@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path"
 	"sort"
 	"strings"
 	"testing"
@@ -142,7 +143,7 @@ func addRoles(routesAndReplies map[string]string) {
 	base := "/security/1.0/roles"
 	var roleNameList []string
 	for roleName, roleInfo := range rbacRoles {
-		routesAndReplies[base+"/"+roleName] = roleInfo
+		routesAndReplies[path.Join(base, roleName)] = roleInfo
 		roleNameList = append(roleNameList, roleName)
 	}
 

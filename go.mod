@@ -24,12 +24,13 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.37
+	github.com/confluentinc/ccloud-sdk-go v0.0.40
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9
+	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.8
+	github.com/confluentinc/schema-registry-sdk-go v0.0.9
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect

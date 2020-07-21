@@ -25,6 +25,9 @@ type MockConfluentHome struct {
 	lockGetConfluentVersion sync.Mutex
 	GetConfluentVersionFunc func() (string, error)
 
+	lockIsAtLeastVersion sync.Mutex
+	IsAtLeastVersionFunc func(targetVersion string) (bool, error)
+
 	lockGetServiceScript sync.Mutex
 	GetServiceScriptFunc func(action, service string) (string, error)
 
@@ -56,6 +59,9 @@ type MockConfluentHome struct {
 		IsConfluentPlatform []struct {
 		}
 		GetConfluentVersion []struct {
+		}
+		IsAtLeastVersion []struct {
+			TargetVersion string
 		}
 		GetServiceScript []struct {
 			Action  string
@@ -260,6 +266,44 @@ func (m *MockConfluentHome) GetConfluentVersionCalls() []struct {
 	defer m.lockGetConfluentVersion.Unlock()
 
 	return m.calls.GetConfluentVersion
+}
+
+// IsAtLeastVersion mocks base method by wrapping the associated func.
+func (m *MockConfluentHome) IsAtLeastVersion(targetVersion string) (bool, error) {
+	m.lockIsAtLeastVersion.Lock()
+	defer m.lockIsAtLeastVersion.Unlock()
+
+	if m.IsAtLeastVersionFunc == nil {
+		panic("mocker: MockConfluentHome.IsAtLeastVersionFunc is nil but MockConfluentHome.IsAtLeastVersion was called.")
+	}
+
+	call := struct {
+		TargetVersion string
+	}{
+		TargetVersion: targetVersion,
+	}
+
+	m.calls.IsAtLeastVersion = append(m.calls.IsAtLeastVersion, call)
+
+	return m.IsAtLeastVersionFunc(targetVersion)
+}
+
+// IsAtLeastVersionCalled returns true if IsAtLeastVersion was called at least once.
+func (m *MockConfluentHome) IsAtLeastVersionCalled() bool {
+	m.lockIsAtLeastVersion.Lock()
+	defer m.lockIsAtLeastVersion.Unlock()
+
+	return len(m.calls.IsAtLeastVersion) > 0
+}
+
+// IsAtLeastVersionCalls returns the calls made to IsAtLeastVersion.
+func (m *MockConfluentHome) IsAtLeastVersionCalls() []struct {
+	TargetVersion string
+} {
+	m.lockIsAtLeastVersion.Lock()
+	defer m.lockIsAtLeastVersion.Unlock()
+
+	return m.calls.IsAtLeastVersion
 }
 
 // GetServiceScript mocks base method by wrapping the associated func.
@@ -513,6 +557,9 @@ func (m *MockConfluentHome) Reset() {
 	m.lockGetConfluentVersion.Lock()
 	m.calls.GetConfluentVersion = nil
 	m.lockGetConfluentVersion.Unlock()
+	m.lockIsAtLeastVersion.Lock()
+	m.calls.IsAtLeastVersion = nil
+	m.lockIsAtLeastVersion.Unlock()
 	m.lockGetServiceScript.Lock()
 	m.calls.GetServiceScript = nil
 	m.lockGetServiceScript.Unlock()

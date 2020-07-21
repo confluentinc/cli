@@ -369,7 +369,7 @@ func TestConfig_AddContext(t *testing.T) {
 	noContextConf.Filename = filename
 	delete(noContextConf.Contexts, noContextConf.Context().Name)
 	noContextConf.CurrentContext = ""
-	type testSturct struct {
+	type testStruct struct {
 		name                   string
 		config                 *Config
 		contextName            string
@@ -385,7 +385,7 @@ func TestConfig_AddContext(t *testing.T) {
 		wantErr                bool
 	}
 
-	test := testSturct{
+	test := testStruct{
 		name:                   "",
 		config:                 noContextConf,
 		contextName:            context.Name,
@@ -410,7 +410,7 @@ func TestConfig_AddContext(t *testing.T) {
 	failAddingExistingContextTest.want = nil
 	failAddingExistingContextTest.wantErr = true
 
-	tests := []testSturct{
+	tests := []testStruct{
 		addValidContextTest,
 		failAddingExistingContextTest,
 	}

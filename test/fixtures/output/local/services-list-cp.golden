@@ -6,7 +6,7 @@ Available Services:
   Control Center
   Kafka
   Kafka REST
-  KSQL Server
+  ksqlDB Server
   Schema Registry
-  Zookeeper
+  ZooKeeper
 

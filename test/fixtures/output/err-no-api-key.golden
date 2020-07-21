@@ -1,1 +1,7 @@
-Error: no API key selected for lkc-abc123, please select an api-key first (e.g., with `api-key use`)
+Error: no API key selected for resource "lkc-abc123"
+
+Suggestions:
+    Select an API key for resource "lkc-abc123" with `ccloud api-key use <API_KEY> --resource lkc-abc123`.
+    To do so, you must have either already created or stored an API key for the resource.
+    To create an API key, use `ccloud api-key create --resource lkc-abc123`.
+    To store an existing API key, use `ccloud api-key store --resource lkc-abc123`.

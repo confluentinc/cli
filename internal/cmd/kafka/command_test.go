@@ -3,7 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -21,11 +21,6 @@ import (
 )
 
 var conf *v3.Config
-
-func init() {
-	stdin = bytes.NewBuffer(nil)
-	stdout = bytes.NewBuffer(nil)
-}
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -287,7 +282,7 @@ func TestCreateACLs(t *testing.T) {
 			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
-				bindings := []*schedv1.ACLBinding{}
+				var bindings []*schedv1.ACLBinding
 				for _, entry := range aclEntry.entries {
 					bindings = append(bindings, &schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry})
 				}
@@ -310,7 +305,7 @@ func TestDeleteACLs(t *testing.T) {
 			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
-				filters := []*schedv1.ACLFilter{}
+				var filters []*schedv1.ACLFilter
 				for _, entry := range aclEntry.entries {
 					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry}))
 				}
@@ -384,7 +379,6 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 }
 
 func TestMultipleResourceACL(t *testing.T) {
-	expect := "exactly one of cluster-scope, consumer-group, topic, transactional-id must be set"
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
@@ -392,6 +386,7 @@ func TestMultipleResourceACL(t *testing.T) {
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
+	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "cluster-scope, consumer-group, topic, transactional-id")
 	if !strings.Contains(err.Error(), expect) {
 		t.Errorf("expected: %s got: %s", expect, err.Error())
 	}
@@ -541,7 +536,7 @@ func TestDefaults(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return nil, errors.ErrNotLoggedIn
+			return nil, &errors.NotLoggedInError{CLIName: "ccloud"}
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
@@ -552,10 +547,10 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := "You must log in to run that command."
-	if err.Error() != want {
-		t.Errorf("unexpected output, got %s, want %s", err, want)
-	}
+	want := errors.NotLoggedInErrorMsg
+	require.Error(t, err)
+	require.Equal(t, want, err.Error())
+	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
 }
 
 /*************** TEST setup/helpers ***************/
@@ -576,32 +571,6 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
-}
-
-func TestCreateEncryptionKeyId(t *testing.T) {
-	c := make(chan interface{})
-
-	_, err := stdin.Write([]byte("y\n"))
-	require.NoError(t, err)
-
-	cmd := NewCMD(c)
-	// err: not dedicated, the api validates this too
-	cmd.SetArgs([]string{
-		"cluster",
-		"create",
-		"name-xyz",
-		"--region=us-west-2",
-		"--cloud=aws",
-		"--encryption-key=xyz",
-		"--type=dedicated",
-		"--cku=4",
-	})
-	err = cmd.Execute()
-	require.NoError(t, err)
-
-	b, err := ioutil.ReadAll(stdout)
-	require.NoError(t, err)
-	require.Equal(t, "Please confirm you've authorized the key for these accounts account-xyz (y/n): ", string(b))
 }
 
 func init() {

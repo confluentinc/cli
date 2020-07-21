@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
@@ -24,7 +25,7 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   service,
-			Short: fmt.Sprintf("Manage the %s service.", writeServiceName(service)),
+			Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -53,41 +54,57 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "log",
-			Short: fmt.Sprintf("Print logs for %s.", writeServiceName(service)),
+			Short: fmt.Sprintf("Print logs showing %s output.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServiceLogCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceLogCommand)
+	c.Command.Flags().BoolP("follow", "f", false, "Log additional output until the command is interrupted.")
+
 	return c.Command
 }
 
 func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
+	exists, err := c.cc.HasLogFile(service)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
+	}
+
 	log, err := c.cc.GetLogFile(service)
 	if err != nil {
 		return err
 	}
 
-	data, err := ioutil.ReadFile(log)
+	shouldFollow, err := command.Flags().GetBool("follow")
 	if err != nil {
-		return fmt.Errorf("no log found: to run %s, use \"confluent local services %s start\"", writeServiceName(service), service)
+		return err
 	}
-	command.Print(string(data))
 
-	return nil
+	show := exec.Command("cat", log)
+	if shouldFollow {
+		show = exec.Command("tail", "-f", log)
+	}
+
+	show.Stdout = os.Stdout
+	show.Stderr = os.Stderr
+	return show.Run()
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Short: fmt.Sprintf("Start the %s service.", writeServiceName(service)),
+			Short: fmt.Sprintf("Start %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServiceStartCommand
-	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", service))
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStartCommand)
+	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", writeOfficialServiceName(service)))
 
 	return c.Command
 }
@@ -117,11 +134,11 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "status",
-			Short: fmt.Sprintf("Check the status of %s.", writeServiceName(service)),
+			Short: fmt.Sprintf("Check if %s is running.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServiceStatusCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStatusCommand)
 	return c.Command
 }
 
@@ -139,11 +156,11 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Short: fmt.Sprintf("Stop the %s service.", writeServiceName(service)),
+			Short: fmt.Sprintf("Stop %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServiceStopCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStopCommand)
 	return c.Command
 }
 
@@ -167,11 +184,11 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "top",
-			Short: fmt.Sprintf("Monitor %s processes.", writeServiceName(service)),
+			Short: fmt.Sprintf("View resource usage for %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServiceTopCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceTopCommand)
 	return c.Command
 }
 
@@ -198,11 +215,11 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: fmt.Sprintf("Print the version of %s.", writeServiceName(service)),
+			Short: fmt.Sprintf("Print the current version of %s.", writeOfficialServiceName(service)),
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = c.runServiceVersionCommand
+	c.Command.RunE = cmd.NewCLIRunE(c.runServiceVersionCommand)
 
 	return c.Command
 }
@@ -228,7 +245,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return c.printStatus(command, service)
 	}
 
-	if err := checkService(service); err != nil {
+	if err := c.checkService(service); err != nil {
 		return err
 	}
 
@@ -236,7 +253,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return err
 	}
 
-	command.Printf("Starting %s\n", writeServiceName(service))
+	command.Printf(errors.StartingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -249,12 +266,12 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 	return c.printStatus(command, service)
 }
 
-func checkService(service string) error {
-	if err := checkOSVersion(); err != nil {
+func (c *Command) checkService(service string) error {
+	if err := c.checkOSVersion(); err != nil {
 		return err
 	}
 
-	if err := checkJavaVersion(service); err != nil {
+	if err := c.checkJavaVersion(service); err != nil {
 		return err
 	}
 
@@ -360,14 +377,14 @@ func (c *Command) startProcess(service string) error {
 		return err
 	}
 
-	errors := make(chan error)
+	errorsChan := make(chan error)
 
 	up := make(chan bool)
 	go func() {
 		for {
 			isUp, err := c.isRunning(service)
 			if err != nil {
-				errors <- err
+				errorsChan <- err
 			}
 			if isUp {
 				up <- isUp
@@ -377,10 +394,10 @@ func (c *Command) startProcess(service string) error {
 	select {
 	case <-up:
 		break
-	case err := <-errors:
+	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to start", writeServiceName(service))
+		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -388,7 +405,7 @@ func (c *Command) startProcess(service string) error {
 		for {
 			isOpen, err := isPortOpen(service)
 			if err != nil {
-				errors <- err
+				errorsChan <- err
 			}
 			if isOpen {
 				open <- isOpen
@@ -399,10 +416,10 @@ func (c *Command) startProcess(service string) error {
 	select {
 	case <-open:
 		break
-	case err := <-errors:
+	case err := <-errorsChan:
 		return err
 	case <-time.After(90 * time.Second):
-		return fmt.Errorf("%s failed to start", writeServiceName(service))
+		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	return nil
@@ -417,7 +434,7 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 		return c.printStatus(command, service)
 	}
 
-	command.Printf("Stopping %s\n", writeServiceName(service))
+	command.Printf(errors.StoppingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -503,13 +520,13 @@ func (c *Command) killProcess(service string) error {
 		return err
 	}
 
-	errors := make(chan error)
+	errorsChan := make(chan error)
 	up := make(chan bool)
 	go func() {
 		for {
 			isUp, err := c.isRunning(service)
 			if err != nil {
-				errors <- err
+				errorsChan <- err
 			}
 			if !isUp {
 				up <- isUp
@@ -519,10 +536,10 @@ func (c *Command) killProcess(service string) error {
 	select {
 	case <-up:
 		return nil
-	case err := <-errors:
+	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return fmt.Errorf("%s failed to stop", writeServiceName(service))
+		return errors.Errorf(errors.FailedToStopErrorMsg, writeServiceName(service))
 	}
 }
 
@@ -537,7 +554,7 @@ func (c *Command) printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	command.Printf("%s is [%s]\n", writeServiceName(service), status)
+	command.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 
@@ -616,9 +633,18 @@ func setServiceEnvs(service string) error {
 	return nil
 }
 
-func checkOSVersion() error {
-	// CLI-84: Require macOS version >= 10.13
+func (c *Command) checkOSVersion() error {
 	if runtime.GOOS == "darwin" {
+		required, _ := version.NewSemver("10.13")
+		// CLI-584 CP 6.0 now requires at least 10.14
+		above, err := c.ch.IsAtLeastVersion("6.0")
+		if err != nil {
+			return err
+		}
+		if above {
+			required, _ = version.NewSemver("10.14")
+		}
+
 		osVersion, err := exec.Command("sw_vers", "-productVersion").Output()
 		if err != nil {
 			return err
@@ -629,15 +655,14 @@ func checkOSVersion() error {
 			return err
 		}
 
-		v10_13, _ := version.NewSemver("10.13")
-		if v.Compare(v10_13) < 0 {
-			return fmt.Errorf("macOS version >= 10.13 is required (detected: %s)", osVersion)
+		if v.Compare(required) < 0 {
+			return fmt.Errorf(errors.MacVersionErrorMsg, required.String(), osVersion)
 		}
 	}
 	return nil
 }
 
-func checkJavaVersion(service string) error {
+func (c *Command) checkJavaVersion(service string) error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
 	if os.Getenv("JAVA_HOME") == "" {
 		out, err := exec.Command("which", "java").Output()
@@ -646,7 +671,7 @@ func checkJavaVersion(service string) error {
 		}
 		java = strings.TrimSuffix(string(out), "\n")
 		if java == "java not found" {
-			return fmt.Errorf("could not find java executable, please install java or set JAVA_HOME")
+			return errors.New(errors.JavaExecNotFondErrorMsg)
 		}
 	}
 
@@ -663,7 +688,7 @@ func checkJavaVersion(service string) error {
 		return err
 	}
 	if !isValid {
-		return fmt.Errorf("the Confluent CLI requires Java version 1.8 or 1.11.\nSee https://docs.confluent.io/current/installation/versions-interoperability.html\nIf you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use.")
+		return errors.New(errors.JavaRequirementErrorMsg)
 	}
 
 	return nil
@@ -698,13 +723,26 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 	return true, nil
 }
 
+func writeOfficialServiceName(service string) string {
+	switch service {
+	case "kafka":
+		return "Apache Kafka®"
+	case "zookeeper":
+		return "Apache ZooKeeper™"
+	default:
+		return writeServiceName(service)
+	}
+}
+
 func writeServiceName(service string) string {
 	switch service {
 	case "kafka-rest":
 		return "Kafka REST"
 	case "ksql-server":
-		return "KSQL Server"
+		return "ksqlDB Server"
+	case "zookeeper":
+		return "ZooKeeper"
+	default:
+		return strings.Title(strings.ReplaceAll(service, "-", " "))
 	}
-
-	return strings.Title(strings.ReplaceAll(service, "-", " "))
 }

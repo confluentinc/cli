@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -54,23 +53,20 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 type command struct {
 	Command *cobra.Command
 	cliName string
-	config  *v3.Config
 	version *cliVersion.Version
 	logger  *log.Logger
 	client  update.Client
 	// for testing
-	prompt          pcmd.Prompt
 	analyticsClient analytics.Client
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, logger *log.Logger, version *cliVersion.Version, prompt pcmd.Prompt,
+func New(cliName string, logger *log.Logger, version *cliVersion.Version,
 	client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
 		cliName:         cliName,
 		version:         version,
 		logger:          logger,
-		prompt:          prompt,
 		client:          client,
 		analyticsClient: analytics,
 	}
@@ -81,41 +77,49 @@ func New(cliName string, logger *log.Logger, version *cliVersion.Version, prompt
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: fmt.Sprintf("Update the %s CLI.", c.cliName),
-		RunE:  c.update,
+		Short: fmt.Sprintf("Update the %s.", c.cliTitle()),
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
-	c.Command.Flags().Bool("yes", false, "Update without prompting.")
+	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
 }
 
-func (c *command) update(cmd *cobra.Command, args []string) error {
+func (c *command) cliTitle() string {
+	switch c.cliName {
+	case "confluent":
+		return "Confluent CLI"
+	case "ccloud":
+		return "Confluent Cloud CLI"
+	}
+	return ""
+}
+
+func (c *command) update(cmd *cobra.Command, _ []string) error {
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.Wrap(err, "error reading --yes as bool")
+		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
-	pcmd.ErrPrintln(cmd, "Checking for updates...")
+	pcmd.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
-		c.Command.SilenceUsage = true
-		return errors.Wrap(err, "error checking for updates")
+		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, "Already up to date.")
+		pcmd.Println(cmd, errors.UpToDateMsg)
 		return nil
 	}
 
 	releaseNotes := c.getReleaseNotes(latestVersion)
 
-	// HACK: our packaging doesn't include the "v" in the version, so we add it back so  that the prompt is consistent
+	// HACK: our packaging doesn't include the "v" in the version, so we add it back so that the prompt is consistent
 	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
 	// Without this hack, the prompt looks like
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	doUpdate := c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes)
-	if !doUpdate {
+	if !c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes) {
 		return nil
 	}
 
@@ -124,9 +128,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
-		return err
+		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
-	pcmd.ErrPrintf(cmd, "Update your autocomplete scripts as instructed by: %s help completion\n", c.config.CLIName)
+	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
 
 	return nil
 }
@@ -135,14 +139,14 @@ func (c *command) getReleaseNotes(latestBinaryVersion string) string {
 	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
 	var errMsg string
 	if err != nil {
-		errMsg = fmt.Sprintf("error obtaining release notes: %s", err)
+		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
 	} else {
 		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
 		if err != nil {
-			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %s", err)
+			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionCheckErrorMsg, err)
 		}
 		if !isSameVersion {
-			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
+			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
 	if errMsg != "" {

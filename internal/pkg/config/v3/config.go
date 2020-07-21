@@ -61,6 +61,7 @@ func New(params *config.Params) *Config {
 func (c *Config) Load() error {
 	currentVersion := Version
 	filename, err := c.getFilename()
+	c.Filename = filename
 	if err != nil {
 		return err
 	}
@@ -69,31 +70,31 @@ func (c *Config) Load() error {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
-				return errors.Wrapf(err, "unable to create config: %v", err)
+				return errors.Wrapf(err, errors.UnableToCreateConfigErrorMsg)
 			}
 			return nil
 		}
-		return errors.Wrapf(err, "unable to read config file: %s", filename)
+		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
 	}
 	err = json.Unmarshal(input, c)
 	if c.Ver.Compare(currentVersion) < 0 {
-		return errors.New(fmt.Sprintf("Config version V%s not up to date with the latest version V%s.", c.Ver, currentVersion))
+		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
 	} else if c.Ver.Compare(Version) > 0 {
-		return errors.New(fmt.Sprintf("Invalid config version V%s.", c.Ver))
+		return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)
 	}
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse config file: %s", filename)
+		return errors.Wrapf(err, errors.ParseConfigErrorMsg, filename)
 	}
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
-			return errors.New("one of the existing contexts has no name")
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.CLIName, c.Filename, c.Logger)
 		}
 		if context.CredentialName == "" {
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		if context.PlatformName == "" {
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
@@ -101,7 +102,7 @@ func (c *Config) Load() error {
 		context.Logger = c.Logger
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.New(fmt.Sprintf("Context '%s' missing KafkaClusterContext", context.Name))
+			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		context.KafkaClusterContext.Context = context
 	}
@@ -120,7 +121,7 @@ func (c *Config) Save() error {
 	}
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, "unable to marshal config")
+		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
 	}
 	filename, err := c.getFilename()
 	if err != nil {
@@ -128,11 +129,11 @@ func (c *Config) Save() error {
 	}
 	err = os.MkdirAll(filepath.Dir(filename), 0700)
 	if err != nil {
-		return errors.Wrapf(err, "unable to create config directory: %s", filename)
+		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
 	}
 	err = ioutil.WriteFile(filename, cfg, 0600)
 	if err != nil {
-		return errors.Wrapf(err, "unable to write config to file: %s", filename)
+		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
 	return nil
 }
@@ -142,7 +143,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			c.Logger.Trace("current context does not exist")
-			return errors.Errorf("the current context does not exist.")
+			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.CLIName, c.Filename, c.Logger)
 		}
 	}
 	// Validate that every context:
@@ -156,25 +157,25 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			c.Logger.Trace("unspecified credential error")
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			c.Logger.Trace("unspecified platform error")
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(v2.ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
 			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
-			return c.corruptedConfigError()
+			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 	}
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			c.Logger.Trace("context state mapped to nonexistent context")
-			return c.corruptedConfigError()
+			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.CLIName, c.Filename, c.Logger)
 		}
 	}
 
@@ -199,7 +200,7 @@ func (c *Config) DeleteContext(name string) error {
 func (c *Config) FindContext(name string) (*Context, error) {
 	context, ok := c.Contexts[name]
 	if !ok {
-		return nil, fmt.Errorf("context \"%s\" does not exist", name)
+		return nil, fmt.Errorf(errors.ContextNotExistErrorMsg, name)
 	}
 	return context, nil
 }
@@ -208,7 +209,7 @@ func (c *Config) AddContext(name string, platformName string, credentialName str
 	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
 	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState) error {
 	if _, ok := c.Contexts[name]; ok {
-		return fmt.Errorf("cannot create context \"%s\" because a context with this name already exists", name)
+		return fmt.Errorf(errors.ContextNameExistsErrorMsg, name)
 	}
 	return c.BuildAndSaveContext(name, platformName, credentialName, kafkaClusters, kafka, schemaRegistryClusters, state)
 }
@@ -219,11 +220,11 @@ func (c *Config) BuildAndSaveContext(name string, platformName string, credentia
 
 	credential, ok := c.Credentials[credentialName]
 	if !ok {
-		return fmt.Errorf("credential \"%s\" not found", credentialName)
+		return fmt.Errorf(errors.CredentialNotFoundErrorMsg, credentialName)
 	}
 	platform, ok := c.Platforms[platformName]
 	if !ok {
-		return fmt.Errorf("platform \"%s\" not found", platformName)
+		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
 	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
 		schemaRegistryClusters, state, c)
@@ -253,7 +254,7 @@ func (c *Config) SetContext(name string) error {
 
 func (c *Config) SaveCredential(credential *v2.Credential) error {
 	if credential.Name == "" {
-		return fmt.Errorf("credential must have a name")
+		return errors.New(errors.NoNameCredentialErrorMsg)
 	}
 	c.Credentials[credential.Name] = credential
 	return c.Save()
@@ -261,7 +262,7 @@ func (c *Config) SaveCredential(credential *v2.Credential) error {
 
 func (c *Config) SavePlatform(platform *v2.Platform) error {
 	if platform.Name == "" {
-		return fmt.Errorf("platform must have a name")
+		return errors.New(errors.NoNamePlatformErrorMsg)
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()
@@ -294,22 +295,7 @@ func (c *Config) getFilename() (string, error) {
 	if err != nil {
 		c.Logger.Error(err)
 		// Return a more user-friendly error.
-		err = fmt.Errorf("an error resolving the config filepath at %s has occurred. "+
-			"Please try moving the file to a different location", c.Filename)
-		return "", err
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ResolvingConfigPathErrorMsg, c.Filename), errors.ResolvingConfigPathSuggestions)
 	}
 	return filename, nil
-}
-
-// corruptedConfigError returns an error signaling that the config file has been corrupted,
-// or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedConfigError() error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the config file located at %s has been corrupted. " +
-		"To fix, please remove the config file, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, configPath)
-	return err
 }

@@ -3,11 +3,11 @@ package v3
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KafkaClusterContext struct {
@@ -223,10 +223,7 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *v1.KafkaCluste
 		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n"+
-			"Removing current API key setting for the cluster.\n"+
-			"You can re-add the API key with 'ccloud api-key store' and set current API key with 'ccloud api-key use'.\n",
-			cluster.APIKey, cluster.ID, k.Context.Name)
+		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
 		cluster.APIKey = ""
 		err := k.Context.Save()
 		if err != nil {
@@ -257,29 +254,10 @@ func (k *KafkaClusterContext) validateApiKeysDict(cluster *v1.KafkaClusterConfig
 		}
 	}
 	if missingKey || mismatchKey || missingSecret {
-		k.printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster)
+		printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster, k.Context.Name)
 		err := k.Context.Save()
 		if err != nil {
 			panic("Unable to save new KafkaEnvContext to config.")
 		}
 	}
-}
-
-func (k *KafkaClusterContext) printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig) {
-	var problems []string
-	if missingKey {
-		problems = append(problems, "'API key missing'")
-	}
-	if mismatchKey {
-		problems = append(problems, "'key of the dictionary does not match API key of the pair'")
-	}
-	if missingSecret {
-		problems = append(problems, "'API secret missing'")
-	}
-	problemString := strings.Join(problems, ", ")
-	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n"+
-		"The issues are the following: "+problemString+".\n"+
-		"Deleting the malformed entries.\n"+
-		"You can re-add the API key secret pair with 'ccloud api-key store'\n",
-		cluster.Name, k.Context.Name)
 }

@@ -2,14 +2,14 @@ package schema_registry
 
 import (
 	"context"
-	"github.com/spf13/cobra"
 
 	"github.com/antihax/optional"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 var clusterType = "schema-registry-cluster"
@@ -40,7 +40,7 @@ func (c *clusterCommandOnPrem) init() {
 		Use:   "list",
 		Short: "List registered Schema Registry clusters.",
 		Long:  "List Schema Registry clusters that are registered with the MDS cluster registry.",
-		RunE:  c.list,
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -52,7 +52,7 @@ func (c *clusterCommandOnPrem) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *clusterCommandOnPrem) list(cmd *cobra.Command, args []string) error {
+func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
 	schemaClustertype := &mds.ClusterRegistryListOpts{
 		ClusterType: optional.NewString(clusterType),
 	}
@@ -62,7 +62,7 @@ func (c *clusterCommandOnPrem) list(cmd *cobra.Command, args []string) error {
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return print.PrintCluster(cmd, clusterInfos, format)
 }

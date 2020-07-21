@@ -198,7 +198,7 @@ func (a *ClientObj) sendCommandFailed(e error) error {
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	if a.cmdCalled == "" {
-		return a.malformedCommandError(e)
+		return a.malformedCommandError()
 	}
 	if err := a.sendPage(); err != nil {
 		return err
@@ -250,7 +250,7 @@ func (a *ClientObj) identify() error {
 	return a.client.Enqueue(identify)
 }
 
-func (a *ClientObj) malformedCommandError(e error) error {
+func (a *ClientObj) malformedCommandError() error {
 	track := segment.Track{
 		Event:      malformedCmdEventName,
 		Properties: a.properties,

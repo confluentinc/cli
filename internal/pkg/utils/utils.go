@@ -26,15 +26,6 @@ func TestEq(a, b []string) bool {
 	return true
 }
 
-func Find(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
-}
-
 func RemoveDuplicates(s []string) []string {
 	check := make(map[string]int)
 	for _, v := range s {
@@ -45,4 +36,13 @@ func RemoveDuplicates(s []string) []string {
 		noDups = append(noDups, k)
 	}
 	return noDups
+}
+
+func Contains(haystack []string, needle string) bool {
+	for _, x := range haystack {
+		if x == needle {
+			return true
+		}
+	}
+	return false
 }

@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 /*
@@ -75,6 +77,7 @@ type ConfluentHome interface {
 
 	IsConfluentPlatform() (bool, error)
 	GetConfluentVersion() (string, error)
+	IsAtLeastVersion(targetVersion string) (bool, error)
 
 	GetServiceScript(action, service string) (string, error)
 	ReadServiceConfig(service string) ([]byte, error)
@@ -96,7 +99,7 @@ func (ch *ConfluentHomeManager) getRootDir() (string, error) {
 		return dir, nil
 	}
 
-	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
+	return "", errors.New(errors.SetConfluentHomeErrorMsg)
 }
 
 func (ch *ConfluentHomeManager) GetFile(path ...string) (string, error) {
@@ -179,7 +182,7 @@ func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error
 	}
 
 	if service == "ksql-server" {
-		isKsqlDB, err := ch.isAboveVersion("5.5")
+		isKsqlDB, err := ch.IsAtLeastVersion("5.5")
 		if err != nil {
 			return []byte{}, err
 		}
@@ -229,7 +232,7 @@ func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
 		return "", err
 	}
 	if len(matches) == 0 {
-		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
+		return "", errors.Errorf(errors.ConfluentHomeNotFoundErrorMsg, pattern)
 	}
 
 	versionFile := matches[0]
@@ -246,12 +249,12 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	var script string
 
 	if format == "json" || format == "protobuf" {
-		supported, err := ch.isAboveVersion("5.5")
+		supported, err := ch.IsAtLeastVersion("5.5")
 		if err != nil {
 			return "", err
 		}
 		if !supported {
-			return "", fmt.Errorf("format %s is not supported in this version", format)
+			return "", errors.Errorf(errors.KafkaScriptFormatNotSupportedErrorMsg, format)
 		}
 	}
 
@@ -265,13 +268,13 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	case "protobuf":
 		script = fmt.Sprintf("kafka-protobuf-console-%s", mode)
 	default:
-		return "", fmt.Errorf("invalid format: %s", format)
+		return "", errors.Errorf(errors.KafkaScriptInvalidFormatErrorMsg, format)
 	}
 
 	return ch.GetFile("bin", script)
 }
 
-func (ch *ConfluentHomeManager) isAboveVersion(targetVersion string) (bool, error) {
+func (ch *ConfluentHomeManager) IsAtLeastVersion(targetVersion string) (bool, error) {
 	confluentVersion, err := ch.GetConfluentVersion()
 	if err != nil {
 		return false, err

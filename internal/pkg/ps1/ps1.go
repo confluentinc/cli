@@ -8,7 +8,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	template_color "github.com/confluentinc/cli/internal/pkg/template-color"
+	templatecolor "github.com/confluentinc/cli/internal/pkg/template-color"
 )
 
 var (
@@ -175,7 +175,7 @@ func (p *Prompt) Get(format string) (string, error) {
 }
 
 func (p *Prompt) GetFuncs() template.FuncMap {
-	m := template_color.GetColorFuncs()
+	m := templatecolor.GetColorFuncs()
 	m["ToUpper"] = strings.ToUpper
 	return m
 }

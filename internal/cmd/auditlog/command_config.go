@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"io/ioutil"
+	"net/http"
+	"os"
+
 	"github.com/confluentinc/go-editor"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
 
-	"net/http"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type configCommand struct {
@@ -25,22 +25,23 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
 		&cobra.Command{
 			Use:   "config",
-			Short: "Manage audit log configuration specification.",
-			Long:  "Manage audit log defaults and routing rules that determine which auditable events are logged, and where.",
+			Short: "Manage the audit log configuration specification.",
+			Long:  "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
 		}, prerunner)
-	cmd := &configCommand{
+	command := &configCommand{
 		AuthenticatedCLICommand: cliCmd,
 		prerunner:               prerunner,
 	}
-	cmd.init()
-	return cmd.Command
+	command.init()
+	return command.Command
 }
 
 func (c *configCommand) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Prints the audit log configuration spec object.",
-		RunE:  c.describe,
+		Long:  `Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.`,
+		RunE:  cmd.NewCLIRunE(c.describe),
 		Args:  cobra.NoArgs,
 	}
 	c.AddCommand(describeCmd)
@@ -49,19 +50,19 @@ func (c *configCommand) init() {
 		Use:   "update",
 		Short: "Submits audit-log config spec object to the API.",
 		Long:  "Submits an audit-log configuration specification JSON object to the API.",
-		RunE:  c.update,
+		RunE:  cmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
-	updateCmd.Flags().String("file", "", "A local file path, read as input. Otherwise the command will read from standard in.")
-	updateCmd.Flags().Bool("force", false, "Tries to update even with concurrent modifications.")
+	updateCmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
+	updateCmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	editCmd := &cobra.Command{
 		Use:   "edit",
 		Short: "Edit the audit-log config spec interactively.",
-		Long:  "Edit the audit-log config spec object interactively, using the EDITOR specified in your environment.",
-		RunE:  c.edit,
+		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
+		RunE:  cmd.NewCLIRunE(c.edit),
 		Args:  cobra.NoArgs,
 	}
 	c.AddCommand(editCmd)
@@ -71,49 +72,49 @@ func (c *configCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
-	spec, _, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {
+	spec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return HandleMdsAuditLogApiError(cmd, err, response)
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
 	if err = enc.Encode(spec); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
 
-func (c *configCommand) update(cmd *cobra.Command, args []string) error {
+func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	var data []byte
 	var err error
 	if cmd.Flags().Changed("file") {
 		fileName, err := cmd.Flags().GetString("file")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		data, err = ioutil.ReadFile(fileName)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	} else {
 		data, err = ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
 	fileSpec := mds.AuditLogConfigSpec{}
 	err = json.Unmarshal(data, &fileSpec)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	putSpec := &fileSpec
 
 	if cmd.Flags().Changed("force") {
 		force, err := cmd.Flags().GetBool("force")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		if force {
 			gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
@@ -148,29 +149,29 @@ func (c *configCommand) update(cmd *cobra.Command, args []string) error {
 		return HandleMdsAuditLogApiError(cmd, err, r)
 	}
 	if err = enc.Encode(result); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
 
-func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
+func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(cmd, err, response)
 	}
 	gotSpecBytes, err := json.MarshalIndent(gotSpec, "", "  ")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	edit := editor.NewEditor()
 	edited, path, err := edit.LaunchTempFile("audit-log", bytes.NewBuffer(gotSpecBytes))
 	defer os.Remove(path)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	putSpec := mds.AuditLogConfigSpec{}
 	if err = json.Unmarshal(edited, &putSpec); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
@@ -186,7 +187,7 @@ func (c *configCommand) edit(cmd *cobra.Command, args []string) error {
 		return HandleMdsAuditLogApiError(cmd, err, r)
 	}
 	if err = enc.Encode(result); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }

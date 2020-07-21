@@ -1,12 +1,15 @@
 package auditlog
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/spf13/cobra"
 	"net/http"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type command struct {
@@ -20,7 +23,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "audit-log",
 			Short: "Manage audit log configuration.",
-			Long:  "Manage which auditable events are logged, and where the events are sent.",
+			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
@@ -35,11 +38,29 @@ func (c *command) init() {
 	c.AddCommand(NewRouteCommand(c.prerunner))
 }
 
+type errorMessage struct {
+	ErrorCode uint32 `json:"error_code" yaml:"error_code"`
+	Message   string `json:"message" yaml:"message"`
+}
 
 func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
-	if response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to access endpoint (%s). Ensure that you're running against MDS with CP 6.0+.", err.Error())
+	if response != nil {
+		switch status := response.StatusCode; status {
+		case http.StatusNotFound:
+			cmd.SilenceUsage = true
+			return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
+		case http.StatusForbidden:
+			switch e := err.(type) {
+			case mds.GenericOpenAPIError:
+				cmd.SilenceUsage = true
+				em := errorMessage{}
+				if err = json.Unmarshal(e.Body(), &em); err != nil {
+					// It wasn't what we expected. Use the regular error handler.
+					return errors.HandleCommon(err, cmd)
+				}
+				return fmt.Errorf("%s\n%s", e.Error(), em.Message)
+			}
+		}
 	}
-	return errors.HandleCommon(err, cmd)
+	return err
 }
