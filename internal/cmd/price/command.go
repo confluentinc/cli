@@ -2,6 +2,7 @@ package price
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -12,69 +13,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type command struct {
-	*cmd.AuthenticatedCLICommand
-}
-
-func New(prerunner cmd.PreRunner) *cobra.Command {
-	c := &command{
-		cmd.NewAuthenticatedCLICommand(
-			&cobra.Command{
-				Use:   "price",
-				Short: "See Confluent Cloud pricing information.",
-				Args:  cobra.NoArgs,
-			},
-			prerunner,
-		),
-	}
-
-	c.AddCommand(c.newListCommand())
-
-	return c.Command
-}
-
-func (c *command) newListCommand() *cobra.Command {
-	command := &cobra.Command{
-		Use:   "list",
-		Short: "Print an organization's price list.",
-		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
-	}
-
-	command.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
-	_ = command.MarkFlagRequired("cloud")
-	command.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
-	_ = command.MarkFlagRequired("region")
-	command.Flags().Bool("legacy", false, "Show legacy cluster types.")
-	command.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	command.Flags().SortFlags = false
-
-	return command
-}
-
 var (
 	listFields       = []string{"metric", "clusterType", "availability", "networkType", "price"}
 	humanLabels      = []string{"Metric", "Cluster Type", "Availability", "Network Type", "Price"}
 	structuredLabels = []string{"metric", "cluster_type", "availability", "network_type", "price"}
-)
 
-type humanRow struct {
-	metric       string
-	clusterType  string
-	availability string
-	networkType  string
-	price        string
-}
+	formatCloud = map[string]string{
+		"aws":   "AWS",
+		"azure": "Azure",
+		"gcp":   "GCP",
+	}
 
-type structuredRow struct {
-	metric       string
-	clusterType  string
-	availability string
-	networkType  string
-	price        float64
-}
-
-var (
 	formatMetric = map[string]string{
 		"ConnectNumRecords": "Connect record",
 		"ConnectNumTasks":   "Connect task",
@@ -110,6 +59,71 @@ var (
 	}
 )
 
+type command struct {
+	*cmd.AuthenticatedCLICommand
+}
+
+func New(prerunner cmd.PreRunner) *cobra.Command {
+	c := &command{
+		cmd.NewAuthenticatedCLICommand(
+			&cobra.Command{
+				Use:   "price",
+				Short: "See Confluent Cloud pricing information.",
+				Args:  cobra.NoArgs,
+			},
+			prerunner,
+		),
+	}
+
+	c.AddCommand(c.newListCommand())
+
+	return c.Command
+}
+
+func (c *command) newListCommand() *cobra.Command {
+	command := &cobra.Command{
+		Use:   "list",
+		Short: "Print an organization's price list.",
+		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.list),
+	}
+
+	// Required flags
+	command.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", listFromMap(formatCloud)))
+	_ = command.MarkFlagRequired("cloud")
+	command.Flags().String("region", "", "Cloud region ID for cluster (e.g. us-west-2).")
+	_ = command.MarkFlagRequired("region")
+
+	// Extra filtering flags
+	command.Flags().String("availability", "", fmt.Sprintf("Filter by availability (%s).", listFromMap(formatAvailability)))
+	command.Flags().String("cluster-type", "", fmt.Sprintf("Filter by cluster type (%s).", listFromMap(formatClusterType)))
+	command.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", listFromMap(formatMetric)))
+	command.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", listFromMap(formatNetworkType)))
+
+	command.Flags().Bool("legacy", false, "Show legacy cluster types.")
+	command.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+
+	command.Flags().SortFlags = false
+
+	return command
+}
+
+type humanRow struct {
+	metric       string
+	clusterType  string
+	availability string
+	networkType  string
+	price        string
+}
+
+type structuredRow struct {
+	metric       string
+	clusterType  string
+	availability string
+	networkType  string
+	price        float64
+}
+
 func (c *command) list(command *cobra.Command, _ []string) error {
 	o, err := command.Flags().GetString("output")
 	if err != nil {
@@ -130,6 +144,10 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	table, err := filterTable(command, res.PriceTable)
 	if err != nil {
 		return err
+	}
+
+	if len(table) == 0 {
+		return fmt.Errorf("no results found")
 	}
 
 	for metric, val := range table {
@@ -165,14 +183,20 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 }
 
 func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (map[string]*orgv1.UnitPrices, error) {
-	cloud, err := command.Flags().GetString("cloud")
+	metric, err := command.Flags().GetString("metric")
 	if err != nil {
 		return nil, err
 	}
 
-	region, err := command.Flags().GetString("region")
-	if err != nil {
-		return nil, err
+	filters := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
+
+	filterValues := make([]string, len(filters))
+	for i, filter := range filters {
+		var err error
+		filterValues[i], err = command.Flags().GetString(filter)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	legacy, err := command.Flags().GetBool("legacy")
@@ -183,24 +207,40 @@ func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (ma
 	filteredTable := make(map[string]*orgv1.UnitPrices)
 
 	for service, val := range table {
+		if metric != "" && service != metric {
+			continue
+		}
+
 		for key, price := range val.Prices {
 			args := strings.Split(key, ":")
+
+			shouldContinue := false
+			for i, val := range filterValues {
+				if val != "" && args[i] != val {
+					shouldContinue = true
+				}
+			}
+			if shouldContinue {
+				continue
+			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
 			if utils.Contains([]string{"standard", "custom"}, args[3]) && !legacy {
 				continue
 			}
 
-			if args[0] == cloud && args[1] == region && price > 0 {
-				if _, ok := filteredTable[service]; !ok {
-					filteredTable[service] = &orgv1.UnitPrices{
-						Prices: make(map[string]float64),
-						Unit:   val.Unit,
-					}
-				}
-
-				filteredTable[service].Prices[key] = price
+			if price == 0 {
+				continue
 			}
+
+			if _, ok := filteredTable[service]; !ok {
+				filteredTable[service] = &orgv1.UnitPrices{
+					Prices: make(map[string]float64),
+					Unit:   val.Unit,
+				}
+			}
+
+			filteredTable[service].Prices[key] = price
 		}
 	}
 
@@ -213,4 +253,13 @@ func formatPrice(price float64, unit string) string {
 		return fmt.Sprintf("$%.1g USD/%s", price, unit)
 	}
 	return fmt.Sprintf("$%.2f USD/%s", price, unit)
+}
+
+func listFromMap(m map[string]string) string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, ", ")
 }

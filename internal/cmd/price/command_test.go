@@ -95,14 +95,8 @@ func TestOmitLegacyClusterTypes(t *testing.T) {
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleLegacyClusterType, exampleNetworkType}, ":"): examplePrice,
 	})
 
-	want := strings.Join([]string{
-		"  Metric | Cluster Type | Availability | Network Type | Price  ",
-		"+--------+--------------+--------------+--------------+-------+",
-	}, "\n")
-
-	got, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion)
-	require.NoError(t, err)
-	require.Equal(t, want+"\n", got)
+	_, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion)
+	require.Error(t, err)
 }
 
 func mockSingleRowCommand() *cobra.Command {
