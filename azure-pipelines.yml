@@ -3,11 +3,21 @@ pool:
 
 steps:
 
+- bash: |
+    make install-vault
+    . mk-include/bin/vault-setup
+  displayName: 'Install Vault'
+
+- bash: |
+    . vault-sem-get-secret ssh_id_rsa
+    . vault-sem-get-secret netrc
+    chmod 400 ~/.ssh/id_rsa
+  displayName: 'Inject secrets'
+
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
 
-# Linux
 - bash: |
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
@@ -21,24 +31,6 @@ steps:
     mkdir -p ${GOPATH}\bin
     mkdir -p ${GOROOT}\bin
   displayName: 'Set up the Go workspace'
-
-- task: DownloadSecureFile@1
-  name: idrsa
-  displayName: 'Securely download id_rsa from Azure vault'
-  inputs:
-    secureFile: 'id_rsa'
-
-- task: DownloadSecureFile@1
-  name: netrc
-  displayName: 'Securely download netrc from Azure vault'
-  inputs:
-    secureFile: 'netrc'
-
-- script: |
-    mv $(netrc.secureFilePath) ~/.netrc
-    mkdir ~/.ssh
-    sudo mv $(idrsa.secureFilePath) ~/.ssh/
-    sudo chmod 400 ~/.ssh/id_rsa
 
 - script: |
     make deps
