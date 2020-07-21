@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
@@ -85,7 +86,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 			foundAuthority := getCRNAuthority(routeName)
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
-		foundAuthorities = removeDuplicates(foundAuthorities)
+		foundAuthorities = utils.RemoveDuplicates(foundAuthorities)
 		if len(foundAuthorities) != 1 {
 			sort.Strings(foundAuthorities)
 			newWarning := fmt.Sprintf("Multiple CRN Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
@@ -125,7 +126,7 @@ func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrap
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		sort.Strings(oldBootStrapServers)
-		if !testEq(oldBootStrapServers, bootstrapServers) {
+		if !utils.TestEq(oldBootStrapServers, bootstrapServers) {
 			newWarning := fmt.Sprintf("New Bootstrap Servers Warning: Cluster %q currently has bootstrap servers = %v. Replacing with %v.", clusterId, oldBootStrapServers, bootstrapServers)
 			warnings = append(warnings, newWarning)
 		}
@@ -158,7 +159,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 		topics := spec.Destinations.Topics
 		for topicName, destination := range topics {
 			if _, ok := newTopics[topicName]; ok {
-				retentionTime := max(destination.RetentionMs, newTopics[topicName].RetentionMs)
+				retentionTime := utils.Max(destination.RetentionMs, newTopics[topicName].RetentionMs)
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
@@ -206,7 +207,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	for _, spec := range specs {
 		excludedPrincipals := *spec.ExcludedPrincipals
 		for _, principal := range excludedPrincipals {
-			if !find(newExcludedPrincipals, principal) {
+			if !utils.Find(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
 			}
 		}
@@ -308,7 +309,7 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		differentPrincipals := []string{}
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
-			if !find(excludedPrincipals, principal) {
+			if !utils.Find(excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}
 		}
@@ -318,51 +319,4 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		}
 	}
 	return warnings
-}
-
-func max(x, y int64) int64 {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func testEq(a, b []string) bool {
-	// If one is nil, the other must also be nil.
-	if (a == nil) != (b == nil) {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
-func find(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
-}
-
-func removeDuplicates(s []string) []string {
-	check := make(map[string]int)
-	for _, v := range s {
-		check[v] = 0
-	}
-	var noDups []string
-	for k := range check {
-		noDups = append(noDups, k)
-	}
-	return noDups
 }
