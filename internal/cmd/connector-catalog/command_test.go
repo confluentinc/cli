@@ -4,14 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"

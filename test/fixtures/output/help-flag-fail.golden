@@ -18,6 +18,7 @@ Available Commands:
   ksql              Manage ksqlDB applications.
   login             Log in to Confluent Cloud.
   logout            Log out of Confluent Cloud.
+  price             See Confluent Cloud pricing information.
   prompt            Print ccloud CLI context for your terminal prompt.
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
