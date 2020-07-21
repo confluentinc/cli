@@ -11,7 +11,6 @@ steps:
 - bash: |
     . vault-sem-get-secret ssh_id_rsa
     . vault-sem-get-secret netrc
-    chmod 400 ~/.ssh/id_rsa
   displayName: 'Inject secrets'
 
 - script: |
