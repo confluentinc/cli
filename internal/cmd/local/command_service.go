@@ -76,20 +76,15 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 	if err != nil {
 		return err
 	}
+
+	show := exec.Command("cat", log)
 	if shouldFollow {
-		tail := exec.Command("tail", "-f", log)
-		tail.Stdout = os.Stdout
-		tail.Stderr = os.Stderr
-		return tail.Run()
+		show = exec.Command("tail", "-f", log)
 	}
 
-	data, err := ioutil.ReadFile(log)
-	if err != nil {
-		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
-	}
-
-	command.Print(string(data))
-	return nil
+	show.Stdout = os.Stdout
+	show.Stderr = os.Stderr
+	return show.Run()
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
