@@ -87,7 +87,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
 		foundAuthorities = utils.RemoveDuplicates(foundAuthorities)
-		if len(foundAuthorities) != 1 {
+		if len(foundAuthorities) > 1 {
 			sort.Strings(foundAuthorities)
 			newWarning := fmt.Sprintf("Multiple CRN Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
 			warnings = append(warnings, newWarning)
