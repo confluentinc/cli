@@ -22,6 +22,24 @@ steps:
     mkdir -p ${GOROOT}\bin
   displayName: 'Set up the Go workspace'
 
+- task: DownloadSecureFile@1
+  name: idrsa
+  displayName: 'Securely download id_rsa from Azure vault'
+  inputs:
+    secureFile: 'id_rsa'
+
+- task: DownloadSecureFile@1
+  name: netrc
+  displayName: 'Securely download netrc from Azure vault'
+  inputs:
+    secureFile: 'netrc'
+
+- script: |
+    mv $(netrc.secureFilePath) ~/.netrc
+    mkdir ~/.ssh
+    sudo mv $(idrsa.secureFilePath) ~/.ssh/
+    sudo chmod 400 ~/.ssh/id_rsa
+
 - script: |
     make deps
   displayName: 'make deps'
