@@ -11,6 +11,7 @@ variables:
   homebrew_cask_opts: '--no-quarantine'
   CI: true
 
+steps:
 - script: |
     brew install gnu-tar
   condition: eq( variables['Agent.OS'], 'Darwin' )
