@@ -207,7 +207,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	for _, spec := range specs {
 		excludedPrincipals := *spec.ExcludedPrincipals
 		for _, principal := range excludedPrincipals {
-			if !utils.Find(newExcludedPrincipals, principal) {
+			if !utils.Contains(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
 			}
 		}
@@ -309,7 +309,7 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		differentPrincipals := []string{}
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
-			if !utils.Find(excludedPrincipals, principal) {
+			if !utils.Contains(excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}
 		}
