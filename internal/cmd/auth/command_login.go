@@ -175,8 +175,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
-	pcmd.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	cmd.Printf(errors.LoggedInAsMsg, email)
+	cmd.Printf(errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
@@ -233,7 +233,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
+	cmd.Printf(errors.LoggedInAsMsg, email)
 	return nil
 }
 

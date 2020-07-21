@@ -162,7 +162,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
+	cmd.Printf(errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
 

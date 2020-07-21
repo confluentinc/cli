@@ -186,7 +186,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	// Wait for parse results, error, or timeout
 	select {
 	case prompt := <-retCh:
-		pcmd.Println(cmd, prompt)
+		cmd.Println(prompt)
 	case err := <-errCh:
 		c.Command.SilenceUsage = true
 		return errors.Wrapf(err, errors.ParsePromptFormatErrorMsg, format)

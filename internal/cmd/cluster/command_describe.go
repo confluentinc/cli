@@ -142,7 +142,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	structuredDisplay := &StructuredDisplay{}
 	if meta.ID != "" {
 		if format == output.Human.String() {
-			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
+			cmd.Printf("Confluent Resource Name: %s\n\n", meta.ID)
 		} else {
 			structuredDisplay.Crn = meta.ID
 		}
@@ -164,7 +164,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 
 	}
 	if format == output.Human.String() {
-		pcmd.Println(cmd, "Scope:")
+		cmd.Println("Scope:")
 		printer.RenderCollectionTable(data, describeLabels)
 	} else {
 		return output.StructuredOutput(format, structuredDisplay)

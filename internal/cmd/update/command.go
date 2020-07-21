@@ -97,7 +97,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, errors.UpToDateMsg)
+		cmd.Println(errors.UpToDateMsg)
 		return nil
 	}
 

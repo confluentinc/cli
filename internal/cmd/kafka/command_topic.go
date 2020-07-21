@@ -314,7 +314,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	cmd.Printf(errors.UpdateTopicConfigMsg, args[0])
 	var entries [][]string
 	titleRow := []string{"Name", "Value"}
 	fmt.Println(configMap)
@@ -493,7 +493,7 @@ func toMap(configs []string) (map[string]string, error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
-	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
+	cmd.Printf("Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
 	var partitions [][]string
@@ -519,7 +519,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) erro
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	pcmd.Println(cmd, "\nConfiguration\n ")
+	cmd.Println("\nConfiguration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
