@@ -26,7 +26,7 @@ func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string) err
 }
 
 func (jsonProvider *JsonSerializationProvider) GetSchemaName() string {
-	return "JSON"
+	return JSONSCHEMABACKEND
 }
 
 func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error) {
@@ -69,7 +69,7 @@ func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string) e
 }
 
 func (jsonProvider *JsonDeserializationProvider) GetSchemaName() string {
-	return "JSON"
+	return JSONSCHEMABACKEND
 }
 
 func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, error) {

@@ -7,7 +7,7 @@ func (rawProvider *RawSerializationProvider) LoadSchema(_ string) error {
 }
 
 func (rawProvider *RawSerializationProvider) GetSchemaName() string {
-	return "RAW"
+	return RAWSCHEMANAME
 }
 
 func (rawProvider *RawSerializationProvider) encode(str string) ([]byte, error) {
@@ -22,7 +22,7 @@ func (rawProvider *RawDeserializationProvider) LoadSchema(_ string) error {
 }
 
 func (rawProvider *RawDeserializationProvider) GetSchemaName() string {
-	return "RAW"
+	return RAWSCHEMANAME
 }
 
 func (rawProvider *RawDeserializationProvider) decode(data []byte) (string, error) {

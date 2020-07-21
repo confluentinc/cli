@@ -2,18 +2,28 @@ package serdes
 
 import "github.com/confluentinc/cli/internal/pkg/errors"
 
+const (
+	AVROSCHEMANAME string = "AVRO"
+	JSONSCHEMANAME string = "JSONSCHEMA"
+	// Backend accepts "JSON" instead of "JSONSCHEMA"
+	JSONSCHEMABACKEND  string = "JSON"
+	PROTOBUFSCHEMANAME string = "PROTOBUF"
+	RAWSCHEMANAME      string = "RAW"
+)
+
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	var provider SerializationProvider
 	// Will add other providers in later commits.
-	if valueFormat == "AVRO" {
+	switch valueFormat {
+	case AVROSCHEMANAME:
 		provider = new(AvroSerializationProvider)
-	} else if valueFormat == "PROTOBUF" {
+	case PROTOBUFSCHEMANAME:
 		provider = new(ProtoSerializationProvider)
-	} else if valueFormat == "JSONSCHEMA" {
+	case JSONSCHEMANAME:
 		provider = new(JsonSerializationProvider)
-	} else if valueFormat == "RAW" {
+	case RAWSCHEMANAME:
 		provider = new(RawSerializationProvider)
-	} else {
+	default:
 		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
 	}
 	return provider, nil
@@ -22,15 +32,16 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
 	var provider DeserializationProvider
 	// Will add other providers in later commits.
-	if valueFormat == "AVRO" {
+	switch valueFormat {
+	case AVROSCHEMANAME:
 		provider = new(AvroDeserializationProvider)
-	} else if valueFormat == "PROTOBUF" {
+	case PROTOBUFSCHEMANAME:
 		provider = new(ProtoDeserializationProvider)
-	} else if valueFormat == "JSONSCHEMA" {
+	case JSONSCHEMANAME:
 		provider = new(JsonDeserializationProvider)
-	} else if valueFormat == "RAW" {
+	case RAWSCHEMANAME:
 		provider = new(RawDeserializationProvider)
-	} else {
+	default:
 		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
 	}
 	return provider, nil

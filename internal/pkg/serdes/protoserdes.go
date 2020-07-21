@@ -38,7 +38,7 @@ func (protoProvider *ProtoSerializationProvider) LoadSchema(schemaPath string) e
 }
 
 func (protoProvider *ProtoSerializationProvider) GetSchemaName() string {
-	return "PROTOBUF"
+	return PROTOBUFSCHEMANAME
 }
 
 func (protoProvider *ProtoSerializationProvider) encode(str string) ([]byte, error) {
@@ -88,7 +88,7 @@ func (protoProvider *ProtoDeserializationProvider) LoadSchema(schemaPath string)
 }
 
 func (protoProvider *ProtoDeserializationProvider) GetSchemaName() string {
-	return "PROTOBUF"
+	return PROTOBUFSCHEMANAME
 }
 
 func (protoProvider *ProtoDeserializationProvider) decode(data []byte) (string, error) {
