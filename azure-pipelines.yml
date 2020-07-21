@@ -6,8 +6,6 @@ steps:
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-  condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: 'Install Go 1.14.2 (Linux)'
 
 # Linux
 - bash: |
@@ -15,16 +13,14 @@ steps:
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-  condition: ne( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Properly configure our custom Go environment (Mac/Linux)
+  displayName: Properly configure our custom Go environment
 
 - script: |
     echo '##vso[task.prependpath]$(GOROOT)/bin'
     echo '##vso[task.prependpath]$(GOPATH)/bin'
     mkdir -p ${GOPATH}\bin
     mkdir -p ${GOROOT}\bin
-  condition: ne( variables['Agent.OS'], 'Windows_NT' )
-  displayName: 'Set up the Go workspace (non-Windows)'
+  displayName: 'Set up the Go workspace'
 
 - script: |
     make deps
