@@ -1,11 +1,6 @@
 pool:
   vmImage: 'macOS-10.15'
 
-variables:
-  # Fixes checksum errors when downloading chrome
-  homebrew_cask_opts: '--no-quarantine'
-  CI: true
-
 steps:
 - script: |
     brew install gnu-tar
