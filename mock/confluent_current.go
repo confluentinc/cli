@@ -37,6 +37,9 @@ type MockConfluentCurrent struct {
 	lockGetLogFile sync.Mutex
 	GetLogFileFunc func(service string) (string, error)
 
+	lockHasLogFile sync.Mutex
+	HasLogFileFunc func(service string) (bool, error)
+
 	lockGetPidFile sync.Mutex
 	GetPidFileFunc func(service string) (string, error)
 
@@ -75,6 +78,9 @@ type MockConfluentCurrent struct {
 			Config  []byte
 		}
 		GetLogFile []struct {
+			Service string
+		}
+		HasLogFile []struct {
 			Service string
 		}
 		GetPidFile []struct {
@@ -425,6 +431,44 @@ func (m *MockConfluentCurrent) GetLogFileCalls() []struct {
 	return m.calls.GetLogFile
 }
 
+// HasLogFile mocks base method by wrapping the associated func.
+func (m *MockConfluentCurrent) HasLogFile(service string) (bool, error) {
+	m.lockHasLogFile.Lock()
+	defer m.lockHasLogFile.Unlock()
+
+	if m.HasLogFileFunc == nil {
+		panic("mocker: MockConfluentCurrent.HasLogFileFunc is nil but MockConfluentCurrent.HasLogFile was called.")
+	}
+
+	call := struct {
+		Service string
+	}{
+		Service: service,
+	}
+
+	m.calls.HasLogFile = append(m.calls.HasLogFile, call)
+
+	return m.HasLogFileFunc(service)
+}
+
+// HasLogFileCalled returns true if HasLogFile was called at least once.
+func (m *MockConfluentCurrent) HasLogFileCalled() bool {
+	m.lockHasLogFile.Lock()
+	defer m.lockHasLogFile.Unlock()
+
+	return len(m.calls.HasLogFile) > 0
+}
+
+// HasLogFileCalls returns the calls made to HasLogFile.
+func (m *MockConfluentCurrent) HasLogFileCalls() []struct {
+	Service string
+} {
+	m.lockHasLogFile.Lock()
+	defer m.lockHasLogFile.Unlock()
+
+	return m.calls.HasLogFile
+}
+
 // GetPidFile mocks base method by wrapping the associated func.
 func (m *MockConfluentCurrent) GetPidFile(service string) (string, error) {
 	m.lockGetPidFile.Lock()
@@ -647,6 +691,9 @@ func (m *MockConfluentCurrent) Reset() {
 	m.lockGetLogFile.Lock()
 	m.calls.GetLogFile = nil
 	m.lockGetLogFile.Unlock()
+	m.lockHasLogFile.Lock()
+	m.calls.HasLogFile = nil
+	m.lockHasLogFile.Unlock()
 	m.lockGetPidFile.Lock()
 	m.calls.GetPidFile = nil
 	m.lockGetPidFile.Unlock()

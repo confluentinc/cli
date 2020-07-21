@@ -67,6 +67,14 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
+	exists, err := c.cc.HasLogFile(service)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
+	}
+
 	log, err := c.cc.GetLogFile(service)
 	if err != nil {
 		return err
