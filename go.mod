@@ -60,7 +60,9 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
+	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
+	github.com/linkedin/goavro/v2 v2.9.8
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.9
 	github.com/mattn/go-runewidth v0.0.3 // indirect
@@ -85,6 +87,7 @@ require (
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v1.1.0
+	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect

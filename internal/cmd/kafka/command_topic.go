@@ -3,17 +3,25 @@ package kafka
 import (
 	"bufio"
 	"context"
+	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
 	"strings"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/Shopify/sarama"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -83,6 +91,10 @@ func (h *hasAPIKeyTopicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
+	cmd.Flags().String("value-format", "RAW", "Format of message value.")
+	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 
@@ -101,6 +113,9 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().String("value-format", "RAW", "Format of message value.")
+	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
@@ -351,6 +366,45 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+	var refs []srsdk.SchemaReference
+
+	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: valueFormat, References: refs})
+	if err != nil {
+		return nil, err
+	}
+
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return nil, err
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
+	} else {
+		err = output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{response.Id})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
+	metaInfo = append(metaInfo, schemaIdBuffer...)
+	return metaInfo, nil
+}
+
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
@@ -361,6 +415,47 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
 		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
+
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	subject := topic + "-value"
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return err
+	}
+	err = serializationProvider.LoadSchema(schemaPath)
+	if err != nil {
+		return err
+	}
+
+	// Meta info contains magic byte and schema ID (4 bytes).
+	// For plain string encoding, meta info is empty.
+	metaInfo := []byte{}
+
+	// Registering schema when specified, and fill metaInfo array.
+	if valueFormat != "RAW" && len(schemaPath) > 0 {
+		if h.Config.Client == nil {
+			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
+		}
+		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
+		if err != nil {
+			return err
+		}
+		metaInfo = info
 	}
 
 	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
@@ -403,17 +498,34 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		close(input)
 	}()
 	// Prime reader
-	scan()
+	go scan()
 
 	var key sarama.Encoder
 	for data := range input {
-		data = strings.TrimSpace(data)
-
-		record := strings.SplitN(data, delim, 2)
-		value := sarama.StringEncoder(record[len(record)-1])
-		if len(record) == 2 {
-			key = sarama.StringEncoder(record[0])
+		if len(data) == 0 {
+			go scan()
+			continue
 		}
+		var valueString string
+		if parseKey {
+			record := strings.SplitN(data, delim, 2)
+			valueString = strings.TrimSpace(record[len(record)-1])
+
+			if len(record) == 2 {
+				key = sarama.StringEncoder(strings.TrimSpace(record[0]))
+			} else {
+				return errors.New(errors.MissingKeyErrorMsg)
+			}
+		} else {
+			valueString = strings.TrimSpace(data)
+		}
+		encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+		if err != nil {
+			return err
+		}
+		encoded := append(metaInfo, encodedMessage...)
+		value := sarama.StringEncoder(string(encoded))
+
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
@@ -442,11 +554,27 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
 	}
 	group, err := cmd.Flags().GetString("group")
+	if err != nil {
+		return err
+	}
+
+	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
 		return err
 	}
@@ -473,10 +601,45 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}()
 
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "RAW" {
+		if h.Config.Client == nil {
+			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
+		}
+
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		if err != nil {
+			return err
+		}
+	} else {
+		srClient, ctx = nil, nil
+	}
+
 	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
-	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	groupHandler := &GroupHandler{
+		SrClient:   srClient,
+		Ctx:        ctx,
+		Format:     valueFormat,
+		Out:        cmd.OutOrStdout(),
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+	}
+	err = consumer.Consume(context.Background(), []string{topic}, groupHandler)
 	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
+	if err != nil {
+		return err
+	}
+	err = os.RemoveAll(dir)
 	return err
 }
 
