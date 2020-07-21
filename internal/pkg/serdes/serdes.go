@@ -9,7 +9,7 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 		provider = new(AvroSerializationProvider)
 	} else if valueFormat == "PROTOBUF" {
 		provider = new(ProtoSerializationProvider)
-	} else if valueFormat == "JSON" {
+	} else if valueFormat == "JSONSCHEMA" {
 		provider = new(JsonSerializationProvider)
 	} else if valueFormat == "RAW" {
 		provider = new(RawSerializationProvider)
@@ -26,7 +26,7 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 		provider = new(AvroDeserializationProvider)
 	} else if valueFormat == "PROTOBUF" {
 		provider = new(ProtoDeserializationProvider)
-	} else if valueFormat == "JSON" {
+	} else if valueFormat == "JSONSCHEMA" {
 		provider = new(JsonDeserializationProvider)
 	} else if valueFormat == "RAW" {
 		provider = new(RawDeserializationProvider)

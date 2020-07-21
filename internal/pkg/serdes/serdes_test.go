@@ -12,10 +12,12 @@ import (
 
 func TestSerializationProvider(t *testing.T) {
 	req := require.New(t)
+	valueFormats := []string{"AVRO", "PROTOBUF", "JSONSCHEMA", "RAW"}
+	schemaNames := []string{"AVRO", "PROTOBUF", "JSON", "RAW"}
 
-	for _, valueFormat := range []string{"AVRO", "PROTOBUF", "JSON", "RAW"} {
+	for idx, valueFormat := range valueFormats {
 		provider, err := GetSerializationProvider(valueFormat)
-		req.Equal(provider.GetSchemaName(), valueFormat)
+		req.Equal(provider.GetSchemaName(), schemaNames[idx])
 		req.Nil(err)
 	}
 
@@ -26,10 +28,12 @@ func TestSerializationProvider(t *testing.T) {
 
 func TestDeserializationProvider(t *testing.T) {
 	req := require.New(t)
+	valueFormats := []string{"AVRO", "PROTOBUF", "JSONSCHEMA", "RAW"}
+	schemaNames := []string{"AVRO", "PROTOBUF", "JSON", "RAW"}
 
-	for _, valueFormat := range []string{"AVRO", "PROTOBUF", "JSON", "RAW"} {
+	for idx, valueFormat := range valueFormats {
 		provider, err := GetDeserializationProvider(valueFormat)
-		req.Equal(provider.GetSchemaName(), valueFormat)
+		req.Equal(provider.GetSchemaName(), schemaNames[idx])
 		req.Nil(err)
 	}
 
@@ -136,7 +140,7 @@ func TestJsonSerdesValid(t *testing.T) {
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
 
-	serializationProvider, _ := GetSerializationProvider("JSON")
+	serializationProvider, _ := GetSerializationProvider("JSONSCHEMA")
 	err = serializationProvider.LoadSchema(schemaPath)
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -146,7 +150,7 @@ func TestJsonSerdesValid(t *testing.T) {
 	req.Zero(result)
 
 	data = expectedBytes
-	deserializationProvider, _ := GetDeserializationProvider("JSON")
+	deserializationProvider, _ := GetDeserializationProvider("JSONSCHEMA")
 	err = deserializationProvider.LoadSchema(schemaPath)
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
@@ -166,10 +170,10 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	schemaPath := filepath.Join(dir, "json-demo.json")
 	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
 
-	serializationProvider, _ := GetSerializationProvider("JSON")
+	serializationProvider, _ := GetSerializationProvider("JSONSCHEMA")
 	err = serializationProvider.LoadSchema(schemaPath)
 	req.Nil(err)
-	deserializationProvider, _ := GetDeserializationProvider("JSON")
+	deserializationProvider, _ := GetDeserializationProvider("JSONSCHEMA")
 	err = deserializationProvider.LoadSchema(schemaPath)
 	req.Nil(err)
 
