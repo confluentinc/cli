@@ -168,10 +168,7 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 		return false
 	}
 	currCtx := cfg.Context()
-	if currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey {
-		return true
-	}
-	return false
+	return currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey
 }
 
 func (c *Command) Execute(cliName string, args []string) error {
