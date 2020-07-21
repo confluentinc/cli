@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (s *CLITestSuite) Test_Update() {
+func (s *CLITestSuite) TestUpdate() {
 	s.T().Skip("Skipping this test until its less flaky")
 
 	configFile, err := homedir.Expand("~/.confluent/config.json")
@@ -42,6 +42,9 @@ func (s *CLITestSuite) Test_Update() {
 		{args: "version", fixture: "update2.golden", regex: true},
 		{args: "--help", notContains: "Update the confluent CLI."},
 	}
+
+	loginURL := serveMds(s.T()).URL
+
 	for _, tt := range tests {
 		tt.workflow = true
 		switch tt.name {
@@ -52,7 +55,7 @@ func (s *CLITestSuite) Test_Update() {
 			err = ioutil.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
-			s.runConfluentTest(tt, serveMds(s.T()).URL)
+			s.runConfluentTest(tt, loginURL)
 			if tt.fixture == "update1.golden" {
 				// Remove the cache file so it _would_ prompt again (if not disabled)
 				err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
