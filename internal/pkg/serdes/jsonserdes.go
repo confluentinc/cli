@@ -3,35 +3,43 @@ package serdes
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/xeipuuv/gojsonschema"
 )
 
-type JsonSerializationProvider uint32
+type JsonSerializationProvider struct {
+	schemaLoader gojsonschema.JSONLoader
+}
+
+func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string) error {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return errors.New(errors.JsonSchemaInvalidErrorMsg)
+	}
+
+	schemaLoader := gojsonschema.NewStringLoader(string(schema))
+	jsonProvider.schemaLoader = schemaLoader
+	return nil
+}
 
 func (jsonProvider *JsonSerializationProvider) GetSchemaName() string {
 	return "JSON"
 }
 
-func (jsonProvider *JsonSerializationProvider) encode(str string, schemaPath string) ([]byte, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-
-	schemaLoader := gojsonschema.NewStringLoader(string(schema))
+func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error) {
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// Json schema conducts validation on Json string before serialization.
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	result, err := gojsonschema.Validate(jsonProvider.schemaLoader, documentLoader)
 	if err != nil {
 		return nil, err
 	}
 
 	if !result.Valid() {
-		return nil, errors.New("The document is not valid.")
+		return nil, errors.New(errors.JsonDocumentInvalidErrorMsg)
 	}
 
 	data := []byte(str)
@@ -45,31 +53,38 @@ func (jsonProvider *JsonSerializationProvider) encode(str string, schemaPath str
 	return compactedBuffer.Bytes(), nil
 }
 
-type JsonDeserializationProvider uint32
+type JsonDeserializationProvider struct {
+	schemaLoader gojsonschema.JSONLoader
+}
+
+func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string) error {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return errors.New(errors.JsonSchemaInvalidErrorMsg)
+	}
+
+	schemaLoader := gojsonschema.NewStringLoader(string(schema))
+	jsonProvider.schemaLoader = schemaLoader
+	return nil
+}
 
 func (jsonProvider *JsonDeserializationProvider) GetSchemaName() string {
 	return "JSON"
 }
 
-func (jsonProvider *JsonDeserializationProvider) decode(data []byte, schemaPath string) (string, error) {
+func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, error) {
 	str := string(data)
 
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return "", err
-	}
-
-	schemaLoader := gojsonschema.NewStringLoader(string(schema))
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// Json schema conducts validation on Json string before serialization.
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	result, err := gojsonschema.Validate(jsonProvider.schemaLoader, documentLoader)
 	if err != nil {
 		return "", err
 	}
 
 	if !result.Valid() {
-		return "", errors.New("The document is not valid.")
+		return "", errors.New(errors.JsonDocumentInvalidErrorMsg)
 	}
 
 	data = []byte(str)

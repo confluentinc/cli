@@ -111,6 +111,12 @@ const (
 	TopicExistsErrorMsg        = "topic \"%s\" already exists for Kafka cluster \"%s\""
 	TopicExistsSuggestions     = ListTopicSuggestions
 
+	// serialization/deserialization commands
+	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
+	JsonDocumentInvalidErrorMsg  = "the json document is invalid"
+	ProtoSchemaInvalidErrorMsg   = "the protobuf schema is invalid"
+	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
+
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
 

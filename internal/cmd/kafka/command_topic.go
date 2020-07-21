@@ -437,6 +437,10 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	err = serializationProvider.LoadSchema(schemaPath)
+	if err != nil {
+		return err
+	}
 
 	// Meta info contains magic byte and schema ID (4 bytes).
 	// For plain string encoding, meta info is empty.
@@ -515,7 +519,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		} else {
 			valueString = strings.TrimSpace(data)
 		}
-		encodedMessage, err := serdes.Serialize(serializationProvider, valueString, schemaPath)
+		encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
 		if err != nil {
 			return err
 		}

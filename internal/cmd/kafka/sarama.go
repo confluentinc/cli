@@ -94,17 +94,19 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 			return err
 		}
 
-		tempStorePath := ""
 		if h.Format != "RAW" {
 			schemaPath, err := h.RequestSchema(value)
 			if err != nil {
 				return err
 			}
-			tempStorePath = schemaPath
 			// Message body is encoded after 5 bytes of meta information.
 			value = value[5:]
+			err = deserializationProvider.LoadSchema(schemaPath)
+			if err != nil {
+				return err
+			}
 		}
-		jsonMessage, err := serdes.Deserialize(deserializationProvider, value, tempStorePath)
+		jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
 		if err != nil {
 			return err
 		}

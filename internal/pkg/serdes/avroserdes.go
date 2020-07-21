@@ -6,61 +6,74 @@ import (
 	"github.com/linkedin/goavro/v2"
 )
 
-type AvroSerializationProvider uint32
+type AvroSerializationProvider struct {
+	codec *goavro.Codec
+}
+
+func (avroProvider *AvroSerializationProvider) LoadSchema(schemaPath string) error {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return err
+	}
+
+	codec, err := goavro.NewCodec(string(schema))
+	if err != nil {
+		return err
+	}
+	avroProvider.codec = codec
+	return nil
+}
 
 func (avroProvider *AvroSerializationProvider) GetSchemaName() string {
 	return "AVRO"
 }
 
-func (avroProvider *AvroSerializationProvider) encode(str string, schemaPath string) ([]byte, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-
-	codec, err := goavro.NewCodec(string(schema))
-	if err != nil {
-		return nil, err
-	}
+func (avroProvider *AvroSerializationProvider) encode(str string) ([]byte, error) {
 	textual := []byte(str)
 
 	// Convert to native Go object.
-	native, _, err := codec.NativeFromTextual(textual)
+	native, _, err := avroProvider.codec.NativeFromTextual(textual)
 	if err != nil {
 		return nil, err
 	}
 
-	binary, err := codec.BinaryFromNative(nil, native)
+	binary, err := avroProvider.codec.BinaryFromNative(nil, native)
 	if err != nil {
 		return nil, err
 	}
 	return binary, nil
 }
 
-type AvroDeserializationProvider uint32
+type AvroDeserializationProvider struct {
+	codec *goavro.Codec
+}
+
+func (avroProvider *AvroDeserializationProvider) LoadSchema(schemaPath string) error {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return err
+	}
+
+	codec, err := goavro.NewCodec(string(schema))
+	if err != nil {
+		return err
+	}
+	avroProvider.codec = codec
+	return nil
+}
 
 func (avroProvider *AvroDeserializationProvider) GetSchemaName() string {
 	return "AVRO"
 }
 
-func (avroProvider *AvroDeserializationProvider) decode(data []byte, schemaPath string) (string, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return "", err
-	}
-
-	codec, err := goavro.NewCodec(string(schema))
-	if err != nil {
-		return "", err
-	}
-
+func (avroProvider *AvroDeserializationProvider) decode(data []byte) (string, error) {
 	// Convert to native Go object.
-	native, _, err := codec.NativeFromBinary(data)
+	native, _, err := avroProvider.codec.NativeFromBinary(data)
 	if err != nil {
 		return "", err
 	}
 
-	textual, err := codec.TextualFromNative(nil, native)
+	textual, err := avroProvider.codec.TextualFromNative(nil, native)
 	if err != nil {
 		return "", err
 	}

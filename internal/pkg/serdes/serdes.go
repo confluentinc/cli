@@ -37,19 +37,21 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 }
 
 type SerializationProvider interface {
-	encode(string, string) ([]byte, error)
+	LoadSchema(string) error
+	encode(string) ([]byte, error)
 	GetSchemaName() string
 }
 
-func Serialize(provider SerializationProvider, str string, schemaPath string) ([]byte, error) {
-	return provider.encode(str, schemaPath)
+func Serialize(provider SerializationProvider, str string) ([]byte, error) {
+	return provider.encode(str)
 }
 
 type DeserializationProvider interface {
-	decode([]byte, string) (string, error)
+	LoadSchema(string) error
+	decode([]byte) (string, error)
 	GetSchemaName() string
 }
 
-func Deserialize(provider DeserializationProvider, data []byte, schemaPath string) (string, error) {
-	return provider.decode(data, schemaPath)
+func Deserialize(provider DeserializationProvider, data []byte) (string, error) {
+	return provider.decode(data)
 }
