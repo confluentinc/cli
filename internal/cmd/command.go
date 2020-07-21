@@ -86,7 +86,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 
 	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of %s.", cliName))
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.GetFullCLIName(cliName)))
 
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
 	updateClient, err := update.NewClient(cliName, disableUpdateCheck, logger)
