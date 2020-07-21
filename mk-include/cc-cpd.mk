@@ -2,7 +2,6 @@
 CPD_VERSION ?= baseline
 CPD_UPDATE ?= true
 
-INIT_CI_TARGETS += gcloud-install cpd-update
 CLEAN_TARGETS += clean-cc-system-tests
 
 # Set path for cpd binary
@@ -16,23 +15,12 @@ CPD_GKE = ""
 # Create Arguments
 CPD_CR_ARGS ?= --deploy=false --pool-name $(POOL_NAME) --pool-tag $(POOL_TAG)
 
-# to check if we see `cc-` pattern
-CHART_PREFIX := $(shell echo $(CHART_NAME) | head -c 3)
-
-# Local CPD Deploy Arguments
-## deploy arguments used when deploying local chart and/or image to cpd
-## this is used in scenarios like cpd gating for cc-<service> repo PR
-ifeq ($(CHART_NAME),cc-umbrella-chart)
-CPD_DEP_ARGS ?= --umbrella-chart-path='$(PWD)/charts/cc-umbrella-chart'
-else ifeq ($(CHART_PREFIX), cc-)
-CPD_DEP_ARGS ?= --override-subchart-path='$(CHART_NAME)=$(PWD)/charts/$(CHART_NAME)' --set="$(CHART_NAME).image.tag=$(IMAGE_VERSION_NO_V),$(CHART_NAME).image.repository=$(DOCKER_REPO)/$(IMAGE_REPO)"
-else
-CPD_DEP_ARGS ?= ""
-endif
-
 # system test variables
 CC_SYSTEM_TESTS_URI ?= git@github.com:confluentinc/cc-system-tests.git
 CC_SYSTEM_TESTS_REF ?= $(shell (test -f CC_SYSTEM_TESTS_VERSION && head -n 1 CC_SYSTEM_TESTS_VERSION) || echo master)
+
+.PHONY: init-ci
+init-ci: gcloud-install cpd-update cpd-priv-create-if-missing
 
 .PHONY: show-cpd
 ## Show cpd vars
@@ -94,12 +82,6 @@ cpd-priv-create-if-missing:
 	else \
 		echo "Already allocated one CPD $(kubectl config current-context)"; \
 	fi
-
-.PHONY: cpd-deploy-local
-## Deploy local chart to cpd cluster
-cpd-deploy-local: cpd-update helm-update-repo cpd-priv-create-if-missing
-	@echo "## Deploying local charts to CPD cluster";
-	$(CPD_PATH) priv dep --id `kubectl config current-context` $(CPD_DEP_ARGS)
 
 .PHONY: cpd-destroy
 ## Clean up all cpd clusters
