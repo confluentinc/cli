@@ -1,10 +1,5 @@
-strategy:
-  matrix:
-    mac:
-      imageName: 'macOS-10.15'
-
 pool:
-  vmImage: $(imageName)
+  vmImage: 'macOS-10.15'
 
 variables:
   # Fixes checksum errors when downloading chrome
