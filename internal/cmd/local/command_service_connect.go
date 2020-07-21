@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var connectors = []string{
@@ -221,7 +221,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 
 	var configFile string
 
-	if local.Contains(connectors, connector) {
+	if utils.Contains(connectors, connector) {
 		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err

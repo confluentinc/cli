@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type Service struct {
@@ -405,7 +406,7 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 	}
 
 	if isCP {
-		if local.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+		if utils.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
 			config, err = appendMonitoringInterceptors(config)
 			if err != nil {
 				return map[string]string{}, err
