@@ -3,7 +3,6 @@ package connector_catalog
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -138,8 +137,4 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return errors.Errorf(errors.InvalidCloudErrorMsg)
-}
-
-func FormatDescription(description string, cliName string) string {
-	return strings.ReplaceAll(description, "{{.CLIName}}", cliName)
 }
