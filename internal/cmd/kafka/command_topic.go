@@ -260,7 +260,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+	cmd.PrintErrf(errors.CreatedTopicMsg, topic.Spec.Name)
 	return nil
 }
 
@@ -347,7 +347,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
+	cmd.PrintErrf(errors.DeletedTopicMsg, args[0])
 	return nil
 }
 
@@ -363,7 +363,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
+	cmd.PrintErrln(errors.StartingProducerMsg)
 
 	InitSarama(h.logger)
 	producer, err := NewSaramaProducer(cluster, h.clientID)
@@ -423,7 +423,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
-			pcmd.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
+			cmd.PrintErrf(errors.FailedToProduceErrorMsg, offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -463,17 +463,17 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		pcmd.ErrPrintln(cmd, errors.StoppingConsumer)
+		cmd.PrintErrln(errors.StoppingConsumer)
 		consumer.Close()
 	}()
 
 	go func() {
 		for err := range consumer.Errors() {
-			pcmd.ErrPrintln(cmd, "ERROR", err)
+			cmd.PrintErrln("ERROR", err)
 		}
 	}()
 
-	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
+	cmd.PrintErrln(errors.StartingConsumerMsg)
 
 	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
 	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)

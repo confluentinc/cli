@@ -7,11 +7,11 @@ const (
 	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg                = "Logged in as \"%s\".\n"
-	LoggedInUsingEnvMsg          = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg                 = "You are now logged out."
-	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
-	KafkaClusterDeletedMsg       = "Deleted Kafka cluster \"%s\".\n"
+	LoggedInAsMsg              = "Logged in as \"%s\".\n"
+	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg               = "You are now logged out."
+	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
+	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
