@@ -25,6 +25,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
+	"github.com/confluentinc/cli/internal/cmd/price"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
@@ -133,6 +134,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		cli.AddCommand(environment.New(cliName, prerunner))
 		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
 		cli.AddCommand(serviceaccount.New(prerunner))

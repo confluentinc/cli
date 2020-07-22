@@ -30,55 +30,61 @@ var (
 	loggedInEnvOutput  = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
 
-func (s *CLITestSuite) Test_Ccloud_Login_UseKafka_AuthKafka_Errors() {
+func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
 		{
-			name:    "error if not authenticated",
-			args:    "kafka topic create integ",
-			fixture: "err-not-authenticated.golden",
+			name:        "error if not authenticated",
+			args:        "kafka topic create integ",
+			fixture:     "err-not-authenticated.golden",
+			wantErrCode: 1,
 		},
 		{
-			name:    "error if no active kafka",
-			args:    "kafka topic create integ",
-			fixture: "err-no-kafka.golden",
-			login:   "default",
+			name:        "error if no active kafka",
+			args:        "kafka topic create integ",
+			fixture:     "err-no-kafka.golden",
+			wantErrCode: 1,
+			login:       "default",
 		},
 		{
-			name:      "error if topic already exists",
-			args:      "kafka topic create integ",
-			fixture:   "topic-exists.golden",
-			login:     "default",
-			useKafka:  "lkc-abc123",
-			authKafka: "true",
+			name:        "error if topic already exists",
+			args:        "kafka topic create integ",
+			fixture:     "topic-exists.golden",
+			wantErrCode: 1,
+			login:       "default",
+			useKafka:    "lkc-abc123",
+			authKafka:   "true",
 		},
 		{
-			name:     "error if no api key used",
-			args:     "kafka topic produce integ",
-			fixture:  "err-no-api-key.golden",
-			login:    "default",
-			useKafka: "lkc-abc123",
+			name:        "error if no api key used",
+			args:        "kafka topic produce integ",
+			fixture:     "err-no-api-key.golden",
+			wantErrCode: 1,
+			login:       "default",
+			useKafka:    "lkc-abc123",
 		},
 		{
-			name:      "error if deleting non-existent api-key",
-			args:      "api-key delete UNKNOWN",
-			fixture:   "delete-unknown-key.golden",
-			login:     "default",
-			useKafka:  "lkc-abc123",
-			authKafka: "true",
+			name:        "error if deleting non-existent api-key",
+			args:        "api-key delete UNKNOWN",
+			fixture:     "delete-unknown-key.golden",
+			wantErrCode: 1,
+			login:       "default",
+			useKafka:    "lkc-abc123",
+			authKafka:   "true",
 		},
 		{
-			name:    "error if using unknown kafka",
-			args:    "kafka cluster use lkc-unknown",
-			fixture: "err-use-unknown-kafka.golden",
-			login:   "default",
+			name:        "error if using unknown kafka",
+			args:        "kafka cluster use lkc-unknown",
+			fixture:     "err-use-unknown-kafka.golden",
+			wantErrCode: 1,
+			login:       "default",
 		},
 	}
+
+	kafkaURL := serveKafkaAPI(s.T()).URL
+	loginURL := serve(s.T(), kafkaURL).URL
+
 	for _, tt := range tests {
-		if strings.HasPrefix(tt.name, "error") {
-			tt.wantErrCode = 1
-		}
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
+		s.runCcloudTest(tt, loginURL)
 	}
 }
 
@@ -90,8 +96,7 @@ func serveLogin(t *testing.T) *httptest.Server {
 	return httptest.NewServer(router)
 }
 
-func (s *CLITestSuite) Test_Save_Username_Password() {
-	t := s.T()
+func (s *CLITestSuite) TestSaveUsernamePassword() {
 	type saveTest struct {
 		cliName  string
 		want     string
@@ -102,19 +107,19 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 		{
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(t).URL,
+			serveLogin(s.T()).URL,
 			ccloudTestBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(t).URL,
+			serveMds(s.T()).URL,
 			confluentTestBin,
 		},
 	}
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
-		t.Fatalf("problems recovering caller information")
+		s.T().Fatalf("problems recovering caller information")
 	}
 	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc")
 	for _, tt := range tests {
@@ -126,7 +131,7 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 
 		// run the login command with --save flag and check output
 		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(t, tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
 		if tt.cliName == "ccloud" {
@@ -146,8 +151,7 @@ func (s *CLITestSuite) Test_Save_Username_Password() {
 	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }
 
-func (s *CLITestSuite) Test_Update_Netrc_Password() {
-	t := s.T()
+func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	type updateTest struct {
 		input    string
 		cliName  string
@@ -157,21 +161,21 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 	}
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
-		t.Fatalf("problems recovering caller information")
+		s.T().Fatalf("problems recovering caller information")
 	}
 	tests := []updateTest{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(t).URL,
+			serveLogin(s.T()).URL,
 			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(t).URL,
+			serveMds(s.T()).URL,
 			confluentTestBin,
 		},
 	}
@@ -185,7 +189,7 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 
 		// run the login command with --save flag and check output
 		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
-		output := runCommand(t, tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
 		if tt.cliName == "ccloud" {
@@ -205,16 +209,15 @@ func (s *CLITestSuite) Test_Update_Netrc_Password() {
 	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }
 
-func (s *CLITestSuite) Test_SSO_Login_And_Save() {
-	t := s.T()
+func (s *CLITestSuite) TestSSOLoginAndSave() {
 	if *skipSsoBrowserTests {
-		t.Skip()
+		s.T().Skip()
 	}
 
 	resetConfiguration(s.T(), "ccloud")
 
 	env := []string{"XX_CCLOUD_EMAIL=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(t, ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
 	cliStdOut, err := cmd.StdoutPipe()

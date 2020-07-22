@@ -264,6 +264,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
+			client, err := r.createCCloudClient(ctx, cmd, command.Version)
+			if err != nil {
+				return err
+			}
+			ctx.client = client
+			command.Config.Client = client
 			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
 				return err
@@ -299,11 +305,6 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
-	client, err := r.createCCloudClient(ctx, cmd, command.Version)
-	if err != nil {
-		return "", err
-	}
-	ctx.client = client
 	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return "", err
