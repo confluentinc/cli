@@ -7,7 +7,7 @@ RELEASE_BRANCH  ?= master
 DOCS_BRANCH     ?= 5.5.0-post
 
 include ./semver.mk
-include ./mk-include/cc-being.mk
+include ./mk-include/cc-begin.mk
 include ./mk-include/cc-vault.mk
 include ./mk-include/cc-cpd.mk
 include ./mk-include/cc-end.mk
