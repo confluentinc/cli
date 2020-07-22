@@ -20,7 +20,8 @@ steps:
 
 - bash: |
     make init-ci
-  displayName: 'make init-ci'
+    SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
+  displayName: 'Running PAAS system test'
 
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
