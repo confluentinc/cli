@@ -231,9 +231,10 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil || resp.StatusCode == 204 {
 		if err == nil {
-			err = errors.New(errors.RoleNotFoundErrorMsg)
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+		} else {
+			return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
 		}
-		return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
 	}
 
 	var allResourceTypes []string

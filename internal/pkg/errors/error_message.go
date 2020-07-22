@@ -65,7 +65,6 @@ const (
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
-	RoleNotFoundErrorMsg            = "role not found"
 	LookUpRoleSuggestions           = "To check for valid roles, use `confluent role list`."
 	InvalidResourceTypeErrorMsg     = "invalid resource type \"%s\""
 	InvalidResourceTypeSuggestions  = "The available resource types are: %s"
