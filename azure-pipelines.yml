@@ -11,8 +11,16 @@ steps:
 - bash: |
     . vault-sem-get-secret ssh_id_rsa
     . vault-sem-get-secret netrc
-    sudo chmod 400 ~/.ssh/id_rsa
+    . vault-sem-get-secret semaphore-secrets-global
+    . vault-sem-get-secret eng_aws
+    . vault-sem-get-secret cpd_gcloud
+    . vault-sem-get-secret ssh_config
+    . vault-sem-get-secret gitconfig
   displayName: 'Inject secrets'
+
+- bash: |
+    make init-ci
+  displayName: 'make init-ci'
 
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
