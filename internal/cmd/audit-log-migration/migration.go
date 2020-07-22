@@ -153,7 +153,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 		var spec mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(v), &spec)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Property file '%s' is malformed: %s", k, err.Error()))
+			return nil, errors.New(fmt.Sprintf("Cluster '%s' has a malformed property file: %s", k, err.Error()))
 		}
 		clusterAuditLogConfigSpecs[k] = &spec
 	}
