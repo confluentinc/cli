@@ -600,9 +600,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}()
 
-<<<<<<< HEAD
-	cmd.PrintErrln(errors.StartingConsumerMsg)
-=======
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "RAW" {
@@ -619,8 +616,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		srClient, ctx = nil, nil
 	}
 
-	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
->>>>>>> master
+	cmd.PrintErrln(errors.StartingConsumerMsg)
 
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
