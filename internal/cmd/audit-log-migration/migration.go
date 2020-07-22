@@ -2,6 +2,7 @@ package audit_log_migration
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -152,7 +153,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 		var spec mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(v), &spec)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(fmt.Sprintf("Property file '%s' is malformed: %s", k, err.Error()))
 		}
 		clusterAuditLogConfigSpecs[k] = &spec
 	}
