@@ -3,8 +3,8 @@ pool:
 
 steps:
 
-- bash: |
-    wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0__amd64.zip
+- script: |
+    make install-vault
   displayName: 'Install Vault'
 
 - bash: |
