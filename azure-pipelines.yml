@@ -14,6 +14,7 @@ steps:
     echo $(ls $(Agent.BuildDirectory))
     chmod +x $(Agent.BuildDirectory)/vault
     export PATH="$(Agent.BuildDirectory):$PATH"
+    vault
     . mk-include/bin/vault-setup
   displayName: 'Install Vault'
 
