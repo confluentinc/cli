@@ -10,9 +10,11 @@ steps:
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
-    unzip /tmp/vault.zip -d $(Agent.BuildDirectory)/
+    unzip /tmp/vault.zip -d $(Agent.BuildDirectory)
     echo $(ls $(Agent.BuildDirectory))
     chmod +x $(Agent.BuildDirectory)/vault
+    vault
+    $(Agent.BuildDirectory)/vault
   displayName: 'Install Vault'
 
 - script: |
