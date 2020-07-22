@@ -16,7 +16,8 @@ steps:
     chmod +x $(Agent.BuildDirectory)/vault
   displayName: 'Install Vault'
 
-- bash: |
+- script: |
+    vault
     . mk-include/bin/vault-setup
   displayName: 'vault setup'
 
