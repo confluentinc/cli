@@ -91,7 +91,7 @@ func (c *command) newListCommand() *cobra.Command {
 	// Required flags
 	command.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", listFromMap(formatCloud)))
 	_ = command.MarkFlagRequired("cloud")
-	command.Flags().String("region", "", "Cloud region ID for cluster (e.g. us-west-2).")
+	command.Flags().String("region", "", "Cloud region ID for cluster (use `ccloud kafka region list` to see all).")
 	_ = command.MarkFlagRequired("region")
 
 	// Extra filtering flags
