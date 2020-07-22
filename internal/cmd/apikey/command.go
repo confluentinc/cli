@@ -86,7 +86,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.NoArgs,
 	}
-	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID. Use \"cloud\" to create a Cloud API key.")
+	createCmd.Flags().String(resourceFlagName, "", "The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -120,7 +120,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.store),
 		Args:  cobra.MaximumNArgs(2),
 	}
-	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
+	storeCmd.Flags().String(resourceFlagName, "", "The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
@@ -134,7 +134,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
 	}
-	useCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
+	useCmd.Flags().String(resourceFlagName, "", "The resource ID.")
 	useCmd.Flags().SortFlags = false
 	if err := useCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
