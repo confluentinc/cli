@@ -317,7 +317,6 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	cmd.Printf(errors.UpdateTopicConfigMsg, args[0])
 	var entries [][]string
 	titleRow := []string{"Name", "Value"}
-	fmt.Println(configMap)
 	for name, value := range configMap {
 		record := &struct {
 			Name  string
