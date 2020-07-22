@@ -3,13 +3,10 @@ pool:
 
 steps:
 
-- script: |
-    wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0__amd64.zip
-  displayName: 'Install Vault'
-
 - bash: |
+    make install-vault
     . mk-include/bin/vault-setup
-  displayName: 'vault setup'
+  displayName: 'Install Vault'
 
 - bash: |
     . vault-sem-get-secret ssh_id_rsa
