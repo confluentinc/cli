@@ -34,7 +34,7 @@ const (
 	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
 
 	// kafka cluster commands
-	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
+	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
 	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
 	// kafka topic commands
@@ -51,7 +51,7 @@ const (
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
 	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"
-	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
+	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `ccloud kafka cluster use %s`.\n"
 
 	// local commands
 	AvailableServicesMsg       = "Available Services:\n%s\n"
