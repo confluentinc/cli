@@ -13,14 +13,9 @@ steps:
     unzip /tmp/vault.zip -d $(Agent.BuildDirectory)
     echo $(ls $(Agent.BuildDirectory))
     chmod +x $(Agent.BuildDirectory)/vault
-    vault
-    $(Agent.BuildDirectory)/vault
-  displayName: 'Install Vault'
-
-- script: |
-    $(Agent.BuildDirectory)/vault
+    export PATH="$(Agent.BuildDirectory):$PATH"
     . mk-include/bin/vault-setup
-  displayName: 'vault setup'
+  displayName: 'Install Vault'
 
 - bash: |
     . vault-sem-get-secret ssh_id_rsa
