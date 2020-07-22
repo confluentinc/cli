@@ -5,8 +5,11 @@ steps:
 
 - bash: |
     make install-vault
-    . mk-include/bin/vault-setup
   displayName: 'Install Vault'
+
+- bash: |
+    . mk-include/bin/vault-setup
+  displayName: 'vault setup'
 
 - bash: |
     . vault-sem-get-secret ssh_id_rsa
