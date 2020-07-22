@@ -67,10 +67,15 @@ func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName st
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
-			for routeName, route := range *spec.Routes {
+			routes := spec.Routes
+			if routes == nil {
+				continue
+			}
+
+			for routeName, route := range *routes {
 				if route.Other == nil {
 					route.Other = &other
-					(*spec.Routes)[routeName] = route
+					(*routes)[routeName] = route
 				}
 			}
 		}
@@ -80,9 +85,13 @@ func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName st
 func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
-		routes := *spec.Routes
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
+
 		foundAuthorities := []string{}
-		for routeName := range routes {
+		for routeName := range *routes {
 			foundAuthority := getCRNAuthority(routeName)
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
@@ -104,8 +113,11 @@ func getCRNAuthority(routeName string) string {
 func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
-		routes := *spec.Routes
-		for routeName := range routes {
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
+		for routeName := range *routes {
 			if checkMismatchKafkaCluster(routeName, clusterId) {
 				newWarning := fmt.Sprintf("Mismatched Kafka Cluster Warning: Cluster %q has a route with a different clusterId. Route: %q.", clusterId, routeName)
 				warnings = append(warnings, newWarning)
@@ -205,8 +217,12 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	var newExcludedPrincipals []string
 
 	for _, spec := range specs {
-		excludedPrincipals := *spec.ExcludedPrincipals
-		for _, principal := range excludedPrincipals {
+		excludedPrincipals := spec.ExcludedPrincipals
+		if excludedPrincipals == nil {
+			continue;
+		}
+
+		for _, principal := range *excludedPrincipals {
 			if !utils.Contains(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
 			}
@@ -223,8 +239,11 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	warnings := []string{}
 
 	for clusterId, spec := range specs {
-		routes := *spec.Routes
-		for crnPath, route := range routes {
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
+		for crnPath, route := range *routes {
 			newCRNPath := replaceClusterId(crnPath, clusterId)
 			if _, ok := newRoutes[newCRNPath]; ok {
 				newWarning := fmt.Sprintf("Repeated Route Warning: Route Name : %q.", newCRNPath)
@@ -305,11 +324,15 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
 	warnings := []string{}
 	for clusterId, spec := range specs {
-		excludedPrincipals := *spec.ExcludedPrincipals
+		excludedPrincipals := spec.ExcludedPrincipals
+		if excludedPrincipals == nil {
+			continue
+		}
+
 		differentPrincipals := []string{}
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
-			if !utils.Contains(excludedPrincipals, principal) {
+			if !utils.Contains(*excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}
 		}
