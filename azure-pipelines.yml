@@ -11,17 +11,9 @@ steps:
 - bash: |
     . vault-sem-get-secret ssh_id_rsa
     . vault-sem-get-secret netrc
-    . vault-sem-get-secret semaphore-secrets-global
-    . vault-sem-get-secret eng_aws
-    . vault-sem-get-secret cpd_gcloud
-    . vault-sem-get-secret ssh_config
-    . vault-sem-get-secret gitconfig
+    sudo chmod 400 ~/.ssh/id_rsa
   displayName: 'Inject secrets'
 
-- bash: |
-    make init-ci
-    SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
-  displayName: 'Running PAAS system test'
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
