@@ -5,6 +5,7 @@ pool:
 variables:  # job-level
   VAULT_VERSION: '1.4.0'
   VAULT_URL: https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_$(VAULT_VERSION)_linux_amd64.zip
+  VAULT_ADDR: https://vault.cireops.gcp.internal.confluent.cloud
 steps:
 
 - task: DownloadSecureFile@1
