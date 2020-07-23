@@ -23,9 +23,6 @@ steps:
     chmod +x $(Agent.BuildDirectory)/vault
     export PATH="$(Agent.BuildDirectory):$PATH"
     . $(vaultsecrets.secureFilePath)
-  displayName: 'Install Vault'
-
-- bash: |
     . mk-include/bin/vault-setup
     . vault-sem-get-secret ssh_id_rsa
     . vault-sem-get-secret netrc
