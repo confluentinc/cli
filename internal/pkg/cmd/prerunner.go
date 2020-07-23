@@ -169,7 +169,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				return r.ConfigLoadingError
 			}
 		}
-		labelRequiredFlags(cmd)
+		LabelRequiredFlags(cmd)
 		return nil
 	}
 }
@@ -180,7 +180,7 @@ func isAuthOrConfigCommands(cmd *cobra.Command) bool {
 		strings.Contains(cmd.CommandPath(), "config")
 }
 
-func labelRequiredFlags(cmd *cobra.Command) {
+func LabelRequiredFlags(cmd *cobra.Command) {
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
 		if len(annotations) == 1 && annotations[0] == "true" {
