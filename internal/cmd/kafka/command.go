@@ -55,5 +55,6 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 		// each of these commands, since CLICommand is anonymous in kafkaCmd, and cobra.Command is anonymous in CLICommand
 		// this is equivalent to c.CLICommand.Command.AddCommand
+		c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
 	}
 }
