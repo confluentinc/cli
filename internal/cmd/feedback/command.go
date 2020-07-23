@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -30,7 +31,7 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
-			Short: fmt.Sprintf("Submit feedback about the %s CLI.", cliName),
+			Short: fmt.Sprintf("Submit feedback about the %s.", version.GetFullCLIName(cliName)),
 			Args:  cobra.NoArgs,
 			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
 		}, prerunner)

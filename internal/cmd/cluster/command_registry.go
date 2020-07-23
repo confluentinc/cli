@@ -195,6 +195,6 @@ func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(cmd, err, response)
 	}
 
-	pcmd.Printf(cmd, errors.UnregisteredClusterMsg, name)
+	cmd.Printf(errors.UnregisteredClusterMsg, name)
 	return nil
 }

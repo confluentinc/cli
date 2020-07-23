@@ -77,10 +77,8 @@ func DoesPathExist(path string) bool {
 		return false
 	}
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return false
-	}
-	return true
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
 }
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {

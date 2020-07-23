@@ -1,9 +1,9 @@
 package local
 
 import (
-	"bytes"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,7 +25,7 @@ func TestFormatJSONResponse(t *testing.T) {
 	req := require.New(t)
 
 	res := &http.Response{
-		Body: ioutil.NopCloser(bytes.NewReader([]byte(exampleJSON))),
+		Body: ioutil.NopCloser(strings.NewReader(exampleJSON)),
 	}
 
 	out, err := formatJSONResponse(res)
@@ -37,7 +37,7 @@ func TestFormatEmptyJSONResponse(t *testing.T) {
 	req := require.New(t)
 
 	res := &http.Response{
-		Body: ioutil.NopCloser(bytes.NewReader([]byte{})),
+		Body: ioutil.NopCloser(strings.NewReader("")),
 	}
 
 	out, err := formatJSONResponse(res)

@@ -149,7 +149,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
-	pcmd.Printf(cmd, errors.UsingEnvMsg, id)
+	cmd.Printf(errors.UsingEnvMsg, id)
 	return nil
 }
 
@@ -176,7 +176,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
+	cmd.PrintErrf(errors.UpdateSuccessMsg, "name", "environment", id, newName)
 	return nil
 }
 
@@ -187,7 +187,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
+	cmd.PrintErrf(errors.DeletedEnvMsg, id)
 	return nil
 }
 

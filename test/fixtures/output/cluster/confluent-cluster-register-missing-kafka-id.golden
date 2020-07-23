@@ -3,13 +3,13 @@ Usage:
   confluent cluster register [flags]
 
 Flags:
-      --cluster-name string                 Cluster name.
-      --kafka-cluster-id string             Kafka cluster ID.
+      --cluster-name string                 REQUIRED: Cluster name.
+      --kafka-cluster-id string             REQUIRED: Kafka cluster ID.
       --schema-registry-cluster-id string   Schema Registry cluster ID.
       --ksql-cluster-id string              ksqlDB cluster ID.
       --connect-cluster-id string           Kafka Connect cluster ID.
-      --hosts string                        A comma separated list of hosts.
-      --protocol string                     Security protocol.
+      --hosts string                        REQUIRED: A comma separated list of hosts.
+      --protocol string                     REQUIRED: Security protocol.
 
 Global Flags:
   -h, --help            Show help for this command.

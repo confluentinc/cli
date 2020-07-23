@@ -275,7 +275,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+	cmd.PrintErrf(errors.CreatedTopicMsg, topic.Spec.Name)
 	return nil
 }
 
@@ -329,10 +329,9 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	cmd.Printf(errors.UpdateTopicConfigMsg, args[0])
 	var entries [][]string
 	titleRow := []string{"Name", "Value"}
-	fmt.Println(configMap)
 	for name, value := range configMap {
 		record := &struct {
 			Name  string
@@ -362,7 +361,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
+	cmd.PrintErrf(errors.DeletedTopicMsg, args[0])
 	return nil
 }
 
@@ -458,7 +457,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		metaInfo = info
 	}
 
-	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
+	cmd.PrintErrln(errors.StartingProducerMsg)
 
 	InitSarama(h.logger)
 	producer, err := NewSaramaProducer(cluster, h.clientID)
@@ -535,7 +534,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
-			pcmd.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
+			cmd.PrintErrf(errors.FailedToProduceErrorMsg, offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -591,13 +590,13 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		pcmd.ErrPrintln(cmd, errors.StoppingConsumer)
+		cmd.PrintErrln(errors.StoppingConsumer)
 		consumer.Close()
 	}()
 
 	go func() {
 		for err := range consumer.Errors() {
-			pcmd.ErrPrintln(cmd, "ERROR", err)
+			cmd.PrintErrln("ERROR", err)
 		}
 	}()
 
@@ -617,7 +616,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		srClient, ctx = nil, nil
 	}
 
-	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
+	cmd.PrintErrln(errors.StartingConsumerMsg)
 
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -656,7 +655,7 @@ func toMap(configs []string) (map[string]string, error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
-	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
+	cmd.Printf("Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
 	var partitions [][]string
@@ -682,7 +681,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) erro
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	pcmd.Println(cmd, "\nConfiguration\n ")
+	cmd.Println("\nConfiguration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }

@@ -256,7 +256,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	cmd.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -273,6 +273,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	cmd.Printf(errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

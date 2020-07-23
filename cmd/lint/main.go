@@ -31,7 +31,7 @@ var (
 		"Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
 	}
 	vocabWords = []string{
-		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "codec",
+		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
 		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "ksql", "lifecycle",
 		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
@@ -108,7 +108,6 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
-	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."), append(resourceScopedCommands, linter.ExcludeCommand("api-key create"))...),
 	linter.Filter(
 		linter.RequireFlagSort(false),
 		linter.OnlyLeafCommands,

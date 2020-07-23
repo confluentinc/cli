@@ -117,7 +117,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
+	cmd.Printf(errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
 	return nil
 }
 
@@ -134,7 +134,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])
+	cmd.Printf(errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])
 	return nil
 }
 
@@ -167,7 +167,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		return outputWriter.Out()
 	} else {
-		pcmd.Println(cmd, errors.NoSubjectsMsg)
+		cmd.Println(errors.NoSubjectsMsg)
 	}
 	return nil
 }

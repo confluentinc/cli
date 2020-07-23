@@ -75,7 +75,7 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pcmd.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
+	cmd.PrintErrln(errors.SaveTheMasterKeyMsg)
 	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
 		return err

@@ -34,6 +34,6 @@ func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.Printf(command, "%s: %s\n", flavor, version)
+	command.Printf("%s: %s\n", flavor, version)
 	return nil
 }
