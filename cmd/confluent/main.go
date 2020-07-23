@@ -32,6 +32,7 @@ func main() {
 
 	version := pversion.NewVersion(cliName, version, commit, date, host)
 
+	// This calls internal/cmd/command.go and builds the entire command
 	cli, err := cmd.NewConfluentCommand(cliName, isTest, version, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
 	if err != nil {
 		if cli == nil {
@@ -46,6 +47,7 @@ func main() {
 			exit(1)
 		}
 	}
+	// And this executes the command given the args passed in from terminal
 	err = cli.Execute(cliName, os.Args[1:])
 	if err != nil {
 		if isTest {

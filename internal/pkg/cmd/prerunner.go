@@ -109,6 +109,7 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPI
 func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, prerunner)
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd))
+	// TODO: is this line needed?
 	cmd.Command = command
 	return cmd
 }
@@ -219,6 +220,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 	}
 }
 
+// TODO: This should be logged-in to Confluent Platform MDS instead?
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {

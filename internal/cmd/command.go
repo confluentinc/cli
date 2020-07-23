@@ -66,6 +66,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cfg.Logger = logger
 	}
 	analyticsClient := getAnalyticsClient(isTest, cliName, cfg, ver.Version, logger)
+	// Base command
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -77,6 +78,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
+	// Base command description
 	if cliName == "ccloud" {
 		cli.Short = "Confluent Cloud CLI."
 		cli.Long = "Manage your Confluent Cloud."
@@ -95,6 +97,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		return nil, err
 	}
 
+	// Prompt: wrapper for IO that allows entering secrets (ex. no echo into terminal)
 	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
 		Config:             cfg,
@@ -147,6 +150,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(iam.New(cliName, prerunner))
+		// THIS IS US! this is all information about the environment that we've gathered to give the command
 		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
 		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(local.New(prerunner))
