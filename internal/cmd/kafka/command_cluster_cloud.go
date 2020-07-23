@@ -268,7 +268,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)
+		cmd.PrintErrln(errors.KafkaClusterTime)
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
@@ -302,11 +302,12 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 	}
 	buf.WriteString("\n\n")
 
-	f := form.New(form.Field{
-		ID:        "authorized",
-		Prompt:    "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
-		IsYesOrNo: true,
-	})
+	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
+	if len(accounts) == 1 {
+		prompt = "Please confirm you've authorized the key for this account: " + accounts[0]
+	}
+
+	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
 	for {
 		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
 			cmd.PrintErrln(errors.FailedToReadConfirmationErrorMsg)
@@ -400,7 +401,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	cmd.Printf(errors.KafkaClusterDeletedMsg, args[0])
 	return nil
 }
 

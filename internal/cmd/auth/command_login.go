@@ -233,7 +233,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
+	cmd.Printf(errors.LoggedInAsMsg, email)
 	return nil
 }
 
@@ -336,7 +336,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.WrittenCredentialsToNetrcMsg, a.netrcHandler.FileName)
+	cmd.PrintErrf(errors.WroteCredentialsToNetrcMsg, a.netrcHandler.FileName)
 	return nil
 }
 

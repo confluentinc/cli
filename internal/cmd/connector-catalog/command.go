@@ -121,7 +121,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			return flagErr
 		}
 		if outputFormat == output.Human.String() {
-			pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
+			cmd.Println("Following are the required configs: \nconnector.class: " + args[0] + "\n" + err.Error())
 		} else {
 
 			for _, c := range reply.Configs {

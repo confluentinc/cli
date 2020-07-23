@@ -7,11 +7,11 @@ const (
 	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg                = "Logged in as \"%s\".\n"
-	LoggedInUsingEnvMsg          = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg                 = "You are now logged out."
-	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
-	KafkaClusterDeletedMsg       = "Deleted Kafka cluster \"%s\".\n"
+	LoggedInAsMsg              = "Logged in as \"%s\".\n"
+	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg               = "You are now logged out."
+	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
+	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -41,8 +41,8 @@ const (
 	StartingProducerMsg  = "Starting Kafka Producer. ^C or ^D to exit"
 	StoppingConsumer     = "Stopping Consumer."
 	StartingConsumerMsg  = "Starting Kafka Consumer. ^C or ^D to exit"
-	CreatedTopicMsg      = "Created topic \"%s\"."
-	DeletedTopicMsg      = "Deleted topic \"%s\"\n."
+	CreatedTopicMsg      = "Created topic \"%s\".\n"
+	DeletedTopicMsg      = "Deleted topic \"%s\".\n"
 	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
 
 	// kafka acl commands

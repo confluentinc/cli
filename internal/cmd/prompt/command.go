@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in your terminal prompt.
@@ -125,7 +126,7 @@ func New(cliName string, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.
 func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
-		Short: fmt.Sprintf("Print %s CLI context for your terminal prompt.", cliName),
+		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.GetFullCLIName(cliName)),
 		Long:  strings.ReplaceAll(longDescriptionTemplate, "{{.CLIName}}", cliName),
 		RunE:  pcmd.NewCLIRunE(c.prompt),
 		Args:  cobra.NoArgs,
@@ -185,7 +186,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	// Wait for parse results, error, or timeout
 	select {
 	case prompt := <-retCh:
-		pcmd.Println(cmd, prompt)
+		cmd.Println(prompt)
 	case err := <-errCh:
 		c.Command.SilenceUsage = true
 		return errors.Wrapf(err, errors.ParsePromptFormatErrorMsg, format)

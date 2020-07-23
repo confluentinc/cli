@@ -141,7 +141,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		count += 1
 	}
 	if cluster.Endpoint == "" {
-		pcmd.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+		cmd.PrintErrln(errors.EndPointNotPopulatedMsg)
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -162,7 +162,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
+	cmd.Printf(errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
 

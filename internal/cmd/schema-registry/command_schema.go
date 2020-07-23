@@ -169,7 +169,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
+		cmd.Println(errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
@@ -206,7 +206,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
+		cmd.Printf(errors.DeletedAllSubjectVersionMsg, deleteType, subject)
 		PrintVersions(versions)
 		return nil
 	} else {
@@ -215,7 +215,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
+		cmd.Printf(errors.DeletedSubjectVersionMsg, deleteType, version, subject)
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
@@ -286,13 +286,13 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
 
 func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
 	if sType != "" {
-		pcmd.Println(cmd, "Type: "+sType)
+		cmd.Println("Type: " + sType)
 	}
-	pcmd.Println(cmd, "Schema: "+schema)
+	cmd.Println("Schema: " + schema)
 	if len(refs) > 0 {
-		pcmd.Println(cmd, "References:")
+		cmd.Println("References:")
 		for i := 0; i < len(refs); i++ {
-			pcmd.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			cmd.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
 	}
 	return nil

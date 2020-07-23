@@ -77,7 +77,7 @@ func New(cliName string, logger *log.Logger, version *cliVersion.Version,
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: fmt.Sprintf("Update the %s.", c.cliTitle()),
+		Short: fmt.Sprintf("Update the %s.", cliVersion.GetFullCLIName(c.cliName)),
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
 	}
@@ -85,29 +85,19 @@ func (c *command) init() {
 	c.Command.Flags().SortFlags = false
 }
 
-func (c *command) cliTitle() string {
-	switch c.cliName {
-	case "confluent":
-		return "Confluent CLI"
-	case "ccloud":
-		return "Confluent Cloud CLI"
-	}
-	return ""
-}
-
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	updateYes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
-	pcmd.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
+	cmd.PrintErrln(errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, errors.UpToDateMsg)
+		cmd.Println(errors.UpToDateMsg)
 		return nil
 	}
 
@@ -130,7 +120,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
-	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
+	cmd.PrintErrf(errors.UpdateAutocompleteMsg, c.cliName)
 
 	return nil
 }

@@ -3,7 +3,7 @@ Usage:
   confluent cluster unregister [flags]
 
 Flags:
-      --cluster-name string   Cluster Name.
+      --cluster-name string   REQUIRED: Cluster Name.
 
 Global Flags:
   -h, --help            Show help for this command.

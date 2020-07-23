@@ -577,11 +577,7 @@ func (c *Command) isRunning(service string) (bool, error) {
 		return false, err
 	}
 
-	if err := process.Signal(syscall.Signal(0)); err != nil {
-		return false, nil
-	}
-
-	return true, nil
+	return process.Signal(syscall.Signal(0)) == nil, nil
 }
 
 func isPortOpen(service string) (bool, error) {
