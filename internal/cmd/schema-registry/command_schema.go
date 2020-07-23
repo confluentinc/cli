@@ -107,7 +107,7 @@ func (c *schemaCommand) init(cliName string) {
 			},
 			examples.Example{
 				Text: "Describe the schema by both subject and version:",
-				Code: fmt.Sprintf("%s schema-registry describe --subject payments --version latest", cliName),
+				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", cliName),
 			},
 		),
 	}
