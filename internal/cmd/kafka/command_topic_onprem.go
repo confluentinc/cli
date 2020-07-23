@@ -74,26 +74,34 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 	}
 
 	// note for future, set up PreRunner CLI command and make client maker code in prerunner.go (see createMDSCLient)
+	// Create Kafka Proxy Client
 	config := kafkaproxy.NewConfiguration()
 	config.BasePath = url + "/v3"
 	proxyClient := kafkaproxy.NewAPIClient(config)
+	// Get Cluster Id
 	clusters, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
 	if err != nil {
-		fmt.Print(err.Error())
+		return err
 	}
 	clusterId := clusters.Data[0].ClusterId
 
-	topicDatas, _, err := proxyClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
+	// Get Topics
+	topicGetResp, _, err := proxyClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
 	if err != nil {
-		fmt.Print(err.Error())
+		return err
 	}
-	topicNames := make([]string, len(topicDatas.Data))
-	for i, topicData := range topicDatas.Data {
-		topicNames[i] = topicData.TopicName
+	topicDatas := topicGetResp.Data
+
+	// Create and populate output writer
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "TopicName"}, []string{"Cluster Id", "Topic Name"}, []string{"cluster_id", "topic_name"})
+	if err != nil {
+		return err
+	}
+	for _, topicData := range topicDatas {
+		outputWriter.AddElement(&topicData)
 	}
 
 	fmt.Printf("URL: %s\n", url)
 	fmt.Printf("cluster id: %s\n", clusterId)
-	fmt.Printf("topic names: %v\n", topicNames)
-	return nil
+	return outputWriter.Out()
 }

@@ -42,17 +42,36 @@ func (o Format) String() string {
 }
 
 type ListOutputWriter interface {
+	/*
+		AddElement - Add an element to the list to output for StructuredListWriter
+		* @param e : the element to add, must be either a pointer or an interface
+	*/
 	AddElement(e interface{})
+	/*
+		Out - Create the output to the IO channel passed in during construction
+	*/
 	Out() error
 	GetOutputFormat() Format
 	StableSort()
 }
 
+/*
+NewListOutputWriter - Create a new ListOutputWriter.
+Returns an ListWriter that is used to output a list of objects (must be pointers of an interface) in different formats (humanreadable, json, yaml)
+ * @param cmd: The cobra.Command called
+ * @param listFields: A list of fields (of the underlying object we're outputting) that we want to output
+ * @param humanLabels: A list of names for the fields (n the same order) that we want in the output for the human readable view
+ * @param structedLabels: A list of names for the fields (in the same order) that we want in the output for structured views (yaml and json)
+@return ListOutputWriter, error
+*/
 func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string) (ListOutputWriter, error) {
 	return NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, os.Stdout)
 }
 
 func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {
+	if len(listFields) != len(humanLabels) || len(humanLabels) != len(structuredLabels) {
+		return nil, errors.New("argument list length mismatch")
+	}
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
 		return nil, err
