@@ -32,7 +32,7 @@ func ResolveReST(template string, cmd *cobra.Command) error {
 	}
 	err = tmpl(cmd.OutOrStderr(), template, cmd)
 	if err != nil {
-		cmd.Println(err)
+		pcmd.Println(cmd, err)
 	}
 	return err
 }

@@ -158,7 +158,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.PrintErrf(errors.DeletedACLsMsg)
+	pcmd.ErrPrintf(cmd, errors.DeletedACLsMsg)
 	return nil
 }
 

@@ -174,7 +174,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.PrintErrf(errors.UpdateSuccessMsg, "description", "service account", args[0], description)
+	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
 	return nil
 }
 

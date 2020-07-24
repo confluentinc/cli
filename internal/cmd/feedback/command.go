@@ -48,7 +48,7 @@ func (c *command) feedbackRunE(cmd *cobra.Command, _ []string) error {
 
 	if len(msg) > 0 {
 		c.analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
-		cmd.Println(errors.ThanksForFeedbackMsg)
+		pcmd.Println(cmd, errors.ThanksForFeedbackMsg)
 	}
 	return nil
 }

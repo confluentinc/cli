@@ -53,6 +53,6 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Println(errors.LoggedOutMsg)
+	pcmd.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

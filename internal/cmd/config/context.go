@@ -140,7 +140,7 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
-	cmd.Println(c.Config.CurrentContext)
+	pcmd.Println(cmd, c.Config.CurrentContext)
 	return nil
 }
 

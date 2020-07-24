@@ -91,7 +91,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		// Test credentials
 		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			cmd.PrintErrln(errors.SRCredsValidationFailedMsg)
+			pcmd.ErrPrintln(cmd, errors.SRCredsValidationFailedMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue

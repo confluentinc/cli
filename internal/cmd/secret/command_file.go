@@ -240,7 +240,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.PrintErrln(errors.UpdateSecretFileMsg)
+	pcmd.ErrPrintln(cmd, errors.UpdateSecretFileMsg)
 	return nil
 }
 
@@ -288,7 +288,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.PrintErrln("Deleted configuration values.")
+	pcmd.ErrPrintln(cmd, "Deleted configuration values.")
 	return nil
 }
 
@@ -329,7 +329,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		cmd.PrintErrln("Save the Master Key. It is not retrievable later.")
+		pcmd.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
 		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 		if err != nil {
 			return err

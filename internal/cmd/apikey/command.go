@@ -254,7 +254,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if cmd.Flags().Changed("description") {
-		cmd.PrintErrf(errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 	return nil
 }
@@ -294,8 +294,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
-		cmd.PrintErrln(errors.APIKeyTime)
-		cmd.PrintErrln(errors.APIKeyNotRetrievableMsg)
+		pcmd.ErrPrintln(cmd, errors.APIKeyTime)
+		pcmd.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
 	}
 
 	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
@@ -329,7 +329,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Printf(errors.DeletedAPIKeyMsg, apiKey)
+	pcmd.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
 	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 
@@ -392,7 +392,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	cmd.PrintErrf(errors.StoredAPIKeyMsg, key)
+	pcmd.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
 	return nil
 }
 
@@ -414,7 +414,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.APIKeyUseFailedErrorMsg)
 	}
-	cmd.PrintErrf(errors.UseAPIKeyMsg, apiKey, clusterId)
+	pcmd.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }
 
