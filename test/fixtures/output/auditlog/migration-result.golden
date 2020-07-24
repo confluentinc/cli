@@ -1,0 +1,101 @@
+{
+  "destinations": {
+    "bootstrap_servers": [
+      "new_bootstrap_1",
+      "new_bootstrap_2"
+    ],
+    "topics": {
+      "DIFFERENT-DEFAULT-TOPIC": {
+        "retention_ms": 100
+      },
+      "confluent-audit-log-events": {
+        "retention_ms": 500
+      },
+      "confluent-audit-log-events_billing": {
+        "retention_ms": 2592000000
+      },
+      "confluent-audit-log-events_payroll": {
+        "retention_ms": 2592000000
+      }
+    }
+  },
+  "excluded_principals": [
+    "User:Alice",
+    "User:Bob"
+  ],
+  "default_topics": {
+    "allowed": "confluent-audit-log-events",
+    "denied": "confluent-audit-log-events"
+  },
+  "routes": {
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=cluster123/topic=payroll-*": {
+      "produce": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      },
+      "consume": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC": {
+      "other": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*": {
+      "other": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*": {
+      "other": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=*": {
+      "other": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*": {
+      "other": {
+        "allowed": "confluent-audit-log-events_billing",
+        "denied": "confluent-audit-log-events_billing"
+      },
+      "produce": {
+        "allowed": "confluent-audit-log-events_billing",
+        "denied": "confluent-audit-log-events_billing"
+      },
+      "consume": {
+        "allowed": "confluent-audit-log-events_billing",
+        "denied": "confluent-audit-log-events_billing"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterX": {
+      "other": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=different-cluster-id/topic=payroll-*": {
+      "other": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
+      },
+      "produce": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      },
+      "consume": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      }
+    }
+  },
+  "metadata": null
+}

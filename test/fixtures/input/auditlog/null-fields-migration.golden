@@ -1,0 +1,14 @@
+{
+    "destinations": {
+      "bootstrap_servers": [
+      ],
+      "topics": {
+      }
+  },
+  "default_topics": {
+  },
+  "routes": {
+  },
+  "excluded_principals": [
+  ]
+}

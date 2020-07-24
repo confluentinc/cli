@@ -1,0 +1,40 @@
+{
+    "destinations": {
+        "bootstrap_servers": [
+            "audit.example.com:9092"
+        ],
+        "topics": {
+            "confluent-audit-log-events_payroll": {
+                "retention_ms": 50
+            },
+            "confluent-audit-log-events": {
+                "retention_ms": 500
+            }
+        }
+    },
+    "default_topics": {
+        "allowed": "confluent-audit-log-events",
+        "denied": "confluent-audit-log-events"
+    },
+    "routes": {
+        "crn://mds1.example.com/kafka=*/topic=payroll-*": {
+            "produce": {
+                "allowed": "confluent-audit-log-events_payroll",
+                "denied": "confluent-audit-log-events_payroll"
+            },
+            "consume": {
+                "allowed": "confluent-audit-log-events_payroll",
+                "denied": "confluent-audit-log-events_payroll"
+            }
+        },
+        "crn://some-authority/kafka=clusterX": {
+          "other": {
+              "allowed": "confluent-audit-log-events_payroll",
+              "denied": "confluent-audit-log-events_payroll"
+          }
+        }
+    },
+    "excluded_principals": [
+        "User:Alice"
+    ]
+}
