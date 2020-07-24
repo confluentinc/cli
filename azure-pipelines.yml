@@ -10,6 +10,7 @@ steps:
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+  displayName: "Download go 1.14.2"
 
 - bash: |
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
@@ -60,6 +61,11 @@ steps:
 - script: |
     make build
   displayName: 'make build'
+
+- script: |
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.12.7/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
+  displayName: "Download go 1.12.7"
 
 - bash: |
     CI=true make gcloud-install
