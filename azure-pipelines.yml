@@ -62,7 +62,8 @@ steps:
   displayName: 'make build'
 
 - bash: |
-    make init-ci
+    CI=true make gcloud-install
+    make cpd-update
     SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
   displayName: 'Running PAAS system test'
 
