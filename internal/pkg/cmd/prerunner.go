@@ -355,7 +355,7 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		pcmd.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
+		ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }
 
