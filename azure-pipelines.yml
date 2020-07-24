@@ -63,7 +63,7 @@ steps:
   displayName: 'make build'
 
 - script: |
-    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.12.7/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
+    wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
   displayName: "Download go 1.12.7"
 
