@@ -91,7 +91,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, or avro, or protobuf, or jsonschema.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -113,7 +113,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, or avro, or protobuf, or jsonschema.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().SortFlags = false
