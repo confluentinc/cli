@@ -50,33 +50,29 @@ func (c *migrateCmd) init() {
 func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 	var err error
 
-	var crnAuthority string
+	crnAuthority := ""
 	if cmd.Flags().Changed("authority") {
 		crnAuthority, err = cmd.Flags().GetString("authority")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-	} else {
-		crnAuthority = ""
 	}
 
-	var bootstrapServers []string
+	bootstrapServers := []string{}
 	if cmd.Flags().Changed("bootstrap-servers") {
 		bootstrapServers, err = cmd.Flags().GetStringArray("bootstrap-servers")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-	} else {
-		bootstrapServers = []string{}
 	}
 
-	var clusterConfigs map[string]string
+	clusterConfigs := map[string]string{}
 	if cmd.Flags().Changed("combine") {
 		fileNameMap, err := cmd.Flags().GetStringToString("combine")
 		if err != nil {
 			return errors.HandleCommon(err, cmd)
 		}
-		clusterConfigs = map[string]string{}
+
 		for clusterId, filePath := range fileNameMap {
 			fileContents, err := ioutil.ReadFile(filePath)
 			if err != nil {
