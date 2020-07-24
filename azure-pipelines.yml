@@ -48,8 +48,6 @@ steps:
     . vault-sem-get-secret cpd_gcloud
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
-    CI=true make gcloud-install
-    make cpd-update
   displayName: 'Inject secrets'
 
 - script: |
@@ -64,6 +62,8 @@ steps:
   displayName: 'make build'
 
 - bash: |
+    CI=true make gcloud-install
+    make cpd-update
     SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
   displayName: 'Running PAAS system test'
 
