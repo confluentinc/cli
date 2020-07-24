@@ -655,7 +655,7 @@ func toMap(configs []string) (map[string]string, error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
-	pcmd.Printf(cmd,"Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
+	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
 	var partitions [][]string

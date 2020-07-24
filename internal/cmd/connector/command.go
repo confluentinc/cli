@@ -255,7 +255,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if outputFormat == output.Human.String() {
 		pcmd.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
 		if trace != "" {
-			pcmd.Printf(cmd,"Error Trace: %s\n", trace)
+			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
 		}
 	} else {
 		return output.StructuredOutput(outputFormat, &struct {
@@ -351,7 +351,7 @@ func panicOnError(err error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) error {
-	pcmd.Println(cmd,"Connector Details")
+	pcmd.Println(cmd, "Connector Details")
 	data := &connectorDescribeDisplay{
 		Name:   connector.Status.Name,
 		ID:     connector.Id.Id,
@@ -360,7 +360,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 		Trace:  connector.Status.Connector.Trace,
 	}
 	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
-	pcmd.Println(cmd,"\n\nTask Level Details")
+	pcmd.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
 	titleRow := []string{"TaskId", "State"}
 	for _, task := range connector.Status.Tasks {
@@ -370,7 +370,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 		}, titleRow))
 	}
 	printer.RenderCollectionTable(tasks, titleRow)
-	pcmd.Println(cmd,"\n\nConfiguration Details")
+	pcmd.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
 	titleRow = []string{"Config", "Value"}
 	for name, value := range connector.Info.Config {

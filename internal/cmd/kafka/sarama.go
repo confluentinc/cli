@@ -10,10 +10,11 @@ import (
 	"strconv"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/Shopify/sarama"
 )
