@@ -13,7 +13,7 @@ import (
 func TestSerializationProvider(t *testing.T) {
 	req := require.New(t)
 	valueFormats := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMANAME, RAWSCHEMANAME}
-	schemaNames := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMABACKEND, RAWSCHEMANAME}
+	schemaNames := []string{AVROSCHEMABACKEND, PROTOBUFSCHEMABACKEND, JSONSCHEMABACKEND, RAWSCHEMANAME}
 
 	for idx, valueFormat := range valueFormats {
 		provider, err := GetSerializationProvider(valueFormat)
@@ -29,7 +29,7 @@ func TestSerializationProvider(t *testing.T) {
 func TestDeserializationProvider(t *testing.T) {
 	req := require.New(t)
 	valueFormats := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMANAME, RAWSCHEMANAME}
-	schemaNames := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMABACKEND, RAWSCHEMANAME}
+	schemaNames := []string{AVROSCHEMABACKEND, PROTOBUFSCHEMABACKEND, JSONSCHEMABACKEND, RAWSCHEMANAME}
 
 	for idx, valueFormat := range valueFormats {
 		provider, err := GetDeserializationProvider(valueFormat)

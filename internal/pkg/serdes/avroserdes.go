@@ -25,7 +25,7 @@ func (avroProvider *AvroSerializationProvider) LoadSchema(schemaPath string) err
 }
 
 func (avroProvider *AvroSerializationProvider) GetSchemaName() string {
-	return AVROSCHEMANAME
+	return AVROSCHEMABACKEND
 }
 
 func (avroProvider *AvroSerializationProvider) encode(str string) ([]byte, error) {
@@ -63,7 +63,7 @@ func (avroProvider *AvroDeserializationProvider) LoadSchema(schemaPath string) e
 }
 
 func (avroProvider *AvroDeserializationProvider) GetSchemaName() string {
-	return AVROSCHEMANAME
+	return AVROSCHEMABACKEND
 }
 
 func (avroProvider *AvroDeserializationProvider) decode(data []byte) (string, error) {

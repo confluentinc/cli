@@ -95,7 +95,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 			return err
 		}
 
-		if h.Format != "RAW" {
+		if h.Format != "string" {
 			schemaPath, err := h.RequestSchema(value)
 			if err != nil {
 				return err

@@ -33,7 +33,7 @@ var (
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
-		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "ksql", "lifecycle",
+		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql", "lifecycle",
 		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
 		"rolebinding", "rolebindings", "single-zone", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
 		"us", "vpc", "v2", "whitelist", "yaml", "zstd",
