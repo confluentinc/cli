@@ -27,7 +27,7 @@ var (
 	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description"}
 )
 
-const nameLength = 32
+const nameLength = 64
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
@@ -106,7 +106,7 @@ func (c *command) init() {
 
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
-		return fmt.Errorf(field+" length should be less then %d characters.", maxLen)
+		return fmt.Errorf(field+" length should not exceed %d characters.", maxLen)
 	}
 
 	return nil
