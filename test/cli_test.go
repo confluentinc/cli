@@ -386,6 +386,9 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+		if *debug {
+			fmt.Println(output)
+		}
 
 		s.validateTestOutput(tt, t, output)
 	})
