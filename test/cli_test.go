@@ -386,9 +386,6 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
-		if *debug {
-			fmt.Println(output)
-		}
 
 		s.validateTestOutput(tt, t, output)
 	})
@@ -400,6 +397,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 	actual := NormalizeNewLines(output)
 	if tt.contains != "" {
+		fmt.Println(output)
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
