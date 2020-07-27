@@ -62,15 +62,6 @@ steps:
     make build
   displayName: 'make build'
 
-- bash: |
-    echo $(ls $(Agent.BuildDirectory))
-    rm -rf $(Agent.BuildDirectory)/go
-    rm -rf $(Agent.BuildDirectory)/gobin
-    rm -rf $(Agent.BuildDirectory)/gopath
-    rm -rf $(Agent.BuildDirectory)/gopathbin
-    rm $(Agent.BuildDirectory)/go1.14.2.tar.gz
-  displayName: "Delete go"
-
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
