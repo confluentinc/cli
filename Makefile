@@ -289,7 +289,6 @@ endif
 	git checkout -b $(CLI_NAME)-cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
 	rm -rf $(DOCS_DIR); \
 	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME) $(DOCS_DIR); \
-	# TODO: remove edge case
 	[ ! -f "$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
 	git add . || exit 1; \
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
