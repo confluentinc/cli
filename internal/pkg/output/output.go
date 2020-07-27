@@ -70,7 +70,7 @@ func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []
 
 func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {
 	if len(listFields) != len(humanLabels) || len(humanLabels) != len(structuredLabels) {
-		return nil, errors.New("argument list length mismatch")
+		return nil, errors.New("argument list length mismatch") // TODO: correct error to return?
 	}
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {

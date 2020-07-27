@@ -22,7 +22,6 @@ type StructuredListWriter struct {
 func (o *StructuredListWriter) AddElement(e interface{}) {
 	elementMap := make(map[string]string)
 	c := reflect.ValueOf(e).Elem()
-	// for each field listed in listFields, access c (value of e) with field and add to elementMap
 	for i := range o.listFields {
 		elementMap[o.listLabels[i]] = fmt.Sprintf("%v", c.FieldByName(o.listFields[i]))
 	}

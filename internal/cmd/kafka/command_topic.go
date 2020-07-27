@@ -14,7 +14,6 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	// sarama's go client
 	"github.com/Shopify/sarama"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"

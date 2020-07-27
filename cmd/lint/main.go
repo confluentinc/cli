@@ -103,8 +103,6 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("config context get"),
 		linter.ExcludeCommandContains("config context set"),
 		linter.ExcludeCommandContains("audit-log"),
-		// config file commands
-		linter.ExcludeCommandContains("config file show"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
