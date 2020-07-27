@@ -83,6 +83,12 @@ cpd-priv-create-if-missing:
 		echo "Already allocated one CPD $(kubectl config current-context)"; \
 	fi
 
+.PHONY: cpd-deploy-local
+## Deploy local chart to cpd cluster
+cpd-deploy-local:
+	@echo "## Deploying local charts to CPD cluster";
+	$(CPD_PATH) priv dep --id `kubectl config current-context`
+
 .PHONY: cpd-destroy
 ## Clean up all cpd clusters
 cpd-destroy:
