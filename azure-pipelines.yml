@@ -65,6 +65,10 @@ steps:
 - bash: |
     echo $(ls $(Agent.BuildDirectory))
     rm -rf $(Agent.BuildDirectory)/go
+    rm -rf $(Agent.BuildDirectory)/gobin
+    rm -rf $(Agent.BuildDirectory)/gopath
+    rm -rf $(Agent.BuildDirectory)/gopathbin
+    rm $(Agent.BuildDirectory)/go1.14.2.tar.gz
   displayName: "Delete go"
 
 - script: |

@@ -137,7 +137,7 @@ CC_SYSTEM_TEST_ENV_SECRETS = $(CC_SYSTEM_TEST_CHECKOUT_DIR)/.profile-with-secret
 
 # This is a hidden target, used only from the system-tests-on-cpd.
 .PHONY: _run-cc-system-tests
-_run-cc-system-tests: checkout-cc-system-tests cpd-priv-create-if-missing
+_run-cc-system-tests:
 	@echo "## Exporting CPD environment bash profile."
 	set -o pipefail && $(CPD_PATH) priv testenv --id `kubectl config current-context` > $(CC_SYSTEM_TEST_ENV_SECRETS)
 	@echo "## Running cc-system-tests's $(MAKE) init-env."
