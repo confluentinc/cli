@@ -302,6 +302,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	buf.WriteString("\n\n")
+	pcmd.Println(cmd, buf.String())
 
 	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
 	if len(accounts) == 1 {
@@ -314,9 +315,10 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 			pcmd.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
-		if f.Responses["authorized"].(bool) {
+		if !f.Responses["authorized"].(bool) {
 			return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
 		}
+		return nil
 	}
 }
 
