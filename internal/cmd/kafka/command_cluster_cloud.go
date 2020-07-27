@@ -295,6 +295,15 @@ var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{r
 func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string, clouds []*schedv1.CloudMetadata) error {
 	accounts := getEnvironmentsForCloud(cloud, clouds)
 
+	buf := new(bytes.Buffer)
+	buf.WriteString(errors.CopyBYOKPermissionsHeaderMsg)
+	buf.WriteString("\n\n")
+	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
+		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
+	}
+	buf.WriteString("\n\n")
+	pcmd.Println(cmd, buf.String())
+
 	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
 	if len(accounts) == 1 {
 		prompt = "Please confirm you've authorized the key for this account: " + accounts[0]
@@ -309,19 +318,8 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 		if !f.Responses["authorized"].(bool) {
 			return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
 		}
-		break
+		return nil
 	}
-
-	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyBYOKPermissionsHeaderMsg)
-	buf.WriteString("\n\n")
-	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
-		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
-	}
-	buf.WriteString("\n\n")
-	pcmd.Println(cmd, buf.String())
-
-	return nil
 }
 
 func stringToAvailability(s string) (schedv1.Durability, error) {
