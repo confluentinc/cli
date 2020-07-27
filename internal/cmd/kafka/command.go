@@ -21,7 +21,6 @@ func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *l
 			Use:   "kafka",
 			Short: "Manage Apache Kafka.",
 		}, prerunner)
-
 	cmd := &command{
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
