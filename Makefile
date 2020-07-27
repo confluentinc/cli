@@ -265,15 +265,16 @@ publish-installers:
 
 .PHONY: docs
 docs:
-	GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
-	GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
 	@TMP_DIR=$$(mktemp -d) || exit 1; \
-	git clone git@github.com:confluentinc/docs.git $${TMP_DIR} || exit 1; \
-	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
-	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
+	git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
+	git fetch; \
+	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=ccloud; \
+	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=confluent; \
 	rm -rf $${TMP_DIR}
 
 .PHONY: publish-docs-internal
@@ -285,17 +286,16 @@ else
 endif
 
 	@cd $(REPO_DIR); \
-	git fetch || exit 1; \
 	git checkout -b $(CLI_NAME)-cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
-	rm -rf $(REPO_DIR)/$(DOCS_DIR)/; \
-	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/ $(REPO_DIR)/$(DOCS_DIR)/; \
+	rm -rf $(DOCS_DIR); \
+	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME) $(DOCS_DIR); \
 	# TODO: remove edge case
-	[ -f "$(REPO_DIR)/$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] && sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(REPO_DIR)/$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
+	[ ! -f "$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
 	git add . || exit 1; \
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
 	git commit -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
-	git push origin cli-$(VERSION) || exit 1; \
-	#hub pull-request -b $(DOCS_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
+	git push origin $(CLI_NAME)-cli-$(VERSION) || exit 1; \
+	hub pull-request -b $(DOCS_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
 
 .PHONY: clean-docs
 clean-docs:
