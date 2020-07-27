@@ -24,7 +24,7 @@ type command struct {
 
 // New returns the Cobra command for `config`.
 // This specifies the command created for 'config' (<resource> <no-verb>), it is called/registered by the top level (cmd/command.go)
-func New(prerunner pcmd.PreRunner, analytics analytics.Client, config *v3.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "config",
@@ -34,7 +34,6 @@ func New(prerunner pcmd.PreRunner, analytics analytics.Client, config *v3.Config
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
 		analytics:  analytics,
-		config:     config,
 	}
 	cmd.init()
 	return cmd.Command
@@ -43,5 +42,4 @@ func New(prerunner pcmd.PreRunner, analytics analytics.Client, config *v3.Config
 // CLI codebase convention, specify subresources and verbs of this resource here
 func (c *command) init() {
 	c.AddCommand(NewContext(c.prerunner, c.analytics))
-	c.AddCommand(NewFile(c.prerunner, c.config))
 }

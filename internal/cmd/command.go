@@ -126,7 +126,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	isAPILogin := isAPIKeyCredential(cfg)
 	// THIS IS WHERE CCLOUD AND CONFLUENT REGISTRATION IS DIFFERENT
 	if cliName == "ccloud" {
-		cli.AddCommand(config.New(prerunner, analyticsClient, cfg))
+		cli.AddCommand(config.New(prerunner, analyticsClient))
 		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
 		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))
@@ -150,7 +150,6 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(iam.New(cliName, prerunner))
-		// THIS IS US! this is all information about the environment that we've gathered to give the command
 		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
 		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(local.New(prerunner))
