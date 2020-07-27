@@ -62,6 +62,11 @@ steps:
     make build
   displayName: 'make build'
 
+- bash: |
+    echo $(ls $(Agent.BuildDirectory))
+    rm -rf $(Agent.BuildDirectory)/go
+  displayName: "Delete go"
+
 - script: |
     wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
