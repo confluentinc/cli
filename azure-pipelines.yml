@@ -68,20 +68,6 @@ steps:
   displayName: "Download go 1.12.7"
 
 - bash: |
-    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
-    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
-    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
-    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-  displayName: Properly configure our custom Go environment
-
-- script: |
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-    echo '##vso[task.prependpath]$(GOPATH)/bin'
-    mkdir -p ${GOPATH}\bin
-    mkdir -p ${GOROOT}\bin
-  displayName: 'Set up the Go workspace'
-
-- bash: |
     CI=true make gcloud-install
   displayName: 'Install gcloud'
 
