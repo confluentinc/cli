@@ -265,43 +265,37 @@ publish-installers:
 
 .PHONY: docs
 docs:
-	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
-	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+	GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+	GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
-	@TMP_BASE=$$(mktemp -d) || exit 1; \
-		TMP_DIR=$${TMP_BASE}/docs || exit 1; \
-		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
-		cd $${TMP_DIR} || exit 1; \
-		git fetch ; \
-		git checkout -b cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
-		cd - || exit 1; \
-		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
-	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
-		cd $${TMP_DIR} || exit 1; \
-		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
-		git add . || exit 1; \
-		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
-		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		git push origin cli-$(VERSION) || exit 1; \
-		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		rm -rf $${TMP_BASE}
+	@TMP_DIR=$$(mktemp -d) || exit 1; \
+	git clone git@github.com:confluentinc/docs.git $${TMP_DIR} || exit 1; \
+	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
+	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
+	rm -rf $${TMP_DIR}
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
-ifndef BASE_DIR
-	$(error BASE_DIR is not set)
-endif
-ifeq (ccloud,$(CLI_NAME))
+ifeq ($(CLI_NAME), ccloud)
 	$(eval DOCS_DIR := cloud/cli/command-reference)
-else ifeq (confluent,$(CLI_NAME))
-	$(eval DOCS_DIR := cli/command-reference)
 else
-	$(error CLI_NAME is not set correctly - must be one of "confluent" or "ccloud")
+	$(eval DOCS_DIR := cli/command-reference)
 endif
-	rm -R $(BASE_DIR)/$(DOCS_DIR)/
-	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/ $(BASE_DIR)/$(DOCS_DIR)/
+
+	@cd $(REPO_DIR); \
+	git fetch || exit 1; \
+	git checkout -b $(CLI_NAME)-cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
+	rm -rf $(REPO_DIR)/$(DOCS_DIR)/; \
+	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/ $(REPO_DIR)/$(DOCS_DIR)/; \
+	# TODO: remove edge case
+	[ -f "$(REPO_DIR)/$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] && sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(REPO_DIR)/$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
+	git add . || exit 1; \
+	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
+	git commit -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
+	git push origin cli-$(VERSION) || exit 1; \
+	#hub pull-request -b $(DOCS_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
 
 .PHONY: clean-docs
 clean-docs:
