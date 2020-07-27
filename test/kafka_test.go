@@ -1,5 +1,7 @@
 package test
 
+import "fmt"
+
 func (s *CLITestSuite) TestKafka() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
@@ -71,5 +73,26 @@ func (s *CLITestSuite) TestKafka() {
 		tt.login = "default"
 		tt.workflow = true
 		s.runCcloudTest(tt, loginURL)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaTopicList() {
+	kafkaproxyURL := serveKafkaproxy(s.T()).URL
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
+		// Test variable output format
+		{args: fmt.Sprintf("kafka topic list --url %s -o human", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o yaml", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list-yaml.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o json", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list-json.golden"},
+		// // Check --url parsing
+		// {args: "kafka topic list --url https://localhost:8082", wantErrCode: 1},
+		// {args: "kafka topic list --url http:///localhost:8082", wantErrCode: 1},
+		// {args: "kafka topic list --url http://localhos:8082", wantErrCode: 1},
+		// {args: "kafka topic list --url http://localhost:808", wantErrCode: 1},
+		// {args: "kafka topic list --url http://localhost:808a", wantErrCode: 1},
+	}
+
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest, "")
 	}
 }

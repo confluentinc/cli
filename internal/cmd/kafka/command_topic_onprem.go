@@ -3,7 +3,7 @@ package kafka
 // confluent kafka topic <commands>
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -55,12 +55,38 @@ func (topicCmd *topicCommand) init() {
 			},
 		),
 	}
-	listCmd.Flags().String("url", "", "URL to REST Proxy Endpoint of Kafka Cluster")
-	//	check(describeCmd.MarkFlagRequired("url")) // can set flag to being required
+	listCmd.Flags().String("url", "", "Base URL to REST Proxy Endpoint of Kafka Cluster.")
+	check(listCmd.MarkFlagRequired("url")) // can set flag to being required
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	// same as topicCmd.CLICommand.Command.AddCommand(..)
 	topicCmd.AddCommand(listCmd)
+
+	// Register topic describe command
+	// describeCmd := &cobra.Command{
+	// 	Use:   "describe <topic>",
+	// 	Args:  cobra.ExactArgs(1),
+	// 	RunE:  topicCmd.describeTopic,
+	// 	Short: "Describe a Kafka topic.",
+	// 	Example: examples.BuildExampleString(
+	// 		examples.Example{
+	// 			Desc: "Describe the ``my_topic`` topic at specified cluser.",
+	// 			Code: "ccloud kafka topic describe my_topic --url http://localht:8082",
+	// 		},
+	// 	),
+	// }
+	// describeCmd.Flags().String("url", "", "URL to REST Proxy Endpoint of Kafka Cluster.")
+	// describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	// describeCmd.Flags().SortFlags = false
+	// topicCmd.AddCommand(describeCmd)
+}
+
+// TODO: Should I refactor this into a Prerunner?
+// I currently have it outside because the url is passed in by user
+func createProxyClient(url string) *kafkaproxy.APIClient {
+	config := kafkaproxy.NewConfiguration()
+	config.BasePath = strings.Trim(url, "/") + "/v3" // TODO: Not sure if I want this trimming
+	return kafkaproxy.NewAPIClient(config)
 }
 
 // Called when command matches registered words
@@ -73,13 +99,10 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	// note for future, set up PreRunner CLI command and make client maker code in prerunner.go (see createMDSCLient)
-	// Create Kafka Proxy Client
-	config := kafkaproxy.NewConfiguration()
-	config.BasePath = url + "/v3"
-	proxyClient := kafkaproxy.NewAPIClient(config)
+	proxyClient := createProxyClient(url)
 	// Get Cluster Id
 	clusters, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
+	// TODO: Should I take the HTTP response and parse it create a more helpful error message? Similar to cmd/cluster/command_list.go:listCmd.list()
 	if err != nil {
 		return err
 	}
@@ -93,7 +116,7 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 	topicDatas := topicGetResp.Data
 
 	// Create and populate output writer
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "TopicName"}, []string{"Cluster Id", "Topic Name"}, []string{"cluster_id", "topic_name"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
 	if err != nil {
 		return err
 	}
@@ -101,7 +124,52 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 		outputWriter.AddElement(&topicData)
 	}
 
-	fmt.Printf("URL: %s\n", url)
-	fmt.Printf("cluster id: %s\n", clusterId)
 	return outputWriter.Out()
 }
+
+// func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) error {
+// 	url, err := cmd.Flags().GetString("url")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if len(args) < 1 {
+// 		return errors.New("missing topic name")
+// 	}
+// 	topicName := args[0]
+
+// 	proxyClient := createProxyClient(url)
+// 	clusterGetResp, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
+// 	if err != nil {
+// 		return err
+// 	}
+// 	clusterId := clusterGetResp.Data[0].ClusterId
+
+// 	partitionsGetResp, _, err := proxyClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), clusterId, topicName)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Println("TODO: Topic: %s, PartitionCount: %s ReplicationFactor: %s")
+
+// 	partitionsOutputWriter, err := output.NewListOutputWriter(cmd,
+// 		[]string{"TopicName", "PartitionId"},
+// 		[]string{"Topic", "Partition"},
+// 		[]string{"topic", "partition"})
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	for _, partition := range partitionsGetResp.Data {
+// 		partitionsOutputWriter.AddElement(&partition)
+// 	}
+// 	partitionsOutputWriter.Out()
+// 	fmt.Println("TODO: Leader, Replicas, and ISR columns\n")
+
+// 	fmt.Println("Configuration\n")
+// 	configsGetResp, _, err := proxyClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), clusterId, topicName)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Printf("TODO: Configurations %v\n", configsGetResp)
+
+// 	return nil
+// }

@@ -41,9 +41,13 @@ var (
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
 	}
-	clusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("kafka acl", "kafka topic"),
+	ccloudClusterScopedCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("ccloud kafka acl", "ccloud kafka topic"),
 		// only on children of kafka topic commands
+		linter.ExcludeCommand("kafka topic"),
+	}
+	confluentClusterScopedCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("confluent kafka topic"),
 		linter.ExcludeCommand("kafka topic"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
@@ -103,9 +107,13 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("config file show"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
-	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("cluster", "string"), clusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), clusterScopedCommands...),
+	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagType("cluster", "string"), ccloudClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), ccloudClusterScopedCommands...),
+	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
+	linter.Filter(linter.RequireFlag("url", false), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("url", "Base URL to REST Proxy Endpoint of Kafka Cluster."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),

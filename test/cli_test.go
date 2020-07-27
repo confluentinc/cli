@@ -378,6 +378,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 			resetConfiguration(t, "confluent")
 		}
 
+		// Executes login command if test specifies
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
 			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)

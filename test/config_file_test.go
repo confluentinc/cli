@@ -18,8 +18,8 @@ func (s *CLITestSuite) TestFileShow() {
 		if tt.name == "" { // set name to args if empty
 			tt.name = tt.args
 		}
-		tt.workflow = true                                              // whether want to reset config/state between commandline actions
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL                         // find URL of kafka cloud?
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL) // run tests against cloud
+		tt.workflow = true // whether want to reset config/state between commandline actions
+		// kafkaAPIURL := serveKafkaAPI(s.T()).URL // find URL of kafka cloud?
+		// s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL) // run tests against cloud
 	}
 }
