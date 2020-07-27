@@ -50,7 +50,7 @@ func (topicCmd *topicCommand) init() {
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "List all topics at specified cluster (providing REST proxy endpoint).",
+				Text: "List all topics at specified cluster (providing REST proxy endpoint).",
 				Code: "confluent kafka topic list --url http://localhost:8082",
 			},
 		),
