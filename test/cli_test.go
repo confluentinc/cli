@@ -397,7 +397,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 	actual := NormalizeNewLines(output)
 	if tt.contains != "" {
-		require.Contains(t, actual, NormalizeNewLines(tt.contains))
+		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
