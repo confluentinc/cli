@@ -104,6 +104,7 @@ require (
 )
 
 replace (
+	// TODO: replace with non-local when merging
 	github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3-6.0.x => /Users/nkuo/go/src/github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3-6.0.x
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
