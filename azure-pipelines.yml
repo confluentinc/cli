@@ -33,7 +33,7 @@ steps:
     secureFile: 'vault_secrets'
 
 - bash: |
-    $(Agent.BuildDirectory)/helm
+    helm
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
@@ -41,8 +41,6 @@ steps:
     echo $(ls $(Agent.BuildDirectory))
     chmod +x $(Agent.BuildDirectory)/vault
     export PATH="$(Agent.BuildDirectory):$PATH"
-    helm
-    $(Agent.BuildDirectory)/helm
     . $(vaultsecrets.secureFilePath)
     . mk-include/bin/vault-setup
     . vault-sem-get-secret ssh_id_rsa
