@@ -34,7 +34,10 @@ steps:
 
 - bash: |
     HELM_BIN=$(which helm)
-    curl -s -o - $(HELM_URL)/$(HELM_TGZ) | tar -xz --strip-components=1 -C $(HELM_BIN) linux-amd64/helm
+    HELM_VERSION=v2.9.1
+    HELM_URL=https://storage.googleapis.com/kubernetes-helm
+    HELM_TGZ=helm-${HELM_VERSION}-linux-amd64.tar.gz
+    curl -s -o - ${HELM_URL}/${HELM_TGZ} | tar -xz --strip-components=1 -C $HELM_BIN linux-amd64/helm
     helm version
     helm init --client-only
   displayName: 'Replace Helm v3 with Helm v2 then init'
