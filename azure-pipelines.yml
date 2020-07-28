@@ -50,6 +50,7 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
+    make helm-setup-ci
   displayName: 'Inject secrets'
 
 - script: |
@@ -98,10 +99,7 @@ steps:
   displayName: 'Run system tests'
 
 - script: |
-    make cpd-destroy
-  displayName: 'Free CPD'
-
-- script: |
     git checkout go.*
+    make cpd-destroy
   displayName: 'Reset go.* just in case'
 

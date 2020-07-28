@@ -11,6 +11,7 @@ include ./mk-include/cc-begin.mk
 include ./mk-include/cc-vault.mk
 include ./mk-include/cc-cpd.mk
 include ./mk-include/cc-docker.mk
+include ./mk-include/cc-helm.mk
 include ./mk-include/cc-end.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
