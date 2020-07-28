@@ -32,12 +32,8 @@ steps:
   inputs:
     secureFile: 'vault_secrets'
 
-- task: HelmInstaller@1
-  displayName: Helm installer
-  inputs: 
-    helmVersionToInstall: 2.9.1
-
 - bash: |
+    helm version
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
@@ -55,7 +51,6 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
-    make helm-init-ci
   displayName: 'Inject secrets'
 
 - script: |
@@ -78,6 +73,15 @@ steps:
     wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
   displayName: "Download go 1.12.7"
+
+- task: HelmInstaller@1
+  displayName: Helm installer
+  inputs: 
+    helmVersionToInstall: 2.9.1
+
+- bash: |
+    make helm-init-ci
+  displayName: 'Helm init'
 
 - bash: |
     CI=true make gcloud-install
