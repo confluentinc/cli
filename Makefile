@@ -165,10 +165,6 @@ unrelease-warn:
 	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
 	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
 
-.PHONY: test-unrelease-notes
-test-unrelease-notes:
-	make unrelease-release-notes
-
 .PHONY: unrelease-release-notes
 unrelease-release-notes:
 	@echo "If you are going to reattempt the release again without the need to edit the release notes, there is no need to delete the release notes from S3."
