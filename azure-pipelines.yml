@@ -32,17 +32,13 @@ steps:
   inputs:
     secureFile: 'vault_secrets'
 
-- bash: |
-    HELM_BIN=$(dirname $(which helm))
-    HELM_VERSION=v2.9.1
-    HELM_URL=https://storage.googleapis.com/kubernetes-helm
-    HELM_TGZ=helm-${HELM_VERSION}-linux-amd64.tar.gz
-    curl -s -o - ${HELM_URL}/${HELM_TGZ} | tar -xz --strip-components=1 -C $HELM_BIN linux-amd64/helm
-    helm version
-    helm init --client-only
-  displayName: 'Replace Helm v3 with Helm v2 then init'
+- task: HelmInstaller@1
+  displayName: Helm installer
+  inputs: 
+    helmVersionToInstall: 2.9.1
 
 - bash: |
+    helm version
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
@@ -60,6 +56,7 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
+    make helm-init-ci
   displayName: 'Inject secrets'
 
 - script: |
