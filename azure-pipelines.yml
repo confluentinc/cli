@@ -33,6 +33,7 @@ steps:
     secureFile: 'vault_secrets'
 
 - bash: |
+    $(Agent.BuildDirectory)/helm
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
@@ -40,6 +41,8 @@ steps:
     echo $(ls $(Agent.BuildDirectory))
     chmod +x $(Agent.BuildDirectory)/vault
     export PATH="$(Agent.BuildDirectory):$PATH"
+    helm
+    $(Agent.BuildDirectory)/helm
     . $(vaultsecrets.secureFilePath)
     . mk-include/bin/vault-setup
     . vault-sem-get-secret ssh_id_rsa
@@ -98,8 +101,12 @@ steps:
     SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
   displayName: 'Run system tests'
 
+- bash: |
+    make cpd-destroy
+  condition: always()
+  displayName: 'Free CPD'
+
 - script: |
     git checkout go.*
-    make cpd-destroy
   displayName: 'Reset go.* just in case'
 
