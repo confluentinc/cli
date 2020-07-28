@@ -6,25 +6,30 @@ variables:  # job-level
   VAULT_VERSION: '1.4.0'
   VAULT_URL: https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_$(VAULT_VERSION)_linux_amd64.zip
   VAULT_ADDR: https://vault.cireops.gcp.internal.confluent.cloud
+
 steps:
-- script: |
-    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-  displayName: "Download go 1.14.2"
+# - script: |
+#     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+#     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+#   displayName: "Download go 1.14.2"
 
-- bash: |
-    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
-    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
-    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
-    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-  displayName: Properly configure our custom Go environment
+- task: GoTool@0
+  inputs:
+    version: '1.14.2'
 
-- script: |
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-    echo '##vso[task.prependpath]$(GOPATH)/bin'
-    mkdir -p ${GOPATH}\bin
-    mkdir -p ${GOROOT}\bin
-  displayName: 'Set up the Go workspace'
+# - bash: |
+#     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+#     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+#     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+#     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+#   displayName: Properly configure our custom Go environment
+
+# - script: |
+#     echo '##vso[task.prependpath]$(GOROOT)/bin'
+#     echo '##vso[task.prependpath]$(GOPATH)/bin'
+#     mkdir -p ${GOPATH}\bin
+#     mkdir -p ${GOROOT}\bin
+#   displayName: 'Set up the Go workspace'
 
 - task: DownloadSecureFile@1
   name: vaultsecrets
@@ -73,12 +78,12 @@ steps:
 - bash: |
     echo $(ls $(Agent.BuildDirectory))
     rm -rf $(Agent.BuildDirectory)/go
+    sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
   displayName: "Delete go"
 
-- script: |
-    wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
-  displayName: "Download go 1.12.7"
+- task: GoTool@0
+  inputs:
+    version: '1.12.7'
 
 - bash: |
     CI=true make gcloud-install
