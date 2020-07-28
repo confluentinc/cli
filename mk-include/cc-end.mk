@@ -29,9 +29,9 @@ pre-release-check:
 	test -f go.sum && git checkout go.sum || true # discard local go.sum modifications
 	git diff --exit-code --name-status || (echo "ERROR: the repo is not supposed to have local dirty changes prior to releasing" && git status && exit 1)
 
-.PHONY: build
-## Build Project.  See show-args to see what will run
-build: $(BUILD_TARGETS)
+# .PHONY: build
+# ## Build Project.  See show-args to see what will run
+# build: $(BUILD_TARGETS)
 
 .PHONY: test
 ## Test Project.  See show-args to see what will run
