@@ -17,6 +17,10 @@ steps:
   inputs:
     version: '1.14.2'
 
+- bash: |
+    go get github.com/goreleaser/goreleaser@v0.106.0
+  displayName: Get goreleaser
+    
 # - bash: |
 #     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
 #     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
