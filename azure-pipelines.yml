@@ -33,7 +33,7 @@ steps:
     secureFile: 'vault_secrets'
 
 - bash: |
-    HELM_BIN=$(which helm)
+    HELM_BIN=$(dirname $(which helm))
     HELM_VERSION=v2.9.1
     HELM_URL=https://storage.googleapis.com/kubernetes-helm
     HELM_TGZ=helm-${HELM_VERSION}-linux-amd64.tar.gz
