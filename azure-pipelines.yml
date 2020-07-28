@@ -60,7 +60,8 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
-    helm repo add helm-cloud https://confluent.jfrog.io/confluent/helm-cloud --username $(HELM_USER) --password $(HELM_APIKEY)
+    make helm-repo-add
+    make helm-init-ci
   displayName: 'Inject secrets'
 
 - script: |
