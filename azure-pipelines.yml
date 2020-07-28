@@ -13,7 +13,6 @@ steps:
   displayName: "Download go 1.14.2"
 
 - bash: |
-    helm
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
     echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
@@ -34,9 +33,13 @@ steps:
     secureFile: 'vault_secrets'
 
 - bash: |
+    HELM_BIN=$(which helm)
+    curl -s -o - $(HELM_URL)/$(HELM_TGZ) | tar -xz --strip-components=1 -C $(HELM_BIN) linux-amd64/helm
     helm version
-    make helm-setup-ci
-    helm version
+    helm init --client-only
+  displayName: 'Replace Helm v3 with Helm v2 then init'
+
+- bash: |
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
