@@ -8,15 +8,11 @@ variables:  # job-level
   VAULT_ADDR: https://vault.cireops.gcp.internal.confluent.cloud
 
 steps:
-# - script: |
-#     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-#     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-#   displayName: "Download go 1.14.2"
+- script: |
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+  displayName: "Download go 1.14.2"
 
-- task: GoTool@0
-  inputs:
-    version: '1.14.2'
-    
 - bash: |
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
     echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
@@ -68,18 +64,11 @@ steps:
     make deps
   displayName: 'make deps'
 
-- bash: |
-    go version
-    go get github.com/goreleaser/goreleaser@v0.106.0
-    goreleaser
-    which goreleaser
-  displayName: Get goreleaser
-
 # make test will build the CLI as part of its work
 # (for integration tests), so no need to run build
 # make targets separately
 - script: |
-    go get github.com/goreleaser/goreleaser@v0.106.0 && make build
+    make build
   displayName: 'make build'
 
 - bash: |
