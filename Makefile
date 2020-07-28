@@ -147,7 +147,7 @@ endef
 
 .PHONY: unrelease
 unrelease: unrelease-warn
-	make unrelease-release-notes
+	make unrelease-s3
 	git checkout master
 	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
@@ -165,8 +165,8 @@ unrelease-warn:
 	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
 	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
 
-.PHONY: unrelease-release-notes
-unrelease-release-notes:
+.PHONY: unrelease-s3
+unrelease-s3:
 	@echo "If you are going to reattempt the release again without the need to edit the release notes, there is no need to delete the release notes from S3."
 	@echo "Do you want to delete the release notes from S3? [Y/n]"
 	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then make delete-binaries-and-release-notes; else make delete-binaries-only; fi
