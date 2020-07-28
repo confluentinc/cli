@@ -32,6 +32,15 @@ steps:
   inputs:
     secureFile: 'vault_secrets'
 
+- task: HelmInstaller@1
+  displayName: Helm installer
+  inputs: 
+    helmVersionToInstall: 2.9.1
+
+- bash: |
+    make helm-init-ci
+  displayName: 'Helm init'
+
 - bash: |
     helm version
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
@@ -51,16 +60,8 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
+    helm repo add helm-cloud https://confluent.jfrog.io/confluent/helm-cloud --username $(HELM_USER) --password $(HELM_APIKEY)
   displayName: 'Inject secrets'
-
-- task: HelmInstaller@1
-  displayName: Helm installer
-  inputs: 
-    helmVersionToInstall: 2.9.1
-
-- bash: |
-    make helm-init-ci
-  displayName: 'Helm init'
 
 - script: |
     make deps
