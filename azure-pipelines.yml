@@ -89,12 +89,20 @@ steps:
   displayName: 'create cpd cluster'
 
 - bash: |
+    make docker-login
+  displayName: 'docker login'
+
+- bash: |
     make cpd-deploy-local
   displayName: 'cpd deploy'
 
 - bash: |
     SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
   displayName: 'Run system tests'
+
+- script: |
+    make cpd-destroy
+  displayName: 'Free CPD'
 
 - script: |
     git checkout go.*
