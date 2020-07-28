@@ -113,6 +113,7 @@ helm-release: helm-package
 helm-install-ci:
 	test -f $(HOME)/helm || curl -s -o - $(HELM_URL)/$(HELM_TGZ) | tar -xz --strip-components=1 -C $(HOME) linux-amd64/helm
 	helm
+	helm version
 
 .PHONY: helm-init-ci
 helm-init-ci:
