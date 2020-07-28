@@ -69,6 +69,7 @@ steps:
   displayName: 'make deps'
 
 - bash: |
+    go version
     go get github.com/goreleaser/goreleaser@v0.106.0
   displayName: Get goreleaser
 
@@ -76,7 +77,7 @@ steps:
 # (for integration tests), so no need to run build
 # make targets separately
 - script: |
-    make build
+    go get github.com/goreleaser/goreleaser@v0.106.0 && make build
   displayName: 'make build'
 
 - bash: |
