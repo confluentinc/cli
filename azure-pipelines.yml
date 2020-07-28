@@ -38,7 +38,6 @@ steps:
     helmVersionToInstall: 2.9.1
 
 - bash: |
-    helm version
     echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
