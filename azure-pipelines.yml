@@ -71,6 +71,8 @@ steps:
 - bash: |
     go version
     go get github.com/goreleaser/goreleaser@v0.106.0
+    goreleaser
+    which goreleaser
   displayName: Get goreleaser
 
 # make test will build the CLI as part of its work
