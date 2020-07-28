@@ -49,6 +49,7 @@ steps:
     . vault-sem-get-secret cpd_gcloud
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
+    make docker-login
   displayName: 'Inject secrets'
 
 - script: |
@@ -87,10 +88,6 @@ steps:
 - bash: |
     make cpd-priv-create-if-missing
   displayName: 'create cpd cluster'
-
-- bash: |
-    make docker-login
-  displayName: 'docker login'
 
 - bash: |
     make cpd-deploy-local
