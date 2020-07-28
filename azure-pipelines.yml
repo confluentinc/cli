@@ -53,6 +53,15 @@ steps:
     make docker-login
   displayName: 'Inject secrets'
 
+- task: HelmInstaller@1
+  displayName: Helm installer
+  inputs: 
+    helmVersionToInstall: 2.9.1
+
+- bash: |
+    make helm-init-ci
+  displayName: 'Helm init'
+
 - script: |
     make deps
   displayName: 'make deps'
@@ -73,15 +82,6 @@ steps:
     wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
   displayName: "Download go 1.12.7"
-
-- task: HelmInstaller@1
-  displayName: Helm installer
-  inputs: 
-    helmVersionToInstall: 2.9.1
-
-- bash: |
-    make helm-init-ci
-  displayName: 'Helm init'
 
 - bash: |
     CI=true make gcloud-install
