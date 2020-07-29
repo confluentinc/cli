@@ -71,21 +71,16 @@ steps:
     make build
   displayName: 'make build'
 
-- bash: |
-    echo $(ls $(Agent.BuildDirectory))
-    rm -rf $(Agent.BuildDirectory)/go
-    sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
-    echo $(ls $(Agent.BuildDirectory))
-  displayName: "Delete go"
+# - bash: |
+#     echo $(ls $(Agent.BuildDirectory))
+#     rm -rf $(Agent.BuildDirectory)/go
+#     sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
+#     echo $(ls $(Agent.BuildDirectory))
+#   displayName: "Delete go"
 
-# - task: GoTool@0
-#   inputs:
-#     version: '1.12.7'
-
-- script: |
-    wget "https://storage.googleapis.com/golang/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
-  displayName: "Download go 1.12.7"
+- task: GoTool@0
+  inputs:
+    version: '1.12.7'
 
 - bash: |
     CI=true make gcloud-install
