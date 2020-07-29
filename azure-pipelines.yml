@@ -71,12 +71,10 @@ steps:
     make build
   displayName: 'make build'
 
-# - bash: |
-#     echo $(ls $(Agent.BuildDirectory))
-#     rm -rf $(Agent.BuildDirectory)/go
-#     sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
-#     echo $(ls $(Agent.BuildDirectory))
-#   displayName: "Delete go"
+- bash: |
+    rm -rf $(Agent.BuildDirectory)/go
+    sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
+  displayName: "Delete go"
 
 - task: GoTool@0
   inputs:
@@ -103,7 +101,8 @@ steps:
   displayName: 'cpd deploy'
 
 - bash: |
-    SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
+    export CREATE_KAFKA_CLUSTERS=true
+    GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
   displayName: 'Run system tests'
 
 - bash: |

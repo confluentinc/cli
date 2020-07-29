@@ -146,12 +146,13 @@ CC_SYSTEM_TEST_ENV_SECRETS = $(CC_SYSTEM_TEST_CHECKOUT_DIR)/.profile-with-secret
 _run-cc-system-tests:
 	@echo "## Exporting CPD environment bash profile."
 	set -o pipefail && $(CPD_PATH) priv testenv --id `kubectl config current-context` > $(CC_SYSTEM_TEST_ENV_SECRETS)
-	@echo "## Running cc-system-tests's $(MAKE) init-env."
+	@echo "## Running cc-system-tests's $(MAKE) init-env. CREATE_KAFKA_CLUSTER: $$CREATE_KAFKA_CLUSTER"
 	source $(CC_SYSTEM_TEST_ENV_SECRETS) && $(MAKE) -C $(CC_SYSTEM_TEST_CHECKOUT_DIR) init-env
 	@echo "## Show debug info about CPD cluster."
 	$(CPD_PATH) debug --id `kubectl config current-context` || true
 	@echo "## Running cc-system-tests tests."
-	source $(CC_SYSTEM_TEST_ENV_SECRETS) && TEST_REPORT_FILE="$(BUILD_DIR)/ci-gating/TEST-report.xml" TESTS_TO_RUN='$(TESTS_TO_RUN)' $(MAKE) -C $(CC_SYSTEM_TEST_CHECKOUT_DIR) test
+	#source $(CC_SYSTEM_TEST_ENV_SECRETS) && TEST_REPORT_FILE="$(BUILD_DIR)/ci-gating/TEST-report.xml" TESTS_TO_RUN='$(TESTS_TO_RUN)' $(MAKE) -C $(CC_SYSTEM_TEST_CHECKOUT_DIR) test
+	source $(CC_SYSTEM_TEST_ENV_SECRETS) && TEST_REPORT_FILE="$(BUILD_DIR)/ci-gating/TEST-report.xml" $(MAKE) -C $(CC_SYSTEM_TEST_CHECKOUT_DIR) test
 
 
 .PHONY: clean-cc-system-tests
