@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 ifndef VERSION
-include ./../semver.mk
+include semver.mk
 VERSION=$(CLEAN_VERSION)
 endif
 
@@ -12,10 +12,6 @@ export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
 # Defaults that are likely to vary by platform. These are cleanly separated so
 # it should be easy to maintain altered values on platform-specific branches
 # when the values aren't overridden by the script invoking the Makefile
-
-# Whether we should apply patches. This only makes sense for alternate packaging
-# systems that know how to apply patches themselves, e.g. Debian.
-APPLY_PATCHES?=yes
 
 # DESTDIR may be overridden by e.g. debian packaging
 ifeq ($(DESTDIR),)
@@ -32,63 +28,54 @@ SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 SYSTEMDDIR=/lib/systemd/system
 endif
 
-# Whether we should run tests during the build.
 SKIP_TESTS?=yes
 
-all: install
+all: download
 
-archive: install
+archive: download
 	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
 
-apply-patches: $(wildcard debian/patches/*)
-ifeq ($(APPLY_PATCHES),yes)
-	git reset --hard HEAD
-	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
-endif
-
-build: apply-patches
-	ifeq ($(SKIP_TESTS),no)
-  		# Unit tests
-		GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test)
-		# Integration tests
-		GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test)
-	endif
-
-	HOSTNAME := $(shell id -u -n)@$(shell hostname)
-
-	ifeq ($(shell uname),Darwin)
-		GORELEASER_SUFFIX ?= -mac.yml
-	else ifneq (,$(findstring NT,$(shell uname)))
-		GORELEASER_SUFFIX ?= -windows.yml
-	else
-		GORELEASER_SUFFIX ?= -linux.yml
-	endif
-
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
-
 BINPATH=$(PREFIX)/bin
-LIBPATH=$(PREFIX)/share/java/$(PACKAGE_TITLE)
+LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
 INSTALL=install -D -m 644
 INSTALL_X=install -D -m 755
 
-install: build
-	if [[ $(DESTDIR)$(PREFIX) != /tmp/confluent/* ]]; then echo "DESTDIR=$(DESTDIR) or PREFIX=$(PREFIX) is weird" ; exit 1 ; fi
+download:
+	if [[ $(DESTDIR)$(PREFIX) != /tmp/confluent/* ]]; then echo "DESTDIR=$(DESTDIR) or PREFIX=$(PREFIX) is incorrect" ; exit 1 ; fi
+
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
+
 	mkdir -p $(DESTDIR)$(BINPATH)
 	mkdir -p $(DESTDIR)$(LIBPATH)
-	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+	mkdir -p $(DESTDIR)$(DOCPATH)
+
+	cd $(DESTDIR)$(LIBPATH) ; \
+	for dir in darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64; do \
+		mkdir -p $${dir} ; \
+		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
+		filepath=$${dir}/confluent$${ext} ; \
+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(VERSION)/confluent_$(VERSION)_$${dir}$${ext} -o $${filepath} ; \
+		chmod 755 $${filepath} ; \
+	done
+
+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+
+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+
 	for svc in debian/*.service ; do \
 	    $(INSTALL) -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
 	done
-	pushd "cli-package/target/cli-package-$(VERSION)-package" ; \
-	find bin/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL_X) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ;\
+
+	cd cli-package/target/cli-package-$(VERSION)-package ; \
+	find bin/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL_X) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ; \
+	find libexec/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ; \
 	find share/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ; \
-	pushd etc/cli/ ; \
-	find . -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL) -o root -g root XXX $(DESTDIR)$(SYSCONFDIR)/XXX
 
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
@@ -131,7 +118,7 @@ rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 # installed version to generate a new archive. Note that we always regenerate
 # the symlink because the RPM_VERSION doesn't include all the version info -- it
 # can leave of things like -beta, -rc1, etc.
-RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area download debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)

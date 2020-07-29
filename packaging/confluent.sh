@@ -4,7 +4,6 @@ set -e
 # This script is designed to live in a Confluent Platform tarball distribution.
 # It depends on the CLI binaries for different OS/ARCH combinations living at
 #   ../libexec/cli/${OS}_${ARCH}/confluent
-#
 
 is_supported_platform() {
   platform=$1
@@ -22,6 +21,7 @@ is_supported_platform() {
   esac
   return $found
 }
+
 check_platform() {
   if is_supported_platform "$PLATFORM"; then
     # optional logging goes here
@@ -31,6 +31,7 @@ check_platform() {
     exit 1
   fi
 }
+
 adjust_os() {
   # adjust archive name based on OS
   case ${OS} in
@@ -42,6 +43,7 @@ adjust_os() {
   esac
   true
 }
+
 check_executable() {
   if [[ -f "${EXECUTABLE}" ]] ; then
     # optional logging goes here
@@ -51,6 +53,7 @@ check_executable() {
     exit 1
   fi
 }
+
 init_config() {
   mkdir -p ${HOME}/.confluent
   if [[ ! -f "${HOME}/.confluent/config.json" ]] ; then
@@ -66,16 +69,20 @@ https://github.com/client9/shlib/blob/master/LICENSE.md
 but credit (and pull requests) appreciated.
 ------------------------------------------------------------------------
 EOF
+
 echoerr() {
   echo "$@" 1>&2
 }
+
 log_prefix() {
   echo "$0"
 }
+
 _logp=6
 log_set_priority() {
   _logp="$1"
 }
+
 log_priority() {
   if test -z "$1"; then
     echo "$_logp"
@@ -83,6 +90,7 @@ log_priority() {
   fi
   [ "$1" -le "$_logp" ]
 }
+
 log_tag() {
   case $1 in
     0) echo "emerg" ;;
@@ -96,22 +104,27 @@ log_tag() {
     *) echo "$1" ;;
   esac
 }
+
 log_debug() {
   log_priority 7 || return 0
   echoerr "$(log_prefix)" "$(log_tag 7)" "$@"
 }
+
 log_info() {
   log_priority 6 || return 0
   echoerr "$(log_prefix)" "$(log_tag 6)" "$@"
 }
+
 log_err() {
   log_priority 3 || return 0
   echoerr "$(log_prefix)" "$(log_tag 3)" "$@"
 }
+
 log_crit() {
   log_priority 2 || return 0
   echoerr "$(log_prefix)" "$(log_tag 2)" "$@"
 }
+
 uname_os() {
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
   case "$os" in
@@ -120,6 +133,7 @@ uname_os() {
   esac
   echo "$os"
 }
+
 uname_arch() {
   arch=$(uname -m)
   case $arch in
@@ -134,6 +148,7 @@ uname_arch() {
   esac
   echo ${arch}
 }
+
 uname_os_check() {
   os=$(uname_os)
   case "$os" in
@@ -152,6 +167,7 @@ uname_os_check() {
   log_crit "uname_os_check '$(uname -s)' got converted to '$os' which is not a GOOS value. Please file bug at https://github.com/client9/shlib"
   return 1
 }
+
 uname_arch_check() {
   arch=$(uname_arch)
   case "$arch" in
@@ -173,6 +189,7 @@ uname_arch_check() {
   log_crit "uname_arch_check '$(uname -m)' got converted to '$arch' which is not a GOARCH value.  Please file bug report at https://github.com/client9/shlib"
   return 1
 }
+
 cat /dev/null <<EOF
 ------------------------------------------------------------------------
 End of functions from https://github.com/client9/shlib
