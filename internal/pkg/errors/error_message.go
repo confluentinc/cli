@@ -337,6 +337,9 @@ const (
 	NotLoggedInErrorMsg               = "not logged in"
 	NotLoggedInSuggestions            = "You must be logged in to run this command.\n" +
 		avoidTimeoutWithCLINameSuggestion
+	SRNotAuthenticatedErrorMsg    = "not logged in, and no sr-endpoint specified"
+	SRNotAuthenticatedSuggestions = "You must specify endpoint for Schema Registry cluster or be logged in to run this command.\n" +
+		avoidTimeoutWithCLINameSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
 		avoidTimeoutGeneralSuggestion
