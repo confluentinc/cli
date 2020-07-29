@@ -101,8 +101,15 @@ steps:
   displayName: 'cpd deploy'
 
 - bash: |
-    export CREATE_KAFKA_CLUSTERS=true
-    GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make system-tests-on-cpd
+    make cpd-priv-testenv
+  displayName: cpd priv testenv || cpd-debug-and-err
+
+- bash: |
+    SKIP_SETUP_SCHEMA_REGISTRY_ENV=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || cpd-debug-and-err
+  displayName: cc-system-tests make init-env || 
+
+- bash: |
+    GO_TEST_PACKAGE_ARGS=./test/paas/... TESTS_TO_RUN=Test make run-system-tests || cpd-debug-and-err
   displayName: 'Run system tests'
 
 - bash: |
