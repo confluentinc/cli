@@ -110,37 +110,37 @@ var (
 func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "consume [topic]",
-			Args:  cobra.ExactArgs(1),
+			Use:   "consume <topic>",
 			Short: "Consume from a Kafka topic.",
 			Long:  "Consume data from topics. By default this command consumes binary data from the Apache Kafka® cluster on localhost.",
+			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Consume Avro data from the beginning of topic called ``mytopic1`` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
+					Text: "Consume Avro data from the beginning of topic called ``mytopic1`` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
 					Code: "confluent local services kafka consume mytopic1 --value-format avro --from-beginning",
 				},
 				examples.Example{
-					Desc: "Consume newly arriving non-Avro data from a topic called ``mytopic2`` on a development Kafka cluster on localhost.",
+					Text: "Consume newly arriving non-Avro data from a topic called ``mytopic2`` on a development Kafka cluster on localhost.",
 					Code: "confluent local services kafka consume mytopic2",
 				},
 				examples.Example{
-					Desc: "Create a Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as ``/tmp/myconfig.properties``. You can specify the file location using ``--config <filename>``.",
+					Text: "Create a Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as ``/tmp/myconfig.properties``. You can specify the file location using ``--config <filename>``.",
 					Code: "bootstrap.servers=<broker endpoint>\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<api-key>\" password=\"<api-secret>\";\nbasic.auth.credentials.source=USER_INFO\nschema.registry.basic.auth.user.info=<username:password>\nschema.registry.url=<sr endpoint>",
 				},
 				examples.Example{
-					Desc: "Consume non-Avro data from the beginning of a topic named ``mytopic3`` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at ``/tmp/myconfig.properties``.",
+					Text: "Consume non-Avro data from the beginning of a topic named ``mytopic3`` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at ``/tmp/myconfig.properties``.",
 					Code: "confluent local services kafka consume mytopic3 --cloud --config /tmp/myconfig.properties --from-beginning",
 				},
 				examples.Example{
-					Desc: "Consume messages with keys and non-Avro values from the beginning of topic called ``mytopic4`` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at ``/tmp/myconfig.properties``. See the sample Confluent Cloud configuration file above.",
+					Text: "Consume messages with keys and non-Avro values from the beginning of topic called ``mytopic4`` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at ``/tmp/myconfig.properties``. See the sample Confluent Cloud configuration file above.",
 					Code: "confluent local services kafka consume mytopic4 --cloud --config /tmp/myconfig.properties --from-beginning --property print.key=true",
 				},
 				examples.Example{
-					Desc: "Consume Avro data from a topic called ``mytopic5`` in Confluent Cloud. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
+					Text: "Consume Avro data from a topic called ``mytopic5`` in Confluent Cloud. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
 					Code: "confluent local services kafka consume mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro \\\n--from-beginning --property schema.registry.url=http://localhost:8081",
 				},
 				examples.Example{
-					Desc: "Consume Avro data from a topic called ``mytopic6`` in Confluent Cloud. Assumes you are using Confluent Cloud Confluent Schema Registry.",
+					Text: "Consume Avro data from a topic called ``mytopic6`` in Confluent Cloud. Assumes you are using Confluent Cloud Confluent Schema Registry.",
 					Code: "confluent local services kafka consume mytopic6 --cloud --config /tmp/myconfig.properties --value-format avro \\\n--from-beginning --property schema.registry.url=https://<SR ENDPOINT> \\\n--property basic.auth.credentials.source=USER_INFO \\\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>",
 				},
 			),
@@ -159,37 +159,37 @@ func (c *Command) runKafkaConsumeCommand(command *cobra.Command, args []string) 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "produce [topic]",
-			Args:  cobra.ExactArgs(1),
+			Use:   "produce <topic>",
 			Short: "Produce to a Kafka topic.",
 			Long:  "Produce data to topics. By default this command produces non-Avro data to the Apache Kafka® cluster on localhost.",
+			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Produce Avro data to a topic called ``mytopic1`` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
+					Text: "Produce Avro data to a topic called ``mytopic1`` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at ``http://localhost:8081``.",
 					Code: "confluent local services kafka produce mytopic1 --value-format avro --property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}'",
 				},
 				examples.Example{
-					Desc: "Produce non-Avro data to a topic called ``mytopic2`` on a development Kafka cluster on localhost:",
+					Text: "Produce non-Avro data to a topic called ``mytopic2`` on a development Kafka cluster on localhost:",
 					Code: "confluent local produce mytopic2",
 				},
 				examples.Example{
-					Desc: "Create a customized Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as ``/tmp/myconfig.properties``. You can specify the file location using ``--config <filename>``.",
+					Text: "Create a customized Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as ``/tmp/myconfig.properties``. You can specify the file location using ``--config <filename>``.",
 					Code: "bootstrap.servers=<broker endpoint>\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<api-key>\" password=\"<api-secret>\";\nbasic.auth.credentials.source=USER_INFO\nschema.registry.basic.auth.user.info=<username:password>\nschema.registry.url=<sr endpoint>",
 				},
 				examples.Example{
-					Desc: "Produce non-Avro data to a topic called ``mytopic3`` in Confluent Cloud. Assumes topic has already been created.",
+					Text: "Produce non-Avro data to a topic called ``mytopic3`` in Confluent Cloud. Assumes topic has already been created.",
 					Code: "confluent local services kafka produce mytopic3 --cloud --config /tmp/myconfig.properties",
 				},
 				examples.Example{
-					Desc: "Produce messages with keys and non-Avro values to a topic called ``mytopic4`` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at ``/tmp/myconfig.properties``. Assumes topic has already been created.",
+					Text: "Produce messages with keys and non-Avro values to a topic called ``mytopic4`` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at ``/tmp/myconfig.properties``. Assumes topic has already been created.",
 					Code: "confluent local services kafka produce mytopic4 --cloud --config /tmp/myconfig.properties --property parse.key=true --property key.separator=,",
 				},
 				examples.Example{
-					Desc: "Produce Avro data to a topic called ``mytopic5`` in Confluent Cloud. Assumes topic has already been created, and Confluent Schema Registry is listening at ``http://localhost:8081``.",
+					Text: "Produce Avro data to a topic called ``mytopic5`` in Confluent Cloud. Assumes topic has already been created, and Confluent Schema Registry is listening at ``http://localhost:8081``.",
 					Code: `confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro --property \\\nvalue.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' \\\n--property schema.registry.url=http://localhost:8081`,
 				},
 				examples.Example{
-					Desc: "Produce Avro data to a topic called ``mytopic6`` in Confluent Cloud. Assumes topic has already been created and you are using Confluent Cloud Confluent Schema Registry.",
+					Text: "Produce Avro data to a topic called ``mytopic6`` in Confluent Cloud. Assumes topic has already been created and you are using Confluent Cloud Confluent Schema Registry.",
 					Code: `confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro --property \\\nvalue.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' \\\n--property schema.registry.url=https://<SR ENDPOINT> \\\n--property basic.auth.credentials.source=USER_INFO \\\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>`,
 				},
 			),

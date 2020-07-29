@@ -3,12 +3,13 @@ package serdes
 import "github.com/confluentinc/cli/internal/pkg/errors"
 
 const (
-	AVROSCHEMANAME string = "AVRO"
-	JSONSCHEMANAME string = "JSONSCHEMA"
-	// Backend accepts "JSON" instead of "JSONSCHEMA"
-	JSONSCHEMABACKEND  string = "JSON"
-	PROTOBUFSCHEMANAME string = "PROTOBUF"
-	RAWSCHEMANAME      string = "RAW"
+	AVROSCHEMANAME        string = "avro"
+	AVROSCHEMABACKEND     string = "AVRO"
+	JSONSCHEMANAME        string = "jsonschema"
+	JSONSCHEMABACKEND     string = "JSON"
+	PROTOBUFSCHEMANAME    string = "protobuf"
+	PROTOBUFSCHEMABACKEND string = "PROTOBUF"
+	RAWSCHEMANAME         string = "string"
 )
 
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {

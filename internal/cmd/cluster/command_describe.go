@@ -71,11 +71,11 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
-			Args:  cobra.NoArgs,
 			Short: "Describe a Kafka cluster.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Discover the cluster ID and Kafka ID for Connect.",
+					Text: "Discover the cluster ID and Kafka ID for Connect.",
 					Code: "confluent cluster describe --url http://localhost:8083",
 				},
 			),
@@ -142,7 +142,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	structuredDisplay := &StructuredDisplay{}
 	if meta.ID != "" {
 		if format == output.Human.String() {
-			cmd.Printf("Confluent Resource Name: %s\n\n", meta.ID)
+			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 		} else {
 			structuredDisplay.Crn = meta.ID
 		}
@@ -164,7 +164,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 
 	}
 	if format == output.Human.String() {
-		cmd.Println("Scope:")
+		pcmd.Println(cmd, "Scope:")
 		printer.RenderCollectionTable(data, describeLabels)
 	} else {
 		return output.StructuredOutput(format, structuredDisplay)

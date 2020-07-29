@@ -32,8 +32,8 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 		&cobra.Command{
 			Use:   "feedback",
 			Short: fmt.Sprintf("Submit feedback about the %s.", version.GetFullCLIName(cliName)),
-			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
 			Args:  cobra.NoArgs,
+			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
 		}, prerunner)
 
 	return cmd.Command
@@ -48,7 +48,7 @@ func (c *command) feedbackRunE(cmd *cobra.Command, _ []string) error {
 
 	if len(msg) > 0 {
 		c.analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
-		cmd.Println(errors.ThanksForFeedbackMsg)
+		pcmd.Println(cmd, errors.ThanksForFeedbackMsg)
 	}
 	return nil
 }
