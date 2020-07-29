@@ -74,7 +74,7 @@ steps:
 - bash: |
     rm -rf $(Agent.BuildDirectory)/go
     sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
-  displayName: "Delete go"
+  displayName: "Delete go (not required)"
 
 - task: GoTool@0
   inputs:
