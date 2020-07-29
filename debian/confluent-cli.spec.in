@@ -3,7 +3,7 @@ Name: confluent-cli
 Version: ##RPMVERSION##
 Release: ##RPMRELEASE##
 Group: Applications/Internet
-License: Confluent Community License
+License: Confluent License Agreement
 Source0: confluent-cli-%{version}.tar.gz
 URL: http://confluent.io
 BuildRoot: %{_tmppath}/%{name}-%{version}-root

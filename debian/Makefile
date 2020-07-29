@@ -20,15 +20,11 @@ endif
 
 ifeq ($(PACKAGE_TYPE),archive)
 PREFIX=$(PACKAGE_NAME)
-SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
 SYSTEMDDIR=$(PREFIX)/lib/systemd/system
 else
 PREFIX=/usr
-SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 SYSTEMDDIR=/lib/systemd/system
 endif
-
-SKIP_TESTS?=yes
 
 all: download
 
