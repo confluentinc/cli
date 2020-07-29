@@ -94,6 +94,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for schema registry cluster.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
@@ -116,6 +117,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for schema registry cluster.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
@@ -447,9 +449,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	// Registering schema when specified, and fill metaInfo array.
 	if valueFormat != "string" && len(schemaPath) > 0 {
-		if h.Config.Client == nil {
-			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
-		}
 		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
 		if err != nil {
 			return err
@@ -603,9 +602,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
-		if h.Config.Client == nil {
-			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
-		}
 
 		// Only initialize client and context when schema is specified.
 		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)

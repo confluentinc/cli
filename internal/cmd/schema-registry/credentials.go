@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -54,9 +55,13 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 		return nil, nil, err
 	}
 
-	srCluster, err := currCtx.SchemaRegistryCluster(cmd)
-	if err != nil {
-		return nil, nil, err
+	srCluster := &v2.SchemaRegistryCluster{}
+	endpoint, _ := cmd.Flags().GetString("sr-endpoint")
+	if len(endpoint) == 0 {
+		srCluster, err = currCtx.SchemaRegistryCluster(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// First examine existing credentials. If check fails(saved credentials no longer works or user enters
@@ -71,20 +76,24 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 		}
 		srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
-		envId, err := currCtx.AuthenticatedEnvId(cmd)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if srCluster, ok := currCtx.SchemaRegistryClusters[envId]; ok {
-			srConfig.BasePath = srCluster.SchemaRegistryEndpoint
-		} else {
-			ctxClient := pcmd.NewContextClient(currCtx)
-			srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
+		if len(endpoint) == 0 {
+			envId, err := currCtx.AuthenticatedEnvId(cmd)
 			if err != nil {
 				return nil, nil, err
 			}
-			srConfig.BasePath = srCluster.Endpoint
+
+			if srCluster, ok := currCtx.SchemaRegistryClusters[envId]; ok {
+				srConfig.BasePath = srCluster.SchemaRegistryEndpoint
+			} else {
+				ctxClient := pcmd.NewContextClient(currCtx)
+				srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
+				if err != nil {
+					return nil, nil, err
+				}
+				srConfig.BasePath = srCluster.Endpoint
+			}
+		} else {
+			srConfig.BasePath = endpoint
 		}
 		srConfig.UserAgent = ver.UserAgent
 		srClient := srsdk.NewAPIClient(srConfig)
