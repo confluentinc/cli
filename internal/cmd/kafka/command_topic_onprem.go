@@ -62,7 +62,7 @@ func (topicCmd *topicCommand) init() {
 	// same as topicCmd.CLICommand.Command.AddCommand(..)
 	topicCmd.AddCommand(listCmd)
 
-	// Register topic describe command
+	// Register describe command
 	// describeCmd := &cobra.Command{
 	// 	Use:   "describe <topic>",
 	// 	Args:  cobra.ExactArgs(1),
@@ -79,6 +79,33 @@ func (topicCmd *topicCommand) init() {
 	// describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	// describeCmd.Flags().SortFlags = false
 	// topicCmd.AddCommand(describeCmd)
+
+	// Register create command
+	// confluent kafka topic create <topic> [flags]
+	// --cluster string      Kafka cluster ID. —> —url
+	// --partitions uint32   Number of topic partitions. (default 6)
+	// --config strings      A comma-separated list of topics configuration ('key=value') overrides for the topic being created.
+	// --dry-run             Run the command without committing changes to Kafka. (Topic creation argument)
+	// --if-not-exists       Exit gracefully if topic already exists. (CLI option)
+	// createCmd := &cobra.Command{
+	// 	Use:   "create <topic>",
+	// 	Short: "Create a Kafka topic.",
+	// 	Args:  cobra.ExactArgs(1),
+	// 	RunE:  pcmd.NewCLIRunE(topicCmd.createTopic),
+	// 	Example: examples.BuildExampleString(
+	// 		examples.Example{
+	// 			Text: "Create a topic named ``my_topic`` with default options at specified cluster (providing REST proxy endpoint).",
+	// 			Code: "confluent kafka topic create my_topic --url http://localhost:8082",
+	// 		}),
+	// }
+	// createCmd.Flags().String("url", "", "Base URL to REST Proxy Endpoint of Kafka Cluster.")
+	// check(listCmd.MarkFlagRequired("url")) // TODO: unset url as required
+	// createCmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
+	// createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
+	// createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	// createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	// createCmd.Flags().SortFlags = false
+	// topicCmd.AddCommand(createCmd)
 }
 
 // TODO: Should I refactor this into a Prerunner?
@@ -170,6 +197,34 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 // 		return err
 // 	}
 // 	fmt.Printf("TODO: Configurations %v\n", configsGetResp)
+
+// 	return nil
+// }
+
+// func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) error {
+// 	url, err := cmd.Flags().GetString("url")
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	setServerURL(topicCmd.ProxyClient, url)
+// 	proxyClient := topicCmd.ProxyClient
+
+// 	clusters, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
+// 	if err != nil {
+// 		return err
+// 	}
+// 	clusterId := clusters.Data[0].ClusterId
+
+// 	// Create topic
+// 	topicName := args[0]
+// 	topicCreateRequestData := &kafkaproxy.CreateTopicRequestData{
+// 		TopicName: topicName,
+// 	}
+// 	cmd.Flags().GetStringSlice("config")
+
+// 	proxyClient.TopicApi.ClustersClusterIdTopicsPost(context.Background(), clusterId,
+// 		&kafkaproxy.ClustersClusterIdTopicsPostOpts{CreateTopicRequestData: optional.NewInterface(topicCreateRequestData)})
 
 // 	return nil
 // }
