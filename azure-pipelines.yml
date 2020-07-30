@@ -43,7 +43,6 @@ steps:
     wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
     echo "Unzipping received /tmp/vault.zip"
     unzip /tmp/vault.zip -d $(Agent.BuildDirectory)
-    echo $(ls $(Agent.BuildDirectory))
     chmod +x $(Agent.BuildDirectory)/vault
     export PATH="$(Agent.BuildDirectory):$PATH"
     . $(vaultsecrets.secureFilePath)
@@ -58,8 +57,6 @@ steps:
     . vault-sem-get-secret connect_aws_credentials
     . vault-sem-get-secret GCP_CONNECT_CREDENTIALS
     . vault-sem-get-secret connect_jdbc_credentials
-    echo $DOCKER_USER
-    echo "inside OG yml"
     make docker-login
     make helm-repo-add
     make helm-init-ci
@@ -112,6 +109,11 @@ steps:
   displayName: cpd priv testenv
 
 - bash: |
+    . vault-sem-get-secret semaphore-secrets-global
+    . vault-sem-get-secret connect_aws_credentials
+    . vault-sem-get-secret connect_jdbc_credentials
+    echo $DOCKER_USER
+    echo "test after vault sem"
     CREATE_KAFKA_CLUSTERS=true make system-test-init-env || cpd-debug-and-err
   displayName: cc-system-tests make init-env 
 
