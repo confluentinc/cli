@@ -181,7 +181,7 @@ delete-binaries-and-archives:
 delete-binaries-archives-and-release-notes:
 	$(caasenv-authenticate); \
 	$(delete-binaries); \
-	$(delete-archives);
+	$(delete-archives); \
 	$(delete-release-notes)
 
 define delete-binaries
