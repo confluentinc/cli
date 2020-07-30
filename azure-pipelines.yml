@@ -84,6 +84,8 @@ steps:
     version: '1.12.7'
 
 - bash: |
+    echo $VAULT_ROLE_ID
+    echo "inside yml"
     CI=true make gcloud-install
   displayName: 'Install gcloud'
 
