@@ -109,6 +109,10 @@ steps:
   displayName: cc-system-tests make init-env 
 
 - bash: |
+    make replace-cli-binary
+  displayName: Replace CLI binary
+
+- bash: |
     GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || cpd-debug-and-err
   displayName: 'Run system tests'
 

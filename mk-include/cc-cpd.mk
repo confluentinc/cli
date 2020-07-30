@@ -175,3 +175,8 @@ run-system-tests:
 ## Clean up .cc-system-tests folder
 clean-cc-system-tests:
 	rm -rf $(CC_SYSTEM_TEST_CHECKOUT_DIR)
+
+.PHONY: replace-cli-binary
+replace-cli-binary:
+	echo $$(ls)
+	cp ./dist/ccloud/darwin_amd64/ccloud $(CC_SYSTEM_TEST_CHECKOUT_DIR)/test/cli/cli_bin/darwin_amd64/ccloud 
