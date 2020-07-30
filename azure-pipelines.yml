@@ -55,6 +55,9 @@ steps:
     . vault-sem-get-secret cpd_gcloud
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
+    . vault-sem-get-secret connect_aws_credentials
+    . vault-sem-get-secret GCP_CONNECT_CREDENTIALS
+    . vault-sem-get-secret connect_jdbc_credentials
     make docker-login
     make helm-repo-add
     make helm-init-ci
