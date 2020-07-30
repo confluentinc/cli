@@ -42,9 +42,9 @@ show-cpd:
 # https://askubuntu.com/questions/1135822 - ppa:jonathonf/python-2.7
 # https://launchpad.net/~jonathonf/+archive/ubuntu/python-2.7
 gcloud-install:
-echo $(VAULT_ROLE_ID)
-echo "inside gcloud-install"
 ifeq ($(CI),true)
+	echo $(VAULT_ROLE_ID)
+	echo "inside gcloud-install"
 	sudo add-apt-repository -y --remove ppa:jonathonf/python-2.7
 	sudo rm -f /etc/apt/sources.list.d/gcloud-source.list
 	sudo apt-get -y install apt-transport-https ca-certificates gnupg
