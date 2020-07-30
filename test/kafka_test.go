@@ -61,6 +61,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
+		{args: "kafka topic mirror stop test-topic", login: "default", useKafka: "lkc-topics", authKafka: "true"},
+		{args: "kafka topic mirror stop not-found", login: "default", useKafka: "lkc-topics", authKafka: "true", fixture: "kafka/mirror-topic-not-found.golden", wantErrCode: 1},
+		{args: "kafka topic mirror bad test-topic", login: "default", useKafka: "lkc-topics", authKafka: "true", fixture: "kafka/mirror-invalid.golden", wantErrCode: 1},
 	}
 
 	resetConfiguration(s.T(), "ccloud")
