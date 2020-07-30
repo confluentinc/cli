@@ -18,7 +18,7 @@ import (
 func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
 	f := form.New(
 		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
-		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret"},
+		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret", IsHidden: true},
 	)
 	if err := f.Prompt(command, pcmd.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
