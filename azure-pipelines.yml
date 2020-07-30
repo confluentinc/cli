@@ -55,9 +55,6 @@ steps:
     . vault-sem-get-secret cpd_gcloud
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
-    . vault-sem-get-secret connect_aws_credentials
-    . vault-sem-get-secret GCP_CONNECT_CREDENTIALS
-    . vault-sem-get-secret connect_jdbc_credentials
     make docker-login
     make helm-repo-add
     make helm-init-ci
@@ -108,19 +105,11 @@ steps:
   displayName: cpd priv testenv
 
 - bash: |
-    export PATH="$(Agent.BuildDirectory):$PATH"
-    . $(vaultsecrets.secureFilePath)
-    . mk-include/bin/vault-setup
-    . vault-sem-get-secret semaphore-secrets-global
-    . vault-sem-get-secret connect_aws_credentials
-    . vault-sem-get-secret connect_jdbc_credentials
-    echo $DOCKER_USER
-    echo "test after vault sem"
     CREATE_KAFKA_CLUSTERS=true make system-test-init-env || cpd-debug-and-err
   displayName: cc-system-tests make init-env 
 
 - bash: |
-    GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || cpd-debug-and-err
+    GO_TEST_PACKAGE_ARGS=./test/cli/... SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true TESTS_TO_RUN=Test make run-system-tests || cpd-debug-and-err
   displayName: 'Run system tests'
 
 - bash: |
