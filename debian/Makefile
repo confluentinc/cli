@@ -1,8 +1,5 @@
 SHELL=/bin/bash
 
-include semver.mk
-CLI_VERSION=$(CLEAN_VERSION)
-
 ifndef VERSION
 	VERSION=$(CLI_VERSION)
 endif
