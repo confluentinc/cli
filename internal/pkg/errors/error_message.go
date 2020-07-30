@@ -337,6 +337,9 @@ const (
 	NotLoggedInErrorMsg               = "not logged in"
 	NotLoggedInSuggestions            = "You must be logged in to run this command.\n" +
 		avoidTimeoutWithCLINameSuggestion
+	SRNotAuthenticatedErrorMsg    = "not logged in, and no Schema Registry endpoint specified"
+	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `ccloud login` to run this command.\n" +
+		avoidTimeoutWithCLINameSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
 		avoidTimeoutGeneralSuggestion

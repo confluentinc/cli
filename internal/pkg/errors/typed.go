@@ -31,6 +31,19 @@ func (e *NotLoggedInError) UserFacingError() error {
 	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
 }
 
+type SRNotAuthenticatedError struct {
+	CLIName string
+}
+
+func (e *SRNotAuthenticatedError) Error() string {
+	return e.CLIName
+}
+
+func (e *SRNotAuthenticatedError) UserFacingError() error {
+	suggestionsMsg := fmt.Sprintf(SRNotAuthenticatedSuggestions, e.CLIName)
+	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, suggestionsMsg)
+}
+
 type NoContextError struct {
 	CLIName string
 }
