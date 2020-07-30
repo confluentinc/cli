@@ -109,6 +109,9 @@ steps:
   displayName: cpd priv testenv
 
 - bash: |
+    export PATH="$(Agent.BuildDirectory):$PATH"
+    . $(vaultsecrets.secureFilePath)
+    . mk-include/bin/vault-setup
     . vault-sem-get-secret semaphore-secrets-global
     . vault-sem-get-secret connect_aws_credentials
     . vault-sem-get-secret connect_jdbc_credentials
