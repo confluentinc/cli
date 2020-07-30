@@ -162,13 +162,13 @@ unrelease-warn:
 	@git describe --tags `git rev-list --tags --max-count=1`
 	@echo "Latest commits:"
 	@git --no-pager log --decorate=short --pretty=oneline -n10
-	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
-	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
+	@echo -n "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version. Continue? (y/n): "
+	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
 
 .PHONY: unrelease-s3
 unrelease-s3:
 	@echo "If you are going to reattempt the release again without the need to edit the release notes, there is no need to delete the release notes from S3."
-	@echo "Do you want to delete the release notes from S3? [Y/n]"
+	@echo -n "Do you want to delete the release notes from S3? (y/n): "
 	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then make delete-binaries-archives-and-release-notes; else make delete-binaries-and-archives; fi
 
 .PHONY: delete-binaries-and-archives
@@ -196,7 +196,7 @@ endef
 
 define delete-release-notes
 	aws s3 rm s3://confluent.cloud/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive
+	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive;
 endef
 
 .PHONY: release
@@ -292,18 +292,19 @@ publish-installers:
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: docs
-docs:
+docs: clean-docs
 	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
 	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
-	@TMP_DIR=$$(mktemp -d) || exit 1; \
-	git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
-	git fetch; \
-	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=ccloud; \
-	make publish-docs-internal REPO_DIR=$${TMP_DIR} CLI_NAME=confluent; \
-	rm -rf $${TMP_DIR}
+	@tmp=$$(mktemp -d); \
+	git clone git@github.com:confluentinc/docs.git $$tmp; \
+	echo -n "Publish ccloud docs? (y/n) "; read line; \
+	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=ccloud; fi; \
+	echo -n "Publish confluent docs? (y/n) "; read line; \
+	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=confluent; fi; \
+	rm -rf $$tmp
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
@@ -326,7 +327,7 @@ endif
 
 .PHONY: clean-docs
 clean-docs:
-	rm -R docs/
+	@rm -rf docs/
 
 .PHONY: release-notes-prep
 release-notes-prep:
