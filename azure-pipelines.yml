@@ -58,6 +58,8 @@ steps:
     . vault-sem-get-secret connect_aws_credentials
     . vault-sem-get-secret GCP_CONNECT_CREDENTIALS
     . vault-sem-get-secret connect_jdbc_credentials
+    echo $DOCKER_USER
+    echo "inside OG yml"
     make docker-login
     make helm-repo-add
     make helm-init-ci
@@ -84,8 +86,8 @@ steps:
     version: '1.12.7'
 
 - bash: |
-    echo $VAULT_ROLE_ID
-    echo "inside yml"
+    echo $DOCKER_USER
+    echo "inside yml gcloud target"
     CI=true make gcloud-install
   displayName: 'Install gcloud'
 

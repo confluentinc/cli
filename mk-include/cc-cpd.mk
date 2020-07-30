@@ -43,7 +43,7 @@ show-cpd:
 # https://launchpad.net/~jonathonf/+archive/ubuntu/python-2.7
 gcloud-install:
 ifeq ($(CI),true)
-	echo $(VAULT_ROLE_ID)
+	echo $(DOCKER_USER)
 	echo "inside gcloud-install"
 	sudo add-apt-repository -y --remove ppa:jonathonf/python-2.7
 	sudo rm -f /etc/apt/sources.list.d/gcloud-source.list
