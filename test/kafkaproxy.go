@@ -24,6 +24,7 @@ func getListClustersHandler(t *testing.T) func(w http.ResponseWriter, r *http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			w.Header().Set("Content-Type", "application/json")
+			// Response jsons are created by editting examples from the Kafka REST Proxy OpenApi Spec
 			response := `{
 				"kind": "KafkaClusterList",
 				"metadata": { "self": "http://localhost:8082/v3/clusters", "next": null},

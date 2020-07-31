@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -23,6 +24,7 @@ type Commander struct {
 
 var _ cmd.PreRunner = (*Commander)(nil)
 
+// NewPreRunnerMock - Creates a mock of the PreRunner interface
 func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
 		Prompt: &Prompt{},
@@ -107,6 +109,17 @@ func (c *Commander) HasAPIKey(command *cmd.HasAPIKeyCLICommand) func(cmd *cobra.
 			return &errors.NoContextError{CLIName: c.Config.CLIName}
 		}
 		command.Context = ctx
+		return nil
+	}
+}
+
+func (c *Commander) UseKafkaProxy(command *cmd.UseKafkaProxyCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		err := c.Anonymous(command.CLICommand)(cmd, args)
+		if err != nil {
+			return err
+		}
+		command.ProxyClient = kafkaproxy.NewAPIClient(kafkaproxy.NewConfiguration())
 		return nil
 	}
 }

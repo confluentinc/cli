@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/jonboulle/clockwork"
@@ -24,11 +25,14 @@ import (
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
+
+// PreRunner - interface to describe different persistent prerun commands to register for different commands
 type PreRunner interface {
 	Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
+	UseKafkaProxy(command *UseKafkaProxyCLICommand) func(cmd *cobra.Command, args []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -64,6 +68,12 @@ type AuthenticatedCLICommand struct {
 type HasAPIKeyCLICommand struct {
 	*CLICommand
 	Context *DynamicContext
+}
+
+// UseKafkaProxyCLICommand - A wrapper for cobra.Command that registers function defined at UseKafkaProxy as PersistantPreRun for every command added
+type UseKafkaProxyCLICommand struct {
+	*CLICommand
+	ProxyClient *kafkaproxy.APIClient
 }
 
 func (a *AuthenticatedCLICommand) AuthToken() string {
@@ -106,6 +116,16 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPI
 	return cmd
 }
 
+// NewUseKafkaProxyCLICommand - Creates a wrapper for cobra.Command that registers function given at UseKafkaProxy as PersistantPreRunE for every command
+func NewUseKafkaProxyCLICommand(command *cobra.Command, prerunner PreRunner) *UseKafkaProxyCLICommand {
+	cmd := &UseKafkaProxyCLICommand{
+		CLICommand:  NewCLICommand(command, prerunner),
+		ProxyClient: nil,
+	}
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.UseKafkaProxy(cmd))
+	return cmd
+}
+
 func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, prerunner)
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd))
@@ -128,6 +148,13 @@ func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
+	command.PersistentPreRunE = h.PersistentPreRunE
+	h.Command.AddCommand(command)
+}
+
+// AddCommand - Use UseKafkaProxyCLICommand.AddCommand() instead of cobra.Command.AddCommand() to register
+// configured PreRun operations
+func (h *UseKafkaProxyCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }
@@ -297,6 +324,18 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
 			return err
 		}
+		return nil
+	}
+}
+
+// UseKafkaProxy provides PreRun operations for comamnds that require a Kafka REST Proxy client.
+func (r *PreRun) UseKafkaProxy(command *UseKafkaProxyCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		err := r.Anonymous(command.CLICommand)(cmd, args)
+		if err != nil {
+			return err
+		}
+		command.ProxyClient = kafkaproxy.NewAPIClient(kafkaproxy.NewConfiguration())
 		return nil
 	}
 }

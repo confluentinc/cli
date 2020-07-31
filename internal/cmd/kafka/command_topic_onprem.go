@@ -11,20 +11,19 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 
-	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3-6.0.x"
+	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
 )
 
 // Info needed to complete kafka topic ...
 type topicCommand struct {
-	*pcmd.CLICommand
+	*pcmd.UseKafkaProxyCLICommand
 	prerunner pcmd.PreRunner
 }
 
 // Return the command to be registered to the kafka topic slot
 func NewTopicCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	topicCmd := &topicCommand{
-		// Create CLICommand, use prerunner to set up PersistentPreRunE for Anonymous
-		CLICommand: pcmd.NewAnonymousCLICommand(
+		UseKafkaProxyCLICommand: pcmd.NewUseKafkaProxyCLICommand(
 			&cobra.Command{
 				Use:   "topic",
 				Short: "Manage Kafka topics.",
@@ -50,13 +49,14 @@ func (topicCmd *topicCommand) init() {
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
+				// on-prem examples are ccloud examples + "at specified cluster (providing REST proxy endpoint)."
 				Text: "List all topics at specified cluster (providing REST proxy endpoint).",
 				Code: "confluent kafka topic list --url http://localhost:8082",
 			},
 		),
 	}
 	listCmd.Flags().String("url", "", "Base URL to REST Proxy Endpoint of Kafka Cluster.")
-	check(listCmd.MarkFlagRequired("url")) // can set flag to being required
+	check(listCmd.MarkFlagRequired("url")) // TODO: unset url as required
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	// same as topicCmd.CLICommand.Command.AddCommand(..)
@@ -108,28 +108,26 @@ func (topicCmd *topicCommand) init() {
 	// topicCmd.AddCommand(createCmd)
 }
 
-// TODO: Should I refactor this into a Prerunner?
-// I currently have it outside because the url is passed in by user
-func createProxyClient(url string) *kafkaproxy.APIClient {
-	config := kafkaproxy.NewConfiguration()
-	config.BasePath = strings.Trim(url, "/") + "/v3" // TODO: Not sure if I want this trimming
-	return kafkaproxy.NewAPIClient(config)
+func setServerURL(client *kafkaproxy.APIClient, url string) {
+	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
 // Called when command matches registered words
 // topicCommand is *this* current topicCommand
 // cobra.Command contains the cobra.Command matched by CLI input
 // args contains all the args after the first string
+// testing: 1) argument parsing/validation, 2) argument -> return from proxy, 3) given objects -> formatting output
 func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil { // require the flag
 		return err
 	}
 
-	proxyClient := createProxyClient(url)
+	setServerURL(topicCmd.ProxyClient, url)
+	proxyClient := topicCmd.ProxyClient
+
 	// Get Cluster Id
 	clusters, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
-	// TODO: Should I take the HTTP response and parse it create a more helpful error message? Similar to cmd/cluster/command_list.go:listCmd.list()
 	if err != nil {
 		return err
 	}
