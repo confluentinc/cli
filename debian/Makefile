@@ -35,8 +35,6 @@ BINPATH=$(PREFIX)/bin
 LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
-INSTALL=install -D -m 644
-
 download:
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
@@ -63,7 +61,7 @@ download:
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
 	for svc in debian/*.service; do \
-	    $(INSTALL) -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
+	    install -m 644 -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
 	done
 
 clean:
