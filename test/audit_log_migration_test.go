@@ -24,7 +24,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 			args:
 			fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2", malformed, migration2),
-			fixture:    "auditlog/malformed-migration-result.golden",
+			contains: "Ignoring property file",
 		},
 		{
 			args:

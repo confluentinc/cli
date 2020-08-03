@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -34,20 +35,27 @@ func (c *migrateCmd) init() {
 		Short: "Migrate legacy audit log configurations.",
 		Long: "Migrate legacy audit log configurations. " +
 			"Use `--combine` to read in multiple Kafka broker server.properties files, " +
-			"combine the values of each of their `confluent.security.event.router.config` properties, " +
-			"and output a combined configuration to standard output, suitable for centralized audit log " +
-			"management, along with any warnings to standard error.",
-		RunE: c.config,
+			"combine the values of their `confluent.security.event.router.config` properties " +
+			"and output a combined configuration suitable for centralized audit log " +
+			"management to standard output along with any warnings to standard error.",
+		RunE: c.migrate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Combine two audit log configuration files.",
+				Code: "confluent audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
+					"--bootstrap-servers logs.example.com:9092 --bootstrap-servers logs.example.com:9093 --authority mds.example.com",
+			},
+		),
 		Args: cobra.NoArgs,
 	}
-	configCmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the path to a copy of that cluster's server.properties file. (See https://docs.confluent.io/current/security/rbac/rbac-get-cluster-ids.html for information on how to find your clusters' IDs.) Example: --combine "clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties".`)
-	configCmd.Flags().StringArray("bootstrap-servers", nil, `A public hostname:port of a broker in the Kafka cluster that will receive audit log events. This argument may be repeated multiple times. Example: --bootstrap-servers logs.example.com:9092 --bootstrap-servers logs.example.com:9093.`)
-	configCmd.Flags().String("authority", "", `The CRN authority to use in all route patterns. Example: --authority mds.example.com.`)
+	configCmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the filepaths of that cluster's server.properties file.`)
+	configCmd.Flags().StringArray("bootstrap-servers", nil, `A public hostname:port of a broker in the Kafka cluster that will receive audit log events.`)
+	configCmd.Flags().String("authority", "", `The CRN authority to use in all route patterns.`)
 	configCmd.Flags().SortFlags = false
 	c.AddCommand(configCmd)
 }
 
-func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
+func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 	var err error
 
 	crnAuthority := ""
@@ -80,10 +88,9 @@ func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 			}
 
 			routerConfig, ok := propertyFile.Get("confluent.security.event.router.config")
-
 			if !ok {
-				fmt.Println(fmt.Sprintf("Property file %s does not contain a router configuration, failed to migrate.", filePath))
-				return nil
+				fmt.Println(fmt.Sprintf("Ignoring property file %s because it does not contain a router configuration.", filePath))
+				continue
 			}
 			clusterConfigs[clusterId] = routerConfig
 		}
