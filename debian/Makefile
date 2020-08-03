@@ -61,6 +61,8 @@ download:
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
 
+	touch $(DESTDIR)$(SYSCONFDIR)/empty # A file is required in this directory to build the DEB package
+
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
 	for svc in debian/*.service; do \
