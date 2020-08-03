@@ -659,6 +659,23 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		if err != nil {
+			if err.Error() == "ccloud" {
+				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+			} else {
+				return err
+			}
+		}
+	} else {
+		srClient, ctx = nil, nil
+	}
+
 	InitSarama(h.logger)
 	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
@@ -680,23 +697,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			pcmd.ErrPrintln(cmd, "ERROR", err)
 		}
 	}()
-
-	var srClient *srsdk.APIClient
-	var ctx context.Context
-	if valueFormat != "string" {
-
-		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
-		if err != nil {
-			if err.Error() == "ccloud" {
-				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
-			} else {
-				return err
-			}
-		}
-	} else {
-		srClient, ctx = nil, nil
-	}
 
 	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
