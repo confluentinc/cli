@@ -49,6 +49,9 @@ download:
 	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+
 	cd $(DESTDIR)$(LIBPATH) ; \
 	for dir in darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64; do \
 		mkdir -p $${dir} ; \
