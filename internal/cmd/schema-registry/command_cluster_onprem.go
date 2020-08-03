@@ -40,8 +40,8 @@ func (c *clusterCommandOnPrem) init() {
 		Use:   "list",
 		Short: "List registered Schema Registry clusters.",
 		Long:  "List Schema Registry clusters that are registered with the MDS cluster registry.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false

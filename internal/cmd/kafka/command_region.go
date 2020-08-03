@@ -38,8 +38,8 @@ func (c *regionCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List cloud provider regions.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)

@@ -29,8 +29,8 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Log out of %s.", remoteAPIName),
-		RunE:  pcmd.NewCLIRunE(a.logout),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(a.logout),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 			a.analyticsClient.SetCommandType(analytics.Logout)
 			return a.CLICommand.PersistentPreRunE(cmd, args)
@@ -53,6 +53,6 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Println(errors.LoggedOutMsg)
+	pcmd.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

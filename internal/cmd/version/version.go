@@ -16,7 +16,7 @@ func New(cliName string, prerunner pcmd.PreRunner, v *version.Version) *cobra.Co
 			Use:   "version",
 			Short: fmt.Sprintf("Show version of the %s.", version.GetFullCLIName(cliName)),
 			Run: func(cmd *cobra.Command, _ []string) {
-				cmd.Println(v)
+				pcmd.Println(cmd, v)
 			},
 			Args: cobra.NoArgs,
 		}, prerunner)

@@ -10,10 +10,11 @@ import (
 	"strconv"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/Shopify/sarama"
 )
@@ -94,7 +95,7 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 			return err
 		}
 
-		if h.Format != "RAW" {
+		if h.Format != "string" {
 			schemaPath, err := h.RequestSchema(value)
 			if err != nil {
 				return err

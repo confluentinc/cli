@@ -128,8 +128,8 @@ func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		Use:   "prompt",
 		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.GetFullCLIName(cliName)),
 		Long:  strings.ReplaceAll(longDescriptionTemplate, "{{.CLIName}}", cliName),
-		RunE:  pcmd.NewCLIRunE(c.prompt),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
 	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
 	defaultFormat := `({{color "blue" "ccloud"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
@@ -186,7 +186,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	// Wait for parse results, error, or timeout
 	select {
 	case prompt := <-retCh:
-		cmd.Println(prompt)
+		pcmd.Println(cmd, prompt)
 	case err := <-errCh:
 		c.Command.SilenceUsage = true
 		return errors.Wrapf(err, errors.ParsePromptFormatErrorMsg, format)

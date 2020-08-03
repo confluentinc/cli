@@ -6,16 +6,18 @@ import (
 )
 
 type Example struct {
-	Desc string
+	Text string
 	Code string
 }
 
 func BuildExampleString(examples ...Example) string {
 	str := strings.Builder{}
 	for _, e := range examples {
-		str.WriteString(e.Desc + "\n\n")
-		str.WriteString("::\n\n")
-		str.WriteString(tab(e.Code) + "\n\n")
+		str.WriteString(e.Text + "\n\n")
+		if e.Code != "" {
+			str.WriteString("::\n\n")
+			str.WriteString(tab(e.Code) + "\n\n")
+		}
 	}
 	return str.String()
 }

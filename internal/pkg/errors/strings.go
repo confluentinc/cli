@@ -38,12 +38,14 @@ const (
 	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
 	// kafka topic commands
-	StartingProducerMsg  = "Starting Kafka Producer. ^C or ^D to exit"
-	StoppingConsumer     = "Stopping Consumer."
-	StartingConsumerMsg  = "Starting Kafka Consumer. ^C or ^D to exit"
-	CreatedTopicMsg      = "Created topic \"%s\".\n"
-	DeletedTopicMsg      = "Deleted topic \"%s\".\n"
-	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
+	StartingProducerMsg    = "Starting Kafka Producer. ^C or ^D to exit"
+	StoppingConsumer       = "Stopping Consumer."
+	StartingConsumerMsg    = "Starting Kafka Consumer. ^C or ^D to exit"
+	CreatedTopicMsg        = "Created topic \"%s\".\n"
+	DeletedTopicMsg        = "Deleted topic \"%s\".\n"
+	UpdateTopicConfigMsg   = "Updated the following configs for topic \"%s\":\n"
+	InvalidMirrorActionMsg = "Invalid mirror action \"%s\" provided.\n"
+	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
 
 	// kafka acl commands
 	DeletedACLsMsg = "Deleted ACLs."

@@ -12,12 +12,12 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "destroy",
-			Args:  cobra.NoArgs,
 			Short: "Delete the data and logs for the current Confluent run.",
 			Long:  "Delete an existing Confluent Platform run. All running services are stopped and the data and the log files of all services are deleted.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "If you run the ``confluent local destroy`` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
+					Text: "If you run the ``confluent local destroy`` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
 					Code: "confluent local destroy",
 				},
 			),

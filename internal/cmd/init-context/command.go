@@ -102,7 +102,7 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.Printf(errors.InitContextMsg, contextName)
+	pcmd.Printf(cmd, errors.InitContextMsg, contextName)
 	return nil
 }
 

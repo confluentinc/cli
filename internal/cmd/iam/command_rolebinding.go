@@ -88,29 +88,29 @@ func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Comma
 func (c *rolebindingCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
 		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
+		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Desc: "Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:",
+				Text: "Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:",
 				Code: "iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
-				Desc: "To list the role bindings for a specific principal:",
+				Text: "To list the role bindings for a specific principal:",
 				Code: "iam rolebinding list --kafka-cluster-id $CID --principal User:frodo",
 			},
 			examples.Example{
-				Desc: "To list the role bindings for a specific principal, filtered to a specific role:",
+				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
 				Code: "iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
 			},
 			examples.Example{
-				Desc: "To list the principals bound to a specific role:",
+				Text: "To list the principals bound to a specific role:",
 				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite",
 			},
 			examples.Example{
-				Desc: "To list the principals bound to a specific resource with a specific role:",
+				Text: "To list the principals bound to a specific resource with a specific role:",
 				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
 			},
 		),
@@ -122,15 +122,15 @@ func (c *rolebindingCommand) init() {
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 		c.Example = examples.BuildExampleString(
 			examples.Example{
-				Desc: "To list the role bindings for a specific principal:",
+				Text: "To list the role bindings for a specific principal:",
 				Code: "iam rolebinding list --principal User:frodo",
 			},
 			examples.Example{
-				Desc: "To list the role bindings for a specific principal, filtered to a specific role:",
+				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
 				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
 			},
 			examples.Example{
-				Desc: "To list the principals bound to a specific role",
+				Text: "To list the principals bound to a specific role",
 				Code: "iam rolebinding list --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
 			},
 		)
@@ -150,8 +150,8 @@ func (c *rolebindingCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a role binding.",
-		RunE:  cmd.NewCLIRunE(c.create),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.create),
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
@@ -176,8 +176,8 @@ func (c *rolebindingCommand) init() {
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete an existing role binding.",
-		RunE:  cmd.NewCLIRunE(c.delete),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.delete),
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")

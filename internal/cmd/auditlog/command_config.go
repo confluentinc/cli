@@ -41,8 +41,8 @@ func (c *configCommand) init() {
 		Use:   "describe",
 		Short: "Prints the audit log configuration spec object.",
 		Long:  `Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.`,
-		RunE:  cmd.NewCLIRunE(c.describe),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.describe),
 	}
 	c.AddCommand(describeCmd)
 
@@ -50,8 +50,8 @@ func (c *configCommand) init() {
 		Use:   "update",
 		Short: "Submits audit-log config spec object to the API.",
 		Long:  "Submits an audit-log configuration specification JSON object to the API.",
-		RunE:  cmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
 	updateCmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
@@ -62,8 +62,8 @@ func (c *configCommand) init() {
 		Use:   "edit",
 		Short: "Edit the audit-log config spec interactively.",
 		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
-		RunE:  cmd.NewCLIRunE(c.edit),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.edit),
 	}
 	c.AddCommand(editCmd)
 }
