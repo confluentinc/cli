@@ -3,11 +3,14 @@ package kafka
 // confluent kafka topic <commands>
 import (
 	"context"
+	"net/http"
+	purl "net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 
@@ -45,7 +48,7 @@ func (topicCmd *topicCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  topicCmd.listTopics,
+		RunE:  pcmd.NewCLIRunE(topicCmd.listTopics),
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -112,6 +115,18 @@ func setServerURL(client *kafkaproxy.APIClient, url string) {
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
+func handleCommonProxyClientErrors(url string, proxyClient *kafkaproxy.APIClient, resp *http.Response, err error) error {
+	// fmt.Printf("[INFO] http.Response:%v, TypeOf(err): %v, ValueOf(err): %v\n\n", resp, reflect.TypeOf(err), reflect.ValueOf(err))
+	switch err.(type) {
+	case *purl.Error: // Handle errors with request url
+		if e, ok := err.(*purl.Error); ok {
+			// TODO: Currently this error exposes implementation detail
+			return errors.Errorf(errors.InvalidFlagValueWithWrappedErrorErrorMsg, url, "url", e.Err)
+		}
+	}
+	return err
+}
+
 // Called when command matches registered words
 // topicCommand is *this* current topicCommand
 // cobra.Command contains the cobra.Command matched by CLI input
@@ -127,16 +142,16 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 	proxyClient := topicCmd.ProxyClient
 
 	// Get Cluster Id
-	clusters, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
+	clusters, resp, err := proxyClient.ClusterApi.ClustersGet(context.Background())
 	if err != nil {
-		return err
+		return handleCommonProxyClientErrors(url, proxyClient, resp, err)
 	}
 	clusterId := clusters.Data[0].ClusterId
 
 	// Get Topics
-	topicGetResp, _, err := proxyClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
+	topicGetResp, resp, err := proxyClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
 	if err != nil {
-		return err
+		return handleCommonProxyClientErrors(url, proxyClient, resp, err)
 	}
 	topicDatas := topicGetResp.Data
 

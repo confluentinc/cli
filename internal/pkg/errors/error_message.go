@@ -300,9 +300,10 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
+	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
+	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
+	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."
+	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %v"
 
 	// catcher
 	CCloudBackendErrorPrefix           = "CCloud backend error"
