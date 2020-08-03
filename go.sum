@@ -94,11 +94,16 @@ github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oV
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
 github.com/confluentinc/cc-structs v0.489.0 h1:xCAh+ucgf/8f21f+5IN/Yf3IKJEmBA49/dzqm8TuV6A=
 github.com/confluentinc/cc-structs v0.539.0 h1:SMDElTZg2J3Ari+hNq3qvqn7UDk8qQGIyrjbKhH4zvM=
+github.com/confluentinc/cc-structs v0.552.0 h1:a4cIgOTs8lxTa3cJAqsXY0W4UXF/mTqs8MRiKkdZdXs=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.425.0/go.mod h1:trTGs5se3ZijGqrRK5Vn0ld/0pWo0yPVMnxX13rBR3I=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.552.0 h1:W5sf9XKa57tl66ZO4wwEv7IqgvZvh/R1tNazCBy4yrc=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.552.0/go.mod h1:trTGs5se3ZijGqrRK5Vn0ld/0pWo0yPVMnxX13rBR3I=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0 h1:IN35U9e0RCFV8aMuYw2T5HYqgFXyVAMG5sjhByls3QA=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0/go.mod h1:L+dZvy79zQxK77MuOeqbJ8UWevydL1U1pqYGNiZGs3M=
 github.com/confluentinc/cc-structs/kafka/core v0.402.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
 github.com/confluentinc/cc-structs/kafka/core v0.405.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
 github.com/confluentinc/cc-structs/kafka/core v0.408.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
+github.com/confluentinc/cc-structs/kafka/core v0.410.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
 github.com/confluentinc/cc-structs/kafka/core v0.419.0 h1:KGI3oV6wVrUyxSJxNsfwFu2kDt4jlv8Ub1GzSircU00=
 github.com/confluentinc/cc-structs/kafka/core v0.419.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
 github.com/confluentinc/cc-structs/kafka/metrics v0.419.0 h1:KlJjrMMCWBQ3AWOmr/FlBw/c6tV2FwUjiE2kqMRs2bg=
@@ -114,6 +119,9 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0 h1:zg5/pQf7YjgFS9wTp
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.489.0 h1:RVYzQPu+MkQwrmr2hBeJKLNuQf/iN7t/H/ifg/PVjQo=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.539.0 h1:hHIoOUf/ezBQtmGYQif9xiML8NcpLELI6FFc2Z4Hz3E=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0 h1:MpZuFbQHeMwEWUZZv+tSnXT2Gx96wB2TDpgGWsftE7Y=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0 h1:bDeXoIAPhHZjpaceVGldJ0gm4y1n5DrzZELd+th+J28=
@@ -129,6 +137,8 @@ github.com/confluentinc/ccloud-sdk-go v0.0.37 h1:Adsm6LWiSwY6KE9NJ29bwTuhZ8uuQ82
 github.com/confluentinc/ccloud-sdk-go v0.0.37/go.mod h1:Ul0KCC3x08tWI/EHlX1zG2eCAwfMT1+VA4e0y+wc35E=
 github.com/confluentinc/ccloud-sdk-go v0.0.40 h1:gIlXw7pLKTot9yKNC9Nj//nOXwAq4DeSo0RKM6C9IGE=
 github.com/confluentinc/ccloud-sdk-go v0.0.40/go.mod h1:Ul0KCC3x08tWI/EHlX1zG2eCAwfMT1+VA4e0y+wc35E=
+github.com/confluentinc/ccloud-sdk-go v0.0.44 h1:Win/LzWTuJcWZ6xjIxwXk2a9vaZAeYtESUN33XXCLwE=
+github.com/confluentinc/ccloud-sdk-go v0.0.44/go.mod h1:48t8bLxiG++HLSkYqehV3ue0HIgpy5aBV7K/nIWdVrI=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.13.0 h1:zgmoYZPQ51xjOPSW4G+QimPcoZEAflCb4UsgvlKA544=
@@ -703,6 +713,7 @@ golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACk
 golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5/go.mod h1:WFFai1msRO1wXaEeE5yQxYXgSfI8pQAWXbQop6sCtWE=
 golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
+golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392/go.mod h1:/lpIB1dKB+9EgE3H3cr1v9wB50oz8l4C4h62xy7jSTY=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
@@ -746,6 +757,7 @@ golang.org/x/net v0.0.0-20190603091049-60506f45cf65/go.mod h1:HSz+uSET+XFnRR8LxR
 golang.org/x/net v0.0.0-20190613194153-d28f0bde5980/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190724013045-ca1201d0de80/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190923162816-aa69164e4478/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200226121028-0de0cce0169b/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200301022130-244492dfa37a/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
@@ -787,6 +799,7 @@ golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a h1:aYOabOQFp6Vj6W1F80affTUvO
 golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190922100055-0a153f010e69/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191113165036-4c7a9d0fe056/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

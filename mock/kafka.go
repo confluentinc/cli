@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 )
@@ -105,6 +106,30 @@ func (m *Kafka) CreateACLs(_ context.Context, _ *schedv1.KafkaCluster, bindings 
 
 func (m *Kafka) DeleteACLs(_ context.Context, _ *schedv1.KafkaCluster, filters []*schedv1.ACLFilter) error {
 	return assertEqualFilters(filters, <-m.Expect)
+}
+
+func (s *Kafka) ListLinks(_ context.Context, _ *schedv1.KafkaCluster) ([]string, error) {
+	return nil, nil
+}
+
+func (s *Kafka) CreateLink(_ context.Context, _ *schedv1.KafkaCluster, _ string, _ *linkv1.LinkSourceCluster, _ *linkv1.CreateLinkOptions) error {
+	return nil
+}
+
+func (s *Kafka) DeleteLink(_ context.Context, _ *schedv1.KafkaCluster, _ string, _ *linkv1.DeleteLinkOptions) error {
+	return nil
+}
+
+func (s *Kafka) DescribeLink(_ context.Context, _ *schedv1.KafkaCluster, _ string) (*linkv1.LinkProperties, error) {
+	return nil, nil
+}
+
+func (s *Kafka) AlterLink(_ context.Context, _ *schedv1.KafkaCluster, _ string, _ *linkv1.LinkProperties, _ *linkv1.AlterLinkOptions) error {
+	return nil
+}
+
+func (m *Kafka) AlterMirror(_ context.Context, _ *schedv1.KafkaCluster, _ *schedv1.AlterMirrorOp) (*schedv1.AlterMirrorResult, error) {
+	return nil, nil
 }
 
 func assertEquals(actual interface{}, expected interface{}) error {

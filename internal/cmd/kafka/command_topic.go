@@ -155,6 +155,8 @@ func (a *authenticatedTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
+	cmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	cmd.Flags().SortFlags = false
@@ -192,6 +194,23 @@ func (a *authenticatedTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	cmd.Flags().SortFlags = false
+	a.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "mirror <action> <topic>",
+		Short: "Perform a mirroring action on a Kafka topic.",
+		Args:  cobra.ExactArgs(2),
+		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Stop the mirroring of topic ``my_topic``",
+				Code: "ccloud kafka topic mirror stop my_topic",
+			},
+		),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 
@@ -268,6 +287,21 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if topic.Spec.Configs, err = toMap(configs); err != nil {
 		return err
 	}
+
+	linkName, err := cmd.Flags().GetString("link")
+	if err != nil {
+		return err
+	}
+
+	mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
+	if err != nil {
+		return err
+	}
+
+	if len(linkName) > 0 || len(mirrorTopic) > 0 {
+		topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
+	}
+
 	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		ifNotExistsFlag, flagErr := cmd.Flags().GetBool("if-not-exists")
 		if flagErr != nil {
@@ -348,6 +382,50 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return entries[i][0] < entries[j][0]
 	})
 	printer.RenderCollectionTable(entries, titleRow)
+	return nil
+}
+
+func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) error {
+	const stopAction = "stop"
+
+	action := args[0]
+	topic := args[1]
+
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	if err != nil {
+		return err
+	}
+
+	validate, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+
+	op := &schedv1.AlterMirrorOp{}
+	switch action {
+	case stopAction:
+		op.Type = &schedv1.AlterMirrorOp_StopTopicMirror_{
+			StopTopicMirror: &schedv1.AlterMirrorOp_StopTopicMirror{
+				Topic: &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic}, Validate: validate},
+			},
+		}
+	default:
+		return fmt.Errorf(errors.InvalidMirrorActionMsg, action)
+	}
+
+	result, err := a.Client.Kafka.AlterMirror(context.Background(), cluster, op)
+	if err != nil {
+		return err
+	}
+
+	switch action {
+	case stopAction:
+		result.GetStopTopicMirror()
+		pcmd.Printf(cmd, errors.StoppedTopicMirrorMsg, topic)
+	default:
+		panic("unreachable")
+	}
+
 	return nil
 }
 
