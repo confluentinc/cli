@@ -74,8 +74,10 @@ fi
 
 %files
 %defattr(-,root,root)
-/usr/bin/*
 /lib/systemd/system/
+/usr/bin/
+/usr/libexec/cli/
+/usr/share/doc/cli/
 
 %doc
 
