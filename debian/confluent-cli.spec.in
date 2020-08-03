@@ -77,11 +77,8 @@ fi
 /lib/systemd/system/
 /usr/bin/
 /usr/libexec/cli/
-/usr/share/doc/cli/
-
 %doc
-
-%config(noreplace) /etc/cli/*
+/usr/share/doc/cli/
 
 %clean
 #used to cleanup things outside the build area and possibly inside.
