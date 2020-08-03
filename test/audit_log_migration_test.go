@@ -7,8 +7,8 @@ import (
 )
 
 func (s *CLITestSuite) TestAuditConfigMigrate() {
-	migration1 := getInputFixturePath("config-migration1.golden", s)
-	migration2 := getInputFixturePath("config-migration2.golden", s)
+	migration1 := getInputFixturePath("config-migration-server1.golden", s)
+	migration2 := getInputFixturePath("config-migration-server2.golden", s)
 
 	malformed := getInputFixturePath("malformed-migration.golden", s)
 	nullFields := getInputFixturePath("null-fields-migration.golden", s)
@@ -24,8 +24,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 			args:
 			fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2", malformed, migration2),
-			wantErrCode: 1,
-			contains:    "cluster123",
+			fixture:    "auditlog/malformed-migration-result.golden",
 		},
 		{
 			args:

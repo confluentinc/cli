@@ -94,6 +94,7 @@ github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oV
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
 github.com/confluentinc/cc-structs v0.489.0 h1:xCAh+ucgf/8f21f+5IN/Yf3IKJEmBA49/dzqm8TuV6A=
 github.com/confluentinc/cc-structs v0.539.0 h1:SMDElTZg2J3Ari+hNq3qvqn7UDk8qQGIyrjbKhH4zvM=
+github.com/confluentinc/cc-structs v0.553.0 h1:12wpBybrd1iXeKvVcMWFAliMepfORVViI/PE8Ej9f3k=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0 h1:IN35U9e0RCFV8aMuYw2T5HYqgFXyVAMG5sjhByls3QA=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0/go.mod h1:L+dZvy79zQxK77MuOeqbJ8UWevydL1U1pqYGNiZGs3M=
 github.com/confluentinc/cc-structs/kafka/core v0.402.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
@@ -114,6 +115,7 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0 h1:zg5/pQf7YjgFS9wTp
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.489.0 h1:RVYzQPu+MkQwrmr2hBeJKLNuQf/iN7t/H/ifg/PVjQo=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.539.0 h1:hHIoOUf/ezBQtmGYQif9xiML8NcpLELI6FFc2Z4Hz3E=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.553.0 h1:QadiZRo2/VF33Oj5nMtrSc5u7wOlvbYWDKC7C0DW9Tg=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0 h1:bDeXoIAPhHZjpaceVGldJ0gm4y1n5DrzZELd+th+J28=
@@ -908,6 +910,7 @@ honnef.co/go/tools v0.0.0-20180728063816-88497007e858/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.1-2019.2.3 h1:3JgtbtFHMiCmsznwGVTUWbgGov+pVqnlf1dEJTNAXeM=
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
+honnef.co/go/tools v0.0.1-2020.1.4 h1:UoveltGrhghAA7ePc+e+QYDHXrBps2PqFZiHkGR/xK8=
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 howett.net/plist v0.0.0-20180609054337-500bd5b9081b/go.mod h1:jInWmjR7JRkkon4jlLXDZGVEeY/wo3kOOJEWYhNE+9Y=
 k8s.io/api v0.0.0-20190126160459-e86510ea3fe7 h1:bpzcyMZqWWEpthYsmuzaqww6OppRDyBJbWycBUOFLKY=

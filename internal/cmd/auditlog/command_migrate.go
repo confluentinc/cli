@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 )
 
 type migrateCmd struct {
@@ -74,11 +74,18 @@ func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 		}
 
 		for clusterId, filePath := range fileNameMap {
-			fileContents, err := ioutil.ReadFile(filePath)
+			propertyFile, err := utils.LoadPropertiesFile(filePath)
 			if err != nil {
 				return errors.HandleCommon(err, cmd)
 			}
-			clusterConfigs[clusterId] = string(fileContents)
+
+			routerConfig, ok := propertyFile.Get("confluent.security.event.router.config")
+
+			if !ok {
+				fmt.Println(fmt.Sprintf("Property file %s does not contain a router configuration, failed to migrate.", filePath))
+				return nil
+			}
+			clusterConfigs[clusterId] = routerConfig
 		}
 	}
 

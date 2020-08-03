@@ -16,11 +16,11 @@ Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" h
       "new_bootstrap_2"
     ],
     "topics": {
-      "DIFFERENT-DEFAULT-TOPIC": {
-        "retention_ms": 100
-      },
       "confluent-audit-log-events": {
         "retention_ms": 500
+      },
+      "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC": {
+        "retention_ms": 100
       },
       "confluent-audit-log-events_billing": {
         "retention_ms": 2592000000
@@ -51,26 +51,26 @@ Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" h
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC": {
       "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*": {
       "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*": {
       "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=*": {
       "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*": {
@@ -95,8 +95,8 @@ Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" h
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=different-cluster-id/topic=payroll-*": {
       "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       },
       "produce": {
         "allowed": "confluent-audit-log-events_payroll",

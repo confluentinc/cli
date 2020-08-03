@@ -1,5 +1,11 @@
 package utils
 
+import (
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/properties"
+	"os"
+)
+
 func Max(x, y int64) int64 {
 	if x > y {
 		return x
@@ -45,4 +51,29 @@ func Contains(haystack []string, needle string) bool {
 		}
 	}
 	return false
+}
+
+func DoesPathExist(path string) bool {
+	if path == "" {
+		return false
+	}
+
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+func LoadPropertiesFile(path string) (*properties.Properties, error) {
+	if !DoesPathExist(path) {
+		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
+	}
+	loader := new(properties.Loader)
+	loader.Encoding = properties.UTF8
+	loader.PreserveFormatting = true
+	//property.DisableExpansion = true
+	property, err := loader.LoadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	property.DisableExpansion = true
+	return property, nil
 }
