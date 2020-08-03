@@ -17,6 +17,7 @@ Requires: confluent-rest-utils
 You can use the Confluent command line interface (CLI) to manage Confluent Platform, including RBAC, secrets, and the ability to deploy a single-node Confluent Platform instance.
 
 %define __jar_repack %{nil}
+%define _binaries_in_noarch_packages_terminate_build 0
 
 %pre
 _group=confluent
