@@ -58,12 +58,9 @@ func (c *migrateCmd) init() {
 func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 	var err error
 
-	crnAuthority := ""
-	if cmd.Flags().Changed("authority") {
-		crnAuthority, err = cmd.Flags().GetString("authority")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+	crnAuthority, err := cmd.Flags().GetString("authority")
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
 	}
 
 	bootstrapServers := []string{}
