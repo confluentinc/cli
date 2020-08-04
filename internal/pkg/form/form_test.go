@@ -36,31 +36,26 @@ func TestPrompt(t *testing.T) {
 
 func TestShow(t *testing.T) {
 	field := Field{Prompt: "Username"}
-	testShow(t, field, nil, "Username: ")
+	testShow(t, field, "Username: ")
 }
 
 func TestShowYesOrNo(t *testing.T) {
 	field := Field{Prompt: "Ok?", IsYesOrNo: true}
-	testShow(t, field, nil, "Ok? (y/n): ")
+	testShow(t, field, "Ok? (y/n): ")
 }
 
 func TestShowDefault(t *testing.T) {
 	field := Field{Prompt: "Username", DefaultValue: "user"}
-	testShow(t, field, nil, "Username: (user) ")
+	testShow(t, field, "Username: (user) ")
 }
 
-func TestShowSavedValue(t *testing.T) {
-	field := Field{Prompt: "Username"}
-	testShow(t, field, "user", "Username: (user) ")
-}
-
-func testShow(t *testing.T, field Field, savedValue interface{}, output string) {
+func testShow(t *testing.T, field Field, output string) {
 	command := new(cobra.Command)
 
 	out := new(bytes.Buffer)
 	command.SetOut(out)
 
-	show(command, field, savedValue)
+	show(command, field)
 	require.Equal(t, output, out.String())
 }
 
