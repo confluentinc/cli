@@ -113,12 +113,14 @@ func (c *command) signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.
 			if err := client.Signup.SendVerificationEmail(context.Background(), res); err != nil {
 				return err
 			}
+
 			pcmd.Printf(cmd, "A new verification email has been sent to %s.\n", f.Responses["email"].(string))
+			continue
 		}
 
 		if _, err := client.Auth.Login(context.Background(), "", f.Responses["email"].(string), f.Responses["password"].(string)); err != nil {
 			if err.Error() == "username or password is invalid" {
-				pcmd.ErrPrintln(cmd, "Your email is not verified.")
+				pcmd.ErrPrintln(cmd, "Sorry, your email is not verified.")
 				continue
 			}
 			return err
