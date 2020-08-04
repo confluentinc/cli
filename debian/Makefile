@@ -19,9 +19,11 @@ endif
 
 ifeq ($(PACKAGE_TYPE),archive)
 PREFIX=$(PACKAGE_NAME)
+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
 SYSTEMDDIR=$(PREFIX)/lib/systemd/system
 else
 PREFIX=/usr
+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 SYSTEMDDIR=/lib/systemd/system
 endif
 
@@ -35,18 +37,17 @@ BINPATH=$(PREFIX)/bin
 LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
-INSTALL=install -D -m 644
-INSTALL_X=install -D -m 755
-
 download:
-	if [[ $(DESTDIR)$(PREFIX) != /tmp/confluent/* ]]; then echo "DESTDIR=$(DESTDIR) or PREFIX=$(PREFIX) is incorrect" ; exit 1 ; fi
-
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
 	mkdir -p $(DESTDIR)$(BINPATH)
 	mkdir -p $(DESTDIR)$(LIBPATH)
 	mkdir -p $(DESTDIR)$(DOCPATH)
+	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+
+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
 	cd $(DESTDIR)$(LIBPATH) ; \
 	for dir in darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64; do \
@@ -57,20 +58,16 @@ download:
 		chmod 755 $${filepath} ; \
 	done
 
-	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
 
-	for svc in debian/*.service ; do \
-	    $(INSTALL) -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
-	done
+	touch $(DESTDIR)$(SYSCONFDIR)/empty # A file is required in this directory to build the RPM package
 
-	cd cli-package/target/cli-package-$(VERSION)-package ; \
-	find bin/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL_X) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ; \
-	find libexec/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ; \
-	find share/ -type f | grep -v README[.]rpm | xargs -I XXX $(INSTALL) -o root -g root XXX $(DESTDIR)$(PREFIX)/XXX ; \
+	chown -R root:root $(DESTDIR)$(PREFIX)
+
+	for svc in debian/*.service; do \
+	    install -m 644 -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
+	done
 
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
@@ -117,7 +114,7 @@ RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	sed "s@##RPMVERSION##@$(RPM_VERSION)@g; s@##RPMRELEASE##@$(RPM_RELEASE_ID)@g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 

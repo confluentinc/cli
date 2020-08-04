@@ -791,6 +791,18 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
+
+	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/test-topic/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/not-found/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
