@@ -52,7 +52,7 @@ func New(fields ...Field) *Form {
 
 func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 	for _, field := range f.Fields {
-		show(command, field, f.Responses[field.ID])
+		show(command, field)
 
 		val, err := read(field, prompt)
 		if err != nil {
@@ -69,16 +69,14 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 	return nil
 }
 
-func show(cmd *cobra.Command, field Field, savedValue interface{}) {
+func show(cmd *cobra.Command, field Field) {
 	pcmd.Print(cmd, field.Prompt)
 	if field.IsYesOrNo {
 		pcmd.Print(cmd, " (y/n)")
 	}
 	pcmd.Print(cmd, ": ")
 
-	if savedValue != nil {
-		pcmd.Printf(cmd, "(%v) ", savedValue)
-	} else if field.DefaultValue != nil {
+	if field.DefaultValue != nil {
 		pcmd.Printf(cmd, "(%v) ", field.DefaultValue)
 	}
 }

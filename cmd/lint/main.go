@@ -33,10 +33,10 @@ var (
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
-		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql", "lifecycle",
-		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
-		"rolebinding", "rolebindings", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
-		"us", "vpc", "v2", "whitelist", "yaml", "zstd",
+		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql",
+		"lifecycle", "lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite",
+		"recv", "rolebinding", "rolebindings", "signup", "single-zone", "sr", "sso", "stdin", "systest", "tcp",
+		"transactional", "txt", "url", "us", "vpc", "v2", "whitelist", "yaml", "zstd",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
@@ -94,6 +94,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("connector-catalog describe"),
 		// skip feedback command
 		linter.ExcludeCommand("feedback"),
+		// skip signup command
+		linter.ExcludeCommand("signup"),
 		// config context commands
 		linter.ExcludeCommand("config context current"),
 		linter.ExcludeCommandContains("config context get"),

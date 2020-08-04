@@ -18,10 +18,19 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 	}
 }
 
-func NewPromptMock(msg string) *Prompt {
+func NewPromptMock(lines ...string) *Prompt {
+	i := 0
+
 	return &Prompt{
 		ReadLineFunc: func() (string, error) {
-			return msg, nil
+			line := lines[i]
+			i++
+			return line, nil
+		},
+		ReadLineMaskedFunc: func() (string, error) {
+			line := lines[i]
+			i++
+			return line, nil
 		},
 	}
 }
