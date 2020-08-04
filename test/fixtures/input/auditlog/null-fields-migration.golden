@@ -61,4 +61,17 @@ listener.name.external.oauthbearer.sasl.server.callback.handler.class=io.conflue
 listener.name.external.oauthbearer.sasl.login.callback.handler.class=io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
 confluent.security.event.logger.enable=true
 confluent.security.event.logger.exporter.kafka.bootstrap.servers=localhost:9093
-confluent.security.event.router.config={ "destinations": { "bootstrap_servers": [ ], "topics": { } }, "default_topics": { }, "routes": { }, "excluded_principals": [ ] }
+confluent.security.event.router.config={ \
+   "destinations": { \
+       "bootstrap_servers": [ \
+       ], \
+       "topics": { \
+       } \
+   }, \
+   "default_topics": { \
+   }, \
+   "routes": { \
+   }, \
+   "excluded_principals": [ \
+   ] \
+}

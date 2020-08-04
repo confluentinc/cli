@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -395,13 +396,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := NormalizeNewLines(output)
+	actual := utils.NormalizeNewLines(output)
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := NormalizeNewLines(LoadFixture(t, tt.fixture))
+		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {

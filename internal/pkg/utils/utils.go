@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"bytes"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/properties"
+	"io/ioutil"
 	"os"
 )
 
@@ -70,10 +72,26 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
 	//property.DisableExpansion = true
-	property, err := loader.LoadFile(path)
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	bytes = NormalizeByteArrayNewLines(bytes)
+	property, err := loader.LoadBytes(bytes)
 	if err != nil {
 		return nil, err
 	}
 	property.DisableExpansion = true
 	return property, nil
+}
+
+// NormalizeNewLines replaces \r\n and \r newline sequences with \n
+func NormalizeNewLines(raw string) string {
+	return string(NormalizeByteArrayNewLines([]byte(raw)))
+}
+
+func NormalizeByteArrayNewLines(raw []byte) []byte {
+	normalized := bytes.Replace(raw, []byte{13, 10}, []byte{10}, -1)
+	normalized = bytes.Replace(normalized, []byte{13}, []byte{10}, -1)
+	return normalized
 }
