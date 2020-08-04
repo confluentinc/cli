@@ -41,14 +41,14 @@ func (c *migrateCmd) init() {
 		RunE: c.migrate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Combine two audit log configuration files.",
+				Text: "Combine two audit log configuration files for clusters 'clusterA' and 'clusterB' with the following bootstrap servers and authority.",
 				Code: "confluent audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
 					"--bootstrap-servers logs.example.com:9092 --bootstrap-servers logs.example.com:9093 --authority mds.example.com",
 			},
 		),
 		Args: cobra.NoArgs,
 	}
-	configCmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the filepaths of that cluster's server.properties file.`)
+	configCmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the path to that cluster's server.properties file.`)
 	configCmd.Flags().StringArray("bootstrap-servers", nil, `A public hostname:port of a broker in the Kafka cluster that will receive audit log events.`)
 	configCmd.Flags().String("authority", "", `The CRN authority to use in all route patterns.`)
 	configCmd.Flags().SortFlags = false
