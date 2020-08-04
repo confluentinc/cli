@@ -249,7 +249,21 @@ func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (ma
 }
 
 func formatPrice(price float64, unit string) string {
-	return fmt.Sprintf("$%v USD/%s", price, unit)
+	priceStr := fmt.Sprintf("%v", price)
+
+	// Require >= 2 digits after the decimal
+	if strings.Contains(priceStr, ".") {
+		// Extend the remainder if needed
+		r := strings.Split(priceStr, ".")
+		for len(r[1]) < 2 {
+			r[1] += "0"
+		}
+		priceStr = strings.Join(r, ".")
+	} else {
+		priceStr += ".00"
+	}
+
+	return fmt.Sprintf("$%s USD/%s", priceStr, unit)
 }
 
 func mapToList(m map[string]string) string {
