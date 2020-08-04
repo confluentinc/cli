@@ -55,15 +55,14 @@ func (c *command) signupRunE(cmd *cobra.Command, _ []string) error {
 
 func (c *command) signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error {
 	f := form.New(
+		form.Field{ID: "email", Prompt: "Email"},
 		form.Field{ID: "first", Prompt: "First Name"},
 		form.Field{ID: "last", Prompt: "Last Name"},
 		form.Field{ID: "organization", Prompt: "Organization"},
-
-		form.Field{ID: "email", Prompt: "Email"},
 		form.Field{ID: "password", Prompt: "Password", IsHidden: true},
-
 		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true},
-		form.Field{ID: "privacy", Prompt: `By entering "y", you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
+		// Marketing
+		form.Field{ID: "privacy", Prompt: `By typing "y", you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
 	)
 
 	pcmd.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
