@@ -18,15 +18,16 @@ import (
 func TestSignupSuccess(t *testing.T) {
 	testSignup(t,
 		mock.NewPromptMock(
+			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
 			"Confluent",
-			"bstrauch@confluent.io",
-			"pass",
+			"password",
 			"y",
 			"y",
 			"y",
 		),
+		"A verification email has been sent to bstrauch@confluent.io.",
 		"Success! Welcome to Confluent Cloud.",
 	)
 }
@@ -34,13 +35,12 @@ func TestSignupSuccess(t *testing.T) {
 func TestSignupRejectTOS(t *testing.T) {
 	testSignup(t,
 		mock.NewPromptMock(
+			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
 			"Confluent",
-			"bstrauch@confluent.io",
-			"pass",
-			"n",
-			"y",
+			"password",
+			"n", // Reject TOS
 			"y",
 		),
 		"You must accept the Terms of Service.",
@@ -50,20 +50,38 @@ func TestSignupRejectTOS(t *testing.T) {
 func TestSignupRejectPrivacyPolicy(t *testing.T) {
 	testSignup(t,
 		mock.NewPromptMock(
+			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
 			"Confluent",
-			"bstrauch@confluent.io",
-			"pass",
+			"password",
 			"y",
-			"n",
-			"y",
+			"n", // Reject PP
 		),
 		"You must accept the Privacy Policy.",
 	)
 }
 
-func testSignup(t *testing.T, prompt pcmd.Prompt, expected string) {
+func TestSignupResendVerificationEmail(t *testing.T) {
+	testSignup(t,
+		mock.NewPromptMock(
+			"bstrauch@confluent.io",
+			"Brian",
+			"Strauch",
+			"Confluent",
+			"password",
+			"y",
+			"y",
+			"n", // Resend
+			"y", // Verify
+		),
+		"A verification email has been sent to bstrauch@confluent.io.",
+		"A new verification email has been sent to bstrauch@confluent.io.",
+		"Success! Welcome to Confluent Cloud.",
+	)
+}
+
+func testSignup(t *testing.T, prompt pcmd.Prompt, expected ...string) {
 	c := &command{}
 
 	cmd := &cobra.Command{}
@@ -73,14 +91,24 @@ func testSignup(t *testing.T, prompt pcmd.Prompt, expected string) {
 	err := c.signup(cmd, prompt, mockCcloudClient())
 	require.NoError(t, err)
 
-	require.Contains(t, buf.String(), expected)
+	for _, x := range expected {
+		require.Contains(t, buf.String(), x)
+	}
 }
 
 func mockCcloudClient() *ccloud.Client {
 	return &ccloud.Client{
 		Signup: &ccloudmock.Signup{
-			CreateFunc: func(_ context.Context, req *orgv1.SignupRequest) (*orgv1.SignupReply, error) {
+			CreateFunc: func(_ context.Context, _ *orgv1.SignupRequest) (*orgv1.SignupReply, error) {
 				return nil, nil
+			},
+			SendVerificationEmailFunc: func(_ context.Context, _ *orgv1.Credentials) error {
+				return nil
+			},
+		},
+		Auth: &ccloudmock.Auth{
+			LoginFunc: func(_ context.Context, _ string, _ string, _ string) (string, error) {
+				return "", nil
 			},
 		},
 	}

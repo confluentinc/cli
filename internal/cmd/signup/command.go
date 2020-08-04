@@ -61,8 +61,8 @@ func (c *command) signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.
 		form.Field{ID: "organization", Prompt: "Organization"},
 		form.Field{ID: "password", Prompt: "Password", IsHidden: true},
 		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true},
-		// Marketing
-		form.Field{ID: "privacy", Prompt: `By typing "y", you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
+		// TODO: Opt-in to marketing emails
+		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
 	)
 
 	pcmd.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
@@ -98,6 +98,33 @@ func (c *command) signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.
 		return err
 	}
 
-	pcmd.Println(cmd, "Success! Welcome to Confluent Cloud.")
-	return nil
+	pcmd.Printf(cmd, "A verification email has been sent to %s.\n", f.Responses["email"].(string))
+	v := form.New(form.Field{ID: "verified", Prompt: `Type "y" once verified, or type "n" to resend.`, IsYesOrNo: true})
+
+	for {
+		if err := v.Prompt(cmd, prompt); err != nil {
+			return err
+		}
+
+		if !v.Responses["verified"].(bool) {
+			res := &v1.Credentials{
+				Username: f.Responses["email"].(string),
+			}
+			if err := client.Signup.SendVerificationEmail(context.Background(), res); err != nil {
+				return err
+			}
+			pcmd.Printf(cmd, "A new verification email has been sent to %s.\n", f.Responses["email"].(string))
+		}
+
+		if _, err := client.Auth.Login(context.Background(), "", f.Responses["email"].(string), f.Responses["password"].(string)); err != nil {
+			if err.Error() == "username or password is invalid" {
+				pcmd.ErrPrintln(cmd, "Your email is not verified.")
+				continue
+			}
+			return err
+		}
+
+		pcmd.Println(cmd, "Success! Welcome to Confluent Cloud.")
+		return nil
+	}
 }
