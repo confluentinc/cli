@@ -94,7 +94,6 @@ github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oV
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
 github.com/confluentinc/cc-structs v0.489.0 h1:xCAh+ucgf/8f21f+5IN/Yf3IKJEmBA49/dzqm8TuV6A=
 github.com/confluentinc/cc-structs v0.539.0 h1:SMDElTZg2J3Ari+hNq3qvqn7UDk8qQGIyrjbKhH4zvM=
-github.com/confluentinc/cc-structs v0.552.0 h1:a4cIgOTs8lxTa3cJAqsXY0W4UXF/mTqs8MRiKkdZdXs=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.425.0/go.mod h1:trTGs5se3ZijGqrRK5Vn0ld/0pWo0yPVMnxX13rBR3I=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.552.0 h1:W5sf9XKa57tl66ZO4wwEv7IqgvZvh/R1tNazCBy4yrc=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.552.0/go.mod h1:trTGs5se3ZijGqrRK5Vn0ld/0pWo0yPVMnxX13rBR3I=
@@ -137,8 +136,6 @@ github.com/confluentinc/ccloud-sdk-go v0.0.37 h1:Adsm6LWiSwY6KE9NJ29bwTuhZ8uuQ82
 github.com/confluentinc/ccloud-sdk-go v0.0.37/go.mod h1:Ul0KCC3x08tWI/EHlX1zG2eCAwfMT1+VA4e0y+wc35E=
 github.com/confluentinc/ccloud-sdk-go v0.0.40 h1:gIlXw7pLKTot9yKNC9Nj//nOXwAq4DeSo0RKM6C9IGE=
 github.com/confluentinc/ccloud-sdk-go v0.0.40/go.mod h1:Ul0KCC3x08tWI/EHlX1zG2eCAwfMT1+VA4e0y+wc35E=
-github.com/confluentinc/ccloud-sdk-go v0.0.44 h1:Win/LzWTuJcWZ6xjIxwXk2a9vaZAeYtESUN33XXCLwE=
-github.com/confluentinc/ccloud-sdk-go v0.0.44/go.mod h1:48t8bLxiG++HLSkYqehV3ue0HIgpy5aBV7K/nIWdVrI=
 github.com/confluentinc/ccloud-sdk-go v0.0.45 h1:jpXLr0GnLHG1X5k3CLYtE3qiHkuDJcbgVC2M2eJbSsg=
 github.com/confluentinc/ccloud-sdk-go v0.0.45/go.mod h1:48t8bLxiG++HLSkYqehV3ue0HIgpy5aBV7K/nIWdVrI=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
