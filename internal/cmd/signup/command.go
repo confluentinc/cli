@@ -4,15 +4,13 @@ import (
 	"context"
 	"os"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
-	"github.com/confluentinc/ccloud-sdk-go"
-
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type command struct {
