@@ -125,6 +125,5 @@ func mockPriceCommand(prices map[string]float64) *cobra.Command {
 }
 
 func TestFormatPrice(t *testing.T) {
-	require.Equal(t, "$0.12 USD/GB", formatPrice(0.123, "GB"))
-	require.Equal(t, "$0.001 USD/GB", formatPrice(0.0012, "GB"))
+	require.Equal(t, "$0.123 USD/GB", formatPrice(0.123, "GB"))
 }
