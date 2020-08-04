@@ -205,7 +205,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		Logger:     log.New(),
 	})
 	prompt := prompt()
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -421,13 +421,13 @@ func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cli
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, cfg)
+	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, nil, cfg)
 	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
 		cliMock.NewDummyAnalyticsMock(), nil)
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cliName string, cfg *v3.Config) (*logoutCommand, *v3.Config) {
-	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
+	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
 	return logoutCmd, cfg
 }

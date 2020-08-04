@@ -65,7 +65,7 @@ Returns an ListWriter that is used to output a list of objects (must be pointers
 @return ListOutputWriter, error
 */
 func NewListOutputWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string) (ListOutputWriter, error) {
-	return NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, os.Stdout)
+	return NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, cmd.OutOrStdout())
 }
 
 func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, humanLabels []string, structuredLabels []string, writer io.Writer) (ListOutputWriter, error) {

@@ -18,6 +18,7 @@ type Commander struct {
 	FlagResolver cmd.FlagResolver
 	Client       *ccloud.Client
 	MDSClient    *mds.APIClient
+	ProxyClient  *kafkaproxy.APIClient
 	Version      *version.Version
 	Config       *v3.Config
 }
@@ -25,7 +26,8 @@ type Commander struct {
 var _ cmd.PreRunner = (*Commander)(nil)
 
 // NewPreRunnerMock - Creates a mock of the PreRunner interface
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) cmd.PreRunner {
+// @param proxyClient - The client that is set in PreRun of UseProxyClientCLICommands
+func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, proxyClient *kafkaproxy.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
 		Prompt: &Prompt{},
 		Out:    os.Stdout,
@@ -34,6 +36,7 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.C
 		FlagResolver: flagResolverMock,
 		Client:       client,
 		MDSClient:    mdsClient,
+		ProxyClient:  proxyClient,
 		Config:       cfg,
 	}
 }
@@ -113,13 +116,14 @@ func (c *Commander) HasAPIKey(command *cmd.HasAPIKeyCLICommand) func(cmd *cobra.
 	}
 }
 
+// UseKafkaProxy - The PreRun function registered by the mock prerunner for UseKafkaProxyCLICommand
 func (c *Commander) UseKafkaProxy(command *cmd.UseKafkaProxyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := c.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return err
 		}
-		command.ProxyClient = kafkaproxy.NewAPIClient(kafkaproxy.NewConfiguration())
+		command.ProxyClient = c.ProxyClient
 		return nil
 	}
 }
