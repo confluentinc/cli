@@ -25,25 +25,6 @@ const (
   topic-2  
   topic-3  
 `
-	ExpectedHelpMessageOutput = `List Kafka topics.
-
-Usage:
-  topic list [flags]
-
-Examples:
-List all topics at specified cluster (providing REST proxy endpoint).
-
-::
-
-  confluent kafka topic list --url http://localhost:8082
-
-
-
-Flags:
-      --url string      Base URL to REST Proxy Endpoint of Kafka Cluster.
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
-  -h, --help            help for list
-`
 	ExpectedListTopicsYamlOutput = `- name: topic-1
 - name: topic-2
 - name: topic-3
@@ -153,8 +134,6 @@ func (suite *KafkaTopicTestSuite) TestConfluentListTopics() {
 	}{
 		// Correct input
 		{input: "list --url http://localhost:8082", expectedOutput: ExpectedListTopicsOutput, expectError: false, errorMsgContainsAll: []string{}, message: "correct argument should match expected output"},
-		// Help string
-		{input: "list -h", expectedOutput: ExpectedHelpMessageOutput, expectError: false, errorMsgContainsAll: []string{}, message: "correct flag should give correct help message"},
 		// Variable output format
 		{input: "list --url http://localhost:8082 -o yaml", expectedOutput: ExpectedListTopicsYamlOutput, expectError: false, errorMsgContainsAll: []string{}, message: "correct argument should match expected output"},
 		{input: "list --url http://localhost:8082 -o json", expectedOutput: ExpectedListTopicsJsonOutput, expectError: false, errorMsgContainsAll: []string{}, message: "correct argument should match expected output"},
