@@ -173,7 +173,8 @@ func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) err
 	for i, service := range services {
 		serviceNames[i] = writeServiceName(service)
 	}
-	command.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+
+	cmd.Printf(command, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -470,6 +471,6 @@ func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 		return err
 	}
 
-	command.Printf(errors.UsingConfluentCurrentMsg, dir)
+	cmd.Printf(command, errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }
