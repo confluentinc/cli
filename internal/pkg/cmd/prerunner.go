@@ -26,7 +26,7 @@ import (
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 
-// PreRunner - interface to describe different persistent prerun commands to register for different commands
+// PreRunner - interface to describe different persistent prerun functions to register for different commands
 type PreRunner interface {
 	Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
