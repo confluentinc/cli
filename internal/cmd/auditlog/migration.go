@@ -285,7 +285,7 @@ func replaceCRNAuthority(crnPath, newCRNAuthority string) string {
 func replaceClusterId(crnPath, clusterId string) string {
 	const kafkaIdentifier = "kafka=*"
 	if !strings.Contains(crnPath, kafkaIdentifier) {
-		fmt.Printf("%q not present in crnPath %q, cannot insert clusterId.\n", kafkaIdentifier, crnPath)
+		// crnPath already has a specific kafka cluster, no need to insert clusterId
 		return crnPath
 	}
 	return strings.Replace(crnPath, kafkaIdentifier, "kafka="+clusterId, 1)

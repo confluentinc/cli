@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 type migrateCmd struct {
@@ -98,7 +99,7 @@ func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 	for _, warning := range warnings {
-		fmt.Println(warning)
+		fmt.Fprintln(os.Stderr, warning)
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

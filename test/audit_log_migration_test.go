@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"path/filepath"
 	"runtime"
 )
@@ -19,7 +18,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 			args:
 			fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2 --bootstrap-servers new_bootstrap_1 --authority NEW.CRN.AUTHORITY.COM", migration1, migration2),
-			contains: utils.NormalizeNewLines(LoadFixture(s.T(), "auditlog/migration-result-with-warnings.golden")),
+			fixture: "auditlog/migration-result-with-warnings.golden",
 		},
 		{
 			args:
