@@ -62,8 +62,8 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().String("image", "", "")
-	createCmd.Flags().MarkHidden("image")
+	createCmd.Flags().String("image", "", "Image to run (internal).")
+	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
