@@ -40,10 +40,6 @@ func NewTopicCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 // Register each of the verbs and expected args
 func (topicCmd *topicCommand) init() {
 	// Register list command
-	// confluent kafka topic list [flags]
-	// --url string   REST Proxy URL.
-	// -o, --output string    Specify the output format as "human", "json" or "yaml". (default "human")
-	// -h, --help
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
@@ -52,12 +48,12 @@ func (topicCmd *topicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				// on-prem examples are ccloud examples + "at specified cluster (providing Kafka REST Proxy endpoint)."
-				Text: "List all topics at specified cluster (providing Kafka REST Proxy endpoint).",
+				Text: "List all topics of a specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic list --url http://localhost:8082",
 			},
 		),
 	}
-	listCmd.Flags().String("url", "", "Base URL to REST Proxy Endpoint of Kafka Cluster.")
+	listCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
 	check(listCmd.MarkFlagRequired("url")) // TODO: unset url as required
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
