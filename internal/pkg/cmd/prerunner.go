@@ -71,6 +71,7 @@ type HasAPIKeyCLICommand struct {
 }
 
 // UseKafkaRestCLICommand - A wrapper for cobra.Command that registers function defined at UseKafkaRest as PersistantPreRun for every command added
+// It also contains the KafkaRestClient to be initialized during PreRun.
 type UseKafkaRestCLICommand struct {
 	*CLICommand
 	KafkaRestClient *kafkarestv3.APIClient
