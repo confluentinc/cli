@@ -13,20 +13,19 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-
-	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 // Info needed to complete kafka topic ...
 type topicCommand struct {
-	*pcmd.UseKafkaProxyCLICommand
+	*pcmd.UseKafkaRestCLICommand
 	prerunner pcmd.PreRunner
 }
 
 // Return the command to be registered to the kafka topic slot
 func NewTopicCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	topicCmd := &topicCommand{
-		UseKafkaProxyCLICommand: pcmd.NewUseKafkaProxyCLICommand(
+		UseKafkaRestCLICommand: pcmd.NewUseKafkaRestCLICommand(
 			&cobra.Command{
 				Use:   "topic",
 				Short: "Manage Kafka topics.",
@@ -52,8 +51,8 @@ func (topicCmd *topicCommand) init() {
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				// on-prem examples are ccloud examples + "at specified cluster (providing REST proxy endpoint)."
-				Text: "List all topics at specified cluster (providing REST proxy endpoint).",
+				// on-prem examples are ccloud examples + "at specified cluster (providing Kafka REST Proxy endpoint)."
+				Text: "List all topics at specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic list --url http://localhost:8082",
 			},
 		),
@@ -78,7 +77,7 @@ func (topicCmd *topicCommand) init() {
 	// 		},
 	// 	),
 	// }
-	// describeCmd.Flags().String("url", "", "URL to REST Proxy Endpoint of Kafka Cluster.")
+	// describeCmd.Flags().String("url", "", "URL to Kafka REST Proxy Endpoint of Kafka Cluster.")
 	// describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	// describeCmd.Flags().SortFlags = false
 	// topicCmd.AddCommand(describeCmd)
@@ -97,11 +96,11 @@ func (topicCmd *topicCommand) init() {
 	// 	RunE:  pcmd.NewCLIRunE(topicCmd.createTopic),
 	// 	Example: examples.BuildExampleString(
 	// 		examples.Example{
-	// 			Text: "Create a topic named ``my_topic`` with default options at specified cluster (providing REST proxy endpoint).",
+	// 			Text: "Create a topic named ``my_topic`` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
 	// 			Code: "confluent kafka topic create my_topic --url http://localhost:8082",
 	// 		}),
 	// }
-	// createCmd.Flags().String("url", "", "Base URL to REST Proxy Endpoint of Kafka Cluster.")
+	// createCmd.Flags().String("url", "", "Base URL to Kafka REST Proxy Endpoint of Kafka Cluster.")
 	// check(listCmd.MarkFlagRequired("url")) // TODO: unset url as required
 	// createCmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	// createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -111,11 +110,11 @@ func (topicCmd *topicCommand) init() {
 	// topicCmd.AddCommand(createCmd)
 }
 
-func setServerURL(client *kafkaproxy.APIClient, url string) {
+func setServerURL(client *kafkarestv3.APIClient, url string) {
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
-func handleCommonProxyClientErrors(url string, proxyClient *kafkaproxy.APIClient, resp *http.Response, err error) error {
+func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.APIClient, resp *http.Response, err error) error {
 	// fmt.Printf("[INFO] http.Response:%v, TypeOf(err): %v, ValueOf(err): %v\n\n", resp, reflect.TypeOf(err), reflect.ValueOf(err))
 	switch err.(type) {
 	case *purl.Error: // Handle errors with request url
@@ -138,20 +137,20 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	setServerURL(topicCmd.ProxyClient, url)
-	proxyClient := topicCmd.ProxyClient
+	setServerURL(topicCmd.KafkaRestClient, url)
+	kafkaRestClient := topicCmd.KafkaRestClient
 
 	// Get Cluster Id
-	clusters, resp, err := proxyClient.ClusterApi.ClustersGet(context.Background())
+	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
 	if err != nil {
-		return handleCommonProxyClientErrors(url, proxyClient, resp, err)
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	}
 	clusterId := clusters.Data[0].ClusterId
 
 	// Get Topics
-	topicGetResp, resp, err := proxyClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
+	topicGetResp, resp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
 	if err != nil {
-		return handleCommonProxyClientErrors(url, proxyClient, resp, err)
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	}
 	topicDatas := topicGetResp.Data
 

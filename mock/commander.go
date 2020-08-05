@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -15,29 +15,29 @@ import (
 )
 
 type Commander struct {
-	FlagResolver cmd.FlagResolver
-	Client       *ccloud.Client
-	MDSClient    *mds.APIClient
-	ProxyClient  *kafkaproxy.APIClient
-	Version      *version.Version
-	Config       *v3.Config
+	FlagResolver    cmd.FlagResolver
+	Client          *ccloud.Client
+	MDSClient       *mds.APIClient
+	KafkaRestClient *kafkarestv3.APIClient
+	Version         *version.Version
+	Config          *v3.Config
 }
 
 var _ cmd.PreRunner = (*Commander)(nil)
 
 // NewPreRunnerMock - Creates a mock of the PreRunner interface
-// @param proxyClient - The client that is set in PreRun of UseProxyClientCLICommands
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, proxyClient *kafkaproxy.APIClient, cfg *v3.Config) cmd.PreRunner {
+// @param kafkaRestClient - The client that is set in PreRun of UseKafkaRestCLICommands
+func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, kafkaRestClient *kafkarestv3.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
 		Prompt: &Prompt{},
 		Out:    os.Stdout,
 	}
 	return &Commander{
-		FlagResolver: flagResolverMock,
-		Client:       client,
-		MDSClient:    mdsClient,
-		ProxyClient:  proxyClient,
-		Config:       cfg,
+		FlagResolver:    flagResolverMock,
+		Client:          client,
+		MDSClient:       mdsClient,
+		KafkaRestClient: kafkaRestClient,
+		Config:          cfg,
 	}
 }
 
@@ -116,14 +116,14 @@ func (c *Commander) HasAPIKey(command *cmd.HasAPIKeyCLICommand) func(cmd *cobra.
 	}
 }
 
-// UseKafkaProxy - The PreRun function registered by the mock prerunner for UseKafkaProxyCLICommand
-func (c *Commander) UseKafkaProxy(command *cmd.UseKafkaProxyCLICommand) func(cmd *cobra.Command, args []string) error {
+// UseKafkaRest - The PreRun function registered by the mock prerunner for UseKafkaRestCLICommand
+func (c *Commander) UseKafkaRest(command *cmd.UseKafkaRestCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := c.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return err
 		}
-		command.ProxyClient = c.ProxyClient
+		command.KafkaRestClient = c.KafkaRestClient
 		return nil
 	}
 }

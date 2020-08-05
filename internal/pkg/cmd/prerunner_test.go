@@ -20,7 +20,7 @@ import (
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 var (
@@ -424,8 +424,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	}
 }
 
-func TestPreRun_UseKafkaProxyCommand(t *testing.T) {
-	name := "UseKafkaProxyCommand prerun should initialize default kafkaproxy client"
+func TestPreRun_Usekafkarestv3Command(t *testing.T) {
+	name := "Usekafkarestv3Command prerun should initialize default kafkarestv3 client"
 
 	t.Run(name, func(t *testing.T) {
 		ver := pmock.NewVersionMock()
@@ -451,18 +451,18 @@ func TestPreRun_UseKafkaProxyCommand(t *testing.T) {
 		}
 
 		// Register command to pass out set up clientChan
-		clientChan := make(chan *kafkaproxy.APIClient, 1)
+		clientChan := make(chan *kafkarestv3.APIClient, 1)
 		cmd := &cobra.Command{Run: nil}
 		cmd.Flags().CountP("verbose", "v", "Increase verbosity")
 
-		kpCmd := pcmd.NewUseKafkaProxyCLICommand(cmd, prerunner)
+		kpCmd := pcmd.NewUseKafkaRestCLICommand(cmd, prerunner)
 		kpCmd.Run = func(cmd *cobra.Command, args []string) {
-			clientChan <- kpCmd.ProxyClient
+			clientChan <- kpCmd.KafkaRestClient
 		}
 
 		_, err = pcmd.ExecuteCommand(kpCmd.Command, "")
 		require.NoError(t, err)
-		require.EqualValues(t, kafkaproxy.NewAPIClient(kafkaproxy.NewConfiguration()), <-clientChan)
+		require.EqualValues(t, kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration()), <-clientChan)
 	})
 
 }

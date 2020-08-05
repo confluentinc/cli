@@ -77,16 +77,16 @@ func (s *CLITestSuite) TestKafka() {
 }
 
 func (s *CLITestSuite) TestConfluentKafkaTopicList() {
-	kafkaproxyURL := serveKafkaproxy(s.T()).URL
+	kafkaRestURL := serveKafkaRest(s.T()).URL
 	tests := []CLITest{
 		// Test correct usage
-		{args: fmt.Sprintf("kafka topic list --url %s", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
 		// Output should format correctly depending on format argument.
-		{args: fmt.Sprintf("kafka topic list --url %s -o human", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s -o yaml", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list-yaml.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s -o json", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list-json.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o human", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o yaml", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list-yaml.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o json", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list-json.golden"},
 		// Invalid format string should throw error
-		{args: fmt.Sprintf("kafka topic list --url %s -o hello", kafkaproxyURL), fixture: "kafka/confluent-kafka-topic-list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o hello", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
 	}
 
 	for _, clitest := range tests {

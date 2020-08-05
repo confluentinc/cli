@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	cliMock "github.com/confluentinc/cli/mock"
-	kafkaproxy "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3"
-	kafkaproxymock "github.com/confluentinc/kafka-rest-proxy-sdk-go/kafkaproxyv3/mock"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3mock "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -34,23 +34,23 @@ const (
 
 type KafkaTopicTestSuite struct {
 	suite.Suite
-	testClient *kafkaproxy.APIClient
+	testClient *kafkarestv3.APIClient
 	// Data returned by APIClient
-	clusterList *kafkaproxy.ClusterDataList
-	topicList   *kafkaproxy.TopicDataList
+	clusterList *kafkarestv3.ClusterDataList
+	topicList   *kafkarestv3.TopicDataList
 }
 
 func (suite *KafkaTopicTestSuite) SetupSuite() {
 	// Define canned test server response data
-	suite.clusterList = &kafkaproxy.ClusterDataList{
-		Data: []kafkaproxy.ClusterData{
+	suite.clusterList = &kafkarestv3.ClusterDataList{
+		Data: []kafkarestv3.ClusterData{
 			{
 				ClusterId: "cluster-1",
 			}},
 	}
 
-	suite.topicList = &kafkaproxy.TopicDataList{
-		Data: []kafkaproxy.TopicData{
+	suite.topicList = &kafkarestv3.TopicDataList{
+		Data: []kafkarestv3.TopicData{
 			{
 				TopicName: "topic-1",
 			},
@@ -85,24 +85,24 @@ func checkURL(url string) error {
 // Create a new topicCommand. Should be called before each test case.
 func (suite *KafkaTopicTestSuite) createCommand() *cobra.Command {
 	// Define testAPIClient
-	suite.testClient = kafkaproxy.NewAPIClient(kafkaproxy.NewConfiguration())
-	suite.testClient.ClusterApi = &kafkaproxymock.ClusterApi{
-		ClustersGetFunc: func(ctx context.Context) (kafkaproxy.ClusterDataList, *http.Response, error) {
+	suite.testClient = kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
+	suite.testClient.ClusterApi = &kafkarestv3mock.ClusterApi{
+		ClustersGetFunc: func(ctx context.Context) (kafkarestv3.ClusterDataList, *http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
-				return kafkaproxy.ClusterDataList{}, nil, err
+				return kafkarestv3.ClusterDataList{}, nil, err
 			}
 			// Return canned data
 			return *suite.clusterList, nil, nil
 		},
 	}
-	suite.testClient.TopicApi = &kafkaproxymock.TopicApi{
-		ClustersClusterIdTopicsGetFunc: func(ctx context.Context, clusterId string) (kafkaproxy.TopicDataList, *http.Response, error) {
+	suite.testClient.TopicApi = &kafkarestv3mock.TopicApi{
+		ClustersClusterIdTopicsGetFunc: func(ctx context.Context, clusterId string) (kafkarestv3.TopicDataList, *http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
-				return kafkaproxy.TopicDataList{}, nil, err
+				return kafkarestv3.TopicDataList{}, nil, err
 			}
 			// Return canned data
 			return *suite.topicList, nil, nil

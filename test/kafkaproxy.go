@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func serveKafkaproxy(t *testing.T) *httptest.Server {
+func serveKafkaRest(t *testing.T) *httptest.Server {
 	// Create a new testify/require object
 	// req := require.New(t)
 	router := http.NewServeMux()
