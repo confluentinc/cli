@@ -35,7 +35,7 @@ type PreRunner interface {
 	UseKafkaRest(command *UseKafkaRestCLICommand) func(cmd *cobra.Command, args []string) error
 }
 
-// PreRun is the standard PreRunner implementation
+// PreRun is the standard PreRunner implementation, contains the information needed to run PreRun functions (?).
 type PreRun struct {
 	Config             *v3.Config
 	ConfigLoadingError error
@@ -70,8 +70,8 @@ type HasAPIKeyCLICommand struct {
 	Context *DynamicContext
 }
 
-// UseKafkaRestCLICommand - A wrapper for cobra.Command that registers function defined at UseKafkaRest as PersistantPreRun for every command added
-// It also contains the KafkaRestClient to be initialized during PreRun.
+// UseKafkaRestCLICommand - A wrapper for cobra.Command that registers UseKafkaRest, which initializes a default kafkarestv3 client,
+// as PreRun for all subcommands. Contains the result of the PreRun, which is the KafkaRestClient.
 type UseKafkaRestCLICommand struct {
 	*CLICommand
 	KafkaRestClient *kafkarestv3.APIClient
@@ -117,7 +117,7 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPI
 	return cmd
 }
 
-// NewUseKafkaRestCLICommand - Creates a wrapper for cobra.Command that registers function given at UseKafkaRest as PersistantPreRunE for every command
+// NewUseKafkaRestCLICommand - Creates a wrapper for cobra.Command that registers UseKafkaRest as PersistantPreRunE for every command
 func NewUseKafkaRestCLICommand(command *cobra.Command, prerunner PreRunner) *UseKafkaRestCLICommand {
 	cmd := &UseKafkaRestCLICommand{
 		CLICommand:      NewCLICommand(command, prerunner),
@@ -152,8 +152,7 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
-// AddCommand - Use UseKafkaRestCLICommand.AddCommand() instead of cobra.Command.AddCommand() to register
-// configured PreRun operations
+// AddCommand - Registers UseKafkaRest as PreRun function for the added command in addition to adding command.
 func (h *UseKafkaRestCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
@@ -329,6 +328,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 }
 
 // UseKafkaRest provides PreRun operations for comamnds that require a Kafka REST Proxy client.
+// Initializes a default KafkaRestClient
 func (r *PreRun) UseKafkaRest(command *UseKafkaRestCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
