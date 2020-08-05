@@ -129,7 +129,6 @@ func NewUseKafkaRestCLICommand(command *cobra.Command, prerunner PreRunner) *Use
 func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, prerunner)
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd))
-	// TODO: is this line needed?
 	cmd.Command = command
 	return cmd
 }
