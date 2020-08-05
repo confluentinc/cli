@@ -424,8 +424,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	}
 }
 
-func TestPreRun_Usekafkarestv3Command(t *testing.T) {
-	name := "Usekafkarestv3Command prerun should initialize default kafkarestv3 client"
+func TestPreRun_UseKafkaRestCommand(t *testing.T) {
+	name := "UseKafkaRestCommand prerun should initialize default kafkarestv3 client"
 
 	t.Run(name, func(t *testing.T) {
 		ver := pmock.NewVersionMock()
