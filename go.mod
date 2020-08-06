@@ -61,6 +61,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
+	github.com/imdario/mergo v0.3.6
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/linkedin/goavro/v2 v2.9.8

@@ -40,13 +40,29 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 				"Retention Time Discrepancy Warning: Topic \"confluent-audit-log-events_payroll\" had discrepancies with retention time. Using max: 2592000000.",
 			},
 		},
+		// This case has only one cluster, and it also has a route topic=* which has some existing routes,
+		// we expect the script to leave those alone and add the other routes for topic=* (e.g authorize, describe, etc)
+		{
+			map[string]string{
+				"cluster123": "{\n    \"destinations\": {\n        \"bootstrap_servers\": [\n            \"audit.example.com:9092\"\n        ],\n        \"topics\": {\n            \"confluent-audit-log-events_payroll\": {\n                \"retention_ms\": 50\n            },\n            \"confluent-audit-log-events\": {\n                \"retention_ms\": 500\n            }\n        }\n    },\n    \"default_topics\": {\n        \"allowed\": \"confluent-audit-log-events\",\n        \"denied\": \"confluent-audit-log-events_different_default_denied\"\n    },\n    \"routes\": {\n        \"crn://mds1.example.com/kafka=*/topic=*\": {\n            \"produce\": {\n                \"allowed\": \"confluent-audit-log-events_payroll\",\n                \"denied\": \"confluent-audit-log-events_payroll\"\n            },\n            \"consume\": {\n                \"allowed\": \"confluent-audit-log-events_payroll\",\n                \"denied\": \"confluent-audit-log-events_payroll\"\n            }\n        },\n        \"crn://some-authority/kafka=clusterX\": {\n          \"other\": {\n              \"allowed\": \"confluent-audit-log-events_payroll\",\n              \"denied\": \"confluent-audit-log-events_payroll\"\n          }\n        }\n    },\n    \"excluded_principals\": [\n        \"User:Alice\"\n    ]\n}",
+			},
+			[]string{"new_bootstrap_2", "new_bootstrap_1"},
+			"NEW.CRN.AUTHORITY.COM",
+			test.LoadFixture(t, "auditlog/migration-result-merge-topics.golden"),
+			[]string{
+				"Mismatched Kafka Cluster Warning: Cluster \"cluster123\" has a route with a different clusterId. Route: \"crn://some-authority/kafka=clusterX\".",
+				"Multiple CRN Authorities Warning: Cluster \"cluster123\" had multiple CRN Authorities in its routes: [crn://mds1.example.com/ crn://some-authority/].",
+				"New Bootstrap Servers Warning: Cluster \"cluster123\" currently has bootstrap servers = [audit.example.com:9092]. Replacing with [new_bootstrap_1 new_bootstrap_2].",
+			},
+		},
 	}
 
 	for _, c := range testCases {
 		var want mds.AuditLogConfigSpec
-		_ = json.Unmarshal([]byte(c.wantSpecAsString), &want)
+		err := json.Unmarshal([]byte(c.wantSpecAsString), &want)
 
 		got, gotWarnings, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
+
 		require.Nil(t, err)
 		require.Equal(t, want, got)
 		require.Equal(t, c.wantWarnings, gotWarnings)
