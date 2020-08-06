@@ -11,10 +11,8 @@ export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
 # Defaults that are likely to vary by platform. These are cleanly separated so
 # it should be easy to maintain altered values on platform-specific branches
 # when the values aren't overridden by the script invoking the Makefile
-SKIP_TESTS=yes
-APPLY_PATCHES=no
 
-APPLY_PATCHES?=yes
+APPLY_PATCHES=no
 
 # DESTDIR may be overridden by e.g. debian packaging
 ifeq ($(DESTDIR),)
