@@ -35,7 +35,7 @@ var (
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
 		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql",
 		"lifecycle", "lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite",
-		"recv", "rolebinding", "rolebindings", "admin", "single-zone", "sr", "sso", "stdin", "systest", "tcp",
+		"recv", "rolebinding", "rolebindings", "signup", "single-zone", "sr", "sso", "stdin", "systest", "tcp",
 		"transactional", "txt", "url", "us", "vpc", "v2", "whitelist", "yaml", "zstd",
 	}
 	utilityCommands = []string{
@@ -95,7 +95,7 @@ var rules = []linter.Rule{
 		// skip feedback command
 		linter.ExcludeCommand("feedback"),
 		// skip admin command
-		linter.ExcludeCommand("admin"),
+		linter.ExcludeCommandContains("admin"),
 		// config context commands
 		linter.ExcludeCommand("config context current"),
 		linter.ExcludeCommandContains("config context get"),
