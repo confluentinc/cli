@@ -11,8 +11,8 @@ export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
 # Defaults that are likely to vary by platform. These are cleanly separated so
 # it should be easy to maintain altered values on platform-specific branches
 # when the values aren't overridden by the script invoking the Makefile
-
-APPLY_PATCHES?=yes
+SKIP_TESTS=yes
+APPLY_PATCHES=no
 
 # DESTDIR may be overridden by e.g. debian packaging
 ifeq ($(DESTDIR),)
@@ -35,17 +35,11 @@ archive: download
 	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
 
-apply-patches: $(wildcard debian/patches/*)
-ifeq ($(APPLY_PATCHES),yes)
-	git reset --hard HEAD
-	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
-endif
-
 BINPATH=$(PREFIX)/bin
 LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
-download: apply-patches
+download:
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
