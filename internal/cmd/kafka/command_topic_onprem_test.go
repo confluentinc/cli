@@ -75,7 +75,7 @@ func checkURL(url string) error {
 	} else if parsedUrl.Hostname() == "" {
 		return &purl.Error{Op: "", URL: "", Err: fmt.Errorf("http: no Host in request URL")}
 	} else if parsedUrl.Hostname() != "localhost" { // if not localhost
-		return &purl.Error{Op: "", URL: "", Err: fmt.Errorf("dial tcp: lookup localhos: no such host")}
+		return &purl.Error{Op: "", URL: "", Err: fmt.Errorf("dial tcp: lookup %s: no such host", parsedUrl.Hostname())}
 	} else if parsedUrl.Port() != "8082" { // if not 8082
 		return &purl.Error{Op: "", URL: "", Err: fmt.Errorf(" dial tcp [::1]:%s: connect: connection refused", parsedUrl.Port())}
 	}
