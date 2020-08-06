@@ -41,7 +41,7 @@ func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	command.Printf(errors.DestroyDeletingMsg, dir)
+	cmd.Printf(command, errors.DestroyDeletingMsg, dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}

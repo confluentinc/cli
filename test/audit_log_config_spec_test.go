@@ -8,7 +8,7 @@ import (
 )
 
 func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
-	original := loadFixture(s.T(), "auditlogconfig-roundtrip-fixedpoint.golden")
+	original := LoadFixture(s.T(), "auditlogconfig-roundtrip-fixedpoint.golden")
 	originalBytes := []byte(original)
 	spec := mds.AuditLogConfigSpec{}
 	if err := json.Unmarshal(originalBytes, &spec); err != nil {

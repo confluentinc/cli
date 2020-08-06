@@ -1,0 +1,65 @@
+{
+  "destinations": {
+    "topics": {
+      "confluent-audit-log-events": {
+        "retention_ms": 7776000000
+      }
+    }
+  },
+  "excluded_principals": null,
+  "default_topics": {
+    "allowed": "confluent-audit-log-events",
+    "denied": "confluent-audit-log-events"
+  },
+  "routes": {
+    "crn:///kafka=cluster123": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/connect=*": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/ksql=*": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/topic=*": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/connect=*": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/ksql=*": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/topic=*": {
+      "other": {
+        "allowed": "",
+        "denied": ""
+      }
+    }
+  },
+  "metadata": null
+}

@@ -1,4 +1,4 @@
-package audit_log_migration
+package auditlog
 
 import (
 	"encoding/json"
@@ -97,6 +97,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
 		foundAuthorities = utils.RemoveDuplicates(foundAuthorities)
+
 		if len(foundAuthorities) > 1 {
 			sort.Strings(foundAuthorities)
 			newWarning := fmt.Sprintf("Multiple CRN Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
@@ -284,7 +285,7 @@ func replaceCRNAuthority(crnPath, newCRNAuthority string) string {
 func replaceClusterId(crnPath, clusterId string) string {
 	const kafkaIdentifier = "kafka=*"
 	if !strings.Contains(crnPath, kafkaIdentifier) {
-		fmt.Printf("%q not present in crnPath %q, cannot insert clusterId.\n", kafkaIdentifier, crnPath)
+		// crnPath already has a specific kafka cluster, no need to insert clusterId
 		return crnPath
 	}
 	return strings.Replace(crnPath, kafkaIdentifier, "kafka="+clusterId, 1)

@@ -1,0 +1,8 @@
+    "destinations": {
+        "bootstrap_servers": [
+            "audit.example.com:9092"
+        ],
+    "excluded_principals": [
+        "User:Alice"
+    ]
+}

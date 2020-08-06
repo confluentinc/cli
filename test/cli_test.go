@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -396,13 +396,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := NormalizeNewLines(output)
+	actual := utils.NormalizeNewLines(output)
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
+		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
@@ -435,27 +435,10 @@ func resetConfiguration(t *testing.T, cliName string) {
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(fixturePath(t, fixture), []byte(content), 0644)
+	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func loadFixture(t *testing.T, fixture string) string {
-	content, err := ioutil.ReadFile(fixturePath(t, fixture))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(content)
-}
-
-func fixturePath(t *testing.T, fixture string) string {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatalf("problems recovering caller information")
-	}
-
-	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
 func binaryPath(t *testing.T, binaryName string) string {
