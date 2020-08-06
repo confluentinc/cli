@@ -1,0 +1,112 @@
+Mismatched Kafka Cluster Warning: Cluster "cluster123" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterX".
+Mismatched Kafka Cluster Warning: Cluster "clusterABC" has a route with a different clusterId. Route: "crn://diff-authority/kafka=different-cluster-id/topic=payroll-*".
+Mismatched Kafka Cluster Warning: Cluster "clusterABC" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterX".
+Multiple CRN Authorities Warning: Cluster "cluster123" had multiple CRN Authorities in its routes: [crn://mds1.example.com/ crn://some-authority/].
+Multiple CRN Authorities Warning: Cluster "clusterABC" had multiple CRN Authorities in its routes: [crn://diff-authority/ crn://mds1.example.com/ crn://some-authority/].
+New Bootstrap Servers Warning: Cluster "cluster123" currently has bootstrap servers = [audit.example.com:9092]. Replacing with [new_bootstrap_1 new_bootstrap_2].
+New Bootstrap Servers Warning: Cluster "clusterABC" currently has bootstrap servers = [some-server]. Replacing with [new_bootstrap_1 new_bootstrap_2].
+New Excluded Principals Warning: Cluster "cluster123" will now also exclude the following principals: [User:Bob].
+New Excluded Principals Warning: Cluster "clusterABC" will now also exclude the following principals: [User:Alice].
+Repeated Route Warning: Route Name : "crn://some-authority/kafka=clusterX".
+Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" had discrepancies with retention time. Using max: 2592000000.
+{
+  "destinations": {
+    "bootstrap_servers": [
+      "new_bootstrap_1",
+      "new_bootstrap_2"
+    ],
+    "topics": {
+      "confluent-audit-log-events": {
+        "retention_ms": 500
+      },
+      "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC": {
+        "retention_ms": 100
+      },
+      "confluent-audit-log-events_billing": {
+        "retention_ms": 2592000000
+      },
+      "confluent-audit-log-events_payroll": {
+        "retention_ms": 2592000000
+      }
+    }
+  },
+  "excluded_principals": [
+    "User:Alice",
+    "User:Bob"
+  ],
+  "default_topics": {
+    "allowed": "confluent-audit-log-events",
+    "denied": "confluent-audit-log-events"
+  },
+  "routes": {
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=cluster123/topic=payroll-*": {
+      "produce": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      },
+      "consume": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC": {
+      "other": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*": {
+      "other": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*": {
+      "other": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=*": {
+      "other": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*": {
+      "other": {
+        "allowed": "confluent-audit-log-events_billing",
+        "denied": "confluent-audit-log-events_billing"
+      },
+      "produce": {
+        "allowed": "confluent-audit-log-events_billing",
+        "denied": "confluent-audit-log-events_billing"
+      },
+      "consume": {
+        "allowed": "confluent-audit-log-events_billing",
+        "denied": "confluent-audit-log-events_billing"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterX": {
+      "other": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=different-cluster-id/topic=payroll-*": {
+      "other": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      },
+      "produce": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      },
+      "consume": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events_payroll"
+      }
+    }
+  },
+  "metadata": null
+}

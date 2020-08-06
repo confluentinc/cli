@@ -1,13 +1,12 @@
 package release_notes
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	testUtils "github.com/confluentinc/cli/test"
 )
 
 func Test_Docs_Update_Handler(t *testing.T) {
@@ -49,7 +48,7 @@ Bug Fixes
 			want, err := readTestFile(tt.wantFile)
 			require.NoError(t, err)
 			// got windows docs result will contain /r/n but readTestfile already uses NormalizeNewLines
-			docs = testUtils.NormalizeNewLines(docs)
+			docs = utils.NormalizeNewLines(docs)
 			require.Equal(t, want, docs)
 		})
 	}

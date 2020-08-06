@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -16,7 +17,6 @@ import (
 
 	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	testUtils "github.com/confluentinc/cli/test"
 )
 
 var (
@@ -173,11 +173,11 @@ func TestNetrcWriter(t *testing.T) {
 			}
 			gotBytes, err := ioutil.ReadFile(tempFile.Name())
 			require.NoError(t, err)
-			got := testUtils.NormalizeNewLines(string(gotBytes))
+			got := utils.NormalizeNewLines(string(gotBytes))
 
 			wantBytes, err := ioutil.ReadFile(tt.wantFile)
 			require.NoError(t, err)
-			want := testUtils.NormalizeNewLines(string(wantBytes))
+			want := utils.NormalizeNewLines(string(wantBytes))
 
 			if got != want {
 				t.Errorf("got: \n%s\nwant: \n%s\n", got, want)

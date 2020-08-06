@@ -1,4 +1,4 @@
-package audit_log_migration
+package auditlog
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/test"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
@@ -25,7 +26,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			},
 			[]string{"new_bootstrap_2", "new_bootstrap_1"},
 			"NEW.CRN.AUTHORITY.COM",
-			"{\n    \"destinations\": {\n        \"bootstrap_servers\": [\n            \"new_bootstrap_1\",\n            \"new_bootstrap_2\"\n        ],\n        \"topics\": {\n            \"confluent-audit-log-events\": {\n                \"retention_ms\": 500\n            },\n            \"confluent-audit-log-events_payroll\": {\n                \"retention_ms\": 2592000000\n            },\n            \"confluent-audit-log-events_billing\": {\n                \"retention_ms\": 2592000000\n            },\n            \"DIFFERENT-DEFAULT-TOPIC\": {\n                \"retention_ms\": 100\n            }\n        }\n    },\n    \"default_topics\": {\n        \"allowed\": \"confluent-audit-log-events\",\n        \"denied\": \"confluent-audit-log-events\"\n    },\n    \"routes\": {\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*\": {\n            \"produce\": {\n                \"allowed\": \"confluent-audit-log-events_billing\",\n                \"denied\": \"confluent-audit-log-events_billing\"\n            },\n            \"consume\": {\n                \"allowed\": \"confluent-audit-log-events_billing\",\n                \"denied\": \"confluent-audit-log-events_billing\"\n            },\n            \"other\": {\n                \"allowed\": \"confluent-audit-log-events_billing\",\n                \"denied\": \"confluent-audit-log-events_billing\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=cluster123/topic=payroll-*\": {\n            \"produce\": {\n                \"allowed\": \"confluent-audit-log-events_payroll\",\n                \"denied\": \"confluent-audit-log-events_payroll\"\n            },\n            \"consume\": {\n                \"allowed\": \"confluent-audit-log-events_payroll\",\n                \"denied\": \"confluent-audit-log-events_payroll\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=different-cluster-id/topic=payroll-*\": {\n            \"produce\": {\n                \"allowed\": \"confluent-audit-log-events_payroll\",\n                \"denied\": \"confluent-audit-log-events_payroll\"\n            },\n            \"consume\": {\n                \"allowed\": \"confluent-audit-log-events_payroll\",\n                \"denied\": \"confluent-audit-log-events_payroll\"\n            },\n            \"other\": {\n                \"allowed\": \"DIFFERENT-DEFAULT-TOPIC\",\n                \"denied\": \"DIFFERENT-DEFAULT-TOPIC\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC\": {\n            \"other\": {\n                \"allowed\": \"DIFFERENT-DEFAULT-TOPIC\",\n                \"denied\": \"DIFFERENT-DEFAULT-TOPIC\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=*\": {\n            \"other\": {\n                \"allowed\": \"DIFFERENT-DEFAULT-TOPIC\",\n                \"denied\": \"DIFFERENT-DEFAULT-TOPIC\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*\": {\n            \"other\": {\n                \"allowed\": \"DIFFERENT-DEFAULT-TOPIC\",\n                \"denied\": \"DIFFERENT-DEFAULT-TOPIC\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*\": {\n            \"other\": {\n                \"allowed\": \"DIFFERENT-DEFAULT-TOPIC\",\n                \"denied\": \"DIFFERENT-DEFAULT-TOPIC\"\n            }\n        },\n        \"crn://NEW.CRN.AUTHORITY.COM/kafka=clusterX\": {\n          \"other\": {\n              \"allowed\": \"confluent-audit-log-events_payroll\",\n              \"denied\": \"confluent-audit-log-events_payroll\"\n          }\n        }\n    },\n    \"excluded_principals\": [\n        \"User:Alice\",\n        \"User:Bob\"\n    ]\n}",
+			test.LoadFixture(t, "auditlog/migration-result.golden"),
 			[]string{
 				"Mismatched Kafka Cluster Warning: Cluster \"cluster123\" has a route with a different clusterId. Route: \"crn://some-authority/kafka=clusterX\".",
 				"Mismatched Kafka Cluster Warning: Cluster \"clusterABC\" has a route with a different clusterId. Route: \"crn://diff-authority/kafka=different-cluster-id/topic=payroll-*\".",
@@ -40,6 +41,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			},
 		},
 	}
+
 	for _, c := range testCases {
 		var want mds.AuditLogConfigSpec
 		_ = json.Unmarshal([]byte(c.wantSpecAsString), &want)

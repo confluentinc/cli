@@ -94,6 +94,7 @@ github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oV
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
 github.com/confluentinc/cc-structs v0.489.0 h1:xCAh+ucgf/8f21f+5IN/Yf3IKJEmBA49/dzqm8TuV6A=
 github.com/confluentinc/cc-structs v0.539.0 h1:SMDElTZg2J3Ari+hNq3qvqn7UDk8qQGIyrjbKhH4zvM=
+github.com/confluentinc/cc-structs v0.553.0 h1:12wpBybrd1iXeKvVcMWFAliMepfORVViI/PE8Ej9f3k=
 github.com/confluentinc/cc-structs v0.552.0 h1:a4cIgOTs8lxTa3cJAqsXY0W4UXF/mTqs8MRiKkdZdXs=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.425.0/go.mod h1:trTGs5se3ZijGqrRK5Vn0ld/0pWo0yPVMnxX13rBR3I=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.552.0 h1:W5sf9XKa57tl66ZO4wwEv7IqgvZvh/R1tNazCBy4yrc=
@@ -119,6 +120,7 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0 h1:zg5/pQf7YjgFS9wTp
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.489.0 h1:RVYzQPu+MkQwrmr2hBeJKLNuQf/iN7t/H/ifg/PVjQo=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.539.0 h1:hHIoOUf/ezBQtmGYQif9xiML8NcpLELI6FFc2Z4Hz3E=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.553.0 h1:QadiZRo2/VF33Oj5nMtrSc5u7wOlvbYWDKC7C0DW9Tg=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0 h1:MpZuFbQHeMwEWUZZv+tSnXT2Gx96wB2TDpgGWsftE7Y=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
