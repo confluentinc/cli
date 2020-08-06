@@ -60,6 +60,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 	for _, c := range testCases {
 		var want mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(c.wantSpecAsString), &want)
+		require.Nil(t, err)
 
 		got, gotWarnings, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
 
