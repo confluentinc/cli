@@ -491,3 +491,10 @@ int-test: test-prep coverage-integ
 doctoc:
 	npx doctoc README.md
 
+.PHONY: echo-build-id
+echo-build-id:
+	echo "$(BUILD_ID)"
+
+.PHONY: echo-build-id-without-setting
+echo-build-id-without-setting:
+	echo "$(Build.BuildId)"
