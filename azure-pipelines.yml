@@ -9,17 +9,17 @@ variables:  # job-level
 
 steps:
 - bash: |
-  echo "the build-id: ${BUILD_ID}"
+    echo "the build-id: ${BUILD_ID}"
   env:
     BUILD_ID: $(Build.BuildId)
   displayName: proper definition of build id environment
 
 - bash: |
-  echo "the build-id2: $(Build.BuildId)"
+    echo "the build-id2: $(Build.BuildId)"
   displayName: without defining env build id
 
 - bash: |
-  echo "the build id env var defined earlier is ${BUILD_ID}"
+    echo "the build id env var defined earlier is ${BUILD_ID}"
   displayName: attempting to use env var defined in earlier stages
 
 - script: |
