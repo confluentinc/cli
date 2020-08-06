@@ -1,4 +1,4 @@
-package signup
+package admin
 
 import (
 	"bytes"
@@ -82,13 +82,11 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 }
 
 func testSignup(t *testing.T, prompt pcmd.Prompt, expected ...string) {
-	c := &command{}
-
 	cmd := &cobra.Command{}
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
-	err := c.signup(cmd, prompt, mockCcloudClient())
+	err := signup(cmd, prompt, mockCcloudClient())
 	require.NoError(t, err)
 
 	for _, x := range expected {

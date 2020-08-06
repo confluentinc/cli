@@ -1,4 +1,4 @@
-package signup
+package admin
 
 import (
 	"context"
@@ -13,13 +13,29 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
+func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
+	c := pcmd.NewAnonymousCLICommand(
+		&cobra.Command{
+			Use:   "admin",
+			Short: "Perform admin-specific tasks.",
+			Args:  cobra.NoArgs,
+		},
+		prerunner,
+	)
+
+	c.AddCommand(NewSignupCommand(prerunner, logger, userAgent))
+	// TODO: payment command
+
+	return c.Command
+}
+
 type command struct {
 	*pcmd.CLICommand
 	logger    *log.Logger
 	userAgent string
 }
 
-func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
+func NewSignupCommand(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
 	signup := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "signup",
@@ -29,11 +45,11 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.
 		prerunner,
 	)
 
+	signup.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
+	signup.Flags().SortFlags = false
+
 	c := &command{signup, logger, userAgent}
 	c.RunE = pcmd.NewCLIRunE(c.signupRunE)
-	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
-	c.Flags().SortFlags = false
-
 	return c.Command
 }
 
@@ -50,10 +66,10 @@ func (c *command) signupRunE(cmd *cobra.Command, _ []string) error {
 		Logger:     c.logger,
 	})
 
-	return c.signup(cmd, pcmd.NewPrompt(os.Stdin), client)
+	return signup(cmd, pcmd.NewPrompt(os.Stdin), client)
 }
 
-func (c *command) signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error {
+func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error {
 	f := form.New(
 		form.Field{ID: "email", Prompt: "Email"},
 		form.Field{ID: "first", Prompt: "First Name"},
@@ -61,7 +77,6 @@ func (c *command) signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.
 		form.Field{ID: "organization", Prompt: "Organization"},
 		form.Field{ID: "password", Prompt: "Password", IsHidden: true},
 		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true},
-		// TODO: Opt-in to marketing emails
 		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
 	)
 

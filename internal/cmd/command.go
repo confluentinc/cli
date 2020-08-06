@@ -9,6 +9,7 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"github.com/confluentinc/cli/internal/cmd/auth"
@@ -30,7 +31,6 @@ import (
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
-	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -123,6 +123,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	if cliName == "ccloud" {
+		cli.AddCommand(admin.New(prerunner, logger, ver.UserAgent))
 		cli.AddCommand(config.New(prerunner, analyticsClient))
 		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
@@ -139,7 +140,6 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
 		cli.AddCommand(serviceaccount.New(prerunner))
-		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
 		}
