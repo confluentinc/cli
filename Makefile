@@ -495,6 +495,3 @@ doctoc:
 echo-build-id:
 	echo "$(BUILD_ID)"
 
-.PHONY: echo-build-id-without-setting
-echo-build-id-without-setting:
-	echo "$(Build.BuildId)"
