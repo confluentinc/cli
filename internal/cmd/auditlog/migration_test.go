@@ -195,7 +195,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 		},
 	}
 
-	for _, c := range testCases {
+	for i, c := range testCases {
 		var want mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(c.wantSpecAsString), &want)
 		require.Nil(t, err)
@@ -203,7 +203,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 		got, gotWarnings, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
 
 		require.Nil(t, err)
-		require.Equal(t, want, got)
+		require.Equal(t, want, got, "testCase: %d", i)
 		require.Equal(t, c.wantWarnings, gotWarnings)
 	}
 }

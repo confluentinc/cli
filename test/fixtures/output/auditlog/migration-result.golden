@@ -46,18 +46,6 @@
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "produce": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "interbroker": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "describe": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/all=*": {
@@ -112,10 +100,6 @@
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "describe": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/group=*": {
@@ -124,18 +108,6 @@
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       },
       "authorize": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "consume": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "heartbeat": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "describe": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
@@ -190,18 +162,6 @@
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "produce": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "consume": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "describe": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*": {
@@ -220,18 +180,6 @@
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/transaction-id=*": {
       "authorize": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "produce": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "consume": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
-      "describe": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }

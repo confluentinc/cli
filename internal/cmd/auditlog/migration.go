@@ -320,11 +320,11 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 		{
 			name: "",
 			resources: []Resource{
-				{extension: "", categories: []string{"Authorize", "Interbroker", "Describe", "Produce", "Other"}},
-				{extension: "topic", categories: []string{"Authorize", "Describe", "Consume", "Produce", "Other"}},
-				{extension: "transaction-id", categories: []string{"Authorize", "Describe", "Consume", "Produce"}},
-				{extension: "group", categories: []string{"Authorize", "Describe", "Consume", "Heartbeat", "Other"}},
-				{extension: "delegation-token", categories: []string{"Authorize", "Describe"}},
+				{extension: "", categories: []string{"Authorize", "Other"}},
+				{extension: "topic", categories: []string{"Authorize", "Other"}},
+				{extension: "transaction-id", categories: []string{"Authorize"}},
+				{extension: "group", categories: []string{"Authorize", "Other"}},
+				{extension: "delegation-token", categories: []string{"Authorize"}},
 				{extension: "control-center-broker-metrics", categories: []string{"Authorize"}},
 				{extension: "control-center-alerts", categories: []string{"Authorize"}},
 				{extension: "cluster-registry", categories: []string{"Authorize"}},
