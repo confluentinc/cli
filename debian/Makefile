@@ -12,7 +12,7 @@ export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
 # it should be easy to maintain altered values on platform-specific branches
 # when the values aren't overridden by the script invoking the Makefile
 
-APPLY_PATCHES?=yes
+APPLY_PATCHES?=no
 
 # DESTDIR may be overridden by e.g. debian packaging
 ifeq ($(DESTDIR),)
