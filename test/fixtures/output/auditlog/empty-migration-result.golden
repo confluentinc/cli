@@ -20,18 +20,6 @@
       "authorize": {
         "allowed": "",
         "denied": ""
-      },
-      "produce": {
-        "allowed": "",
-        "denied": ""
-      },
-      "interbroker": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
-        "allowed": "",
-        "denied": ""
       }
     },
     "crn:///kafka=cluster123/all=*": {
@@ -86,10 +74,6 @@
       "authorize": {
         "allowed": "",
         "denied": ""
-      },
-      "describe": {
-        "allowed": "",
-        "denied": ""
       }
     },
     "crn:///kafka=cluster123/group=*": {
@@ -98,18 +82,6 @@
         "denied": ""
       },
       "authorize": {
-        "allowed": "",
-        "denied": ""
-      },
-      "consume": {
-        "allowed": "",
-        "denied": ""
-      },
-      "heartbeat": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
         "allowed": "",
         "denied": ""
       }
@@ -164,34 +136,10 @@
       "authorize": {
         "allowed": "",
         "denied": ""
-      },
-      "produce": {
-        "allowed": "",
-        "denied": ""
-      },
-      "consume": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
-        "allowed": "",
-        "denied": ""
       }
     },
     "crn:///kafka=cluster123/transaction-id=*": {
       "authorize": {
-        "allowed": "",
-        "denied": ""
-      },
-      "produce": {
-        "allowed": "",
-        "denied": ""
-      },
-      "consume": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
         "allowed": "",
         "denied": ""
       }
@@ -202,18 +150,6 @@
         "denied": ""
       },
       "authorize": {
-        "allowed": "",
-        "denied": ""
-      },
-      "produce": {
-        "allowed": "",
-        "denied": ""
-      },
-      "interbroker": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
         "allowed": "",
         "denied": ""
       }
@@ -270,10 +206,6 @@
       "authorize": {
         "allowed": "",
         "denied": ""
-      },
-      "describe": {
-        "allowed": "",
-        "denied": ""
       }
     },
     "crn:///kafka=clusterABC/group=*": {
@@ -282,18 +214,6 @@
         "denied": ""
       },
       "authorize": {
-        "allowed": "",
-        "denied": ""
-      },
-      "consume": {
-        "allowed": "",
-        "denied": ""
-      },
-      "heartbeat": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
         "allowed": "",
         "denied": ""
       }
@@ -348,34 +268,10 @@
       "authorize": {
         "allowed": "",
         "denied": ""
-      },
-      "produce": {
-        "allowed": "",
-        "denied": ""
-      },
-      "consume": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
-        "allowed": "",
-        "denied": ""
       }
     },
     "crn:///kafka=clusterABC/transaction-id=*": {
       "authorize": {
-        "allowed": "",
-        "denied": ""
-      },
-      "produce": {
-        "allowed": "",
-        "denied": ""
-      },
-      "consume": {
-        "allowed": "",
-        "denied": ""
-      },
-      "describe": {
         "allowed": "",
         "denied": ""
       }

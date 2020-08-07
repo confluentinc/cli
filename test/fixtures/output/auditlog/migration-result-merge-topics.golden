@@ -29,18 +29,6 @@
       "authorize": {
         "allowed": "confluent-audit-log-events",
         "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "produce": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "interbroker": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "describe": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=cluster123/all=*": {
@@ -95,10 +83,6 @@
       "authorize": {
         "allowed": "confluent-audit-log-events",
         "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "describe": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=cluster123/group=*": {
@@ -107,18 +91,6 @@
         "denied": "confluent-audit-log-events_different_default_denied"
       },
       "authorize": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "consume": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "heartbeat": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "describe": {
         "allowed": "confluent-audit-log-events",
         "denied": "confluent-audit-log-events_different_default_denied"
       }
@@ -181,26 +153,10 @@
       "consume": {
         "allowed": "confluent-audit-log-events_payroll",
         "denied": "confluent-audit-log-events_payroll"
-      },
-      "describe": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=cluster123/transaction-id=*": {
       "authorize": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "produce": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "consume": {
-        "allowed": "confluent-audit-log-events",
-        "denied": "confluent-audit-log-events_different_default_denied"
-      },
-      "describe": {
         "allowed": "confluent-audit-log-events",
         "denied": "confluent-audit-log-events_different_default_denied"
       }
