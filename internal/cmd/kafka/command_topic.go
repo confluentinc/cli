@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -152,7 +153,7 @@ func (a *authenticatedTopicCommand) init() {
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	cmd.Flags().SortFlags = false
@@ -188,7 +189,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
@@ -263,7 +264,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if topic.Spec.Configs, err = toMap(configs); err != nil {
+	if topic.Spec.Configs, err = kafka.ToMap(configs); err != nil {
 		return err
 	}
 	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
@@ -314,7 +315,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	configMap, err := toMap(configs)
+	configMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -640,18 +641,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	err = os.RemoveAll(dir)
 	return err
-}
-
-func toMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
-		}
-		configMap[pair[0]] = pair[1]
-	}
-	return configMap, nil
 }
 
 func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {

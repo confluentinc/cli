@@ -80,13 +80,38 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 	kafkaRestURL := serveKafkaRest(s.T()).URL
 	tests := []CLITest{
 		// Test correct usage
-		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
 		// Output should format correctly depending on format argument.
-		{args: fmt.Sprintf("kafka topic list --url %s -o human", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s -o yaml", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list-yaml.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s -o json", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list-json.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o human", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o yaml", kafkaRestURL), fixture: "kafka/confluent/topic/list-yaml.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o json", kafkaRestURL), fixture: "kafka/confluent/topic/list-json.golden"},
 		// Invalid format string should throw error
-		{args: fmt.Sprintf("kafka topic list --url %s -o hello", kafkaRestURL), fixture: "kafka/confluent-kafka-topic-list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o hello", kafkaRestURL), fixture: "kafka/confluent/topic/list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
+	}
+
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest, "")
+	}
+}
+
+func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
+	kafkaRestURL := serveKafkaRest(s.T()).URL
+	tests := []CLITest{
+		// Test correct usage
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-create-success.golden", wantErrCode: 0, name: "correct URL with default params should create successfully"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 1 --config retention.ms=100000,compression.type=gzip", kafkaRestURL),
+			fixture: "kafka/confluent/topic/create-topic-create-success.golden", wantErrCode: 0, name: "correct URL with valid optional params should create successfully"},
+		// Errors: Does not conform to command specification
+		{args: fmt.Sprintf("kafka topic create --url %s", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions as", kafkaRestURL), contains: "Error: invalid argument \"as\" for \"--partitions\" flag: strconv.ParseInt: parsing \"as\": invalid syntax", wantErrCode: 1, name: "argument type not match should return error"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor as", kafkaRestURL), contains: "Error: invalid argument \"as\" for \"--replication-factor\" flag: strconv.ParseInt: parsing \"as\": invalid syntax", wantErrCode: 1, name: "argument type not match should return error"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "invalid config should return error"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1,compression", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "invalid config should return error"},
+		// Errors: Error in topic creation from invalid argument (from server)
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -10", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid num. partitions should lead to error"},          //errorMsgContainsAll: []string{"error during topic creation"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid replication-factor should lead to error"}, //errorMsgContainsAll: []string{"error during topic creation"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=a", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid config value should lead to error"},      //errorMsgContainsAll: []string{"error during topic creation"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=asdf", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid config key should lead to error"},             //errorMsgContainsAll: []string{"error during topic creation"},
 	}
 
 	for _, clitest := range tests {

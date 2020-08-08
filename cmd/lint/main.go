@@ -111,7 +111,7 @@ var rules = []linter.Rule{
 	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
 	linter.Filter(linter.RequireFlag("url", false), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("url", "Base URL to REST Proxy Endpoint of Kafka Cluster."), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
@@ -152,7 +152,7 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"compression-codec", "connect-cluster-id", "consumer-property", "enable-systest-events",
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
-			"producer-property", "remote-secrets-file", "request-required-acks", "request-timeout-ms",
+			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
 			"value-deserializer",
 		),
