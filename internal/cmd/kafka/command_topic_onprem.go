@@ -3,6 +3,7 @@ package kafka
 // confluent kafka topic <commands>
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	purl "net/url"
@@ -98,6 +99,32 @@ func (topicCmd *topicCommand) init() {
 	createCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(createCmd)
 
+	// Register delete command
+	// Delete a Kafka topic.
+	// Usage:
+	//     confluent kafka topic delete <topic> [flags]
+	// Examples:
+	//     Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.
+	//     confluent kafka topic delete my_topic
+	//     confluent kafka topic delete my_topic_avro
+	// Flags:
+	//     --url Base URL of REST Proxy Endpoint of Kafka Cluster. (Required) (replace: cluster string Kafka cluster ID)
+	deleteCmd := &cobra.Command{
+		Use:   "delete <topic>",
+		Short: "Delete a Kafka topic.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(topicCmd.deleteTopic),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete the topic ``my_topic`` at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.",
+				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
+			}),
+	}
+	deleteCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
+	check(deleteCmd.MarkFlagRequired("url"))
+	deleteCmd.Flags().SortFlags = false
+	topicCmd.AddCommand(deleteCmd)
+
 	// Register describe command
 	// describeCmd := &cobra.Command{
 	// 	Use:   "describe <topic>",
@@ -121,6 +148,11 @@ func setServerURL(client *kafkarestv3.APIClient, url string) {
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
+type kafkaRestV3Error struct {
+	Code    int    `json:"error_code"`
+	Message string `json:"message"`
+}
+
 func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.APIClient, resp *http.Response, err error) error {
 	fmt.Printf("[DEBUG] http.Response:%v, TypeOf(err): %v, ValueOf(err): %v\n\n", resp, reflect.TypeOf(err), reflect.ValueOf(err))
 	switch err.(type) {
@@ -129,6 +161,15 @@ func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.
 			// TODO: Currently this error exposes implementation detail
 			// TODO: add message: cluster may not be ready?
 			return errors.Errorf(errors.InvalidFlagValueWithWrappedErrorErrorMsg, url, "url", e.Err)
+		}
+	case kafkarestv3.GenericOpenAPIError:
+		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
+			var decodedError kafkaRestV3Error
+			err = json.Unmarshal(openAPIError.Body(), &decodedError)
+			if err != nil {
+				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+			}
+			return fmt.Errorf("Kafka REST Proxy backend error:\n\t%v", decodedError.Message)
 		}
 	}
 	return err
@@ -201,7 +242,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	} else if clusters.Data == nil || len(clusters.Data) == 0 { // TODO: should I check for this? If so update list topics to do the same, what error should I return?
-		return errors.NewErrorWithSuggestions("internal server error", "Check the status of your Kafka cluster") // TODO: refactor into error_messages.go
+		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions) // TODO: refactor into error_messages.go
 	}
 	clusterId := clusters.Data[0].ClusterId
 
@@ -259,6 +300,40 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	// no error if topic is created successfully.
 	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topicName) // TODO: why print to StdErr
 	// fmt.Printf("[DEBUG] topicData: %v\n", topicData)
+	return nil
+}
+
+// Register delete command
+// Delete a Kafka topic.
+// Usage:
+//     confluent kafka topic delete <topic> [flags]
+// Flags:
+//     --url Base URL of REST Proxy Endpoint of Kafka Cluster. (Required) (replace: cluster string Kafka cluster ID)
+func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) error {
+	// Parse arguments
+	topicName := args[0]
+	url, err := cmd.Flags().GetString("url")
+	if err != nil {
+		return err
+	}
+
+	// Get ClusterId
+	setServerURL(topicCmd.KafkaRestClient, url)
+	kafkaRestClient := topicCmd.KafkaRestClient
+	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	if err != nil {
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // checks for error in URL
+	} else if clustersData.Data == nil || len(clustersData.Data) == 0 {
+		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+	}
+	clusterId := clustersData.Data[0].ClusterId
+
+	// Delete Topic
+	resp, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(context.Background(), clusterId, topicName)
+	if err != nil {
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catches topic name not found (backend error)
+	}
+	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, topicName) // topic successfully created
 	return nil
 }
 

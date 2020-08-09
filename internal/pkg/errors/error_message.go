@@ -331,6 +331,10 @@ const (
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 
+	// Kafka REST Proxy Errors
+	InternalServerErrorMsg         = "internal server error"
+	InternalServerErrorSuggestions = "Check the status of your Kafka cluster or please submit a support ticket."
+
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
 	ccloudAvoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `ccloud login --save`."

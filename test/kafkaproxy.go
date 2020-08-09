@@ -19,15 +19,18 @@ func serveKafkaRest(t *testing.T) *httptest.Server {
 	// req := require.New(t)
 	router := http.NewServeMux()
 
+	// Handler function names are based on URL (parsed)
 	router.HandleFunc("/v3/clusters", getClustersHandler(t))
 	router.HandleFunc("/v3/clusters/cluster-1/topics", getClustersClusterIdTopicsHandler(t))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist", getClustersClusterIdTopicsTopicNameHandler(t, "topic-exist"))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-not-exist", getClustersClusterIdTopicsTopicNameHandler(t, "topic-not-exist"))
 	// Create a test server that routes each request to handler function described
 	return httptest.NewServer(router)
 }
 
 func getClustersHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" { // List Clusters
+		if r.Method == http.MethodGet { // List Clusters
 			w.Header().Set("Content-Type", "application/json")
 			// Response jsons are created by editting examples from the Kafka REST Proxy OpenApi Spec
 			response := `{
@@ -79,7 +82,7 @@ func areValidTopicCreateArgs(requestData kafkarestv3.CreateTopicRequestData) boo
 
 func getClustersClusterIdTopicsHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" { // List Topics
+		if r.Method == http.MethodGet { // List Topics
 			w.Header().Set("Content-Type", "application/json")
 			response := `{
 				"kind": "KafkaTopicList",
@@ -111,7 +114,7 @@ func getClustersClusterIdTopicsHandler(t *testing.T) func(w http.ResponseWriter,
 			}`
 			_, err := io.WriteString(w, response)
 			require.NoError(t, err)
-		} else if r.Method == "POST" { // Create Topic
+		} else if r.Method == http.MethodPost { // Create Topic
 			// Parse request body
 			reqBody, _ := ioutil.ReadAll(r.Body)
 			var requestData kafkarestv3.CreateTopicRequestData
@@ -146,6 +149,28 @@ func getClustersClusterIdTopicsHandler(t *testing.T) func(w http.ResponseWriter,
 				w.WriteHeader(http.StatusBadRequest)
 			}
 
+		}
+	}
+}
+
+func getClustersClusterIdTopicsTopicNameHandler(t *testing.T, topicName string) func(responseWriter http.ResponseWriter, request *http.Request) {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Delete topic
+		// The server only houses the topic: "topic-exist"
+		if request.Method == http.MethodDelete {
+			if topicName == "topic-exist" {
+				// successfully deleted
+				responseWriter.WriteHeader(http.StatusNoContent)
+			} else { // topic-not-exist
+				// not found
+				responseWriter.WriteHeader(http.StatusNotFound)
+				responseBody := `{
+					"error_code": 40403,
+					"message": "This server does not host this topic-partition."
+				}`
+				_, err := io.WriteString(responseWriter, responseBody)
+				require.NoError(t, err)
+			}
 		}
 	}
 }
