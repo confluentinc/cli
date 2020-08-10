@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	sourceBootstrapServersFlagName = "source"
+	sourceBootstrapServersFlagName     = "source"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	sourceConfigFlagName = "configs"
+	sourceConfigFlagName               = "configs"
+	dryrunFlagName                     = "dry-run"
 )
 
 var (
@@ -80,6 +81,7 @@ func (c *linkCommand) init() {
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
 	createCmd.Flags().String(sourceConfigFlagName, "", "Additional comma-separated properties for source cluster.")
+	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -167,6 +169,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(err, cmd)
 	}
 
+	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
+	if err != nil {
+		return errors.HandleCommon(err, cmd)
+	}
+
 	// TODO: fix up source configs.
 	_, err = cmd.Flags().GetString(sourceConfigFlagName)
 	// sourceConfigs, err := cmd.Flags().GetString(sourceConfigFlagName)
@@ -187,7 +194,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		ClusterId:"",
 		Configs:              config,
 	}
-	createOptions := &linkv1.CreateLinkOptions{ValidateLink:false, ValidateOnly:false}
+	createOptions := &linkv1.CreateLinkOptions{ValidateLink:false, ValidateOnly:validateOnly}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
 	return errors.HandleCommon(err, cmd)
 }
