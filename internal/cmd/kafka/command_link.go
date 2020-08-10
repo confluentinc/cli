@@ -136,16 +136,16 @@ func (c *linkCommand) init() {
 func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"LinkName"}, []string{"LinkName"}, []string{"LinkName"})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	type LinkWriter struct {
 		LinkName string
@@ -159,26 +159,26 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	linkName := args[0]
 
 	bootstrapServers, err := cmd.Flags().GetString(sourceBootstrapServersFlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	// TODO: fix up source configs.
 	_, err = cmd.Flags().GetString(sourceConfigFlagName)
 	// sourceConfigs, err := cmd.Flags().GetString(sourceConfigFlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	// Create config map from the argument.
 	config := make(map[string]string)
@@ -187,7 +187,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	config[sourceBootstrapServersPropertyName] = bootstrapServers
 
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	sourceLink := &linkv1.ClusterLink{
 		LinkName:linkName,
@@ -196,36 +196,36 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	createOptions := &linkv1.CreateLinkOptions{ValidateLink:false, ValidateOnly:validateOnly}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
-	return errors.HandleCommon(err, cmd)
+	return err
 }
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	link := args[0]
 	deletionOptions := &linkv1.DeleteLinkOptions{}
 	err = c.Client.Kafka.DeleteLink(context.Background(), cluster, link, deletionOptions)
-	return errors.HandleCommon(err, cmd)
+	return err
 }
 
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	link := args[0]
 	resp, err := c.Client.Kafka.DescribeLink(context.Background(), cluster, link)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, keyValueFields, keyValueFields, keyValueFields)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	for k, v := range resp.Properties {
@@ -240,7 +240,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	link := args[0]
@@ -259,5 +259,5 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	alterOptions := &linkv1.AlterLinkOptions{}
 	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config, alterOptions)
 
-	return errors.HandleCommon(err, cmd)
+	return err
 }
