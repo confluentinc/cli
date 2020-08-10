@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	sourceBootstrapServersFlagName     = "source"
+	sourceBootstrapServersFlagName     = "source_cluster"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	sourceConfigFlagName               = "configs"
+	configFlagName                     = "config"
 	dryrunFlagName                     = "dry-run"
 )
 
@@ -22,7 +22,7 @@ var (
 )
 
 type keyValueDisplay struct {
-	Key string
+	Key   string
 	Value string
 }
 
@@ -51,7 +51,7 @@ func (c *linkCommand) init() {
 	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
 
 	listCmd := &cobra.Command{
-		Use: "list",
+		Use:   "list",
 		Short: "List previously created cluster links.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -68,7 +68,7 @@ func (c *linkCommand) init() {
 
 	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
 	createCmd := &cobra.Command{
-		Use: "create <link-name>",
+		Use:   "create <link-name>",
 		Short: "Create a new cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -80,13 +80,13 @@ func (c *linkCommand) init() {
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
-	createCmd.Flags().String(sourceConfigFlagName, "", "Additional comma-separated properties for source cluster.")
+	createCmd.Flags().StringSlice(configFlagName, nil, "Additional comma-separated properties for source cluster.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
-		Use: "delete <link-name>",
+		Use:   "delete <link-name>",
 		Short: "Delete a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -100,7 +100,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
-		Use: "describe <link-name>",
+		Use:   "describe <link-name>",
 		Short: "Describes a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -108,8 +108,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link describe my_link",
 			},
 		),
-        RunE: c.describe,
-        Args: cobra.ExactArgs(1),
+		RunE: c.describe,
+		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -117,7 +117,7 @@ func (c *linkCommand) init() {
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	updateCmd := &cobra.Command{
-		Use: "update <link-name>",
+		Use:   "update <link-name>",
 		Short: "Updates a property for a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -174,27 +174,25 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO: fix up source configs.
-	_, err = cmd.Flags().GetString(sourceConfigFlagName)
-	// sourceConfigs, err := cmd.Flags().GetString(sourceConfigFlagName)
+	linkConfigs, err := cmd.Flags().GetStringSlice(configFlagName)
 	if err != nil {
 		return err
 	}
 	// Create config map from the argument.
-	config := make(map[string]string)
+	configMap, err := toMap(linkConfigs)
 
 	// The `source` argument is a convenience; we package everything into properties for the source cluster.
-	config[sourceBootstrapServersPropertyName] = bootstrapServers
+	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
 	if err != nil {
 		return err
 	}
 	sourceLink := &linkv1.ClusterLink{
-		LinkName:linkName,
-		ClusterId:"",
-		Configs:              config,
+		LinkName:  linkName,
+		ClusterId: "",
+		Configs:   configMap,
 	}
-	createOptions := &linkv1.CreateLinkOptions{ValidateLink:false, ValidateOnly:validateOnly}
+	createOptions := &linkv1.CreateLinkOptions{ValidateLink: false, ValidateOnly: validateOnly}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
 	return err
 }
@@ -230,7 +228,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 
 	for k, v := range resp.Properties {
 		outputWriter.AddElement(&keyValueDisplay{
-			Key: k,
+			Key:   k,
 			Value: v,
 		})
 	}
@@ -244,7 +242,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	link := args[0]
-	configs, err := cmd.Flags().GetStringSlice("config")
+	configs, err := cmd.Flags().GetStringSlice(configFlagName)
 	if err != nil {
 		return err
 	}
