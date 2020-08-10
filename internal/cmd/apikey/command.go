@@ -85,6 +85,7 @@ func (c *command) init() {
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
+	c.completer.AddCommand(listCmd, false)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
@@ -101,6 +102,8 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(createCmd)
+	c.completer.AddCommand(createCmd, false)
+
 
 	updateCmd := &cobra.Command{
 		Use:   "update <apikey>",
@@ -111,6 +114,8 @@ func (c *command) init() {
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
+	c.completer.AddCommand(updateCmd, true)
+
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
@@ -119,6 +124,8 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	c.AddCommand(deleteCmd)
+	c.completer.AddCommand(deleteCmd, true)
+
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -134,6 +141,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(storeCmd)
+	c.completer.AddCommand(storeCmd, true)
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
@@ -147,8 +155,9 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
+	c.completer.AddCommand(useCmd, true)
 
-	c.completer.AddCommand(c.Command, c.suggestAPIKeys(c.Command))
+	c.completer.AddSuggestionFunction(c.Command, c.suggestAPIKeys(c.Command))
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
