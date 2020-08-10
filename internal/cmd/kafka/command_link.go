@@ -14,8 +14,6 @@ const (
 	sourceBootstrapServersFlagName = "source"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
 	sourceConfigFlagName = "configs"
-	propertyKeyFlagName = "key"
-	propertyValueFlagName = "value"
 )
 
 var (
@@ -128,8 +126,7 @@ func (c *linkCommand) init() {
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().String(propertyKeyFlagName, "", "Property key.")
-	updateCmd.Flags().String(propertyValueFlagName, "", "Property value.")
+	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 }
@@ -240,16 +237,17 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	link := args[0]
-	key, err := cmd.Flags().GetString(propertyKeyFlagName)
+	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	value, err := cmd.Flags().GetString(propertyValueFlagName)
+	configMap, err := toMap(configs)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
+
 	config := &linkv1.LinkProperties{
-		Properties: map[string]string{key: value},
+		Properties: configMap,
 	}
 	alterOptions := &linkv1.AlterLinkOptions{}
 	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config, alterOptions)
