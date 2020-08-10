@@ -12,7 +12,7 @@ export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
 # it should be easy to maintain altered values on platform-specific branches
 # when the values aren't overridden by the script invoking the Makefile
 
-APPLY_PATCHES?=no
+APPLY_PATCHES?=yes
 
 # DESTDIR may be overridden by e.g. debian packaging
 ifeq ($(DESTDIR),)
@@ -29,9 +29,9 @@ SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 SYSTEMDDIR=/lib/systemd/system
 endif
 
-all: download
+all: install
 
-archive: download
+archive: install
 	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
 
@@ -45,7 +45,7 @@ BINPATH=$(PREFIX)/bin
 LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
-download: apply-patches
+install: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
@@ -116,7 +116,7 @@ rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 # installed version to generate a new archive. Note that we always regenerate
 # the symlink because the RPM_VERSION doesn't include all the version info -- it
 # can leave of things like -beta, -rc1, etc.
-RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area download debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
