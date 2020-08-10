@@ -38,6 +38,7 @@ archive: install
 apply-patches: $(wildcard debian/patches/*)
 ifeq ($(APPLY_PATCHES),yes)
 	git reset --hard HEAD
+	rm -f Makefile # Makefile must be deleted before standard_build_layout.patch is applied
 	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
 endif
 
