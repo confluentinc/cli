@@ -58,6 +58,8 @@ func (c *command) signupRunE(cmd *cobra.Command, _ []string) error {
 }
 
 func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error {
+	pcmd.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
+
 	f := form.New(
 		form.Field{ID: "email", Prompt: "Email"},
 		form.Field{ID: "first", Prompt: "First Name"},
@@ -68,7 +70,6 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
 	)
 
-	pcmd.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
 	if err := f.Prompt(cmd, prompt); err != nil {
 		return err
 	}
@@ -117,7 +118,7 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 				return err
 			}
 
-			pcmd.Printf(cmd, "A new verification email has been sent to %s.\n", f.Responses["email"].(string))
+			pcmd.Printf(cmd, "A new verification email has been sent to %s. If this email is not received, please contact support@confluent.io.\n", f.Responses["email"].(string))
 			continue
 		}
 

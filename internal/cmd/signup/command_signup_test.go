@@ -76,7 +76,7 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 			"y", // Verify
 		),
 		"A verification email has been sent to bstrauch@confluent.io.",
-		"A new verification email has been sent to bstrauch@confluent.io.",
+		"A new verification email has been sent to bstrauch@confluent.io. If this email is not received, please contact support@confluent.io.",
 		"Success! Welcome to Confluent Cloud.",
 	)
 }

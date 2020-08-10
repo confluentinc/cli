@@ -95,8 +95,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("connector-catalog describe"),
 		// skip feedback command
 		linter.ExcludeCommand("feedback"),
-		// skip admin command
-		linter.ExcludeCommandContains("admin"),
+		// skip signup command
+		linter.ExcludeCommandContains("signup"),
 		// config context commands
 		linter.ExcludeCommand("config context current"),
 		linter.ExcludeCommandContains("config context get"),
