@@ -14,6 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+/*
+ * This fake server has: 3 nodes (replication-factor <= 3)
+ * Only takes 2 config keys: retention.ms & compression.type
+ * Contains 1 cluster: "cluster-1" and ListTopics return topic-1 and topic-2, only "topic-exist" exists for Delete & Update
+ */
+
 func serveKafkaRest(t *testing.T) *httptest.Server {
 	// Create a new testify/require object
 	// req := require.New(t)
@@ -24,13 +30,26 @@ func serveKafkaRest(t *testing.T) *httptest.Server {
 	router.HandleFunc("/v3/clusters/cluster-1/topics", getClustersClusterIdTopicsHandler(t))
 	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist", getClustersClusterIdTopicsTopicNameHandler(t, "topic-exist"))
 	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-not-exist", getClustersClusterIdTopicsTopicNameHandler(t, "topic-not-exist"))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/configs:alter", getClustersClusterIdTopicsTopicNameConfigsAlterHandler(t, "topic-exist"))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-not-exist/configs:alter", getClustersClusterIdTopicsTopicNameConfigsAlterHandler(t, "topic-not-exist"))
 	// Create a test server that routes each request to handler function described
 	return httptest.NewServer(router)
 }
 
+func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
+	responseWriter.WriteHeader(statusCode)
+	responseBody := fmt.Sprintf(`{
+		"error_code": %d,
+		"message": "%s"
+	}`, errorCode, message)
+	_, err := io.WriteString(responseWriter, responseBody)
+	return err
+}
+
 func getClustersHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet { // List Clusters
+		// List Clusters
+		if r.Method == http.MethodGet {
 			w.Header().Set("Content-Type", "application/json")
 			// Response jsons are created by editting examples from the Kafka REST Proxy OpenApi Spec
 			response := `{
@@ -82,7 +101,8 @@ func areValidTopicCreateArgs(requestData kafkarestv3.CreateTopicRequestData) boo
 
 func getClustersClusterIdTopicsHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet { // List Topics
+		// List Topics
+		if r.Method == http.MethodGet {
 			w.Header().Set("Content-Type", "application/json")
 			response := `{
 				"kind": "KafkaTopicList",
@@ -163,13 +183,45 @@ func getClustersClusterIdTopicsTopicNameHandler(t *testing.T, topicName string) 
 				responseWriter.WriteHeader(http.StatusNoContent)
 			} else { // topic-not-exist
 				// not found
-				responseWriter.WriteHeader(http.StatusNotFound)
-				responseBody := `{
-					"error_code": 40403,
-					"message": "This server does not host this topic-partition."
-				}`
-				_, err := io.WriteString(responseWriter, responseBody)
+				require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			}
+		}
+	}
+}
+
+func getClustersClusterIdTopicsTopicNameConfigsAlterHandler(t *testing.T, topicName string) func(responseWriter http.ResponseWriter, request *http.Request) {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Batch alter topic configs
+		if request.Method == http.MethodPost {
+			if topicName == "topic-exist" { // successfully deleted
+				// Parse Alter Args
+				requestBody, err := ioutil.ReadAll(request.Body)
 				require.NoError(t, err)
+				var requestData kafkarestv3.AlterConfigBatchRequestData
+				err = json.Unmarshal(requestBody, &requestData)
+				require.NoError(t, err)
+
+				// Check Alter Args if valid
+				for _, config := range requestData.Data {
+					if config.Name != "retention.ms" && config.Name != "compression.type" { // should be either retention.ms or compression.type
+						require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 404, fmt.Sprintf("Config %s cannot be found for TOPIC topic-exist in cluster cluster-1.", config.Name)))
+						return
+					} else if config.Name == "retention.ms" {
+						if config.Value == nil { // if retention.ms but value null
+							require.NoError(t, writeErrorResponse(responseWriter, http.StatusBadRequest, 40002, "Null value not supported for : SET:retention.ms"))
+							return
+						} else if _, err := strconv.Atoi(*config.Value); err != nil { // if retention.ms but value invalid
+							require.NoError(t, writeErrorResponse(responseWriter, http.StatusBadRequest, 40002, fmt.Sprintf("Invalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value %s for configuration retention.ms: Not a number of type LONG", *config.Value)))
+							return
+						}
+					}
+					// TODO check for compression.type values
+				}
+				// No error
+				responseWriter.WriteHeader(http.StatusNoContent)
+			} else { // topic-not-exist
+				// not found
+				require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
 		}
 	}

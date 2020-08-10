@@ -122,9 +122,31 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 func (s *CLITestSuite) TestConfluentKafkaTopicDelete() {
 	kafkaRestURL := serveKafkaRest(s.T()).URL
 	tests := []CLITest{
-		// Test correct usage
+		{args: fmt.Sprintf("kafka topic delete --url %s", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
 		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/delete-topic-success.golden", wantErrCode: 0, name: "deleting existing topic with correct url should delete successfully"},
 		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/delete-topic-not-exist-failure.golden", wantErrCode: 1, name: "deleting a non-existent topic should fail"},
+	}
+
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest, "")
+	}
+}
+
+func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
+	kafkaRestURL := serveKafkaRest(s.T()).URL
+	tests := []CLITest{
+		// Topic name errors
+		{args: fmt.Sprintf("kafka topic update --url %s", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
+		{args: fmt.Sprintf("kafka topic update topic-not-exist --url %s", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tThis server does not host this topic-partition.", wantErrCode: 1, name: "update config of a non-existent topic should fail"},
+		// --config errors
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression=", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config asdf=1", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tConfig asdf cannot be found for TOPIC topic-exist in cluster cluster-1.", wantErrCode: 1, name: "incorrect config name should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tInvalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG", wantErrCode: 1, name: "incorrect config value should fail"},
+		// Success cases
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-success", wantErrCode: 0, name: "valid config updates should succeed with configs printed sorted"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1000,retention.ms=1", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-duplicate-success", wantErrCode: 0, name: "valid duplicate config should succeed with the later config value kept"},
 	}
 
 	for _, clitest := range tests {
