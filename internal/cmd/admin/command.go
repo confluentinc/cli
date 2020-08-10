@@ -4,10 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "admin",
@@ -17,7 +16,7 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.
 		prerunner,
 	)
 
-	c.AddCommand(NewSignupCommand(prerunner, logger, userAgent))
+	c.Hidden = true
 	// TODO: payment command
 
 	return c.Command

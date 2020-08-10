@@ -1,4 +1,4 @@
-package admin
+package signup
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type command struct {
 	userAgent string
 }
 
-func NewSignupCommand(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
 	c := &command{
 		pcmd.NewAnonymousCLICommand(
 			&cobra.Command{
