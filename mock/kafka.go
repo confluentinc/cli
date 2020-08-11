@@ -118,7 +118,7 @@ func (m *Kafka)	AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, li
 }
 
 func (m* Kafka)	CreateLink(ctx context.Context, destination *schedv1.KafkaCluster, link *linkv1.ClusterLink, options *linkv1.CreateLinkOptions) error {
-	if err := assertEqualValues(link, <-m.Expect); err != nil {
+	if err := assertEquals(link, <-m.Expect); err != nil {
 		return err
 	}
 	return nil
