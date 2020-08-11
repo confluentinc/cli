@@ -626,7 +626,7 @@ func TestAlterLink(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "alter", link.name, "--key", link.alterKey, "--value", link.alterValue}
+			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s", link.alterKey, link.alterValue)}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- link.name
@@ -639,7 +639,7 @@ func TestCreateLink(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "create", link.name, "--source", link.source}
+			return []string{"link", "create", link.name, "--source_cluster", link.source}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- &linkv1.ClusterLink{
