@@ -92,8 +92,8 @@ func (topicCmd *topicCommand) init() {
 			}),
 	}
 	createCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
-	check(listCmd.MarkFlagRequired("url"))                                  // TODO: unset url as required
-	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.") // TODO: change back to uint32
+	check(listCmd.MarkFlagRequired("url"))
+	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
@@ -191,7 +191,6 @@ type kafkaRestV3Error struct {
 }
 
 func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.APIClient, resp *http.Response, err error) error {
-	// fmt.Printf("[DEBUG] http.Response:%v, TypeOf(err): %v, ValueOf(err): %v\n\n", resp, reflect.TypeOf(err), reflect.ValueOf(err))
 	switch err.(type) {
 	case *purl.Error: // Handle errors with request url
 		if e, ok := err.(*purl.Error); ok {
@@ -564,7 +563,6 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 			i++
 		}
 		sort.Slice(configsTableEntries, func(i int, j int) bool {
-			// fmt.Printf("[DEBUG] %s", configsTableEntries[i][0])
 			return configsTableEntries[i][0] < configsTableEntries[j][0]
 		})
 		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
