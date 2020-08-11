@@ -108,13 +108,19 @@ func (m *Kafka) DeleteACLs(_ context.Context, _ *schedv1.KafkaCluster, filters [
 }
 
 func (m *Kafka)	AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, config *linkv1.LinkProperties, options *linkv1.AlterLinkOptions) error {
-	assertEqualValues(link, <-m.Expect)
-	assertEquals(config, <-m.Expect)
+	if err := assertEqualValues(link, <-m.Expect); err != nil {
+		return err
+	}
+	if err := assertEquals(config, <-m.Expect); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (m* Kafka)	CreateLink(ctx context.Context, destination *schedv1.KafkaCluster, link *linkv1.ClusterLink, options *linkv1.CreateLinkOptions) error {
-	assertEqualValues(link, <-m.Expect)
+	if err := assertEqualValues(link, <-m.Expect); err != nil {
+		return err
+	}
 	return nil
 }
 
