@@ -158,3 +158,24 @@ func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
 		s.runConfluentTest(clitest, "")
 	}
 }
+
+func (s *CLITestSuite) TestConfluentKafkaTopicDescribe() {
+	kafkaRestURL := serveKafkaRest(s.T()).URL
+	tests := []CLITest{
+		// Topic name errors
+		{args: fmt.Sprintf("kafka topic describe --url %s", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "<topic> arg missing should lead to error"},
+		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tThis server does not host this topic-partition.", wantErrCode: 1, name: "describing a non-existant topic should lead to error"},
+		// -o errors
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o asdf", kafkaRestURL), contains: "Error: invalid value \"asdf\" for flag `--output`\n\nSuggestions:\n    The possible values for flag `output` are: human, json, yaml.", wantErrCode: 1, name: "bad output format flag should lead to error"},
+		// Success cases
+		// TODO: The canned response for topic describe are what I expect from mulibroker, but I haven't set up a multibroker cluster locally yet.
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success.golden", wantErrCode: 0, name: "topic that exists & correct format arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success.golden", wantErrCode: 0, name: "topic that exist & human arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o json", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success-json.golden", wantErrCode: 0, name: "topic that exist & json arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o yaml", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success-yaml.golden", wantErrCode: 0, name: "topic that exist & yaml arg should lead to success"},
+	}
+
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest, "")
+	}
+}

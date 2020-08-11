@@ -563,6 +563,10 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 			}{name: name, value: value}, []string{"name", "value"})
 			i++
 		}
+		sort.Slice(configsTableEntries, func(i int, j int) bool {
+			// fmt.Printf("[DEBUG] %s", configsTableEntries[i][0])
+			return configsTableEntries[i][0] < configsTableEntries[j][0]
+		})
 		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
 	} else { // machine output (json or yaml)
 		err = output.StructuredOutput(format, topicData)

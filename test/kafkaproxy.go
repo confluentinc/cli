@@ -17,7 +17,8 @@ import (
 /*
  * This fake server has: 3 nodes (replication-factor <= 3)
  * Only takes 2 config keys: retention.ms & compression.type
- * Contains 1 cluster: "cluster-1" and ListTopics return topic-1 and topic-2, only "topic-exist" exists for Create, Delete & Update
+ * Contains 1 cluster: "cluster-1" and ListTopics return topic-1 and topic-2, only "topic-exist" exists for Create, Delete, Update & Describe
+ *   For describe it has: 3 partitions and replication-factor of 3
  */
 
 func serveKafkaRest(t *testing.T) *httptest.Server {
@@ -32,6 +33,12 @@ func serveKafkaRest(t *testing.T) *httptest.Server {
 	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-not-exist", getClustersClusterIdTopicsTopicNameHandler(t, "topic-not-exist"))
 	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/configs:alter", getClustersClusterIdTopicsTopicNameConfigsAlterHandler(t, "topic-exist"))
 	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-not-exist/configs:alter", getClustersClusterIdTopicsTopicNameConfigsAlterHandler(t, "topic-not-exist"))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/partitions", getClustersClusterIdTopicsTopicNamePartitionsHandler(t, "topic-exist"))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-not-exist/partitions", getClustersClusterIdTopicsTopicNamePartitionsHandler(t, "topic-not-exist"))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/partitions/0/replicas", getClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasHandler(t, "topic-exist", 0))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/partitions/1/replicas", getClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasHandler(t, "topic-exist", 1))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/partitions/2/replicas", getClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasHandler(t, "topic-exist", 2))
+	router.HandleFunc("/v3/clusters/cluster-1/topics/topic-exist/configs", getClustersClusterIdTopicsTopicNameConfigsHandler(t, "topic-exist"))
 	// Create a test server that routes each request to handler function described
 	return httptest.NewServer(router)
 }
@@ -223,6 +230,234 @@ func getClustersClusterIdTopicsTopicNameConfigsAlterHandler(t *testing.T, topicN
 				responseWriter.WriteHeader(http.StatusNoContent)
 			} else { // topic-not-exist
 				// not found
+				require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			}
+		}
+	}
+}
+
+func getClustersClusterIdTopicsTopicNamePartitionsHandler(t *testing.T, topicName string) func(w http.ResponseWriter, r *http.Request) {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Get Partitions of a topic
+		if request.Method == http.MethodGet {
+			if topicName == "topic-exist" {
+				responseWriter.Header().Set("Content-Type", "application/json")
+				responseString := fmt.Sprintf(`{
+					"kind": "KafkaPartitionList",
+					"metadata": {
+						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions",
+						"next": null
+					},
+					"data": [
+						{
+							"kind": "KafkaPartition",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0",
+								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=0"
+							},
+							"cluster_id": "cluster-1",
+							"topic_name": "%[1]s",
+							"partition_id": 0,
+							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/replicas/1001"},
+							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/replicas"},
+							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/reassignment"}
+						},
+						{
+							"kind": "KafkaPartition",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1",
+								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=1"
+							},
+							"cluster_id": "cluster-1",
+							"topic_name": "%[1]s",
+							"partition_id": 1,
+							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/replicas/1001"},
+							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/replicas"},
+							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/reassignment"}
+						},
+						{
+							"kind": "KafkaPartition",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2",
+								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=2"
+							},
+							"cluster_id": "cluster-1",
+							"topic_name": "%[1]s",
+							"partition_id": 2,
+							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/replicas/1001"},
+							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/replicas"},
+							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/reassignment"}
+						}
+					]
+				}`, "topic-exist")
+				_, err := io.WriteString(responseWriter, responseString)
+				require.NoError(t, err)
+			} else {
+				require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			}
+		}
+	}
+}
+
+func getClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasHandler(t *testing.T, topicName string, partitionId int) func(w http.ResponseWriter, r *http.Request) {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Get Replicas of a partition
+		if request.Method == http.MethodGet {
+			// if topic exists
+			if topicName == "topic-exist" {
+				// Define replica & partition info
+				type replicaData struct {
+					brokerId int
+					isLeader bool
+					isInSync bool
+				}
+				partitionInfo := []struct { // TODO: add test for different # of replicas for different partitions
+					replicas []replicaData
+				}{
+					{
+						replicas: []replicaData{{brokerId: 1001, isLeader: true, isInSync: true},
+							{brokerId: 1002, isLeader: false, isInSync: true},
+							{brokerId: 1003, isLeader: false, isInSync: true}},
+					},
+					{
+						replicas: []replicaData{{brokerId: 1001, isLeader: false, isInSync: false},
+							{brokerId: 1002, isLeader: true, isInSync: true},
+							{brokerId: 1003, isLeader: false, isInSync: true}},
+					},
+					{
+						replicas: []replicaData{{brokerId: 1001, isLeader: false, isInSync: false},
+							{brokerId: 1002, isLeader: false, isInSync: false},
+							{brokerId: 1003, isLeader: true, isInSync: true}},
+					},
+				}
+
+				// Build response string
+				// Different sets of replica strings for different partitions
+				replicaString := make([]string, len(partitionInfo[partitionId].replicas))
+				for i := range partitionInfo[partitionId].replicas {
+					replicaString[i] = fmt.Sprintf(`{
+						"kind": "KafkaReplica",
+						"metadata": {
+							"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/%[2]d/replicas/1001",
+							"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=%[2]d/replica=1001"
+						},
+						"cluster_id": "cluster-1",
+						"topic_name": "%[1]s",
+						"partition_id": %[2]d,
+						"broker_id": %[3]d,
+						"is_leader": %[4]t,
+						"is_in_sync": %[5]t,
+						"broker": {
+							"related": "http://localhost:8082/v3/clusters/cluster-1/brokers/1001"
+						}
+					}`, "topic-exist", partitionId, partitionInfo[partitionId].replicas[i].brokerId,
+						partitionInfo[partitionId].replicas[i].isLeader,
+						partitionInfo[partitionId].replicas[i].isInSync)
+				}
+				responseString := fmt.Sprintf(`{
+					"kind": "KafkaReplicaList",
+					"metadata": {
+						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/%[2]d/replicas",
+						"next": null
+					},
+					"data": [
+						%[3]s,
+						%[4]s,
+						%[5]s
+					]
+				}`, "topic-exist", partitionId, replicaString[0], replicaString[1], replicaString[2])
+
+				responseWriter.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(responseWriter, responseString)
+				require.NoError(t, err)
+			} else { // if topic not exist
+				require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			}
+		}
+	}
+}
+
+func getClustersClusterIdTopicsTopicNameConfigsHandler(t *testing.T, topicName string) func(w http.ResponseWriter, r *http.Request) {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Get Configs of topic
+		if request.Method == http.MethodGet {
+			// if topic exists
+			if topicName == "topic-exist" {
+				responseString := fmt.Sprintf(`{
+					"kind": "KafkaTopicConfigList",
+					"metadata": {
+						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist/configs",
+						"next": null
+					},
+					"data": [
+						{
+							"kind": "KafkaTopicConfig",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist/configs/cleanup.policy",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist/config=cleanup.policy"
+							},
+							"cluster_id": "cluster-1",
+							"name": "cleanup.policy",
+							"value": "delete",
+							"is_read_only": false,
+							"is_sensitive": false,
+							"source": "DEFAULT_CONFIG",
+							"synonyms": [
+								{
+									"name": "log.cleanup.policy",
+									"value": "delete",
+									"source": "DEFAULT_CONFIG"
+								}
+							],
+							"topic_name": "topic-exist",
+							"is_default": true
+						},
+						{
+							"kind": "KafkaTopicConfig",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist/configs/compression.type",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist/config=compression.type"
+							},
+							"cluster_id": "cluster-1",
+							"name": "compression.type",
+							"value": "producer",
+							"is_read_only": false,
+							"is_sensitive": false,
+							"source": "DEFAULT_CONFIG",
+							"synonyms": [
+								{
+									"name": "compression.type",
+									"value": "producer",
+									"source": "DEFAULT_CONFIG"
+								}
+							],
+							"topic_name": "topic-exist",
+							"is_default": true
+						},
+						{
+							"kind": "KafkaTopicConfig",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist/configs/retention.ms",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist/config=retention.ms"
+							},
+							"cluster_id": "cluster-1",
+							"name": "retention.ms",
+							"value": "604800000",
+							"is_read_only": false,
+							"is_sensitive": false,
+							"source": "DEFAULT_CONFIG",
+							"synonyms": [],
+							"topic_name": "topic-exist",
+							"is_default": true
+						}
+					]
+				}`)
+
+				responseWriter.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(responseWriter, responseString)
+				require.NoError(t, err)
+
+			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(responseWriter, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
 		}
