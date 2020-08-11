@@ -202,6 +202,7 @@ func (a *authenticatedTopicCommand) init() {
 		Short: "Perform a mirroring action on a Kafka topic.",
 		Args:  cobra.ExactArgs(2),
 		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Hidden: true,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Stop the mirroring of topic ``my_topic``",
