@@ -4,7 +4,6 @@ import (
 	"context"
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
@@ -60,7 +59,7 @@ func (c *linkCommand) init() {
 			},
 		),
 		RunE: c.list,
-		Args: cobra.NoArgs
+		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
