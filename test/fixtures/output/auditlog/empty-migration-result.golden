@@ -13,191 +13,127 @@
   },
   "routes": {
     "crn:///kafka=cluster123": {
-      "other": {
+      "authorize": {
         "allowed": "",
         "denied": ""
       },
-      "authorize": {
+      "management": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/cluster-registry=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/connect=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/connect=*/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/connect=*/connector=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/connect=*/secret=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/control-center-alerts=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/control-center-broker-metrics=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/delegation-token=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/group=*": {
-      "other": {
+      "authorize": {
         "allowed": "",
         "denied": ""
       },
-      "authorize": {
+      "management": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/ksql=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/ksql=*/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/ksql=*/ksql-cluster=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/schema-registry=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/schema-registry=*/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/schema-registry=*/subject=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/security-metadata=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=cluster123/topic=*": {
-      "other": {
+      "authorize": {
         "allowed": "",
         "denied": ""
       },
-      "authorize": {
+      "management": {
         "allowed": "",
         "denied": ""
       }
@@ -209,191 +145,127 @@
       }
     },
     "crn:///kafka=clusterABC": {
-      "other": {
+      "authorize": {
         "allowed": "",
         "denied": ""
       },
-      "authorize": {
+      "management": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/cluster-registry=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/connect=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/connect=*/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/connect=*/connector=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/connect=*/secret=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/control-center-alerts=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/control-center-broker-metrics=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/delegation-token=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/group=*": {
-      "other": {
+      "authorize": {
         "allowed": "",
         "denied": ""
       },
-      "authorize": {
+      "management": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/ksql=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/ksql=*/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/ksql=*/ksql-cluster=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/schema-registry=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/schema-registry=*/all=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/schema-registry=*/subject=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/security-metadata=*": {
-      "other": {
-        "allowed": "",
-        "denied": ""
-      },
       "authorize": {
         "allowed": "",
         "denied": ""
       }
     },
     "crn:///kafka=clusterABC/topic=*": {
-      "other": {
+      "authorize": {
         "allowed": "",
         "denied": ""
       },
-      "authorize": {
+      "management": {
         "allowed": "",
         "denied": ""
       }
