@@ -2,12 +2,16 @@ package admin
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
 	"github.com/spf13/cobra"
+	"github.com/stripe/stripe-go"
+	"github.com/stripe/stripe-go/token"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
 
 type command struct {
@@ -19,7 +23,7 @@ func NewPaymentCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:   "payment",
-				Short: "Manage linked credit cards for an organization.",
+				Short: "Manage an organization's payment method.",
 				Args:  cobra.NoArgs,
 			},
 			prerunner,
@@ -35,41 +39,76 @@ func NewPaymentCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) newDescribeCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "describe",
-		Short: "Print payment info for an organization.",
+		Short: "Print the payment method for an organization.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  pcmd.NewCLIRunE(c.describeRunE),
 	}
 }
 
-func (c *command) describe(cmd *cobra.Command, _ []string) error {
+func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
 	card, err := c.Client.Organization.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
 	}
 
-	pcmd.Println(cmd, card)
+	pcmd.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)
 	return nil
 }
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "update",
-		Short: "Update payment info for an organization.",
+		Short: "Update the payment method for an organization.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  pcmd.NewCLIRunE(c.updateRunE),
 	}
 }
 
-func (c *command) update(cmd *cobra.Command, _ []string) error {
-	// TODO: Show name of organization
-	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
-	stripeToken := ""
+func (c *command) updateRunE(cmd *cobra.Command, _ []string) error {
+	return c.update(cmd, pcmd.NewPrompt(os.Stdin))
+}
 
-	if err := c.Client.Organization.UpdatePaymentInfo(context.Background(), org, stripeToken); err != nil {
+func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
+	pcmd.Println(cmd, "Edit credit card")
+
+	f := form.New(
+		form.Field{ID: "number", Prompt: "Card number"},
+		form.Field{ID: "expiration", Prompt: "MM/YY"},
+		form.Field{ID: "cvc", Prompt: "CVC"},
+		form.Field{ID: "name", Prompt: "Cardholder name"},
+	)
+
+	if err := f.Prompt(cmd, prompt); err != nil {
 		return err
 	}
 
-	pcmd.Println(cmd, "Updated payment info.")
+	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
+
+	exp := strings.Split(f.Responses["expiration"].(string), "/")
+
+	stripe.Key = ""
+	// TODO: retrieve from vault (v1/prod/kv/billing/billing-worker/stripeApiKey)
+
+	params := &stripe.TokenParams{
+		Card: &stripe.CardParams{
+			Number:   stripe.String(f.Responses["number"].(string)),
+			ExpMonth: stripe.String(exp[0]),
+			ExpYear:  stripe.String(exp[1]),
+			CVC:      stripe.String(f.Responses["cvc"].(string)),
+			Name:     stripe.String(f.Responses["name"].(string)),
+		},
+	}
+
+	stripeToken, err := token.New(params)
+	if err != nil {
+		return err
+	}
+
+	if err := c.Client.Organization.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
+		return err
+	}
+
+	pcmd.Println(cmd, "Updated.")
 	return nil
 }
