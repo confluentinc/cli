@@ -253,7 +253,6 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 //   --if-not-exists       Exit gracefully if topic already exists.
 func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) error {
 	// Parse arguments
-	// cobra requires 1 argument, no need to check for error
 	topicName := args[0]
 	// check required argument
 	url, err := cmd.Flags().GetString("url")
@@ -268,14 +267,14 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	// Get Cluster Id
 	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
 	if err != nil {
-		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
-	} else if clusters.Data == nil || len(clusters.Data) == 0 { // TODO: should I check for this? If so update list topics to do the same, what error should I return?
-		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions) // TODO: refactor into error_messages.go
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle url errors
+	} else if clusters.Data == nil || len(clusters.Data) == 0 {
+		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 	clusterId := clusters.Data[0].ClusterId
 
 	// Parse remaining arguments
-	numPartitions, err := cmd.Flags().GetInt32("partitions") // TODO: change back to uint32
+	numPartitions, err := cmd.Flags().GetInt32("partitions")
 	if err != nil {
 		return err
 	}
@@ -287,7 +286,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-	_, err = cmd.Flags().GetBool("if-not-exists") //TODO: noErrIfExists
+	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
 	if err != nil {
 		return err
 	}
@@ -317,17 +316,24 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 		}),
 	})
 	if err != nil {
-		if resp.StatusCode == http.StatusBadRequest {
-			return errors.NewErrorWithSuggestions("error during topic creation",
-				"The error can be one of: topic name already exists, invalid replication factor or invalid configuration keys or values")
-			// TODO: Currently Kafka REST Proxy returns 400 for all errors during topic creation (including dup topic, invalid configs...)
-			// 		 temporarily returning all as one error. Implement noErrIfExists when able to distinguish errors.
+		// catch topic exists error
+		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
+			var decodedError kafkaRestV3Error
+			err2 := json.Unmarshal(openAPIError.Body(), &decodedError)
+			if err2 != nil {
+				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+			}
+			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
+				if ifNotExists == false {
+					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsOnPremErrorMsg, topicName), errors.TopicExistsOnPremSuggestions)
+				} // ignore error if ifNotExists flag is set
+				return nil
+			}
 		}
-		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch all other errors
 	}
 	// no error if topic is created successfully.
 	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topicName) // TODO: why print to StdErr
-	// fmt.Printf("[DEBUG] topicData: %v\n", topicData)
 	return nil
 }
 

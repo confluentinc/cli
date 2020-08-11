@@ -104,12 +104,14 @@ const (
 	NonEmptyNameErrorMsg                 = "`--name` flag value must not be emtpy"
 
 	// kafka topic commands
-	FailedToProduceErrorMsg    = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg  = "configuration must be in the form of key=value"
-	MissingKeyErrorMsg         = "missing key in message"
-	UnknownValueFormatErrorMsg = "unknown value schema format"
-	TopicExistsErrorMsg        = "topic \"%s\" already exists for Kafka cluster \"%s\""
-	TopicExistsSuggestions     = ListTopicSuggestions
+	FailedToProduceErrorMsg      = "failed to produce offset %d: %s\n"
+	ConfigurationFormErrorMsg    = "configuration must be in the form of key=value"
+	MissingKeyErrorMsg           = "missing key in message"
+	UnknownValueFormatErrorMsg   = "unknown value schema format"
+	TopicExistsErrorMsg          = "topic \"%s\" already exists for Kafka cluster \"%s\""
+	TopicExistsSuggestions       = ListTopicSuggestions
+	TopicExistsOnPremErrorMsg    = "topic \"%s\" already exists for the Kafka cluster"
+	TopicExistsOnPremSuggestions = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"

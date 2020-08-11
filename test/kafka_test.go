@@ -97,21 +97,26 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 	kafkaRestURL := serveKafkaRest(s.T()).URL
 	tests := []CLITest{
-		// Test correct usage
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with default params should create successfully"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 1 --config retention.ms=100000,compression.type=gzip", kafkaRestURL),
-			fixture: "kafka/confluent/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with valid optional params should create successfully"},
-		// Errors: Does not conform to command specification
+		// <topic> errors
 		{args: fmt.Sprintf("kafka topic create --url %s", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions as", kafkaRestURL), contains: "Error: invalid argument \"as\" for \"--partitions\" flag: strconv.ParseInt: parsing \"as\": invalid syntax", wantErrCode: 1, name: "argument type not match should return error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor as", kafkaRestURL), contains: "Error: invalid argument \"as\" for \"--replication-factor\" flag: strconv.ParseInt: parsing \"as\": invalid syntax", wantErrCode: 1, name: "argument type not match should return error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "invalid config should return error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1,compression", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "invalid config should return error"},
-		// Errors: Error in topic creation from invalid argument (from server)
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -10", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid num. partitions should lead to error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid replication-factor should lead to error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=a", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid config value should lead to error"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=asdf", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-argument-server-error.golden", wantErrCode: 1, name: "invalid config key should lead to error"},
+		{args: fmt.Sprintf("kafka topic create topic-exist --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/create-duplicate-topic-failure", wantErrCode: 1, name: "creating topic with existing topic name should fail"},
+		// --partitions errors
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -2", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tNumber of partitions must be larger than 0.", wantErrCode: 1, name: "creating topic with negative partitions name should fail"},
+		// --replication-factor errors
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tReplication factor: 4 larger than available brokers: 3.", wantErrCode: 1, name: "creating topic with larger replication factor than num. brokers should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor -2", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tReplication factor must be larger than 0.", wantErrCode: 1, name: "creating topic with negative replication factor should fail"},
+		// --config errors
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1,", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1,compression", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=1", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tUnknown topic config name: asdf", wantErrCode: 1, name: "creating topic with incorrect config name should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=as", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tInvalid value as for configuration retention.ms: Not a number of type LONG", wantErrCode: 1, name: "creating topic with correct key incorrect config value should fail"},
+		// Success
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with default params (part 6, repl 3, no configs) should create successfully"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 2 --config retention.ms=100000,compression.type=gzip", kafkaRestURL),
+			fixture: "kafka/confluent/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with valid optional params should create successfully"},
+		// --ifnotexists
+		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --if-not-exists", kafkaRestURL), fixture: "kafka/confluent/topic/create-duplicate-topic-ifnotexists-success.golden", wantErrCode: 0, name: "create topic with existing topic name with if-not-exists flag should succeed"},
 	}
 
 	for _, clitest := range tests {
@@ -141,9 +146,9 @@ func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
 		// --config errors
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression=", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "poorly formatted config arg should fail"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config asdf=1", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tConfig asdf cannot be found for TOPIC topic-exist in cluster cluster-1.", wantErrCode: 1, name: "incorrect config name should fail"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tInvalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG", wantErrCode: 1, name: "incorrect config value should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tInvalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG", wantErrCode: 1, name: "correct key incorrect config value should fail"},
 		// Success cases
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-success", wantErrCode: 0, name: "valid config updates should succeed with configs printed sorted"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1000,retention.ms=1", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-duplicate-success", wantErrCode: 0, name: "valid duplicate config should succeed with the later config value kept"},

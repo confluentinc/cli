@@ -1,4 +1,0 @@
-Error: error during topic creation
-
-Suggestions:
-    The error can be one of: topic name already exists, invalid replication factor or invalid configuration keys or values
