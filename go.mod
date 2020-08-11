@@ -105,6 +105,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/mds-sdk-go/mdsv1 => /Users/cjohnson/github/confluentinc/mds-sdk-go/mdsv1
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11

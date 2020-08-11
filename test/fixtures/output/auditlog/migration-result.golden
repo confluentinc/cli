@@ -39,107 +39,71 @@
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC": {
-      "other": {
+      "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       },
-      "authorize": {
+      "management": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/all=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/cluster-registry=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*/all=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*/connector=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*/secret=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/control-center-alerts=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/control-center-broker-metrics=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/delegation-token=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/group=*": {
-      "other": {
+      "management": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       },
@@ -149,77 +113,49 @@
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*/all=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*/ksql-cluster=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/schema-registry=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/schema-registry=*/all=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/schema-registry=*/subject=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/security-metadata=*": {
-      "other": {
-        "allowed": "DIFFERENT-DEFAULT-TOPIC",
-        "denied": "DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=*": {
-      "other": {
+      "management": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       },
@@ -229,7 +165,7 @@
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*": {
-      "other": {
+      "management": {
         "allowed": "confluent-audit-log-events_billing",
         "denied": "confluent-audit-log-events_billing"
       },
@@ -240,6 +176,10 @@
       "consume": {
         "allowed": "confluent-audit-log-events_billing",
         "denied": "confluent-audit-log-events_billing"
+      },
+      "authorize": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/transaction-id=*": {
@@ -249,13 +189,13 @@
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterX": {
-      "other": {
+      "management": {
         "allowed": "confluent-audit-log-events_payroll",
         "denied": "confluent-audit-log-events_payroll"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=different-cluster-id/topic=payroll-*": {
-      "other": {
+      "management": {
         "allowed": "DIFFERENT-DEFAULT-TOPIC",
         "denied": "DIFFERENT-DEFAULT-TOPIC"
       },
@@ -266,6 +206,10 @@
       "consume": {
         "allowed": "confluent-audit-log-events_payroll",
         "denied": "confluent-audit-log-events_payroll"
+      },
+      "authorize": {
+        "allowed": "DIFFERENT-DEFAULT-TOPIC",
+        "denied": "DIFFERENT-DEFAULT-TOPIC"
       }
     }
   },

@@ -50,197 +50,137 @@ Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" h
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC": {
-      "other": {
+      "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       },
-      "authorize": {
+      "management": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/all=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/cluster-registry=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*/all=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*/connector=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/connect=*/secret=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/control-center-alerts=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/control-center-broker-metrics=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/delegation-token=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/group=*": {
-      "other": {
+      "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       },
-      "authorize": {
+      "management": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*/all=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/ksql=*/ksql-cluster=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/schema-registry=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/schema-registry=*/all=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/schema-registry=*/subject=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/security-metadata=*": {
-      "other": {
-        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
-        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
-      },
       "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=*": {
-      "other": {
+      "authorize": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       },
-      "authorize": {
+      "management": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterABC/topic=billing-*": {
-      "other": {
+      "authorize": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      },
+      "management": {
         "allowed": "confluent-audit-log-events_billing",
         "denied": "confluent-audit-log-events_billing"
       },
@@ -260,13 +200,17 @@ Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" h
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterX": {
-      "other": {
+      "management": {
         "allowed": "confluent-audit-log-events_payroll",
         "denied": "confluent-audit-log-events_payroll"
       }
     },
     "crn://NEW.CRN.AUTHORITY.COM/kafka=different-cluster-id/topic=payroll-*": {
-      "other": {
+      "authorize": {
+        "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
+        "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
+      },
+      "management": {
         "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC",
         "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC"
       },
