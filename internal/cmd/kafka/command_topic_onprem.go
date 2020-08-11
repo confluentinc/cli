@@ -154,22 +154,31 @@ func (topicCmd *topicCommand) init() {
 	topicCmd.AddCommand(updateCmd)
 
 	// Register describe command
-	// describeCmd := &cobra.Command{
-	// 	Use:   "describe <topic>",
-	// 	Args:  cobra.ExactArgs(1),
-	// 	RunE:  topicCmd.describeTopic,
-	// 	Short: "Describe a Kafka topic.",
-	// 	Example: examples.BuildExampleString(
-	// 		examples.Example{
-	// 			Desc: "Describe the ``my_topic`` topic at specified cluser.",
-	// 			Code: "ccloud kafka topic describe my_topic --url http://localht:8082",
-	// 		},
-	// 	),
-	// }
-	// describeCmd.Flags().String("url", "", "URL to Kafka REST Proxy Endpoint of Kafka Cluster.")
-	// describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	// describeCmd.Flags().SortFlags = false
-	// topicCmd.AddCommand(describeCmd)
+	// Describe a Kafka topic.
+	// Usage:
+	// confluent kafka topic describe <topic> [flags]
+	// Examples:
+	// Describe the ``my_topic`` topic.
+	// confluent kafka topic describe my_topic
+	// Flags:
+	//  --cluster string   Kafka cluster ID.
+	// -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+	describeCmd := &cobra.Command{
+		Use:   "describe <topic>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(topicCmd.describeTopic),
+		Short: "Describe a Kafka topic.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe the ``my_topic`` topic at specified cluster (providing Kafka REST Proxy endpoint).",
+				Code: "confluent kafka topic describe my_topic --url http://localhost:8082",
+			},
+		),
+	}
+	describeCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	topicCmd.AddCommand(describeCmd)
 }
 
 func setServerURL(client *kafkarestv3.APIClient, url string) {
@@ -436,77 +445,130 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	return nil
 }
 
-// func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) error {
-// 	url, err := cmd.Flags().GetString("url")
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if len(args) < 1 {
-// 		return errors.New("missing topic name")
-// 	}
-// 	topicName := args[0]
+type PartitionData struct {
+	TopicName              string  `json:"topic" yaml:"topic"`
+	PartitionId            int32   `json:"partition" yaml:"partition"`
+	LeaderBrokerId         int32   `json:"leader" yaml:"leader"`
+	ReplicaBrokerIds       []int32 `json:"replicas" yaml:"replicas"`
+	InSyncReplicaBrokerIds []int32 `json:"isr" yaml:"isr"`
+}
 
-// 	proxyClient := createProxyClient(url)
-// 	clusterGetResp, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
-// 	if err != nil {
-// 		return err
-// 	}
-// 	clusterId := clusterGetResp.Data[0].ClusterId
+type TopicData struct {
+	TopicName         string            `json:"topic_name" yaml:"topic_name"`
+	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
+	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
+	Partitions        []PartitionData   `json:"partitions" yaml:"partitions"`
+	Configs           map[string]string `json:"config" yaml:"config"`
+}
 
-// 	partitionsGetResp, _, err := proxyClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), clusterId, topicName)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fmt.Println("TODO: Topic: %s, PartitionCount: %s ReplicationFactor: %s")
+func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) error {
+	// Parse Args
+	topicName := args[0]
+	url, err := cmd.Flags().GetString("url")
+	if err != nil {
+		return err
+	}
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	} else if output.IsValidFormat(format) == false { // catch format flag
+		return output.NewInvalidOutputFormatFlagError(format)
+	}
 
-// 	partitionsOutputWriter, err := output.NewListOutputWriter(cmd,
-// 		[]string{"TopicName", "PartitionId"},
-// 		[]string{"Topic", "Partition"},
-// 		[]string{"topic", "partition"})
-// 	if err != nil {
-// 		return err
-// 	}
+	// Get clusterId
+	setServerURL(topicCmd.KafkaRestClient, url)
+	client := topicCmd.KafkaRestClient
+	clustersData, resp, err := client.ClusterApi.ClustersGet(context.Background())
+	if err != nil {
+		return handleCommonKafkaRestClientErrors(url, client, resp, err) // catch url incorrect error
+	} else if clustersData.Data == nil || len(clustersData.Data) == 0 {
+		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+	}
+	clusterId := clustersData.Data[0].ClusterId
 
-// 	for _, partition := range partitionsGetResp.Data {
-// 		partitionsOutputWriter.AddElement(&partition)
-// 	}
-// 	partitionsOutputWriter.Out()
-// 	fmt.Println("TODO: Leader, Replicas, and ISR columns\n")
+	// Get partitions
+	topicData := &TopicData{}
+	// TODO: partitions reassignment?
+	partitionsResp, resp, err := client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), clusterId, topicName)
+	if err != nil {
+		return handleCommonKafkaRestClientErrors(url, client, resp, err) // catch topic not exist error
+	} else if partitionsResp.Data == nil {
+		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+	}
+	topicData.TopicName = topicName
+	topicData.PartitionCount = len(partitionsResp.Data)
+	topicData.Partitions = make([]PartitionData, len(partitionsResp.Data))
+	for i, partitionResp := range partitionsResp.Data {
+		partitionId := partitionResp.PartitionId
+		partitionData := PartitionData{
+			TopicName:   topicName,
+			PartitionId: partitionId,
+		}
 
-// 	fmt.Println("Configuration\n")
-// 	configsGetResp, _, err := proxyClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), clusterId, topicName)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fmt.Printf("TODO: Configurations %v\n", configsGetResp)
+		// For each partition, get replicas
+		replicasResp, resp, err := client.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(context.Background(), clusterId, topicName, partitionId)
+		if err != nil {
+			return handleCommonKafkaRestClientErrors(url, client, resp, err)
+		} else if replicasResp.Data == nil {
+			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+		}
+		partitionData.ReplicaBrokerIds = make([]int32, len(replicasResp.Data))
+		partitionData.InSyncReplicaBrokerIds = make([]int32, 0, len(replicasResp.Data))
+		for j, replicaResp := range replicasResp.Data {
+			if replicaResp.IsLeader {
+				partitionData.LeaderBrokerId = replicaResp.BrokerId
+			}
+			partitionData.ReplicaBrokerIds[j] = replicaResp.BrokerId
+			if replicaResp.IsInSync {
+				partitionData.InSyncReplicaBrokerIds = append(partitionData.InSyncReplicaBrokerIds, replicaResp.BrokerId)
+			}
+		}
+		if i == 0 {
+			topicData.ReplicationFactor = len(replicasResp.Data)
+		}
+		topicData.Partitions[i] = partitionData
+	}
 
-// 	return nil
-// }
+	// Get configs
+	configsResp, resp, err := client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), clusterId, topicName)
+	if err != nil {
+		return handleCommonKafkaRestClientErrors(url, client, resp, err)
+	} else if configsResp.Data == nil {
+		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+	}
+	topicData.Configs = make(map[string]string)
+	for _, config := range configsResp.Data {
+		topicData.Configs[config.Name] = *config.Value
+	}
 
-// func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) error {
-// 	url, err := cmd.Flags().GetString("url")
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	setServerURL(topicCmd.ProxyClient, url)
-// 	proxyClient := topicCmd.ProxyClient
-
-// 	clusters, _, err := proxyClient.ClusterApi.ClustersGet(context.Background())
-// 	if err != nil {
-// 		return err
-// 	}
-// 	clusterId := clusters.Data[0].ClusterId
-
-// 	// Create topic
-// 	topicName := args[0]
-// 	topicCreateRequestData := &kafkaproxy.CreateTopicRequestData{
-// 		TopicName: topicName,
-// 	}
-// 	cmd.Flags().GetStringSlice("config")
-
-// 	proxyClient.TopicApi.ClustersClusterIdTopicsPost(context.Background(), clusterId,
-// 		&kafkaproxy.ClustersClusterIdTopicsPostOpts{CreateTopicRequestData: optional.NewInterface(topicCreateRequestData)})
-
-// 	return nil
-// }
+	// Print topic info
+	if format == output.Human.String() { // human output
+		// Output partitions info
+		pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
+		partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
+		partitionsTableEntries := make([][]string, topicData.PartitionCount)
+		for i, partition := range topicData.Partitions {
+			partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
+		}
+		printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
+		// Output config info
+		pcmd.Print(cmd, "\nConfiguration\n\n")
+		configsTableLabels := []string{"Name", "Value"}
+		configsTableEntries := make([][]string, len(topicData.Configs))
+		i := 0
+		for name, value := range topicData.Configs {
+			configsTableEntries[i] = printer.ToRow(&struct {
+				name  string
+				value string
+			}{name: name, value: value}, []string{"name", "value"})
+			i++
+		}
+		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
+	} else { // machine output (json or yaml)
+		err = output.StructuredOutput(format, topicData)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
