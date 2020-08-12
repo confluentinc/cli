@@ -104,7 +104,6 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 	c.completer.AddCommand(createCmd, false)
 
-
 	updateCmd := &cobra.Command{
 		Use:   "update <apikey>",
 		Short: "Update API key.",
@@ -116,7 +115,6 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 	c.completer.AddCommand(updateCmd, true)
 
-
 	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete API keys.",
@@ -125,7 +123,6 @@ func (c *command) init() {
 	}
 	c.AddCommand(deleteCmd)
 	c.completer.AddCommand(deleteCmd, true)
-
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",

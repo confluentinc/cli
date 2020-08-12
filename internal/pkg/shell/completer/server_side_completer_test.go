@@ -10,7 +10,7 @@ import (
 
 func TestServerSideCompleter_Complete(t *testing.T) {
 	type fields struct {
-		RootCmd                *cobra.Command
+		RootCmd *cobra.Command
 	}
 	type args struct {
 		d prompt.Document
@@ -50,7 +50,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				d: *createDocument("1 2 "),
 			},
 			want: []prompt.Suggest{
-					newSuggestion("arg"),
+				newSuggestion("arg"),
 			},
 		},
 		{
@@ -88,7 +88,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				d: *createDocument("1 2 --one completed "),
 			},
 			want: []prompt.Suggest{
-					newSuggestion("arg"),
+				newSuggestion("arg"),
 			},
 		},
 		{
@@ -112,7 +112,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewServerSideCompleter(tt.fields.RootCmd)
 			addSuggestionFunctions(c, tt.fields.RootCmd)
-			c.Complete(*createDocument("1 ")) // preload the suggestions
+			c.Complete(*createDocument("1 "))  // preload the suggestions
 			time.Sleep(100 * time.Millisecond) // let goroutine run
 			got := c.Complete(tt.args.d)
 			require.Equal(t, tt.want, got)
@@ -123,14 +123,14 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 func addSuggestionFunctions(c *ServerSideCompleter, rootCmd *cobra.Command) {
 	for _, cmd := range rootCmd.Commands() {
 		c.AddSuggestionFunction(cmd, func() []prompt.Suggest {
-			return []prompt.Suggest {
+			return []prompt.Suggest{
 				newSuggestion("arg"),
 			}
 		})
 
 		for i, subCmd := range cmd.Commands() {
 			// register only every other sub command
-			if i % 2 == 0 {
+			if i%2 == 0 {
 				c.AddCommand(subCmd, true)
 			} else {
 				c.AddCommand(subCmd, false)

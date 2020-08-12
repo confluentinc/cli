@@ -25,7 +25,7 @@ func NewServerSideCompleter(RootCmd *cobra.Command) *ServerSideCompleter {
 	c := &ServerSideCompleter{
 		cachedSuggestionsByCmd: new(sync.Map),
 		suggestionFuncsByCmd:   new(sync.Map),
-		shouldSuggestForCmd:	new(sync.Map),
+		shouldSuggestForCmd:    new(sync.Map),
 		RootCmd:                RootCmd,
 	}
 
@@ -103,7 +103,7 @@ func (c *ServerSideCompleter) shouldSuggestArgument(d prompt.Document, matchedCm
 	}
 
 	// must be registered for a suggestion function
-	if registered, ok := c.shouldSuggestForCmd.Load(c.commandKey(matchedCmd)); ok && !registered.(bool)  {
+	if registered, ok := c.shouldSuggestForCmd.Load(c.commandKey(matchedCmd)); ok && !registered.(bool) {
 		return false
 	}
 
