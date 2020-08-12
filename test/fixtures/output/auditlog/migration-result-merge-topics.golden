@@ -170,6 +170,16 @@
         "allowed": "confluent-audit-log-events",
         "denied": "confluent-audit-log-events_different_default_denied"
       }
+    },
+    "crn://NEW.CRN.AUTHORITY.COM/kafka=clusterY": {
+      "management": {
+        "allowed": "confluent-audit-log-events_payroll",
+        "denied": "confluent-audit-log-events"
+      },
+      "authorize": {
+        "allowed": "confluent-audit-log-events",
+        "denied": "confluent-audit-log-events_different_default_denied"
+      }
     }
   },
   "metadata": null
