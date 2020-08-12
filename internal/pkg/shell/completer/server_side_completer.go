@@ -51,7 +51,7 @@ func (c *ServerSideCompleter) Complete(d prompt.Document) []prompt.Suggest {
 		parent := c.commandKey(cmd.Parent())
 		if cachedSuggestions, ok := c.cachedSuggestionsByCmd.Load(parent); ok {
 			if suggestions, ok := cachedSuggestions.([]prompt.Suggest); ok {
-				var filtered []prompt.Suggest
+				filtered := []prompt.Suggest{}
 				for _, suggestion := range suggestions {
 					// only suggest if it does not appear anywhere in the input
 					if !strings.Contains(d.Text, suggestion.Text) {
