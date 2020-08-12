@@ -177,6 +177,16 @@ func TestAuditLogConfigTranslation(t *testing.T) {
               "allowed": "confluent-audit-log-events_payroll",
               "denied": "confluent-audit-log-events_payroll"
           }
+        },
+        "crn://some-authority/kafka=clusterY": {
+          "other": {
+              "allowed": "confluent-audit-log-events_payroll",
+              "denied": "confluent-audit-log-events_payroll"
+          },
+          "management": {
+              "allowed": "confluent-audit-log-events_payroll",
+              "denied": "confluent-audit-log-events"
+          }
         }
     },
     "excluded_principals": [
@@ -188,7 +198,9 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			"NEW.CRN.AUTHORITY.COM",
 			test.LoadFixture(t, "auditlog/migration-result-merge-topics.golden"),
 			[]string{
+				`"Other" Category Warning: Dropped the legacy "other" category rule from the route for "crn://some-authority/kafka=clusterY" from cluster "cluster123", as it already contains a "management" category rule.`,
 				`Mismatched Kafka Cluster Warning: Cluster "cluster123" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterX".`,
+				`Mismatched Kafka Cluster Warning: Cluster "cluster123" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterY".`,
 				`Multiple CRN Authorities Warning: Cluster "cluster123" had multiple CRN Authorities in its routes: [crn://mds1.example.com/ crn://some-authority/].`,
 				`New Bootstrap Servers Warning: Cluster "cluster123" currently has bootstrap servers = [audit.example.com:9092]. Replacing with [new_bootstrap_1 new_bootstrap_2].`,
 			},

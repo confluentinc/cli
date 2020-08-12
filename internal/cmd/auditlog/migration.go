@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/imdario/mergo"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -26,7 +27,8 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 		return mds.AuditLogConfigSpec{}, warnings, err
 	}
 
-	migrateOtherCategoryToManagement(clusterAuditLogConfigSpecs)
+	newWarnings = migrateOtherCategoryToManagement(clusterAuditLogConfigSpecs)
+	warnings = append(warnings, newWarnings...)
 
 	addDefaultEnabledCategories(clusterAuditLogConfigSpecs, defaultTopicName)
 
@@ -62,20 +64,33 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	return newSpec, warnings, nil
 }
 
-func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) {
-	for _, spec := range specs {
+func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) []string {
+	warnings := []string{}
+	for clusterId, spec := range specs {
 		routes := spec.Routes
 		if routes == nil {
 			continue
 		}
 		for routeName, route := range *routes {
-			if route.Other != nil && route.Management == nil {
-				route.Management = route.Other
-				route.Other = nil
+			if route.Other != nil {
+				if route.Management == nil {
+					route.Management = route.Other
+					route.Other = nil
+				} else if reflect.DeepEqual(route.Management, route.Other) {
+					route.Other = nil
+				} else {
+					warning := fmt.Sprintf(
+						`"Other" Category Warning: Dropped the legacy "other" category rule from the route for`+
+							` %q from cluster %q, as it already contains a "management" category rule.`,
+						routeName, clusterId)
+					warnings = append(warnings, warning)
+					route.Other = nil
+				}
 				(*routes)[routeName] = route
 			}
 		}
 	}
+	return warnings
 }
 
 // Add the AUTHORIZE and MANAGEMENT categories to the route when the default topic is different than the default
