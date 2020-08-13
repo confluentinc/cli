@@ -1,7 +1,7 @@
-    Key    | Description | Owner |      Owner Email      |  Resource Type  | Resource ID  |        Created         
-+----------+-------------+-------+-----------------------+-----------------+--------------+-----------------------+
-    MYKEY3 |             |    23 | bstrauch@confluent.io | kafka           | lkc-bob      | 16:00 Tue Feb 23 1999  
-    MYKEY4 | my-cool-app |    23 | bstrauch@confluent.io | kafka           | lkc-cool1    | 16:00 Tue Feb 23 1999  
-    MYKEY6 | my-ksql-app |    23 | bstrauch@confluent.io | ksql            | lksqlc-ksql1 | 16:00 Tue Feb 23 1999  
-    MYKEY7 |             |    23 | bstrauch@confluent.io | schema-registry | lsrc-1       | 16:00 Tue Feb 23 1999  
-    MYKEY8 |             |    23 | bstrauch@confluent.io | cloud           |              | 16:00 Tue Feb 23 1999  
+    Key    | Description | Owner |      Owner Email      |  Resource Type  | Resource ID  |       Created        
++----------+-------------+-------+-----------------------+-----------------+--------------+---------------------+
+    MYKEY3 |             |    23 | bstrauch@confluent.io | kafka           | lkc-bob      | 24 Feb 99 00:00 UTC  
+    MYKEY4 | my-cool-app |    23 | bstrauch@confluent.io | kafka           | lkc-cool1    | 24 Feb 99 00:00 UTC  
+    MYKEY6 | my-ksql-app |    23 | bstrauch@confluent.io | ksql            | lksqlc-ksql1 | 24 Feb 99 00:00 UTC  
+    MYKEY7 |             |    23 | bstrauch@confluent.io | schema-registry | lsrc-1       | 24 Feb 99 00:00 UTC  
+    MYKEY8 |             |    23 | bstrauch@confluent.io | cloud           |              | 24 Feb 99 00:00 UTC  

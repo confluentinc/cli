@@ -1,9 +1,9 @@
-       Key      | Description | Owner |      Owner Email      | Resource Type | Resource ID  |        Created         
-+---------------+-------------+-------+-----------------------+---------------+--------------+-----------------------+
-    MYKEY1      | first-key   |    12 | bstrauch@confluent.io | kafka         | lkc-bob      | 16:00 Tue Feb 23 1999  
-    MYKEY2      |             |    18 | bstrauch@confluent.io | kafka         | lkc-abc      | 16:00 Tue Feb 23 1999  
-    MYKEY3      |             |    23 | bstrauch@confluent.io | kafka         | lkc-bob      | 16:00 Tue Feb 23 1999  
-    UIAPIKEY100 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1    | 16:00 Tue Feb 23 1999  
-    UIAPIKEY101 |             |    25 | bstrauch@confluent.io | kafka         | lkc-other1   | 16:00 Tue Feb 23 1999  
-    UIAPIKEY102 |             |    25 | bstrauch@confluent.io | ksql          | lksqlc-ksql1 | 16:00 Tue Feb 23 1999  
-    UIAPIKEY103 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1    | 16:00 Tue Feb 23 1999  
+       Key      | Description | Owner |      Owner Email      | Resource Type | Resource ID  |       Created        
++---------------+-------------+-------+-----------------------+---------------+--------------+---------------------+
+    MYKEY1      | first-key   |    12 | bstrauch@confluent.io | kafka         | lkc-bob      | 24 Feb 99 00:00 UTC  
+    MYKEY2      |             |    18 | bstrauch@confluent.io | kafka         | lkc-abc      | 24 Feb 99 00:00 UTC  
+    MYKEY3      |             |    23 | bstrauch@confluent.io | kafka         | lkc-bob      | 24 Feb 99 00:00 UTC  
+    UIAPIKEY100 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1    | 24 Feb 99 00:00 UTC  
+    UIAPIKEY101 |             |    25 | bstrauch@confluent.io | kafka         | lkc-other1   | 24 Feb 99 00:00 UTC  
+    UIAPIKEY102 |             |    25 | bstrauch@confluent.io | ksql          | lksqlc-ksql1 | 24 Feb 99 00:00 UTC  
+    UIAPIKEY103 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1    | 24 Feb 99 00:00 UTC  

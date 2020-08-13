@@ -212,7 +212,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		created := fmt.Sprintf("%d", apiKey.Created.Seconds)
 		if outputWriter.GetOutputFormat() == output.Human {
-			created = time.Unix(apiKey.Created.Seconds, 0).Format("15:04 Mon Jan _2 2006")
+			created = time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC822)
 		}
 
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
