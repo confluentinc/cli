@@ -35,10 +35,10 @@ func (c *migrateCmd) init() {
 		Use:   "config",
 		Short: "Migrate legacy audit log configurations.",
 		Long: "Migrate legacy audit log configurations. " +
-			"Use `--combine` to read in multiple Kafka broker server.properties files, " +
-			"combine the values of their `confluent.security.event.router.config` properties " +
+			"Use ``--combine`` to read in multiple Kafka broker ``server.properties`` files, " +
+			"combine the values of their ``confluent.security.event.router.config`` properties, " +
 			"and output a combined configuration suitable for centralized audit log " +
-			"management to standard output along with any warnings to standard error.",
+			"management. This is sent to standard output along with any warnings to standard error.",
 		RunE: c.migrate,
 		Example: examples.BuildExampleString(
 			examples.Example{

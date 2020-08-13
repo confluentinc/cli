@@ -21,11 +21,11 @@ require (
 	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
 	github.com/confluentinc/cc-structs/kafka/org v0.419.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.0-00010101000000-000000000000
+	github.com/confluentinc/ccloud-sdk-go v0.0.46
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9
@@ -61,6 +61,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/imdario/mergo v0.3.6
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/linkedin/goavro/v2 v2.9.8
@@ -84,6 +85,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
+	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
@@ -97,7 +99,6 @@ require (
 	golang.org/x/tools v0.0.0-20200615190835-a2fa627c4bf4 // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	google.golang.org/genproto v0.0.0-20190122154452-ba6ebe99b011 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
@@ -105,7 +106,6 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go => /Users/bstrauch/Documents/go/src/github.com/confluentinc/ccloud-sdk-go
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11

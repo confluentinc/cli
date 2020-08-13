@@ -309,9 +309,9 @@ publish-docs: docs
 .PHONY: publish-docs-internal
 publish-docs-internal:
 ifeq ($(CLI_NAME), ccloud)
-	$(eval DOCS_DIR := cloud/cli/command-reference)
+	$(eval DOCS_DIR := ccloud-cli/command-reference)
 else
-	$(eval DOCS_DIR := cli/command-reference)
+	$(eval DOCS_DIR := confluent-cli/command-reference)
 endif
 
 	@cd $(REPO_DIR); \

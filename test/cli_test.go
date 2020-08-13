@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -775,6 +776,8 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
 
+	mux.HandleFunc("/2.0/kafka/lkc-links/links/", handleKafkaLinks(t))
+
 	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/test-topic/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			w.WriteHeader(http.StatusNoContent)
@@ -793,6 +796,39 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(mux)
+}
+
+func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		lastElem := parts[len(parts) - 1]
+
+		if lastElem == "" {
+			// No specific link here, we want a list of ALL links
+
+			linkList := []string{
+				"link-1",
+				"link-2",
+			}
+
+			listReply, err := json.Marshal(linkList)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		} else {
+			// Return properties for the selected link.
+
+			linkDescription := &linkv1.LinkProperties{
+				Properties: map[string]string{
+					"replica.fetch.max.bytes": "1048576",
+			}}
+
+			describeReply, err := json.Marshal(linkDescription)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(describeReply))
+			require.NoError(t, err)
+		}
+	}
 }
 
 func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
