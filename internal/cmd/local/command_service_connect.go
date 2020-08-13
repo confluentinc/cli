@@ -18,13 +18,9 @@ import (
 )
 
 var connectors = []string{
-	"elasticsearch-sink",
 	"file-sink",
 	"file-source",
-	"hdfs-sink",
-	"jdbc-sink",
-	"jdbc-source",
-	"s3-sink",
+	"replicator",
 }
 
 func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {

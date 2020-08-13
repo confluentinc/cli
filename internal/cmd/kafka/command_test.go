@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"strconv"
 	"strings"
 	"testing"
@@ -551,6 +552,103 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, want, err.Error())
 	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
+}
+
+/*************** TEST command_links ***************/
+type testLink struct {
+	name       string
+	source     string
+	alterKey   string
+	alterValue string
+}
+
+var Links = []testLink{
+	{
+		name:       "test_link",
+		source:     "myhost:1234",
+		alterKey:   "retention.ms",
+		alterValue: "1234567890",
+	},
+}
+
+func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
+	expect := make(chan interface{})
+	for _, link := range Links {
+		cmd := NewCMD(expect)
+		cmd.SetArgs(argmaker(link))
+
+		go expector(expect, link)
+
+		if err := cmd.Execute(); err != nil {
+			t.Errorf("error: %s", err)
+			t.Fail()
+			return
+		}
+	}
+}
+
+func TestListLinks(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "list"}
+		},
+		func(expect chan interface{}, link testLink) {
+		},
+	)
+}
+
+func TestDescribeLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "describe", link.name}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- link.name
+		},
+	)
+}
+
+func TestDeleteLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "delete", link.name}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- link.name
+		},
+	)
+}
+
+func TestAlterLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s", link.alterKey, link.alterValue)}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- link.name
+			expect <- &linkv1.LinkProperties{Properties: map[string]string{link.alterKey: link.alterValue}}
+		},
+	)
+}
+
+func TestCreateLink(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "create", link.name, "--source_cluster", link.source}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- &linkv1.ClusterLink{
+				LinkName: link.name,
+				Configs: map[string]string{
+					"bootstrap.servers": link.source,
+				},
+			}
+		})
 }
 
 /*************** TEST setup/helpers ***************/

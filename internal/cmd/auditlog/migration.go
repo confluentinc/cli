@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/imdario/mergo"
 	"regexp"
 	"sort"
 	"strings"
@@ -51,12 +52,11 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	newWarnings = combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
 	warnings = append(warnings, newWarnings...)
 
-	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
-
 	replaceCRNAuthorityRoutes(&newSpec, crnAuthority)
 
-	sort.Strings(warnings)
+	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
 
+	sort.Strings(warnings)
 	return newSpec, warnings, nil
 }
 
@@ -221,7 +221,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	for _, spec := range specs {
 		excludedPrincipals := spec.ExcludedPrincipals
 		if excludedPrincipals == nil {
-			continue;
+			continue
 		}
 
 		for _, principal := range *excludedPrincipals {
@@ -291,31 +291,105 @@ func replaceClusterId(crnPath, clusterId string) string {
 	return strings.Replace(crnPath, kafkaIdentifier, "kafka="+clusterId, 1)
 }
 
-func generateCRNPath(clusterId, crnAuthority, pathExtension string) string {
+func generateCRNPath(clusterId, crnAuthority, pathExtension, subcluster string) string {
 	path := "crn://" + crnAuthority + "/kafka=" + clusterId
+	if subcluster != "" {
+		path += "/" + subcluster + "=*"
+	}
 	if pathExtension != "" {
 		path += "/" + pathExtension + "=*"
 	}
 	return path
 }
 
-func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec, crnAuthority string) {
+// For each of the input clusters, we need to make sure that if they specify a default topic different than the global one,
+// that messages go to their specific default topics instead of the global default topic
+func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec, newCRNAuthority string) {
+	type Resource struct {
+		extension  string
+		categories []string
+	}
+
+	type Subcluster struct {
+		name      string
+		resources []Resource
+	}
+
+	// We'll have to add all these routes for each input file
+	subclusterRoutes := []Subcluster{
+		{
+			name: "",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize", "Other"}},
+				{extension: "topic", categories: []string{"Authorize", "Other"}},
+				{extension: "transaction-id", categories: []string{"Authorize"}},
+				{extension: "group", categories: []string{"Authorize", "Other"}},
+				{extension: "delegation-token", categories: []string{"Authorize", "Other"}},
+				{extension: "control-center-broker-metrics", categories: []string{"Authorize", "Other"}},
+				{extension: "control-center-alerts", categories: []string{"Authorize", "Other"}},
+				{extension: "cluster-registry", categories: []string{"Authorize", "Other"}},
+				{extension: "security-metadata", categories: []string{"Authorize", "Other"}},
+				{extension: "all", categories: []string{"Authorize", "Other"}},
+			},
+		},
+		{
+			name: "connect",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize", "Other"}},
+				{extension: "connector", categories: []string{"Authorize", "Other"}},
+				{extension: "secret", categories: []string{"Authorize", "Other"}},
+				{extension: "all", categories: []string{"Authorize", "Other"}},
+			},
+		},
+		{
+			name: "schema-registry",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize", "Other"}},
+				{extension: "subject", categories: []string{"Authorize", "Other"}},
+				{extension: "all", categories: []string{"Authorize", "Other"}},
+			},
+		},
+		{
+			name: "ksql",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize", "Other"}},
+				{extension: "ksql-cluster", categories: []string{"Authorize", "Other"}},
+				{extension: "all", categories: []string{"Authorize", "Other"}},
+			},
+		},
+	}
+
 	for clusterId, spec := range specs {
 		if spec.DefaultTopics.Denied != newSpec.DefaultTopics.Denied || spec.DefaultTopics.Allowed != newSpec.DefaultTopics.Allowed {
-			other := mds.AuditLogConfigRouteCategoryTopics{
+			oldDefaultTopics := mds.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
 
-			// add the four new routes to the newSpec, if not already there
-			newRouteConfig := mds.AuditLogConfigRouteCategories{
-				Other: &other,
-			}
-			pathExtensions := []string{"", "topic", "connect", "ksql"}
-			for _, extension := range pathExtensions {
-				routeName := generateCRNPath(clusterId, crnAuthority, extension)
-				newSpecRoutes := *newSpec.Routes
-				if _, ok := newSpecRoutes[routeName]; !ok {
+			// add the new routes defined above
+			for _, subcluster := range subclusterRoutes {
+				for _, resource := range subcluster.resources {
+					routeName := generateCRNPath(clusterId, newCRNAuthority, resource.extension, subcluster.name)
+
+					// Create a map of field name to default topics
+					categoriesToRoutes := map[string]interface{}{}
+					for _, category := range resource.categories {
+						categoriesToRoutes[category] = &oldDefaultTopics
+					}
+
+					// Initialize our newRouteConfig with values
+					newRouteConfig := mds.AuditLogConfigRouteCategories{}
+					if err := mergo.Map(&newRouteConfig, categoriesToRoutes); err != nil {
+						continue
+					}
+
+					newSpecRoutes := *newSpec.Routes
+					if _, ok := newSpecRoutes[routeName]; ok {
+						// Route already exists in newSpec, so merge it with our new route config
+						if err := mergo.Merge(&newRouteConfig, newSpecRoutes[routeName], mergo.WithOverride); err != nil {
+							continue
+						}
+					}
 					newSpecRoutes[routeName] = newRouteConfig
 				}
 			}
