@@ -42,9 +42,9 @@ type command struct {
 }
 
 var (
-	listFields              = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listHumanLabels         = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	listStructuredLabels    = []string{"key", "owner", "description", "resource_type", "resource_id"}
+	listFields              = []string{"Key", "Description", "UserId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
