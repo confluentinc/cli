@@ -420,7 +420,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	}
 	resp, err = kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(context.Background(), clusterId, topicName,
 		&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
-			optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 		})
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle config key/value invalid errors

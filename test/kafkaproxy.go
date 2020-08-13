@@ -140,7 +140,7 @@ func getClustersClusterIdTopicsHandler(t *testing.T) func(responseWriter http.Re
 			// check configs
 			for _, config := range requestData.Configs {
 				if config.Name != "retention.ms" && config.Name != "compression.type" {
-					writeErrorResponse(responseWriter, http.StatusBadRequest, 40002, fmt.Sprintf("Unknown topic config name: %s", config.Name))
+					require.NoError(t, writeErrorResponse(responseWriter, http.StatusBadRequest, 40002, fmt.Sprintf("Unknown topic config name: %s", config.Name)))
 					return
 				} else if config.Name == "retention.ms" {
 					if config.Value == nil { // if retention.ms but value null

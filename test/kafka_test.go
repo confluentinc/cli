@@ -99,7 +99,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 	tests := []CLITest{
 		// <topic> errors
 		{args: fmt.Sprintf("kafka topic create --url %s", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
-		{args: fmt.Sprintf("kafka topic create topic-exist --url %s", kafkaRestURL), fixture: "kafka/confluent/topic/create-duplicate-topic-failure", wantErrCode: 1, name: "creating topic with existing topic name should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-exist --url %s", kafkaRestURL), contains: "Error: topic \"topic-exist\" already exists for the Kafka cluster\n\nSuggestions:\n    To list topics for the cluster, use `confluent kafka topic list --url <url>`.", wantErrCode: 1, name: "creating topic with existing topic name should fail"},
 		// --partitions errors
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -2", kafkaRestURL), contains: "Error: Kafka REST Proxy backend error:\n\tNumber of partitions must be larger than 0.", wantErrCode: 1, name: "creating topic with negative partitions name should fail"},
 		// --replication-factor errors
