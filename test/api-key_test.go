@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"testing"
@@ -150,9 +149,6 @@ func (s *CLITestSuite) TestAPIKey() {
 
 func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := ioutil.ReadAll(r.Body)
-		require.NoError(t, err)
-
 		id, err := strconv.Atoi(r.URL.Query().Get("id"))
 		require.NoError(t, err)
 
@@ -165,7 +161,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 
-		data, err = json.Marshal(res)
+		data, err := json.Marshal(res)
 		require.NoError(t, err)
 		_, err = w.Write(data)
 		require.NoError(t, err)
