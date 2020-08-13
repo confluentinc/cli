@@ -92,7 +92,11 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeM
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oVlqmbfWRTr/5NYVo8GDz3avvt58OMXoCL7k=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
+github.com/confluentinc/cc-structs v0.489.0 h1:xCAh+ucgf/8f21f+5IN/Yf3IKJEmBA49/dzqm8TuV6A=
 github.com/confluentinc/cc-structs v0.519.0 h1:B8MGW8V73U3H3jSmb28359iZgLQxQzfrTOP57+iPbss=
+github.com/confluentinc/cc-structs v0.539.0 h1:SMDElTZg2J3Ari+hNq3qvqn7UDk8qQGIyrjbKhH4zvM=
+github.com/confluentinc/cc-structs v0.552.0 h1:a4cIgOTs8lxTa3cJAqsXY0W4UXF/mTqs8MRiKkdZdXs=
+github.com/confluentinc/cc-structs v0.553.0 h1:12wpBybrd1iXeKvVcMWFAliMepfORVViI/PE8Ej9f3k=
 github.com/confluentinc/cc-structs v0.562.0 h1:C+YTyJL/LSQmFvBLd1vOMS+h1vSdk2oza9r4c1mr0/0=
 github.com/confluentinc/cc-structs v0.563.0 h1:oEgYYg8mcnRDW1aKmG8RuON7FTYtVVnhIfddb89+c5U=
 github.com/confluentinc/cc-structs v0.564.0 h1:QYKgu1QnoLmGf6PinIMlhXNGyEGBCD7ouOoQfNqQDYg=
@@ -119,10 +123,14 @@ github.com/confluentinc/cc-structs/kafka/product/core v0.419.0/go.mod h1:FF4M+qX
 github.com/confluentinc/cc-structs/kafka/scheduler v0.408.0/go.mod h1:VzT5EDgrn2JRsRPkY+12iN6L8hP+UzH4Zbn0IfxB0sc=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0 h1:zg5/pQf7YjgFS9wTp5TPx6weMbTuT6QG3pNrNQteg60=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.489.0 h1:RVYzQPu+MkQwrmr2hBeJKLNuQf/iN7t/H/ifg/PVjQo=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.519.0 h1:U8dFR+XPvdjRH4oxdgWNZlOiUyUVC2Ox0VbTseohwYA=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.525.0 h1:R5CL6pB8sgk8bEzE1ELpSaMu7rQP4ZE9WfRxnkjgqbU=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.539.0 h1:hHIoOUf/ezBQtmGYQif9xiML8NcpLELI6FFc2Z4Hz3E=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0 h1:Q8Dg5b3PtdTN+gbSWSyvZ1+U4n/RClmGcRp+GhJ/XT0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0 h1:MpZuFbQHeMwEWUZZv+tSnXT2Gx96wB2TDpgGWsftE7Y=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.553.0 h1:QadiZRo2/VF33Oj5nMtrSc5u7wOlvbYWDKC7C0DW9Tg=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.562.0 h1:gOdQiBQOEMc3suaWArasAP/1WLv/TnoccGC+8VhrbSE=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.563.0 h1:9BbRhaFal1bHW6YIZxfqjMQnE8NbekBLNuEzwqb4fos=
@@ -149,6 +157,8 @@ github.com/confluentinc/go-printer v0.13.0/go.mod h1:bOK/pPNm4ao7bZIcRnGPGca1B64
 github.com/confluentinc/mds-sdk-go v0.0.15 h1:hiiUvtfD+BuBr4IJd+8C1/um0v7rFYBaJwsBgl2TZQs=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9 h1:TsJzNxIN5hyq8AT/F24nSkyknS6u8NEpKU5C88pzS04=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9/go.mod h1:wyYeXb6d0I/RRhPV7LaAFneTGqbT7chHZtpzfKwdrh0=
+github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19 h1:iaoifvC9Q+iXpa2ibgbErJ0YOgeLiYWlY+Jr2P1SF9c=
+github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19/go.mod h1:wyYeXb6d0I/RRhPV7LaAFneTGqbT7chHZtpzfKwdrh0=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11 h1:SqknPrUP6isE35o3//c5agXxOl4/cVyxtNIsi65EPTY=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.15 h1:xxqUWagHg86nrxaICWs3vYXONdfJ5LWFj9YNlJxqNLo=

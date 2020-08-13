@@ -28,7 +28,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.46
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
@@ -105,7 +105,6 @@ require (
 )
 
 replace (
-	github.com/confluentinc/mds-sdk-go/mdsv1 => /Users/cjohnson/github/confluentinc/mds-sdk-go/mdsv1
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
