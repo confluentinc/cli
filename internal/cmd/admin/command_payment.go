@@ -85,10 +85,12 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
 
-	exp := strings.Split(f.Responses["expiration"].(string), "/")
+	stripe.Key = "sk_live_z9G2UTa5QjYmTIZkYZgvX8EJ"
+	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
+		Level: 0,
+	}
 
-	stripe.Key = ""
-	// TODO: retrieve from vault (v1/prod/kv/billing/billing-worker/stripeApiKey)
+	exp := strings.Split(f.Responses["expiration"].(string), "/")
 
 	params := &stripe.TokenParams{
 		Card: &stripe.CardParams{
