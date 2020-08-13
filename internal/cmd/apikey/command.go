@@ -3,12 +3,11 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
+	"strings"
+	"time"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -210,11 +209,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		created := fmt.Sprintf("%d", apiKey.Created.Seconds)
-		if outputWriter.GetOutputFormat() == output.Human {
-			created = time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC822)
-		}
-
+		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.

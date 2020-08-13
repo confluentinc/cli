@@ -1,4 +1,4 @@
-    Key    | Description | Owner |      Owner Email      | Resource Type | Resource ID |       Created        
-+----------+-------------+-------+-----------------------+---------------+-------------+---------------------+
-    MYKEY1 | first-key   |    12 | bstrauch@confluent.io | kafka         | lkc-bob     | 24 Feb 99 00:00 UTC  
-    MYKEY3 |             |    23 | bstrauch@confluent.io | kafka         | lkc-bob     | 24 Feb 99 00:00 UTC  
+    Key    | Description | Owner |      Owner Email      | Resource Type | Resource ID |       Created         
++----------+-------------+-------+-----------------------+---------------+-------------+----------------------+
+    MYKEY1 | first-key   |    12 | bstrauch@confluent.io | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
+    MYKEY3 |             |    23 | bstrauch@confluent.io | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  

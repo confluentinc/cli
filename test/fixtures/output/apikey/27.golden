@@ -1,6 +1,6 @@
-       Key      | Description | Owner |      Owner Email      | Resource Type | Resource ID |       Created        
-+---------------+-------------+-------+-----------------------+---------------+-------------+---------------------+
-  * MYKEY4      | my-cool-app |    23 | bstrauch@confluent.io | kafka         | lkc-cool1   | 24 Feb 99 00:00 UTC  
-    MYKEY9      |             |    99 | bstrauch@confluent.io | kafka         | lkc-cool1   | 24 Feb 99 00:00 UTC  
-    UIAPIKEY100 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1   | 24 Feb 99 00:00 UTC  
-    UIAPIKEY103 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1   | 24 Feb 99 00:00 UTC  
+       Key      | Description | Owner |      Owner Email      | Resource Type | Resource ID |       Created         
++---------------+-------------+-------+-----------------------+---------------+-------------+----------------------+
+  * MYKEY4      | my-cool-app |    23 | bstrauch@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
+    MYKEY9      |             |    99 | bstrauch@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
+    UIAPIKEY100 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
+    UIAPIKEY103 |             |    25 | bstrauch@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
