@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,12 +19,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	"github.com/gogo/protobuf/types"
 
 	"github.com/confluentinc/bincover"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -35,9 +31,14 @@ import (
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -447,8 +448,11 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, binaryName)
 }
 
-var keyStore = map[int32]*schedv1.ApiKey{}
-var keyIndex = int32(1)
+var (
+	keyStore        = map[int32]*schedv1.ApiKey{}
+	keyIndex        = int32(1)
+	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+)
 
 type ApiKeyList []*schedv1.ApiKey
 
@@ -524,6 +528,10 @@ func init() {
 		},
 		UserId: 25,
 	}
+
+	for _, k := range keyStore {
+		k.Created = keyTimestamp
+	}
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
@@ -541,6 +549,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", keyIndex)
+			apiKey.Created = keyTimestamp
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
 			} else {
@@ -739,6 +748,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
+	router.HandleFunc("/api/users", handleUsers(t))
 	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }

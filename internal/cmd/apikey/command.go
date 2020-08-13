@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/spf13/cobra"
-
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -148,8 +149,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		Key          string
 		Description  string
 		UserId       int32
+		UserEmail    string
 		ResourceType string
 		ResourceId   string
+		Created      string
 	}
 	var apiKeys []*schedv1.ApiKey
 
@@ -202,6 +205,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
+		user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
+		if err != nil {
+			return err
+		}
+
+		created := fmt.Sprintf("%d", apiKey.Created.Seconds)
+		if outputWriter.GetOutputFormat() == output.Human {
+			created = time.Unix(apiKey.Created.Seconds, 0).Format("15:04 Mon Jan _2 2006")
+		}
+
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
@@ -210,8 +223,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
-				UserId:       apiKey.UserId,
+				UserId:       user.Id,
+				UserEmail:    user.Email,
 				ResourceType: pcmd.CloudResourceType,
+				Created:      created,
 			})
 		}
 
@@ -223,12 +238,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
-				UserId:       apiKey.UserId,
+				UserId:       user.Id,
+				UserEmail:    user.Email,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
+				Created:      created,
 			})
 		}
 	}
+
 	return outputWriter.Out()
 }
 
