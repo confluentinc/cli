@@ -1411,9 +1411,9 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 				ApiKey: apiKey,
 				Error:  nil,
 			}
-			reply, err := json.Marshal(result)
+			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "DELETE" {
 			req := &schedv1.DeleteApiKeyRequest{}
@@ -1424,9 +1424,9 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 				ApiKey: apiKey,
 				Error:  nil,
 			}
-			reply, err := json.Marshal(result)
+			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		}
 
