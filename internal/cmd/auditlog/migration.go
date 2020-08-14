@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -28,7 +29,10 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 		return mds.AuditLogConfigSpec{}, warnings, err
 	}
 
-	addOtherBlock(clusterAuditLogConfigSpecs, defaultTopicName)
+	newWarnings = migrateOtherCategoryToManagement(clusterAuditLogConfigSpecs)
+	warnings = append(warnings, newWarnings...)
+
+	addDefaultEnabledCategories(clusterAuditLogConfigSpecs, defaultTopicName)
 
 	newWarnings = warnMultipleCRNAuthorities(clusterAuditLogConfigSpecs)
 	warnings = append(warnings, newWarnings...)
@@ -62,24 +66,56 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	return newSpec, warnings, nil
 }
 
-// add the OTHER block to the route when the default topic is different than the default ("confluent-audit-log-events")
-func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName string) {
+func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) []string {
+	warnings := []string{}
+	for clusterId, spec := range specs {
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
+		for routeName, route := range *routes {
+			if route.Other != nil {
+				if route.Management == nil {
+					route.Management = route.Other
+					route.Other = nil
+				} else if reflect.DeepEqual(route.Management, route.Other) {
+					route.Other = nil
+				} else {
+					warning := fmt.Sprintf(
+						`"Other" Category Warning: Dropped the legacy "other" category rule from the route for`+
+							` %q from cluster %q, as it already contains a "management" category rule.`,
+						routeName, clusterId)
+					warnings = append(warnings, warning)
+					route.Other = nil
+				}
+				(*routes)[routeName] = route
+			}
+		}
+	}
+	return warnings
+}
+
+// Add the AUTHORIZE and MANAGEMENT categories to the route when the default topic is different than the default
+// ("confluent-audit-log-events")
+func addDefaultEnabledCategories(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName string) {
 	for _, spec := range specs {
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
 		if spec.DefaultTopics.Denied != defaultTopicName || spec.DefaultTopics.Allowed != defaultTopicName {
-			other := mds.AuditLogConfigRouteCategoryTopics{
+			enabledCategoryTopics := mds.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
-			routes := spec.Routes
-			if routes == nil {
-				continue
-			}
-
 			for routeName, route := range *routes {
-				if route.Other == nil {
-					route.Other = &other
-					(*routes)[routeName] = route
+				if route.Management == nil {
+					route.Management = &enabledCategoryTopics
 				}
+				if route.Authorize == nil {
+					route.Authorize = &enabledCategoryTopics
+				}
+				(*routes)[routeName] = route
 			}
 		}
 	}
@@ -242,7 +278,13 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	newRoutes := make(map[string]mds.AuditLogConfigRouteCategories)
 	warnings := []string{}
 
-	for clusterId, spec := range specs {
+	clusterIds := make([]string, 0)
+	for clusterId, _ := range specs {
+		clusterIds = append(clusterIds, clusterId)
+	}
+	sort.Strings(clusterIds)
+	for _, clusterId := range clusterIds {
+		spec := specs[clusterId]
 		routes := spec.Routes
 		if routes == nil {
 			continue
@@ -322,46 +364,52 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 		{
 			name: "",
 			resources: []Resource{
-				{extension: "", categories: []string{"Authorize", "Other"}},
-				{extension: "topic", categories: []string{"Authorize", "Other"}},
+				{extension: "", categories: []string{"Authorize", "Management"}},
+				{extension: "topic", categories: []string{"Authorize", "Management"}},
 				{extension: "transaction-id", categories: []string{"Authorize"}},
-				{extension: "group", categories: []string{"Authorize", "Other"}},
-				{extension: "delegation-token", categories: []string{"Authorize", "Other"}},
-				{extension: "control-center-broker-metrics", categories: []string{"Authorize", "Other"}},
-				{extension: "control-center-alerts", categories: []string{"Authorize", "Other"}},
-				{extension: "cluster-registry", categories: []string{"Authorize", "Other"}},
-				{extension: "security-metadata", categories: []string{"Authorize", "Other"}},
-				{extension: "all", categories: []string{"Authorize", "Other"}},
+				{extension: "group", categories: []string{"Authorize", "Management"}},
+				{extension: "delegation-token", categories: []string{"Authorize"}},
+				{extension: "control-center-broker-metrics", categories: []string{"Authorize"}},
+				{extension: "control-center-alerts", categories: []string{"Authorize"}},
+				{extension: "cluster-registry", categories: []string{"Authorize"}},
+				{extension: "security-metadata", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
 			},
 		},
 		{
 			name: "connect",
 			resources: []Resource{
-				{extension: "", categories: []string{"Authorize", "Other"}},
-				{extension: "connector", categories: []string{"Authorize", "Other"}},
-				{extension: "secret", categories: []string{"Authorize", "Other"}},
-				{extension: "all", categories: []string{"Authorize", "Other"}},
+				{extension: "", categories: []string{"Authorize"}},
+				{extension: "connector", categories: []string{"Authorize"}},
+				{extension: "secret", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
 			},
 		},
 		{
 			name: "schema-registry",
 			resources: []Resource{
-				{extension: "", categories: []string{"Authorize", "Other"}},
-				{extension: "subject", categories: []string{"Authorize", "Other"}},
-				{extension: "all", categories: []string{"Authorize", "Other"}},
+				{extension: "", categories: []string{"Authorize"}},
+				{extension: "subject", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
 			},
 		},
 		{
 			name: "ksql",
 			resources: []Resource{
-				{extension: "", categories: []string{"Authorize", "Other"}},
-				{extension: "ksql-cluster", categories: []string{"Authorize", "Other"}},
-				{extension: "all", categories: []string{"Authorize", "Other"}},
+				{extension: "", categories: []string{"Authorize"}},
+				{extension: "ksql-cluster", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
 			},
 		},
 	}
 
-	for clusterId, spec := range specs {
+	clusterIds := make([]string, 0)
+	for clusterId, _ := range specs {
+		clusterIds = append(clusterIds, clusterId)
+	}
+	sort.Strings(clusterIds)
+	for _, clusterId := range clusterIds {
+		spec := specs[clusterId]
 		if spec.DefaultTopics.Denied != newSpec.DefaultTopics.Denied || spec.DefaultTopics.Allowed != newSpec.DefaultTopics.Allowed {
 			oldDefaultTopics := mds.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
