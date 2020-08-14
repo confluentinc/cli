@@ -1,13 +1,14 @@
-       Key      | Description | Owner |      Owner Email      |  Resource Type  | Resource ID  |       Created         
-+---------------+-------------+-------+-----------------------+-----------------+--------------+----------------------+
-    MYKEY1      | first-key   |    12 | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    MYKEY2      |             |    18 | bstrauch@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
-    MYKEY3      |             |    23 | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    MYKEY4      | my-cool-app |    23 | bstrauch@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-    MYKEY6      | my-ksql-app |    23 | bstrauch@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-    MYKEY7      |             |    23 | bstrauch@confluent.io | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
-    MYKEY8      |             |    23 | bstrauch@confluent.io | cloud           |              | 1999-02-24T00:00:00Z  
-    UIAPIKEY100 |             |    25 | bstrauch@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-    UIAPIKEY101 |             |    25 | bstrauch@confluent.io | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
-    UIAPIKEY102 |             |    25 | bstrauch@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-    UIAPIKEY103 |             |    25 | bstrauch@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          Key          | Description | Owner |      Owner Email      |  Resource Type  | Resource ID  |       Created         
++----------------------+-------------+-------+-----------------------+-----------------+--------------+----------------------+
+    MYKEY1             | first-key   |    12 | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    MYKEY2             |             |    18 | bstrauch@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
+    MYKEY3             |             |    23 | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    MYKEY4             | my-cool-app |    23 | bstrauch@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+    MYKEY6             | my-ksql-app |    23 | bstrauch@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+    MYKEY7             |             |    23 | bstrauch@confluent.io | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
+    MYKEY8             |             |    23 | bstrauch@confluent.io | cloud           |              | 1999-02-24T00:00:00Z  
+    SERVICEACCOUNTKEY1 |             | 12345 | <service account>     | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    UIAPIKEY100        |             |    25 | bstrauch@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+    UIAPIKEY101        |             |    25 | bstrauch@confluent.io | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
+    UIAPIKEY102        |             |    25 | bstrauch@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+    UIAPIKEY103        |             |    25 | bstrauch@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  

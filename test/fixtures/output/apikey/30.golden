@@ -21,6 +21,13 @@
   resource_type: kafka
 - created: "1999-02-24T00:00:00Z"
   description: ""
+  key: SERVICEACCOUNTKEY1
+  owner: "12345"
+  owner_email: <service account>
+  resource_id: lkc-bob
+  resource_type: kafka
+- created: "1999-02-24T00:00:00Z"
+  description: ""
   key: UIAPIKEY100
   owner: "25"
   owner_email: bstrauch@confluent.io

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"strings"
 	"time"
@@ -190,6 +191,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	users := map[int32]*orgv1.User{}
+	serviceAccounts, err := getServiceAccountsMap(c.Client)
+	if err != nil {
+		return err
+	}
+
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
@@ -204,9 +211,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
-		if err != nil {
-			return err
+		var email string
+		if _, ok := serviceAccounts[apiKey.UserId]; ok {
+			email = "<service account>"
+		} else {
+			if user, ok := users[apiKey.UserId]; ok{
+				email = user.Email
+			} else {
+				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
+				if err != nil {
+					return err
+				}
+				email = user.Email
+				users[user.Id] = user
+			}
 		}
 
 		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
@@ -218,8 +236,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
-				UserId:       user.Id,
-				UserEmail:    user.Email,
+				UserId:       apiKey.UserId,
+				UserEmail:    email,
 				ResourceType: pcmd.CloudResourceType,
 				Created:      created,
 			})
@@ -233,8 +251,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
-				UserId:       user.Id,
-				UserEmail:    user.Email,
+				UserId:       apiKey.UserId,
+				UserEmail:    email,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
 				Created:      created,
@@ -243,6 +261,18 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	return outputWriter.Out()
+}
+
+func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[int32]bool)
+	for _, sa := range serviceAccounts {
+		saMap[sa.Id] = true
+	}
+	return saMap, nil
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {

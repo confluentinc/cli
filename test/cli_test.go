@@ -57,6 +57,7 @@ var (
 	confluentTestBin = confluentTestBinNormal
 	covCollector     *bincover.CoverageCollector
 	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	serviceAccountID = int32(12345)
 )
 
 const (
@@ -532,7 +533,15 @@ func init() {
 		},
 		UserId: 25,
 	}
-
+	keyStore[200] = &schedv1.ApiKey{
+		Id:     keyIndex,
+		Key:    "SERVICEACCOUNTKEY1",
+		Secret: "SERVICEACCOUNTSECRET1",
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
+			{Id: "lkc-bob", Type: "kafka"},
+		},
+		UserId: serviceAccountID,
+	}
 	for _, k := range keyStore {
 		k.Created = keyTimestamp
 	}
@@ -1429,7 +1438,7 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 		switch r.Method {
 		case "GET":
 			serviceAccount := &orgv1.User{
-				Id:                 12345,
+				Id:                 serviceAccountID,
 				ServiceName:        "service_account",
 				ServiceDescription: "at your service.",
 			}
