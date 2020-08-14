@@ -2,9 +2,10 @@ package apikey
 
 import (
 	"context"
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"os"
 	"testing"
+
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
@@ -125,7 +126,7 @@ func (suite *APITestSuite) SetupTest() {
 		GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
 			return []*v1.User{}, nil
 		},
-		CheckEmailFunc:           nil,
+		CheckEmailFunc: nil,
 	}
 }
 

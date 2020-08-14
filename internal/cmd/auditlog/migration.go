@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/imdario/mergo"
 	"regexp"
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/imdario/mergo"
+
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mds.AuditLogConfigSpec, []string, error) {

@@ -3,12 +3,13 @@ package apikey
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
-	"strings"
-	"time"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -215,7 +216,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if _, ok := serviceAccounts[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
-			if user, ok := users[apiKey.UserId]; ok{
+			if user, ok := users[apiKey.UserId]; ok {
 				email = user.Email
 			} else {
 				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
