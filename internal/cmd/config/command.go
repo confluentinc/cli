@@ -9,18 +9,20 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
+	cliName string
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
 
 // New returns the Cobra command for `config`.
-func New(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "config",
 			Short: "Modify the CLI configuration.",
 		}, prerunner)
 	cmd := &command{
+		cliName:    cliName,
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
 		analytics:  analytics,
@@ -30,5 +32,5 @@ func New(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 }
 
 func (c *command) init() {
-	c.AddCommand(NewContext(c.prerunner, c.analytics))
+	c.AddCommand(NewContext(c.cliName, c.prerunner, c.analytics))
 }

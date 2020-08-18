@@ -358,7 +358,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 			fmt.Println(output)
 		}
 
-		if strings.HasPrefix(tt.args, "kafka cluster create") {
+		if strings.HasPrefix(tt.args, "kafka cluster create") ||
+			strings.HasPrefix(tt.args, "config context current") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
@@ -388,6 +389,12 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+
+		if strings.HasPrefix(tt.args, "config context list") ||
+			strings.HasPrefix(tt.args, "config context current") {
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+		}
 
 		s.validateTestOutput(tt, t, output)
 	})

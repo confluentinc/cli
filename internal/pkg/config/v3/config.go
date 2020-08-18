@@ -274,12 +274,29 @@ func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
 }
 
+func (c *Config) CredentialType() v2.CredentialType {
+	ctx := c.Context()
+	if ctx == nil {
+		return v2.None
+	}
+	if c.Context().Credential.CredentialType == v2.APIKey {
+		return v2.APIKey
+	}
+	if c.HasLogin() {
+		return v2.Username
+	}
+	return v2.None
+}
+
 func (c *Config) HasLogin() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
 	}
-	return ctx.hasLogin()
+	if c.CLIName == "ccloud" {
+		return ctx.hasCCloudLogin()
+	}
+	return ctx.HasMDSLogin()
 }
 
 func (c *Config) ResetAnonymousId() error {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"sort"
 
 	"github.com/confluentinc/go-printer"
@@ -20,18 +21,20 @@ var (
 
 type contextCommand struct {
 	*pcmd.CLICommand
+	cliName   string
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func NewContext(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
 		}, prerunner)
 	cmd := &contextCommand{
+		cliName:    cliName,
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
 		analytics:  analytics,
@@ -60,32 +63,43 @@ func (c *contextCommand) init() {
 			return c.prerunner.Anonymous(c.CLICommand)(cmd, args)
 		},
 	})
-	c.AddCommand(&cobra.Command{
+	currentCmd := &cobra.Command{
 		Use:   "current",
 		Short: "Show the current config context.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.current),
-	})
-
-	getCmd := &cobra.Command{
-		Use:   "get <id or no argument for current context>",
-		Short: "Get a config context parameter.",
-		Args:  cobra.RangeArgs(0, 1),
-		RunE:  pcmd.NewCLIRunE(c.get),
 	}
-	getCmd.Hidden = true
-	c.AddCommand(getCmd)
-
-	setCmd := &cobra.Command{
-		Use:   "set <id or no argument for current context>",
-		Short: "Set a config context parameter.",
-		Args:  cobra.RangeArgs(0, 1),
-		RunE:  pcmd.NewCLIRunE(c.set),
+	var usernameFlagUsage string
+	if c.cliName == "ccloud" {
+		usernameFlagUsage = "Returns email if logged in, and returns API key if API key context."
+	} else {
+		usernameFlagUsage = "Returns username."
 	}
-	setCmd.Flags().String("kafka-cluster", "", "Set the current Kafka cluster context.")
-	setCmd.Flags().SortFlags = false
-	setCmd.Hidden = true
-	c.AddCommand(setCmd)
+	currentCmd.Flags().Bool("username", false, usernameFlagUsage)
+	currentCmd.Flags().SortFlags = false
+	c.AddCommand(currentCmd)
+
+	if c.cliName == "ccloud" {
+		getCmd := &cobra.Command{
+			Use:   "get <id or no argument for current context>",
+			Short: "Get a config context parameter.",
+			Args:  cobra.RangeArgs(0, 1),
+			RunE:  pcmd.NewCLIRunE(c.get),
+		}
+		getCmd.Hidden = true
+		c.AddCommand(getCmd)
+
+		setCmd := &cobra.Command{
+			Use:   "set <id or no argument for current context>",
+			Short: "Set a config context parameter.",
+			Args:  cobra.RangeArgs(0, 1),
+			RunE:  pcmd.NewCLIRunE(c.set),
+		}
+		setCmd.Flags().String("kafka-cluster", "", "Set the current Kafka cluster context.")
+		setCmd.Flags().SortFlags = false
+		setCmd.Hidden = true
+		c.AddCommand(setCmd)
+	}
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
@@ -140,7 +154,25 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
-	pcmd.Println(cmd, c.Config.CurrentContext)
+	credentialType := c.Config.CredentialType()
+	if credentialType == v2.None {
+		pcmd.Println(cmd, errors.NotLoggedInErrorMsg)
+		return nil
+	}
+	username, err := cmd.Flags().GetBool("username")
+	if err != nil {
+		return err
+	}
+	if username {
+		ctx := c.Config.Config.Context()
+		if credentialType == v2.APIKey {
+			pcmd.Println(cmd, ctx.Credential.APIKeyPair.Key)
+		} else {
+			pcmd.Println(cmd, ctx.Credential.Username)
+		}
+	} else {
+		pcmd.Println(cmd, c.Config.CurrentContext)
+	}
 	return nil
 }
 
