@@ -171,7 +171,7 @@ func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) err
 
 	serviceNames := make([]string, len(services))
 	for i, service := range services {
-		serviceNames[i] = writeServiceName(service)
+		serviceNames[i] = c.writeServiceName(service)
 	}
 
 	cmd.Printf(command, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))

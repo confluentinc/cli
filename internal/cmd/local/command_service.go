@@ -18,6 +18,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/spinner"
 )
 
@@ -253,7 +254,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return err
 	}
 
-	cmd.Printf(command, errors.StartingServiceMsg, writeServiceName(service))
+	cmd.Printf(command, errors.StartingServiceMsg, c.writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -397,7 +398,7 @@ func (c *Command) startProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+		return errors.Errorf(errors.FailedToStartErrorMsg, c.writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -419,7 +420,7 @@ func (c *Command) startProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(90 * time.Second):
-		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+		return errors.Errorf(errors.FailedToStartErrorMsg, c.writeServiceName(service))
 	}
 
 	return nil
@@ -434,7 +435,7 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 		return c.printStatus(command, service)
 	}
 
-	cmd.Printf(command, errors.StoppingServiceMsg, writeServiceName(service))
+	cmd.Printf(command, errors.StoppingServiceMsg, c.writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -539,7 +540,7 @@ func (c *Command) killProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return errors.Errorf(errors.FailedToStopErrorMsg, writeServiceName(service))
+		return errors.Errorf(errors.FailedToStopErrorMsg, c.writeServiceName(service))
 	}
 }
 
@@ -554,7 +555,7 @@ func (c *Command) printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	cmd.Printf(command, errors.ServiceStatusMsg, writeServiceName(service), status)
+	cmd.Printf(command, errors.ServiceStatusMsg, c.writeServiceName(service), status)
 	return nil
 }
 
@@ -726,16 +727,23 @@ func writeOfficialServiceName(service string) string {
 	case "zookeeper":
 		return "Apache ZooKeeper™"
 	default:
-		return writeServiceName(service)
+		c := &Command{
+			ch:         local.NewConfluentHomeManager(),
+		}
+		return c.writeServiceName(service)
 	}
 }
 
-func writeServiceName(service string) string {
+func (c *Command) writeServiceName(service string) string {
 	switch service {
 	case "kafka-rest":
 		return "Kafka REST"
 	case "ksql-server":
-		return "ksqlDB Server"
+		isKsqlDB, err := c.ch.IsAtLeastVersion("5.5")
+		if err != nil || isKsqlDB {
+			return "ksqlDB Server"
+		}
+		return "ksql Server"
 	case "zookeeper":
 		return "ZooKeeper"
 	default:
