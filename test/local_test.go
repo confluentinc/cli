@@ -101,6 +101,24 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	}
 }
 
+func (s *CLITestSuite) TestLocalKSQLServerName() {
+	s.createCH([]string{
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
+	})
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local services status", fixture: "local/ksql-server-status.golden", regex: true},
+		{args: "local services stop", fixture: "local/ksql-server-stopped.golden", regex: true},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
+	}
+}
+
 func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	s.createCH([]string{
 		"share/java/kafka/zookeeper-5.5.0.jar",
