@@ -299,5 +299,10 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	alterOptions := &linkv1.AlterLinkOptions{}
 	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config, alterOptions)
 
+
+	if err == nil {
+		pcmd.Printf(cmd, errors.UpdatedLinkMsg, link)
+	}
+
 	return err
 }

@@ -50,6 +50,7 @@ const (
 	// kafka link commands
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
 	CreatedLinkMsg = "Created cluster link \"%s\".\n"
+	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
 	// kafka acl commands
 	DeletedACLsMsg = "Deleted ACLs."
