@@ -47,7 +47,7 @@ steps:
 
 - task: HelmInstaller@1
   displayName: Helm installer
-  inputs: 
+  inputs:
     helmVersionToInstall: 2.9.1
 
 - bash: |
@@ -68,6 +68,7 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
+    echo $DOCKER_USER
     make helm-repo-add
     make helm-init-ci
   displayName: 'Inject secrets'
@@ -109,6 +110,8 @@ steps:
   displayName: 'create cpd cluster'
 
 - bash: |
+    echo $DOCKER_USER
+    make docker-login
     make cpd-deploy-local
   displayName: 'cpd deploy'
 
@@ -118,7 +121,7 @@ steps:
 
 - bash: |
     CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
-  displayName: cc-system-tests make init-env 
+  displayName: cc-system-tests make init-env
 
 - bash: |
     make replace-cli-binary
