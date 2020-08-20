@@ -113,7 +113,7 @@ steps:
 - bash: |
     source $(Agent.BuildDirectory)/.docker-creds
     echo $DOCKER_USER
-    @DOCKER_USER=$DOCKER_USER DOCKER_APIKEY=$DOCKER_APIKEY make docker-login
+    DOCKER_USER=$DOCKER_USER make docker-login
     make cpd-deploy-local
   displayName: 'cpd deploy'
 
