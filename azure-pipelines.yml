@@ -111,9 +111,14 @@ steps:
   displayName: 'create cpd cluster'
 
 - bash: |
-    source $(Agent.BuildDirectory)/.docker-creds
-    echo $DOCKER_USER
-    DOCKER_USER=$DOCKER_USER make docker-login
+    vault
+    export PATH="$(Agent.BuildDirectory):$PATH"
+    . $(vaultsecrets.secureFilePath)
+    . mk-include/bin/vault-setup
+    . vault-sem-get-secret ssh_id_rsa
+    . vault-sem-get-secret netrc
+    . vault-sem-get-secret semaphore-secrets-global
+    make docker-login
     make cpd-deploy-local
   displayName: 'cpd deploy'
 
