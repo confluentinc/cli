@@ -127,7 +127,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return aclutil.PrintACLs(cmd, bindings, os.Stderr)
+	return aclutil.PrintACLs(cmd, bindings, os.Stdout)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
