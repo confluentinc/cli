@@ -8,18 +8,6 @@ variables:  # job-level
   VAULT_ADDR: https://vault.cireops.gcp.internal.confluent.cloud
 
 steps:
-- bash: |
-    echo "the build-id: ${BUILD_ID}"
-  env:
-    BUILD_ID: $(Build.BuildId)
-  displayName: proper definition of build id environment
-
-- bash: |
-    make echo-build-id
-  env:
-    BUILD_ID: $(Build.BuildId)
-  displayName: make target using build id env var set properly
-
 - script: |
     wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
     tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
