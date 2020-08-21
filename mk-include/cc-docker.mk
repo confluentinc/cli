@@ -1,14 +1,19 @@
+JFROG_DOCKER_REPO := confluent-docker.jfrog.io
+JFROG_DOCKER_REPO_INTERNAL := confluent-docker-internal-dev.jfrog.io
+
 .PHONY: docker-login
 ## Login to docker Artifactory
 docker-login:
 ifeq ($(DOCKER_USER)$(DOCKER_APIKEY),$(_empty))
-	echo "EMPTY"
-	echo $(DOCKER_USER)
-	@jq -e '.auths."confluent-docker.jfrog.io"' $(HOME)/.docker/config.json 2>&1 >/dev/null ||\
-		(echo "confluent-docker.jfrog.io not logged in, Username and Password not found in environment, prompting for login:" && \
-		 docker login confluent-docker.jfrog.io)
+	@jq -e '.auths."$(JFROG_DOCKER_REPO)"' $(HOME)/.docker/config.json 2>&1 >/dev/null ||\
+		(echo "$(JFROG_DOCKER_REPO) not logged in, Username and Password not found in environment, prompting for login:" && \
+		 docker login $(JFROG_DOCKER_REPO))
+	@jq -e '.auths."$(JFROG_DOCKER_REPO_INTERNAL)"' $(HOME)/.docker/config.json 2>&1 >/dev/null ||\
+		(echo "$(JFROG_DOCKER_REPO_INTERNAL) not logged in, Username and Password not found in environment, prompting for login:" && \
+		 docker login $(JFROG_DOCKER_REPO_INTERNAL))
 else
-	echo "NAH EMPTY"
-	@jq -e '.auths."confluent-docker.jfrog.io"' $(HOME)/.docker/config.json 2>&1 >/dev/null ||\
-		docker login confluent-docker.jfrog.io --username $(DOCKER_USER) --password $(DOCKER_APIKEY)
+	@jq -e '.auths."$(JFROG_DOCKER_REPO)"' $(HOME)/.docker/config.json 2>&1 >/dev/null ||\
+		docker login $(JFROG_DOCKER_REPO) --username $(DOCKER_USER) --password $(DOCKER_APIKEY)
+	@jq -e '.auths."$(JFROG_DOCKER_REPO_INTERNAL)"' $(HOME)/.docker/config.json 2>&1 >/dev/null ||\
+		docker login $(JFROG_DOCKER_REPO_INTERNAL) --username $(DOCKER_USER) --password $(DOCKER_APIKEY)
 endif
