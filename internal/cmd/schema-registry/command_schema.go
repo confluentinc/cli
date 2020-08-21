@@ -164,7 +164,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
+		pcmd.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
