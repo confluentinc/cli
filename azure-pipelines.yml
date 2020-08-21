@@ -68,8 +68,6 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
-    #echo DOCKER_USER=${DOCKER_USER} >> $(Agent.BuildDirectory)/.docker-creds
-    #echo DOCKER_APIKEY=${DOCKER_APIKEY} >> $(Agent.BuildDirectory)/.docker-creds
     make helm-repo-add
     make helm-init-ci
   displayName: 'Inject secrets'
@@ -78,9 +76,6 @@ steps:
     make deps
   displayName: 'make deps'
 
-# make test will build the CLI as part of its work
-# (for integration tests), so no need to run build
-# make targets separately
 - script: |
     make build
   displayName: 'make build'
@@ -111,13 +106,6 @@ steps:
   displayName: 'create cpd cluster'
 
 - bash: |
-    #export PATH="$(Agent.BuildDirectory):$PATH"
-    # . $(vaultsecrets.secureFilePath)
-    # . mk-include/bin/vault-setup
-    # . vault-sem-get-secret ssh_id_rsa
-    # . vault-sem-get-secret netrc
-    # . vault-sem-get-secret semaphore-secrets-global
-    #make docker-login
     make cpd-deploy-local
   displayName: 'cpd deploy'
 
