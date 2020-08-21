@@ -1,0 +1,136 @@
+pool:
+  vmImage: 'ubuntu-18.04'
+
+
+variables:  # job-level
+  VAULT_VERSION: '1.4.0'
+  VAULT_URL: https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_$(VAULT_VERSION)_linux_amd64.zip
+  VAULT_ADDR: https://vault.cireops.gcp.internal.confluent.cloud
+
+steps:
+- bash: |
+    echo "the build-id: ${BUILD_ID}"
+  env:
+    BUILD_ID: $(Build.BuildId)
+  displayName: proper definition of build id environment
+
+- bash: |
+    make echo-build-id
+  env:
+    BUILD_ID: $(Build.BuildId)
+  displayName: make target using build id env var set properly
+
+- script: |
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+  displayName: "Download go 1.14.2"
+
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+  displayName: Properly configure our custom Go environment
+
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+    echo '##vso[task.prependpath]$(GOPATH)/bin'
+    mkdir -p ${GOPATH}\bin
+    mkdir -p ${GOROOT}\bin
+  displayName: 'Set up the Go workspace'
+
+- task: DownloadSecureFile@1
+  name: vaultsecrets
+  displayName: 'Securely download Azure vault'
+  inputs:
+    secureFile: 'vault_secrets'
+
+- task: HelmInstaller@1
+  displayName: Helm installer
+  inputs:
+    helmVersionToInstall: 2.9.1
+
+- bash: |
+    echo "Installing Hashicorp Vault v$(VAULT_VERSION) from $(VAULT_URL)"
+    wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip $(VAULT_URL)
+    echo "Unzipping received /tmp/vault.zip"
+    unzip /tmp/vault.zip -d $(Agent.BuildDirectory)
+    chmod +x $(Agent.BuildDirectory)/vault
+    export PATH="$(Agent.BuildDirectory):$PATH"
+    . $(vaultsecrets.secureFilePath)
+    . mk-include/bin/vault-setup
+    . vault-sem-get-secret ssh_id_rsa
+    . vault-sem-get-secret netrc
+    . vault-sem-get-secret semaphore-secrets-global
+    . vault-sem-get-secret eng_aws
+    . vault-sem-get-secret aws_credentials
+    . vault-sem-get-secret cpd_gcloud
+    . vault-sem-get-secret ssh_config
+    . vault-sem-get-secret gitconfig
+    make docker-login
+    make helm-repo-add
+    make helm-init-ci
+  displayName: 'Inject secrets'
+
+- script: |
+    make deps
+  displayName: 'make deps'
+
+- script: |
+    make build
+  displayName: 'make build'
+
+- bash: |
+    rm -rf $(Agent.BuildDirectory)/go
+    sudo rm -rf $(Agent.BuildDirectory)/gobin $(Agent.BuildDirectory)/gopath $(Agent.BuildDirectory)/gopathbin
+  displayName: "Delete go (not required)"
+
+- task: GoTool@0
+  inputs:
+    version: '1.12.7'
+
+- bash: |
+    CI=true make gcloud-install
+  displayName: 'Install gcloud'
+
+- bash: |
+    make cpd-update
+  displayName: 'Download CPD'
+
+- bash: |
+    make checkout-cc-system-tests
+  displayName: 'checkout cc-system-tests'
+
+- bash: |
+    make cpd-priv-create-if-missing
+  displayName: 'create cpd cluster'
+
+- bash: |
+    make cpd-deploy-local
+  displayName: 'cpd deploy'
+
+- bash: |
+    make cpd-priv-testenv || make cpd-debug-and-err
+  displayName: cpd priv testenv
+
+- bash: |
+    CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
+  displayName: cc-system-tests make init-env
+
+- bash: |
+    make replace-cli-binary
+  displayName: Replace CLI binary
+
+- bash: |
+    GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
+  displayName: 'Run system tests'
+
+- bash: |
+    make cpd-destroy
+  condition: always()
+  displayName: 'Free CPD'
+
+- script: |
+    git checkout go.*
+  displayName: 'Reset go.* just in case'
+
