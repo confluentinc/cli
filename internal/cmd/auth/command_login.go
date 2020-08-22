@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"regexp"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -185,6 +186,13 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	url_is_valid := validateURL(url)
+	if !url_is_valid {
+		return errors.New("Invalid URL")
+	}
+
+	
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return err
@@ -352,4 +360,10 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func validateURL(url string) bool{
+	url_pattern := `^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$`
+	matched, _ := regexp.Match(url_pattern, []byte(url))
+	return matched
 }
