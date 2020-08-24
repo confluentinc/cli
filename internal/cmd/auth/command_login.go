@@ -187,12 +187,29 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	url_is_valid := validateURL(url)
-	if !url_is_valid {
-		return errors.New("Invalid URL")
+	url, err_msg := validateURL(url)
+	if err_msg != "" {
+		os.Stderr.WriteString("Warning: Assuming " + err_msg + ".\n")
 	}
 
-	
+	// dynamicContext1, err := a.Config.Context(cmd)
+	// if err != nil {
+	// 	return err
+	// }
+	// var ctx1 *v3.Context
+	// if dynamicContext1 != nil {
+	// 	ctx1 = dynamicContext1.Context
+	// }
+	// os.Stderr.WriteString("making dummy request\n")
+	// flagChanged1 := cmd.Flags().Changed("ca-cert-path")
+	// caCertPath1, err := cmd.Flags().GetString("ca-cert-path")
+	// mdsClient1, err := a.MDSClientManager.GetMDSClient(ctx1, caCertPath1, flagChanged1, url, a.Logger)
+	// _, err = pauth.GetConfluentAuthToken(mdsClient1, "", "")
+	// os.Stderr.WriteString("made dummy request\n")
+	// if err !=nil {
+	// 	return err
+	// }
+
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
 		return err
@@ -362,8 +379,21 @@ func check(err error) {
 	}
 }
 
-func validateURL(url string) bool{
-	url_pattern := `^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$`
-	matched, _ := regexp.Match(url_pattern, []byte(url))
-	return matched
+func validateURL(url string) (string, string) {
+	protocol_rgx, _ := regexp.Compile(`(\w+)://`)
+	port_rgx, _ := regexp.Compile(`:(\d+\/?)`)
+
+	protocol_match := protocol_rgx.MatchString(url)
+	port_match := port_rgx.MatchString(url)
+
+	var msg []string
+	if !protocol_match {
+		url = "http://" + url
+		msg = append(msg, "http protocol")
+	}
+	if !port_match {
+		url = url + ":8090"
+		msg = append(msg, "default MDS port 8090")
+	}
+	return url, strings.Join(msg, " and ")
 }
