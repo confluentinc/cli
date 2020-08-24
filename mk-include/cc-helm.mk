@@ -73,6 +73,7 @@ else
 	@helm repo add helm-cloud https://confluent.jfrog.io/confluent/helm-cloud --username $(user) --password $(pass)
 endif
 else
+	echo "GOT TO ADD HELM REPO"
 	@helm repo add helm-cloud https://confluent.jfrog.io/confluent/helm-cloud --username $(HELM_USER) --password $(HELM_APIKEY)
 endif
 
