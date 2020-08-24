@@ -113,10 +113,6 @@ _ := $(shell test -d $(CI_BIN) || mkdir -p $(CI_BIN))
 export PATH = $(CI_BIN):$(shell printenv PATH)
 endif
 
-.PHONY: echo-ci-bin
-echo-ci-bin:
-	echo $(CI_BIN)
-
 .PHONY: update-mk-include
 update-mk-include:
 ifneq ($(shell git status --untracked-files=no --porcelain),)
