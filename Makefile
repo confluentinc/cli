@@ -9,7 +9,7 @@ DOCS_BRANCH     ?= 5.5.0-post
 include ./semver.mk
 include ./mk-include/cc-begin.mk
 include ./mk-include/cc-vault.mk
-include ./mk-include/cc-cpd.mk
+include ./cli-cpd.mk
 include ./mk-include/cc-docker.mk
 include ./mk-include/cc-helm.mk
 include ./mk-include/cc-end.mk
