@@ -56,7 +56,7 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
-    echo $HELM_USER
+    make ${HOME}/.helm/repository/cache/helm-cloud-index.yaml
     make helm-init-ci
   displayName: 'Inject secrets'
 
