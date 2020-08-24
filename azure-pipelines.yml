@@ -55,6 +55,7 @@ steps:
     . vault-sem-get-secret cpd_gcloud
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
+    CI=true
     make docker-login
     make helm-init-ci
   displayName: 'Inject secrets'
