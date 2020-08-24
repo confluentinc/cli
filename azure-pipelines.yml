@@ -23,12 +23,6 @@ steps:
   inputs:
     secureFile: 'netrc'
 
-- task: DownloadSecureFile@1
-  name: vaultsecrets
-  displayName: 'Securely download Azure vault'
-  inputs:
-    secureFile: 'vault_secrets'
-
 - script: |
     mv $(netrc.secureFilePath) ~/.netrc
     mkdir ~/.ssh
