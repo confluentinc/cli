@@ -60,6 +60,7 @@ steps:
     echo "include ./mk-include/cc-docker.mk" >> Makefile
     echo "include ./mk-include/cc-vault.mk" >> Makefile
     echo "include ./mk-include/cc-helm.mk" >> Makefile
+    echo "include ./cli-cpd.mk" >> Makefile
   displayName: clone mk-include and include in Makefile
  
 - bash: |

@@ -7,12 +7,6 @@ RELEASE_BRANCH  ?= master
 DOCS_BRANCH     ?= 5.5.0-post
 
 include ./semver.mk
-include ./mk-include/cc-begin.mk
-include ./mk-include/cc-vault.mk
-include ./cli-cpd.mk
-include ./mk-include/cc-docker.mk
-include ./mk-include/cc-helm.mk
-include ./mk-include/cc-end.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
