@@ -20,6 +20,10 @@ steps:
     echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
   displayName: Properly configure our custom Go environment
 
+- bash: |
+    make echo-ci-bin
+  displayName: echo ci bin
+
 - script: |
     echo '##vso[task.prependpath]$(GOROOT)/bin'
     echo '##vso[task.prependpath]$(GOPATH)/bin'
