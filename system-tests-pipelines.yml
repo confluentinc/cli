@@ -1,0 +1,146 @@
+pool:
+  vmImage: 'ubuntu-18.04'
+
+
+variables:  # job-level
+  IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
+
+steps:
+- task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 2.9.1 specified in cc-helm.mk
+  displayName: Helm installer
+  inputs:
+    helmVersionToInstall: 2.9.1
+
+- task: DownloadSecureFile@1
+  name: idrsa
+  displayName: 'Securely download id_rsa from Azure vault'
+  inputs:
+    secureFile: 'id_rsa'
+
+- task: DownloadSecureFile@1
+  name: netrc
+  displayName: 'Securely download netrc from Azure vault'
+  inputs:
+    secureFile: 'netrc'
+
+- script: |
+    mv $(netrc.secureFilePath) ~/.netrc
+    mkdir ~/.ssh
+    sudo mv $(idrsa.secureFilePath) ~/.ssh/id_rsa
+    sudo chmod 400 ~/.ssh/id_rsa
+  displayName: 'Put secrets in their right place'
+    
+- script: |
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+  displayName: "Download go 1.14.2"
+
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+  displayName: Properly configure our custom Go environment
+
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+    echo '##vso[task.prependpath]$(GOPATH)/bin'
+    mkdir -p ${GOPATH}\bin
+    mkdir -p ${GOROOT}\bin
+  displayName: 'Set up the Go workspace'
+
+- task: DownloadSecureFile@1
+  name: vaultsecrets
+  displayName: 'Securely download secrets for vault login'
+  inputs:
+    secureFile: 'vault_secrets'
+
+- script: |
+    make deps
+  displayName: 'make deps'
+
+- script: |
+    make build
+  displayName: 'make build'
+
+- task: GoTool@0
+  inputs:
+    version: '1.12.7'
+ 
+- bash: |
+    git clone git@github.com:confluentinc/cc-mk-include.git mk-include
+    echo "include ./mk-include/cc-begin.mk" >> Makefile
+    echo "include ./mk-include/cc-end.mk" >> Makefile
+    echo "include ./mk-include/cc-docker.mk" >> Makefile
+    echo "include ./mk-include/cc-vault.mk" >> Makefile
+    echo "include ./mk-include/cc-helm.mk" >> Makefile
+    echo "include ./cli-cpd.mk" >> Makefile
+  displayName: clone mk-include and include in Makefile
+ 
+- bash: |
+    BIN_PATH="$(Agent.BuildDirectory)" make install-vault
+  displayName: install vault
+ 
+- bash: |
+    export PATH="$(Agent.BuildDirectory):$PATH" #export path where vault is loaded to
+    export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
+    . $(vaultsecrets.secureFilePath) # export secrets for vault login
+    . mk-include/bin/vault-setup
+    . vault-sem-get-secret ssh_id_rsa
+    . vault-sem-get-secret netrc
+    . vault-sem-get-secret semaphore-secrets-global
+    . vault-sem-get-secret eng_aws
+    . vault-sem-get-secret aws_credentials
+    . vault-sem-get-secret cpd_gcloud
+    . vault-sem-get-secret ssh_config
+    . vault-sem-get-secret gitconfig
+    make docker-login
+    make $(HOME)/.helm/repository/cache/helm-cloud-index.yaml
+    make helm-init-ci
+  displayName: try to inject secrets and setup docker and helm
+
+- bash: |
+    CI=true make gcloud-install
+  displayName: 'Install gcloud'
+
+- bash: |
+    make cpd-update
+  displayName: 'Download CPD'
+
+- bash: |
+    make checkout-cc-system-tests
+  displayName: 'checkout cc-system-tests'
+
+- bash: |
+    make cpd-priv-create-if-missing
+  displayName: 'create cpd cluster'
+
+- bash: |
+    make cpd-deploy-local
+  displayName: 'cpd deploy'
+
+- bash: |
+    make cpd-priv-testenv || make cpd-debug-and-err
+  displayName: cpd priv testenv
+
+- bash: |
+    CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
+  displayName: make init-env
+
+- bash: |
+    make replace-cli-binary
+  displayName: Replace CLI binary
+
+- bash: |
+    GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
+  displayName: 'Run system tests'
+
+- bash: |
+    make cpd-destroy
+  condition: always()
+  displayName: 'Free CPD'
+
+- script: |
+    git checkout go.*
+  displayName: 'Reset go.* just in case'
+

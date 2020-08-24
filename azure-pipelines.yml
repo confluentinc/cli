@@ -1,15 +1,68 @@
+strategy:
+  matrix:
+    windows:
+      imageName: 'windows-2019'
+    mac:
+      imageName: 'macOS-10.15'
+    linux:
+      imageName: 'ubuntu-18.04'
+
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: $(imageName)
 
-
-variables:  # job-level
-  IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
+variables:
+  # Fixes checksum errors when downloading chrome
+  homebrew_cask_opts: '--no-quarantine'
+  CI: true
 
 steps:
-- task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 2.9.1 specified in cc-helm.mk
-  displayName: Helm installer
-  inputs:
-    helmVersionToInstall: 2.9.1
+- script: |
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Install Go 1.14.2 (Linux)'
+
+- script: |
+    brew install gnu-tar
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install gnu-tar (Darwin)'
+
+- script: |
+    echo $HOMEBREW_CASK_OPTS
+    brew update
+    brew cask install google-chrome
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install chrome (Darwin)'
+
+- script: |
+    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install Go 1.14.2 (Darwin)'
+
+- powershell: |
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.2.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.2.zip "-o$(Agent.BuildDirectory)" -y
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Install Go 1.14.2 (Windows)'
+
+# Linux
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Properly configure our custom Go environment (Mac/Linux)
+
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)\go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)\gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)\go\bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)\go\src\github.com\$(build.repository.name)"
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Properly configure our custom Go environment (Windows)
 
 - task: DownloadSecureFile@1
   name: idrsa
@@ -24,121 +77,76 @@ steps:
     secureFile: 'netrc'
 
 - script: |
-    mv $(netrc.secureFilePath) ~/.netrc
-    mkdir ~/.ssh
-    sudo mv $(idrsa.secureFilePath) ~/.ssh/id_rsa
-    sudo chmod 400 ~/.ssh/id_rsa
-  displayName: 'Put secrets in their right place'
-    
-- script: |
-    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-  displayName: "Download go 1.14.2"
-
-- bash: |
-    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
-    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
-    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
-    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-  displayName: Properly configure our custom Go environment
-
-- script: |
     echo '##vso[task.prependpath]$(GOROOT)/bin'
     echo '##vso[task.prependpath]$(GOPATH)/bin'
     mkdir -p ${GOPATH}\bin
     mkdir -p ${GOROOT}\bin
-  displayName: 'Set up the Go workspace'
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Set up the Go workspace (non-Windows)'
 
-- task: DownloadSecureFile@1
-  name: vaultsecrets
-  displayName: 'Securely download secrets for vault login'
-  inputs:
-    secureFile: 'vault_secrets'
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)\bin'
+    echo '##vso[task.prependpath]$(GOPATH)\bin'
+    echo '##vso[task.setvariable variable=PATH;]$(GOROOT)\bin;$(GOPATH)\bin;$(PATH)'
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
+    mkdir ${GOPATH}\bin
+    mkdir ${GOROOT}\bin
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Set up the Go workspace (Windows)'
+
+- script: |
+    mv $(netrc.secureFilePath) ~/.netrc
+    mkdir ~/.ssh
+    sudo mv $(idrsa.secureFilePath) ~/.ssh/
+    sudo chmod 400 ~/.ssh/id_rsa
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Put secrets in their right places (non-Windows)'
+
+- script: |
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
+    move $(netrc.secureFilePath) %USERPROFILE%\_netrc
+    mkdir %USERPROFILE%\.ssh
+    move $(idrsa.secureFilePath) %USERPROFILE%\.ssh\
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Put secrets in their right places (Windows)'
+
+- script: |
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
+    sudo chmod 755 /usr/bin/hub
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Install hub (Linux)'
+
+- script: |
+    curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo gtar -xvz -C /usr/local/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
+    sudo chmod 755 /usr/local/bin/hub
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install hub (Darwin)'
 
 - script: |
     make deps
   displayName: 'make deps'
 
+# make test will build the CLI as part of its work
+# (for integration tests), so no need to run build
+# make targets separately
 - script: |
-    make build
-  displayName: 'make build'
+    make test
+  displayName: 'make test'
 
-- task: GoTool@0
-  inputs:
-    version: '1.12.7'
- 
-- bash: |
-    git clone git@github.com:confluentinc/cc-mk-include.git mk-include
-    echo "include ./mk-include/cc-begin.mk" >> Makefile
-    echo "include ./mk-include/cc-end.mk" >> Makefile
-    echo "include ./mk-include/cc-docker.mk" >> Makefile
-    echo "include ./mk-include/cc-vault.mk" >> Makefile
-    echo "include ./mk-include/cc-helm.mk" >> Makefile
-    echo "include ./cli-cpd.mk" >> Makefile
-  displayName: clone mk-include and include in Makefile
- 
-- bash: |
-    BIN_PATH="$(Agent.BuildDirectory)" make install-vault
-  displayName: install vault
- 
-- bash: |
-    export PATH="$(Agent.BuildDirectory):$PATH" #export path where vault is loaded to
-    export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
-    . $(vaultsecrets.secureFilePath) # export secrets for vault login
-    . mk-include/bin/vault-setup
-    . vault-sem-get-secret ssh_id_rsa
-    . vault-sem-get-secret netrc
-    . vault-sem-get-secret semaphore-secrets-global
-    . vault-sem-get-secret eng_aws
-    . vault-sem-get-secret aws_credentials
-    . vault-sem-get-secret cpd_gcloud
-    . vault-sem-get-secret ssh_config
-    . vault-sem-get-secret gitconfig
-    make docker-login
-    make $(HOME)/.helm/repository/cache/helm-cloud-index.yaml
-    make helm-init-ci
-  displayName: try to inject secrets and setup docker and helm
+- script: |
+    make lint-licenses
+  displayName: 'make lint-licenses'
 
-- bash: |
-    CI=true make gcloud-install
-  displayName: 'Install gcloud'
-
-- bash: |
-    make cpd-update
-  displayName: 'Download CPD'
-
-- bash: |
-    make checkout-cc-system-tests
-  displayName: 'checkout cc-system-tests'
-
-- bash: |
-    make cpd-priv-create-if-missing
-  displayName: 'create cpd cluster'
-
-- bash: |
-    make cpd-deploy-local
-  displayName: 'cpd deploy'
-
-- bash: |
-    make cpd-priv-testenv || make cpd-debug-and-err
-  displayName: cpd priv testenv
-
-- bash: |
-    CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
-  displayName: make init-env
-
-- bash: |
-    make replace-cli-binary
-  displayName: Replace CLI binary
-
-- bash: |
-    GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
-  displayName: 'Run system tests'
-
-- bash: |
-    make cpd-destroy
-  condition: always()
-  displayName: 'Free CPD'
+- script: |
+    bash <(curl -s https://codecov.io/bash)
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Generate Codecov report (only run on Linux)'
 
 - script: |
     git checkout go.*
