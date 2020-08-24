@@ -81,11 +81,6 @@ $(HOME)/.helm/repository/cache/incubator-index.yaml:
 	@helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
 
 
-.PHONY: helm-repo-add
-helm-repo-add:
-	@helm repo add helm-cloud https://confluent.jfrog.io/confluent/helm-cloud --username $(HELM_USER) --password $(HELM_APIKEY)
-
-
 .PHONY: helm-update-repo
 helm-update-repo: $(HOME)/.helm/repository/cache/helm-cloud-index.yaml $(HOME)/.helm/repository/cache/incubator-index.yaml
 	@helm repo update

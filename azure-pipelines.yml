@@ -56,7 +56,6 @@ steps:
     . vault-sem-get-secret ssh_config
     . vault-sem-get-secret gitconfig
     make docker-login
-    make helm-repo-add
     make helm-init-ci
   displayName: 'Inject secrets'
 
