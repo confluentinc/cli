@@ -130,7 +130,7 @@ steps:
 
 - bash: |
     CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
-  displayName: cc-system-tests make init-env
+  displayName: make init-env
 
 - bash: |
     make replace-cli-binary
