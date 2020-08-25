@@ -86,7 +86,7 @@ jobs:
     displayName: clone mk-include and include in Makefile
   
   - bash: |
-      make install-valut
+      make install-vault
     displayName: install vault
   
 
