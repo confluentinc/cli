@@ -191,7 +191,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return errors.Errorf(errors.InvalidLoginURLMsg)
 	}
 	if err_msg != "" {
-		os.Stderr.WriteString("Warning: Assuming " + err_msg + ".\n")
+		a.Logger.Debug("Assuming " + err_msg + ".\n")
 	}
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
