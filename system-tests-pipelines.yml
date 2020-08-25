@@ -11,14 +11,6 @@ jobs:
   
   steps:
     
-  - bash: |
-      ls $(HOME)/.helm
-    displayName: ls .helm
-
-  - bash: |
-      ls $(HOME)/.helm/repository/cache
-    displayName: ls helm cache dir
-
   - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 2.9.1 specified in cc-helm.mk
     displayName: Helm installer
     inputs:
