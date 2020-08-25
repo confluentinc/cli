@@ -42,7 +42,6 @@ show-cpd:
 # https://askubuntu.com/questions/1135822 - ppa:jonathonf/python-2.7
 # https://launchpad.net/~jonathonf/+archive/ubuntu/python-2.7
 gcloud-install:
-ifeq ($(CI),true)
 	sudo add-apt-repository -y --remove ppa:jonathonf/python-2.7
 	sudo rm -f /etc/apt/sources.list.d/gcloud-source.list
 	sudo apt-get -y install apt-transport-https ca-certificates gnupg
@@ -54,7 +53,6 @@ ifeq ($(CI),true)
 	gcloud config set project cloud-private-dev
 	gcloud config set account semaphore@cloud-private-dev.iam.gserviceaccount.com
 	gcloud auth activate-service-account --key-file ~/.config/gcloud/application_default_credentials.json
-endif
 
 .PHONY: cpd-install
 # Install cpd if it's not installed
