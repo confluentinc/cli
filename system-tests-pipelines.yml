@@ -1,5 +1,5 @@
 jobs:
-- job: system-test
+- job: system_test
   displayName: cli system-tests
   timeoutInMinutes: 5
 
