@@ -32,12 +32,12 @@ jobs:
       mkdir ~/.ssh
       sudo mv $(idrsa.secureFilePath) ~/.ssh/id_rsa
       sudo chmod 400 ~/.ssh/id_rsa
-    displayName: 'Put secrets in their right place'
+    displayName: Put secrets in their right place
       
   - script: |
       wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
       tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-    displayName: "Download go 1.14.2"
+    displayName: Download go 1.14.2
   
   - bash: |
       echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
@@ -51,21 +51,21 @@ jobs:
       echo '##vso[task.prependpath]$(GOPATH)/bin'
       mkdir -p ${GOPATH}\bin
       mkdir -p ${GOROOT}\bin
-    displayName: 'Set up the Go workspace'
+    displayName: Set up the Go workspace
   
   - task: DownloadSecureFile@1
     name: vaultsecrets
-    displayName: 'Securely download secrets for vault login'
+    displayName: Securely download secrets for vault login
     inputs:
       secureFile: 'vault_secrets'
   
   - script: |
       make deps
-    displayName: 'make deps'
+    displayName: make deps
   
   - script: |
       make build
-    displayName: 'make build'
+    displayName: make build
   
   - task: GoTool@0
     inputs:
@@ -86,6 +86,14 @@ jobs:
     displayName: install vault
   
   - bash: |
+      ls $(HOME)/.helm
+    displayName: ls .helm
+
+  - bash: |
+      ls $(HOME)/.helm/repository/cache
+    displayName: ls helm cache dir
+
+  - bash: |
       export PATH="$(Agent.BuildDirectory):$PATH" #export path where vault is loaded to
       export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
       . $(vaultsecrets.secureFilePath) # export secrets for vault login
@@ -105,15 +113,15 @@ jobs:
   
   - bash: |
       CI=true make gcloud-install
-    displayName: 'Install gcloud'
+    displayName: Install gcloud
   
   - bash: |
       make cpd-update
-    displayName: 'Download CPD'
+    displayName: Download CPD
   
   - bash: |
       make checkout-cc-system-tests
-    displayName: 'checkout cc-system-tests'
+    displayName: checkout cc-system-tests
   
   - bash: |
       make cpd-priv-create-if-missing
@@ -121,11 +129,11 @@ jobs:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
-    displayName: 'create cpd cluster'
+    displayName: create cpd cluster
   
   - bash: |
       make cpd-deploy-local
-    displayName: 'cpd deploy'
+    displayName: cpd deploy
   
   - bash: |
       make cpd-priv-testenv || make cpd-debug-and-err
@@ -141,12 +149,12 @@ jobs:
   
   - bash: |
       GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
-    displayName: 'Run system tests'
+    displayName: Run system tests
   
   - bash: |
       make cpd-destroy
     condition: always()
-    displayName: 'Free CPD'
+    displayName: Free CPD
   
   - script: |
       git checkout go.*
