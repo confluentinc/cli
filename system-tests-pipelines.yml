@@ -8,6 +8,7 @@ jobs:
   
   variables:
     IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
+    CI: "true"
   
   steps:
     
