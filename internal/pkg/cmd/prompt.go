@@ -33,11 +33,19 @@ func NewPrompt(stdin *os.File) *RealPrompt {
 // ReadLine reads a line of input, without the newline.
 func (p *RealPrompt) ReadLine() (string, error) {
 	str, err := p.In.ReadString('\n')
-	return strings.TrimSuffix(strings.TrimSuffix(str, "\n"), "\r"), err
+	return strings.TrimRight(str, "\r\n"), err
 }
 
 // ReadLineMasked reads a line of input from a terminal without local echo.
 func (p *RealPrompt) ReadLineMasked() (string, error) {
+	isPipe, err := p.IsPipe()
+	if err != nil {
+		return "", err
+	}
+	if isPipe {
+		return p.ReadLine()
+	}
+
 	pwd, err := gopass.GetPasswdMasked()
 	return string(pwd), err
 }

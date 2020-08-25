@@ -249,7 +249,7 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(email) == 0 || len(password) == 0 {
-		cmd.Println("Enter your Confluent credentials:")
+		pcmd.Println(cmd, "Enter your Confluent credentials:")
 	}
 
 	if len(email) == 0 {
@@ -336,7 +336,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.WrittenCredentialsToNetrcMsg, a.netrcHandler.FileName)
+	pcmd.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.FileName)
 	return nil
 }
 

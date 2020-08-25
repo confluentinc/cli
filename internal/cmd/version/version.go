@@ -1,6 +1,8 @@
 package version
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -12,8 +14,8 @@ func New(cliName string, prerunner pcmd.PreRunner, v *version.Version) *cobra.Co
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: "Print the " + version.GetFullCLIName(cliName) + " version.",
-			Run: func(cmd *cobra.Command, args []string) {
+			Short: fmt.Sprintf("Show version of the %s.", version.GetFullCLIName(cliName)),
+			Run: func(cmd *cobra.Command, _ []string) {
 				pcmd.Println(cmd, v)
 			},
 			Args: cobra.NoArgs,

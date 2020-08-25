@@ -31,12 +31,12 @@ var (
 		"Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
 	}
 	vocabWords = []string{
-		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "codec",
+		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
-		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "kafka", "ksql", "lifecycle",
+		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql", "lifecycle",
 		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
-		"rolebinding", "rolebindings", "single-zone", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
-		"us", "whitelist", "yaml", "zstd",
+		"rolebinding", "rolebindings", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
+		"us", "vpc", "v2", "whitelist", "yaml", "zstd", "hostname", "https", "rbac", "io", "mds", "tmp", "html",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
@@ -108,7 +108,6 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
-	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."), append(resourceScopedCommands, linter.ExcludeCommand("api-key create"))...),
 	linter.Filter(
 		linter.RequireFlagSort(false),
 		linter.OnlyLeafCommands,
@@ -136,6 +135,7 @@ var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireRealWords("Use", '-'),
 		linter.ExcludeCommandContains("unregister"),
+		linter.ExcludeCommandContains("audit-log"),
 	),
 }
 
@@ -147,7 +147,7 @@ var flagRules = []linter.FlagRule{
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
 			"producer-property", "remote-secrets-file", "request-required-acks", "request-timeout-ms",
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
-			"value-deserializer",
+			"value-deserializer", "bootstrap-servers",
 		),
 	),
 	linter.FlagFilter(

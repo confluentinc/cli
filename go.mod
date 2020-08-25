@@ -3,6 +3,8 @@ module github.com/confluentinc/cli
 require (
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
+	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
@@ -14,18 +16,19 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.556.0
 	github.com/confluentinc/cc-structs/kafka/core v0.419.0
 	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
 	github.com/confluentinc/cc-structs/kafka/org v0.419.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.37
+	github.com/confluentinc/ccloud-sdk-go v0.0.46
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
@@ -36,6 +39,7 @@ require (
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.7.0
 	github.com/frankban/quicktest v1.7.2 // indirect
+	github.com/gliderlabs/ssh v0.3.0 // indirect
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -56,8 +60,11 @@ require (
 	github.com/hashicorp/go-version v1.1.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
-	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
+	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/imdario/mergo v0.3.6
+	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
+	github.com/linkedin/goavro/v2 v2.9.8
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.9
 	github.com/mattn/go-runewidth v0.0.3 // indirect
@@ -82,6 +89,7 @@ require (
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v1.1.0
+	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd // indirect

@@ -7,11 +7,11 @@ const (
 	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg                = "Logged in as \"%s\".\n"
-	LoggedInUsingEnvMsg          = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg                 = "You are now logged out."
-	WrittenCredentialsToNetrcMsg = "Written credentials to netrc file \"%s\"\n"
-	KafkaClusterDeletedMsg       = "Deleted Kafka cluster \"%s\".\n"
+	LoggedInAsMsg              = "Logged in as \"%s\".\n"
+	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg               = "You are now logged out."
+	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
+	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -34,16 +34,18 @@ const (
 	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
 
 	// kafka cluster commands
-	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\"."
+	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
 	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
 	// kafka topic commands
-	StartingProducerMsg  = "Starting Kafka Producer. ^C or ^D to exit"
-	StoppingConsumer     = "Stopping Consumer."
-	StartingConsumerMsg  = "Starting Kafka Consumer. ^C or ^D to exit"
-	CreatedTopicMsg      = "Created topic \"%s\"."
-	DeletedTopicMsg      = "Deleted topic \"%s\"\n."
-	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
+	StartingProducerMsg    = "Starting Kafka Producer. ^C or ^D to exit"
+	StoppingConsumer       = "Stopping Consumer."
+	StartingConsumerMsg    = "Starting Kafka Consumer. ^C or ^D to exit"
+	CreatedTopicMsg        = "Created topic \"%s\".\n"
+	DeletedTopicMsg        = "Deleted topic \"%s\".\n"
+	UpdateTopicConfigMsg   = "Updated the following configs for topic \"%s\":\n"
+	InvalidMirrorActionMsg = "Invalid mirror action \"%s\" provided.\n"
+	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
 
 	// kafka acl commands
 	DeletedACLsMsg = "Deleted ACLs."
@@ -51,7 +53,7 @@ const (
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
 	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"
-	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is not backed by \"%s\" which is not the current Kafka cluster \"%s\".\n"
+	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `ccloud kafka cluster use %s`.\n"
 
 	// local commands
 	AvailableServicesMsg       = "Available Services:\n%s\n"

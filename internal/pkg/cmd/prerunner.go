@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -168,6 +169,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				return r.ConfigLoadingError
 			}
 		}
+		LabelRequiredFlags(cmd)
 		return nil
 	}
 }
@@ -176,6 +178,15 @@ func isAuthOrConfigCommands(cmd *cobra.Command) bool {
 	return strings.Contains(cmd.CommandPath(), "login") ||
 		strings.Contains(cmd.CommandPath(), "logout") ||
 		strings.Contains(cmd.CommandPath(), "config")
+}
+
+func LabelRequiredFlags(cmd *cobra.Command) {
+	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
+		if len(annotations) == 1 && annotations[0] == "true" {
+			flag.Usage = "REQUIRED: " + flag.Usage
+		}
+	})
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
@@ -264,6 +275,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
+			client, err := r.createCCloudClient(ctx, cmd, command.Version)
+			if err != nil {
+				return err
+			}
+			ctx.client = client
+			command.Config.Client = client
 			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
 				return err
@@ -299,11 +316,6 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
-	client, err := r.createCCloudClient(ctx, cmd, command.Version)
-	if err != nil {
-		return "", err
-	}
-	ctx.client = client
 	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return "", err
@@ -343,7 +355,7 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		cmd.PrintErrln(errors.LocalCommandDevOnlyMsg)
+		ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }
 

@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 func GenReSTTree(cmd *cobra.Command, dir string, linkHandler func(string) string, depth int) error {
@@ -139,6 +141,8 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 }
 
 func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
+	pcmd.LabelRequiredFlags(cmd)
+
 	flags := cmd.NonInheritedFlags()
 	flags.SetOutput(buf)
 	if flags.HasAvailableFlags() {

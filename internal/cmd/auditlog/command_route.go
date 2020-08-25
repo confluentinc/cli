@@ -37,8 +37,8 @@ func (c *routeCommand) init() {
 		Use:   "list",
 		Short: "List routes matching a resource & sub-resources.",
 		Long:  "List the routes that match either the queried resource or its sub-resources.",
-		RunE:  cmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP("resource", "r", "", "The Confluent resource name (CRN) that is the subject of the query.")
 	check(listCmd.MarkFlagRequired("resource"))
@@ -49,8 +49,8 @@ func (c *routeCommand) init() {
 		Use:   "lookup <crn>",
 		Short: "Return the matching audit-log route rule.",
 		Long:  "Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
-		RunE:  cmd.NewCLIRunE(c.lookup),
 		Args:  cobra.ExactArgs(1),
+		RunE:  cmd.NewCLIRunE(c.lookup),
 	}
 	c.AddCommand(lookupCmd)
 }

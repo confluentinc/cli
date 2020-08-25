@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -155,7 +156,7 @@ func (s *CLITestSuite) TearDownSuite() {
 	covCollector.TearDown()
 }
 
-func (s *CLITestSuite) Test_Confluent_Help() {
+func (s *CLITestSuite) TestConfluentHelp() {
 	var tests []CLITest
 	if runtime.GOOS == "windows" {
 		tests = []CLITest{
@@ -172,21 +173,27 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 			{args: "version", fixture: "confluent-version.golden", regex: true},
 		}
 	}
+
+	loginURL := serveMds(s.T()).URL
+
 	for _, tt := range tests {
-		s.runConfluentTest(tt, serveMds(s.T()).URL)
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
-func (s *CLITestSuite) Test_Ccloud_Help() {
+func (s *CLITestSuite) TestCcloudHelp() {
 	tests := []CLITest{
 		{name: "no args", fixture: "help-flag-fail.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
 		{args: "version", fixture: "version.golden", regex: true},
 	}
+
+	kafkaURL := serveKafkaAPI(s.T()).URL
+	loginURL := serve(s.T(), kafkaURL).URL
+
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
+		s.runCcloudTest(tt, loginURL)
 	}
 }
 
@@ -196,9 +203,7 @@ func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, 
 	}
 }
 
-func (s *CLITestSuite) Test_UserAgent() {
-	t := s.T()
-
+func (s *CLITestSuite) TestUserAgent() {
 	checkUserAgent := func(t *testing.T, expected string) string {
 		kafkaApiRouter := http.NewServeMux()
 		kafkaApiRouter.HandleFunc("/", assertUserAgent(t, expected))
@@ -211,23 +216,22 @@ func (s *CLITestSuite) Test_UserAgent() {
 		return httptest.NewServer(cloudRouter).URL
 	}
 
-	serverURL := checkUserAgent(t, fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
+	serverURL := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
 		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
 	env := []string{"XX_CCLOUD_EMAIL=valid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 
-	t.Run("ccloud login", func(tt *testing.T) {
+	s.T().Run("ccloud login", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
 	})
-	t.Run("ccloud cluster list", func(tt *testing.T) {
+	s.T().Run("ccloud cluster list", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", 0)
 	})
-	t.Run("ccloud topic list", func(tt *testing.T) {
+	s.T().Run("ccloud topic list", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", 0)
 	})
 }
 
-func (s *CLITestSuite) Test_Ccloud_Errors() {
-	t := s.T()
+func (s *CLITestSuite) TestCcloudErrors() {
 	type errorer interface {
 		GetError() *corev1.Error
 	}
@@ -265,7 +269,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		return server.URL
 	}
 
-	t.Run("invalid user or pass", func(tt *testing.T) {
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
@@ -273,7 +277,7 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
 	})
 
-	t.Run("expired token", func(tt *testing.T) {
+	s.T().Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
@@ -284,26 +288,26 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
 	})
 
-	t.Run("malformed token", func(tt *testing.T) {
+	s.T().Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
 
-	t.Run("invalid jwt", func(tt *testing.T) {
+	s.T().Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", 1)
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
@@ -321,6 +325,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
+
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
@@ -392,13 +397,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := NormalizeNewLines(output)
+	actual := utils.NormalizeNewLines(output)
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
+		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
@@ -431,27 +436,10 @@ func resetConfiguration(t *testing.T, cliName string) {
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(fixturePath(t, fixture), []byte(content), 0644)
+	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func loadFixture(t *testing.T, fixture string) string {
-	content, err := ioutil.ReadFile(fixturePath(t, fixture))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(content)
-}
-
-func fixturePath(t *testing.T, fixture string) string {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatalf("problems recovering caller information")
-	}
-
-	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
 func binaryPath(t *testing.T, binaryName string) string {
@@ -751,6 +739,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
 	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }
@@ -786,6 +775,20 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
+
+	mux.HandleFunc("/2.0/kafka/lkc-links/links/", handleKafkaLinks(t))
+
+	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/test-topic/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/not-found/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
@@ -793,6 +796,39 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(mux)
+}
+
+func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		lastElem := parts[len(parts) - 1]
+
+		if lastElem == "" {
+			// No specific link here, we want a list of ALL links
+
+			linkList := []string{
+				"link-1",
+				"link-2",
+			}
+
+			listReply, err := json.Marshal(linkList)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		} else {
+			// Return properties for the selected link.
+
+			linkDescription := &linkv1.LinkProperties{
+				Properties: map[string]string{
+					"replica.fetch.max.bytes": "1048576",
+			}}
+
+			describeReply, err := json.Marshal(linkDescription)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(describeReply))
+			require.NoError(t, err)
+		}
+	}
 }
 
 func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {

@@ -31,15 +31,6 @@ func ExtractConfig(data []byte) map[string]interface{} {
 	return config
 }
 
-func Contains(haystack []string, needle string) bool {
-	for _, x := range haystack {
-		if x == needle {
-			return true
-		}
-	}
-	return false
-}
-
 func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]string, error) {
 	var args []string
 

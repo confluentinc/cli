@@ -3,6 +3,7 @@ package secret
 import (
 	"encoding/base32"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -1455,7 +1456,7 @@ func generateCorruptedData(cipher string) (string, error) {
 }
 
 func corruptEncryptedDEK(localSecureConfigPath string) error {
-	secretsProps, err := LoadPropertiesFile(localSecureConfigPath)
+	secretsProps, err := utils.LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
 		return err
 	}
@@ -1474,7 +1475,7 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 }
 
 func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, removedConfigs string) error {
-	secretsProps, err := LoadPropertiesFile(localSecureConfigPath)
+	secretsProps, err := utils.LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
 		return err
 	}

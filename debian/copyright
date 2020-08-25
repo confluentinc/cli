@@ -1,0 +1,16 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: cli
+Source: https://github.com/confluentinc/cli
+
+Files: *
+Copyright: 2020 Confluent, Inc.
+License: Confluent License Agreement
+
+Files: debian/*
+Copyright: 2020 Confluent, Inc.
+License: Confluent License Agreement
+
+License: Confluent License Agreement
+ This software is subject to the terms of the Confluent License Agreement,
+ except that the prohibition on production use and the limitation to a 30 day
+ Evaluation Term shall not apply to your use of this software.

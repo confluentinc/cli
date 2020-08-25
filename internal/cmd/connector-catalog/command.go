@@ -3,13 +3,13 @@ package connector_catalog
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -43,15 +43,18 @@ func (c *command) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "describe <connector-type>",
 		Short: "Describe a connector plugin type.",
-		Example: FormatDescription(`
-Describe required connector configuration parameters for a specific connector plugin.
-With the --sample-file flag, create a sample connector configuration file.
-::
-
-        {{.CLIName}} connector-catalog describe <PluginName>
-        {{.CLIName}} connector-catalog describe <PluginName> --sample-file <filename>`, cliName),
-		RunE: pcmd.NewCLIRunE(c.describe),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.describe),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe required connector configuration parameters for a specific connector plugin.",
+				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name>", cliName),
+			},
+			examples.Example{
+				Text: "With the ``--sample-file`` flag, create a sample connector configuration file.",
+				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name> --sample-file <filename>", cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -61,14 +64,14 @@ With the --sample-file flag, create a sample connector configuration file.
 	cmd = &cobra.Command{
 		Use:   "list",
 		Short: "List connector plugin types.",
-		Example: FormatDescription(`
-List connectors in the current or specified Kafka cluster context.
-
-::
-
-        {{.CLIName}} connector-catalog list`, cliName),
-		RunE: pcmd.NewCLIRunE(c.list),
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List connectors in the current or specified Kafka cluster context.",
+				Code: fmt.Sprintf("%s connector-catalog list", cliName),
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -134,8 +137,4 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return errors.Errorf(errors.InvalidCloudErrorMsg)
-}
-
-func FormatDescription(description string, cliName string) string {
-	return strings.ReplaceAll(description, "{{.CLIName}}", cliName)
 }

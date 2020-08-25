@@ -70,8 +70,8 @@ func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the API keys.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
@@ -83,10 +83,10 @@ func (c *command) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API keys for a given resource.",
-		RunE:  pcmd.NewCLIRunE(c.create),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID. Use \"cloud\" to create a Cloud API key.")
+	createCmd.Flags().String(resourceFlagName, "", "The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -98,9 +98,9 @@ func (c *command) init() {
 
 	updateCmd := &cobra.Command{
 		Use:   "update <apikey>",
-		Short: "Update API key.",
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Short: "Update an API key.",
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
@@ -108,19 +108,19 @@ func (c *command) init() {
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <apikey>",
-		Short: "Delete API keys.",
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	})
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
-		Short: `Store an API key/secret locally to use in the CLI.`,
+		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
-		RunE:  pcmd.NewCLIRunE(c.store),
 		Args:  cobra.MaximumNArgs(2),
+		RunE:  pcmd.NewCLIRunE(c.store),
 	}
-	storeCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
+	storeCmd.Flags().String(resourceFlagName, "", "The resource ID.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
 	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
@@ -130,11 +130,11 @@ func (c *command) init() {
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
-		Short: "Make API key active for use in other commands.",
-		RunE:  pcmd.NewCLIRunE(c.use),
+		Short: "Make an API key active for use in other commands.",
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 	}
-	useCmd.Flags().String(resourceFlagName, "", "REQUIRED: The resource ID.")
+	useCmd.Flags().String(resourceFlagName, "", "The resource ID.")
 	useCmd.Flags().SortFlags = false
 	if err := useCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
@@ -254,7 +254,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if cmd.Flags().Changed("description") {
-		cmd.PrintErrf(errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 	return nil
 }
@@ -392,7 +392,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	cmd.PrintErrf(errors.StoredAPIKeyMsg, key)
+	pcmd.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
 	return nil
 }
 
@@ -414,7 +414,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.APIKeyUseFailedErrorMsg)
 	}
-	cmd.PrintErrf(errors.UseAPIKeyMsg, apiKey, clusterId)
+	pcmd.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }
 

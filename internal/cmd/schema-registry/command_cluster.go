@@ -2,17 +2,18 @@ package schema_registry
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -60,11 +61,16 @@ func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 
 func (c *clusterCommand) init(cliName string) {
 	createCmd := &cobra.Command{
-		Use:     "enable",
-		Short:   `Enable Schema Registry for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster enable --cloud gcp --geo us`, cliName),
-		RunE:    pcmd.NewCLIRunE(c.enable),
-		Args:    cobra.NoArgs,
+		Use:   "enable",
+		Short: "Enable Schema Registry for this environment.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.enable),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Enable Schema Registry, using Google Cloud Platform in the US:",
+				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", cliName),
+			},
+		),
 	}
 	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
 	_ = createCmd.MarkFlagRequired("cloud")
@@ -73,26 +79,28 @@ func (c *clusterCommand) init(cliName string) {
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
+
 	describeCmd := &cobra.Command{
-		Use:     "describe",
-		Short:   `Describe the Schema Registry cluster for this environment.`,
-		Example: FormatDescription(`{{.CLIName}} schema-registry cluster describe`, cliName),
-		RunE:    pcmd.NewCLIRunE(c.describe),
-		Args:    cobra.NoArgs,
+		Use:   "describe",
+		Short: "Describe the Schema Registry cluster for this environment.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
+
 	updateCmd := &cobra.Command{
 		Use:   "update",
-		Short: `Update global mode or compatibility of Schema Registry.`,
-		Example: FormatDescription(`Update top level compatibility or mode of schema registry.
-
-::
-		{{.CLIName}} schema-registry cluster update --compatibility=BACKWARD
-		{{.CLIName}} schema-registry cluster update --mode=READWRITE`, cliName),
-		RunE: pcmd.NewCLIRunE(c.update),
-		Args: cobra.NoArgs,
+		Short: "Update global mode or compatibility of Schema Registry.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.update),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Update top level compatibility or mode of Schema Registry.",
+				Code: fmt.Sprintf("%s schema-registry cluster update --compatibility=BACKWARD\n%s schema-registry cluster update --mode=READWRITE", cliName, cliName),
+			},
+		),
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
 	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")

@@ -1,19 +1,13 @@
 package connector
 
 import (
-	"io/ioutil"
-	"strings"
-
 	"encoding/json"
+	"io/ioutil"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
-
-func FormatDescription(description string, cliName string) string {
-	return strings.ReplaceAll(description, "{{.CLIName}}", cliName)
-}
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	filename, err := cmd.Flags().GetString("config")

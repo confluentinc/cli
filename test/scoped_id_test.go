@@ -62,7 +62,6 @@ func serveClusterScopedId(meta *cluster.ScopedId, t *testing.T) *httptest.Server
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
-
 	})
 	return httptest.NewServer(router)
 }

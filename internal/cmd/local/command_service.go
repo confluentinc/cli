@@ -67,6 +67,14 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error {
 	service := command.Parent().Name()
 
+	exists, err := c.cc.HasLogFile(service)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
+	}
+
 	log, err := c.cc.GetLogFile(service)
 	if err != nil {
 		return err
@@ -76,20 +84,15 @@ func (c *Command) runServiceLogCommand(command *cobra.Command, _ []string) error
 	if err != nil {
 		return err
 	}
+
+	show := exec.Command("cat", log)
 	if shouldFollow {
-		tail := exec.Command("tail", "-f", log)
-		tail.Stdout = os.Stdout
-		tail.Stderr = os.Stderr
-		return tail.Run()
+		show = exec.Command("tail", "-f", log)
 	}
 
-	data, err := ioutil.ReadFile(log)
-	if err != nil {
-		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
-	}
-
-	command.Print(string(data))
-	return nil
+	show.Stdout = os.Stdout
+	show.Stderr = os.Stderr
+	return show.Run()
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -229,7 +232,7 @@ func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) e
 		return err
 	}
 
-	command.Println(ver)
+	cmd.Println(command, ver)
 	return nil
 }
 
@@ -250,7 +253,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return err
 	}
 
-	command.Printf(errors.StartingServiceMsg, writeServiceName(service))
+	cmd.Printf(command, errors.StartingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -431,7 +434,7 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 		return c.printStatus(command, service)
 	}
 
-	command.Printf(errors.StoppingServiceMsg, writeServiceName(service))
+	cmd.Printf(command, errors.StoppingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -551,7 +554,7 @@ func (c *Command) printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	command.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
+	cmd.Printf(command, errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 
@@ -574,11 +577,7 @@ func (c *Command) isRunning(service string) (bool, error) {
 		return false, err
 	}
 
-	if err := process.Signal(syscall.Signal(0)); err != nil {
-		return false, nil
-	}
-
-	return true, nil
+	return process.Signal(syscall.Signal(0)) == nil, nil
 }
 
 func isPortOpen(service string) (bool, error) {

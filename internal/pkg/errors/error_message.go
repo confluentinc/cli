@@ -21,8 +21,9 @@ const (
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
 
 	// login command
-	UnableToSaveUserAuthErrorMsg = "unable to save user authentication"
-	NoEnvironmentFoundErrorMsg   = "no environment found for authenticated user"
+	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
+	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
+	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -103,10 +104,18 @@ const (
 	NonEmptyNameErrorMsg                 = "`--name` flag value must not be emtpy"
 
 	// kafka topic commands
-	FailedToProduceErrorMsg   = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg = "configuration must be in the form of key=value"
-	TopicExistsErrorMsg       = "topic \"%s\" already exists for Kafka cluster \"%s\""
-	TopicExistsSuggestions    = ListTopicSuggestions
+	FailedToProduceErrorMsg    = "failed to produce offset %d: %s\n"
+	ConfigurationFormErrorMsg  = "configuration must be in the form of key=value"
+	MissingKeyErrorMsg         = "missing key in message"
+	UnknownValueFormatErrorMsg = "unknown value schema format"
+	TopicExistsErrorMsg        = "topic \"%s\" already exists for Kafka cluster \"%s\""
+	TopicExistsSuggestions     = ListTopicSuggestions
+
+	// serialization/deserialization commands
+	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
+	JsonDocumentInvalidErrorMsg  = "the json document is invalid"
+	ProtoSchemaInvalidErrorMsg   = "the protobuf schema is invalid"
+	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
 	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
@@ -327,6 +336,9 @@ const (
 	avoidTimeoutGeneralSuggestion     = "To avoid session timeouts, you can save credentials to netrc file by logging in with `--save` flag."
 	NotLoggedInErrorMsg               = "not logged in"
 	NotLoggedInSuggestions            = "You must be logged in to run this command.\n" +
+		avoidTimeoutWithCLINameSuggestion
+	SRNotAuthenticatedErrorMsg    = "not logged in, and no Schema Registry endpoint specified"
+	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `ccloud login` to run this command.\n" +
 		avoidTimeoutWithCLINameSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +

@@ -10,7 +10,7 @@ Available Commands:
   list        List connectors.
   pause       Pause a connector.
   resume      Resume a connector.
-  update      Update connector configuration.
+  update      Update a connector configuration.
 
 Global Flags:
   -h, --help            Show help for this command.

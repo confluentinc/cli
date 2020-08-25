@@ -51,7 +51,3 @@ func getServiceProviderFromUrl(url string) string {
 	}
 	return strings.Trim(stringSlice[2], ".")
 }
-
-func FormatDescription(description string, cliName string) string {
-	return strings.ReplaceAll(description, "{{.CLIName}}", cliName)
-}

@@ -2,9 +2,8 @@ package release_notes
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
-
-	testUtils "github.com/confluentinc/cli/test"
 )
 
 func readTestFile(filePath string) (string, error) {
@@ -13,5 +12,5 @@ func readTestFile(filePath string) (string, error) {
 		return "", fmt.Errorf("unable to load output file")
 	}
 	fileContent := string(fileBytes)
-	return testUtils.NormalizeNewLines(fileContent), nil
+	return utils.NormalizeNewLines(fileContent), nil
 }

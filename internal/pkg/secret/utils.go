@@ -2,6 +2,7 @@ package secret
 
 import (
 	"bytes"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -72,33 +73,6 @@ func WritePropertiesFile(path string, property *properties.Properties, writeComm
 	return err
 }
 
-func DoesPathExist(path string) bool {
-	if path == "" {
-		return false
-	}
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-func LoadPropertiesFile(path string) (*properties.Properties, error) {
-	if !DoesPathExist(path) {
-		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
-	}
-	loader := new(properties.Loader)
-	loader.Encoding = properties.UTF8
-	loader.PreserveFormatting = true
-	//property.DisableExpansion = true
-	property, err := loader.LoadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	property.DisableExpansion = true
-	return property, nil
-}
-
 func addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
 	property.DisableExpansion = true
 	configProviders := property.GetString(ConfigProviderKey, "")
@@ -120,7 +94,7 @@ func addSecureConfigProviderProperty(property *properties.Properties) (*properti
 }
 
 func LoadConfiguration(path string, configKeys []string, filter bool) (*properties.Properties, error) {
-	if !DoesPathExist(path) {
+	if !utils.DoesPathExist(path) {
 		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
 	fileType := filepath.Ext(path)
@@ -291,7 +265,7 @@ func loadJSONConfig(path string, configKeys []string) (*properties.Properties, e
 }
 
 func writePropertiesConfig(path string, configs *properties.Properties, addSecureConfig bool) error {
-	configProps, err := LoadPropertiesFile(path)
+	configProps, err := utils.LoadPropertiesFile(path)
 	if err != nil {
 		return err
 	}
@@ -322,7 +296,7 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 }
 
 func RemovePropertiesConfig(removeConfigs []string, path string) error {
-	configProps, err := LoadPropertiesFile(path)
+	configProps, err := utils.LoadPropertiesFile(path)
 	pattern := regexp.MustCompile(JAASKeyPattern)
 	if err != nil {
 		return err

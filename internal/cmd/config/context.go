@@ -44,8 +44,8 @@ func (c *contextCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all config contexts.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -53,8 +53,8 @@ func (c *contextCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
 		Short: "Use a config context.",
-		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			c.analytics.SetCommandType(analytics.ContextUse)
 			return c.prerunner.Anonymous(c.CLICommand)(cmd, args)
@@ -63,15 +63,15 @@ func (c *contextCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "current",
 		Short: "Show the current config context.",
-		RunE:  pcmd.NewCLIRunE(c.current),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.current),
 	})
 
 	getCmd := &cobra.Command{
 		Use:   "get <id or no argument for current context>",
 		Short: "Get a config context parameter.",
-		RunE:  pcmd.NewCLIRunE(c.get),
 		Args:  cobra.RangeArgs(0, 1),
+		RunE:  pcmd.NewCLIRunE(c.get),
 	}
 	getCmd.Hidden = true
 	c.AddCommand(getCmd)
@@ -79,8 +79,8 @@ func (c *contextCommand) init() {
 	setCmd := &cobra.Command{
 		Use:   "set <id or no argument for current context>",
 		Short: "Set a config context parameter.",
-		RunE:  pcmd.NewCLIRunE(c.set),
 		Args:  cobra.RangeArgs(0, 1),
+		RunE:  pcmd.NewCLIRunE(c.set),
 	}
 	setCmd.Flags().String("kafka-cluster", "", "Set the current Kafka cluster context.")
 	setCmd.Flags().SortFlags = false
@@ -90,8 +90,8 @@ func (c *contextCommand) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a config context.",
-		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	})
 }
 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -31,7 +33,7 @@ func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "acl",
-			Short: `Manage Kafka ACLs.`,
+			Short: "Manage Kafka ACLs.",
 		}, prerunner)
 	cmd := &aclCommand{AuthenticatedCLICommand: cliCmd}
 	cmd.init()
@@ -43,23 +45,15 @@ func (c *aclCommand) init() {
 
 	createCmd = &cobra.Command{
 		Use:   "create",
-		Short: `Create a Kafka ACL.`,
-		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
-` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
-` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
-
-::
-
-	ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group \
-	java_example_group_1
-
-::
-
-	ccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'
-
-`,
-		RunE: pcmd.NewCLIRunE(c.create),
-		Args: cobra.NoArgs,
+		Short: "Create a Kafka ACL.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "You can only specify one of these flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, if you want to specify both ``consumer-group`` and ``topic``, you must specify this as two separate commands:",
+				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
+			},
+		),
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -69,9 +63,9 @@ func (c *aclCommand) init() {
 
 	deleteCmd = &cobra.Command{
 		Use:   "delete",
-		Short: `Delete a Kafka ACL.`,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Short: "Delete a Kafka ACL.",
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	deleteCmd.Flags().AddFlagSet(aclConfigFlags())
 	deleteCmd.Flags().SortFlags = false
@@ -80,9 +74,9 @@ func (c *aclCommand) init() {
 
 	listCmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource.`,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Short: "List Kafka ACLs for a resource.",
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
 	listCmd.Flags().Int("service-account", 0, "Service account ID.")
@@ -133,7 +127,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return aclutil.PrintACLs(cmd, bindings, os.Stderr)
+	return aclutil.PrintACLs(cmd, bindings, os.Stdout)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {

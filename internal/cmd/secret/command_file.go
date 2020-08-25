@@ -36,8 +36,8 @@ func (c *secureFileCommand) init() {
 		Use:   "encrypt",
 		Short: "Encrypt secrets in a configuration properties file.",
 		Long:  "This command encrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set in the environment variable. Create master key using \"master-key generate\" command and save the generated master key in environment variable.",
-		RunE:  pcmd.NewCLIRunE(c.encrypt),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.encrypt),
 	}
 	encryptCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
 	check(encryptCmd.MarkFlagRequired("config-file"))
@@ -55,8 +55,8 @@ func (c *secureFileCommand) init() {
 		Use:   "decrypt",
 		Short: "Decrypt encrypted secrets from the configuration properties file.",
 		Long:  `This command decrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set using the "master-key generate" command.`,
-		RunE:  pcmd.NewCLIRunE(c.decrypt),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.decrypt),
 	}
 	decryptCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
 	check(decryptCmd.MarkFlagRequired("config-file"))
@@ -75,8 +75,8 @@ func (c *secureFileCommand) init() {
 		Use:   "add",
 		Short: "Add encrypted secrets to a configuration properties file.",
 		Long:  "This command encrypts the password and adds it to the configuration file specified in --config-file. This command returns a failure if a master key has not already been set using the \"master-key generate\" command.",
-		RunE:  pcmd.NewCLIRunE(c.add),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.add),
 	}
 	addCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
 	check(addCmd.MarkFlagRequired("config-file"))
@@ -96,8 +96,8 @@ func (c *secureFileCommand) init() {
 		Use:   "update",
 		Short: "Update the encrypted secrets from the configuration properties file.",
 		Long:  "This command updates the encrypted secrets from the configuration properties file.",
-		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
 	check(updateCmd.MarkFlagRequired("config-file"))
@@ -116,8 +116,8 @@ func (c *secureFileCommand) init() {
 	removeCmd := &cobra.Command{
 		Use:   "remove",
 		Short: "Delete the configuration values from the configuration properties file.",
-		RunE:  pcmd.NewCLIRunE(c.remove),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.remove),
 	}
 	removeCmd.Flags().String("config-file", "", "Path to the configuration properties file.")
 	check(removeCmd.MarkFlagRequired("config-file"))
@@ -134,8 +134,8 @@ func (c *secureFileCommand) init() {
 		Use:   "rotate",
 		Short: "Rotate master or data key.",
 		Long:  `This command rotates either the master or data key. To rotate the master key, specify the current master key passphrase flag ("--passphrase") followed by the new master key passphrase flag ("--passphrase-new"). To rotate the data key, specify the current master key passphrase flag ("--passphrase").`,
-		RunE:  pcmd.NewCLIRunE(c.rotate),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.rotate),
 	}
 
 	rotateKeyCmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")

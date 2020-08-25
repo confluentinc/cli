@@ -14,6 +14,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -96,8 +97,8 @@ func (c *clusterCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka clusters.",
-		RunE:  pcmd.NewCLIRunE(c.list),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -106,17 +107,17 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
-		Example: `
-Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
-
-::
-
-	ccloud kafka cluster create sales092020 --cloud "aws" --type "dedicated" --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
-
-For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.
-`,
-		RunE: pcmd.NewCLIRunE(c.create),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
+				Code: `ccloud kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
+			},
+			examples.Example{
+				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
+			},
+		),
 	}
 
 	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")
@@ -134,8 +135,8 @@ For more information, see https://docs.confluent.io/current/cloud/clusters/byok-
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka cluster.",
-		RunE:  pcmd.NewCLIRunE(c.describe),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -144,8 +145,8 @@ For more information, see https://docs.confluent.io/current/cloud/clusters/byok-
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
-		RunE:  pcmd.NewCLIRunE(c.update),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only.")
@@ -156,15 +157,15 @@ For more information, see https://docs.confluent.io/current/cloud/clusters/byok-
 	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a Kafka cluster.",
-		RunE:  pcmd.NewCLIRunE(c.delete),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
 	c.AddCommand(&cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
-		RunE:  pcmd.NewCLIRunE(c.use),
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 	})
 }
 
@@ -301,20 +302,23 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	buf.WriteString("\n\n")
+	pcmd.Println(cmd, buf.String())
 
-	f := form.New(form.Field{
-		ID:        "authorized",
-		Prompt:    "Please confirm you've authorized the key for these accounts " + strings.Join(accounts, ", "),
-		IsYesOrNo: true,
-	})
+	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
+	if len(accounts) == 1 {
+		prompt = "Please confirm you've authorized the key for this account: " + accounts[0]
+	}
+
+	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
 	for {
 		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
-			cmd.PrintErrln(errors.FailedToReadConfirmationErrorMsg)
+			pcmd.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
-		if f.Responses["authorized"].(bool) {
+		if !f.Responses["authorized"].(bool) {
 			return errors.Errorf(errors.AuthorizeAccountsErrorMsg, strings.Join(accounts, ", "))
 		}
+		return nil
 	}
 }
 
@@ -416,7 +420,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd.PrintErrf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	pcmd.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
 	return nil
 }
 

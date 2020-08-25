@@ -41,6 +41,7 @@ type ConfluentCurrent interface {
 	WriteConfig(service string, config []byte) error
 
 	GetLogFile(service string) (string, error)
+	HasLogFile(service string) (bool, error)
 
 	GetPidFile(service string) (string, error)
 	HasPidFile(service string) (bool, error)
@@ -143,12 +144,19 @@ func (cc *ConfluentCurrentManager) GetLogFile(service string) (string, error) {
 	return cc.getServiceFile(service, fmt.Sprintf("%s.stdout", service))
 }
 
+func (cc *ConfluentCurrentManager) HasLogFile(service string) (bool, error) {
+	file, err := cc.GetLogFile(service)
+	if err != nil {
+		return false, err
+	}
+	return exists(file), nil
+}
+
 func (cc *ConfluentCurrentManager) HasPidFile(service string) (bool, error) {
 	file, err := cc.GetPidFile(service)
 	if err != nil {
 		return false, err
 	}
-
 	return exists(file), nil
 }
 

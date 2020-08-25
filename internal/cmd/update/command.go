@@ -77,22 +77,12 @@ func New(cliName string, logger *log.Logger, version *cliVersion.Version,
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: fmt.Sprintf("Update the %s.", c.cliTitle()),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Short: fmt.Sprintf("Update the %s.", cliVersion.GetFullCLIName(c.cliName)),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false
-}
-
-func (c *command) cliTitle() string {
-	switch c.cliName {
-	case "confluent":
-		return "Confluent CLI"
-	case "ccloud":
-		return "Confluent Cloud CLI"
-	}
-	return ""
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {

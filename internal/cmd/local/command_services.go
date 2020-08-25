@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type Service struct {
@@ -172,7 +173,8 @@ func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) err
 	for i, service := range services {
 		serviceNames[i] = writeServiceName(service)
 	}
-	command.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+
+	cmd.Printf(command, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -180,15 +182,15 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
-			Args:  cobra.NoArgs,
 			Short: "Start all Confluent Platform services.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Start all available services:",
+					Text: "Start all available services:",
 					Code: "confluent local services start",
 				},
 				examples.Example{
-					Desc: "Start Apache Kafka® and ZooKeeper as its dependency:",
+					Text: "Start Apache Kafka® and ZooKeeper as its dependency:",
 					Code: "confluent local services kafka start",
 				},
 			),
@@ -256,15 +258,15 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "stop",
-			Args:  cobra.NoArgs,
 			Short: "Stop all Confluent Platform services.",
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Stop all running services:",
+					Text: "Stop all running services:",
 					Code: "confluent local services stop",
 				},
 				examples.Example{
-					Desc: "Stop Apache Kafka® and its dependent services.",
+					Text: "Stop Apache Kafka® and its dependent services.",
 					Code: "confluent local services kafka stop",
 				},
 			),
@@ -405,7 +407,7 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 	}
 
 	if isCP {
-		if local.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+		if utils.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
 			config, err = appendMonitoringInterceptors(config)
 			if err != nil {
 				return map[string]string{}, err
@@ -469,6 +471,6 @@ func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 		return err
 	}
 
-	command.Printf(errors.UsingConfluentCurrentMsg, dir)
+	cmd.Printf(command, errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

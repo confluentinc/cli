@@ -17,11 +17,11 @@ Available Commands:
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
   update          Update the Confluent CLI.
-  version         Print the Confluent CLI version.
+  version         Show version of the Confluent CLI.
 
 Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-      --version         Show version of confluent.
+      --version         Show version of the Confluent CLI.
 
 Use "confluent [command] --help" for more information about a command.

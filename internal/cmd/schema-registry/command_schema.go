@@ -7,12 +7,12 @@ import (
 	"strconv"
 
 	"github.com/antihax/optional"
-	"github.com/spf13/cobra"
-
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -39,34 +39,32 @@ func (c *schemaCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
-		Example: FormatDescription(`
-Register a new schema
-
-::
-
-		{{.CLIName}} schema-registry schema create --subject payments --schema schemafilepath
-
-Where schemafilepath may include these contents:
-
-::
-
-	{
-	   "type" : "record",
-	   "namespace" : "Example",
-	   "name" : "Employee",
-	   "fields" : [
-		  { "name" : "Name" , "type" : "string" },
-		  { "name" : "Age" , "type" : "int" }
-	   ]
-	}
-
-- For more information on schema types, see
-  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.
-- For more information on schema references, see
-  https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
-`, cliName),
-		RunE: pcmd.NewCLIRunE(c.create),
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Register a new schema:",
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", cliName),
+			},
+			examples.Example{
+				Text: "Where schemafilepath may include these contents:",
+				Code: `{
+	"type" : "record",
+	"namespace" : "Example",
+	"name" : "Employee",
+	"fields" : [
+		{ "name" : "Name" , "type" : "string" },
+		{ "name" : "Age" , "type" : "int" }
+	]
+}`,
+			},
+			examples.Example{
+				Text: "For more information on schema types, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.",
+			},
+			examples.Example{
+				Text: "For more information on schema references, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.",
+			},
+		),
 	}
 	RequireSubjectFlag(cmd)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
@@ -80,14 +78,14 @@ Where schemafilepath may include these contents:
 	cmd = &cobra.Command{
 		Use:   "delete --subject <subject> --version <version> --permanent",
 		Short: "Delete one or more schemas.",
-		Example: FormatDescription(`
-Delete one or more topics. This command should only be used in extreme circumstances.
-
-::
-
-		{{.CLIName}} schema-registry schema delete --subject payments --version latest`, cliName),
-		RunE: pcmd.NewCLIRunE(c.delete),
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.delete),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
+				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", cliName),
+			},
+		),
 	}
 	RequireSubjectFlag(cmd)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
@@ -97,24 +95,21 @@ Delete one or more topics. This command should only be used in extreme circumsta
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "describe <schema-id> [--subject <subject>] [--version <version>]",
-		Short: "Get schema either by schema-id, or by subject/version.",
-		Example: FormatDescription(`
-Describe the schema string by schema ID
-
-::
-
-		{{.CLIName}} schema-registry schema describe 1337
-
-Describe the schema by both subject and version
-
-::
-
-		{{.CLIName}} schema-registry describe --subject payments --version latest
-`, cliName),
-		PreRunE: c.preDescribe,
-		RunE:    pcmd.NewCLIRunE(c.describe),
+		Use:     "describe <schema-id> [--subject <subject>] [--version <version>]",
+		Short:   "Get schema either by schema-id, or by subject/version.",
 		Args:    cobra.MaximumNArgs(1),
+		PreRunE: pcmd.NewCLIPreRunnerE(c.preDescribe),
+		RunE:    pcmd.NewCLIRunE(c.describe),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe the schema string by schema ID:",
+				Code: fmt.Sprintf("%s schema-registry schema describe 1337", cliName),
+			},
+			examples.Example{
+				Text: "Describe the schema by both subject and version:",
+				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", cliName),
+			},
+		),
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")

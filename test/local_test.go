@@ -21,8 +21,11 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
 	}
 
-	for _, test := range tests {
-		s.runConfluentTest(test, serveMds(s.T()).URL)
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		tt.workflow = true
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
@@ -33,12 +36,14 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local version", fixture: "local/version-ccs.golden"},
 		{args: "local services list", fixture: "local/services-list-ccs.golden"},
+		{args: "local version", fixture: "local/version-ccs.golden"},
 	}
 
-	for _, test := range tests {
-		s.runConfluentTest(test, serveMds(s.T()).URL)
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
@@ -49,8 +54,15 @@ func (s *CLITestSuite) TestLocalVersion() {
 	})
 	defer s.destroy()
 
-	test := CLITest{args: "local version", fixture: "local/version-cp.golden"}
-	s.runConfluentTest(test, serveMds(s.T()).URL)
+	tests := []CLITest{
+		{args: "local version", fixture: "local/version-cp.golden"},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
+	}
 }
 
 func (s *CLITestSuite) TestLocalServicesList() {
@@ -59,8 +71,15 @@ func (s *CLITestSuite) TestLocalServicesList() {
 	})
 	defer s.destroy()
 
-	test := CLITest{args: "local services list", fixture: "local/services-list-cp.golden"}
-	s.runConfluentTest(test, serveMds(s.T()).URL)
+	tests := []CLITest{
+		{args: "local services list", fixture: "local/services-list-cp.golden"},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
+	}
 }
 
 func (s *CLITestSuite) TestLocalServicesLifecycle() {
@@ -75,8 +94,10 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 		{args: "local services top", fixture: "local/services-top-no-services-running.golden", wantErrCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runConfluentTest(test, serveMds(s.T()).URL)
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
@@ -94,8 +115,10 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 		{args: "local services zookeeper version", fixture: "local/zookeeper-version.golden"},
 	}
 
-	for _, test := range tests {
-		s.runConfluentTest(test, serveMds(s.T()).URL)
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 

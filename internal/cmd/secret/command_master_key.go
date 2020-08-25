@@ -36,8 +36,8 @@ func (c *masterKeyCommand) init() {
 		Use:   "generate",
 		Short: "Generate a master key for Confluent Platform.",
 		Long:  "This command generates a master key. This key is used for encryption and decryption of configuration values.",
-		RunE:  pcmd.NewCLIRunE(c.generate),
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.generate),
 	}
 	generateCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
 to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)

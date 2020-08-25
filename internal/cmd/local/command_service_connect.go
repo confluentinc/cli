@@ -8,31 +8,27 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var connectors = []string{
-	"elasticsearch-sink",
 	"file-sink",
 	"file-source",
-	"hdfs-sink",
-	"jdbc-sink",
-	"jdbc-source",
-	"s3-sink",
+	"replicator",
 }
 
 func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "connector",
-			Args:  cobra.NoArgs,
 			Short: "Manage connectors.",
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.AddCommand(NewConnectConnectorConfigCommand(prerunner))
@@ -47,20 +43,20 @@ func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
 func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "config [connector-name]",
-			Args:  cobra.ExactArgs(1),
+			Use:   "config <connector-name>",
 			Short: "View or set connector configurations.",
+			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Print the current configuration of a connector named ``s3-sink``:",
+					Text: "Print the current configuration of a connector named ``s3-sink``:",
 					Code: "confluent local services connect connector config s3-sink",
 				},
 				examples.Example{
-					Desc: "Configure a connector named ``wikipedia-file-source`` by passing its configuration properties in JSON format.",
+					Text: "Configure a connector named ``wikipedia-file-source`` by passing its configuration properties in JSON format.",
 					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.json",
 				},
 				examples.Example{
-					Desc: "Configure a connector named ``wikipedia-file-source`` by passing its configuration properties as Java properties.",
+					Text: "Configure a connector named ``wikipedia-file-source`` by passing its configuration properties as Java properties.",
 					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.properties",
 				},
 			),
@@ -92,8 +88,8 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 			return err
 		}
 
-		command.Printf("Current configuration of %s:\n", connector)
-		command.Println(out)
+		cmd.Printf(command, "Current configuration of %s:\n", connector)
+		cmd.Println(command, out)
 		return nil
 	}
 
@@ -125,16 +121,16 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return err
 	}
 
-	command.Println(out)
+	cmd.Println(command, out)
 	return nil
 }
 
 func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "status [connector-name]",
-			Args:  cobra.MaximumNArgs(1),
+			Use:   "status <connector-name>",
 			Short: "Check the status of all connectors, or a single connector.",
+			Args:  cobra.MaximumNArgs(1),
 		}, prerunner)
 
 	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorStatusCommand)
@@ -156,7 +152,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 			return err
 		}
 
-		command.Println(out)
+		cmd.Println(command, out)
 		return nil
 	}
 
@@ -166,7 +162,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 		return err
 	}
 
-	command.Println(out)
+	cmd.Println(command, out)
 	return nil
 }
 
@@ -174,9 +170,9 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
-			Args:  cobra.NoArgs,
 			Short: "List all bundled connectors.",
 			Long:  "List all connectors bundled with Confluent Platform.",
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.Command.Run = c.runConnectConnectorListCommand
@@ -184,20 +180,20 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *Command) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
-	command.Println("Bundled Connectors:")
-	command.Println(local.BuildTabbedList(connectors))
+	cmd.Println(command, "Bundled Connectors:")
+	cmd.Println(command, local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "load [connector-name]",
-			Args:  cobra.ExactArgs(1),
+			Use:   "load <connector-name>",
 			Short: "Load a connector.",
 			Long:  "Load a bundled connector from Confluent Platform or your own custom connector.",
+			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Load a predefined connector called ``s3-sink``:",
+					Text: "Load a predefined connector called ``s3-sink``:",
 					Code: "confluent local load s3-sink",
 				},
 			),
@@ -221,7 +217,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 
 	var configFile string
 
-	if local.Contains(connectors, connector) {
+	if utils.Contains(connectors, connector) {
 		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
@@ -260,19 +256,19 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		return err
 	}
 
-	command.Println(out)
+	cmd.Println(command, out)
 	return nil
 }
 
 func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
-			Use:   "unload [connector-name]",
-			Args:  cobra.ExactArgs(1),
+			Use:   "unload <connector-name>",
 			Short: "Unload a connector.",
+			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Desc: "Unload a predefined connector called ``s3-sink``:",
+					Text: "Unload a predefined connector called ``s3-sink``:",
 					Code: "confluent local unload s3-sink",
 				},
 			),
@@ -298,9 +294,9 @@ func (c *Command) runConnectConnectorUnloadCommand(command *cobra.Command, args 
 	}
 
 	if len(out) > 0 {
-		command.Println(out)
+		cmd.Println(command, out)
 	} else {
-		command.Println("Success.")
+		cmd.Println(command, "Success.")
 	}
 	return nil
 }
@@ -309,8 +305,8 @@ func NewConnectPluginCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "plugin",
-			Args:  cobra.NoArgs,
 			Short: "Manage Connect plugins.",
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.AddCommand(NewConnectPluginListCommand(prerunner))
@@ -322,9 +318,9 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "list",
-			Args:  cobra.NoArgs,
 			Short: "List available Connect plugins.",
 			Long:  "List available Connect plugins bundled with Confluent Platform.",
+			Args:  cobra.NoArgs,
 		}, prerunner)
 
 	c.Command.RunE = cmd.NewCLIRunE(c.runConnectPluginListCommand)
@@ -346,7 +342,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	command.Printf(errors.AvailableConnectPluginsMsg, out)
+	cmd.Printf(command, errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 

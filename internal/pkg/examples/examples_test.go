@@ -9,12 +9,12 @@ import (
 func TestBuildExampleString(t *testing.T) {
 	got := BuildExampleString(
 		Example{
-			Desc: "Desc",
+			Text: "Text",
 			Code: "Code",
 		},
 	)
 
-	want := "Desc\n\n::\n\n  Code\n\n"
+	want := "Text\n\n::\n\n  Code\n\n"
 	require.Equal(t, got, want)
 }
 

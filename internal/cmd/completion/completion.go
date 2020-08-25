@@ -79,8 +79,8 @@ func (c *completionCommand) init(cliName string) {
 		Use:   "completion <shell>",
 		Short: "Print shell completion code.",
 		Long:  getLongDescription(cliName),
-		RunE:  cmd.NewCLIRunE(c.completion),
 		Args:  cobra.ExactArgs(1),
+		RunE:  cmd.NewCLIRunE(c.completion),
 	}
 }
 
