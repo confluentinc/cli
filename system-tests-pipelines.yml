@@ -130,7 +130,7 @@ jobs:
   
   - bash: |
       make show-cpd
-    displayName: show cpd
+    displayName: show cc-cpd.mk variables
 
   - bash: |
       make cpd-deploy-local
