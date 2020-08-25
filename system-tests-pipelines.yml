@@ -1,8 +1,9 @@
+timeoutInMinutes: 5
+
 pool:
   vmImage: 'ubuntu-18.04'
 
-
-variables:  # job-level
+variables:
   IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
 
 steps:
