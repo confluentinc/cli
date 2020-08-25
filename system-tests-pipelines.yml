@@ -9,6 +9,7 @@ jobs:
   variables:
     IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
     CI: "true"
+    BIN_PATH: "$(Agent.BuildDirectory)"
   
   steps:
     
@@ -84,12 +85,12 @@ jobs:
     displayName: clone mk-include and include in Makefile
   
   - bash: |
-      BIN_PATH="$(Agent.BuildDirectory)" make install-vault
+      make install-valut
     displayName: install vault
   
 
   - bash: |
-      export PATH="$(Agent.BuildDirectory):$PATH" #export path where vault is loaded to
+      export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
       export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
       . $(vaultsecrets.secureFilePath) # export secrets for vault login
       . mk-include/bin/vault-setup
@@ -126,6 +127,10 @@ jobs:
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
     displayName: create cpd cluster
   
+  - bash: |
+      make show-cpd
+    displayName: show cpd
+
   - bash: |
       make cpd-deploy-local
     displayName: cpd deploy
