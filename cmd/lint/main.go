@@ -152,7 +152,7 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"compression-codec", "connect-cluster-id", "consumer-property", "enable-systest-events",
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
-			"producer-property", "remote-secrets-file", "request-required-acks", "request-timeout-ms",
+			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
 			"value-deserializer",
 		),
