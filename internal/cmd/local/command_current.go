@@ -36,6 +36,6 @@ func (c *Command) runCurrentCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	command.Println(dir)
+	cmd.Println(command, dir)
 	return nil
 }

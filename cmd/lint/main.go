@@ -35,8 +35,8 @@ var (
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
 		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql", "lifecycle",
 		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
-		"rolebinding", "rolebindings", "single-zone", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
-		"us", "vpc", "v2", "whitelist", "yaml", "zstd",
+		"rolebinding", "rolebindings", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
+		"us", "vpc", "v2", "whitelist", "yaml", "zstd", "hostname", "https", "rbac", "io", "mds", "tmp", "html",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
@@ -143,6 +143,7 @@ var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireRealWords("Use", '-'),
 		linter.ExcludeCommandContains("unregister"),
+		linter.ExcludeCommandContains("audit-log"),
 	),
 }
 
@@ -154,7 +155,7 @@ var flagRules = []linter.FlagRule{
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
 			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
-			"value-deserializer",
+			"value-deserializer", "bootstrap-servers",
 		),
 	),
 	linter.FlagFilter(

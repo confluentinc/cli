@@ -1,0 +1,12 @@
+Source: confluent-cli
+Section: misc
+Priority: optional
+Maintainer: Confluent Packaging <packages@confluent.io>
+Build-Depends: debhelper (>= 9), dh-systemd, make
+Standards-Version: 3.9.3
+Homepage: http://confluent.io
+
+Package: confluent-cli
+Architecture: all
+Depends: ${misc:Depends}, confluent-rest-utils, adduser
+Description: Command Line Interface for managing Confluent Platform

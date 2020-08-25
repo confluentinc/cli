@@ -1,9 +1,11 @@
-package audit_log_migration
+package auditlog
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/imdario/mergo"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -25,7 +27,10 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 		return mds.AuditLogConfigSpec{}, warnings, err
 	}
 
-	addOtherBlock(clusterAuditLogConfigSpecs, defaultTopicName)
+	newWarnings = migrateOtherCategoryToManagement(clusterAuditLogConfigSpecs)
+	warnings = append(warnings, newWarnings...)
+
+	addDefaultEnabledCategories(clusterAuditLogConfigSpecs, defaultTopicName)
 
 	newWarnings = warnMultipleCRNAuthorities(clusterAuditLogConfigSpecs)
 	warnings = append(warnings, newWarnings...)
@@ -51,33 +56,64 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	newWarnings = combineRoutes(clusterAuditLogConfigSpecs, &newSpec)
 	warnings = append(warnings, newWarnings...)
 
-	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
-
 	replaceCRNAuthorityRoutes(&newSpec, crnAuthority)
 
-	sort.Strings(warnings)
+	generateAlternateDefaultTopicRoutes(clusterAuditLogConfigSpecs, &newSpec, crnAuthority)
 
+	sort.Strings(warnings)
 	return newSpec, warnings, nil
 }
 
-// add the OTHER block to the route when the default topic is different than the default ("confluent-audit-log-events")
-func addOtherBlock(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName string) {
+func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) []string {
+	warnings := []string{}
+	for clusterId, spec := range specs {
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
+		for routeName, route := range *routes {
+			if route.Other != nil {
+				if route.Management == nil {
+					route.Management = route.Other
+					route.Other = nil
+				} else if reflect.DeepEqual(route.Management, route.Other) {
+					route.Other = nil
+				} else {
+					warning := fmt.Sprintf(
+						`"Other" Category Warning: Dropped the legacy "other" category rule from the route for`+
+							` %q from cluster %q, as it already contains a "management" category rule.`,
+						routeName, clusterId)
+					warnings = append(warnings, warning)
+					route.Other = nil
+				}
+				(*routes)[routeName] = route
+			}
+		}
+	}
+	return warnings
+}
+
+// Add the AUTHORIZE and MANAGEMENT categories to the route when the default topic is different than the default
+// ("confluent-audit-log-events")
+func addDefaultEnabledCategories(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName string) {
 	for _, spec := range specs {
+		routes := spec.Routes
+		if routes == nil {
+			continue
+		}
 		if spec.DefaultTopics.Denied != defaultTopicName || spec.DefaultTopics.Allowed != defaultTopicName {
-			other := mds.AuditLogConfigRouteCategoryTopics{
+			enabledCategoryTopics := mds.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
-			routes := spec.Routes
-			if routes == nil {
-				continue
-			}
-
 			for routeName, route := range *routes {
-				if route.Other == nil {
-					route.Other = &other
-					(*routes)[routeName] = route
+				if route.Management == nil {
+					route.Management = &enabledCategoryTopics
 				}
+				if route.Authorize == nil {
+					route.Authorize = &enabledCategoryTopics
+				}
+				(*routes)[routeName] = route
 			}
 		}
 	}
@@ -97,6 +133,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
 		foundAuthorities = utils.RemoveDuplicates(foundAuthorities)
+
 		if len(foundAuthorities) > 1 {
 			sort.Strings(foundAuthorities)
 			newWarning := fmt.Sprintf("Multiple CRN Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
@@ -220,7 +257,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	for _, spec := range specs {
 		excludedPrincipals := spec.ExcludedPrincipals
 		if excludedPrincipals == nil {
-			continue;
+			continue
 		}
 
 		for _, principal := range *excludedPrincipals {
@@ -239,7 +276,13 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	newRoutes := make(map[string]mds.AuditLogConfigRouteCategories)
 	warnings := []string{}
 
-	for clusterId, spec := range specs {
+	clusterIds := make([]string, 0)
+	for clusterId, _ := range specs {
+		clusterIds = append(clusterIds, clusterId)
+	}
+	sort.Strings(clusterIds)
+	for _, clusterId := range clusterIds {
+		spec := specs[clusterId]
 		routes := spec.Routes
 		if routes == nil {
 			continue
@@ -284,37 +327,117 @@ func replaceCRNAuthority(crnPath, newCRNAuthority string) string {
 func replaceClusterId(crnPath, clusterId string) string {
 	const kafkaIdentifier = "kafka=*"
 	if !strings.Contains(crnPath, kafkaIdentifier) {
-		fmt.Printf("%q not present in crnPath %q, cannot insert clusterId.\n", kafkaIdentifier, crnPath)
+		// crnPath already has a specific kafka cluster, no need to insert clusterId
 		return crnPath
 	}
 	return strings.Replace(crnPath, kafkaIdentifier, "kafka="+clusterId, 1)
 }
 
-func generateCRNPath(clusterId, crnAuthority, pathExtension string) string {
+func generateCRNPath(clusterId, crnAuthority, pathExtension, subcluster string) string {
 	path := "crn://" + crnAuthority + "/kafka=" + clusterId
+	if subcluster != "" {
+		path += "/" + subcluster + "=*"
+	}
 	if pathExtension != "" {
 		path += "/" + pathExtension + "=*"
 	}
 	return path
 }
 
-func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec, crnAuthority string) {
-	for clusterId, spec := range specs {
+// For each of the input clusters, we need to make sure that if they specify a default topic different than the global one,
+// that messages go to their specific default topics instead of the global default topic
+func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec, newCRNAuthority string) {
+	type Resource struct {
+		extension  string
+		categories []string
+	}
+
+	type Subcluster struct {
+		name      string
+		resources []Resource
+	}
+
+	// We'll have to add all these routes for each input file
+	subclusterRoutes := []Subcluster{
+		{
+			name: "",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize", "Management"}},
+				{extension: "topic", categories: []string{"Authorize", "Management"}},
+				{extension: "transaction-id", categories: []string{"Authorize"}},
+				{extension: "group", categories: []string{"Authorize", "Management"}},
+				{extension: "delegation-token", categories: []string{"Authorize"}},
+				{extension: "control-center-broker-metrics", categories: []string{"Authorize"}},
+				{extension: "control-center-alerts", categories: []string{"Authorize"}},
+				{extension: "cluster-registry", categories: []string{"Authorize"}},
+				{extension: "security-metadata", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
+			},
+		},
+		{
+			name: "connect",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize"}},
+				{extension: "connector", categories: []string{"Authorize"}},
+				{extension: "secret", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
+			},
+		},
+		{
+			name: "schema-registry",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize"}},
+				{extension: "subject", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
+			},
+		},
+		{
+			name: "ksql",
+			resources: []Resource{
+				{extension: "", categories: []string{"Authorize"}},
+				{extension: "ksql-cluster", categories: []string{"Authorize"}},
+				{extension: "all", categories: []string{"Authorize"}},
+			},
+		},
+	}
+
+	clusterIds := make([]string, 0)
+	for clusterId, _ := range specs {
+		clusterIds = append(clusterIds, clusterId)
+	}
+	sort.Strings(clusterIds)
+	for _, clusterId := range clusterIds {
+		spec := specs[clusterId]
 		if spec.DefaultTopics.Denied != newSpec.DefaultTopics.Denied || spec.DefaultTopics.Allowed != newSpec.DefaultTopics.Allowed {
-			other := mds.AuditLogConfigRouteCategoryTopics{
+			oldDefaultTopics := mds.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
 
-			// add the four new routes to the newSpec, if not already there
-			newRouteConfig := mds.AuditLogConfigRouteCategories{
-				Other: &other,
-			}
-			pathExtensions := []string{"", "topic", "connect", "ksql"}
-			for _, extension := range pathExtensions {
-				routeName := generateCRNPath(clusterId, crnAuthority, extension)
-				newSpecRoutes := *newSpec.Routes
-				if _, ok := newSpecRoutes[routeName]; !ok {
+			// add the new routes defined above
+			for _, subcluster := range subclusterRoutes {
+				for _, resource := range subcluster.resources {
+					routeName := generateCRNPath(clusterId, newCRNAuthority, resource.extension, subcluster.name)
+
+					// Create a map of field name to default topics
+					categoriesToRoutes := map[string]interface{}{}
+					for _, category := range resource.categories {
+						categoriesToRoutes[category] = &oldDefaultTopics
+					}
+
+					// Initialize our newRouteConfig with values
+					newRouteConfig := mds.AuditLogConfigRouteCategories{}
+					if err := mergo.Map(&newRouteConfig, categoriesToRoutes); err != nil {
+						continue
+					}
+
+					newSpecRoutes := *newSpec.Routes
+					if _, ok := newSpecRoutes[routeName]; ok {
+						// Route already exists in newSpec, so merge it with our new route config
+						if err := mergo.Merge(&newRouteConfig, newSpecRoutes[routeName], mergo.WithOverride); err != nil {
+							continue
+						}
+					}
 					newSpecRoutes[routeName] = newRouteConfig
 				}
 			}

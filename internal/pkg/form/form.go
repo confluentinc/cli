@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -68,17 +69,17 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 	return nil
 }
 
-func show(command *cobra.Command, field Field, savedValue interface{}) {
-	command.Print(field.Prompt)
+func show(cmd *cobra.Command, field Field, savedValue interface{}) {
+	pcmd.Print(cmd, field.Prompt)
 	if field.IsYesOrNo {
-		command.Print(" (y/n)")
+		pcmd.Print(cmd, " (y/n)")
 	}
-	command.Print(": ")
+	pcmd.Print(cmd, ": ")
 
 	if savedValue != nil {
-		command.Printf("(%v) ", savedValue)
+		pcmd.Printf(cmd, "(%v) ", savedValue)
 	} else if field.DefaultValue != nil {
-		command.Printf("(%v) ", field.DefaultValue)
+		pcmd.Printf(cmd, "(%v) ", field.DefaultValue)
 	}
 }
 

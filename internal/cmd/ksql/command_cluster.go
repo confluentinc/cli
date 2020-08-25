@@ -62,6 +62,8 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd.Flags().String("image", "", "Image to run (internal).")
+	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -124,6 +126,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Name:           args[0],
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
+	}
+	image, err := cmd.Flags().GetString("image")
+	if err == nil && len(image) > 0 {
+		cfg.Image = image
 	}
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
 	if err != nil {

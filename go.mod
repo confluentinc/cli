@@ -16,19 +16,20 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.556.0
 	github.com/confluentinc/cc-structs/kafka/core v0.419.0
 	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
 	github.com/confluentinc/cc-structs/kafka/org v0.419.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.441.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.40
+	github.com/confluentinc/ccloud-sdk-go v0.0.46
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.1
-	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.9
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
@@ -60,7 +61,8 @@ require (
 	github.com/hashicorp/go-version v1.1.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
-	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
+	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/imdario/mergo v0.3.6
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/linkedin/goavro/v2 v2.9.8

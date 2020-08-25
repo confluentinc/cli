@@ -18,13 +18,9 @@ import (
 )
 
 var connectors = []string{
-	"elasticsearch-sink",
 	"file-sink",
 	"file-source",
-	"hdfs-sink",
-	"jdbc-sink",
-	"jdbc-source",
-	"s3-sink",
+	"replicator",
 }
 
 func NewConnectConnectorCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -92,8 +88,8 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 			return err
 		}
 
-		command.Printf("Current configuration of %s:\n", connector)
-		command.Println(out)
+		cmd.Printf(command, "Current configuration of %s:\n", connector)
+		cmd.Println(command, out)
 		return nil
 	}
 
@@ -125,7 +121,7 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return err
 	}
 
-	command.Println(out)
+	cmd.Println(command, out)
 	return nil
 }
 
@@ -156,7 +152,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 			return err
 		}
 
-		command.Println(out)
+		cmd.Println(command, out)
 		return nil
 	}
 
@@ -166,7 +162,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 		return err
 	}
 
-	command.Println(out)
+	cmd.Println(command, out)
 	return nil
 }
 
@@ -184,8 +180,8 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *Command) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
-	command.Println("Bundled Connectors:")
-	command.Println(local.BuildTabbedList(connectors))
+	cmd.Println(command, "Bundled Connectors:")
+	cmd.Println(command, local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -260,7 +256,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		return err
 	}
 
-	command.Println(out)
+	cmd.Println(command, out)
 	return nil
 }
 
@@ -298,9 +294,9 @@ func (c *Command) runConnectConnectorUnloadCommand(command *cobra.Command, args 
 	}
 
 	if len(out) > 0 {
-		command.Println(out)
+		cmd.Println(command, out)
 	} else {
-		command.Println("Success.")
+		cmd.Println(command, "Success.")
 	}
 	return nil
 }
@@ -346,7 +342,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	command.Printf(errors.AvailableConnectPluginsMsg, out)
+	cmd.Printf(command, errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 

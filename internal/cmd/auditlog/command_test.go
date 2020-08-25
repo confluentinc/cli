@@ -255,7 +255,7 @@ func (suite *AuditConfigTestSuite) TestAuditConfigUpdateForce() {
 func (suite *AuditConfigTestSuite) TestAuditConfigRouteList() {
 	devNull := ""
 	bothToDevNull := mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNull, Denied: &devNull}
-	otherToDevNull := mds.AuditLogConfigRouteCategories{Other: &bothToDevNull}
+	authorizeToDevNull := mds.AuditLogConfigRouteCategories{Authorize: &bothToDevNull}
 
 	expect := make(chan MockCall, 10)
 	expect <- MockCall{
@@ -268,13 +268,13 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteList() {
 				Denied:  "confluent-audit-log-events",
 			},
 			Routes: &map[string]mds.AuditLogConfigRouteCategories{
-				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=from-db4": otherToDevNull,
-				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=*":        otherToDevNull,
-				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=*/connector=*":              otherToDevNull,
-				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-*":                       otherToDevNull,
-				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=*":                          otherToDevNull,
-				"crn://mds1.example.com/kafka=*/connect=qa-*":                                            otherToDevNull,
-				"crn://mds1.example.com/kafka=*/connect=qa-*/connector=*":                                otherToDevNull,
+				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=from-db4": authorizeToDevNull,
+				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=*":        authorizeToDevNull,
+				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=*/connector=*":              authorizeToDevNull,
+				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-*":                       authorizeToDevNull,
+				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=*":                          authorizeToDevNull,
+				"crn://mds1.example.com/kafka=*/connect=qa-*":                                            authorizeToDevNull,
+				"crn://mds1.example.com/kafka=*/connect=qa-*/connector=*":                                authorizeToDevNull,
 			},
 		},
 	}
@@ -292,20 +292,20 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	expect <- MockCall{
 		Func: ResolveResourceRoute,
 		Input: &mds.ResolveResourceRouteOpts{
-			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test")},
+			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test")},
 		Result: mds.AuditLogConfigResolveResourceRouteResponse{
 			Route: "default",
 			Categories: mds.AuditLogConfigRouteCategories{
-				Other:       &mds.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
-				Authorize:   &mds.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
-				Produce:     &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
-				Consume:     &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
-				Interbroker: &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
+				Management: &mds.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
+				Authorize:  &mds.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
+				Produce:    &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
+				Consume:    &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
+				Describe:   &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
 			},
 		},
 	}
 	cmd := suite.newMockCmd(expect)
-	cmd.SetArgs([]string{"route", "lookup", "crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test"})
+	cmd.SetArgs([]string{"route", "lookup", "crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test"})
 	err := cmd.Execute()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 0, len(expect))

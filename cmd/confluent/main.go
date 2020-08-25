@@ -10,6 +10,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -37,7 +38,7 @@ func main() {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			cli.Command.PrintErrln(err)
+			pcmd.ErrPrintln(cli.Command, err)
 		}
 		if isTest {
 			bincover.ExitCode = 1

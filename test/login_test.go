@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -146,7 +147,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		wantBytes, err := ioutil.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(NormalizeNewLines(want), NormalizeNewLines(string(got)))
+		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
 	}
 	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }
@@ -204,7 +205,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		wantBytes, err := ioutil.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(NormalizeNewLines(want), NormalizeNewLines(string(got)))
+		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
 	}
 	_ = os.Remove(auth.NetrcIntegrationTestFile)
 }

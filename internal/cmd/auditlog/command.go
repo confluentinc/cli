@@ -13,27 +13,28 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.CLICommand
 	prerunner pcmd.PreRunner
 }
 
 // New returns the default command object for interacting with audit logs.
 func New(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
+	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "audit-log",
 			Short: "Manage audit log configuration.",
 			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
 		}, prerunner)
 	cmd := &command{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
+		CLICommand: cliCmd,
+		prerunner:  prerunner,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *command) init() {
+	c.AddCommand(NewMigrateCommand(c.prerunner))
 	c.AddCommand(NewConfigCommand(c.prerunner))
 	c.AddCommand(NewRouteCommand(c.prerunner))
 }

@@ -25,6 +25,7 @@ var (
 	}
 
 	formatMetric = map[string]string{
+		"ConnectCapacity":   "Connect capacity",
 		"ConnectNumRecords": "Connect record",
 		"ConnectNumTasks":   "Connect task",
 		"ConnectThroughput": "Connect throughput",
@@ -89,16 +90,16 @@ func (c *command) newListCommand() *cobra.Command {
 	}
 
 	// Required flags
-	command.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", listFromMap(formatCloud)))
+	command.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", mapToList(formatCloud)))
 	_ = command.MarkFlagRequired("cloud")
 	command.Flags().String("region", "", "Cloud region ID for cluster (use `ccloud kafka region list` to see all).")
 	_ = command.MarkFlagRequired("region")
 
 	// Extra filtering flags
-	command.Flags().String("availability", "", fmt.Sprintf("Filter by availability (%s).", listFromMap(formatAvailability)))
-	command.Flags().String("cluster-type", "", fmt.Sprintf("Filter by cluster type (%s).", listFromMap(formatClusterType)))
-	command.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", listFromMap(formatMetric)))
-	command.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", listFromMap(formatNetworkType)))
+	command.Flags().String("availability", "", fmt.Sprintf("Filter by availability (%s).", mapToList(formatAvailability)))
+	command.Flags().String("cluster-type", "", fmt.Sprintf("Filter by cluster type (%s).", mapToList(formatClusterType)))
+	command.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", mapToList(formatMetric)))
+	command.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", mapToList(formatNetworkType)))
 
 	command.Flags().Bool("legacy", false, "Show legacy cluster types.")
 	command.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -248,14 +249,24 @@ func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (ma
 }
 
 func formatPrice(price float64, unit string) string {
-	if price < 0.005 {
-		// Needs to be represented by a fractional dollar amount.
-		return fmt.Sprintf("$%.1g USD/%s", price, unit)
+	priceStr := fmt.Sprintf("%v", price)
+
+	// Require >= 2 digits after the decimal
+	if strings.Contains(priceStr, ".") {
+		// Extend the remainder if needed
+		r := strings.Split(priceStr, ".")
+		for len(r[1]) < 2 {
+			r[1] += "0"
+		}
+		priceStr = strings.Join(r, ".")
+	} else {
+		priceStr += ".00"
 	}
-	return fmt.Sprintf("$%.2f USD/%s", price, unit)
+
+	return fmt.Sprintf("$%s USD/%s", priceStr, unit)
 }
 
-func listFromMap(m map[string]string) string {
+func mapToList(m map[string]string) string {
 	var keys []string
 	for k := range m {
 		keys = append(keys, k)

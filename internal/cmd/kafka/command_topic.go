@@ -95,6 +95,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
@@ -117,6 +118,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
@@ -154,6 +156,8 @@ func (a *authenticatedTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
+	cmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	cmd.Flags().SortFlags = false
@@ -191,6 +195,24 @@ func (a *authenticatedTopicCommand) init() {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	cmd.Flags().SortFlags = false
+	a.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "mirror <action> <topic>",
+		Short: "Perform a mirroring action on a Kafka topic.",
+		Args:  cobra.ExactArgs(2),
+		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Hidden: true,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Stop the mirroring of topic ``my_topic``.",
+				Code: "ccloud kafka topic mirror stop my_topic",
+			},
+		),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 
@@ -267,6 +289,21 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if topic.Spec.Configs, err = kafka.ToMap(configs); err != nil {
 		return err
 	}
+
+	linkName, err := cmd.Flags().GetString("link")
+	if err != nil {
+		return err
+	}
+
+	mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
+	if err != nil {
+		return err
+	}
+
+	if len(linkName) > 0 || len(mirrorTopic) > 0 {
+		topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
+	}
+
 	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		ifNotExistsFlag, flagErr := cmd.Flags().GetBool("if-not-exists")
 		if flagErr != nil {
@@ -350,6 +387,50 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	return nil
 }
 
+func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) error {
+	const stopAction = "stop"
+
+	action := args[0]
+	topic := args[1]
+
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	if err != nil {
+		return err
+	}
+
+	validate, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+
+	op := &schedv1.AlterMirrorOp{}
+	switch action {
+	case stopAction:
+		op.Type = &schedv1.AlterMirrorOp_StopTopicMirror_{
+			StopTopicMirror: &schedv1.AlterMirrorOp_StopTopicMirror{
+				Topic: &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic}, Validate: validate},
+			},
+		}
+	default:
+		return fmt.Errorf(errors.InvalidMirrorActionMsg, action)
+	}
+
+	result, err := a.Client.Kafka.AlterMirror(context.Background(), cluster, op)
+	if err != nil {
+		return err
+	}
+
+	switch action {
+	case stopAction:
+		result.GetStopTopicMirror()
+		pcmd.Printf(cmd, errors.StoppedTopicMirrorMsg, topic)
+	default:
+		panic("unreachable")
+	}
+
+	return nil
+}
+
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
@@ -375,7 +456,11 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 
 	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
 	if err != nil {
-		return nil, err
+		if err.Error() == "ccloud" {
+			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+		} else {
+			return nil, err
+		}
 	}
 
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: valueFormat, References: refs})
@@ -448,9 +533,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	// Registering schema when specified, and fill metaInfo array.
 	if valueFormat != "string" && len(schemaPath) > 0 {
-		if h.Config.Client == nil {
-			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
-		}
 		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
 		if err != nil {
 			return err
@@ -579,6 +661,23 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		if err != nil {
+			if err.Error() == "ccloud" {
+				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+			} else {
+				return err
+			}
+		}
+	} else {
+		srClient, ctx = nil, nil
+	}
+
 	InitSarama(h.logger)
 	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
@@ -600,22 +699,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			pcmd.ErrPrintln(cmd, "ERROR", err)
 		}
 	}()
-
-	var srClient *srsdk.APIClient
-	var ctx context.Context
-	if valueFormat != "string" {
-		if h.Config.Client == nil {
-			return errors.New(errors.NotUsernameAuthenticatedErrorMsg)
-		}
-
-		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
-		if err != nil {
-			return err
-		}
-	} else {
-		srClient, ctx = nil, nil
-	}
 
 	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
 

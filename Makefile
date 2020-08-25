@@ -147,13 +147,7 @@ endef
 
 .PHONY: unrelease
 unrelease: unrelease-warn
-	$(caasenv-authenticate); \
-	aws s3 rm s3://confluent.cloud/ccloud-cli/binaries/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm s3://confluent.cloud/ccloud-cli/archives/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm s3://confluent.cloud/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm s3://confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm s3://confluent.cloud/confluent-cli/archives/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive;
+	make unrelease-s3
 	git checkout master
 	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
@@ -168,8 +162,42 @@ unrelease-warn:
 	@git describe --tags `git rev-list --tags --max-count=1`
 	@echo "Latest commits:"
 	@git --no-pager log --decorate=short --pretty=oneline -n10
-	@echo "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version.  Continue? [Y/n]"
-	@read line; if [ $$line = "n" ]; then echo aborting; exit 1 ; fi
+	@echo -n "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version. Continue? (y/n): "
+	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
+
+.PHONY: unrelease-s3
+unrelease-s3:
+	@echo "If you are going to reattempt the release again without the need to edit the release notes, there is no need to delete the release notes from S3."
+	@echo -n "Do you want to delete the release notes from S3? (y/n): "
+	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then make delete-binaries-archives-and-release-notes; else make delete-binaries-and-archives; fi
+
+.PHONY: delete-binaries-and-archives
+delete-binaries-and-archives:
+	$(caasenv-authenticate); \
+	$(delete-binaries); \
+	$(delete-archives)
+
+.PHONY: delete-binaries-archives-and-release-notes
+delete-binaries-archives-and-release-notes:
+	$(caasenv-authenticate); \
+	$(delete-binaries); \
+	$(delete-archives); \
+	$(delete-release-notes)
+
+define delete-binaries
+	aws s3 rm s3://confluent.cloud/ccloud-cli/binaries/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION) --recursive
+endef
+
+define delete-archives
+	aws s3 rm s3://confluent.cloud/ccloud-cli/archives/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/archives/$(CLEAN_VERSION) --recursive
+endef
+
+define delete-release-notes
+	aws s3 rm s3://confluent.cloud/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm s3://confluent.cloud/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive
+endef
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -264,48 +292,42 @@ publish-installers:
 	aws s3 cp install-confluent.sh s3://confluent.cloud/confluent-cli/install.sh --acl public-read
 
 .PHONY: docs
-docs:
+docs: clean-docs
 	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
 	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs
-	@TMP_BASE=$$(mktemp -d) || exit 1; \
-		TMP_DIR=$${TMP_BASE}/docs || exit 1; \
-		git clone git@github.com:confluentinc/docs.git $${TMP_DIR}; \
-		cd $${TMP_DIR} || exit 1; \
-		git fetch ; \
-		git checkout -b cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
-		cd - || exit 1; \
-		make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=ccloud || exit 1; \
-	    make publish-docs-internal BASE_DIR=$${TMP_DIR} CLI_NAME=confluent || exit 1; \
-		cd $${TMP_DIR} || exit 1; \
-		sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' cloud/cli/command-reference/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
-		git add . || exit 1; \
-		git diff --cached --exit-code >/dev/null && echo "nothing to update for docs" && exit 0; \
-		git commit -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		git push origin cli-$(VERSION) || exit 1; \
-		hub pull-request -b $(DOCS_BRANCH) -m "chore: updating CLI docs for $(VERSION)" || exit 1; \
-		rm -rf $${TMP_BASE}
+	@tmp=$$(mktemp -d); \
+	git clone git@github.com:confluentinc/docs.git $$tmp; \
+	echo -n "Publish ccloud docs? (y/n) "; read line; \
+	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=ccloud; fi; \
+	echo -n "Publish confluent docs? (y/n) "; read line; \
+	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=confluent; fi; \
+	rm -rf $$tmp
 
 .PHONY: publish-docs-internal
 publish-docs-internal:
-ifndef BASE_DIR
-	$(error BASE_DIR is not set)
-endif
-ifeq (ccloud,$(CLI_NAME))
-	$(eval DOCS_DIR := cloud/cli/command-reference)
-else ifeq (confluent,$(CLI_NAME))
-	$(eval DOCS_DIR := cli/command-reference)
+ifeq ($(CLI_NAME), ccloud)
+	$(eval DOCS_DIR := ccloud-cli/command-reference)
 else
-	$(error CLI_NAME is not set correctly - must be one of "confluent" or "ccloud")
+	$(eval DOCS_DIR := confluent-cli/command-reference)
 endif
-	rm -R $(BASE_DIR)/$(DOCS_DIR)/
-	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME)/ $(BASE_DIR)/$(DOCS_DIR)/
+
+	@cd $(REPO_DIR); \
+	git checkout -b $(CLI_NAME)-cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
+	rm -rf $(DOCS_DIR); \
+	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME) $(DOCS_DIR); \
+	[ ! -f "$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
+	git add . || exit 1; \
+	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
+	git commit -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
+	git push origin $(CLI_NAME)-cli-$(VERSION) || exit 1; \
+	hub pull-request -b $(DOCS_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
 
 .PHONY: clean-docs
 clean-docs:
-	rm -R docs/
+	@rm -rf docs/
 
 .PHONY: release-notes-prep
 release-notes-prep:

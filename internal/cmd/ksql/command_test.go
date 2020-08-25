@@ -183,6 +183,20 @@ func (suite *KSQLTestSuite) TestCreateKSQL() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.CreateCalled())
+	cfg := suite.ksqlc.CreateCalls()[0].Arg1
+	req.Equal("", cfg.Image)
+	req.Equal(uint32(4), cfg.TotalNumCsu)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--image", "foo"}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	cfg := suite.ksqlc.CreateCalls()[0].Arg1
+	req.Equal("foo", cfg.Image)
 }
 
 func (suite *KSQLTestSuite) TestDescribeKSQL() {
