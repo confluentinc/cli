@@ -153,7 +153,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
+	cmd.Flags().Int32("partitions", -1, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
 	cmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
@@ -267,7 +267,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	topic.Spec.Name = args[0]
 
-	topic.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
+	topic.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
 	if err != nil {
 		return err
 	}
