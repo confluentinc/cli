@@ -349,6 +349,50 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 }
 
+func TestValidateUrl(t *testing.T) {
+	req := require.New(t)
+
+	suite := []struct {
+		url_in string
+		valid bool
+		url_out string
+		warning_msg string
+	}{
+		{
+			url_in: "https:///test.com",
+			valid:    false,
+			url_out: "",
+			warning_msg: "default MDS port 8090",
+		},
+		{
+			url_in: "test.com",
+			valid:    true,
+			url_out: "http://test.com:8090",
+			warning_msg: "http protocol and default MDS port 8090",
+		},
+		{
+			url_in: "test.com:80",
+			valid:    true,
+			url_out: "http://test.com:80",
+			warning_msg: "http protocol",
+		},
+		{
+			url_in: "http://test.com",
+			valid:    true,
+			url_out: "http://test.com:8090",
+			warning_msg: "default MDS port 8090",
+		},
+	}
+	for _, s := range suite {
+		url, matched, msg := validateURL(s.url_in)
+		req.Equal(s.valid, matched)
+		if s.valid {
+			req.Equal(s.url_out, url)
+		}
+		req.Equal(s.warning_msg, msg)
+	}	
+}
+
 func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
 	req := require.New(t)
 	ctx := cfg.Context()
