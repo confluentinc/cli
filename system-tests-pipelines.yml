@@ -104,8 +104,8 @@ jobs:
       . vault-sem-get-secret ssh_config
       . vault-sem-get-secret gitconfig
       make docker-login
-      make helm-update-repo
       make helm-init-ci
+      make helm-update-repo
     displayName: try to inject secrets and setup docker and helm
   
   - bash: |
