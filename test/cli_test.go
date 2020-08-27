@@ -806,24 +806,27 @@ func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 		if lastElem == "" {
 			// No specific link here, we want a list of ALL links
 
-			linkList := []*linkv1.ListLinksResponseItem{
+			listResponsePayload := []*linkv1.ListLinksResponseItem{
 				&linkv1.ListLinksResponseItem{LinkName:"link-1",LinkId:"1234",ClusterId:"Blah"},
 				&linkv1.ListLinksResponseItem{LinkName:"link-2",LinkId:"4567",ClusterId:"blah"},
 			}
 
-			listReply, err := json.Marshal(linkList)
+			listReply, err := json.Marshal(listResponsePayload)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
 		} else {
 			// Return properties for the selected link.
 
-			linkDescription := &linkv1.LinkProperties{
-				Properties: map[string]string{
-					"replica.fetch.max.bytes": "1048576",
-			}}
-
-			describeReply, err := json.Marshal(linkDescription)
+			describeResponsePayload := linkv1.DescribeLinkResponse{
+				Entries: []*linkv1.DescribeLinkResponseEntry{
+					{
+						Name:"replica.fetch.max.bytes",
+						Value:"1048576",
+					},
+				},
+			}
+			describeReply, err := json.Marshal(describeResponsePayload)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(describeReply))
 			require.NoError(t, err)
