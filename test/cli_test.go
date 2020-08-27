@@ -806,9 +806,9 @@ func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 		if lastElem == "" {
 			// No specific link here, we want a list of ALL links
 
-			linkList := []string{
-				"link-1",
-				"link-2",
+			linkList := []*linkv1.ListLinksResponseItem{
+				&linkv1.ListLinksResponseItem{LinkName:"link-1",LinkId:"1234",ClusterId:"Blah"},
+				&linkv1.ListLinksResponseItem{LinkName:"link-2",LinkId:"4567",ClusterId:"blah"},
 			}
 
 			listReply, err := json.Marshal(linkList)
