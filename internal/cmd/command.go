@@ -112,7 +112,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
-  command.completer = completer.NewShellCompleter(cli, cliName)
+	command.completer = completer.NewShellCompleter(cli, cliName)
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.New(cliName, prerunner, ver))
@@ -133,7 +133,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		if isAPIKeyCredential(cfg) {
 			return command, nil
 		}
-		cli.AddCommand(apikey.New(prerunner, nil, resolver)) // Exposed for testing
+		cli.AddCommand(apikey.New(prerunner, nil, resolver, command.completer.ServerSideCompleter)) // Exposed for testing
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		cli.AddCommand(environment.New(cliName, prerunner))

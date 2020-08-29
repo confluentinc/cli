@@ -118,7 +118,7 @@ func (c *command) init() {
 		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
 	c.AddCommand(deleteCmd)
 	c.completer.AddCommand(deleteCmd, true)
 
@@ -470,13 +470,13 @@ func (c *command) suggestAPIKeys(cmd *cobra.Command) func() []prompt.Suggest {
 	}
 }
 
-func (c *command) fetchAPIKeys(cmd *cobra.Command) ([]*authv1.ApiKey, error) {
-	apiKeys, err := c.Client.APIKey.List(context.Background(), &authv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
+func (c *command) fetchAPIKeys(cmd *cobra.Command) ([]*schedv1.ApiKey, error) {
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
 	if err != nil {
 		return nil, errors.HandleCommon(err, cmd)
 	}
 
-	var userApiKeys []*authv1.ApiKey
+	var userApiKeys []*schedv1.ApiKey
 	for _, key := range apiKeys {
 		if key.Id != 0 {
 			userApiKeys = append(userApiKeys, key)
