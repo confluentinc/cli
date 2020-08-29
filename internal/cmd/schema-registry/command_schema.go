@@ -110,7 +110,6 @@ func (c *schemaCommand) init(cliName string) {
 				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", cliName),
 			},
 		),
-		Args: cobra.MaximumNArgs(1),
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
