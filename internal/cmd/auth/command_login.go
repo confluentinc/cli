@@ -210,8 +210,6 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	_, _, err = mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return err
 	}
