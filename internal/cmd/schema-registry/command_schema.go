@@ -108,9 +108,9 @@ Describe the schema by both subject and version
 
 		{{.CLIName}} schema-registry describe --subject payments --version latest
 `, c.Config.CLIName),
-        PreRunE: c.preDescribe,
-		RunE: c.describe,
-		Args: cobra.MaximumNArgs(1),
+		PreRunE: c.preDescribe,
+		RunE:    c.describe,
+		Args:    cobra.MaximumNArgs(1),
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
@@ -211,7 +211,7 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err

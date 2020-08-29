@@ -6,6 +6,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 )
 
@@ -334,6 +335,8 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			},
 		},
 	}
+	cmdLine := pflag.CommandLine
+	pflag.CommandLine = nil
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &CobraCompleter{
@@ -343,4 +346,5 @@ func TestCobraCompleter_Complete(t *testing.T) {
 			require.Equal(t, tt.want, got)
 		})
 	}
+	pflag.CommandLine = cmdLine
 }

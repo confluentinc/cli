@@ -270,12 +270,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"assets": &bintree{nil, map[string]*bintree{
-		"sso_callback.html": &bintree{assetsSso_callbackHtml, map[string]*bintree{}},
+	"assets": {nil, map[string]*bintree{
+		"sso_callback.html": {assetsSso_callbackHtml, map[string]*bintree{}},
 	}},
-	"cp_cli": &bintree{nil, map[string]*bintree{
-		"confluent.patch": &bintree{cp_cliConfluentPatch, map[string]*bintree{}},
-		"confluent.sh":    &bintree{cp_cliConfluentSh, map[string]*bintree{}},
+	"cp_cli": {nil, map[string]*bintree{
+		"confluent.patch": {cp_cliConfluentPatch, map[string]*bintree{}},
+		"confluent.sh":    {cp_cliConfluentSh, map[string]*bintree{}},
 	}},
 }}
 

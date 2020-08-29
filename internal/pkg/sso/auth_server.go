@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cc-utils/local"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 /*
