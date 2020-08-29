@@ -4,10 +4,11 @@ import (
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -17,11 +18,12 @@ type Commander struct {
 	Client       *ccloud.Client
 	MDSClient    *mds.APIClient
 	Version      *version.Version
+	Config       *v3.Config
 }
 
 var _ cmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient) cmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
 		Prompt: &Prompt{},
 		Out:    os.Stdout,
@@ -30,6 +32,7 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient) cmd.PreRu
 		FlagResolver: flagResolverMock,
 		Client:       client,
 		MDSClient:    mdsClient,
+		Config:       cfg,
 	}
 }
 
@@ -38,6 +41,7 @@ func (c *Commander) Anonymous(command *cmd.CLICommand) func(cmd *cobra.Command, 
 		if command != nil {
 			command.Version = c.Version
 			command.Config.Resolver = c.FlagResolver
+			command.Config.Config = c.Config
 		}
 		return nil
 	}
@@ -55,12 +59,12 @@ func (c *Commander) Authenticated(command *cmd.AuthenticatedCLICommand) func(cmd
 			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return &errors.NoContextError{CLIName: c.Config.CLIName}
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
 		if err == nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 		return nil
 	}
@@ -78,11 +82,11 @@ func (c *Commander) AuthenticatedWithMDS(command *cmd.AuthenticatedCLICommand) f
 			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return &errors.NoContextError{CLIName: c.Config.CLIName}
 		}
 		command.Context = ctx
 		if !ctx.HasMDSLogin() {
-			return errors.HandleCommon(errors.ErrNotLoggedIn, cmd)
+			return &errors.NotLoggedInError{CLIName: c.Config.CLIName}
 		}
 		command.State = ctx.State
 		return nil
@@ -100,7 +104,7 @@ func (c *Commander) HasAPIKey(command *cmd.HasAPIKeyCLICommand) func(cmd *cobra.
 			return err
 		}
 		if ctx == nil {
-			return errors.HandleCommon(errors.ErrNoContext, cmd)
+			return &errors.NoContextError{CLIName: c.Config.CLIName}
 		}
 		command.Context = ctx
 		return nil

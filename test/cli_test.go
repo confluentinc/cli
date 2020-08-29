@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -21,20 +22,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/bincover"
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
+	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
-	connectv1 "github.com/confluentinc/ccloudapis/connect/v1"
-	corev1 "github.com/confluentinc/ccloudapis/core/v1"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	ksqlv1 "github.com/confluentinc/ccloudapis/ksql/v1"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
-	utilv1 "github.com/confluentinc/ccloudapis/util/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -129,6 +130,8 @@ func (s *CLITestSuite) SetupSuite() {
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
+	err = os.Setenv("XX_CCLOUD_RBAC", "yes")
+	req.NoError(err)
 	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
 			var makeArgs string
@@ -149,10 +152,11 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
+	_ = os.Unsetenv("XX_CCLOUD_RBAC")
 	covCollector.TearDown()
 }
 
-func (s *CLITestSuite) Test_Confluent_Help() {
+func (s *CLITestSuite) TestConfluentHelp() {
 	var tests []CLITest
 	if runtime.GOOS == "windows" {
 		tests = []CLITest{
@@ -169,21 +173,27 @@ func (s *CLITestSuite) Test_Confluent_Help() {
 			{args: "version", fixture: "confluent-version.golden", regex: true},
 		}
 	}
+
+	loginURL := serveMds(s.T()).URL
+
 	for _, tt := range tests {
-		s.runConfluentTest(tt, serveMds(s.T()).URL)
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
-func (s *CLITestSuite) Test_Ccloud_Help() {
+func (s *CLITestSuite) TestCcloudHelp() {
 	tests := []CLITest{
-		{name: "no args", fixture: "help-flag.golden", wantErrCode: 1},
+		{name: "no args", fixture: "help-flag-fail.golden", wantErrCode: 1},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
 		{args: "version", fixture: "version.golden", regex: true},
 	}
+
+	kafkaURL := serveKafkaAPI(s.T()).URL
+	loginURL := serve(s.T(), kafkaURL).URL
+
 	for _, tt := range tests {
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, loginURL)
 	}
 }
 
@@ -193,9 +203,7 @@ func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, 
 	}
 }
 
-func (s *CLITestSuite) Test_UserAgent() {
-	t := s.T()
-
+func (s *CLITestSuite) TestUserAgent() {
 	checkUserAgent := func(t *testing.T, expected string) string {
 		kafkaApiRouter := http.NewServeMux()
 		kafkaApiRouter.HandleFunc("/", assertUserAgent(t, expected))
@@ -208,23 +216,22 @@ func (s *CLITestSuite) Test_UserAgent() {
 		return httptest.NewServer(cloudRouter).URL
 	}
 
-	serverURL := checkUserAgent(t, fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
+	serverURL := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
 		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
 	env := []string{"XX_CCLOUD_EMAIL=valid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 
-	t.Run("ccloud login", func(tt *testing.T) {
+	s.T().Run("ccloud login", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
 	})
-	t.Run("ccloud cluster list", func(tt *testing.T) {
+	s.T().Run("ccloud cluster list", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", 0)
 	})
-	t.Run("ccloud topic list", func(tt *testing.T) {
+	s.T().Run("ccloud topic list", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", 0)
 	})
 }
 
-func (s *CLITestSuite) Test_Ccloud_Errors() {
-	t := s.T()
+func (s *CLITestSuite) TestCcloudErrors() {
 	type errorer interface {
 		GetError() *corev1.Error
 	}
@@ -248,12 +255,12 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 			// TODO: these assume the upstream doesn't change its error responses. Fragile, fragile, fragile. :(
 			// https://github.com/confluentinc/cc-auth-service/blob/06db0bebb13fb64c9bc3c6e2cf0b67709b966632/jwt/token.go#L23
 			case "Bearer expired":
-				write(w, &kafkav1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
+				write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
 			case "Bearer malformed":
-				write(w, &kafkav1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
+				write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
 			case "Bearer invalid":
 				// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
-				write(w, &kafkav1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
+				write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
 			default:
 				req.Fail("reached the unreachable", "auth=%s", r.Header.Get("Authorization"))
 			}
@@ -262,44 +269,51 @@ func (s *CLITestSuite) Test_Ccloud_Errors() {
 		return server.URL
 	}
 
-	t.Run("invalid user or pass", func(tt *testing.T) {
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
-		require.Equal(tt, "Error: You have entered an incorrect username or password. Please try again.\n", output)
+		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
 	})
 
-	t.Run("expired token", func(tt *testing.T) {
+	s.T().Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Equal(tt, "Logged in as expired@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Your token has expired. You are now logged out.\nError: You must log in to run that command.\n", output)
+		require.Contains(tt, output, errors.TokenExpiredMsg)
+		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
 	})
 
-	t.Run("malformed token", func(tt *testing.T) {
+	s.T().Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Equal(tt, "Logged in as malformed@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
+		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
 
-	t.Run("invalid jwt", func(tt *testing.T) {
+	s.T().Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
-		require.Equal(tt, "Logged in as invalid@user.com\nUsing environment a-595 (\"default\")\n", output)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(t, ccloudTestBin, []string{}, "kafka cluster list", 1)
-		require.Equal(tt, "Error: Your auth token has been corrupted. Please login again.\n", output)
+		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
 }
 
-func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint string) {
+func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
@@ -311,6 +325,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
+
 		if tt.login == "default" {
 			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
@@ -332,7 +347,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL, kafkaAPIEndpoint stri
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[2], "|")[2])
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
 			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
@@ -382,14 +397,13 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	if *update && !tt.regex && tt.fixture != "" {
 		writeFixture(t, tt.fixture, output)
 	}
-	actual := NormalizeNewLines(string(output))
+	actual := utils.NormalizeNewLines(output)
 	if tt.contains != "" {
 		require.Contains(t, actual, tt.contains)
 	} else if tt.notContains != "" {
 		require.NotContains(t, actual, tt.notContains)
 	} else if tt.fixture != "" {
-		expected := NormalizeNewLines(loadFixture(t, tt.fixture))
-
+		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
 		if tt.regex {
 			require.Regexp(t, expected, actual)
 		} else if !reflect.DeepEqual(actual, expected) {
@@ -422,27 +436,10 @@ func resetConfiguration(t *testing.T, cliName string) {
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(fixturePath(t, fixture), []byte(content), 0644)
+	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func loadFixture(t *testing.T, fixture string) string {
-	content, err := ioutil.ReadFile(fixturePath(t, fixture))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(content)
-}
-
-func fixturePath(t *testing.T, fixture string) string {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatalf("problems recovering caller information")
-	}
-
-	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
 func binaryPath(t *testing.T, binaryName string) string {
@@ -451,10 +448,10 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, binaryName)
 }
 
-var KEY_STORE = map[int32]*authv1.ApiKey{}
-var KEY_INDEX = int32(1)
+var keyStore = map[int32]*schedv1.ApiKey{}
+var keyIndex = int32(1)
 
-type ApiKeyList []*authv1.ApiKey
+type ApiKeyList []*schedv1.ApiKey
 
 // Len is part of sort.Interface.
 func (d ApiKeyList) Len() int {
@@ -472,52 +469,58 @@ func (d ApiKeyList) Less(i, j int) bool {
 }
 
 func init() {
-	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
+	keyStore[keyIndex] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "MYKEY1",
 		Secret: "MYSECRET1",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-bob", Type: "kafka"},
 		},
 		UserId: 12,
 	}
-	KEY_INDEX += 1
-	KEY_STORE[KEY_INDEX] = &authv1.ApiKey{
+	keyIndex += 1
+	keyStore[keyIndex] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "MYKEY2",
 		Secret: "MYSECRET2",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-abc", Type: "kafka"},
 		},
 		UserId: 18,
 	}
-	KEY_INDEX += 1
-	KEY_STORE[100] = &authv1.ApiKey{
+	keyIndex += 1
+	keyStore[100] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY100",
 		Secret: "UIAPISECRET100",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
-	KEY_STORE[101] = &authv1.ApiKey{
+	keyStore[101] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY101",
 		Secret: "UIAPISECRET101",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-other1", Type: "kafka"},
 		},
 		UserId: 25,
 	}
-	KEY_STORE[102] = &authv1.ApiKey{
+	keyStore[102] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY102",
 		Secret: "UIAPISECRET102",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lksqlc-ksql1", Type: "ksql"},
 		},
 		UserId: 25,
 	}
-	KEY_STORE[103] = &authv1.ApiKey{
+	keyStore[103] = &schedv1.ApiKey{
+		Id:     keyIndex,
 		Key:    "UIAPIKEY103",
 		Secret: "UIAPISECRET103",
-		LogicalClusters: []*authv1.ApiKey_Cluster{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-cool1", Type: "kafka"},
 		},
 		UserId: 25,
@@ -531,22 +534,22 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/me", handleMe(t))
 	router.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			req := &authv1.CreateApiKeyRequest{}
+			req := &schedv1.CreateApiKeyRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
-			apiKey.Id = int32(KEY_INDEX)
-			apiKey.Key = fmt.Sprintf("MYKEY%d", KEY_INDEX)
-			apiKey.Secret = fmt.Sprintf("MYSECRET%d", KEY_INDEX)
+			apiKey.Id = keyIndex
+			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
+			apiKey.Secret = fmt.Sprintf("MYSECRET%d", keyIndex)
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
 			} else {
 				apiKey.UserId = req.ApiKey.UserId
 			}
-			KEY_INDEX++
-			KEY_STORE[apiKey.Id] = apiKey
-			b, err := utilv1.MarshalJSONToBytes(&authv1.CreateApiKeyReply{ApiKey: apiKey})
+			keyIndex++
+			keyStore[apiKey.Id] = apiKey
+			b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -555,12 +558,13 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKeys := apiKeysFilter(r.URL)
 			// Return sorted data or the test output will not be stable
 			sort.Sort(ApiKeyList(apiKeys))
-			b, err := utilv1.MarshalJSONToBytes(&authv1.GetApiKeysReply{ApiKeys: apiKeys})
+			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetApiKeysReply{ApiKeys: apiKeys})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		}
 	})
+	router.HandleFunc("/api/api_keys/", handleAPIKeyUpdateAndDelete(t))
 	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
@@ -584,24 +588,30 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/accounts/a-595", handleEnvironmentGet(t, "a-595"))
-	router.HandleFunc("/api/accounts/not-595", handleEnvironmentGet(t, "not-595"))
-	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t, kafkaAPIURL))
+	router.HandleFunc("/api/accounts/a-595", handleEnvironmentRequests(t, "a-595"))
+	router.HandleFunc("/api/accounts/not-595", handleEnvironmentRequests(t, "not-595"))
+	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated-pending", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-dedicated-with-encryption", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-update", handleKafkaClusterUpdateTest(t))
+	router.HandleFunc("/api/clusters/lkc-update-dedicated", handleKafkaDedicatedClusterUpdateTest(t))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
 	router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			handleKafkaClusterCreate(t, kafkaAPIURL)(w, r)
 		} else if r.Method == "GET" {
-			cluster := kafkav1.KafkaCluster{
+			cluster := schedv1.KafkaCluster{
 				Id:              "lkc-123",
 				Name:            "abc",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
 				Durability:      0,
 				Status:          0,
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 			}
-			b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClustersReply{
-				Clusters: []*kafkav1.KafkaCluster{&cluster},
+			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
+				Clusters: []*schedv1.KafkaCluster{&cluster},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -614,55 +624,26 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	})
 	router.HandleFunc("/api/schema_registries/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
-		id := q.Get("Id")
+		id := q.Get("id")
 		if id == "" {
 			id = "lsrc-1234"
 		}
 		accountId := q.Get("account_id")
-		srCluster := &srv1.SchemaRegistryCluster{
+		srCluster := &schedv1.SchemaRegistryCluster{
 			Id:        id,
 			AccountId: accountId,
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
-		b, err := utilv1.MarshalJSONToBytes(&srv1.GetSchemaRegistryClusterReply{
+		fmt.Println(srCluster)
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetSchemaRegistryClusterReply{
 			Cluster: srCluster,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	})
-	router.HandleFunc("/api/service_accounts", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			serviceAccount := &orgv1.User{
-				Id:                 12345,
-				ServiceName:        "service_account",
-				ServiceDescription: "at your service.",
-			}
-			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
-				Users: []*orgv1.User{serviceAccount},
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
-		} else if r.Method == "POST" {
-			req := &orgv1.CreateServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			serviceAccount := &orgv1.User{
-				Id:                 55555,
-				ServiceName:        req.User.ServiceName,
-				ServiceDescription: req.User.ServiceDescription,
-			}
-			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
-				Error: nil,
-				User:  serviceAccount,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(createReply))
-			require.NoError(t, err)
-		}
-	})
+	router.HandleFunc("/api/service_accounts", handleServiceAccountRequests(t))
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connectors/az-connector/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -672,7 +653,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/accounts/a-595/clusters/lkc-123/connector-plugins", handleConnectPlugins(t))
 	router.HandleFunc("/api/ksqls", handleKSQLCreateList(t))
 	router.HandleFunc("/api/ksqls/lksqlc-ksql1/", func(w http.ResponseWriter, r *http.Request) {
-		ksqlCluster := &ksqlv1.KSQLCluster{
+		ksqlCluster := &schedv1.KSQLCluster{
 			Id:                "lksqlc-ksql1",
 			AccountId:         "25",
 			KafkaClusterId:    "lkc-12345",
@@ -681,7 +662,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			Storage:           101,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
-		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+		reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 			Cluster: ksqlCluster,
 		})
 		require.NoError(t, err)
@@ -689,7 +670,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/ksqls/lksqlc-12345", func(w http.ResponseWriter, r *http.Request) {
-		ksqlCluster := &ksqlv1.KSQLCluster{
+		ksqlCluster := &schedv1.KSQLCluster{
 			Id:                "lksqlc-12345",
 			AccountId:         "25",
 			KafkaClusterId:    "lkc-abcde",
@@ -698,7 +679,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			Storage:           130,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
-		reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+		reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 			Cluster: ksqlCluster,
 		})
 		require.NoError(t, err)
@@ -706,11 +687,11 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/env_metadata", func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*kafkav1.Cloud{
+		clouds := []*schedv1.CloudMetadata{
 			{
 				Id:   "gcp",
 				Name: "Google Cloud Platform",
-				Regions: []*kafkav1.Region{
+				Regions: []*schedv1.Region{
 					{
 						Id:            "asia-southeast1",
 						Name:          "asia-southeast1 (Singapore)",
@@ -726,7 +707,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			{
 				Id:   "aws",
 				Name: "Amazon Web Services",
-				Regions: []*kafkav1.Region{
+				Regions: []*schedv1.Region{
 					{
 						Id:            "ap-northeast-1",
 						Name:          "ap-northeast-1 (Tokyo)",
@@ -742,7 +723,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			{
 				Id:   "azure",
 				Name: "Azure",
-				Regions: []*kafkav1.Region{
+				Regions: []*schedv1.Region{
 					{
 						Id:            "southeastasia",
 						Name:          "southeastasia (Singapore)",
@@ -751,23 +732,25 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				},
 			},
 		}
-		reply, err := utilv1.MarshalJSONToBytes(&kafkav1.GetEnvironmentMetadataReply{
+		reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetEnvironmentMetadataReply{
 			Clouds: clouds,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
 	})
+	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
+	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }
 
-func apiKeysFilter(url *url.URL) []*authv1.ApiKey {
-	var apiKeys []*authv1.ApiKey
+func apiKeysFilter(url *url.URL) []*schedv1.ApiKey {
+	var apiKeys []*schedv1.ApiKey
 	q := url.Query()
 	uid := q.Get("user_id")
 	clusterIds := q["cluster_id"]
 
-	for _, a := range KEY_STORE {
+	for _, a := range keyStore {
 		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
 		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
 			for _, c := range a.LogicalClusters {
@@ -792,6 +775,20 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls:search", handleKafkaACLsList(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls", handleKafkaACLsCreate(t))
 	mux.HandleFunc("/2.0/kafka/lkc-acls/acls/delete", handleKafkaACLsDelete(t))
+
+	mux.HandleFunc("/2.0/kafka/lkc-links/links/", handleKafkaLinks(t))
+
+	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/test-topic/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			w.WriteHeader(http.StatusNoContent)
+		}
+	})
+	mux.HandleFunc("/2.0/kafka/lkc-topics/topics/not-found/mirror:stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+
 	// TODO: no idea how this "topic already exists" API request or response actually looks
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
@@ -801,13 +798,47 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
+func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		lastElem := parts[len(parts) - 1]
+
+		if lastElem == "" {
+			// No specific link here, we want a list of ALL links
+
+			listResponsePayload := []*linkv1.ListLinksResponseItem{
+				&linkv1.ListLinksResponseItem{LinkName:"link-1",LinkId:"1234",ClusterId:"Blah"},
+				&linkv1.ListLinksResponseItem{LinkName:"link-2",LinkId:"4567",ClusterId:"blah"},
+			}
+
+			listReply, err := json.Marshal(listResponsePayload)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		} else {
+			// Return properties for the selected link.
+
+			describeResponsePayload := linkv1.DescribeLinkResponse{
+				Entries: []*linkv1.DescribeLinkResponseEntry{
+					{
+						Name:"replica.fetch.max.bytes",
+						Value:"1048576",
+					},
+				},
+			}
+			describeReply, err := json.Marshal(describeResponsePayload)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(describeReply))
+			require.NoError(t, err)
+		}
+	}
+}
+
 func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := require.New(t)
 		b, err := ioutil.ReadAll(r.Body)
 		req.NoError(err)
-		// TODO: mark AuthenticateRequest as not internal so its in CCloudAPIs
-		// https://github.com/confluentinc/cc-structs/blob/ce0ea5a6670d21a4b5c4f4f6ebd3d30b44cbb9f1/kafka/flow/v1/flow.proto#L41
 		auth := &struct {
 			Email    string
 			Password string
@@ -833,9 +864,10 @@ func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 			User: &orgv1.User{
-				Id:        23,
-				Email:     "cody@confluent.io",
-				FirstName: "Cody",
+				Id:         23,
+				Email:      "cody@confluent.io",
+				FirstName:  "Cody",
+				ResourceId: "u-11aaa",
 			},
 			Accounts: environments,
 		})
@@ -880,10 +912,11 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) f
 			require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		}
 		// Now return the KafkaCluster with updated ApiEndpoint
-		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
-			Cluster: &kafkav1.KafkaCluster{
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: &schedv1.KafkaCluster{
 				Id:              id,
 				Name:            "kafka-cluster",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
 				NetworkIngress:  100,
 				NetworkEgress:   100,
 				Storage:         500,
@@ -899,46 +932,196 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T, kafkaAPIURL string) f
 	}
 }
 
-func handleKafkaClusterDescribeTest(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
+func handleKafkaClusterDescribeTest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
-			Cluster: &kafkav1.KafkaCluster{
-				Id:              "lkc-describe",
-				Name:            "kafka-cluster",
-				NetworkIngress:  100,
-				NetworkEgress:   100,
-				Storage:         500,
-				ServiceProvider: "aws",
-				Region:          "us-west-2",
-				Endpoint:        "SASL_SSL://kafka-endpoint",
-				ApiEndpoint:     "http://kafka-api-url",
-			},
+		id := r.URL.Query().Get("id")
+		cluster := &schedv1.KafkaCluster{
+			Id:              id,
+			Name:            "kafka-cluster",
+			Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+			NetworkIngress:  100,
+			NetworkEgress:   100,
+			Storage:         500,
+			ServiceProvider: "aws",
+			Region:          "us-west-2",
+			Endpoint:        "SASL_SSL://kafka-endpoint",
+			ApiEndpoint:     "http://kafka-api-url",
+		}
+		switch id {
+		case "lkc-describe-dedicated":
+			cluster.Cku = 1
+			cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
+		case "lkc-describe-dedicated-pending":
+			cluster.Cku = 1
+			cluster.PendingCku = 2
+			cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
+		case "lkc-describe-dedicated-with-encryption":
+			cluster.Cku = 1
+			cluster.EncryptionKeyId = "abc123"
+			cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
+		}
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: cluster,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaClusterUpdateTest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Describe client call
+		var out []byte
+		if r.Method == "GET" {
+			id := r.URL.Query().Get("id")
+			var err error
+			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              id,
+					Name:            "lkc-update",
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+					NetworkIngress:  100,
+					NetworkEgress:   100,
+					Storage:         500,
+					Status:          schedv1.ClusterStatus_UP,
+					ServiceProvider: "aws",
+					Region:          "us-west-2",
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     "http://kafka-api-url",
+				},
+			})
+			require.NoError(t, err)
+		}
+		// Update client call
+		if r.Method == "PUT" {
+			req := &schedv1.UpdateKafkaClusterRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			if req.Cluster.Cku > 0 {
+				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+					Cluster: nil,
+					Error: &corev1.Error{
+						Message: "cluster expansion is supported for dedicated clusters only",
+					},
+				})
+			} else {
+				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+					Cluster: &schedv1.KafkaCluster{
+						Id:              req.Cluster.Id,
+						Name:            req.Cluster.Name,
+						Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+						NetworkIngress:  100,
+						NetworkEgress:   100,
+						Storage:         500,
+						Status:          schedv1.ClusterStatus_UP,
+						ServiceProvider: "aws",
+						Region:          "us-west-2",
+						Endpoint:        "SASL_SSL://kafka-endpoint",
+						ApiEndpoint:     "http://kafka-api-url",
+					},
+				})
+			}
+			require.NoError(t, err)
+		}
+		_, err := io.WriteString(w, string(out))
+		require.NoError(t, err)
+	}
+}
+
+func handleKafkaDedicatedClusterUpdateTest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var out []byte
+		if r.Method == "GET" {
+			id := r.URL.Query().Get("id")
+			var err error
+			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              id,
+					Name:            "lkc-update-dedicated",
+					Cku:             1,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+					NetworkIngress:  50,
+					NetworkEgress:   150,
+					Storage:         30000,
+					Status:          schedv1.ClusterStatus_EXPANDING,
+					ServiceProvider: "aws",
+					Region:          "us-west-2",
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     "http://kafka-api-url",
+				},
+			})
+			require.NoError(t, err)
+		}
+		// Update client call
+		if r.Method == "PUT" {
+			req := &schedv1.UpdateKafkaClusterRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              req.Cluster.Id,
+					Name:            req.Cluster.Name,
+					Cku:             1,
+					PendingCku:      req.Cluster.Cku,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+					NetworkIngress:  50 * req.Cluster.Cku,
+					NetworkEgress:   150 * req.Cluster.Cku,
+					Storage:         30000 * req.Cluster.Cku,
+					Status:          schedv1.ClusterStatus_EXPANDING,
+					ServiceProvider: "aws",
+					Region:          "us-west-2",
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     "http://kafka-api-url",
+				},
+			})
+			require.NoError(t, err)
+		}
+		_, err := io.WriteString(w, string(out))
 		require.NoError(t, err)
 	}
 }
 
 func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &kafkav1.CreateKafkaClusterRequest{}
+		req := &schedv1.CreateKafkaClusterRequest{}
 		err := utilv1.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
-		b, err := utilv1.MarshalJSONToBytes(&kafkav1.GetKafkaClusterReply{
-			Cluster: &kafkav1.KafkaCluster{
-				Id:              "lkc-def963",
-				AccountId:       req.Config.AccountId,
-				Name:            req.Config.Name,
-				NetworkIngress:  100,
-				NetworkEgress:   100,
-				Storage:         req.Config.Storage,
-				ServiceProvider: req.Config.ServiceProvider,
-				Region:          req.Config.Region,
-				Endpoint:        "SASL_SSL://kafka-endpoint",
-				ApiEndpoint:     kafkaAPIURL,
-			},
-		})
+		var b []byte
+		if req.Config.Deployment.Sku == productv1.Sku_DEDICATED {
+			b, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              "lkc-def963",
+					AccountId:       req.Config.AccountId,
+					Name:            req.Config.Name,
+					Cku:             req.Config.Cku,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+					NetworkIngress:  50 * req.Config.Cku,
+					NetworkEgress:   150 * req.Config.Cku,
+					Storage:         30000 * req.Config.Cku,
+					ServiceProvider: req.Config.ServiceProvider,
+					Region:          req.Config.Region,
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     kafkaAPIURL,
+				},
+			})
+		} else {
+			b, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              "lkc-def963",
+					AccountId:       req.Config.AccountId,
+					Name:            req.Config.Name,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+					NetworkIngress:  100,
+					NetworkEgress:   100,
+					Storage:         5000,
+					ServiceProvider: req.Config.ServiceProvider,
+					Region:          req.Config.Region,
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     kafkaAPIURL,
+				},
+			})
+		}
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
@@ -947,21 +1130,20 @@ func handleKafkaClusterCreate(t *testing.T, kafkaAPIURL string) func(w http.Resp
 
 func handleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		results := []*kafkav1.ACLBinding{
+		results := []*schedv1.ACLBinding{
 			{
-				Pattern: &kafkav1.ResourcePatternConfig{
-					ResourceType: kafkav1.ResourceTypes_TOPIC,
+				Pattern: &schedv1.ResourcePatternConfig{
+					ResourceType: schedv1.ResourceTypes_TOPIC,
 					Name:         "test-topic",
-					PatternType:  kafkav1.PatternTypes_LITERAL,
+					PatternType:  schedv1.PatternTypes_LITERAL,
 				},
-				Entry: &kafkav1.AccessControlEntryConfig{
-					Operation:      kafkav1.ACLOperations_READ,
-					PermissionType: kafkav1.ACLPermissionTypes_ALLOW,
+				Entry: &schedv1.AccessControlEntryConfig{
+					Operation:      schedv1.ACLOperations_READ,
+					PermissionType: schedv1.ACLPermissionTypes_ALLOW,
 				},
 			},
 		}
 		reply, err := json.Marshal(results)
-
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
@@ -971,7 +1153,7 @@ func handleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Reque
 func handleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			var bindings []*kafkav1.ACLBinding
+			var bindings []*schedv1.ACLBinding
 			err := json.NewDecoder(r.Body).Decode(&bindings)
 			require.NoError(t, err)
 			require.NotEmpty(t, bindings)
@@ -985,7 +1167,7 @@ func handleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Req
 
 func handleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var filters []*kafkav1.ACLFilter
+		var filters []*schedv1.ACLFilter
 		err := json.NewDecoder(r.Body).Decode(&filters)
 		require.NoError(t, err)
 		require.NotEmpty(t, filters)
@@ -998,7 +1180,7 @@ func handleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Req
 
 func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ksqlCluster1 := &ksqlv1.KSQLCluster{
+		ksqlCluster1 := &schedv1.KSQLCluster{
 			Id:                "lksqlc-ksql5",
 			AccountId:         "25",
 			KafkaClusterId:    "lkc-qwert",
@@ -1007,7 +1189,7 @@ func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 			Storage:           101,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
-		ksqlCluster2 := &ksqlv1.KSQLCluster{
+		ksqlCluster2 := &schedv1.KSQLCluster{
 			Id:                "lksqlc-woooo",
 			AccountId:         "25",
 			KafkaClusterId:    "lkc-zxcvb",
@@ -1017,15 +1199,15 @@ func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
 		if r.Method == "POST" {
-			reply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClusterReply{
+			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		} else if r.Method == "GET" {
-			listReply, err := utilv1.MarshalJSONToBytes(&ksqlv1.GetKSQLClustersReply{
-				Clusters: []*ksqlv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
+			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
+				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
@@ -1037,25 +1219,25 @@ func handleKSQLCreateList(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 func handleConnect(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			connectorExpansion := &connectv1.ConnectorExpansion{
-				Id: &connectv1.ConnectorId{Id: "lcc-123"},
-				Info: &connectv1.ConnectorInfo{
+			connectorExpansion := &opv1.ConnectorExpansion{
+				Id: &opv1.ConnectorId{Id: "lcc-123"},
+				Info: &opv1.ConnectorInfo{
 					Name:   "az-connector",
 					Type:   "Sink",
 					Config: map[string]string{},
 				},
-				Status: &connectv1.ConnectorStateInfo{Name: "az-connector", Connector: &connectv1.ConnectorState{State: "Running"},
-					Tasks: []*connectv1.TaskState{{Id: 1, State: "Running"}},
+				Status: &opv1.ConnectorStateInfo{Name: "az-connector", Connector: &opv1.ConnectorState{State: "Running"},
+					Tasks: []*opv1.TaskState{{Id: 1, State: "Running"}},
 				}}
-			listReply, err := json.Marshal(map[string]*connectv1.ConnectorExpansion{"lcc-123": connectorExpansion})
+			listReply, err := json.Marshal(map[string]*opv1.ConnectorExpansion{"lcc-123": connectorExpansion})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
 		} else if r.Method == "POST" {
-			var request connectv1.ConnectorInfo
+			var request opv1.ConnectorInfo
 			err := utilv1.UnmarshalJSON(r.Body, &request)
 			require.NoError(t, err)
-			connector1 := &connectv1.Connector{
+			connector1 := &schedv1.Connector{
 				Name:           request.Name,
 				KafkaClusterId: "lkc-123",
 				AccountId:      "a-595",
@@ -1072,55 +1254,55 @@ func handleConnect(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 
 func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		configInfos := &connectv1.ConfigInfos{
+		configInfos := &opv1.ConfigInfos{
 			Name:       "",
 			Groups:     nil,
 			ErrorCount: 1,
-			Configs: []*connectv1.Configs{
+			Configs: []*opv1.Configs{
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "kafka.api.key",
 						Errors: []string{"\"kafka.api.key\" is required"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "kafka.api.secret",
 						Errors: []string{"\"kafka.api.secret\" is required"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "topics",
 						Errors: []string{"\"topics\" is required"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "data.format",
 						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "gcs.credentials.config",
 						Errors: []string{"\"gcs.credentials.config\" is required"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "gcs.bucket.name",
 						Errors: []string{"\"gcs.bucket.name\" is required"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "time.interval",
 						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"},
 					},
 				},
 				{
-					Value: &connectv1.ConfigValue{
+					Value: &opv1.ConfigValue{
 						Name:   "tasks.max",
 						Errors: []string{"\"tasks.max\" is required"},
 					},
@@ -1137,15 +1319,15 @@ func handleConnectorCatalogDescribe(t *testing.T) func(w http.ResponseWriter, r 
 func handleConnectPlugins(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			connectorPlugin1 := &connectv1.ConnectorPluginInfo{
+			connectorPlugin1 := &opv1.ConnectorPluginInfo{
 				Class: "AzureBlobSink",
 				Type:  "Sink",
 			}
-			connectorPlugin2 := &connectv1.ConnectorPluginInfo{
+			connectorPlugin2 := &opv1.ConnectorPluginInfo{
 				Class: "GcsSink",
 				Type:  "Sink",
 			}
-			listReply, err := json.Marshal([]*connectv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
+			listReply, err := json.Marshal([]*opv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
@@ -1161,18 +1343,129 @@ func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.
 	}
 }
 
-func handleEnvironmentGet(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
+func handleEnvironmentRequests(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, env := range environments {
 			if env.Id == id {
 				// env found
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
+				if r.Method == "GET" {
+					b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+					require.NoError(t, err)
+					_, err = io.WriteString(w, string(b))
+					require.NoError(t, err)
+				} else if r.Method == "PUT" {
+					req := &orgv1.UpdateAccountRequest{}
+					err := utilv1.UnmarshalJSON(r.Body, req)
+					require.NoError(t, err)
+					env.Name = req.Account.Name
+					b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
+					require.NoError(t, err)
+					_, err = io.WriteString(w, string(b))
+					require.NoError(t, err)
+				} else if r.Method == "DELETE" {
+					b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
+					require.NoError(t, err)
+					_, err = io.WriteString(w, string(b))
+					require.NoError(t, err)
+				}
+				return
 			}
 		}
 		// env not found
 		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		urlSplit := strings.Split(r.URL.Path, "/")
+		keyId, err := strconv.Atoi(urlSplit[len(urlSplit)-1])
+		require.NoError(t, err)
+		index := int32(keyId)
+		apiKey := keyStore[index]
+		if r.Method == "PUT" {
+			req := &schedv1.UpdateApiKeyRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			apiKey.Description = req.ApiKey.Description
+			result := &schedv1.UpdateApiKeyReply{
+				ApiKey: apiKey,
+				Error:  nil,
+			}
+			reply, err := json.Marshal(result)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		} else if r.Method == "DELETE" {
+			req := &schedv1.DeleteApiKeyRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			delete(keyStore, index)
+			result := &schedv1.DeleteApiKeyReply{
+				ApiKey: apiKey,
+				Error:  nil,
+			}
+			reply, err := json.Marshal(result)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(reply))
+			require.NoError(t, err)
+		}
+
+	}
+}
+
+func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			serviceAccount := &orgv1.User{
+				Id:                 12345,
+				ServiceName:        "service_account",
+				ServiceDescription: "at your service.",
+			}
+			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{serviceAccount},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(listReply))
+			require.NoError(t, err)
+		case "POST":
+			req := &orgv1.CreateServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			serviceAccount := &orgv1.User{
+				Id:                 55555,
+				ServiceName:        req.User.ServiceName,
+				ServiceDescription: req.User.ServiceDescription,
+			}
+			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
+				Error: nil,
+				User:  serviceAccount,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(createReply))
+			require.NoError(t, err)
+		case "PUT":
+			req := &orgv1.UpdateServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateServiceAccountReply{
+				Error: nil,
+				User:  req.User,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(updateReply))
+			require.NoError(t, err)
+		case "DELETE":
+			req := &orgv1.DeleteServiceAccountRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteServiceAccountReply{
+				Error: nil,
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(updateReply))
+			require.NoError(t, err)
+		}
 	}
 }

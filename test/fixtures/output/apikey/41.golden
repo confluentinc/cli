@@ -1,0 +1,4 @@
+    Key    | Owner | Description | Resource Type | Resource ID  
++----------+-------+-------------+---------------+-------------+
+    MYKEY1 |    12 | first-key   | kafka         | lkc-bob      
+    MYKEY3 |    23 |             | kafka         | lkc-bob      

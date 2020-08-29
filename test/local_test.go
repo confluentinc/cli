@@ -1,106 +1,155 @@
-// +build !windows
-
 package test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/stretchr/testify/require"
 )
 
-func (s *CLITestSuite) TestLocalHelpCommands() {
-	var tests []CLITest
-	tests = []CLITest{
-		// These should all be equivalent
-		{args: "local", fixture: "local-help1.golden"},
-		{args: "help local", fixture: "local-help1.golden"},
-		{args: "local --help", fixture: "local-help1.golden"},
-		// Ideally, this would show subcommand help, but Cobra doesn't send "list" arg to the help command func.
-		// So we just show the top level list of commands again. :(
-		{args: "help local list", fixture: "local-help1.golden"},
-		// But if we call it this way, we can see help for specific local subcommands.
-		{args: "local list --help", fixture: "local-help2.golden"},
-		// We only have help 2 command levels deep. "local list plugins --help" shows the same as "local list --help"
-		{args: "local list plugins --help", fixture: "local-help2.golden"},
+func (s *CLITestSuite) TestLocalLifecycle() {
+	s.createCH([]string{
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
+	})
+	s.createCC()
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local destroy", fixture: "local/destroy-error.golden", wantErrCode: 1},
+		{args: "local current", fixture: "local/current.golden", regex: true},
+		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
 	}
-	resetConfiguration(s.T(), "confluent")
+
+	loginURL := serveMds(s.T()).URL
+
 	for _, tt := range tests {
-		if tt.name == "" {
-			tt.name = tt.args
-		}
-		s.runConfluentTest(tt, serveMds(s.T()).URL)
+		tt.workflow = true
+		s.runConfluentTest(tt, loginURL)
+	}
+}
+
+func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
+	s.createCH([]string{
+		"share/java/confluent-common/common-config-0.0.0.jar",
+	})
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local services list", fixture: "local/services-list-ccs.golden"},
+		{args: "local version", fixture: "local/version-ccs.golden"},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
 func (s *CLITestSuite) TestLocalVersion() {
+	s.createCH([]string{
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
+		"share/java/kafka-connect-replicator/connect-replicator-0.0.0.jar",
+	})
+	defer s.destroy()
+
 	tests := []CLITest{
-		{name: "5.3.1 community", args: "local --path %s version", fixture: "local-version1.golden"},
-		{name: "5.3.1 enterprise", args: "local --path %s version", fixture: "local-version2.golden"},
-		{name: "5.4.0 community", args: "local --path %s version", fixture: "local-version3.golden"},
-		{name: "5.4.0 enterprise", args: "local --path %s version", fixture: "local-version4.golden"},
+		{args: "local version", fixture: "local/version-cp.golden"},
 	}
-	resetConfiguration(s.T(), "confluent")
+
+	loginURL := serveMds(s.T()).URL
+
 	for _, tt := range tests {
-		parts := strings.Split(tt.name, " ")
-		version := parts[0]
-		enterprise := parts[1] == "enterprise"
-		path, err := makeFakeCPLocalInstall(version, enterprise)
-		require.NoError(s.T(), err)
-		//noinspection GoDeferInLoop
-		defer os.RemoveAll(path) // clean up
-		tt.args = fmt.Sprintf(tt.args, path)
-		s.runConfluentTest(tt, serveMds(s.T()).URL)
+		s.runConfluentTest(tt, loginURL)
 	}
 }
 
-func makeFakeCPLocalInstall(version string, enterprise bool) (string, error) {
-	path, err := ioutil.TempDir("", "confluent-"+version)
-	if err != nil {
-		return "", err
+func (s *CLITestSuite) TestLocalServicesList() {
+	s.createCH([]string{
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
+	})
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local services list", fixture: "local/services-list-cp.golden"},
 	}
 
-	// setup to pass "validate" step
-	srConf := fmt.Sprintf("%s/etc/schema-registry/", path)
-	err = os.MkdirAll(srConf, os.ModePerm)
-	if err != nil {
-		return "", err
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("%s/connect-avro-distributed.properties", srConf), []byte(""), os.ModePerm)
-	if err != nil {
-		return "", err
+}
+
+func (s *CLITestSuite) TestLocalServicesLifecycle() {
+	s.createCH([]string{
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
+	})
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local services status", fixture: "local/services-status-all-stopped.golden", regex: true},
+		{args: "local services stop", fixture: "local/services-stop-already-stopped.golden", regex: true},
+		{args: "local services top", fixture: "local/services-top-no-services-running.golden", wantErrCode: 1},
 	}
 
-	// setup for version detection to correctly decide if its "Confluent Platform" or "Confluent Community Software"
-	if enterprise {
-		var filename string
-		if version == "5.3.1" {
-			filename = "kafka-connect-replicator-5.3.1.jar"
-		} else {
-			filename = "connect-replicator-5.4.0.jar"
-		}
-		replicatorDir := fmt.Sprintf("%s/share/java/kafka-connect-replicator/", path)
-		err = os.MkdirAll(replicatorDir, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", replicatorDir, filename), []byte(""), os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		filename := fmt.Sprintf("common-config-%s.jar", version)
-		commonDir := fmt.Sprintf("%s/share/java/confluent-common/", path)
-		err = os.MkdirAll(commonDir, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", commonDir, filename), []byte(""), os.ModePerm)
-		if err != nil {
-			return "", err
-		}
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
 	}
-	return path, nil
+}
+
+func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
+	s.createCH([]string{
+		"share/java/kafka/zookeeper-0.0.0.jar",
+	})
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local services zookeeper log", fixture: "local/zookeeper-log-error.golden", wantErrCode: 1},
+		{args: "local services zookeeper status", fixture: "local/zookeeper-status-stopped.golden", regex: true},
+		{args: "local services zookeeper stop", fixture: "local/zookeeper-stop-already-stopped.golden", regex: true},
+		{args: "local services zookeeper top", fixture: "local/zookeeper-top-stopped.golden"},
+		{args: "local services zookeeper version", fixture: "local/zookeeper-version.golden"},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
+	}
+}
+
+func (s *CLITestSuite) createCC() {
+	req := require.New(s.T())
+
+	dir := filepath.Join(os.TempDir(), "confluent-int-test", "cc")
+	req.NoError(os.Setenv("CONFLUENT_CURRENT", dir))
+}
+
+func (s *CLITestSuite) createCH(files []string) {
+	req := require.New(s.T())
+
+	dir := filepath.Join(os.TempDir(), "confluent-int-test", "ch")
+	req.NoError(os.Setenv("CONFLUENT_HOME", dir))
+
+	for _, file := range files {
+		path := filepath.Join(dir, file)
+
+		dir := filepath.Dir(path)
+		req.NoError(os.MkdirAll(dir, 0777))
+
+		req.NoError(ioutil.WriteFile(path, []byte{}, 0644))
+	}
+}
+
+func (s *CLITestSuite) destroy() {
+	req := require.New(s.T())
+
+	req.NoError(os.Setenv("CONFLUENT_HOME", ""))
+	req.NoError(os.Setenv("CONFLUENT_CURRENT", ""))
+	dir := filepath.Join(os.TempDir(), "confluent-int-test")
+	req.NoError(os.RemoveAll(dir))
 }

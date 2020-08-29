@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -27,17 +27,16 @@ var (
 	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description"}
 )
 
-const nameLength = 32
+const nameLength = 64
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "service-account",
 			Short: `Manage service accounts.`,
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
 	}
@@ -48,9 +47,9 @@ func New(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
 func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: `List service accounts.`,
-		RunE:  c.list,
+		Short: "List service accounts.",
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -58,18 +57,15 @@ func (c *command) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: `Create a service account.`,
-		Example: `
-Create a service account named ` + "``DemoServiceAccount``" + `.
-
-::
-
-  ccloud service-account create "DemoServiceAccount" \
-  --description "This is a demo service account."
-
-`,
-		RunE: c.create,
-		Args: cobra.ExactArgs(1),
+		Short: "Create a service account.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a service account named ``DemoServiceAccount``.",
+				Code: `ccloud service-account create DemoServiceAccount --description "This is a demo service account."`,
+			},
+		),
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
@@ -79,18 +75,15 @@ Create a service account named ` + "``DemoServiceAccount``" + `.
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: `Update a service account.`,
-		Example: `
-Update the description of a service account with the ID ` + "``2786``" + `.
-
-::
-
-    ccloud service-account update service-account-id 2786 \
-    --description "Update demo service account information."
-
-`,
-		RunE: c.update,
-		Args: cobra.ExactArgs(1),
+		Short: "Update a service account.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Update the description of a service account with the ID ``2786``",
+				Code: `ccloud service-account update 2786 --description "Update demo service account information."`,
+			},
+		),
 	}
 	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
@@ -99,23 +92,21 @@ Update the description of a service account with the ID ` + "``2786``" + `.
 
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <id>",
-		Short: `Delete a service account.`,
-		Example: `
-Delete a service account with the ID ` + "``2786``" + `.
-
-::
-
-    ccloud service-account delete 2786
-
-`,
-		RunE: c.delete,
-		Args: cobra.ExactArgs(1),
+		Short: "Delete a service account.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete a service account with the ID ``2786``",
+				Code: "ccloud service-account delete 2786",
+			},
+		),
 	})
 }
 
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
-		return fmt.Errorf(field+" length should be less then %d characters.", maxLen)
+		return fmt.Errorf(field+" length should not exceed %d characters.", maxLen)
 	}
 
 	return nil
@@ -125,16 +116,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if err := requireLen(name, nameLength, "service name"); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	user := &orgv1.User{
@@ -145,7 +136,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -153,17 +144,17 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	idp, err := strconv.Atoi(args[0])
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	id := int32(idp)
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	user := &orgv1.User{
@@ -172,15 +163,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
 	return nil
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	idp, err := strconv.Atoi(args[0])
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	id := int32(idp)
 
@@ -189,20 +181,20 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, u := range users {
 		outputWriter.AddElement(u)

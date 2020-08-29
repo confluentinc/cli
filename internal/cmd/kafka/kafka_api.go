@@ -5,27 +5,29 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
 type ACLConfiguration struct {
-	*kafkav1.ACLBinding
+	*schedv1.ACLBinding
 	errors error
 }
 
 func NewACLConfig() *ACLConfiguration {
 	return &ACLConfiguration{
-		ACLBinding: &kafkav1.ACLBinding{
-			Entry: &kafkav1.AccessControlEntryConfig{
+		ACLBinding: &schedv1.ACLBinding{
+			Entry: &schedv1.AccessControlEntryConfig{
 				Host: "*",
 			},
-			Pattern: &kafkav1.ResourcePatternConfig{},
+			Pattern: &schedv1.ResourcePatternConfig{},
 		},
 	}
 }
@@ -47,7 +49,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
 	flgSet.Int("service-account", 0, "The service account ID.")
 	flgSet.StringArray("operation", []string{""}, fmt.Sprintf("Set ACL Operations to: (%s).",
-		listEnum(kafkav1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
+		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
 	_ = cobra.MarkFlagRequired(flgSet, "service-account")
@@ -73,7 +75,7 @@ the --prefix option was also passed.`)
 
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
-	aclConfigs := []*ACLConfiguration{}
+	var aclConfigs []*ACLConfiguration
 
 	if cmd.Name() == listCmd.Name() {
 		aclConfig := NewACLConfig()
@@ -88,7 +90,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	}
 	for _, operation := range operations {
 		aclConfig := NewACLConfig()
-		op, err := getAclOperation(operation)
+		op, err := getACLOperation(operation)
 		if err != nil {
 			return nil, err
 		}
@@ -117,11 +119,11 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "transactional-id":
 			setResourcePattern(conf, n, v)
 		case "allow":
-			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_ALLOW
+			conf.Entry.PermissionType = schedv1.ACLPermissionTypes_ALLOW
 		case "deny":
-			conf.Entry.PermissionType = kafkav1.ACLPermissionTypes_DENY
+			conf.Entry.PermissionType = schedv1.ACLPermissionTypes_DENY
 		case "prefix":
-			conf.Pattern.PatternType = kafkav1.PatternTypes_PREFIXED
+			conf.Pattern.PatternType = schedv1.PatternTypes_PREFIXED
 		case "service-account":
 			if v == "0" {
 				conf.Entry.Principal = "User:*"
@@ -134,19 +136,19 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
-	if conf.Pattern.ResourceType != kafkav1.ResourceTypes_UNKNOWN {
-		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
-			listEnum(kafkav1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
+	if conf.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg,
+			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 		return
 	}
 
 	n = strings.ToUpper(n)
-	n = strings.Replace(n, "-", "_", -1)
+	n = strings.ReplaceAll(n, "-", "_")
 
-	conf.Pattern.ResourceType = kafkav1.ResourceTypes_ResourceType(kafkav1.ResourceTypes_ResourceType_value[n])
+	conf.Pattern.ResourceType = schedv1.ResourceTypes_ResourceType(schedv1.ResourceTypes_ResourceType_value[n])
 
-	if conf.Pattern.ResourceType == kafkav1.ResourceTypes_CLUSTER {
-		conf.Pattern.PatternType = kafkav1.PatternTypes_LITERAL
+	if conf.Pattern.ResourceType == schedv1.ResourceTypes_CLUSTER {
+		conf.Pattern.PatternType = schedv1.PatternTypes_LITERAL
 	}
 	conf.Pattern.Name = v
 }
@@ -167,7 +169,7 @@ OUTER:
 		if v == "CLUSTER" {
 			v = "cluster-scope"
 		}
-		v = strings.Replace(v, "_", "-", -1)
+		v = strings.ReplaceAll(v, "_", "-")
 		ops = append(ops, strings.ToLower(v))
 	}
 
@@ -175,11 +177,11 @@ OUTER:
 	return strings.Join(ops, ", ")
 }
 
-func getAclOperation(operation string) (kafkav1.ACLOperations_ACLOperation, error) {
+func getACLOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
 	op := strings.ToUpper(operation)
-	op = strings.Replace(op, "-", "_", -1)
-	if operation, ok := kafkav1.ACLOperations_ACLOperation_value[op]; ok {
-		return kafkav1.ACLOperations_ACLOperation(operation), nil
+	op = strings.ReplaceAll(op, "-", "_")
+	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {
+		return schedv1.ACLOperations_ACLOperation(operation), nil
 	}
-	return kafkav1.ACLOperations_UNKNOWN, fmt.Errorf("Invalid operation value: %s", op)
+	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
 }

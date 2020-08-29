@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	version "github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
 )
 
@@ -38,7 +40,7 @@ type PrefixedKey struct {
 // Prefix may be an empty string. An error will be returned if sep is empty or a space.
 func NewPrefixedKey(prefix, sep string, prefixVersion bool) (*PrefixedKey, error) {
 	if sep == "" || sep == " " {
-		return nil, fmt.Errorf("sep must be a non-empty string")
+		return nil, errors.New(errors.SepNonEmptyErrorMsg)
 	}
 	return &PrefixedKey{
 		Prefix:        prefix,
@@ -116,7 +118,7 @@ func (p *PrefixedKey) ParseVersion(key, name string) (match bool, foundVersion *
 
 	ver, err := version.NewSemver(split[1])
 	if err != nil {
-		return false, nil, fmt.Errorf("unable to parse %s version - %s", name, err)
+		return false, nil, errors.Errorf(errors.ParseVersionErrorMsg, name, split[1])
 	}
 	return true, ver, nil
 }

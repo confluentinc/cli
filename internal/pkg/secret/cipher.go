@@ -11,10 +11,10 @@ type Cipher struct {
 
 func NewDefaultCipher() *Cipher {
 	return &Cipher{
-		Iterations:       METADATA_KEY_DEFAULT_ITERATIONS,
-		KeyLength:        METADATA_KEY_DEFAULT_LENGTH_BYTES,
+		Iterations:       MetadataKeyDefaultIterations,
+		KeyLength:        MetadataKeyDefaultLengthBytes,
 		SaltMEK:          "",
 		SaltDEK:          "",
-		EncryptionAlgo:   METADATA_ENC_ALGORITHM,
+		EncryptionAlgo:   MetadataEncAlgorithm,
 		EncryptedDataKey: ""}
 }

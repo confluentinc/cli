@@ -14,6 +14,12 @@ import (
 type Logger struct {
 	params *Params
 	l      hclog.Logger
+	buffer []bufferedLog
+}
+
+type bufferedLog struct {
+	level   Level
+	message string
 }
 
 var _ ccloud.Logger = (*Logger)(nil)
@@ -75,62 +81,116 @@ func (l *Logger) Named(name string) *Logger {
 }
 
 func (l *Logger) Trace(args ...interface{}) {
+	message := fmt.Sprint(args...)
 	if l.l.IsTrace() {
-		l.l.Trace(fmt.Sprint(args...))
+		l.l.Trace(message)
+	} else {
+		l.bufferLogMessage(TRACE, message)
 	}
 }
 
 func (l *Logger) Tracef(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
 	if l.l.IsTrace() {
-		l.l.Trace(fmt.Sprintf(format, args...))
+		l.l.Trace(message)
+	} else {
+		l.bufferLogMessage(TRACE, message)
 	}
 }
 
 func (l *Logger) Debug(args ...interface{}) {
+	message := fmt.Sprint(args...)
 	if l.l.IsDebug() {
-		l.l.Debug(fmt.Sprint(args...))
+		l.l.Debug(message)
+	} else {
+		l.bufferLogMessage(DEBUG, message)
 	}
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
 	if l.l.IsDebug() {
-		l.l.Debug(fmt.Sprintf(format, args...))
+		l.l.Debug(message)
+	} else {
+		l.bufferLogMessage(DEBUG, message)
 	}
 }
 
 func (l *Logger) Info(args ...interface{}) {
+	message := fmt.Sprint(args...)
 	if l.l.IsInfo() {
-		l.l.Info(fmt.Sprint(args...))
+		l.l.Info(message)
+	} else {
+		l.bufferLogMessage(INFO, message)
 	}
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
 	if l.l.IsInfo() {
-		l.l.Info(fmt.Sprintf(format, args...))
+		l.l.Info(message)
+	} else {
+		l.bufferLogMessage(INFO, message)
 	}
 }
 
 func (l *Logger) Warn(args ...interface{}) {
+	message := fmt.Sprint(args...)
 	if l.l.IsWarn() {
-		l.l.Warn(fmt.Sprint(args...))
+		l.l.Warn(message)
+	} else {
+		l.bufferLogMessage(WARN, message)
 	}
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
 	if l.l.IsWarn() {
-		l.l.Warn(fmt.Sprintf(format, args...))
+		l.l.Warn(message)
+	} else {
+		l.bufferLogMessage(WARN, message)
 	}
 }
 
 func (l *Logger) Error(args ...interface{}) {
+	message := fmt.Sprint(args...)
 	if l.l.IsError() {
-		l.l.Error(fmt.Sprint(args...))
+		l.l.Error(message)
+	} else {
+		l.bufferLogMessage(ERROR, message)
 	}
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
+	message := fmt.Sprintf(format, args...)
 	if l.l.IsError() {
-		l.l.Error(fmt.Sprintf(format, args...))
+		l.l.Error(message)
+	} else {
+		l.bufferLogMessage(ERROR, message)
+	}
+}
+
+func (l *Logger) bufferLogMessage(level Level, message string) {
+	l.buffer = append(l.buffer, bufferedLog{
+		level:   level,
+		message: message,
+	})
+}
+
+func (l *Logger) Flush() {
+	for _, buffered := range l.buffer {
+		switch buffered.level {
+		case ERROR:
+			l.Error(buffered.message)
+		case WARN:
+			l.Warn(buffered.message)
+		case INFO:
+			l.Info(buffered.message)
+		case DEBUG:
+			l.Debug(buffered.message)
+		case TRACE:
+			l.Trace(buffered.message)
+		}
 	}
 }
 

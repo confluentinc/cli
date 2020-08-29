@@ -24,81 +24,95 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
-	long := cmd.Long
+func GenReSTTree(cmd *cobra.Command, dir string, linkHandler func(string) string, depth int) error {
+	path := filepath.Join(strings.Split(cmd.CommandPath(), " ")...)
 
-	flags := cmd.NonInheritedFlags()
-	flags.SetOutput(buf)
-	if flags.HasAvailableFlags() {
-		buf.WriteString("Flags\n")
-		buf.WriteString("~~~~~\n\n::\n\n")
-		flags.PrintDefaults()
-		buf.WriteString("\n" + long + "\n\n")
+	if cmd.HasSubCommands() {
+		file := filepath.Join(dir, path, "index.rst")
+
+		if err := os.MkdirAll(filepath.Dir(file), 0777); err != nil {
+			return err
+		}
+
+		if err := GenReSTIndex(cmd, file, indexHeader, SphinxRef); err != nil {
+			return err
+		}
+
+		for _, c := range cmd.Commands() {
+			if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
+				continue
+			}
+
+			if err := GenReSTTree(c, dir, linkHandler, depth+1); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
-	parentFlags := cmd.InheritedFlags()
-	parentFlags.SetOutput(buf)
-	if parentFlags.HasAvailableFlags() {
-		buf.WriteString("Global Flags\n")
-		buf.WriteString("~~~~~~~~~~~~\n\n::\n\n")
-		parentFlags.PrintDefaults()
-		buf.WriteString("\n")
+	name := strings.ReplaceAll(cmd.CommandPath(), " ", "_") + ".rst"
+	file := filepath.Join(dir, filepath.Dir(path), name)
+
+	f, err := os.Create(file)
+	if err != nil {
+		return err
 	}
+	defer f.Close()
 
-	if len(cmd.Example) > 0 {
-		buf.WriteString("Examples\n")
-		buf.WriteString("~~~~~~~~\n\n")
-		buf.WriteString(fmt.Sprintf("%s\n\n", cmd.Example))
-	}
-
-	return nil
+	return GenReST(cmd, f, linkHandler, depth)
 }
 
-// linkHandler for default ReST hyperlink markup
-func defaultLinkHandler(name, ref string) string {
-	return fmt.Sprintf("`%s <%s.rst>`_", name, ref)
-}
-
-// GenReST creates reStructured Text output.
-func GenReST(cmd *cobra.Command, w io.Writer) error {
-	return GenReSTCustom(cmd, w, defaultLinkHandler)
-}
-
-// GenReSTCustom creates custom reStructured Text output.
-func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, string) string) error {
+func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, depth int) error {
 	cmd.InitDefaultHelpCmd()
 	cmd.InitDefaultHelpFlag()
 
 	buf := new(bytes.Buffer)
+
 	name := cmd.CommandPath()
+	ref := strings.ReplaceAll(name, " ", "_")
 
-	short := cmd.Short
-	ref := strings.Replace(name, " ", "_", -1)
-
-	buf.WriteString(".. _" + ref + ":\n\n")
+	buf.WriteString(fmt.Sprintf(".. _%s:\n\n", ref))
 	buf.WriteString(name + "\n")
 	buf.WriteString(strings.Repeat("-", len(name)) + "\n\n")
+
+	printWarnings(buf, cmd, depth)
+
+	desc := cmd.Short
+	if cmd.Long != "" {
+		desc = cmd.Long
+	}
 	buf.WriteString("Description\n")
 	buf.WriteString("~~~~~~~~~~~\n\n")
-	buf.WriteString(short + "\n\n")
+	buf.WriteString(desc + "\n\n")
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
 	}
 
-	if err := printOptionsReST(buf, cmd, name); err != nil {
+	printTips(buf, cmd, depth)
+
+	if err := printOptions(buf, cmd); err != nil {
 		return err
 	}
+
 	if hasSeeAlso(cmd) {
 		buf.WriteString("See Also\n")
 		buf.WriteString("~~~~~~~~\n\n")
 		if cmd.HasParent() {
 			parent := cmd.Parent()
-			pname := parent.CommandPath()
-			ref = strings.Replace(pname, " ", "_", -1)
-			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(pname, ref), parent.Short))
+
+			ref = strings.ReplaceAll(parent.CommandPath(), " ", "_")
+			if cmd.Root() == parent {
+				ref += "-ref"
+			}
+
+			buf.WriteString(fmt.Sprintf("* %s - %s\n", linkHandler(ref), parent.Short))
+
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -114,8 +128,8 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 				continue
 			}
 			cname := name + " " + child.Name()
-			ref = strings.Replace(cname, " ", "_", -1)
-			buf.WriteString(fmt.Sprintf("* %s \t - %s\n", linkHandler(cname, ref), child.Short))
+			ref = strings.ReplaceAll(cname, " ", "_")
+			buf.WriteString(fmt.Sprintf("* %s - %s\n", linkHandler(ref), child.Short))
 		}
 		buf.WriteString("\n")
 	}
@@ -126,42 +140,88 @@ func GenReSTCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string, str
 	return err
 }
 
-// GenReSTTree will generate a ReST page for this command and all
-// descendants in the directory given.
-// This function may not work correctly if your command names have `-` in them.
-// If you have `cmd` with two subcmds, `sub` and `sub-third`,
-// and `sub` has a subcommand called `third`, it is undefined which
-// help output will be in the file `cmd-sub-third.1`.
-func GenReSTTree(cmd *cobra.Command, dir string) error {
-	emptyStr := func(s string) string { return "" }
-	return GenReSTTreeCustom(cmd, dir, emptyStr, defaultLinkHandler)
+func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
+	pcmd.LabelRequiredFlags(cmd)
+
+	flags := cmd.NonInheritedFlags()
+	flags.SetOutput(buf)
+	if flags.HasAvailableFlags() {
+		buf.WriteString("Flags\n")
+		buf.WriteString("~~~~~\n\n")
+		buf.WriteString("::\n\n")
+		flags.PrintDefaults()
+		buf.WriteString("\n")
+	}
+
+	parentFlags := cmd.InheritedFlags()
+	parentFlags.SetOutput(buf)
+	if parentFlags.HasAvailableFlags() {
+		buf.WriteString("Global Flags\n")
+		buf.WriteString("~~~~~~~~~~~~\n\n")
+		buf.WriteString("::\n\n")
+		parentFlags.PrintDefaults()
+		buf.WriteString("\n")
+	}
+
+	if len(cmd.Example) > 0 {
+		buf.WriteString("Examples\n")
+		buf.WriteString("~~~~~~~~\n\n")
+		buf.WriteString(cmd.Example)
+	}
+
+	return nil
 }
 
-// GenReSTTreeCustom is the the same as GenReSTTree, but
-// with custom filePrepender and linkHandler.
-func GenReSTTreeCustom(cmd *cobra.Command, dir string, filePrepender func(string) string, linkHandler func(string, string) string) error {
-	for _, c := range cmd.Commands() {
-		if !c.IsAvailableCommand() || c.IsAdditionalHelpTopicCommand() {
-			continue
+func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		include := strings.Repeat("../", depth+1) + "includes/cli.rst"
+		args := map[string]string{
+			"start-after": "cli_limitations_start",
+			"end-before":  "cli_limitations_end",
 		}
-		if err := GenReSTTreeCustom(c, dir, filePrepender, linkHandler); err != nil {
-			return err
-		}
+		buf.WriteString(sphinxBlock("include", include, args))
+	}
+}
+
+func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		include := strings.Repeat("../", depth+1) + "includes/path-set-cli.rst"
+		buf.WriteString(sphinxBlock("include", include, nil))
 	}
 
-	basename := strings.Replace(cmd.CommandPath(), " ", "_", -1) + ".rst"
-	filename := filepath.Join(dir, basename)
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
+	if strings.HasPrefix(cmd.CommandPath(), "confluent secret") {
+		ref := SphinxRef("secrets-examples")
+		tip := fmt.Sprintf("For examples, see %s.", ref)
+		buf.WriteString(sphinxBlock("tip", tip, nil))
 	}
-	defer f.Close()
 
-	if _, err := io.WriteString(f, filePrepender(filename)); err != nil {
-		return err
+	if cmd.CommandPath() == "confluent iam rolebinding create" {
+		ref := SphinxRef("view-audit-logs-on-the-fly")
+		note := fmt.Sprintf("If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to %s.", ref)
+		buf.WriteString(sphinxBlock("note", note, nil))
 	}
-	if err := GenReSTCustom(cmd, f, linkHandler); err != nil {
-		return err
+}
+
+func SphinxRef(ref string) string {
+	return fmt.Sprintf(":ref:`%s`", ref)
+}
+
+func sphinxBlock(key, val string, args map[string]string) string {
+	str := strings.Builder{}
+
+	str.WriteString(fmt.Sprintf(".. %s:: %s\n", key, val))
+
+	var keys []string
+	for key, _ := range args {
+		keys = append(keys, key)
 	}
-	return nil
+	sort.Strings(keys)
+	for _, key := range keys {
+		val := args[key]
+		str.WriteString(fmt.Sprintf("  :%s: %s\n", key, val))
+	}
+
+	str.WriteString("\n")
+
+	return str.String()
 }

@@ -5,18 +5,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/client9/gospell"
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -29,19 +26,17 @@ var (
 	cliNames = []string{"confluent", "ccloud"}
 
 	properNouns = []string{
-		"Apache", "Kafka", "CLI", "API", "ACL", "ACLs", "Confluent Cloud", "Confluent Platform", "Confluent", "RBAC", "IAM", "Schema Registry",
-		"Enterprise", "KSQL", "Connect",
+		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
+		"Connect", "Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
+		"Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
 	}
 	vocabWords = []string{
-		"ccloud", "kafka", "api", "url", "config", "configs", "csu", "multizone", "transactional", "ksql", "KSQL", "stdin",
-		"connect", "connect-catalog", "JSON", "plaintext", "json", "YAML", "yaml", "SSO", "netrc",
-		// security
-		"iam", "acl", "acls", "ACL", "rolebinding", "rolebindings", "PEM", "auth", "init", "decrypt", "READWRITE",
-		"txt", // this is because @file.txt -> file txt
-		// clouds
-		"aws", "gcp",
-		// geos
-		"geo", "us", "eu", "apac",
+		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
+		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
+		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "iam", "init", "json", "jsonschema", "kafka", "ksql", "lifecycle",
+		"lz4", "multi-zone", "netrc", "pem", "plaintext", "producer.config", "protobuf", "readwrite", "recv",
+		"rolebinding", "rolebindings", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "transactional", "txt", "url",
+		"us", "vpc", "v2", "whitelist", "yaml", "zstd", "hostname", "https", "rbac", "io", "mds", "tmp", "html",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",
@@ -77,12 +72,16 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("api-key create"),
 		// skip connector create since you don't get to choose id for connector
 		linter.ExcludeCommandContains("connector create"),
-		// skip local which delegates to bash commands
+		// skip local which delegates to external bash scripts
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store <apikey> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
+		// skip for register command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster register"),
+		// skip for unregister command since they don't have names/IDs
+		linter.ExcludeCommandContains("cluster unregister"),
 		// skip secret commands
 		linter.ExcludeCommandContains("secret"),
 		// skip schema-registry commands which do not use names/ID's
@@ -93,6 +92,13 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name
 		linter.ExcludeCommandContains("connector-catalog describe"),
+		// skip feedback command
+		linter.ExcludeCommand("feedback"),
+		// config context commands
+		linter.ExcludeCommand("config context current"),
+		linter.ExcludeCommandContains("config context get"),
+		linter.ExcludeCommandContains("config context set"),
+		linter.ExcludeCommandContains("audit-log"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
@@ -102,11 +108,16 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
-	linter.Filter(linter.RequireFlagDescription("resource", "REQUIRED: The resource ID."),
-		append(resourceScopedCommands, linter.ExcludeCommand("api-key create"))...),
-	linter.RequireFlagSort(false),
+	linter.Filter(
+		linter.RequireFlagSort(false),
+		linter.OnlyLeafCommands,
+		linter.ExcludeCommandContains("local"),
+	),
 	linter.RequireLowerCase("Use"),
-	linter.RequireSingular("Use"),
+	linter.Filter(
+		linter.RequireSingular("Use"),
+		linter.ExcludeCommandContains("local"),
+	),
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
 		linter.ExcludeCommandContains("secret"),
@@ -117,22 +128,60 @@ var rules = []linter.Rule{
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns),
-		linter.ExcludeCommandContains("secret")),
-	linter.RequireRealWords("Use", '-'),
+	linter.Filter(
+		linter.RequireNotTitleCase("Short", properNouns),
+		linter.ExcludeCommandContains("secret"),
+	),
+	linter.Filter(
+		linter.RequireRealWords("Use", '-'),
+		linter.ExcludeCommandContains("unregister"),
+		linter.ExcludeCommandContains("audit-log"),
+	),
 }
 
 var flagRules = []linter.FlagRule{
-	linter.FlagFilter(linter.RequireFlagNameLength(2, 16),
-		linter.ExcludeFlag("service-account", "connect-cluster-id", "schema-registry-cluster-id", "local-secrets-file", "remote-secrets-file")),
-	linter.RequireFlagUsageMessage,
-	linter.RequireFlagUsageStartWithCapital,
-	linter.RequireFlagUsageEndWithPunctuation,
+	linter.FlagFilter(
+		linter.RequireFlagNameLength(2, 16),
+		linter.ExcludeFlag(
+			"compression-codec", "connect-cluster-id", "consumer-property", "enable-systest-events",
+			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
+			"producer-property", "remote-secrets-file", "request-required-acks", "request-timeout-ms",
+			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
+			"value-deserializer", "bootstrap-servers",
+		),
+	),
+	linter.FlagFilter(
+		linter.RequireFlagUsageMessage,
+		linter.ExcludeFlag("key-deserializer", "value-deserializer"),
+	),
+	linter.FlagFilter(
+		linter.RequireFlagUsageStartWithCapital,
+		linter.ExcludeFlag("ksql-cluster-id"),
+	),
+	linter.FlagFilter(
+		linter.RequireFlagUsageEndWithPunctuation,
+		linter.ExcludeFlag(
+			"batch-size", "enable-systest-events", "formatter", "isolation-level", "line-reader", "max-block-ms",
+			"max-memory-bytes", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
+			"offset", "property", "request-required-acks", "request-timeout-ms", "retry-backoff-ms",
+			"socket-buffer-size", "timeout",
+		),
+	),
 	linter.RequireFlagKebabCase,
-	linter.RequireFlagCharacters('-'),
-	linter.FlagFilter(linter.RequireFlagDelimiter('-', 1),
-		linter.ExcludeFlag("service-account", "kafka-cluster-id", "connect-cluster-id", "schema-registry-cluster-id",
-			"ksql-cluster-id", "local-secrets-file", "remote-secrets-file", "ca-cert-path")),
+	linter.FlagFilter(
+		linter.RequireFlagCharacters('-'),
+		linter.ExcludeFlag("consumer.config", "producer.config"),
+	),
+	linter.FlagFilter(
+		linter.RequireFlagDelimiter('-', 1),
+		linter.ExcludeFlag(
+			"ca-cert-path", "connect-cluster-id", "enable-systest-events", "if-not-exists", "kafka-cluster-id",
+			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
+			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
+			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
+			"skip-message-on-error", "socket-buffer-size",
+		),
+	),
 	linter.RequireFlagRealWords('-'),
 	linter.RequireFlagUsageRealWords,
 }
@@ -147,7 +196,8 @@ func main() {
 		os.Exit(1)
 	}
 	for _, w := range vocabWords {
-		vocab.AddWordRaw(w)
+		vocab.AddWordRaw(strings.ToLower(w))
+		vocab.AddWordRaw(strings.ToUpper(w))
 	}
 	linter.SetVocab(vocab)
 
@@ -160,12 +210,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cfg := v3.New(&config.Params{
-			CLIName:    cliName,
-			MetricSink: nil,
-			Logger:     log.New(),
-		})
-		cli, err := cmd.NewConfluentCommand(cliName, cfg, cfg.Logger, &version.Version{Binary: cliName}, mock.NewDummyAnalyticsMock(), pauth.NewNetrcHandler(""))
+		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, pauth.NewNetrcHandler(""))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

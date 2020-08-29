@@ -2,6 +2,7 @@ package v3
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 	"runtime"
 	"testing"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -19,7 +20,6 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testUtils "github.com/confluentinc/cli/test"
 )
 
 var (
@@ -75,6 +75,10 @@ func SetupTestInputs(cliName string) *TestInputs {
 			Account: account,
 			Accounts: []*orgv1.Account{
 				account,
+			},
+			Organization: &orgv1.Organization{
+				Id:   321,
+				Name: "test-org",
 			},
 		},
 		AuthToken: "abc123",
@@ -294,8 +298,8 @@ func TestConfig_Save(t *testing.T) {
 			}
 			got, _ := ioutil.ReadFile(configFile.Name())
 			want, _ := ioutil.ReadFile(tt.wantFile)
-			if testUtils.NormalizeNewLines(string(got)) != testUtils.NormalizeNewLines(string(want)) {
-				t.Errorf("Config.Save() = %v\n want = %v", testUtils.NormalizeNewLines(string(got)), testUtils.NormalizeNewLines(string(want)))
+			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
+				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 			}
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
@@ -365,7 +369,7 @@ func TestConfig_AddContext(t *testing.T) {
 	noContextConf.Filename = filename
 	delete(noContextConf.Contexts, noContextConf.Context().Name)
 	noContextConf.CurrentContext = ""
-	type testSturct struct {
+	type testStruct struct {
 		name                   string
 		config                 *Config
 		contextName            string
@@ -381,7 +385,7 @@ func TestConfig_AddContext(t *testing.T) {
 		wantErr                bool
 	}
 
-	test := testSturct{
+	test := testStruct{
 		name:                   "",
 		config:                 noContextConf,
 		contextName:            context.Name,
@@ -406,7 +410,7 @@ func TestConfig_AddContext(t *testing.T) {
 	failAddingExistingContextTest.want = nil
 	failAddingExistingContextTest.wantErr = true
 
-	tests := []testSturct{
+	tests := []testStruct{
 		addValidContextTest,
 		failAddingExistingContextTest,
 	}
@@ -770,5 +774,35 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		if kcc.APIKey != "" {
 			t.Errorf("DeleteAPIKey did not remove deleted active API key.")
 		}
+	}
+}
+
+func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
+	clusterID := "lkc-abcdefg"
+	apiKey := "akey"
+	kcc := &v1.KafkaClusterConfig{
+		ID:          clusterID,
+		Name:        "lit",
+		Bootstrap:   "http://test",
+		APIEndpoint: "",
+		APIKeys: map[string]*v0.APIKeyPair{
+			apiKey: {
+				Key:    apiKey,
+				Secret: "asecret",
+			},
+		},
+		APIKey: apiKey,
+	}
+	for _, cliName := range []string{"ccloud", "confluent"} {
+		testInputs := SetupTestInputs(cliName)
+		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
+		kafkaClusterContext.AddKafkaClusterConfig(kcc)
+		kafkaClusterContext.SetActiveKafkaCluster(clusterID)
+		require.Equal(t, clusterID, kafkaClusterContext.GetActiveKafkaClusterId())
+
+		kafkaClusterContext.RemoveKafkaCluster(clusterID)
+		_, ok := kafkaClusterContext.KafkaClusterConfigs[clusterID]
+		require.False(t, ok)
+		require.Empty(t, kafkaClusterContext.GetActiveKafkaClusterId())
 	}
 }

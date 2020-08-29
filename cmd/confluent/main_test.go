@@ -8,18 +8,14 @@ import (
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	req := require.New(t)
 
-	cfg := v3.AuthenticatedCloudConfigMock()
-	cfg.CLIName = "ccloud"
-	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("ccloud", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock(), auth.NewNetrcHandler(""))
+	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
+	root, err := cmd.NewConfluentCommand("ccloud", true, ver, auth.NewNetrcHandler(""))
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
@@ -39,15 +35,12 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req := require.New(t)
 
-	cfg := v3.AuthenticatedCloudConfigMock()
-	ver := pversion.NewVersion("ccloud", "Confluent Cloud CLI", "https://confluent.cloud; support@confluent.io", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("confluent", cfg, cfg.Logger, ver, mock.NewDummyAnalyticsMock(), auth.NewNetrcHandler(""))
+	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
+	root, err := cmd.NewConfluentCommand("confluent", true, ver, auth.NewNetrcHandler(""))
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
 	req.NoError(err)
-	req.NotContains(output, "kafka")
-	req.NotContains(output, "ksql")
 	req.NotContains(output, "Manage and select")
 	req.NotContains(output, "service-account")
 	req.NotContains(output, "api-key")
@@ -57,4 +50,8 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req.Contains(output, "version")
 	req.Contains(output, "completion")
 	req.Contains(output, "iam")
+	req.Contains(output, "kafka")
+	req.Contains(output, "ksql")
+	req.Contains(output, "schema-registry")
+	req.Contains(output, "connect")
 }

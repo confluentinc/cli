@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"sort"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type Metadata interface {
@@ -66,25 +67,31 @@ type describeCommand struct {
 }
 
 // NewDescribeCommand returns the sub-command object for describing clusters through /v1/metadata/id
-func NewDescribeCommand(cfg *v3.Config, prerunner pcmd.PreRunner, client Metadata) *cobra.Command {
+func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Command {
 	describeCmd := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
-			Short: "Describe a Confluent cluster.",
+			Short: "Describe a Kafka cluster.",
 			Args:  cobra.NoArgs,
-		}, cfg, prerunner),
+			Example: examples.BuildExampleString(
+				examples.Example{
+					Text: "Discover the cluster ID and Kafka ID for Connect.",
+					Code: "confluent cluster describe --url http://localhost:8083",
+				},
+			),
+		}, prerunner),
 		client: client,
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	check(describeCmd.MarkFlagRequired("url"))
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
-	describeCmd.RunE = describeCmd.describe
+	describeCmd.RunE = pcmd.NewCLIRunE(describeCmd.describe)
 
 	return describeCmd.Command
 }
 
-func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*ScopedId, error) {
+func (s *ScopedIdService) DescribeCluster(_ context.Context, url string) (*ScopedId, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/metadata/id", url), nil)
 	if err != nil {
 		return nil, err
@@ -101,14 +108,14 @@ func (s *ScopedIdService) DescribeCluster(ctx context.Context, url string) (*Sco
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unable to fetch cluster metadata: %s - %s", resp.Status, body)
+		return nil, errors.Errorf(errors.FetchClusterMetadataErrorMsg, resp.Status, body)
 	}
 	meta := &ScopedId{}
 	err = json.Unmarshal(body, meta)
 	return meta, err
 }
 
-func (c *describeCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return nil
@@ -116,12 +123,12 @@ func (c *describeCommand) describe(cmd *cobra.Command, args []string) error {
 
 	meta, err := c.client.DescribeCluster(context.Background(), url)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	return printDescribe(cmd, meta, outputOption)

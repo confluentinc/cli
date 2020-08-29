@@ -47,10 +47,8 @@ func ExcludeCommand(excluded ...string) RuleFilter {
 	return func(cmd *cobra.Command) bool {
 		f := FullCommand(cmd)
 		exclude := strings.Join(strings.Split(f, " ")[1:], " ")
-		if _, found := blacklist[exclude]; found {
-			return false
-		}
-		return true
+		_, found := blacklist[exclude]
+		return !found
 	}
 }
 
@@ -60,10 +58,8 @@ func ExcludeUse(excluded ...string) RuleFilter {
 		blacklist[e] = struct{}{}
 	}
 	return func(cmd *cobra.Command) bool {
-		if _, found := blacklist[cmd.Use]; found {
-			return false
-		}
-		return true
+		_, found := blacklist[cmd.Use]
+		return !found
 	}
 }
 
@@ -73,10 +69,8 @@ func ExcludeParentUse(excluded ...string) RuleFilter {
 		blacklist[e] = struct{}{}
 	}
 	return func(cmd *cobra.Command) bool {
-		if _, found := blacklist[cmd.Parent().Use]; found {
-			return false
-		}
-		return true
+		_, found := blacklist[cmd.Parent().Use]
+		return !found
 	}
 }
 
@@ -115,9 +109,7 @@ func ExcludeFlag(excluded ...string) FlagRuleFilter {
 		blacklist[e] = struct{}{}
 	}
 	return func(flag *pflag.Flag, cmd *cobra.Command) bool {
-		if _, found := blacklist[flag.Name]; found {
-			return false
-		}
-		return true
+		_, found := blacklist[flag.Name]
+		return !found
 	}
 }

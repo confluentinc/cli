@@ -3,170 +3,185 @@ package iam
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/cobra"
 	"net/http"
 
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type aclCommand struct {
 	*pcmd.AuthenticatedCLICommand
+	cliName string
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(config *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
 			Use:   "acl",
-			Short: `Manage Kafka ACLs (5.4+ only).`,
-		}, config, prerunner),
+			Short: "Manage Kafka ACLs (5.4+ only).",
+		}, prerunner),
+		cliName: cliName,
 	}
-	cmd.init()
+
+	cmd.init(cliName)
+
 	return cmd.Command
 }
 
-func (c *aclCommand) init() {
-	cliName := c.Config.CLIName
-
+func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: `Create a Kafka ACL.`,
-		Example: `You can only specify one of these flags per command invocation: ` + "``cluster``, ``consumer-group``" + `,
-` + "``topic``, or ``transactional-id``" + ` per command invocation. For example, if you want to specify both
-` + "``consumer-group`` and ``topic``" + `, you must specify this as two separate commands:
-
-::
-
-	` + cliName + ` iam acl create --allow --principal User:1522 --operation READ --consumer-group \
-	java_example_group_1 --kafka-cluster-id my-cluster
-
-::
-
-	` + cliName + ` iam acl create --allow --principal User:1522 --operation READ --topic '*' \
-	--kafka-cluster-id my-cluster
-
-`,
-		RunE: c.create,
-		Args: cobra.NoArgs,
+		Short: "Create a Kafka ACL.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
+				Code: cliName + " iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>",
+			},
+			examples.Example{
+				Text: "Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster.",
+				Code: cliName + " iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>",
+			},
+			examples.Example{
+				Text: "Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster.",
+				Code: cliName + " iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>",
+			},
+		),
 	}
-	cmd.Flags().AddFlagSet(addAclFlags())
+	cmd.Flags().AddFlagSet(addACLFlags())
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: `Delete a Kafka ACL.`,
-		RunE:  c.delete,
+		Short: "Delete a Kafka ACL.",
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.delete),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster:",
+				Code: cliName + " iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test",
+			},
+		),
 	}
-	cmd.Flags().AddFlagSet(deleteAclFlags())
+	cmd.Flags().AddFlagSet(deleteACLFlags())
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: `List Kafka ACLs for a resource.`,
-		RunE:  c.list,
+		Short: "List Kafka ACLs for a resource.",
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all the ACLs for the specified Kafka cluster:",
+				Code: cliName + " iam acl list --kafka-cluster-id <kafka-cluster-id>",
+			},
+			examples.Example{
+				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
+				Code: cliName + " iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
+			},
+		),
 	}
-	cmd.Flags().AddFlagSet(listAclFlags())
+	cmd.Flags().AddFlagSet(listACLFlags())
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 
 	c.AddCommand(cmd)
 }
 
-func (c *aclCommand) list(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return c.handleACLError(cmd, err, response)
 	}
-	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
-func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
-	acl := validateAclAddDelete(parse(cmd))
+func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
+	acl := validateACLAddDelete(parse(cmd))
 
 	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+		return acl.errors
 	}
 
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return c.handleACLError(cmd, err, response)
 	}
-
-	return nil
+	return PrintACLs(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mds.AclBinding{acl.CreateAclRequest.AclBinding})
 }
 
-func (c *aclCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
 	if acl.errors != nil {
-		return errors.HandleCommon(acl.errors, cmd)
+		return acl.errors
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 
 	if err != nil {
-		return c.handleAclError(cmd, err, response)
+		return c.handleACLError(cmd, err, response)
 	}
 
-	return PrintAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return PrintACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }
 
-func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
+func (c *aclCommand) handleACLError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		cmd.SilenceUsage = true
-		return fmt.Errorf("Unable to %s ACLs (%s). Ensure that you're running against MDS with CP 5.4+.", cmd.Name(), err.Error())
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnableToPerformAclErrorMsg, cmd.Name(), err.Error()), errors.UnableToPerformAclSuggestions)
 	}
-	return errors.HandleCommon(err, cmd)
+	return err
 }
 
-// validateAclAddDelete ensures the minimum requirements for acl add/delete is met
-func validateAclAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
+// validateACLAddDelete ensures the minimum requirements for acl add/delete is met
+func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
 	// delete is deliberately less powerful in the cli than in the API to prevent accidental
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("--allow or --deny must be set when adding or deleting an ACL"))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
-		aclConfiguration.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_LITERAL
+		aclConfiguration.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
 	}
 
 	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(mds.ACL_RESOURCE_TYPE_TOPIC, mds.ACL_RESOURCE_TYPE_GROUP,
-				mds.ACL_RESOURCE_TYPE_CLUSTER, mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID)))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
+			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }
 
-// convertToFilter converts a CreateAclRequest to an ACLFilterRequest
-func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterRequest {
+// convertToFilter converts a CreateAclRequest to an AclFilterRequest
+func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterRequest {
 	// ACE matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 
 	if request.AclBinding.Entry.Operation == "" {
-		request.AclBinding.Entry.Operation = mds.ACL_OPERATION_ANY
+		request.AclBinding.Entry.Operation = mds.ACLOPERATION_ANY
 	}
 
 	if request.AclBinding.Entry.PermissionType == "" {
-		request.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_ANY
+		request.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_ANY
 	}
 	// delete/list shouldn't provide a host value
 	request.AclBinding.Entry.Host = ""
@@ -174,14 +189,14 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	// ResourcePattern matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePatternFilter.java#L42-L56
 	if request.AclBinding.Pattern.ResourceType == "" {
-		request.AclBinding.Pattern.ResourceType = mds.ACL_RESOURCE_TYPE_ANY
+		request.AclBinding.Pattern.ResourceType = mds.ACLRESOURCETYPE_ANY
 	}
 
 	if request.AclBinding.Pattern.PatternType == "" {
 		if request.AclBinding.Pattern.Name == "" {
-			request.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_ANY
+			request.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_ANY
 		} else {
-			request.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_LITERAL
+			request.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
 		}
 	}
 
@@ -203,11 +218,11 @@ func convertToAclFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
+func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
 	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
 	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
 
-	// delete also uses this function but doesn't have -o flag defined, -o flag is needed NewListOutputWriter
+	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -244,5 +259,5 @@ func PrintAcls(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 }
 
 func (c *aclCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }

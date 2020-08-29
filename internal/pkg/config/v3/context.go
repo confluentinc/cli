@@ -49,17 +49,14 @@ func newContext(name string, platform *v2.Platform, credential *v2.Credential,
 
 func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {
 	if cluster.ID == "" {
-		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
+		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n"+
-			"Removing current API key setting for the cluster.\n"+
-			"You can re-add the API key with 'ccloud api-key store' and set current API key with 'ccloud api-key use'.\n",
-			cluster.APIKey, cluster.Name, c.Name)
+		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, c.Name, cluster.ID)
 		cluster.APIKey = ""
 		err := c.Save()
 		if err != nil {
-			return fmt.Errorf("unable to reset invalid active API key")
+			return errors.Wrap(err, errors.ResetInvalidAPIKeyErrorMsg)
 		}
 	}
 	return c.validateApiKeysDict(cluster)
@@ -86,43 +83,24 @@ func (c *Context) validateApiKeysDict(cluster *v1.KafkaClusterConfig) error {
 		}
 	}
 	if missingKey || mismatchKey || missingSecret {
-		c.printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster)
+		printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster, c.Name)
 		err := c.Save()
 		if err != nil {
-			return fmt.Errorf("unable to clear invalid API key pairs")
+			return errors.Wrap(err, errors.ClearInvalidAPIFailErrorMsg)
 		}
 	}
 	return nil
 }
 
-func (c *Context) printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig) {
-	var problems []string
-	if missingKey {
-		problems = append(problems, "'API key missing'")
-	}
-	if mismatchKey {
-		problems = append(problems, "'key of the dictionary does not match API key of the pair'")
-	}
-	if missingSecret {
-		problems = append(problems, "'API secret missing'")
-	}
-	problemString := strings.Join(problems, ", ")
-	_, _ = fmt.Fprintf(os.Stderr, "There are malformed API key secret pair entries in the dictionary for cluster '%s' under context '%s'.\n"+
-		"The issues are the following: "+problemString+".\n"+
-		"Deleting the malformed entries.\n"+
-		"You can re-add the API key secret pair with 'ccloud api-key store'\n",
-		cluster.Name, c.Name)
-}
-
 func (c *Context) validate() error {
 	if c.Name == "" {
-		return errors.New("one of the existing contexts has no name")
+		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return &errors.UnspecifiedCredentialError{ContextName: c.Name}
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return &errors.UnspecifiedPlatformError{ContextName: c.Name}
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if c.SchemaRegistryClusters == nil {
 		c.SchemaRegistryClusters = map[string]*v2.SchemaRegistryCluster{}
@@ -170,7 +148,7 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.Auth = nil
 	err := c.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to delete user auth")
+		return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
 	}
 	return nil
 }
@@ -190,4 +168,19 @@ func (c *Context) UpdateAuthToken(token string) error {
 		return err
 	}
 	return nil
+}
+
+func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig, contextName string) {
+	var problems []string
+	if missingKey {
+		problems = append(problems, errors.APIKeyMissingMsg)
+	}
+	if mismatchKey {
+		problems = append(problems, errors.KeyPairMismatchMsg)
+	}
+	if missingSecret {
+		problems = append(problems, errors.APISecretMissingMsg)
+	}
+	problemString := strings.Join(problems, ", ")
+	_, _ = fmt.Fprintf(os.Stderr, errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
 }

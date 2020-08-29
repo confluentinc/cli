@@ -61,6 +61,7 @@ func (c *Config) Load() error {
 	if err != nil {
 		return err
 	}
+	c.Filename = filename
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -201,7 +202,7 @@ func (c *Config) APIName() string {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, errors.ErrNoContext
+		return nil, &errors.NoContextError{CLIName: c.CLIName}
 	}
 	context, err := c.FindContext(c.CurrentContext)
 	if err != nil {
@@ -222,8 +223,7 @@ func (c *Config) CredentialType() (CredentialType, error) {
 	if cred, ok := c.Credentials[context.Credential]; ok {
 		return cred.CredentialType, nil
 	}
-	err = &errors.UnspecifiedCredentialError{ContextName: c.CurrentContext}
-	return -1, err
+	return -1, errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.CurrentContext, c.CLIName, c.Filename, c.Logger)
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
@@ -235,7 +235,7 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 		return nil, err
 	}
 	if c.Auth == nil || c.Auth.Account == nil {
-		return nil, errors.ErrNotLoggedIn
+		return nil, &errors.NotLoggedInError{CLIName: c.CLIName}
 	}
 	sr := context.SchemaRegistryClusters[c.Auth.Account.Id]
 	if sr == nil {
@@ -284,10 +284,10 @@ func (c *Config) CheckLogin() error {
 	switch credType {
 	case Username:
 		if c.AuthToken == "" && (c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "") {
-			return errors.ErrNotLoggedIn
+			return &errors.NotLoggedInError{CLIName: c.CLIName}
 		}
 	case APIKey:
-		return errors.ErrNotLoggedIn
+		return &errors.NotLoggedInError{CLIName: c.CLIName}
 	}
 	return nil
 }

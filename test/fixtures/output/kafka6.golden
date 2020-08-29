@@ -1,3 +1,0 @@
-     Id     | Name | Provider |   Region    | Durability |    Status     
-+-----------+------+----------+-------------+------------+--------------+
-    lkc-123 | abc  | gcp      | us-central1 | LOW        | PROVISIONING  

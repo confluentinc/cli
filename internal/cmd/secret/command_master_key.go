@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/go-printer"
@@ -14,19 +13,17 @@ import (
 
 type masterKeyCommand struct {
 	*cobra.Command
-	prompt pcmd.Prompt
 	resolv pcmd.FlagResolver
 	plugin secureplugin.PasswordProtection
 }
 
 // NewMasterKeyCommand returns the Cobra command for managing master key.
-func NewMasterKeyCommand(prompt pcmd.Prompt, resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
+func NewMasterKeyCommand(resolv pcmd.FlagResolver, plugin secureplugin.PasswordProtection) *cobra.Command {
 	cmd := &masterKeyCommand{
 		Command: &cobra.Command{
 			Use:   "master-key",
 			Short: "Manage the master key for Confluent Platform.",
 		},
-		prompt: prompt,
 		resolv: resolv,
 		plugin: plugin,
 	}
@@ -38,9 +35,9 @@ func (c *masterKeyCommand) init() {
 	generateCmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate a master key for Confluent Platform.",
-		Long:  `This command generates a master key. This key is used for encryption and decryption of configuration values.`,
-		RunE:  c.generate,
+		Long:  "This command generates a master key. This key is used for encryption and decryption of configuration values.",
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.generate),
 	}
 	generateCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
 to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
@@ -50,40 +47,38 @@ to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.
 	c.AddCommand(generateCmd)
 }
 
-func (c *masterKeyCommand) generate(cmd *cobra.Command, args []string) error {
+func (c *masterKeyCommand) generate(cmd *cobra.Command, _ []string) error {
 	passphraseSource, err := cmd.Flags().GetString("passphrase")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	passphrase, err := c.resolv.ValueFrom(passphraseSource, "Master Key Passphrase: ", true)
 	if err != nil {
 		switch err {
 		case pcmd.ErrUnexpectedStdinPipe:
-			cmd.SilenceUsage = true
 			// TODO: should we require this or just assume that pipe to stdin implies '--passphrase -' ?
-			return fmt.Errorf("please specify '--passphrase -' if you intend to pipe your passphrase over stdin")
+			return errors.New(errors.SpecifyPassphraseErrorMsg)
 		case pcmd.ErrNoPipe:
-			cmd.SilenceUsage = true
-			return fmt.Errorf("please pipe your passphrase over stdin")
+			return errors.New(errors.PipePassphraseErrorMsg)
 		}
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsPath)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	pcmd.ErrPrintln(cmd, "Save the master key. It cannot be retrieved later.")
+	pcmd.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
 	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return nil
 }

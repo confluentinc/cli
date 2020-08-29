@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -21,10 +20,6 @@ var (
 	mdsUsernamePasswordString    = "mds-username-password"
 	ccloudUsernamePasswordString = "ccloud-username-password"
 	ccloudSSORefreshTokenString  = "ccloud-sso-refresh-token"
-
-	resolvingFilePathErrMsg = "An error resolving the netrc filepath at %s has occurred. Error: %s"
-	netrcGetErrorMsg        = "Unable to get credentials from Netrc file. Error: %s"
-	netrcWriteErrorMsg      = "Unable to write credentials to Netrc file. Error: %s"
 )
 
 type netrcCredentialType int
@@ -62,12 +57,12 @@ type NetrcHandler struct {
 func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return fmt.Errorf(resolvingFilePathErrMsg, filename, err)
+		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
 	}
 
 	netrcFile, err := getOrCreateNetrc(filename)
 	if err != nil {
-		return fmt.Errorf(netrcWriteErrorMsg, err)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
@@ -81,11 +76,11 @@ func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 	}
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
-		return fmt.Errorf(netrcWriteErrorMsg, err)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	err = ioutil.WriteFile(filename, netrcBytes, 0600)
 	if err != nil {
-		return fmt.Errorf("Unable to write to netrc file %s. Error: %s", filename, err)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	return nil
 }
@@ -94,15 +89,15 @@ func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 func (n *NetrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return "", "", fmt.Errorf(resolvingFilePathErrMsg, filename, err)
+		return "", "", errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
 	}
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
 	machine, err := netrc.FindMachine(filename, machineName)
 	if err != nil {
-		return "", "", fmt.Errorf(netrcGetErrorMsg, err)
+		return "", "", errors.Wrapf(err, errors.GetNetrcCredentialsErrorMsg, filename)
 	}
 	if machine == nil {
-		return "", "", errors.Errorf("Login credential not in netrc file.")
+		return "", "", errors.Errorf(errors.NetrcCredentialsNotFoundErrorMsg, filename)
 	}
 	return machine.Login, machine.Password, nil
 }
@@ -127,7 +122,7 @@ func getOrCreateNetrc(filename string) (*netrc.Netrc, error) {
 		if os.IsNotExist(err) {
 			_, err = os.OpenFile(filename, os.O_CREATE, 0600)
 			if err != nil {
-				return nil, errors.Wrapf(err, "unable to create netrc file: %s", filename)
+				return nil, errors.Wrapf(err, errors.CreateNetrcFileErrorMsg, filename)
 			}
 			n, err = netrc.ParseFile(filename)
 			if err != nil {

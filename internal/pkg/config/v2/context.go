@@ -55,7 +55,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 
 func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {
 	if cluster.ID == "" {
-		return fmt.Errorf("cluster under context '%s' has no %s", c.Name, "id")
+		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		_, _ = fmt.Fprintf(os.Stderr, "Current API key '%s' of cluster '%s' under context '%s' is not found.\n"+
@@ -125,13 +125,13 @@ func (c *Context) validate() error {
 		return errors.New("one of the existing contexts has no name")
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return &errors.UnspecifiedCredentialError{ContextName: c.Name}
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return &errors.UnspecifiedPlatformError{ContextName: c.Name}
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if _, ok := c.KafkaClusters[c.Kafka]; c.Kafka != "" && !ok {
-		return fmt.Errorf("context '%s' has a nonexistent active kafka cluster", c.Name)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
 	}
 	if c.SchemaRegistryClusters == nil {
 		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}

@@ -1,0 +1,54 @@
+RELEASE NOTES PREPARATION FOR CLI %s
+
+
+LIST OF ALL PRs SINCE LAST RELEASE (%s):
+%s
+
+------------------------------------------------------------------------------------------
+
+================
+INSTRUCTIONS:
+================
+- Fill in the below sections (e.g. 'New Features for Both CLIs').
+- Each element in the section must start with bullet point character "-".
+- No newlines between section name and bullet points
+- No newlines between bullet points
+- If there is no content for that section, you can either leave the placeholder as is or remove the entire line.
+
+NOTE: DO NOT EDIT THE SECTION NAMES (e.g. 'New Features for Both CLIs')
+
+-------------
+BOTH CLIs
+-------------
+
+%s
+- <PLACEHOLDER>
+
+
+%s
+- <PLACEHOLDER>
+
+
+-------------
+CCLOUD
+-------------
+
+%s
+- <PLACEHOLDER>
+
+
+%s
+- <PLACEHOLDER>
+
+
+-------------
+CONFLUENT
+-------------
+
+%s
+- <PLACEHOLDER>
+
+
+%s
+- <PLACEHOLDER>
+

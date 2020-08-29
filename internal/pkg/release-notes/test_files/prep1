@@ -1,0 +1,62 @@
+RELEASE NOTES PREPARATION FOR CLI v1.7.0
+
+
+LIST OF ALL PRs SINCE LAST RELEASE (v1.6.0):
+
+
+------------------------------------------------------------------------------------------
+
+================
+INSTRUCTIONS:
+================
+- Fill in the below sections (e.g. 'New Features for Both CLIs').
+- Each element in the section must start with bullet point character "-".
+- No newlines between section name and bullet points
+- No newlines between bullet points
+- If there is no content for that section, you can either leave the placeholder as is or remove the entire line.
+
+NOTE: DO NOT EDIT THE SECTION NAMES (e.g. 'New Features for Both CLIs')
+
+-------------
+BOTH CLIs
+-------------
+
+New Features for Both CLIs
+- both feature1
+- both feature2
+
+
+Bug Fixes for Both CLIs
+- both bug1
+- both bug2
+
+
+-------------
+CCLOUD
+-------------
+
+CCloud New Features
+- ccloud feature1
+- ccloud feature2
+CCloud Bug Fixes
+- ccloud bug1
+-        ccloud bug2
+
+
+-------------
+CONFLUENT
+-------------
+
+Confluent New Features
+- confluent new feature1
+-confluent new feature2
+
+
+
+notes notes notes
+notes notes notes
+
+
+Confluent Bug Fixes
+- confluent bug1
+- confluent bug2

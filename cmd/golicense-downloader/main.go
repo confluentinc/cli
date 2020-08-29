@@ -189,7 +189,7 @@ func (g *LicenseDownloader) CreateLicenseIndex(licenses []*License) error {
 }
 
 func (g *LicenseDownloader) ParseLicense(text string) (*License, error) {
-	text = strings.Replace(text, "\n", "", -1) // convert CRLF to LF
+	text = strings.ReplaceAll(text, "\n", "") // convert CRLF to LF
 	columns := strings.SplitN(text, " ", 2)
 	if len(columns) != 2 {
 		return nil, fmt.Errorf("invalid golicense output: %s\n", text)
