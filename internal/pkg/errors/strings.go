@@ -53,7 +53,7 @@ const (
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
 	// kafka acl commands
-	DeletedACLsMsg = "Deleted ACLs."
+	DeletedACLsMsg = "Deleted ACLs.\n"
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
