@@ -7,23 +7,25 @@ package mock
 import (
 	sync "sync"
 
+	github_com_confluentinc_cc_structs_kafka_org_v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go"
-	github_com_confluentinc_ccloudapis_org_v1 "github.com/confluentinc/ccloudapis/org/v1"
+
+	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // MockCCloudTokenHandler is a mock of CCloudTokenHandler interface
 type MockCCloudTokenHandler struct {
 	lockGetUserSSO sync.Mutex
-	GetUserSSOFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_ccloudapis_org_v1.User, error)
+	GetUserSSOFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_cc_structs_kafka_org_v1.User, error)
 
 	lockGetCredentialsToken sync.Mutex
 	GetCredentialsTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, email, password string) (string, error)
 
 	lockGetSSOToken sync.Mutex
-	GetSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) (string, string, error)
+	GetSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_cc_structs_kafka_org_v1.User, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, string, error)
 
 	lockRefreshSSOToken sync.Mutex
-	RefreshSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, refreshToken, url string) (string, error)
+	RefreshSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, refreshToken, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error)
 
 	calls struct {
 		GetUserSSO []struct {
@@ -39,18 +41,20 @@ type MockCCloudTokenHandler struct {
 			Client    *github_com_confluentinc_ccloud_sdk_go.Client
 			Url       string
 			NoBrowser bool
-			UserSSO   *github_com_confluentinc_ccloudapis_org_v1.User
+			UserSSO   *github_com_confluentinc_cc_structs_kafka_org_v1.User
+			Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
 		RefreshSSOToken []struct {
 			Client       *github_com_confluentinc_ccloud_sdk_go.Client
 			RefreshToken string
 			Url          string
+			Logger       *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
 	}
 }
 
 // GetUserSSO mocks base method by wrapping the associated func.
-func (m *MockCCloudTokenHandler) GetUserSSO(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_ccloudapis_org_v1.User, error) {
+func (m *MockCCloudTokenHandler) GetUserSSO(client *github_com_confluentinc_ccloud_sdk_go.Client, email string) (*github_com_confluentinc_cc_structs_kafka_org_v1.User, error) {
 	m.lockGetUserSSO.Lock()
 	defer m.lockGetUserSSO.Unlock()
 
@@ -135,7 +139,7 @@ func (m *MockCCloudTokenHandler) GetCredentialsTokenCalls() []struct {
 }
 
 // GetSSOToken mocks base method by wrapping the associated func.
-func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_ccloudapis_org_v1.User) (string, string, error) {
+func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, url string, noBrowser bool, userSSO *github_com_confluentinc_cc_structs_kafka_org_v1.User, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, string, error) {
 	m.lockGetSSOToken.Lock()
 	defer m.lockGetSSOToken.Unlock()
 
@@ -147,17 +151,19 @@ func (m *MockCCloudTokenHandler) GetSSOToken(client *github_com_confluentinc_ccl
 		Client    *github_com_confluentinc_ccloud_sdk_go.Client
 		Url       string
 		NoBrowser bool
-		UserSSO   *github_com_confluentinc_ccloudapis_org_v1.User
+		UserSSO   *github_com_confluentinc_cc_structs_kafka_org_v1.User
+		Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 	}{
 		Client:    client,
 		Url:       url,
 		NoBrowser: noBrowser,
 		UserSSO:   userSSO,
+		Logger:    logger,
 	}
 
 	m.calls.GetSSOToken = append(m.calls.GetSSOToken, call)
 
-	return m.GetSSOTokenFunc(client, url, noBrowser, userSSO)
+	return m.GetSSOTokenFunc(client, url, noBrowser, userSSO, logger)
 }
 
 // GetSSOTokenCalled returns true if GetSSOToken was called at least once.
@@ -173,7 +179,8 @@ func (m *MockCCloudTokenHandler) GetSSOTokenCalls() []struct {
 	Client    *github_com_confluentinc_ccloud_sdk_go.Client
 	Url       string
 	NoBrowser bool
-	UserSSO   *github_com_confluentinc_ccloudapis_org_v1.User
+	UserSSO   *github_com_confluentinc_cc_structs_kafka_org_v1.User
+	Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
 	m.lockGetSSOToken.Lock()
 	defer m.lockGetSSOToken.Unlock()
@@ -182,7 +189,7 @@ func (m *MockCCloudTokenHandler) GetSSOTokenCalls() []struct {
 }
 
 // RefreshSSOToken mocks base method by wrapping the associated func.
-func (m *MockCCloudTokenHandler) RefreshSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, refreshToken, url string) (string, error) {
+func (m *MockCCloudTokenHandler) RefreshSSOToken(client *github_com_confluentinc_ccloud_sdk_go.Client, refreshToken, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error) {
 	m.lockRefreshSSOToken.Lock()
 	defer m.lockRefreshSSOToken.Unlock()
 
@@ -194,15 +201,17 @@ func (m *MockCCloudTokenHandler) RefreshSSOToken(client *github_com_confluentinc
 		Client       *github_com_confluentinc_ccloud_sdk_go.Client
 		RefreshToken string
 		Url          string
+		Logger       *github_com_confluentinc_cli_internal_pkg_log.Logger
 	}{
 		Client:       client,
 		RefreshToken: refreshToken,
 		Url:          url,
+		Logger:       logger,
 	}
 
 	m.calls.RefreshSSOToken = append(m.calls.RefreshSSOToken, call)
 
-	return m.RefreshSSOTokenFunc(client, refreshToken, url)
+	return m.RefreshSSOTokenFunc(client, refreshToken, url, logger)
 }
 
 // RefreshSSOTokenCalled returns true if RefreshSSOToken was called at least once.
@@ -218,6 +227,7 @@ func (m *MockCCloudTokenHandler) RefreshSSOTokenCalls() []struct {
 	Client       *github_com_confluentinc_ccloud_sdk_go.Client
 	RefreshToken string
 	Url          string
+	Logger       *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
 	m.lockRefreshSSOToken.Lock()
 	defer m.lockRefreshSSOToken.Unlock()

@@ -1,0 +1,28 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  ccloud kafka cluster create <name> [flags]
+
+Examples:
+Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
+
+::
+
+  ccloud kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+
+For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.
+
+
+
+Flags:
+      --cloud string            Cloud provider ID (e.g. 'aws' or 'gcp').
+      --region string           Cloud region ID for cluster (e.g. 'us-west-2').
+      --availability string     Availability of the cluster. Allowed Values: single-zone, multi-zone. (default "single-zone")
+      --type string             Type of the Kafka cluster. Allowed values: basic, standard, dedicated. (default "basic")
+      --cku int                 Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.
+      --encryption-key string   Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

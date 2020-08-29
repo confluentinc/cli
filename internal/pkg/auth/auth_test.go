@@ -1,19 +1,22 @@
 package auth
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/mds-sdk-go"
-	"github.com/stretchr/testify/require"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"testing"
 
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+
 	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	testUtils "github.com/confluentinc/cli/test"
 )
 
 var (
@@ -170,11 +173,11 @@ func TestNetrcWriter(t *testing.T) {
 			}
 			gotBytes, err := ioutil.ReadFile(tempFile.Name())
 			require.NoError(t, err)
-			got := testUtils.NormalizeNewLines(string(gotBytes))
+			got := utils.NormalizeNewLines(string(gotBytes))
 
 			wantBytes, err := ioutil.ReadFile(tt.wantFile)
 			require.NoError(t, err)
-			want := testUtils.NormalizeNewLines(string(wantBytes))
+			want := utils.NormalizeNewLines(string(wantBytes))
 
 			if got != want {
 				t.Errorf("got: \n%s\nwant: \n%s\n", got, want)
@@ -191,7 +194,7 @@ func TestUpateSSOToken(t *testing.T) {
 		GetUserSSOFunc: func(client *ccloud.Client, email string) (user *orgv1.User, e error) {
 			return &orgv1.User{}, nil
 		},
-		RefreshSSOTokenFunc: func(client *ccloud.Client, refreshToken, url string) (s string, e error) {
+		RefreshSSOTokenFunc: func(client *ccloud.Client, refreshToken, url string, logger *log.Logger) (s string, e error) {
 			require.Equal(t, refreshToken, mockConfigPassword)
 			return finalAuthToken, nil
 		},

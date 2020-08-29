@@ -1,29 +1,25 @@
 package cluster
 
 import (
-	"os"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/spf13/cobra"
 )
 
 type command struct {
 	*pcmd.CLICommand
 	prerunner  pcmd.PreRunner
-	config     *v3.Config
 	metaClient Metadata
 }
 
 // New returns the Cobra command for `cluster`.
-func New(prerunner pcmd.PreRunner, config *v3.Config, metaClient Metadata) *cobra.Command {
+func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
 	cmd := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "cluster",
-			Short: "Retrieve metadata about Confluent clusters.",
-		}, config, prerunner),
+			Short: "Retrieve metadata about Confluent Platform clusters.",
+		}, prerunner),
 		prerunner:  prerunner,
-		config:     config,
 		metaClient: metaClient,
 	}
 	cmd.init()
@@ -31,9 +27,8 @@ func New(prerunner pcmd.PreRunner, config *v3.Config, metaClient Metadata) *cobr
 }
 
 func (c *command) init() {
-	c.AddCommand(NewDescribeCommand(c.config, c.prerunner, c.metaClient))
-	if os.Getenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE") != "" {
-		// TODO: Remove this feature flag if statement once 6.0 is released
-		c.AddCommand(NewListCommand(c.config, c.prerunner))
-	}
+	c.AddCommand(NewDescribeCommand(c.prerunner, c.metaClient))
+	c.AddCommand(NewListCommand(c.prerunner))
+	c.AddCommand(NewRegisterCommand(c.prerunner))
+	c.AddCommand(NewUnregisterCommand(c.prerunner))
 }

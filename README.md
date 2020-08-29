@@ -119,12 +119,12 @@ $ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Conf
 
 ## Developing
 
-This repo requires golang 1.13.5. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.14.2. We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.13.5 already. If your `goenv` does not list this as an option,
+Fortunately `goenv` supports 1.14.2 already. If your `goenv` does not list this as an option,
 you may have to build `goenv`'s `master` branch from source, which you can do with the
 following instructions:
 
@@ -138,6 +138,11 @@ Now clone the repo and update your shell profile:
     echo 'export GOENV_ROOT="$GOPATH/src/github.com/syndbg/goenv"' >> ~/.bash_profile
     echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
     echo 'eval "$(goenv init -)"' >> ~/.bash_profile
+
+Install the required version of `goreleaser`
+
+    go get github.com/goreleaser/goreleaser@v0.106.0
+
 
 ### Mac Setup Notes
 
@@ -282,7 +287,38 @@ We also have end-to-end system tests for
 * ccloud-only functionality - [cc-system-tests](https://github.com/confluentinc/cc-system-tests/blob/master/test/cli_test.go)
 * on-prem-only functionality - [muckrake](https://github.com/confluentinc/muckrake) (TODO: fix link to CLI tests)
 
+To run all tests
+
+    make test
+
+UNIT_TEST_ARGS environment variable is used to manipulate unit test execution,
+while INT_TEST_ARGS environment variable is for integration tests.
+
+For example you can filter for a subset of unit test and a subset integration tests to be run
+
+    make test UNIT_TEST_ARGS="-run TestApiTestSuite" INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
+
+More details on the use of these environment variables in the *Unit Test* and *Integration Test* sections.
+
+### Unit Tests
+
 Unit tests exist in `_test.go` files alongside the main source code files.
+
+You can run the all unit tests with
+
+    make unit-test
+
+To run only a subset of unit tests, you must find the suite and test name and filter with
+
+    # all tests within a suite
+    make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite"
+
+    # a very specific subset of tests
+    make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
+
+UNIT_TEST_ARGS is can also be used with `make test` target, if you want to filter unit tests but still run integration tests
+
+    make test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
 
 ### Integration Tests
 
@@ -297,32 +333,33 @@ binary and invoke commands on it. These CLI integration tests roughly follow thi
 Read the [CLITest](./test/cli_test.go) configuration to get a better idea
 about how to write and configure your own integration tests.
 
-You can run just the integration tests with
-
-    make test TEST_ARGS="-v"
-
 You can update the golden files from the current output with
 
-    make test TEST_ARGS="-update"
+    make int-test INT_TEST_ARGS="-update"
 
 You can skip rebuilding the CLI if it already exists in `dist` with
 
-    make test TEST_ARGS="-no-rebuild"
+    make int-test INT_TEST_ARGS="-no-rebuild"
 
 You can mix and match these flags. To update the golden files without rebuilding, and log verbosely
 
-    make test TEST_ARGS="-update -no-rebuild -v"
+    make int-test INT_TEST_ARGS="-update -no-rebuild -v"
 
 To run a single test case (or all test cases with a prefix)
 
     # all integration tests
-    make test TEST_ARGS="-run TestCLI"
+    make int-test INT_TEST_ARGS="-run TestCLI"
 
     # all subtests of this `Test_Confluent_Iam_Rolebinding_List` integration tests
-    make test TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
+    make int-test INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
 
     # a very specific subset of tests
-    make test TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List/iam_rolebinding_list_--kafka-cluster-id_CID_--principal_User:frodo"
+    make int-test INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List/iam_rolebinding_list_--kafka-cluster-id_CID_--principal_User:frodo"
+
+INT_TEST_ARGS is can also be used with `make test` target, if you want to filter or update integration tests but still run unit tests
+
+    make test INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
+
 
 ## Adding a New Command to the CLI
 
@@ -351,16 +388,16 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type fileCommand struct {
 	*cobra.Command
-	config *config.Config
+	config *v3.Config
 }
 
-func NewFileCommand(config *config.Config) *cobra.Command {
+func NewFileCommand(config *v3.Config) *cobra.Command {
 	cmd := &fileCommand{
 		Command: &cobra.Command{
 			Use:   "file",
@@ -377,7 +414,7 @@ func (c *fileCommand) init() {
 		Use:   "show <num-times>",
 		Short: "Show the config file a specified number of times.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.show,
+		RunE:  pcmd.NewCLIRunE(c.show),
 	}
 	c.AddCommand(showCmd)
 }
@@ -389,7 +426,7 @@ func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
 	}
 	filename := c.config.Filename
 	if filename == "" {
-		return errors.New("No config file exists!")
+		return errors.New(errors.NoConfigFileErrorMsg)
 	}
 	for i := 0; i < numTimes; i++ {
 		pcmd.Println(cmd, filename)
@@ -406,19 +443,25 @@ For our command, the constructor needs to take a `Config` struct as a parameter.
 
 
 #### `init` Function
-Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run.
-
+Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run. Not that all `RunE` function must be intialized using `cmd` package's `NewCLIRunE` function, which handles the common logic for all CLI commands.
 #### Main (Work) Function
 This function is named after the verb component of the command, `show`. It does the "heavy" lifting by parsing the `<num-times>` arg, retrieving the filename, and either printing its name to the console, or returning an error if there's no filename set.
 
+#### Error Handling
+See [error.md](errors.md) for details.
 
 ### Registering the Command
-We must register our newly created command with the top-level `config` command located at `internal/cmd/config/comman.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
+We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
 
 With an entirely new command, we would also need to register it with the base top-level command (`ccloud` and/or `confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
 
 ### Building
-To build both binaries, we run `make build`. After this, we can run our command, and see that it (hopefully) works!
+To build both binaries, we run `make build`. After this, we can run our command either of the following ways, and see that they (hopefully) work!
+
+```
+dist/ccloud/<platform>/ccloud config file show 3
+dist/confluent/<platform>/confluent config file show 3
+```
 
 ### Integration Testing
 There's not much code here to unit test, so we'll skip right to integration testing. We'll create a file named `file_test.go` under the `test` directory, and add the following code to it:
@@ -438,7 +481,7 @@ func (s *CLITestSuite) TestFileCommands() {
 		}
 		tt.workflow = true
 		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL, kafkaAPIURL)
+		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
 	}
 }
 ```
@@ -446,7 +489,9 @@ func (s *CLITestSuite) TestFileCommands() {
 We'll also need to add the new golden file, `file1.golden`, to `test/fixtures/output`. After running the command manually to ensure the output is correct, the content for the golden file can either be:
 
 1. Copied directly from the shell
-2. Generated automatically by running `make test TEST_ARGS="./test/... -update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `file` golden file, this command will update the `help` command test outputs to reflect the added command.
+2. Generated automatically by running `make test INT_TEST_ARGS="-update"`, which runs all integration tests and updates all golden files to match their output. This is a risky command to run, as it essentially passes all integration tests, but is convenient to use if you can't get tests to pass from manual copying due to some hidden spaces. In addition to auto-filling the `file` golden file, this command will update the `help` command test outputs to reflect the added command.
+
+To run this integration test, run `make test INT_TEST_ARGS="-run TestCLI/TestFileCommands"`.
 
 ### Opening a PR!
 

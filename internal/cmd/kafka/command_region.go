@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -22,14 +20,13 @@ type regionCommand struct {
 }
 
 // NewRegionCommand returns the Cobra command for Kafka region.
-func NewRegionCommand(prerunner pcmd.PreRunner, config *v3.Config) *cobra.Command {
+func NewRegionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "region",
 			Short: "Manage Confluent Cloud regions.",
 			Long:  "Use this command to manage Confluent Cloud regions.",
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &regionCommand{
 		AuthenticatedCLICommand: cliCmd,
 	}
@@ -41,8 +38,8 @@ func (c *regionCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List cloud provider regions.",
-		RunE:  c.list,
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -50,18 +47,18 @@ func (c *regionCommand) init() {
 	c.AddCommand(listCmd)
 }
 
-func (c *regionCommand) list(cmd *cobra.Command, args []string) error {
+func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	cloudIdFilter, err := cmd.Flags().GetString("cloud")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	type regionStruct struct {
 		CloudId    string

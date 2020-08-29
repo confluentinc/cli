@@ -62,31 +62,32 @@ func (c *Config) Load() error {
 	if err != nil {
 		return err
 	}
+	c.Filename = filename
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
-				return errors.Wrapf(err, "unable to create config: %v", err)
+				return errors.Wrapf(err, errors.UnableToCreateConfigErrorMsg)
 			}
 			return nil
 		}
-		return errors.Wrapf(err, "unable to read config file: %s", filename)
+		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
 	}
 	err = json.Unmarshal(input, c)
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse config file: %s", filename)
+		return errors.Wrapf(err, errors.ParseConfigErrorMsg, filename)
 	}
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
-			return errors.New("one of the existing contexts has no name")
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.CLIName, c.Filename, c.Logger)
 		}
 		if context.CredentialName == "" {
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		if context.PlatformName == "" {
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
@@ -109,7 +110,7 @@ func (c *Config) Save() error {
 	}
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, "unable to marshal config")
+		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
 	}
 	filename, err := c.getFilename()
 	if err != nil {
@@ -117,11 +118,11 @@ func (c *Config) Save() error {
 	}
 	err = os.MkdirAll(filepath.Dir(filename), 0700)
 	if err != nil {
-		return errors.Wrapf(err, "unable to create config directory: %s", filename)
+		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
 	}
 	err = ioutil.WriteFile(filename, cfg, 0600)
 	if err != nil {
-		return errors.Wrapf(err, "unable to write config to file: %s", filename)
+		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
 	return nil
 }
@@ -131,7 +132,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			c.Logger.Trace("current context does not exist")
-			return errors.Errorf("the current context does not exist.")
+			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.CLIName, c.Filename, c.Logger)
 		}
 	}
 	// Validate that every context:
@@ -145,25 +146,24 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			c.Logger.Trace("unspecified credential error")
-			return &errors.UnspecifiedCredentialError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			c.Logger.Trace("unspecified platform error")
-			return &errors.UnspecifiedPlatformError{ContextName: context.Name}
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
-			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
-			return c.corruptedConfigError()
+			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 	}
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			c.Logger.Trace("context state mapped to nonexistent context")
-			return c.corruptedConfigError()
+			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.CLIName, c.Filename, c.Logger)
 		}
 	}
 
@@ -308,30 +308,4 @@ func (c *Config) getFilename() (string, error) {
 		return "", err
 	}
 	return filename, nil
-}
-
-// corruptedConfigError returns an error signaling that the config file has been corrupted,
-// or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedConfigError() error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the config file located at %s has been corrupted. " +
-		"To fix, please remove the config file, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, configPath)
-	return err
-}
-
-// corruptedContextError returns an error signaling that the specified context's,
-// config has been corrupted, or another error if the config's filepath is unable to be resolved.
-func (c *Config) corruptedContextError(contextName string) error {
-	configPath, err := c.getFilename()
-	if err != nil {
-		return err
-	}
-	errMsg := "the configuration of context '%s' has been corrupted. " +
-		"To fix, please remove the config file located at %s, and run `login` or `init`"
-	err = fmt.Errorf(errMsg, contextName, configPath)
-	return err
 }

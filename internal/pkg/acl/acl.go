@@ -3,15 +3,13 @@ package acl
 import (
 	"io"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func PrintAcls(cmd *cobra.Command, bindingsObj []*kafkav1.ACLBinding, writer io.Writer) error {
-
+func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -22,7 +20,7 @@ func PrintAcls(cmd *cobra.Command, bindingsObj []*kafkav1.ACLBinding, writer io.
 	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	for _, binding := range bindingsObj {

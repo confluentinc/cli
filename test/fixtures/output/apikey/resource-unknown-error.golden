@@ -1,0 +1,7 @@
+Error: resource "lkc-unknown" not found
+
+Suggestions:
+    Check that the resource "lkc-unknown" exists.
+    To list Kafka clusters, use `ccloud kafka cluster list`.
+    To check schema-registry cluster info, use `ccloud schema-registry cluster describe`.
+    To list KSQL clusters, use `ccloud ksql app list`.

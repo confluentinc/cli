@@ -2,7 +2,7 @@
 package keystore
 
 import (
-	authv1 "github.com/confluentinc/ccloudapis/auth/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -12,7 +12,7 @@ import (
 
 type KeyStore interface {
 	HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error)
-	StoreAPIKey(key *authv1.ApiKey, clusterId string, cmd *cobra.Command) error
+	StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error
 	DeleteAPIKey(key string, cmd *cobra.Command) error
 }
 
@@ -26,7 +26,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 		return false, err
 	}
 	if ctx == nil {
-		return false, errors.ErrNoContext
+		return false, &errors.NoContextError{CLIName: c.Config.CLIName}
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -37,13 +37,13 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *authv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
 	ctx, err := c.Config.Context(cmd)
 	if err != nil {
 		return err
 	}
 	if ctx == nil {
-		return errors.ErrNoContext
+		return &errors.NoContextError{CLIName: c.Config.CLIName}
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -62,7 +62,7 @@ func (c *ConfigKeyStore) DeleteAPIKey(key string, cmd *cobra.Command) error {
 		return err
 	}
 	if context == nil {
-		return errors.ErrNoContext
+		return &errors.NoContextError{CLIName: c.Config.CLIName}
 	}
 	context.KafkaClusterContext.DeleteAPIKey(key)
 	return c.Config.Save()

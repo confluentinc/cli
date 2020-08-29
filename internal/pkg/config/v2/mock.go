@@ -3,7 +3,7 @@ package v2
 import (
 	"fmt"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"

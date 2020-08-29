@@ -121,7 +121,7 @@ func (c *Config) APIName() string {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, errors.ErrNoContext
+		return nil, &errors.NoContextError{CLIName: c.CLIName}
 	}
 	return c.Contexts[c.CurrentContext], nil
 }
@@ -132,7 +132,7 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 		return nil, err
 	}
 	if c.Auth == nil || c.Auth.Account == nil {
-		return nil, errors.ErrNotLoggedIn
+		return nil, &errors.NotLoggedInError{CLIName: c.CLIName}
 	}
 	sr := context.SchemaRegistryClusters[c.Auth.Account.Id]
 	if sr == nil {
@@ -162,7 +162,7 @@ func (c *Config) KafkaClusterConfig() (*KafkaClusterConfig, error) {
 // CheckLogin returns an error if the user is not logged in.
 func (c *Config) CheckLogin() error {
 	if c.AuthToken == "" && (c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "") {
-		return errors.ErrNotLoggedIn
+		return &errors.NotLoggedInError{CLIName: c.CLIName}
 	}
 	return nil
 }

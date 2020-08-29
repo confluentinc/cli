@@ -3,23 +3,36 @@ package kafka
 import (
 	"bufio"
 	"context"
+	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"sort"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	"github.com/Shopify/sarama"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+)
+
+const (
+	defaultReplicationFactor = 3
+	unspecifiedPartitionCount = -1
 )
 
 type hasAPIKeyTopicCommand struct {
@@ -51,77 +64,81 @@ type structuredDescribeDisplay struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger, clientID string) *cobra.Command {
+func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, config, prerunner),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
 	}
-	authenticatedCmd := &authenticatedTopicCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, config, prerunner),
-		logger:                  logger,
-		clientID:                clientID,
-	}
-	authenticatedCmd.init()
 	hasAPIKeyCmd.init()
+	if !isAPIKeyLogin {
+		authenticatedCmd := &authenticatedTopicCommand{
+			AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
+			logger:                  logger,
+			clientID:                clientID,
+		}
+		authenticatedCmd.init()
+	}
 	return command
 }
 
 func (h *hasAPIKeyTopicCommand) init() {
-	// Hack to overwrite Authenticated prerunner set by authenticatedTopicCmd
-	h.PersistentPreRunE = h.prerunner.HasAPIKey(h.HasAPIKeyCLICommand)
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Short: "Produce messages to a Kafka topic.",
-		RunE:  h.produce,
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(h.produce),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "consume <topic>",
 		Short: "Consume messages from a Kafka topic.",
-		Example: `
-Consume items from the 'my_topic' topic and press 'Ctrl + C' to exit.
-
-::
-
-	ccloud kafka topic consume -b my_topic`,
-		RunE: h.consume,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(h.consume),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Consume items from the ``my_topic`` topic and press ``Ctrl+C`` to exit.",
+				Code: "ccloud kafka topic consume -b my_topic",
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
 
 func (a *authenticatedTopicCommand) init() {
-	// Issue: Can't resolve context here, but need context to decide whether or not to show command.
-	ctx := a.Config.Config.Context() // TODO: Change to DynamicConfig to handle flags.
-	if ctx != nil && ctx.Credential.CredentialType == v2.APIKey {
-		return
-	}
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
-		Example: `
-List all topics.
-
-::
-
-        ccloud kafka topic list`,
-		RunE: a.list,
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(a.list),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all topics.",
+				Code: "ccloud kafka topic list",
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -131,34 +148,36 @@ List all topics.
 	cmd = &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
-		Example: `
-Create a topic named 'my_topic' with default options.
-
-::
-
-   ccloud kafka topic create my_topic`,
-		RunE: a.create,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(a.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a topic named ``my_topic`` with default options.",
+				Code: "ccloud kafka topic create my_topic",
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
+	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
+	cmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 
 	cmd = &cobra.Command{
 		Use:   "describe <topic>",
 		Short: "Describe a Kafka topic.",
-		Example: `
-Describe the 'my_topic' topic.
-
-::
-
-
-       ccloud kafka topic describe my_topic`,
-		RunE: a.describe,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(a.describe),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe the ``my_topic`` topic.",
+				Code: "ccloud kafka topic describe my_topic",
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -168,14 +187,14 @@ Describe the 'my_topic' topic.
 	cmd = &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
-		Example: `
-Modify the 'my_topic' topic to have a retention period of days ('259200000' milliseconds).
-
-::
-
-    ccloud kafka topic update my_topic --config="retention.ms=259200000"		`,
-		RunE: a.update,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(a.update),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
+				Code: `ccloud kafka topic update my_topic --config="retention.ms=259200000"`,
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
@@ -184,36 +203,54 @@ Modify the 'my_topic' topic to have a retention period of days ('259200000' mill
 	a.AddCommand(cmd)
 
 	cmd = &cobra.Command{
+		Use:   "mirror <action> <topic>",
+		Short: "Perform a mirroring action on a Kafka topic.",
+		Args:  cobra.ExactArgs(2),
+		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Hidden: true,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Stop the mirroring of topic ``my_topic``.",
+				Code: "ccloud kafka topic mirror stop my_topic",
+			},
+		),
+	}
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
+	cmd.Flags().SortFlags = false
+	a.AddCommand(cmd)
+
+	cmd = &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
-		Example: `
-Delete the topics 'my_topic' and 'my_topic_avro'. Use this command carefully as data loss can occur.
-
-::
-
-        ccloud kafka topic delete my_topic
-        ccloud kafka topic delete my_topic_avro		`,
-		RunE: a.delete,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(a.delete),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
+				Code: "ccloud kafka topic delete my_topic\nccloud kafka topic delete my_topic_avro",
+			},
+		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().SortFlags = false
 	a.AddCommand(cmd)
 }
 
-func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) error {
+func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, topic := range resp {
 		outputWriter.AddElement(topic)
@@ -224,57 +261,82 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, args []string) erro
 func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	topic := &kafkav1.Topic{
-		Spec: &kafkav1.TopicSpecification{
+	topic := &schedv1.Topic{
+		Spec: &schedv1.TopicSpecification{
 			Configs: make(map[string]string)},
 		Validate: false,
 	}
 
 	topic.Spec.Name = args[0]
 
-	topic.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
+	topic.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	const defaultReplicationFactor = 3
 	topic.Spec.ReplicationFactor = defaultReplicationFactor
 
 	topic.Validate, err = cmd.Flags().GetBool("dry-run")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	if topic.Spec.Configs, err = toMap(configs); err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	err = a.Client.Kafka.CreateTopic(context.Background(), cluster, topic)
 
-	return errors.HandleCommon(err, cmd)
+	linkName, err := cmd.Flags().GetString("link")
+	if err != nil {
+		return err
+	}
+
+	mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
+	if err != nil {
+		return err
+	}
+
+	if len(linkName) > 0 || len(mirrorTopic) > 0 {
+		topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
+
+		// Avoid specifying partition count for mirrored topics.
+		topic.Spec.NumPartitions = unspecifiedPartitionCount
+	}
+
+	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+		ifNotExistsFlag, flagErr := cmd.Flags().GetBool("if-not-exists")
+		if flagErr != nil {
+			return flagErr
+		}
+		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return err
+	}
+	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+	return nil
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	topic := &schedv1.TopicSpecification{Name: args[0]}
+	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	if outputOption == output.Human.String() {
 		return printHumanDescribe(cmd, resp)
@@ -286,59 +348,211 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
+	topic := &schedv1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	if topic.Configs, err = toMap(configs); err != nil {
-		return errors.HandleCommon(err, cmd)
+	configMap, err := toMap(configs)
+	if err != nil {
+		return err
+	}
+	topic.Configs = copyMap(configMap)
+
+	validate, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
+	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return err
+	}
+	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	var entries [][]string
+	titleRow := []string{"Name", "Value"}
+	for name, value := range configMap {
+		record := &struct {
+			Name  string
+			Value string
+		}{
+			name,
+			value,
+		}
+		entries = append(entries, printer.ToRow(record, titleRow))
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i][0] < entries[j][0]
+	})
+	printer.RenderCollectionTable(entries, titleRow)
+	return nil
+}
+
+func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) error {
+	const stopAction = "stop"
+
+	action := args[0]
+	topic := args[1]
+
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	if err != nil {
+		return err
 	}
 
 	validate, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: validate})
 
-	return errors.HandleCommon(err, cmd)
+	op := &schedv1.AlterMirrorOp{}
+	switch action {
+	case stopAction:
+		op.Type = &schedv1.AlterMirrorOp_StopTopicMirror_{
+			StopTopicMirror: &schedv1.AlterMirrorOp_StopTopicMirror{
+				Topic: &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic}, Validate: validate},
+			},
+		}
+	default:
+		return fmt.Errorf(errors.InvalidMirrorActionMsg, action)
+	}
+
+	result, err := a.Client.Kafka.AlterMirror(context.Background(), cluster, op)
+	if err != nil {
+		return err
+	}
+
+	switch action {
+	case stopAction:
+		result.GetStopTopicMirror()
+		pcmd.Printf(cmd, errors.StoppedTopicMirrorMsg, topic)
+	default:
+		panic("unreachable")
+	}
+
+	return nil
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	topic := &kafkav1.TopicSpecification{Name: args[0]}
-	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &kafkav1.Topic{Spec: topic, Validate: false})
+	topic := &schedv1.TopicSpecification{Name: args[0]}
+	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return err
+	}
+	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
+	return nil
+}
 
-	return errors.HandleCommon(err, cmd)
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+	var refs []srsdk.SchemaReference
+
+	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
+	if err != nil {
+		if err.Error() == "ccloud" {
+			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+		} else {
+			return nil, err
+		}
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: valueFormat, References: refs})
+	if err != nil {
+		return nil, err
+	}
+
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return nil, err
+	}
+	if outputFormat == output.Human.String() {
+		pcmd.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+	} else {
+		err = output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{response.Id})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
+	metaInfo = append(metaInfo, schemaIdBuffer...)
+	return metaInfo, nil
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	cluster, err := h.Context.ActiveKafkaCluster(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
-	pcmd.ErrPrintln(cmd, "Starting Kafka Producer. ^C or ^D to exit")
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
+
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	subject := topic + "-value"
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return err
+	}
+	err = serializationProvider.LoadSchema(schemaPath)
+	if err != nil {
+		return err
+	}
+
+	// Meta info contains magic byte and schema ID (4 bytes).
+	// For plain string encoding, meta info is empty.
+	metaInfo := []byte{}
+
+	// Registering schema when specified, and fill metaInfo array.
+	if valueFormat != "string" && len(schemaPath) > 0 {
+		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
+		if err != nil {
+			return err
+		}
+		metaInfo = info
+	}
+
+	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
 
 	InitSarama(h.logger)
 	producer, err := NewSaramaProducer(cluster, h.clientID)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
+		return err
 	}
 
 	// Line reader for producer input.
@@ -372,21 +586,44 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		close(input)
 	}()
 	// Prime reader
-	scan()
+	go scan()
 
 	var key sarama.Encoder
 	for data := range input {
-		data = strings.TrimSpace(data)
-
-		record := strings.SplitN(data, delim, 2)
-		value := sarama.StringEncoder(record[len(record)-1])
-		if len(record) == 2 {
-			key = sarama.StringEncoder(record[0])
+		if len(data) == 0 {
+			go scan()
+			continue
 		}
+		var valueString string
+		if parseKey {
+			record := strings.SplitN(data, delim, 2)
+			valueString = strings.TrimSpace(record[len(record)-1])
+
+			if len(record) == 2 {
+				key = sarama.StringEncoder(strings.TrimSpace(record[0]))
+			} else {
+				return errors.New(errors.MissingKeyErrorMsg)
+			}
+		} else {
+			valueString = strings.TrimSpace(data)
+		}
+		encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+		if err != nil {
+			return err
+		}
+		encoded := append(metaInfo, encodedMessage...)
+		value := sarama.StringEncoder(string(encoded))
+
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
-			pcmd.ErrPrintf(cmd, "Failed to produce offset %d: %s\n", offset, err)
+			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, topic, cluster.ID)
+			if isTopicNotExistError {
+				scanErr = err
+				close(input)
+				break
+			}
+			pcmd.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -394,30 +631,64 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		go scan()
 	}
 	if scanErr != nil {
-		return errors.HandleCommon(scanErr, cmd)
+		return scanErr
 	}
-	return errors.HandleCommon(producer.Close(), cmd)
+	return producer.Close()
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
-	cluster, err := h.Context.ActiveKafkaCluster(cmd)
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
+	}
+
+	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
 	}
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
+	}
+
+	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return err
+	}
+
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		if err != nil {
+			if err.Error() == "ccloud" {
+				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+			} else {
+				return err
+			}
+		}
+	} else {
+		srClient, ctx = nil, nil
 	}
 
 	InitSarama(h.logger)
 	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
+		return err
 	}
 
 	// Trap SIGINT to trigger a shutdown.
@@ -425,7 +696,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		pcmd.ErrPrintln(cmd, "Stopping Consumer.")
+		pcmd.ErrPrintln(cmd, errors.StoppingConsumer)
 		consumer.Close()
 	}()
 
@@ -435,11 +706,30 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}()
 
-	pcmd.ErrPrintln(cmd, "Starting Kafka Consumer. ^C to exit")
+	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
-	err = consumer.Consume(context.Background(), []string{topic}, &GroupHandler{Out: cmd.OutOrStdout()})
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return err
+		}
+	}
 
-	return errors.HandleCommon(err, cmd)
+	groupHandler := &GroupHandler{
+		SrClient:   srClient,
+		Ctx:        ctx,
+		Format:     valueFormat,
+		Out:        cmd.OutOrStdout(),
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+	}
+	err = consumer.Consume(context.Background(), []string{topic}, groupHandler)
+	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
+	if err != nil {
+		return err
+	}
+	err = os.RemoveAll(dir)
+	return err
 }
 
 func toMap(configs []string) (map[string]string, error) {
@@ -447,14 +737,14 @@ func toMap(configs []string) (map[string]string, error) {
 	for _, cfg := range configs {
 		pair := strings.SplitN(cfg, "=", 2)
 		if len(pair) < 2 {
-			return nil, fmt.Errorf("The configuration must be in the form of key=value")
+			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
 		}
 		configMap[pair[0]] = pair[1]
 	}
 	return configMap, nil
 }
 
-func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) error {
+func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
 	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
@@ -478,13 +768,15 @@ func printHumanDescribe(cmd *cobra.Command, resp *kafkav1.TopicDescription) erro
 		}
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
-
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i][0] < entries[j][0]
+	})
 	pcmd.Println(cmd, "\nConfiguration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
 
-func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) error {
+func printStructuredDescribe(resp *schedv1.TopicDescription, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 	structuredDisplay.PartitionCount = len(resp.Partitions)
@@ -499,11 +791,10 @@ func printStructuredDescribe(resp *kafkav1.TopicDescription, format string) erro
 	for _, entry := range resp.Config {
 		structuredDisplay.Config[entry.Name] = entry.Value
 	}
-
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func getPartitionDisplay(partition *kafkav1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
+func getPartitionDisplay(partition *schedv1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
 	var replicas []uint32
 	for _, replica := range partition.Replicas {
 		replicas = append(replicas, replica.Id)

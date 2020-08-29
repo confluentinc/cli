@@ -36,21 +36,24 @@ var (
 	secretCommandArgs     = map[string]func([]string) []string{"ccloud api-key store": apiKeyStoreSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
+	nonUser               = "no-user-info"
 
 	// these are exported to avoid import cycle with test (test is in package analytics_test)
 	// @VisibleForTesting
-	FlagsPropertiesKey      = "flags"
-	ArgsPropertiesKey       = "args"
-	OrgIdPropertiesKey      = "organization_id"
-	EmailPropertiesKey      = "email"
-	ErrorMsgPropertiesKey   = "error_message"
-	StartTimePropertiesKey  = "start_time"
-	FinishTimePropertiesKey = "finish_time"
-	SucceededPropertiesKey  = "succeeded"
-	CredentialPropertiesKey = "credential_type"
-	ApiKeyPropertiesKey     = "api-key"
-	VersionPropertiesKey    = "version"
-	CliNameTraitsKey        = "cli_name"
+	FlagsPropertiesKey              = "flags"
+	ArgsPropertiesKey               = "args"
+	OrgIdPropertiesKey              = "organization_id"
+	EmailPropertiesKey              = "email"
+	ErrorMsgPropertiesKey           = "error_message"
+	StartTimePropertiesKey          = "start_time"
+	FinishTimePropertiesKey         = "finish_time"
+	SucceededPropertiesKey          = "succeeded"
+	CredentialPropertiesKey         = "credential_type"
+	ApiKeyPropertiesKey             = "api-key"
+	VersionPropertiesKey            = "version"
+	CliNameTraitsKey                = "cli_name"
+	ReleaseNotesErrorPropertiesKeys = "release_notes_error"
+	FeedbackPropertiesKey           = "feedback"
 )
 
 // Logger struct that implements Segment's logger and redirects segments error log to debug log
@@ -73,12 +76,11 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 type Client interface {
 	SetStartTime()
 	TrackCommand(cmd *cobra.Command, args []string)
-	CatchHelpCall(rootCmd *cobra.Command, args []string)
-	SendCommandSucceeded() error
-	SendCommandFailed(e error) error
 	SetCommandType(commandType CommandType)
 	SessionTimedOut() error
+	SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error
 	Close() error
+	SetSpecialProperty(propertiesKey string, value interface{})
 }
 
 type ClientObj struct {
@@ -101,13 +103,14 @@ type userInfo struct {
 	email          string
 	organizationId string
 	apiKey         string
+	anonymousId    string
 }
 
 func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
 		cliName:     cliName,
-		client:      segmentClient,
 		config:      cfg,
+		client:      segmentClient,
 		properties:  make(segment.Properties),
 		cliVersion:  version,
 		clock:       clock,
@@ -132,15 +135,17 @@ func (a *ClientObj) TrackCommand(cmd *cobra.Command, args []string) {
 func (a *ClientObj) SessionTimedOut() error {
 	// just in case; redundant if config.DeleteUserAuth called before TrackCommand in prerunner.Anonymous()
 	a.user = userInfo{}
-	err := a.config.ResetAnonymousId()
-	if err != nil {
-		return errors.Wrap(err, "Unable to reset anonymous id")
+	if a.config != nil {
+		err := a.resetAnonymousId()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// Cobra does not trigger prerun and postrun when help flag is true
-func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
+// Cobra does not trigger prerun and postrun when help flag is used
+func (a *ClientObj) catchHelpCall(rootCmd *cobra.Command, args []string) {
 	// non-help calls would already have triggered preruns
 	if a.cmdCalled != "" {
 		return
@@ -157,7 +162,16 @@ func (a *ClientObj) CatchHelpCall(rootCmd *cobra.Command, args []string) {
 	}
 }
 
-func (a *ClientObj) SendCommandSucceeded() error {
+func (a *ClientObj) SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error {
+	a.catchHelpCall(cmd, args)
+	if cmdExecutionError != nil {
+		err := a.sendCommandFailed(cmdExecutionError)
+		return err
+	}
+	return a.sendCommandSucceeded()
+}
+
+func (a *ClientObj) sendCommandSucceeded() error {
 	if a.commandType == Login || a.commandType == Init || a.commandType == ContextUse {
 		err := a.loginHandler()
 		if err != nil {
@@ -172,19 +186,19 @@ func (a *ClientObj) SendCommandSucceeded() error {
 	// only reset anonymous id if logout from a username credential
 	// preventing logouts that have no effects from resetting anonymous id
 	if a.commandType == Logout && a.user.credentialType == v2.Username.String() {
-		if err := a.config.ResetAnonymousId(); err != nil {
+		if err := a.resetAnonymousId(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (a *ClientObj) SendCommandFailed(e error) error {
+func (a *ClientObj) sendCommandFailed(e error) error {
 	a.properties.Set(SucceededPropertiesKey, false)
 	a.properties.Set(FinishTimePropertiesKey, a.clock.Now())
 	a.properties.Set(ErrorMsgPropertiesKey, e.Error())
 	if a.cmdCalled == "" {
-		return a.malformedCommandError(e)
+		return a.malformedCommandError()
 	}
 	if err := a.sendPage(); err != nil {
 		return err
@@ -200,27 +214,34 @@ func (a *ClientObj) Close() error {
 	return a.client.Close()
 }
 
+// for commands that need extra properties other than the common ones already set
+func (a *ClientObj) SetSpecialProperty(propertiesKey string, value interface{}) {
+	a.properties.Set(propertiesKey, value)
+}
+
 // Helper Functions
 
 func (a *ClientObj) sendPage() error {
 	page := segment.Page{
-		AnonymousId: a.config.AnonymousId,
 		Name:        a.cmdCalled,
 		Properties:  a.properties,
 		UserId:      a.user.id,
+		AnonymousId: a.user.anonymousId,
 	}
-	a.addUserProperties()
+	if a.config != nil {
+		a.addUserProperties()
+	}
 	return a.client.Enqueue(page)
 }
 
 func (a *ClientObj) identify() error {
 	identify := segment.Identify{
-		AnonymousId: a.config.AnonymousId,
+		AnonymousId: a.user.anonymousId,
 		UserId:      a.user.id,
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.cliVersion)
-	traits.Set(CliNameTraitsKey, a.config.CLIName)
+	traits.Set(CliNameTraitsKey, a.cliName)
 	traits.Set(CredentialPropertiesKey, a.user.credentialType)
 	if a.user.credentialType == v2.APIKey.String() {
 		traits.Set(ApiKeyPropertiesKey, a.user.apiKey)
@@ -229,16 +250,27 @@ func (a *ClientObj) identify() error {
 	return a.client.Enqueue(identify)
 }
 
-func (a *ClientObj) malformedCommandError(e error) error {
-	a.user = a.getUser()
+func (a *ClientObj) malformedCommandError() error {
 	track := segment.Track{
-		AnonymousId: a.config.AnonymousId,
-		Event:       malformedCmdEventName,
-		Properties:  a.properties,
-		UserId:      a.user.id,
+		Event:      malformedCmdEventName,
+		Properties: a.properties,
 	}
-	a.addUserProperties()
+	if a.config != nil {
+		a.user = a.getUser()
+		track.AnonymousId = a.user.anonymousId
+		track.UserId = a.user.id
+		a.addUserProperties()
+	}
 	return a.client.Enqueue(track)
+}
+
+func (a *ClientObj) resetAnonymousId() error {
+	err := a.config.ResetAnonymousId()
+	if err != nil {
+		return errors.Wrap(err, "Unable to reset anonymous id")
+	}
+	a.user.anonymousId = a.config.AnonymousId
+	return nil
 }
 
 func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
@@ -269,7 +301,7 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.properties.Set(CredentialPropertiesKey, a.user.credentialType)
-	if a.config.CLIName == "ccloud" && a.user.credentialType == v2.Username.String() {
+	if a.cliName == "ccloud" && a.user.credentialType == v2.Username.String() {
 		a.properties.Set(OrgIdPropertiesKey, a.user.organizationId)
 		a.properties.Set(EmailPropertiesKey, a.user.email)
 	}
@@ -280,6 +312,13 @@ func (a *ClientObj) addUserProperties() {
 
 func (a *ClientObj) getUser() userInfo {
 	var user userInfo
+	if a.config == nil {
+		return userInfo{
+			id:          nonUser,
+			anonymousId: nonUser,
+		}
+	}
+	user.anonymousId = a.config.AnonymousId
 	user.credentialType = a.getCredentialType()
 	// If the user is not logged in
 	if user.credentialType == "" {
@@ -351,7 +390,7 @@ func (a *ClientObj) loginHandler() error {
 	}
 
 	if a.isSwitchUserLogin(prevUser) {
-		if err := a.config.ResetAnonymousId(); err != nil {
+		if err := a.resetAnonymousId(); err != nil {
 			return err
 		}
 		return a.identify()

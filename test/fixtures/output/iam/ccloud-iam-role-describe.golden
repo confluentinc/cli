@@ -1,0 +1,65 @@
+        Name        |                 AccessPolicy                  
++-------------------+----------------------------------------------+
+  CloudClusterAdmin | [                                             
+                    |   {                                           
+                    |     "bindingScope": "cluster",                
+                    |     "bindWithResource": false,                
+                    |     "allowedOperations": [                    
+                    |       {                                       
+                    |         "resourceType": "Topic",              
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "KsqlCluster",        
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "Subject",            
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "Connector",          
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "NetworkAccess",      
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "ClusterMetric",      
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "Cluster",            
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "ClusterApiKey",      
+                    |         "operations": ["All"]                 
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "SecurityMetadata",   
+                    |         "operations": ["Describe", "Alter"]   
+                    |       }                                       
+                    |     ]                                         
+                    |   },                                          
+                    |   {                                           
+                    |     "bindingScope": "organization",           
+                    |     "bindWithResource": false,                
+                    |     "allowedOperations": [                    
+                    |       {                                       
+                    |         "resourceType": "SupportPlan",        
+                    |         "operations": ["Describe"]            
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "User",               
+                    |         "operations": ["Describe", "Invite"]  
+                    |       },                                      
+                    |       {                                       
+                    |         "resourceType": "ServiceAccount",     
+                    |         "operations": ["Describe"]            
+                    |       }                                       
+                    |     ]                                         
+                    |   }                                           
+                    | ]                                             
+                    |                                               

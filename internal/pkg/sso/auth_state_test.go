@@ -8,10 +8,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func TestNewStateDev(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false, log.New())
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -31,7 +33,7 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	stateStag, err := newState("https://stag.cpdev.cloud", false)
+	stateStag, err := newState("https://stag.cpdev.cloud", false, log.New())
 	require.NoError(t, err)
 	// configs for devel and staging are the same
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
@@ -43,7 +45,7 @@ func TestNewStateDev(t *testing.T) {
 }
 
 func TestNewStateDevNoBrowser(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", true)
+	state, err := newState("https://devel.cpdev.cloud", true, log.New())
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -64,7 +66,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	stateStag, err := newState("https://stag.cpdev.cloud", true)
+	stateStag, err := newState("https://stag.cpdev.cloud", true, log.New())
 	require.NoError(t, err)
 	// configs for devel and staging are the same except the callback url
 	require.Equal(t, state.SSOProviderHost, stateStag.SSOProviderHost)
@@ -75,7 +77,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, stateStag.SSOProviderIDToken)
 
 	// check cpd configs
-	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true)
+	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true, log.New())
 	require.NoError(t, err)
 	// configs for cpd and devel are the same except the callback url
 	require.Equal(t, state.SSOProviderHost, stateCpd.SSOProviderHost)
@@ -87,7 +89,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 }
 
 func TestNewStateProd(t *testing.T) {
-	state, err := newState("https://confluent.cloud", false)
+	state, err := newState("https://confluent.cloud", false, log.New())
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -107,7 +109,7 @@ func TestNewStateProd(t *testing.T) {
 }
 
 func TestNewStateProdNoBrowser(t *testing.T) {
-	state, err := newState("https://confluent.cloud", true)
+	state, err := newState("https://confluent.cloud", true, log.New())
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -128,7 +130,7 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 }
 
 func TestGetAuthorizationUrl(t *testing.T) {
-	state, _ := newState("https://devel.cpdev.cloud", false)
+	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
 
 	// test get auth code url
 	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo")
@@ -157,7 +159,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 }
 
 func TestGetOAuthToken(t *testing.T) {
-	state, _ := newState("https://devel.cpdev.cloud", false)
+	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
 
 	expectedUri := "/oauth/token"
 	expectedPayload := "grant_type=authorization_code" +
@@ -192,7 +194,7 @@ func TestGetOAuthToken(t *testing.T) {
 }
 
 func TestRefreshOAuthToken(t *testing.T) {
-	state, _ := newState("https://devel.cpdev.cloud", false)
+	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
 	mockRefreshToken := "bar"
 	state.SSOProviderRefreshToken = mockRefreshToken
 	expectedUri := "/oauth/token"

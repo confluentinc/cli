@@ -10,9 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
-	kafkav1 "github.com/confluentinc/ccloudapis/kafka/v1"
-	srv1 "github.com/confluentinc/ccloudapis/schemaregistry/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
@@ -28,8 +27,8 @@ const (
 type SubjectTestSuite struct {
 	suite.Suite
 	conf             *v3.Config
-	kafkaCluster     *kafkav1.KafkaCluster
-	srCluster        *srv1.SchemaRegistryCluster
+	kafkaCluster     *schedv1.KafkaCluster
+	srCluster        *schedv1.SchemaRegistryCluster
 	srMothershipMock *mock.SchemaRegistry
 	srClientMock     *srsdk.APIClient
 }
@@ -40,33 +39,33 @@ func (suite *SubjectTestSuite) SetupSuite() {
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &v0.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &kafkav1.KafkaCluster{
+	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
 		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
-	suite.srCluster = &srv1.SchemaRegistryCluster{
+	suite.srCluster = &schedv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 }
 
 func (suite *SubjectTestSuite) SetupTest() {
 	suite.srMothershipMock = &mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryClusterConfig) (*srv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *srv1.SchemaRegistryCluster) (*srv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			ListFunc: func(ctx context.Context) ([]string, *http.Response, error) {
+			ListFunc: func(ctx context.Context, opts *srsdk.ListOpts) ([]string, *http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
 			},
-			ListVersionsFunc: func(ctx context.Context, subject string) (int32s []int32, response *http.Response, e error) {
+			ListVersionsFunc: func(ctx context.Context, subject string, opts *srsdk.ListVersionsOpts) (int32s []int32, response *http.Response, e error) {
 				return []int32{1234, 4567}, nil, nil
 			},
 			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
@@ -83,7 +82,7 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(cliMock.NewPreRunnerMock(client, nil), suite.conf, suite.srClientMock, suite.conf.Logger)
+	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, suite.conf), suite.srClientMock, suite.conf.Logger)
 	return cmd
 }
 
@@ -95,6 +94,18 @@ func (suite *SubjectTestSuite) TestSubjectList() {
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ListCalled())
+}
+
+func (suite *SubjectTestSuite) TestSubjectListDeleted() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "list", "--deleted"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.ListCalled())
+	retVal := apiMock.ListCalls()[0]
+	req.Equal(retVal.LocalVarOptionals.Deleted.Value(), true)
 }
 
 func (suite *SubjectTestSuite) TestSubjectUpdateMode() {
@@ -140,6 +151,19 @@ func (suite *SubjectTestSuite) TestSubjectDescribe() {
 	req.True(apiMock.ListVersionsCalled())
 	retVal := apiMock.ListVersionsCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
+}
+
+func (suite *SubjectTestSuite) TestSubjectDescribeDeleted() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"subject", "describe", subjectName, "--deleted"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.ListVersionsCalled())
+	retVal := apiMock.ListVersionsCalls()[0]
+	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.LocalVarOptionals.Deleted.Value(), true)
 }
 
 func TestSubjectSuite(t *testing.T) {

@@ -12,7 +12,7 @@ func TestCompletionBash(t *testing.T) {
 	req := require.New(t)
 
 	root := pcmd.BuildRootCommand()
-	cmd := NewCompletionCmd(root, "ccloud")
+	cmd := New(root, "ccloud")
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "completion", "bash")
@@ -24,7 +24,7 @@ func TestCompletionZsh(t *testing.T) {
 	req := require.New(t)
 
 	root := pcmd.BuildRootCommand()
-	cmd := NewCompletionCmd(root, "ccloud")
+	cmd := New(root, "ccloud")
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "completion", "zsh")
@@ -36,7 +36,7 @@ func TestCompletionUnknown(t *testing.T) {
 	req := require.New(t)
 
 	root := pcmd.BuildRootCommand()
-	cmd := NewCompletionCmd(root, "ccloud")
+	cmd := New(root, "ccloud")
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "completion", "newsh")
@@ -48,7 +48,7 @@ func TestCompletionNone(t *testing.T) {
 	req := require.New(t)
 
 	root := pcmd.BuildRootCommand()
-	cmd := NewCompletionCmd(root, "ccloud")
+	cmd := New(root, "ccloud")
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "completion")

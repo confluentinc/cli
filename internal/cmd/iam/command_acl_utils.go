@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/mds-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
@@ -29,7 +29,7 @@ func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
 }
 
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
-func addAclFlags() *pflag.FlagSet {
+func addACLFlags() *pflag.FlagSet {
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
 	flgSet := aclFlags()
@@ -39,7 +39,7 @@ func addAclFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-func deleteAclFlags() *pflag.FlagSet {
+func deleteACLFlags() *pflag.FlagSet {
 	flgSet := aclFlags()
 	// MDS delete apis allow principal/operation/host to be skipped, but we deliberately
 	// want cli delete to only work on 1 acl at a time.
@@ -50,26 +50,25 @@ func deleteAclFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-func listAclFlags() *pflag.FlagSet {
+func listACLFlags() *pflag.FlagSet {
 	flgSet := aclFlags()
 	_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
 	return flgSet
 }
 
 func aclFlags() *pflag.FlagSet {
-
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of acl commands.")
+	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
 	flgSet.String("host", "*", "Set host for access.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(mds.ACL_OPERATION_ALL, mds.ACL_OPERATION_READ, mds.ACL_OPERATION_WRITE,
-			mds.ACL_OPERATION_CREATE, mds.ACL_OPERATION_DELETE, mds.ACL_OPERATION_ALTER,
-			mds.ACL_OPERATION_DESCRIBE, mds.ACL_OPERATION_CLUSTER_ACTION,
-			mds.ACL_OPERATION_DESCRIBE_CONFIGS, mds.ACL_OPERATION_ALTER_CONFIGS,
-			mds.ACL_OPERATION_IDEMPOTENT_WRITE)))
+		convertToFlags(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
+			mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE, mds.ACLOPERATION_ALTER,
+			mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_CLUSTER_ACTION,
+			mds.ACLOPERATION_DESCRIBE_CONFIGS, mds.ACLOPERATION_ALTER_CONFIGS,
+			mds.ACLOPERATION_IDEMPOTENT_WRITE)))
 	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
 access to the provided operations on the Kafka cluster itself.`)
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
@@ -121,33 +120,33 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "transactional-id":
 			setResourcePattern(conf, n, v)
 		case "allow":
-			conf.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_ALLOW
+			conf.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_ALLOW
 		case "deny":
-			conf.AclBinding.Entry.PermissionType = mds.ACL_PERMISSION_TYPE_DENY
+			conf.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_DENY
 		case "prefix":
-			conf.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_PREFIXED
+			conf.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_PREFIXED
 		case "principal":
 			conf.AclBinding.Entry.Principal = v
 		case "host":
 			conf.AclBinding.Entry.Host = v
 		case "operation":
 			v = strings.ToUpper(v)
-			v = strings.Replace(v, "-", "_", -1)
+			v = strings.ReplaceAll(v, "-", "_")
 			enumUtils := enumUtils{}
 			enumUtils.init(
-				mds.ACL_OPERATION_UNKNOWN,
-				mds.ACL_OPERATION_ANY,
-				mds.ACL_OPERATION_ALL,
-				mds.ACL_OPERATION_READ,
-				mds.ACL_OPERATION_WRITE,
-				mds.ACL_OPERATION_CREATE,
-				mds.ACL_OPERATION_DELETE,
-				mds.ACL_OPERATION_ALTER,
-				mds.ACL_OPERATION_DESCRIBE,
-				mds.ACL_OPERATION_CLUSTER_ACTION,
-				mds.ACL_OPERATION_DESCRIBE_CONFIGS,
-				mds.ACL_OPERATION_ALTER_CONFIGS,
-				mds.ACL_OPERATION_IDEMPOTENT_WRITE,
+				mds.ACLOPERATION_UNKNOWN,
+				mds.ACLOPERATION_ANY,
+				mds.ACLOPERATION_ALL,
+				mds.ACLOPERATION_READ,
+				mds.ACLOPERATION_WRITE,
+				mds.ACLOPERATION_CREATE,
+				mds.ACLOPERATION_DELETE,
+				mds.ACLOPERATION_ALTER,
+				mds.ACLOPERATION_DESCRIBE,
+				mds.ACLOPERATION_CLUSTER_ACTION,
+				mds.ACLOPERATION_DESCRIBE_CONFIGS,
+				mds.ACLOPERATION_ALTER_CONFIGS,
+				mds.ACLOPERATION_IDEMPOTENT_WRITE,
 			)
 			if op, ok := enumUtils[v]; ok {
 				conf.AclBinding.Entry.Operation = op.(mds.AclOperation)
@@ -162,22 +161,22 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	if conf.AclBinding.Pattern.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(mds.ACL_RESOURCE_TYPE_TOPIC, mds.ACL_RESOURCE_TYPE_GROUP,
-				mds.ACL_RESOURCE_TYPE_CLUSTER, mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID)))
+			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 		return
 	}
 
 	// Normalize the resource pattern name
 	n = strings.ToUpper(n)
-	n = strings.Replace(n, "-", "_", -1)
+	n = strings.ReplaceAll(n, "-", "_")
 
 	enumUtils := enumUtils{}
-	enumUtils.init(mds.ACL_RESOURCE_TYPE_TOPIC, mds.ACL_RESOURCE_TYPE_GROUP,
-		mds.ACL_RESOURCE_TYPE_CLUSTER, mds.ACL_RESOURCE_TYPE_TRANSACTIONAL_ID)
+	enumUtils.init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+		mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)
 	conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mds.AclResourceType)
 
-	if conf.AclBinding.Pattern.ResourceType == mds.ACL_RESOURCE_TYPE_CLUSTER {
-		conf.AclBinding.Pattern.PatternType = mds.PATTERN_TYPE_LITERAL
+	if conf.AclBinding.Pattern.ResourceType == mds.ACLRESOURCETYPE_CLUSTER {
+		conf.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
 	}
 	conf.AclBinding.Pattern.Name = v
 }
@@ -186,14 +185,14 @@ func convertToFlags(operations ...interface{}) string {
 	var ops []string
 
 	for _, v := range operations {
-		if v == mds.ACL_RESOURCE_TYPE_GROUP {
+		if v == mds.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == mds.ACL_RESOURCE_TYPE_CLUSTER {
+		if v == mds.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
 		s := fmt.Sprintf("%v", v)
-		s = strings.Replace(s, "_", "-", -1)
+		s = strings.ReplaceAll(s, "_", "-")
 		ops = append(ops, strings.ToLower(s))
 	}
 

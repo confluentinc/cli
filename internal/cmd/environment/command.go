@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/ccloudapis/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -27,13 +26,12 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(prerunner pcmd.PreRunner, config *v3.Config, cliName string) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "environment",
 			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
-		},
-		config, prerunner)
+		}, prerunner)
 	cmd := &command{AuthenticatedCLICommand: cliCmd}
 	cmd.init()
 	return cmd.Command
@@ -43,8 +41,8 @@ func (c *command) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent Cloud environments.",
-		RunE:  c.list,
 		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -53,15 +51,15 @@ func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "use <environment-id>",
 		Short: "Switch to the specified Confluent Cloud environment.",
-		RunE:  c.use,
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.use),
 	})
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new Confluent Cloud environment.",
-		RunE:  c.create,
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
@@ -70,8 +68,8 @@ func (c *command) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update <environment-id>",
 		Short: "Update an existing Confluent Cloud environment.",
-		RunE:  c.update,
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
 	check(updateCmd.MarkFlagRequired("name"))
@@ -81,12 +79,12 @@ func (c *command) init() {
 	c.AddCommand(&cobra.Command{
 		Use:   "delete <environment-id>",
 		Short: "Delete a Confluent Cloud environment and all its resources.",
-		RunE:  c.delete,
 		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	})
 }
 
-func (c *command) refreshEnvList(cmd *cobra.Command) error {
+func (c *command) refreshEnvList() error {
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return err
@@ -108,21 +106,21 @@ func (c *command) refreshEnvList(cmd *cobra.Command) error {
 
 	err = c.Config.Save()
 	if err != nil {
-		return errors.Wrap(err, "unable to save user auth while refreshing environment list")
+		return errors.Wrap(err, errors.EnvRefreshErrorMsg)
 	}
 
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, environment := range environments {
 		// Add '*' only in the case where we are printing out tables
@@ -143,14 +141,15 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	acc, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
 	if err != nil {
-		return errors.HandleCommon(errors.New("The specified environment ID was not found.  To see available environments, use `ccloud environment list`."), cmd)
+		err = errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
+		return err
 	}
 
 	c.Context.State.Auth.Account = acc
 	if err := c.Config.Save(); err != nil {
-		return errors.HandleCommon(errors.New("couldn't switch to new environment: couldn't save config."), cmd)
+		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
-	pcmd.Println(cmd, "Now using", id, "as the default (active) environment.")
+	pcmd.Printf(cmd, errors.UsingEnvMsg, id)
 	return nil
 }
 
@@ -159,7 +158,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
 }
@@ -175,8 +174,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	err = c.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.State.Auth.Account.OrganizationId})
 
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
 	return nil
 }
 
@@ -185,8 +185,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	err := c.Client.Account.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId})
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
+	pcmd.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
 	return nil
 }
 

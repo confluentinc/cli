@@ -368,3 +368,132 @@ const ListVersionsPublicFixtureInvalidPrefix = `\
     <StorageClass>STANDARD</StorageClass>
   </Contents>
 </ListBucketResult>`
+
+const ListReleaseNotesVersionsPublicFixture = `\
+<?xml version="1.0" encoding="utf-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>confluent.cloud</Name>
+  <Prefix>ccloud-cli/binaries/</Prefix>
+  <Marker></Marker>
+  <MaxKeys>1000</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.47.0/release-notes.rst</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"6d67d14d2e493c4954f3b9a73c3b7e96"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.48.0/release-notes.rst</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"a040fb753aa77009330bb7b6e0f805a8"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+
+</ListBucketResult>`
+
+const ListReleaseNotesVersionsInvalidFiles = `\
+<?xml version="1.0" encoding="utf-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>confluent.cloud</Name>
+  <Prefix>ccloud-cli/binaries/</Prefix>
+  <Marker></Marker>
+  <MaxKeys>1000</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.47.0/bababa.rst</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"6d67d14d2e493c4954f3b9a73c3b7e96"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.48.0/blob</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"a040fb753aa77009330bb7b6e0f805a8"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+
+</ListBucketResult>`
+
+const ListReleaseNotesVersionsExcludeInvalidFiles = `\
+<?xml version="1.0" encoding="utf-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>confluent.cloud</Name>
+  <Prefix>ccloud-cli/binaries/</Prefix>
+  <Marker></Marker>
+  <MaxKeys>1000</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.47.0/release-notes.rst</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"6d67d14d2e493c4954f3b9a73c3b7e96"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.48.0/blobblab</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"a040fb753aa77009330bb7b6e0f805a8"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+
+</ListBucketResult>`
+
+const ListReleaseNotesVersionsPublicFixtureUnsortedVersions = `\
+<?xml version="1.0" encoding="utf-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>confluent.cloud</Name>
+  <Prefix>ccloud-cli/binaries/</Prefix>
+  <Marker></Marker>
+  <MaxKeys>1000</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.44.0/release-notes.rst</Key>
+    <LastModified>2019-03-29T20:32:38.000Z</LastModified>
+    <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
+    <Size>17067256</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.42.0/release-notes.rst</Key>
+    <LastModified>2019-03-29T20:32:38.000Z</LastModified>
+    <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
+    <Size>17067256</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>ccloud-cli/release-notes/0.43.0/release-notes.rst</Key>
+    <LastModified>2019-03-29T20:32:38.000Z</LastModified>
+    <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
+    <Size>17067256</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+</ListBucketResult>`
+
+const ListReleaseNotesVersionsPublicFixtureNonSemver = `\
+<?xml version="1.0" encoding="utf-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>confluent.cloud</Name>
+  <Prefix>ccloud-cli/binaries/</Prefix>
+  <Marker></Marker>
+  <MaxKeys>1000</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>ccloud-cli/release-notes/v1beta1/release-notes.rst</Key>
+    <LastModified>2019-03-29T20:32:38.000Z</LastModified>
+    <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
+    <Size>17067256</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+</ListBucketResult>`
+
+const ReleaseNotesFileV0470 = `
+================================
+CCloud CLI v0.47.0 Release Notes
+================================
+`

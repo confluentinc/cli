@@ -1,0 +1,12 @@
+api_endpoint: http://kafka-api-url
+availability: LOW
+egress: 100
+endpoint: SASL_SSL://kafka-endpoint
+id: lkc-describe
+ingress: 100
+name: kafka-cluster
+provider: aws
+region: us-west-2
+status: PROVISIONING
+storage: 500
+type: BASIC
