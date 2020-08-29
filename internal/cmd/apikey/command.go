@@ -430,7 +430,7 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 
 func (c *command) suggestAPIKeys(cmd *cobra.Command) func() []prompt.Suggest {
 	return func() []prompt.Suggest {
-		if err := c.Prerunner.Authenticated(c.AuthenticatedCLICommand)(cmd, []string{}); err != nil {
+		if _, err := c.Context.AuthenticatedState(c.AuthenticatedCLICommand.CLICommand.Command); err != nil {
 			return []prompt.Suggest{
 				{
 					Text:        " ",
