@@ -8,7 +8,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	log "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
@@ -20,6 +20,9 @@ type MDSClientManagerImpl struct{}
 
 func (m *MDSClientManagerImpl) GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error) {
 	mdsClient := initializeMDS(ctx, logger)
+	if logger.GetLevel() == log.DEBUG || logger.GetLevel() == log.TRACE {
+		mdsClient.GetConfig().Debug = true
+	}
 	if flagChanged {
 		if caCertPath == "" {
 			// revert to default client regardless of previously configured client
