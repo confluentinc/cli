@@ -58,7 +58,7 @@ jobs:
   
   - task: DownloadSecureFile@1
     name: vaultsecrets
-    displayName: Securely download secrets for vault login
+    displayName: Securely download secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
     inputs:
       secureFile: 'vault_secrets'
   
@@ -92,8 +92,7 @@ jobs:
 
   - bash: |
       export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
-      export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
-      . $(vaultsecrets.secureFilePath) # export secrets for vault login
+      . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
       . vault-sem-get-secret netrc
@@ -156,8 +155,4 @@ jobs:
       make cpd-destroy
     condition: always()
     displayName: Free CPD
-  
-  - script: |
-      git checkout go.*
-    displayName: 'Reset go.* just in case'
   
