@@ -53,7 +53,7 @@ const (
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
 	// kafka acl commands
-	DeletedACLsMsg  = "Deleted ACLs."
+	DeletedACLsMsg  = "Deleted ACLs.\n"
 	ACLsNotFoundMsg = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
@@ -73,7 +73,7 @@ const (
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
-	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v"
+	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"
 	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject \"%s\"\n"
 	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"

@@ -479,7 +479,7 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 		return nil, err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
+		pcmd.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
