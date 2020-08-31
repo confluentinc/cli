@@ -305,11 +305,12 @@ func TestDeleteACLs(t *testing.T) {
 			cmd := NewCMD(expect)
 			cmd.SetArgs(append(args, aclEntries[j].args...))
 
+			var filters []*schedv1.ACLFilter
+			for _, entry := range aclEntries[j].entries {
+				filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resourcePatterns[i].pattern, Entry: entry}))
+			}
+
 			go func() {
-				var filters []*schedv1.ACLFilter
-				for _, entry := range aclEntries[j].entries {
-					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resourcePatterns[i].pattern, Entry: entry}))
-				}
 				expect <- filters
 			}()
 
