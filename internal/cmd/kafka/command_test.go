@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"strconv"
 	"strings"
 	"testing"
+
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"

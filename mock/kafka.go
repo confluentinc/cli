@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 
 	"github.com/golang/protobuf/proto"
@@ -107,7 +108,7 @@ func (m *Kafka) DeleteACLs(_ context.Context, _ *schedv1.KafkaCluster, filters [
 	return assertEqualFilters(filters, <-m.Expect)
 }
 
-func (m *Kafka)	AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, config *linkv1.LinkProperties, options *linkv1.AlterLinkOptions) error {
+func (m *Kafka) AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, config *linkv1.LinkProperties, options *linkv1.AlterLinkOptions) error {
 	if err := assertEqualValues(link, <-m.Expect); err != nil {
 		return err
 	}
@@ -117,18 +118,18 @@ func (m *Kafka)	AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, li
 	return nil
 }
 
-func (m* Kafka)	CreateLink(ctx context.Context, destination *schedv1.KafkaCluster, link *linkv1.ClusterLink, options *linkv1.CreateLinkOptions) error {
+func (m *Kafka) CreateLink(ctx context.Context, destination *schedv1.KafkaCluster, link *linkv1.ClusterLink, options *linkv1.CreateLinkOptions) error {
 	if err := assertEquals(link, <-m.Expect); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m* Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster) ([]string, error) {
+func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster) ([]string, error) {
 	return []string{"link-1", "link-2"}, nil
 }
 
-func (m* Kafka) DescribeLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string) (*linkv1.LinkProperties, error) {
+func (m *Kafka) DescribeLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string) (*linkv1.LinkProperties, error) {
 	return &linkv1.LinkProperties{
 		Properties: map[string]string{
 			"Foo": "123",
@@ -137,7 +138,7 @@ func (m* Kafka) DescribeLink(ctx context.Context, cluster *schedv1.KafkaCluster,
 	}, assertEqualValues(link, <-m.Expect)
 }
 
-func (m* Kafka) DeleteLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, options *linkv1.DeleteLinkOptions) error {
+func (m *Kafka) DeleteLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, options *linkv1.DeleteLinkOptions) error {
 	return assertEqualValues(link, <-m.Expect)
 }
 
@@ -156,7 +157,7 @@ func assertEquals(actual interface{}, expected interface{}) error {
 }
 
 func assertEqualValues(actual interface{}, expected interface{}) error {
-	if actual != expected  {
+	if actual != expected {
 		return fmt.Errorf("Actual: %+v\nExpected: %+v", actual, expected)
 	}
 	return nil

@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	defaultReplicationFactor = 3
+	defaultReplicationFactor  = 3
 	unspecifiedPartitionCount = -1
 )
 
@@ -203,10 +203,10 @@ func (a *authenticatedTopicCommand) init() {
 	a.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "mirror <action> <topic>",
-		Short: "Perform a mirroring action on a Kafka topic.",
-		Args:  cobra.ExactArgs(2),
-		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Use:    "mirror <action> <topic>",
+		Short:  "Perform a mirroring action on a Kafka topic.",
+		Args:   cobra.ExactArgs(2),
+		RunE:   pcmd.NewCLIRunE(a.mirror),
 		Hidden: true,
 		Example: examples.BuildExampleString(
 			examples.Example{

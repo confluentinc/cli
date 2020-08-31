@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/test"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	"github.com/confluentinc/cli/test"
 )
 
 func TestAuditLogConfigTranslation(t *testing.T) {
@@ -333,13 +334,13 @@ func TestAuditLogConfigTranslationMalformedProperties(t *testing.T) {
 	for _, c := range testCases {
 		_, _, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
 		require.NotNil(t, err)
-		require.Contains(t, err.Error(), "cluster123");
+		require.Contains(t, err.Error(), "cluster123")
 	}
 }
 
 func TestAuditLogConfigTranslationNilCase(t *testing.T) {
 	var null mds.AuditLogConfigSpec
-	val, _ := json.Marshal(null);
+	val, _ := json.Marshal(null)
 	clusterConfig := map[string]string{"abc": string(val)}
 	var bootstrapServers []string
 	var crnAuthority string
