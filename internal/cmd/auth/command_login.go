@@ -8,7 +8,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -210,8 +209,6 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	_, _, err = mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return err
 	}

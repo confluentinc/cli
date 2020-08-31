@@ -100,11 +100,14 @@ github.com/confluentinc/cc-structs v0.553.0 h1:12wpBybrd1iXeKvVcMWFAliMepfORVViI
 github.com/confluentinc/cc-structs v0.562.0 h1:C+YTyJL/LSQmFvBLd1vOMS+h1vSdk2oza9r4c1mr0/0=
 github.com/confluentinc/cc-structs v0.563.0 h1:oEgYYg8mcnRDW1aKmG8RuON7FTYtVVnhIfddb89+c5U=
 github.com/confluentinc/cc-structs v0.564.0 h1:QYKgu1QnoLmGf6PinIMlhXNGyEGBCD7ouOoQfNqQDYg=
-github.com/confluentinc/cc-structs v0.575.0 h1:o3/fvopBko+kv5qadxS7nYV1R50FgEoWBHpHVpxFMCo=
+github.com/confluentinc/cc-structs v0.584.0 h1:8Odt4B5uaU5EZqy3G/z7yPKkG0sRCoLN24yrlEWu7YY=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.425.0 h1:ePlR5q8IAeyPWGPpuvHEGEq+YoZsVj5XA6J6P2kr2gA=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.425.0/go.mod h1:trTGs5se3ZijGqrRK5Vn0ld/0pWo0yPVMnxX13rBR3I=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.556.0 h1:ig4ECwshnIFfwptLy91M2PCRqRd90pS6Ydfq+Co7Do0=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.556.0/go.mod h1:YwaCKgn7ozmzwHK+TdwYBpV0r7Np66btNThjlGDibN0=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.580.0/go.mod h1:tRjkznzgdB0F+oLZuMQLAk3irMx1CZVyj9tmaSv0Obs=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0 h1:wK8n5m402YhgXvCWk7xZUOWunLfMb1zLMr+9HVigYmI=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0/go.mod h1:tRjkznzgdB0F+oLZuMQLAk3irMx1CZVyj9tmaSv0Obs=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0 h1:IN35U9e0RCFV8aMuYw2T5HYqgFXyVAMG5sjhByls3QA=
 github.com/confluentinc/cc-structs/kafka/connect v0.441.0/go.mod h1:L+dZvy79zQxK77MuOeqbJ8UWevydL1U1pqYGNiZGs3M=
 github.com/confluentinc/cc-structs/kafka/core v0.402.0/go.mod h1:5XSLYdbP1n3OA27wLNG0FjpiJcZWuAcKEYc03pz4r4s=
@@ -133,10 +136,13 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.549.0/go.mod h1:ObI7Nx0HE/
 github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0 h1:MpZuFbQHeMwEWUZZv+tSnXT2Gx96wB2TDpgGWsftE7Y=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.552.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.553.0 h1:QadiZRo2/VF33Oj5nMtrSc5u7wOlvbYWDKC7C0DW9Tg=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.560.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.562.0 h1:gOdQiBQOEMc3suaWArasAP/1WLv/TnoccGC+8VhrbSE=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.563.0 h1:9BbRhaFal1bHW6YIZxfqjMQnE8NbekBLNuEzwqb4fos=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.564.0 h1:NiouvafZ3tGHaughdGhs/iTUwkKxZBlBFOn+IFqamKM=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.575.0 h1:d0cdT8+XU3QSk59N9L6bTrGkUj/GtUEptQc0uH/pY/8=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.580.0/go.mod h1:EA+pLAi+Q6qrMuybEmegZLCYyw4hybannorj5agfydQ=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.584.0 h1:uqHYQUSDdQAD3CpyovQzOAMumuBLbtrGUepMbmgxv88=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.584.0/go.mod h1:EA+pLAi+Q6qrMuybEmegZLCYyw4hybannorj5agfydQ=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0 h1:bDeXoIAPhHZjpaceVGldJ0gm4y1n5DrzZELd+th+J28=
@@ -152,6 +158,10 @@ github.com/confluentinc/ccloud-sdk-go v0.0.37 h1:Adsm6LWiSwY6KE9NJ29bwTuhZ8uuQ82
 github.com/confluentinc/ccloud-sdk-go v0.0.37/go.mod h1:Ul0KCC3x08tWI/EHlX1zG2eCAwfMT1+VA4e0y+wc35E=
 github.com/confluentinc/ccloud-sdk-go v0.0.46 h1:0XFRkjqtRGz+0hnk1kSf+JfvKqJfG5koSlS1YAcDV7k=
 github.com/confluentinc/ccloud-sdk-go v0.0.46/go.mod h1:4/pzoNTLH8r0tvoqg11kn29QoNvD/FReaqiaH96/pUg=
+github.com/confluentinc/ccloud-sdk-go v0.0.49 h1:Yw6/5bAyX4E/aZLU7Wy+YLM0Azr8rE1FYogNo6l2CSg=
+github.com/confluentinc/ccloud-sdk-go v0.0.49/go.mod h1:1+7+YSPJfIuJgEwMApsePbkKHlOzvXNrtafI4B7LmW8=
+github.com/confluentinc/ccloud-sdk-go v0.0.50 h1:ZsXrbzOCmEGHO6j9JLNCxhyaHIejEZLsnpfuNsAcDN8=
+github.com/confluentinc/ccloud-sdk-go v0.0.50/go.mod h1:1+7+YSPJfIuJgEwMApsePbkKHlOzvXNrtafI4B7LmW8=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.13.0 h1:zgmoYZPQ51xjOPSW4G+QimPcoZEAflCb4UsgvlKA544=
@@ -216,6 +226,8 @@ github.com/emicklei/go-restful v2.9.6+incompatible h1:tfrHha8zJ01ywiOEC1miGY8st1
 github.com/emicklei/go-restful v2.9.6+incompatible/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
 github.com/emirpasic/gods v1.12.0 h1:QAUIPSaCu4G+POclxeqb3F+WPpdKqFGlw36+yOzGlrg=
 github.com/emirpasic/gods v1.12.0/go.mod h1:YfzfFFoVP/catgzJb4IKIqXjX78Ha8FMSDh3ymbK86o=
+github.com/envoyproxy/protoc-gen-validate v0.4.0 h1:0Hedkeb8AtERQoi/wLDxdMr6iOU4g6Mw0RfB2IEpEhk=
+github.com/envoyproxy/protoc-gen-validate v0.4.0/go.mod h1:amr46FC2KZvleZB2VXz+QeQDF+iIKKjQimiDrtp1rYA=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 h1:BHsljHzVlRcyQhjrss6TZTdY2VfCqZPbv5k3iBFa2ZQ=
@@ -428,6 +440,7 @@ github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b h1:Jdu2tbAxkRouSILp2E
 github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b/go.mod h1:HmaZGXHdSwQh1jnUlBGN2BeEYOHACLVGzYOXCbsLvxY=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
+github.com/iancoleman/strcase v0.0.0-20180726023541-3605ed457bf7/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
 github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365 h1:ECW73yc9MY7935nNYXUkK7Dz17YuSUI9yqRqYS8aBww=
 github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
 github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334 h1:VHgatEHNcBFEB7inlalqfNqw65aNkM1lGX2yt3NmbS8=
@@ -502,6 +515,7 @@ github.com/linkedin/goavro/v2 v2.9.8/go.mod h1:UgQUb2N/pmueQYH9bfqFioWxzYCZXSfF8
 github.com/lithammer/dedent v1.1.0 h1:VNzHMVCBNG1j0fh3OrsFRkVUwStdDArbgBWoPAffktY=
 github.com/lithammer/dedent v1.1.0/go.mod h1:jrXYCQtgg0nJiN+StA2KgR7w6CiQNv9Fd/Z9BP0jIOc=
 github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e/go.mod h1:7rIyQOR62GCctdiQpZ/zOJlFyk6y+94wXzv6RNZgaR4=
+github.com/lyft/protoc-gen-star v0.4.10/go.mod h1:mE8fbna26u7aEA2QCVvvfBU/ZrPgocG1206xAFPcs94=
 github.com/magiconair/properties v1.8.0 h1:LLgXmsheXeRoUOBOjtwPQCWIYqM/LU1ayDtDePerRcY=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mailru/easyjson v0.0.0-20160728113105-d5b7844b561a/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
@@ -754,6 +768,7 @@ golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+o
 golang.org/x/lint v0.0.0-20180702182130-06c8688daad7/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3/go.mod h1:6SW0HCj/g11FgYtHlgUYUwCkIfeOF89ocIRzGO/8vkc=
+golang.org/x/lint v0.0.0-20200302205851-738671d3881b/go.mod h1:3xt1FjdF8hUf6vQPIChWIBhFzV8gjjsPE/fR3IyQdNY=
 golang.org/x/mobile v0.0.0-20190312151609-d3739f865fa6/go.mod h1:z+o9i4GpDbdi3rU15maQ/Ox0txvL9dWGYEHz965HBQE=
 golang.org/x/mobile v0.0.0-20190719004257-d2bd2a29d028/go.mod h1:E/iHnbuqvinMTCcRqshq8CkpyQDoeVncDDYHnLhea+o=
 golang.org/x/mod v0.0.0-20190513183733-4bf6d317e70e/go.mod h1:mXi4GBBbnImb6dmsKGUJ2LatrhH/nqhxcFungHvyanc=
@@ -855,6 +870,7 @@ golang.org/x/tools v0.0.0-20190930201159-7c411dea38b0/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20191010075000-0337d82405ff/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191130070609-6e064ea0cf2d/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+golang.org/x/tools v0.0.0-20200130002326-2f3ba24bd6e7/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.0.0-20200207183749-b753a1ba74fa/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=
 golang.org/x/tools v0.0.0-20200615190835-a2fa627c4bf4 h1:r0yxHOIqrRV3Xu/DcAkxvrxFZze7cLsrteoxfLyxxwY=

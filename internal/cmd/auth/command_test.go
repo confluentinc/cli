@@ -175,11 +175,12 @@ func TestLogout(t *testing.T) {
 	req := require.New(t)
 
 	cfg := v3.AuthenticatedCloudConfigMock()
+	contextName := cfg.Context().Name
 	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
-	verifyLoggedOutState(t, cfg)
+	verifyLoggedOutState(t, cfg, contextName)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
@@ -335,7 +336,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)
-		verifyLoggedOutState(t, cfg)
+		verifyLoggedOutState(t, cfg, ctx.Name)
 
 		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -371,9 +372,9 @@ func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
 	}
 }
 
-func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
+func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string) {
 	req := require.New(t)
-	state := cfg.Context().State
+	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
 }
