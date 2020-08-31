@@ -299,8 +299,8 @@ func TestCreateACLs(t *testing.T) {
 
 func TestDeleteACLs(t *testing.T) {
 	expect := make(chan interface{})
-	for _, resource := range resourcePatterns {
-		args := append([]string{"acl", "delete"}, resource.args...)
+	for i, _ := range resourcePatterns {
+		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
 		for _, aclEntry := range aclEntries {
 			cmd := NewCMD(expect)
 			cmd.SetArgs(append(args, aclEntry.args...))
@@ -308,7 +308,7 @@ func TestDeleteACLs(t *testing.T) {
 			go func() {
 				var filters []*schedv1.ACLFilter
 				for _, entry := range aclEntry.entries {
-					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry}))
+					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resourcePatterns[i].pattern, Entry: entry}))
 				}
 				expect <- filters
 			}()
