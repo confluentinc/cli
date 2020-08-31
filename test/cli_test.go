@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -617,8 +617,17 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 			}
+			clusterMultizone := schedv1.KafkaCluster{
+				Id:              "lkc-456",
+				Name:            "def",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				Durability:      1,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+			}
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster},
+				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -808,14 +817,14 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
-		lastElem := parts[len(parts) - 1]
+		lastElem := parts[len(parts)-1]
 
 		if lastElem == "" {
 			// No specific link here, we want a list of ALL links
 
 			listResponsePayload := []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName:"link-1",LinkId:"1234",ClusterId:"Blah"},
-				&linkv1.ListLinksResponseItem{LinkName:"link-2",LinkId:"4567",ClusterId:"blah"},
+				&linkv1.ListLinksResponseItem{LinkName: "link-1", LinkId: "1234", ClusterId: "Blah"},
+				&linkv1.ListLinksResponseItem{LinkName: "link-2", LinkId: "4567", ClusterId: "blah"},
 			}
 
 			listReply, err := json.Marshal(listResponsePayload)
@@ -828,8 +837,8 @@ func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 			describeResponsePayload := linkv1.DescribeLinkResponse{
 				Entries: []*linkv1.DescribeLinkResponseEntry{
 					{
-						Name:"replica.fetch.max.bytes",
-						Value:"1048576",
+						Name:  "replica.fetch.max.bytes",
+						Value: "1048576",
 					},
 				},
 			}

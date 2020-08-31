@@ -7,7 +7,7 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Egress       |                       100 |
 | Storage      |                      5000 |
 | Provider     | aws                       |
-| Availability | LOW                       |
+| Availability | single-zone               |
 | Region       | us-east-1                 |
 | Status       | PROVISIONING              |
 | Endpoint     | SASL_SSL://kafka-endpoint |
