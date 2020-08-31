@@ -3,7 +3,7 @@ package form
 import (
 	"fmt"
 	"strings"
-//	"regexp"
+	"regexp"
 
 	"github.com/spf13/cobra"
 
@@ -54,7 +54,6 @@ func New(fields ...Field) *Form {
 }
 
 func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
-	// for _, field := range f.Fields {
 	for i:=0; i<len(f.Fields); i++ {
 		field := f.Fields[i]
 		show(command, field)
@@ -64,13 +63,12 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 			return err
 		}
 
-		res, err := validate_and_save(field, val)
+		res, err := validate(field, val)
 		if err != nil {
 			return err
 		}
-		if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-			pcmd.Print(command, "You must accept to continue. To abandon flow, use Ctrl-C\n")
-			i--
+		if checkRequiredYes(command, field, res) {
+			i--	//re-prompt
 		}
 
 		f.Responses[field.ID] = res
@@ -107,7 +105,7 @@ func read(field Field, prompt cmd.Prompt) (string, error) {
 	return val, nil
 }
 
-func validate_and_save(field Field, val string) (interface{}, error) {
+func validate(field Field, val string) (interface{}, error) {
 	if field.IsYesOrNo {
 		switch strings.ToUpper(val) {
 		case "Y", "YES":
@@ -122,7 +120,20 @@ func validate_and_save(field Field, val string) (interface{}, error) {
 		return field.DefaultValue, nil
 	}
 
-
-
+	if field.Regex != "" {
+		field_rgx, _ := regexp.Compile(field.Regex)
+		if regex_match := field_rgx.MatchString(val); !regex_match {
+			return nil, fmt.Errorf(errors.InvalidInputFormatMsg, val, field.ID)
+		}
+	}
+	
 	return val, nil
+}
+
+func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
+	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
+		pcmd.Print(cmd, "You must accept to continue. To abandon flow, use Ctrl-C\n")
+		return true
+	}
+	return false
 }

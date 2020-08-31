@@ -83,35 +83,35 @@ func TestReadPassword(t *testing.T) {
 	require.Equal(t, "pass", password)
 }
 
-func TestSaveYesOrNo(t *testing.T) {
+func TestValidateYesOrNo(t *testing.T) {
 	field := Field{IsYesOrNo: true}
 
 	for _, val := range []string{"y", "yes"} {
-		res, err := save(field, val)
+		res, err := validate(field, val)
 		require.NoError(t, err)
 		require.True(t, res.(bool))
 	}
 
 	for _, val := range []string{"n", "no"} {
-		res, err := save(field, val)
+		res, err := validate(field, val)
 		require.NoError(t, err)
 		require.False(t, res.(bool))
 	}
 
-	_, err := save(field, "maybe")
+	_, err := validate(field, "maybe")
 	require.Error(t, err)
 }
 
-func TestSaveDefaultVal(t *testing.T) {
+func TestValidateDefaultVal(t *testing.T) {
 	field := Field{DefaultValue: "default"}
 
-	res, err := save(field, "")
+	res, err := validate(field, "")
 	require.Equal(t, "default", res)
 	require.NoError(t, err)
 }
 
-func TestSave(t *testing.T) {
-	res, err := save(Field{}, "res")
+func TestValidate(t *testing.T) {
+	res, err := validate(Field{}, "res")
 	require.Equal(t, "res", res)
 	require.NoError(t, err)
 }
