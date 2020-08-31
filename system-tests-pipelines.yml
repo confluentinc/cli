@@ -18,7 +18,9 @@ jobs:
     inputs:
       helmVersionToInstall: 2.9.1
  
-  - template: azure-pipel 
+  - template: azure-pipelines-templates/setup-secrets.yml
+
+  - template: azure-pipelines-templates/setup-go.yml
       
   - script: |
       wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
