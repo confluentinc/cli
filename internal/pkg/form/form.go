@@ -3,6 +3,7 @@ package form
 import (
 	"fmt"
 	"strings"
+//	"regexp"
 
 	"github.com/spf13/cobra"
 
@@ -36,11 +37,13 @@ type Form struct {
 }
 
 type Field struct {
-	ID           string
-	Prompt       string
-	DefaultValue interface{}
-	IsYesOrNo    bool
-	IsHidden     bool
+	ID				string
+	Prompt			string
+	DefaultValue	interface{}
+	IsYesOrNo		bool
+	IsHidden		bool
+	Regex			string
+	RequireYes		bool
 }
 
 func New(fields ...Field) *Form {
@@ -51,7 +54,9 @@ func New(fields ...Field) *Form {
 }
 
 func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
-	for _, field := range f.Fields {
+	// for _, field := range f.Fields {
+	for i:=0; i<len(f.Fields); i++ {
+		field := f.Fields[i]
 		show(command, field)
 
 		val, err := read(field, prompt)
@@ -59,10 +64,15 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 			return err
 		}
 
-		res, err := save(field, val)
+		res, err := validate_and_save(field, val)
 		if err != nil {
 			return err
 		}
+		if field.IsYesOrNo && field.RequireYes && !res.(bool) {
+			pcmd.Print(command, "You must accept to continue. To abandon flow, use Ctrl-C\n")
+			i--
+		}
+
 		f.Responses[field.ID] = res
 	}
 
@@ -97,7 +107,7 @@ func read(field Field, prompt cmd.Prompt) (string, error) {
 	return val, nil
 }
 
-func save(field Field, val string) (interface{}, error) {
+func validate_and_save(field Field, val string) (interface{}, error) {
 	if field.IsYesOrNo {
 		switch strings.ToUpper(val) {
 		case "Y", "YES":
@@ -111,6 +121,8 @@ func save(field Field, val string) (interface{}, error) {
 	if val == "" && field.DefaultValue != nil {
 		return field.DefaultValue, nil
 	}
+
+
 
 	return val, nil
 }
