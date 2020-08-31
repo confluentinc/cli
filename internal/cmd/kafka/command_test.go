@@ -301,13 +301,13 @@ func TestDeleteACLs(t *testing.T) {
 	expect := make(chan interface{})
 	for i, _ := range resourcePatterns {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
-		for _, aclEntry := range aclEntries {
+		for j, _ := range aclEntries {
 			cmd := NewCMD(expect)
-			cmd.SetArgs(append(args, aclEntry.args...))
+			cmd.SetArgs(append(args, aclEntries[j].args...))
 
 			go func() {
 				var filters []*schedv1.ACLFilter
-				for _, entry := range aclEntry.entries {
+				for _, entry := range aclEntries[j].entries {
 					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resourcePatterns[i].pattern, Entry: entry}))
 				}
 				expect <- filters
