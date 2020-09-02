@@ -113,8 +113,8 @@ To install the CLI:
 ```
 $ make deps
 $ make build
-$ dist/ccloud/$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
-$ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
+$ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
+$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
 ## Developing
@@ -226,7 +226,7 @@ Note: you can verify whether a macOS binary is signed and notarized correctly
 by running `spctl -a -vvv -t install <binary name>`.  If all is good, you
 should see output like
 ```
-dist/ccloud/darwin_amd64/ccloud: accepted
+dist/ccloud/ccloud_darwin_amd64/ccloud: accepted
 source=Notarized Developer ID
 origin=Developer ID Application: Confluent, Inc. (RTSX8FNWR2)
 ```
@@ -459,8 +459,8 @@ With an entirely new command, we would also need to register it with the base to
 To build both binaries, we run `make build`. After this, we can run our command either of the following ways, and see that they (hopefully) work!
 
 ```
-dist/ccloud/<platform>/ccloud config file show 3
-dist/confluent/<platform>/confluent config file show 3
+dist/ccloud/ccloud_<platform>/ccloud config file show 3
+dist/confluent/confluent_<platform>/confluent config file show 3
 ```
 
 ### Integration Testing

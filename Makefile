@@ -228,8 +228,8 @@ fakegorelease:
 sign:
 	@GO111MODULE=on gon gon_ccloud.hcl
 	@GO111MODULE=on gon gon_confluent.hcl
-	rm dist/ccloud/darwin_amd64/ccloud_signed.zip || true
-	rm dist/confluent/darwin_amd64/confluent_signed.zip || true
+	rm dist/ccloud/ccloud_darwin_amd64/ccloud_signed.zip || true
+	rm dist/confluent/confluent_darwin_amd64/confluent_signed.zip || true
 
 .PHONY: download-licenses
 download-licenses:
@@ -255,7 +255,7 @@ dist: download-licenses
 				[ "$${os}" = "windows" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
 				cp LICENSE /tmp/$${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
-				cp dist/$${binary}/$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
+				cp dist/$${binary}/$${binary}_$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
 				suffix="" ; \
 				if [ "$${os}" = "windows" ] ; then \
 					suffix=zip ; \
@@ -279,7 +279,7 @@ dist: download-licenses
 publish: sign dist
 	@$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
+		aws s3 cp dist/$${binary}/$${binary}_darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
 	done
