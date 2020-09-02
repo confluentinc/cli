@@ -14,6 +14,39 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
+const (
+	otherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +
+		"for cluster %q has been dropped because it contains a MANAGEMENT event category. The OTHER event " +
+		"category is deprecated in Confluent Platform 6.0, and is replaced by the MANAGEMENT event category."
+
+	multipleCRNWarning = "Multiple CRN Authorities Warning: Cluster %q had multiple CRN authorities " +
+		"in its routes: %v. Multiple, different CRN authorities exist in routes from a single cluster. " +
+		"This is unexpected in a configuration targeting a single cluster, but makes sense if you are reusing " +
+		"the same routing rules on multiple clusters. If this is the case you can ignore this warning or consider " +
+		"using CRN patterns with wildcard (empty) authority values in your audit log routes."
+
+	mismatchedKafkaClusterWarning = "Mismatched Kafka Cluster Warning: Cluster %q has a route for a different cluster, " +
+		"route: %q. Routes from one Kafka cluster ID on a completely different cluster ID are unexpected, " +
+		"but not necessarily wrong. For example, this message might be returned if you reuse the same routing " +
+		"configuration on multiple clusters."
+
+	newBootstrapWarning = "New Bootstrap Servers Warning: Cluster %q currently has bootstrap " +
+		"servers = %v. Replacing with %v. Migrated clusters will use the specified bootstrap servers."
+
+	malformedConfigWarning          = "Bad Input File Warning: The audit log configuration for cluster %q " +
+		"uses invalid JSON. Parsing error: %v"
+
+	repeatedRouteWarning            = "Repeated Route Warning: Route Name : %q. There are duplicate routes specified " +
+		"between different router configurations. Duplicate routes will be dropped."
+
+	newExcludedPrincipalsWarning    = "New Excluded Principals Warning: Due to combining the excluded principal from " +
+		"every input cluster, cluster %q will now also exclude the following principals: %v"
+
+	retentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
+		" Using max: %v. Discrepancies in retention time occur when two cluster configurations have the same topic in a" +
+		" router configuration, but different retention times. The maximum specified retention time will be used."
+)
+
 func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mds.AuditLogConfigSpec, []string, error) {
 	var newSpec mds.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
@@ -79,10 +112,7 @@ func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) 
 				} else if reflect.DeepEqual(route.Management, route.Other) {
 					route.Other = nil
 				} else {
-					warning := fmt.Sprintf(
-						`"Other" Category Warning: Dropped the legacy "other" category rule from the route for`+
-							` %q from cluster %q, as it already contains a "management" category rule.`,
-						routeName, clusterId)
+					warning := fmt.Sprintf(otherCategoryWarning, routeName, clusterId)
 					warnings = append(warnings, warning)
 					route.Other = nil
 				}
@@ -136,7 +166,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 
 		if len(foundAuthorities) > 1 {
 			sort.Strings(foundAuthorities)
-			newWarning := fmt.Sprintf("Multiple CRN Authorities Warning: Cluster %q had multiple CRN Authorities in its routes: %v.", clusterId, foundAuthorities)
+			newWarning := fmt.Sprintf(multipleCRNWarning, clusterId, foundAuthorities)
 			warnings = append(warnings, newWarning)
 		}
 	}
@@ -157,7 +187,7 @@ func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string
 		}
 		for routeName := range *routes {
 			if checkMismatchKafkaCluster(routeName, clusterId) {
-				newWarning := fmt.Sprintf("Mismatched Kafka Cluster Warning: Cluster %q has a route with a different clusterId. Route: %q.", clusterId, routeName)
+				newWarning := fmt.Sprintf(mismatchedKafkaClusterWarning, clusterId, routeName)
 				warnings = append(warnings, newWarning)
 			}
 		}
@@ -177,7 +207,7 @@ func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrap
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		sort.Strings(oldBootStrapServers)
 		if !utils.TestEq(oldBootStrapServers, bootstrapServers) {
-			newWarning := fmt.Sprintf("New Bootstrap Servers Warning: Cluster %q currently has bootstrap servers = %v. Replacing with %v.", clusterId, oldBootStrapServers, bootstrapServers)
+			newWarning := fmt.Sprintf(newBootstrapWarning, clusterId, oldBootStrapServers, bootstrapServers)
 			warnings = append(warnings, newWarning)
 		}
 	}
@@ -186,13 +216,13 @@ func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrap
 
 func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[string]*mds.AuditLogConfigSpec, error) {
 	clusterAuditLogConfigSpecs := make(map[string]*mds.AuditLogConfigSpec)
-	for k, v := range clusterConfigs {
+	for clusterId, auditConfig := range clusterConfigs {
 		var spec mds.AuditLogConfigSpec
-		err := json.Unmarshal([]byte(v), &spec)
+		err := json.Unmarshal([]byte(auditConfig), &spec)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Cluster '%s' has a malformed audit log configuration: %s", k, err.Error()))
+			return nil, errors.New(fmt.Sprintf(malformedConfigWarning, clusterId, err.Error()))
 		}
-		clusterAuditLogConfigSpecs[k] = &spec
+		clusterAuditLogConfigSpecs[clusterId] = &spec
 	}
 	return clusterAuditLogConfigSpecs, nil
 }
@@ -230,7 +260,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) []string {
 	warnings := []string{}
 	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
-		newWarning := fmt.Sprintf("Retention Time Discrepancy Warning: Topic %q had discrepancies with retention time. Using max: %v.", topicName, maxRetentionTime)
+		newWarning := fmt.Sprintf(retentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
 		warnings = append(warnings, newWarning)
 	}
 	return warnings
@@ -290,7 +320,7 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 		for crnPath, route := range *routes {
 			newCRNPath := replaceClusterId(crnPath, clusterId)
 			if _, ok := newRoutes[newCRNPath]; ok {
-				newWarning := fmt.Sprintf("Repeated Route Warning: Route Name : %q.", newCRNPath)
+				newWarning := fmt.Sprintf(repeatedRouteWarning, newCRNPath)
 				warnings = append(warnings, newWarning)
 			} else {
 				newRoutes[newCRNPath] = route
@@ -461,7 +491,7 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 			}
 		}
 		if len(differentPrincipals) != 0 {
-			newWarning := fmt.Sprintf("New Excluded Principals Warning: Cluster %q will now also exclude the following principals: %v.", clusterId, differentPrincipals)
+			newWarning := fmt.Sprintf(newExcludedPrincipalsWarning, clusterId, differentPrincipals)
 			warnings = append(warnings, newWarning)
 		}
 	}

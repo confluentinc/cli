@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -125,17 +126,17 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			"NEW.CRN.AUTHORITY.COM",
 			test.LoadFixture(t, "auditlog/migration-result.golden"),
 			[]string{
-				`Mismatched Kafka Cluster Warning: Cluster "cluster123" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterX".`,
-				`Mismatched Kafka Cluster Warning: Cluster "clusterABC" has a route with a different clusterId. Route: "crn://diff-authority/kafka=different-cluster-id/topic=payroll-*".`,
-				`Mismatched Kafka Cluster Warning: Cluster "clusterABC" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterX".`,
-				`Multiple CRN Authorities Warning: Cluster "cluster123" had multiple CRN Authorities in its routes: [crn://mds1.example.com/ crn://some-authority/].`,
-				`Multiple CRN Authorities Warning: Cluster "clusterABC" had multiple CRN Authorities in its routes: [crn://diff-authority/ crn://mds1.example.com/ crn://some-authority/].`,
-				`New Bootstrap Servers Warning: Cluster "cluster123" currently has bootstrap servers = [audit.example.com:9092]. Replacing with [new_bootstrap_1 new_bootstrap_2].`,
-				`New Bootstrap Servers Warning: Cluster "clusterABC" currently has bootstrap servers = [some-server]. Replacing with [new_bootstrap_1 new_bootstrap_2].`,
-				`New Excluded Principals Warning: Cluster "cluster123" will now also exclude the following principals: [User:Bob].`,
-				`New Excluded Principals Warning: Cluster "clusterABC" will now also exclude the following principals: [User:Alice].`,
-				`Repeated Route Warning: Route Name : "crn://some-authority/kafka=clusterX".`,
-				`Retention Time Discrepancy Warning: Topic "confluent-audit-log-events_payroll" had discrepancies with retention time. Using max: 2592000000.`,
+				fmt.Sprintf(mismatchedKafkaClusterWarning,"cluster123", "crn://some-authority/kafka=clusterX"),
+				fmt.Sprintf(mismatchedKafkaClusterWarning,"clusterABC", "crn://diff-authority/kafka=different-cluster-id/topic=payroll-*"),
+				fmt.Sprintf(mismatchedKafkaClusterWarning,"clusterABC", "crn://some-authority/kafka=clusterX"),
+				fmt.Sprintf(multipleCRNWarning,"cluster123", "[crn://mds1.example.com/ crn://some-authority/]"),
+				fmt.Sprintf(multipleCRNWarning,"clusterABC", "[crn://diff-authority/ crn://mds1.example.com/ crn://some-authority/]"),
+				fmt.Sprintf(newBootstrapWarning,"cluster123", "[audit.example.com:9092]", "[new_bootstrap_1 new_bootstrap_2]"),
+				fmt.Sprintf(newBootstrapWarning,"clusterABC", "[some-server]", "[new_bootstrap_1 new_bootstrap_2]"),
+				fmt.Sprintf(newExcludedPrincipalsWarning,"cluster123", "[User:Bob]"),
+				fmt.Sprintf(newExcludedPrincipalsWarning,"clusterABC", "[User:Alice]"),
+				fmt.Sprintf(repeatedRouteWarning,"crn://some-authority/kafka=clusterX"),
+				fmt.Sprintf(retentionTimeDiscrepancyWarning,"confluent-audit-log-events_payroll", 2592000000),
 			},
 		},
 		// This case has only one cluster, and it also has a route topic=* which has some existing routes,
@@ -198,11 +199,11 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			"NEW.CRN.AUTHORITY.COM",
 			test.LoadFixture(t, "auditlog/migration-result-merge-topics.golden"),
 			[]string{
-				`"Other" Category Warning: Dropped the legacy "other" category rule from the route for "crn://some-authority/kafka=clusterY" from cluster "cluster123", as it already contains a "management" category rule.`,
-				`Mismatched Kafka Cluster Warning: Cluster "cluster123" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterX".`,
-				`Mismatched Kafka Cluster Warning: Cluster "cluster123" has a route with a different clusterId. Route: "crn://some-authority/kafka=clusterY".`,
-				`Multiple CRN Authorities Warning: Cluster "cluster123" had multiple CRN Authorities in its routes: [crn://mds1.example.com/ crn://some-authority/].`,
-				`New Bootstrap Servers Warning: Cluster "cluster123" currently has bootstrap servers = [audit.example.com:9092]. Replacing with [new_bootstrap_1 new_bootstrap_2].`,
+				fmt.Sprintf(mismatchedKafkaClusterWarning,"cluster123", "crn://some-authority/kafka=clusterX"),
+				fmt.Sprintf(mismatchedKafkaClusterWarning,"cluster123", "crn://some-authority/kafka=clusterY"),
+				fmt.Sprintf(multipleCRNWarning,"cluster123", "[crn://mds1.example.com/ crn://some-authority/]"),
+				fmt.Sprintf(newBootstrapWarning,"cluster123", "[audit.example.com:9092]", "[new_bootstrap_1 new_bootstrap_2]"),
+				fmt.Sprintf(otherCategoryWarning,"crn://some-authority/kafka=clusterY" , "cluster123"),
 			},
 		},
 	}
