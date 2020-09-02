@@ -12,9 +12,9 @@ New Bootstrap Servers Warning: Cluster "cluster123" currently has bootstrap serv
 
 New Bootstrap Servers Warning: Cluster "clusterABC" currently has bootstrap servers = [some-server]. Replacing with [new_bootstrap_1 new_bootstrap_2]. Migrated clusters will use the specified bootstrap servers.
 
-New Excluded Principals Warning: Due to combining the excluded principal from every input cluster, cluster "cluster123" will now also exclude the following principals: [User:Bob]
+New Excluded Principals Warning: Due to combining the excluded principals from every input cluster, cluster "cluster123" will now also exclude the following principals: [User:Bob]
 
-New Excluded Principals Warning: Due to combining the excluded principal from every input cluster, cluster "clusterABC" will now also exclude the following principals: [User:Alice]
+New Excluded Principals Warning: Due to combining the excluded principals from every input cluster, cluster "clusterABC" will now also exclude the following principals: [User:Alice]
 
 Repeated Route Warning: Route Name : "crn://some-authority/kafka=clusterX". There are duplicate routes specified between different router configurations. Duplicate routes will be dropped.
 
