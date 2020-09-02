@@ -39,7 +39,7 @@ const (
 	repeatedRouteWarning            = "Repeated Route Warning: Route Name : %q. There are duplicate routes specified " +
 		"between different router configurations. Duplicate routes will be dropped."
 
-	newExcludedPrincipalsWarning    = "New Excluded Principals Warning: Due to combining the excluded principal from " +
+	newExcludedPrincipalsWarning    = "New Excluded Principals Warning: Due to combining the excluded principals from " +
 		"every input cluster, cluster %q will now also exclude the following principals: %v"
 
 	retentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
