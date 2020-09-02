@@ -33,7 +33,7 @@ const (
 	newBootstrapWarning = "New Bootstrap Servers Warning: Cluster %q currently has bootstrap " +
 		"servers = %v. Replacing with %v. Migrated clusters will use the specified bootstrap servers."
 
-	malformedConfigWarning          = "Bad Input File Warning: The audit log configuration for cluster %q " +
+	malformedConfigWarning          = "Bad Input File: The audit log configuration for cluster %q " +
 		"uses invalid JSON. Parsing error: %v"
 
 	repeatedRouteWarning            = "Repeated Route Warning: Route Name : %q. There are duplicate routes specified " +
