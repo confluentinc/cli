@@ -382,6 +382,18 @@ func TestValidateUrl(t *testing.T) {
 			url_out: "http://test.com:8090",
 			warning_msg: "default MDS port 8090",
 		},
+		{
+			url_in: "https://127.0.0.1:8090",
+			valid:    true,
+			url_out: "https://127.0.0.1:8090",
+			warning_msg: "",
+		},
+		{
+			url_in: "127.0.0.1",
+			valid:    true,
+			url_out: "http://127.0.0.1:8090",
+			warning_msg: "http protocol and default MDS port 8090",
+		},
 	}
 	for _, s := range suite {
 		url, matched, msg := validateURL(s.url_in)
@@ -390,7 +402,7 @@ func TestValidateUrl(t *testing.T) {
 			req.Equal(s.url_out, url)
 		}
 		req.Equal(s.warning_msg, msg)
-	}	
+	}
 }
 
 func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {

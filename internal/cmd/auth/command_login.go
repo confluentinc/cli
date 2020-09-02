@@ -186,12 +186,12 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	url, valid, err_msg := validateURL(url)
+	url, valid, errMsg := validateURL(url)
 	if !valid {
 		return errors.Errorf(errors.InvalidLoginURLMsg)
 	}
-	if err_msg != "" {
-		a.Logger.Debug("Assuming " + err_msg + ".\n")
+	if errMsg != "" {
+		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
@@ -380,6 +380,6 @@ func validateURL(url string) (string, bool, string) {
 	}
 	pattern := `^\w+://[^/ ]+:\d+(?:\/|$)`
 	matched, _ := regexp.Match(pattern, []byte(url))
-	
+
 	return url, matched, strings.Join(msg, " and ")
 }

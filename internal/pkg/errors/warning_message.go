@@ -10,4 +10,7 @@ const (
 
 	// secret commands
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
+
+	//login command
+	UsingLoginURLDefaults = "Assuming %s.\n"
 )
