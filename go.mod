@@ -133,6 +133,7 @@ require (
 	github.com/uber-go/atomic v1.3.2 // indirect
 	github.com/uber/jaeger-client-go v2.15.0+incompatible // indirect
 	github.com/uber/jaeger-lib v1.5.0 // indirect
+	github.com/ugorji/go v1.1.4 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/uudashr/gocognit v1.0.1 // indirect
 	github.com/valyala/quicktemplate v1.5.1 // indirect
@@ -154,6 +155,7 @@ require (
 
 replace (
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
+	github.com/spf13/cobra => github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
