@@ -33,13 +33,13 @@ const (
 	newBootstrapWarning = "New Bootstrap Servers Warning: Cluster %q currently has bootstrap " +
 		"servers = %v. Replacing with %v. Migrated clusters will use the specified bootstrap servers."
 
-	malformedConfigWarning          = "Bad Input File: The audit log configuration for cluster %q " +
+	malformedConfigError = "Bad Input File: The audit log configuration for cluster %q " +
 		"uses invalid JSON. Parsing error: %v"
 
-	repeatedRouteWarning            = "Repeated Route Warning: Route Name : %q. There are duplicate routes specified " +
+	repeatedRouteWarning = "Repeated Route Warning: Route Name : %q. There are duplicate routes specified " +
 		"between different router configurations. Duplicate routes will be dropped."
 
-	newExcludedPrincipalsWarning    = "New Excluded Principals Warning: Due to combining the excluded principals from " +
+	newExcludedPrincipalsWarning = "New Excluded Principals Warning: Due to combining the excluded principals from " +
 		"every input cluster, cluster %q will now also exclude the following principals: %v"
 
 	retentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
@@ -220,7 +220,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 		var spec mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(auditConfig), &spec)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf(malformedConfigWarning, clusterId, err.Error()))
+			return nil, errors.New(fmt.Sprintf(malformedConfigError, clusterId, err.Error()))
 		}
 		clusterAuditLogConfigSpecs[clusterId] = &spec
 	}
