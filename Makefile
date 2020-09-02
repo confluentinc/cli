@@ -26,7 +26,7 @@ deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GO111MODULE=on && \
 	export GOPRIVATE=github.com/confluentinc && \
-	go get github.com/goreleaser/goreleaser@v0.106.0 && \
+	go get github.com/goreleaser/goreleaser@v0.142.0 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.21.0 && \
 	go get github.com/mitchellh/golicense@v0.1.1
 
