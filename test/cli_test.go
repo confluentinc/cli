@@ -360,7 +360,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 			fmt.Println(output)
 		}
 
-		if strings.HasPrefix(tt.args, "kafka cluster create") {
+		if strings.HasPrefix(tt.args, "kafka cluster create") ||
+			strings.HasPrefix(tt.args, "config context current") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
@@ -390,6 +391,12 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+
+		if strings.HasPrefix(tt.args, "config context list") ||
+			strings.HasPrefix(tt.args, "config context current") {
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+		}
 
 		s.validateTestOutput(tt, t, output)
 	})
@@ -612,8 +619,17 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 			}
+			clusterMultizone := schedv1.KafkaCluster{
+				Id:              "lkc-456",
+				Name:            "def",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				Durability:      1,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+			}
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster},
+				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))

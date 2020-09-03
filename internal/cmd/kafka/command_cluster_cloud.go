@@ -45,6 +45,10 @@ var (
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
 		"EncryptionKeyId":    "encryption_key_id"}
+	durabilityToAvaiablityNameMap = map[string]string{
+		"LOW":  singleZone,
+		"HIGH": multiZone,
+	}
 )
 
 const (
@@ -479,7 +483,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Storage:            cluster.Storage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
-		Availability:       cluster.Durability.String(),
+		Availability:       durabilityToAvaiablityNameMap[cluster.Durability.String()],
 		Status:             cluster.Status.String(),
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
