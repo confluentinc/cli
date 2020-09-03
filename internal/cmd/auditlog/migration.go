@@ -9,9 +9,10 @@ import (
 	"sort"
 	"strings"
 
-	warn "github.com/confluentinc/cli/internal/pkg/errors"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/imdario/mergo"
+
+	warn "github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )

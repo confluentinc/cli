@@ -1,8 +1,9 @@
 package config
 
 import (
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"sort"
+
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
