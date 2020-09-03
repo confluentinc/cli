@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -38,9 +37,9 @@ There are five ways to pass the secret:
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
-	flagResolver pcmd.FlagResolver
-	completer    *completer.ServerSideCompleter
+	keystore            keystore.KeyStore
+	flagResolver        pcmd.FlagResolver
+	completableChildren []*cobra.Command
 }
 
 var (
@@ -54,7 +53,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, completer *completer.ServerSideCompleter) *cobra.Command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -64,10 +63,9 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		AuthenticatedCLICommand: cliCmd,
 		keystore:                keystore,
 		flagResolver:            resolver,
-		completer:               completer,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init() {
@@ -83,7 +81,6 @@ func (c *command) init() {
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
-	c.completer.AddCommand(listCmd, false)
 
 	createCmd := &cobra.Command{
 		Use:   "create",
@@ -100,7 +97,6 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(createCmd)
-	c.completer.AddCommand(createCmd, false)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <apikey>",
@@ -111,7 +107,7 @@ func (c *command) init() {
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
-	c.completer.AddCommand(updateCmd, true)
+	c.completableChildren = append(c.completableChildren, updateCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
@@ -120,7 +116,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
-	c.completer.AddCommand(deleteCmd, true)
+	c.completableChildren = append(c.completableChildren, deleteCmd)
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -136,7 +132,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(storeCmd)
-	c.completer.AddCommand(storeCmd, true)
+	c.completableChildren = append(c.completableChildren, storeCmd)
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
@@ -150,9 +146,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
-	c.completer.AddCommand(useCmd, true)
-
-	c.completer.AddSuggestionFunction(c.Command, c.suggestAPIKeys(c.Command))
+	c.completableChildren = append(c.completableChildren, useCmd)
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -445,35 +439,39 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 	return strings.TrimSpace(val), nil
 }
 
-func (c *command) suggestAPIKeys(cmd *cobra.Command) func() []prompt.Suggest {
-	return func() []prompt.Suggest {
-		if _, err := c.Context.AuthenticatedState(c.AuthenticatedCLICommand.CLICommand.Command); err != nil {
-			return []prompt.Suggest{
-				{
-					Text:        " ",
-					Description: "You are currently not authenticated. Please login.",
-				},
-			}
-		}
-		var suggests []prompt.Suggest
-		apiKeys, err := c.fetchAPIKeys(cmd)
-		if err != nil {
-			return suggests
-		}
-		for _, key := range apiKeys {
-			suggests = append(suggests, prompt.Suggest{
-				Text:        key.Key,
-				Description: key.Description,
-			})
-		}
-		return suggests
-	}
+// Completable implementation
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
 }
 
-func (c *command) fetchAPIKeys(cmd *cobra.Command) ([]*schedv1.ApiKey, error) {
+func (c *command) Complete() []prompt.Suggest {
+	//if _, err := c.Context.AuthenticatedState(c.Command); err != nil {
+	//	return []prompt.Suggest{
+	//		{
+	//			Text:        " ",
+	//			Description: "You are currently not authenticated. Please login.",
+	//		},
+	//	}
+	//}
+	var suggests []prompt.Suggest
+	apiKeys, err := c.fetchAPIKeys()
+	if err != nil {
+		return suggests
+	}
+	for _, key := range apiKeys {
+		suggests = append(suggests, prompt.Suggest{
+			Text:        key.Key,
+			Description: key.Description,
+		})
+	}
+	return suggests
+}
+
+func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
 	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
 	if err != nil {
-		return nil, errors.HandleCommon(err, cmd)
+		return nil, errors.HandleCommon(err, c.Command)
 	}
 
 	var userApiKeys []*schedv1.ApiKey
@@ -483,4 +481,8 @@ func (c *command) fetchAPIKeys(cmd *cobra.Command) ([]*schedv1.ApiKey, error) {
 		}
 	}
 	return userApiKeys, nil
+}
+
+func (c *command) CompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

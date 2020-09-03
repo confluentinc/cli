@@ -12,9 +12,10 @@ type Completer interface {
 	Complete(doc prompt.Document) []prompt.Suggest
 }
 
-type CommandCompleter interface {
-	Completer
-	AddCommand(cmd *cobra.Command, completionFunc CompletionFunc)
+type CompletableCommand interface {
+	Cmd() *cobra.Command
+	Complete() []prompt.Suggest
+	CompletableChildren() []*cobra.Command
 }
 
 func (f CompleterFunc) Complete(doc prompt.Document) []prompt.Suggest {

@@ -1,39 +1,31 @@
 package completer
 
 import (
+	"strings"
+	"sync"
+
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"strings"
-	"sync"
 )
 
 type ServerSideCompleter struct {
-	// map[string][]prompt.Suggest
-	cachedSuggestionsByCmd *sync.Map
-
-	// map[string]CompletionFunc
-	suggestionFuncsByCmd *sync.Map
-
-	// map[string]bool
-	shouldSuggestForCmd *sync.Map
+	// map[string]CompletableCommand
+	commandsByPath *sync.Map
 
 	RootCmd *cobra.Command
 }
 
 func NewServerSideCompleter(RootCmd *cobra.Command) *ServerSideCompleter {
 	c := &ServerSideCompleter{
-		cachedSuggestionsByCmd: new(sync.Map),
-		suggestionFuncsByCmd:   new(sync.Map),
-		shouldSuggestForCmd:    new(sync.Map),
-		RootCmd:                RootCmd,
+		commandsByPath: new(sync.Map),
+		RootCmd:        RootCmd,
 	}
 
 	return c
 }
 
 func (c *ServerSideCompleter) Complete(d prompt.Document) []prompt.Suggest {
-
 	cmd := c.RootCmd
 	args := strings.Fields(d.CurrentLine())
 
@@ -47,37 +39,46 @@ func (c *ServerSideCompleter) Complete(d prompt.Document) []prompt.Suggest {
 	}
 
 	// check if child command with preloaded suggestions by the parent i.e api-key delete
+	// if parent, load suggestions (in background).
+	// if child, suggest.
 	if cmd.Parent() != nil {
 		parent := c.commandKey(cmd.Parent())
-		if cachedSuggestions, ok := c.cachedSuggestionsByCmd.Load(parent); ok {
-			if suggestions, ok := cachedSuggestions.([]prompt.Suggest); ok {
-				filtered := []prompt.Suggest{}
-				for _, suggestion := range suggestions {
-					// only suggest if it does not appear anywhere in the input
-					if !strings.Contains(d.Text, suggestion.Text) {
-						filtered = append(filtered, suggestion)
-					}
-				}
-				return filtered
-			}
+		v, ok := c.commandsByPath.Load(parent)
+		if !ok {
+			// Should not happen.
+			return []prompt.Suggest{}
 		}
+		cc := v.(CompletableCommand)
+		return cc.Complete()
+		//if cachedSuggestions, ok := c.cachedSuggestionsByCmd.Load(parent); ok {
+		//	if suggestions, ok := cachedSuggestions.([]prompt.Suggest); ok {
+		//		return filterSuggestions(d, suggestions)
+		//	}
+		//}
 	}
 
 	// otherwise fetch the suggestions in the background if it is a parent command i.e api-key
-	key := c.commandKey(cmd)
-	if f, ok := c.suggestionFuncsByCmd.Load(key); ok {
-		go c.updateSuggestion(c.commandKey(cmd), f.(func() []prompt.Suggest))
-	}
+	//key := c.commandKey(cmd)
+	//if f, ok := c.suggestionFuncsByCmd.Load(key); ok {
+	//	go c.updateSuggestion(cmd)
+	//}
 
 	return []prompt.Suggest{}
 }
 
-func (c *ServerSideCompleter) AddCommand(cmd *cobra.Command, shouldSuggest bool) {
-	c.shouldSuggestForCmd.Store(c.commandKey(cmd), shouldSuggest)
+func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt.Suggest {
+	filtered := []prompt.Suggest{}
+	for _, suggestion := range suggestions {
+		// only suggest if it does not appear anywhere in the input
+		if !strings.Contains(d.Text, suggestion.Text) {
+			filtered = append(filtered, suggestion)
+		}
+	}
+	return filtered
 }
 
-func (c *ServerSideCompleter) AddSuggestionFunction(cmd *cobra.Command, suggestionFunc func() []prompt.Suggest) {
-	c.suggestionFuncsByCmd.Store(c.commandKey(cmd), suggestionFunc)
+func (c *ServerSideCompleter) AddCommand(cmd CompletableCommand) {
+	c.commandsByPath.Store(c.commandKey(cmd.Cmd()), cmd)
 }
 
 func (c *ServerSideCompleter) commandKey(cmd *cobra.Command) string {
@@ -85,9 +86,8 @@ func (c *ServerSideCompleter) commandKey(cmd *cobra.Command) string {
 	return strings.TrimPrefix(cmd.CommandPath(), c.RootCmd.Name()+" ")
 }
 
-func (c *ServerSideCompleter) updateSuggestion(annotation string, suggestionFunc func() []prompt.Suggest) {
-	suggestions := suggestionFunc()
-	c.cachedSuggestionsByCmd.Store(annotation, suggestions)
+// TODO: Implement
+func (c *ServerSideCompleter) updateSuggestion(cmd CompletableCommand) {
 }
 
 // checks whether an argument should be suggested
@@ -102,8 +102,27 @@ func (c *ServerSideCompleter) shouldSuggestArgument(d prompt.Document, matchedCm
 		return false
 	}
 
-	// must be registered for a suggestion function
-	if registered, ok := c.shouldSuggestForCmd.Load(c.commandKey(matchedCmd)); ok && !registered.(bool) {
+	// must be a completable child.
+	if matchedCmd.Parent() == nil {
+		return false
+	}
+	parent := c.commandKey(matchedCmd.Parent())
+	v, ok := c.commandsByPath.Load(parent)
+	if !ok {
+		// Should not happen.
+		return false
+	}
+	cc := v.(CompletableCommand)
+	hasCompletableChild := false
+	for _, child := range cc.CompletableChildren() {
+		childKey := c.commandKey(child)
+		matchedKey := c.commandKey(matchedCmd)
+		hasCompletableChild = childKey == matchedKey
+		if hasCompletableChild {
+			break
+		}
+	}
+	if !hasCompletableChild {
 		return false
 	}
 

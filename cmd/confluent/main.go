@@ -20,7 +20,7 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	cliName = "confluent"
+	cliName = "ccloud"
 	isTest  = "false"
 )
 
