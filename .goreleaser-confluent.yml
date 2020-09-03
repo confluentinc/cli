@@ -37,11 +37,13 @@ builds:
 release:
   disable: true
 
-archive:
-  format: binary
-
-s3:
+archives:
   -
+    format: binary
+
+blob:
+  -
+    provider: s3
     bucket: confluent.cloud
     region: us-west-2
     folder: "confluent-cli/binaries/{{.Version}}"
