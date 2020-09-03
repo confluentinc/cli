@@ -41,7 +41,7 @@ archives:
   -
     format: binary
 
-blob:
+blobs:
   -
     provider: s3
     bucket: confluent.cloud
