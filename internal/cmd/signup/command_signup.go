@@ -2,11 +2,10 @@ package signup
 
 import (
 	"context"
-	"os"
-
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
+	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"

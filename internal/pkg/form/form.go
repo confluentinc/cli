@@ -65,10 +65,15 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 
 		res, err := validate(field, val)
 		if err != nil {
+			if fmt.Sprintf(errors.InvalidInputFormatMsg, val, field.ID) == err.Error() {
+				pcmd.ErrPrintln(command, err)
+				i-- //re-prompt on invalid regex
+				continue
+			}
 			return err
 		}
 		if checkRequiredYes(command, field, res) {
-			i--	//re-prompt
+			i--	//re-prompt on required yes
 		}
 
 		f.Responses[field.ID] = res
@@ -126,13 +131,13 @@ func validate(field Field, val string) (interface{}, error) {
 			return nil, fmt.Errorf(errors.InvalidInputFormatMsg, val, field.ID)
 		}
 	}
-	
+
 	return val, nil
 }
 
 func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		pcmd.Print(cmd, "You must accept to continue. To abandon flow, use Ctrl-C\n")
+		pcmd.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false
