@@ -2,11 +2,10 @@ package signup
 
 import (
 	"context"
-	"os"
-
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
+	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -61,28 +60,19 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 	pcmd.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
 
 	f := form.New(
-		form.Field{ID: "email", Prompt: "Email"},
+		form.Field{ID: "email", Prompt: "Email", Regex: `(?:[a-z0-9!#$%&'*+\/=?^_\x60{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_\x60{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])`},
 		form.Field{ID: "first", Prompt: "First Name"},
 		form.Field{ID: "last", Prompt: "Last Name"},
 		form.Field{ID: "organization", Prompt: "Organization"},
 		form.Field{ID: "password", Prompt: "Password", IsHidden: true},
-		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true},
-		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true},
+		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true, RequireYes: true},
+		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true, RequireYes: true},
 	)
 
 	if err := f.Prompt(cmd, prompt); err != nil {
 		return err
 	}
 
-	if !f.Responses["tos"].(bool) {
-		pcmd.Println(cmd, "You must accept the Terms of Service.")
-		return nil
-	}
-
-	if !f.Responses["privacy"].(bool) {
-		pcmd.Println(cmd, "You must accept the Privacy Policy.")
-		return nil
-	}
 
 	req := &v1.SignupRequest{
 		Organization: &v1.Organization{

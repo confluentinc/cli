@@ -41,9 +41,12 @@ func TestSignupRejectTOS(t *testing.T) {
 			"Confluent",
 			"password",
 			"n", // Reject TOS
+			"y", // Accept TOS after re-prompt
+			"y",
 			"y",
 		),
-		"You must accept the Terms of Service.",
+		"You must accept to continue. To abandon flow, use Ctrl-C",
+		"Success! Welcome to Confluent Cloud.",
 	)
 }
 
@@ -57,8 +60,11 @@ func TestSignupRejectPrivacyPolicy(t *testing.T) {
 			"password",
 			"y",
 			"n", // Reject PP
+			"y", //Accept PP after re-prompt
+			"y",
 		),
-		"You must accept the Privacy Policy.",
+		"You must accept to continue. To abandon flow, use Ctrl-C",
+		"Success! Welcome to Confluent Cloud.",
 	)
 }
 
