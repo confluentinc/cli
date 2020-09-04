@@ -39,6 +39,7 @@ release:
 
 archives:
   -
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 blobs:
   -
