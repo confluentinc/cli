@@ -39,7 +39,6 @@ release:
 
 archives:
   -
-    format: binary
 
 blobs:
   -
