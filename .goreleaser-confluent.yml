@@ -38,11 +38,15 @@ release:
   disable: true
 
 archives:
-  -
+  - id: binary
+    format: binary
+  - id: archive
     name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 blobs:
   -
+    ids:
+    - binary
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
