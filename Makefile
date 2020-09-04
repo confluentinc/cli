@@ -217,9 +217,7 @@ gorelease:
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
-	aws s3 cp s3://confluent.cloud/ccloud-cli/binaries/$(VERSION_NO_V) s3://confluent.cloud/ccloud-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
-	aws s3 cp s3://confluent.cloud/confluent-cli/binaries/$(VERSION_NO_V) s3://confluent.cloud/confluent-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 .PHONY: fakegorelease
 fakegorelease:
