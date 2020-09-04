@@ -213,10 +213,13 @@ fakerelease: get-release-image commit-release tag-release
 
 .PHONY: gorelease
 gorelease:
+	@# current goreleaser version does not allow acl sepcification in yml, so we set it by copying the file onto itself and adding acl, metadata value is dummy as aws does not allow copy to itself without change fields
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	aws s3 cp s3://confluent.cloud/ccloud-cli/binaries/$(VERSION_NO_V) s3://confluent.cloud/ccloud-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
+	aws s3 cp s3://confluent.cloud/confluent-cli/binaries/$(VERSION_NO_V) s3://confluent.cloud/confluent-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive
 
 .PHONY: fakegorelease
 fakegorelease:

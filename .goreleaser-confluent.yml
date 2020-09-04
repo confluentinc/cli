@@ -47,4 +47,3 @@ blobs:
     bucket: confluent.cloud
     region: us-west-2
     folder: "confluent-cli/binaries/{{.Version}}"
-    acl: public-read
