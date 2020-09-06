@@ -36,6 +36,8 @@ def job = {
                             if [ -z "${TEST_PATH}" ]; then
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
                             fi
+                            git clone https://github.com/confluentinc/muckrake.git
+                            cd muckrake
                             ducker/resources/setup-gradle-properties.sh
                             ducker/resources/setup-git-credential-store
                             cd ducker; ./vagrant-build-ducker.sh --pr true
