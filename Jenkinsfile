@@ -15,6 +15,8 @@ def config = jobConfig {
 
 def job = {
     if (config.isPrJob) {
+        configureGitSSH("github/confluent_jenkins", "private_key")
+
         stage('Clone muckrake') {
             withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                 ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
