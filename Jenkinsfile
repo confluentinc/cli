@@ -30,7 +30,7 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
-                            git clone https://github.com/confluentinc/muckrake.git
+                            git clone git@github.com:confluentinc/muckrake.git
                         '''
                     }
                 }
