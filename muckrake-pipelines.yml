@@ -94,10 +94,10 @@ jobs:
   
   - bash: |
       git clone https://github.com/confluentinc/muckrake.git
-      cd muckrake
     displayName: clone muckrake
 
   - bash: |
+      cd muckrake
       ./ducker/ducker checkout prebuilt && ./ducker/ducker checkout git
     displayName: checkout prebuilt and git materials
   
