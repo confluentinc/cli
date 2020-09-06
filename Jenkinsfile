@@ -13,7 +13,7 @@ def config = jobConfig {
     timeoutHours = 16
 }
 
-def pre = {
+def job = {
     if (config.isPrJob) {
         stage('Clone muckrake') {
             withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
@@ -36,13 +36,7 @@ def pre = {
                 }
             }
         }
-    }
-}
 
-
-
-def job = {
-    if (config.isPrJob) {
         stage('Build & Test Ducker Image') {
             cd muckrake
             def pem_file = ''
@@ -94,4 +88,4 @@ def post = {
     }
 }
 
-runJob config, pre, job, post
+runJob config, job, post
