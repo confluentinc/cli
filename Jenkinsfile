@@ -57,13 +57,12 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
-                            cd muckrake
                             if [ -z "${TEST_PATH}" ]; then
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
                             fi
-                            ducker/resources/setup-gradle-properties.sh
-                            ducker/resources/setup-git-credential-store
-                            cd ducker; ./vagrant-build-ducker.sh --pr true
+                            muckrake/ducker/resources/setup-gradle-properties.sh
+                            muckrake/ducker/resources/setup-git-credential-store
+                            cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
                         '''
                     }
                 }
