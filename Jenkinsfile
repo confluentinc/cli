@@ -61,7 +61,11 @@ def job = {
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
+                            echo "catting /home/jenkins/.gradle/gradle.properties"
+                            cat /home/jenkins/.gradle/gradle.properties
                             muckrake/ducker/resources/setup-git-credential-store
+                            echo "catting /home/jenkins/.git-credentials"
+                            cat /home/jenkins/.git-credentials
                             cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
                         '''
                     }
