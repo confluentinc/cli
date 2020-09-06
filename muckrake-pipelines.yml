@@ -1,5 +1,5 @@
 jobs:
-- job: system_test
+- job: muckrake_system_test
   displayName: cli muckrake system tests
   timeoutInMinutes: 90
 
