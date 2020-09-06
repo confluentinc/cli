@@ -1,6 +1,6 @@
 jobs:
 - job: system_test
-  displayName: cli system-tests
+  displayName: cli muckrake system tests
   timeoutInMinutes: 90
 
   pool:
@@ -52,8 +52,8 @@ jobs:
     displayName: make deps
   
   - script: |
-      make build
-    displayName: make build
+      make build-confluent
+    displayName: make build-confluent
   
   - task: GoTool@0
     inputs:
@@ -93,51 +93,11 @@ jobs:
     displayName: try to inject secrets and setup docker and helm
   
   - bash: |
-      make gcloud-install
-    displayName: Install gcloud
-  
-  - bash: |
-      make cpd-update
-    displayName: Download CPD
-  
-  - bash: |
-      make checkout-cc-system-tests
-    displayName: checkout cc-system-tests
-  
-  - bash: |
-      make cpd-priv-create-if-missing
-    env:
-      AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
-      AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
-      AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
-    displayName: create cpd cluster
-  
-  - bash: |
-      make show-cpd
-    displayName: show cc-cpd.mk variables
+      git clone https://github.com/confluentinc/muckrake.git
+      cd muckrake
+    displayName: clone muckrake
 
   - bash: |
-      make cpd-deploy-local
-    displayName: cpd deploy
-  
-  - bash: |
-      make cpd-priv-testenv || make cpd-debug-and-err
-    displayName: cpd priv testenv
-  
-  - bash: |
-      CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
-    displayName: make init-env
-  
-  - bash: |
-      make replace-cli-binary
-    displayName: Replace CLI binary
-  
-  - bash: |
-      GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
-    displayName: Run system tests
-  
-  - bash: |
-      make cpd-destroy
-    condition: always()
-    displayName: Free CPD
+      ./ducker/ducker checkout prebuilt && ./ducker/ducker checkout git
+    displayName: checkout prebuilt and git materials
   
