@@ -95,7 +95,8 @@ def job = {
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
                             muckrake/ducker/resources/setup-git-credential-store
-                            cd muckrake/ducker; GIT_BRANCH=master ./vagrant-build-ducker.sh --pr true
+                            export CHANGE_BRANCH=master
+                            cd muckrake/ducker; CHANGE_BRANCH=master ./vagrant-build-ducker.sh --pr true
                         '''
                     }
                 }
