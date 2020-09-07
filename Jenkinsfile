@@ -41,6 +41,7 @@ def job = {
                             mkdir -p $GOPATH/bin
                             mkdir -p $GOROOT/bin
                             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+                            git config --global url."ssh://git@github.com".insteadOf "https://github.com"
                             make deps
                             make build-confluent
                         '''
