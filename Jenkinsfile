@@ -26,7 +26,7 @@ def job = {
                 ["artifactory/tools_jenkins", "password", "TOOLS_ARTIFACTORY_PASSWORD"],
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                 ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
-                withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"]) {
+                withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
@@ -41,7 +41,7 @@ def job = {
                             mkdir -p $GOPATH/bin
                             mkdir -p $GOROOT/bin
                             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-                            echo "machine github.com\n\tlogin ${env.GIT_USER}\n\tpassword ${env.GIT_TOKEN}" > ~/.netrc
+                            echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
                             make deps
                             make build-confluent
                         '''
@@ -112,6 +112,8 @@ def post = {
             pem_file = setupSSHKey("vagrant/instance_pem", "pem_file", "${env.WORKSPACE}/vagrant-instance.pem")
             withEnv(["AWS_KEYPAIR_FILE=${pem_file}"]) {
                 sh '''#!/usr/bin/env bash
+                    pwd
+                    ls
                     cd muckrake
                     cd ducker
                     . ./resources/aws-iam.sh
