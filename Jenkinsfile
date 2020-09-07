@@ -56,6 +56,12 @@ def job = {
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
+                        muckrake/ducker/resources/setup-gradle-properties.sh
+                        echo "catting /home/jenkins/.gradle/gradle.properties"
+                        cat /home/jenkins/.gradle/gradle.properties
+                        muckrake/ducker/resources/setup-git-credential-store
+                        echo "catting /home/jenkins/.git-credentials"
+                        cat /home/jenkins/.git-credentials
                         sh '''
                             if [ -z "${TEST_PATH}" ]; then
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
