@@ -97,7 +97,7 @@ def job = {
                             muckrake/ducker/resources/setup-git-credential-store
                             export CHANGE_BRANCH=master
                             export HASH=$(git rev-parse --short=7 HEAD)
-                            sed -i "s?\(confluent-cli-\(.*\)=\)\(.*\)?\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\.tar\.gz?" muckrake/ducker/ducker
+                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?" muckrake/ducker/ducker
                             cat muckrake/ducker/ducker
                             cd muckrake/ducker; CHANGE_BRANCH=master ./vagrant-build-ducker.sh --pr true
                         '''
