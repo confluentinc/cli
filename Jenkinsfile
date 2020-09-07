@@ -2,7 +2,7 @@ def config = jobConfig {
     nodeLabel = 'docker-oraclejdk8'
     properties = [
         parameters([
-            string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/everything_runs_test.py muckrake/tests/kafka_rest_mini_test.py', description: 'Use this to specify a test or subset of tests to run.'),
+            string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/acl_cli_test.py muckrake/tests/password_protection_cli_test.py muckrake/tests/rbac_kafka_cli_test.py', description: 'Use this to specify a test or subset of tests to run.'),
             string(name: 'NUM_WORKERS', defaultValue: '15', description: 'Number of EC2 nodes to use when running the tests.'),
             string(name: 'INSTALL_TYPE', defaultValue: 'source', choices: ['distro', 'source', 'tarball'], description: 'Use tarball or source or distro'),
             string(name: 'RESOURCE_URL', defaultValue: '', description: 'If using tarball or distro [deb, rpm], specify S3 URL to download artifacts from'),
@@ -61,11 +61,7 @@ def job = {
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
-                            echo "catting /home/jenkins/.gradle/gradle.properties" >&2
-                            cat /home/jenkins/.gradle/gradle.properties >&2
                             muckrake/ducker/resources/setup-git-credential-store
-                            echo "catting /home/jenkins/.git-credentials" >&2
-                            cat /home/jenkins/.git-credentials >&2
                             cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
                         '''
                     }
