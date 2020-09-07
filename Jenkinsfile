@@ -41,7 +41,7 @@ def job = {
 
         stage('Build & Test Ducker Image') {
             def pem_file = ''
-            pem_file = setupSSHKey("muckrake/vagrant/instance_pem", "pem_file", "${env.WORKSPACE}/vagrant-instance.pem")
+            pem_file = setupSSHKey("vagrant/instance_pem", "pem_file", "${env.WORKSPACE}/vagrant-instance.pem")
             withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                 ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
                 ["github/confluent_jenkins", "user", "GIT_USER"],
