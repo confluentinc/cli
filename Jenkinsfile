@@ -62,6 +62,7 @@ def job = {
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
                             muckrake/ducker/resources/setup-git-credential-store
+                            export CP_BRANCH=master
                             cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
                         '''
                     }
