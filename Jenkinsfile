@@ -32,7 +32,7 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
-                            wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --output-document go1.14.7.tar.gz
+                            wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
                             tar -C $(pwd) -xzf go1.14.7.tar.gz
                             export GOROOT=$(pwd)/go
                             export GOPATH=$(pwd)/go/path
@@ -40,6 +40,7 @@ def job = {
                             export modulePath=$(pwd)/go/src/github.com/confluentinc/cli
                             mkdir -p $GOPATH/bin
                             mkdir -p $GOROOT/bin
+                            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                             make deps
                             make build-confluent
                         '''
