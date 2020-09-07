@@ -746,28 +746,8 @@ func (c *rolebindingCommand) ccloudCreate(options *rolebindingOptions) (*http.Re
 		options.scopeV2)
 }
 
-func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
-	var resp *http.Response
-	if c.cliName == "ccloud" {
-		resp, err = c.ccloudCreate(options)
-	} else {
-		resp, err = c.confluentCreate(options)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
-	}
-
-	return displayCreateAndDeleteOutput(cmd, options)
+func (c *rolebindingCommand) create(_ *cobra.Command, _ []string) error {
+	return nil
 }
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
