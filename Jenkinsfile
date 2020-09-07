@@ -17,6 +17,37 @@ def job = {
     if (config.isPrJob) {
         configureGitSSH("github/confluent_jenkins", "private_key")
 
+        stage('Setup Go and Build CLI') {
+            withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
+                ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
+                ["github/confluent_jenkins", "user", "GIT_USER"],
+                ["github/confluent_jenkins", "access_token", "GIT_TOKEN"],
+                ["artifactory/tools_jenkins", "user", "TOOLS_ARTIFACTORY_USER"],
+                ["artifactory/tools_jenkins", "password", "TOOLS_ARTIFACTORY_PASSWORD"],
+                ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
+                ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
+                withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"]) {
+                    withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
+                        "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
+                        ["gradle/gradle_properties_maven", "gradle_properties_file",
+                        "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
+                        sh '''
+                            wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --output-document go1.14.7.tar.gz
+                            tar -C $(pwd) -xzf go1.14.7.tar.gz
+                            export GOROOT=$(pwd)/go
+                            export GOPATH=$(pwd)/go/path
+                            export GOBIN=$(pwd)/go/bin
+                            export modulePath=$(pwd)/go/src/github.com/confluentinc/cli
+                            mkdir -p $GOPATH/bin
+                            mkdir -p $GOROOT/bin
+                            make deps
+                            make build-confluent
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Clone muckrake') {
             withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                 ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
