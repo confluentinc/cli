@@ -66,6 +66,7 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
                             git clone git@github.com:confluentinc/muckrake.git
+                            cd muckrake ; git checkout local_cli ; cd ..
                         '''
                     }
                 }
