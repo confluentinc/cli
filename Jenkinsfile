@@ -99,7 +99,7 @@ def job = {
                             export HASH=$(git rev-parse --short=7 HEAD)
                             sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" muckrake/ducker/ducker
                             cat muckrake/ducker/ducker
-                            sed -i "?^get_cli ? s?$? $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?" muckrake/vagrant/base-ubuntu.sh
+                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-ubuntu.sh
                             cat muckrake/vagrant/base-ubuntu.sh
                             cd muckrake/ducker; CHANGE_BRANCH=local_cli ./vagrant-build-ducker.sh --pr true
                         '''
