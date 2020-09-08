@@ -23,36 +23,34 @@ func TestPaymentDescribe(t *testing.T) {
 	require.Equal(t, "Visa ending in 4242\n", out)
 }
 
-func TestPaymentUpdate(t *testing.T) {
-	// TODO: Mock Stripe API call (tests shouldn't make an actual API call)
-	/*
-		c := command{
-			AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{
-				State: &v2.ContextState{
-					Auth: &v1.AuthConfig{
-						User: &orgv1.User{
-							OrganizationId: int32(0),
-						},
-					},
-				},
-			},
-		}
-
-		cmd := &cobra.Command{}
-		buf := new(bytes.Buffer)
-		cmd.SetOut(buf)
-
-		prompt := mock.NewPromptMock(
-			"4242424242424242",
-			"12/70",
-			"999",
-			"Brian Strauch",
-		)
-		err := c.update(cmd, prompt)
-		require.NoError(t, err)
-		require.Contains(t, "Updated.", buf.String())
-	*/
-}
+//func TestPaymentUpdate(t *testing.T) {
+//	// TODO: Mock Stripe API call (tests shouldn't make an actual API call)
+//	c := command{
+//		AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{
+//			State: &v2.ContextState{
+//				Auth: &v1.AuthConfig{
+//					User: &orgv1.User{
+//						OrganizationId: int32(0),
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	cmd := &cobra.Command{}
+//	buf := new(bytes.Buffer)
+//	cmd.SetOut(buf)
+//
+//	prompt := mock.NewPromptMock(
+//		"4242424242424242",
+//		"12/70",
+//		"999",
+//		"Brian Strauch",
+//	)
+//	err := c.update(cmd, prompt)
+//	require.NoError(t, err)
+//	require.Contains(t, "Updated.", buf.String())
+//}
 
 func mockAdminCommand() *cobra.Command {
 	client := &ccloud.Client{

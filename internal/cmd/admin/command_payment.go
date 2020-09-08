@@ -51,7 +51,10 @@ func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
+	if card == nil {
+		pcmd.Println(cmd, "Payment method not found. Add one using \"ccloud admin payment update\".")
+		return nil
+	}
 	pcmd.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)
 	return nil
 }
@@ -73,9 +76,9 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 	pcmd.Println(cmd, "Edit credit card")
 
 	f := form.New(
-		form.Field{ID: "number", Prompt: "Card number"},
-		form.Field{ID: "expiration", Prompt: "MM/YY"},
-		form.Field{ID: "cvc", Prompt: "CVC"},
+		form.Field{ID: "card number", Prompt: "Card number", Regex: `(?:\d[ -]*?){13,19}`},
+		form.Field{ID: "expiration", Prompt: "MM/YY", Regex: `\d{2}/\d{2}`},
+		form.Field{ID: "cvc", Prompt: "CVC", Regex: `\d{3,4}`},
 		form.Field{ID: "name", Prompt: "Cardholder name"},
 	)
 
@@ -94,7 +97,7 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 
 	params := &stripe.TokenParams{
 		Card: &stripe.CardParams{
-			Number:   stripe.String(f.Responses["number"].(string)),
+			Number:   stripe.String(f.Responses["card number"].(string)),
 			ExpMonth: stripe.String(exp[0]),
 			ExpYear:  stripe.String(exp[1]),
 			CVC:      stripe.String(f.Responses["cvc"].(string)),
