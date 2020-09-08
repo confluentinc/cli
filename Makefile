@@ -18,7 +18,7 @@ RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 S3_BUCKET_PATH=s3://confluent.cloud
 ifeq (true, $(RELEASE_TEST))
-S3_BUCKET_PATH=s3://cli-release-test/confluent.cloud
+S3_BUCKET_PATH=s3://confluent.cloud/cli-release-test
 $(warning Release in test mode, S3_BUCKET_PATH=$(S3_BUCKET_PATH))
 endif
 
