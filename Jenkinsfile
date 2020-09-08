@@ -102,6 +102,8 @@ def job = {
                             cat muckrake/ducker/ducker
                             sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-ubuntu.sh
                             cat muckrake/vagrant/base-ubuntu.sh
+                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-redhat.sh
+                            cat muckrake/vagrant/base-redhat.sh
                             cd muckrake/ducker; CHANGE_BRANCH=local_cli ./vagrant-build-ducker.sh --pr true
                         '''
                     }
