@@ -84,7 +84,7 @@ def job = {
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                 ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                 withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=master"]) {
+                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=local_cli"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
@@ -95,11 +95,13 @@ def job = {
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
                             muckrake/ducker/resources/setup-git-credential-store
-                            export CHANGE_BRANCH=master
+                            export CHANGE_BRANCH=local_cli
                             export HASH=$(git rev-parse --short=7 HEAD)
                             sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" muckrake/ducker/ducker
                             cat muckrake/ducker/ducker
-                            cd muckrake/ducker; CHANGE_BRANCH=master ./vagrant-build-ducker.sh --pr true
+                            sed -i "?^get_cli ? s?$? $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?" muckrake/vagrant/base-ubuntu.sh
+                            cat muckrake/vagrant/base-ubuntu.sh
+                            cd muckrake/ducker; CHANGE_BRANCH=local_cli ./vagrant-build-ducker.sh --pr true
                         '''
                     }
                 }
