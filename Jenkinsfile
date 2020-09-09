@@ -76,7 +76,7 @@ def job = {
                             cd muckrake
                             git checkout -b cli_system_test_$HASH
                             git commit -am "System test configuration for CLI build ${HASH}"
-                            git push -u origin cli_systme_test_$HASH
+                            git push -u origin cli_system_test_$HASH
                         '''
                     }
                 }
