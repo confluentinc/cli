@@ -24,6 +24,13 @@ unrelease-s3:
 	@echo -n "Do you want to delete the release notes from S3? (y/n): "
 	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then make delete-binaries-archives-and-release-notes; else make delete-binaries-and-archives; fi
 
+.PHONY: revert-latest-archives
+revert-latest-archives:
+	$(eval TEMP_FILE=$(shell mktemp -d))
+	cd $(TEMP_FILE) && \
+	aws s3 cp $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) $(TEMP_FILE) --recursive && \
+	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) $(TEMP_FILE) --recursive
+
 .PHONY: delete-binaries-and-archives
 delete-binaries-and-archives:
 	$(caasenv-authenticate); \
