@@ -69,9 +69,9 @@ def job = {
                             cd muckrake
                             git checkout local_cli
                             export HASH=$(git rev-parse --short=7 HEAD)
-                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
-                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
-                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
+                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
+                            sed -i "s?get_cli .*?& file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
+                            sed -i "s?get_cli .*?& file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
                             git checkout -b cli_system_test_$HASH
                             git commit -am "System test configuration for CLI build ${HASH}"
                             git push -u origin cli_system_test_$HASH
