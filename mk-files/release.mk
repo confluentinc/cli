@@ -45,7 +45,7 @@ download-licenses:
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
 	@for binary in ccloud confluent; do \
 		echo Downloading third-party licenses for $${binary} binary ; \
-		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
 		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
 		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
 		echo ; \
@@ -57,7 +57,7 @@ dist: download-licenses
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	@for binary in ccloud confluent; do \
 		for os in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
-			for arch in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -iname $${binary}_$${os}_* -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
+			for arch in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -iname $${binary}_$${os}_* -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$3 }'); do \
 				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
 					continue ; \
 				fi; \
