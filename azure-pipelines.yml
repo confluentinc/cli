@@ -16,7 +16,6 @@ variables:
   CI: true
 
 steps:
-
 - template: azure-pipelines-templates/setup-secrets.yml
 
 - template: azure-pipelines-templates/setup-go.yml

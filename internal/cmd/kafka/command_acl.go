@@ -148,6 +148,21 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	matchingBindingCount := 0
+	for _, acl := range acls {
+		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
+		resp, err := c.Client.Kafka.ListACLs(context.WithValue(context.Background(), "requestor", "delete"), cluster, convertToFilter(acl.ACLBinding))
+		if err != nil {
+			return err
+		}
+		matchingBindingCount += len(resp)
+	}
+	if matchingBindingCount == 0 {
+		pcmd.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
+		return nil
+	}
+
 	err = c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters)
 	if err != nil {
 		return err

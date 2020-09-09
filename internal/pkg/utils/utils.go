@@ -2,10 +2,12 @@ package utils
 
 import (
 	"bytes"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/properties"
 	"io/ioutil"
 	"os"
+
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func Max(x, y int64) int64 {
