@@ -10,12 +10,19 @@ release: get-release-image commit-release tag-release
 fakerelease: get-release-image commit-release tag-release
 	@GO111MODULE=on make fakegorelease
 
+GORELEASE_S3_CCLOUD_FOLDER=ccloud-cli/binaries
+GORELEASE_S3_CONFLUENT_FOLDER=confluent-cli/binaries
+ifeq (true, $(RELEASE_TEST))
+GORELEASE_S3_CCLOUD_FOLDER=cli-test-release/ccloud-cli/binaries
+GORELEASE_S3_CONFLUENT_FOLDER=cli-test-release/confluent-cli/binaries
+endif
+
 .PHONY: gorelease
 gorelease:
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_FOLDER)/ccloud-cli/binaries  goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_FOLDER)/confluent-cli/binaries goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
 	aws s3 cp $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
 	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive
 

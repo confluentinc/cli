@@ -16,12 +16,12 @@ DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
-S3_FOLDER=conflunet.cloud
+S3_BUCKET_PATH=s3://confluent.cloud
 ifeq (true, $(RELEASE_TEST))
-S3_FOLDER=confluent.cloud/cli-release-test
-$(warning Release in test mode, S3_FOLDER=$(S3_FOLDER))
+S3_BUCKET_PATH=s3://confluent.cloud/cli-release-test
+$(warning Release in test mode, S3_BUCKET_PATH=$(S3_BUCKET_PATH))
 endif
-S3_BUCKET_PATH=s3://$(S3_FOLDER)
+
 
 .PHONY: clean
 clean:
