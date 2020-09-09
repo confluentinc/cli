@@ -66,7 +66,17 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
                             git clone git@github.com:confluentinc/muckrake.git
-                            cd muckrake ; git checkout local_cli ; cd ..
+                            export HASH=$(git rev-parse --short=7 HEAD)
+                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" muckrake/ducker/ducker
+                            cat muckrake/ducker/ducker
+                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-ubuntu.sh
+                            cat muckrake/vagrant/base-ubuntu.sh
+                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-redhat.sh
+                            cat muckrake/vagrant/base-redhat.sh
+                            cd muckrake
+                            git checkout -b cli_system_test_$HASH
+                            git commit -am "System test configuration for CLI build ${HASH}"
+                            git push -u origin cli_systme_test_$HASH
                         '''
                     }
                 }
@@ -96,15 +106,9 @@ def job = {
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
                             muckrake/ducker/resources/setup-git-credential-store
-                            export CHANGE_BRANCH=local_cli
                             export HASH=$(git rev-parse --short=7 HEAD)
-                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" muckrake/ducker/ducker
-                            cat muckrake/ducker/ducker
-                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-ubuntu.sh
-                            cat muckrake/vagrant/base-ubuntu.sh
-                            sed -i "s?get_cli .*?& $(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" muckrake/vagrant/base-redhat.sh
-                            cat muckrake/vagrant/base-redhat.sh
-                            cd muckrake/ducker; CHANGE_BRANCH=local_cli ./vagrant-build-ducker.sh --pr true
+                            export CHANGE_BRANCH=cli_system_test_$HASH
+                            cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
                         '''
                     }
                 }
@@ -121,12 +125,13 @@ def post = {
             pem_file = setupSSHKey("vagrant/instance_pem", "pem_file", "${env.WORKSPACE}/vagrant-instance.pem")
             withEnv(["AWS_KEYPAIR_FILE=${pem_file}"]) {
                 sh '''#!/usr/bin/env bash
-                    pwd
-                    ls
+                    export HASH=$(git rev-parse --short=7 HEAD)
                     cd muckrake
                     cd ducker
                     . ./resources/aws-iam.sh
                     vagrant destroy -f
+                    cd ..
+                    git push --delete origin cli_system_test_$HASH
                 '''
             }
         }
