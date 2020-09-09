@@ -17,8 +17,9 @@ HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 S3_BUCKET_PATH=s3://confluent.cloud
+S3_RELEASE_TEST_FOLDER=cli-release-test
 ifeq (true, $(RELEASE_TEST))
-S3_BUCKET_PATH=s3://confluent.cloud/cli-release-test
+S3_BUCKET_PATH=s3://confluent.cloud/$(S3_RELEASE_TEST_FOLDER)
 $(warning Release in test mode, S3_BUCKET_PATH=$(S3_BUCKET_PATH))
 endif
 

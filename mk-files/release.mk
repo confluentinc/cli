@@ -13,8 +13,8 @@ fakerelease: get-release-image commit-release tag-release
 GORELEASE_S3_CCLOUD_FOLDER=ccloud-cli/binaries
 GORELEASE_S3_CONFLUENT_FOLDER=confluent-cli/binaries
 ifeq (true, $(RELEASE_TEST))
-GORELEASE_S3_CCLOUD_FOLDER=cli-test-release/ccloud-cli/binaries
-GORELEASE_S3_CONFLUENT_FOLDER=cli-test-release/confluent-cli/binaries
+GORELEASE_S3_CCLOUD_FOLDER=$(S3_RELEASE_TEST_FOLDER)/ccloud-cli/binaries
+GORELEASE_S3_CONFLUENT_FOLDER=$(S3_RELEASE_TEST_FOLDER)/confluent-cli/binaries
 endif
 
 .PHONY: gorelease
