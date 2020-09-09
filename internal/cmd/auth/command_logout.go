@@ -49,6 +49,7 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	ctx.Config.CurrentContext = ""
 	err = a.Config.Save()
 	if err != nil {
 		return err

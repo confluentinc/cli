@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 

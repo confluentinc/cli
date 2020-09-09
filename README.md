@@ -113,18 +113,18 @@ To install the CLI:
 ```
 $ make deps
 $ make build
-$ dist/ccloud/$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
-$ dist/confluent/$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
+$ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
+$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
 ## Developing
 
-This repo requires golang 1.14.2. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.14.7. We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.14.2 already. If your `goenv` does not list this as an option,
+Fortunately `goenv` supports 1.14.7 already. If your `goenv` does not list this as an option,
 you may have to build `goenv`'s `master` branch from source, which you can do with the
 following instructions:
 
@@ -226,7 +226,7 @@ Note: you can verify whether a macOS binary is signed and notarized correctly
 by running `spctl -a -vvv -t install <binary name>`.  If all is good, you
 should see output like
 ```
-dist/ccloud/darwin_amd64/ccloud: accepted
+dist/ccloud/ccloud_darwin_amd64/ccloud: accepted
 source=Notarized Developer ID
 origin=Developer ID Application: Confluent, Inc. (RTSX8FNWR2)
 ```
@@ -459,8 +459,8 @@ With an entirely new command, we would also need to register it with the base to
 To build both binaries, we run `make build`. After this, we can run our command either of the following ways, and see that they (hopefully) work!
 
 ```
-dist/ccloud/<platform>/ccloud config file show 3
-dist/confluent/<platform>/confluent config file show 3
+dist/ccloud/ccloud_<platform>/ccloud config file show 3
+dist/confluent/confluent_<platform>/confluent config file show 3
 ```
 
 ### Integration Testing

@@ -358,11 +358,7 @@ func (a *ClientObj) getCPUsername() string {
 }
 
 func (a *ClientObj) getCredentialType() string {
-	ctx := a.config.Context()
-	if ctx == nil {
-		return ""
-	}
-	switch ctx.Credential.CredentialType {
+	switch a.config.CredentialType() {
 	case v2.Username:
 		if a.config.HasLogin() {
 			return v2.Username.String()

@@ -17,10 +17,10 @@ variables:
 
 steps:
 - script: |
-    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
   condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: 'Install Go 1.14.2 (Linux)'
+  displayName: 'Install Go 1.14.7 (Linux)'
 
 - script: |
     brew install gnu-tar
@@ -35,17 +35,17 @@ steps:
   displayName: 'Install chrome (Darwin)'
 
 - script: |
-    wget "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
-    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.2.tar.gz"
+    wget "https://golang.org/dl/go1.14.7.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
-  displayName: 'Install Go 1.14.2 (Darwin)'
+  displayName: 'Install Go 1.14.7 (Darwin)'
 
 - powershell: |
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -Uri "https://s3-us-west-2.amazonaws.com/confluent.cloud/cli/go-binaries/1.14.2/go1.14.2.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.2.zip" -Verbose
-    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.2.zip "-o$(Agent.BuildDirectory)" -y
+    Invoke-WebRequest -Uri "https://golang.org/dl/go1.14.7.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.7.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.7.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: 'Install Go 1.14.2 (Windows)'
+  displayName: 'Install Go 1.14.7 (Windows)'
 
 # Linux
 - bash: |
