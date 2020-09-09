@@ -50,4 +50,4 @@ blobs:
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
-    folder: "ccloud-cli/binaries/{{.Version}}"
+    folder: "{{.Env.S3FOLDER}}/{{.Version}}"
