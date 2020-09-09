@@ -65,10 +65,10 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
+                            export HASH=$(git rev-parse --short=7 HEAD)
                             git clone git@github.com:confluentinc/muckrake.git
                             cd muckrake
                             git checkout local_cli
-                            export HASH=$(git rev-parse --short=7 HEAD)
                             sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                             sed -i "s?get_cli .*?& file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                             sed -i "s?get_cli .*?& file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -99,12 +99,12 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
+                            export HASH=$(git rev-parse --short=7 HEAD)
                             if [ -z "${TEST_PATH}" ]; then
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
                             fi
                             muckrake/ducker/resources/setup-gradle-properties.sh
                             muckrake/ducker/resources/setup-git-credential-store
-                            export HASH=$(git rev-parse --short=7 HEAD)
                             export CHANGE_BRANCH=cli_system_test_$HASH
                             cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
                         '''
