@@ -47,8 +47,8 @@ dist: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
 	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
 	@for binary in ccloud confluent; do \
-		for os in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$1 }'); do \
-			for arch in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -iname $${os}_* -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
+		for os in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
+			for arch in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -iname $${binary}_$${os}_* -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
 				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
 					continue ; \
 				fi; \
