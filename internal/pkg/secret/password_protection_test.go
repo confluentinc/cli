@@ -3,12 +3,13 @@ package secret
 import (
 	"encoding/base32"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 

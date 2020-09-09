@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,6 +19,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
@@ -358,7 +360,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 			fmt.Println(output)
 		}
 
-		if strings.HasPrefix(tt.args, "kafka cluster create") {
+		if strings.HasPrefix(tt.args, "kafka cluster create") ||
+			strings.HasPrefix(tt.args, "config context current") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
@@ -388,6 +391,12 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+
+		if strings.HasPrefix(tt.args, "config context list") ||
+			strings.HasPrefix(tt.args, "config context current") {
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+		}
 
 		s.validateTestOutput(tt, t, output)
 	})
@@ -610,8 +619,17 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 			}
+			clusterMultizone := schedv1.KafkaCluster{
+				Id:              "lkc-456",
+				Name:            "def",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				Durability:      1,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+			}
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster},
+				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -801,29 +819,32 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
-		lastElem := parts[len(parts) - 1]
+		lastElem := parts[len(parts)-1]
 
 		if lastElem == "" {
 			// No specific link here, we want a list of ALL links
 
-			linkList := []string{
-				"link-1",
-				"link-2",
+			listResponsePayload := []*linkv1.ListLinksResponseItem{
+				&linkv1.ListLinksResponseItem{LinkName: "link-1", LinkId: "1234", ClusterId: "Blah"},
+				&linkv1.ListLinksResponseItem{LinkName: "link-2", LinkId: "4567", ClusterId: "blah"},
 			}
 
-			listReply, err := json.Marshal(linkList)
+			listReply, err := json.Marshal(listResponsePayload)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
 		} else {
 			// Return properties for the selected link.
 
-			linkDescription := &linkv1.LinkProperties{
-				Properties: map[string]string{
-					"replica.fetch.max.bytes": "1048576",
-			}}
-
-			describeReply, err := json.Marshal(linkDescription)
+			describeResponsePayload := linkv1.DescribeLinkResponse{
+				Entries: []*linkv1.DescribeLinkResponseEntry{
+					{
+						Name:  "replica.fetch.max.bytes",
+						Value: "1048576",
+					},
+				},
+			}
+			describeReply, err := json.Marshal(describeResponsePayload)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(describeReply))
 			require.NoError(t, err)

@@ -2,12 +2,13 @@ package secret
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 

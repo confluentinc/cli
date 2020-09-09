@@ -8,7 +8,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	log "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
@@ -20,21 +20,27 @@ type MDSClientManagerImpl struct{}
 
 func (m *MDSClientManagerImpl) GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error) {
 	mdsClient := initializeMDS(ctx, logger)
+	if logger.GetLevel() == log.DEBUG || logger.GetLevel() == log.TRACE {
+		mdsClient.GetConfig().Debug = true
+	}
 	if flagChanged {
 		if caCertPath == "" {
 			// revert to default client regardless of previously configured client
 			mdsClient.GetConfig().HTTPClient = DefaultClient()
 		} else {
+			logger.Debugf("CA certificate path was specified.  Note, the set of supported ciphers for the CLI can be found at https://golang.org/pkg/crypto/tls/#pkg-constants")
 			// override previously configured httpclient if a new cert path was specified
-			certReader, err := getCertReader(caCertPath)
+			certReader, err := getCertReader(caCertPath, logger)
 			if err != nil {
 				return nil, err
 			}
+			logger.Tracef("Successfully read CA certificate.")
+			logger.Tracef("Attempting to initialize HTTP client using certificate")
 			mdsClient.GetConfig().HTTPClient, err = SelfSignedCertClient(certReader, logger)
 			if err != nil {
 				return nil, err
 			}
-			logger.Debugf("Successfully loaded certificate from %s", caCertPath)
+			logger.Tracef("Successfully loaded certificate from %s", caCertPath)
 		}
 	}
 	mdsClient.ChangeBasePath(url)
@@ -61,11 +67,12 @@ func initializeMDS(ctx *v3.Context, logger *log.Logger) *mds.APIClient {
 	return mds.NewAPIClient(mdsConfig)
 }
 
-func getCertReader(caCertPath string) (*os.File, error) {
+func getCertReader(caCertPath string, logger *log.Logger) (*os.File, error) {
 	caCertPath, err := filepath.Abs(caCertPath)
 	if err != nil {
 		return nil, err
 	}
+	logger.Debugf("Attempting to load certificate from absolute path %s", caCertPath)
 	caCertFile, err := os.Open(caCertPath)
 	if err != nil {
 		return nil, err

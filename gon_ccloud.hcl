@@ -1,4 +1,4 @@
-source = ["./dist/ccloud/darwin_amd64/ccloud"]
+source = ["./dist/ccloud/ccloud_darwin_amd64/ccloud"]
 bundle_id = "io.confluent.cli.ccloud"
 
 apple_id {
@@ -9,5 +9,5 @@ sign {
 }
 
 zip {
-  output_path = "./dist/ccloud/darwin_amd64/ccloud_signed.zip"
+  output_path = "./dist/ccloud/ccloud_darwin_amd64/ccloud_signed.zip"
 }

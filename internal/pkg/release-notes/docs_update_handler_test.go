@@ -1,10 +1,11 @@
 package release_notes
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/stretchr/testify/require"
 )

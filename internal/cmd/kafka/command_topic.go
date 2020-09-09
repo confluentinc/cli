@@ -30,6 +30,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+const (
+	defaultReplicationFactor  = 3
+	unspecifiedPartitionCount = -1
+)
+
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
@@ -153,7 +158,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 	}
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().Uint32("partitions", 6, "Number of topic partitions.")
+	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
 	cmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
@@ -198,10 +203,10 @@ func (a *authenticatedTopicCommand) init() {
 	a.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "mirror <action> <topic>",
-		Short: "Perform a mirroring action on a Kafka topic.",
-		Args:  cobra.ExactArgs(2),
-		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Use:    "mirror <action> <topic>",
+		Short:  "Perform a mirroring action on a Kafka topic.",
+		Args:   cobra.ExactArgs(2),
+		RunE:   pcmd.NewCLIRunE(a.mirror),
 		Hidden: true,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -267,12 +272,11 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	topic.Spec.Name = args[0]
 
-	topic.Spec.NumPartitions, err = cmd.Flags().GetUint32("partitions")
+	topic.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
 	if err != nil {
 		return err
 	}
 
-	const defaultReplicationFactor = 3
 	topic.Spec.ReplicationFactor = defaultReplicationFactor
 
 	topic.Validate, err = cmd.Flags().GetBool("dry-run")
@@ -301,6 +305,9 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	if len(linkName) > 0 || len(mirrorTopic) > 0 {
 		topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
+
+		// Avoid specifying partition count for mirrored topics.
+		topic.Spec.NumPartitions = unspecifiedPartitionCount
 	}
 
 	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
@@ -472,7 +479,7 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 		return nil, err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Println(cmd, errors.RegisteredSchemaMsg, response.Id)
+		pcmd.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
