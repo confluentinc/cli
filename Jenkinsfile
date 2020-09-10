@@ -34,9 +34,14 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
+                            echo "SEM IS $SEM2_AWS"
                             echo $SEM2_AWS > sem2_aws.sh
+                            ls
                             chmod +x sem2_aws.sh
                             ./sem2_aws.sh
+                            ls
+                            echo "HOME"
+                            ls ~
                             cat .aws/credentials
                             nn=README.md
                             aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --body ${nn}
