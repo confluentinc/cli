@@ -47,7 +47,8 @@ def job = {
                             make build-confluent
                             cd dist/confluent
                             targz=$(ls *.tar.gz| head -1)
-                            aws s3 cp $targz s3://confluent.cloud/confluent-cli-system-test-builds/
+                            . extract-iam-credential.sh
+                            aws s3 cp $targz s3://confluent.cloud/confluent-cli-system-test-builds/ --acl public-read
                         '''
                     }
                 }
@@ -105,6 +106,7 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
                             export HASH=$(git rev-parse --short=7 HEAD)
+                            . extract-iam-credential.sh
                             if [ -z "${TEST_PATH}" ]; then
                                 export TEST_PATH="muckrake/tests/everything_runs_test.py"
                             fi
@@ -129,6 +131,7 @@ def post = {
             withEnv(["AWS_KEYPAIR_FILE=${pem_file}"]) {
                 sh '''#!/usr/bin/env bash
                     export HASH=$(git rev-parse --short=7 HEAD)
+                    . extract-iam-credential.sh
                     cd muckrake
                     cd ducker
                     . ./resources/aws-iam.sh
