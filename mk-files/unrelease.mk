@@ -6,7 +6,7 @@ ifneq (true, $(RELEASE_TEST))
 	git checkout master
 	git pull
 else
-	$(warning not going to master)
+	$(warning **** ARGHHHHH ******)
 endif
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
