@@ -2,7 +2,7 @@
 unrelease: unrelease-warn
 	make unrelease-s3
 ifneq (true, $(RELEASE_TEST))
-	$(warning going to master)
+	$(warning checkout out master)
 	git checkout master
 else
 	$(warning not going to master)
