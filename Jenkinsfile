@@ -46,7 +46,7 @@ def job = {
                             make deps
                             make build-confluent
                             cd dist/confluent
-                            targz=(*.tar.gz)
+                            targz=$(ls *.tar.gz| head -1)
                             aws s3 cp $targz s3://confluent.cloud/confluent-cli-system-test-builds/
                         '''
                     }
