@@ -1,13 +1,13 @@
 .PHONY: unrelease
 unrelease: unrelease-warn
 	make unrelease-s3
-ifneq (true, $(RELEASE_TEST))
-	$(warning checkout out master)
-	git checkout master
-	git pull
-else
-	$(warning **** ARGHHHHH ******)
-endif
+	ifneq (true, $(RELEASE_TEST))
+		$(warning Unreleasing on master)
+		git checkout master
+		git pull
+	else
+		$(warning Unrelease test run)
+	endif
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
@@ -60,13 +60,11 @@ endef
 
 .PHONY: restore-latest-archives
 restore-latest-archives:
-	make echo-stuff
-	$(eval TEMP_FILE=$(shell mktemp -d))
-	cd $(TEMP_FILE) ; \
-	LATEST_VERSION=$(CLEAN_VERSION)
+	$(eval TEMP_DIR=$(shell mktemp -d))
+	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		aws s3 cp $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_FILE)/$${binary}-cli --recursive ; \
-		cd $(TEMP_FILE)/$${binary}-cli ; \
+		aws s3 cp $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
+		cd $(TEMP_DIR)/$${binary}-cli ; \
 		for fname in $${binary}_v$(CLEAN_VERSION)_*; do \
 			newname=`echo "$$fname" | sed 's/_v$(CLEAN_VERSION)/_latest/g'`; \
 			mv $$fname $$newname; \
@@ -75,10 +73,5 @@ restore-latest-archives:
 		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
 		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --recursive ; \
 	done
+	rm -rf $(TEMP_DIR)
 
-.PHONY: echo-stuff
-echo-stuff:
-	echo $(VERSION)
-	echo $(VERSION_NO_V)
-	echo $(CLEAN_VERSION)
-	echo $(BUMPED_CLEAN_VERSION)
