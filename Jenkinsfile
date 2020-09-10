@@ -32,8 +32,9 @@ def job = {
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                        sh '''
+                        sh '''#!/usr/bin/env bash
                             ls
+			    cat extract-iam-credential.sh
                             . extract-iam-credential.sh
                             export HASH=$(git rev-parse --short=7 HEAD)
                             wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
@@ -71,7 +72,7 @@ def job = {
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                        sh '''
+                        sh '''#!/usr/bin/env bash
                             export HASH=$(git rev-parse --short=7 HEAD)
                             export confluent_s3="https://s3-us-west-2.amazonaws.com"
                             git clone git@github.com:confluentinc/muckrake.git
@@ -106,7 +107,7 @@ def job = {
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                        sh '''
+                        sh '''#!/usr/bin/env bash
                             export HASH=$(git rev-parse --short=7 HEAD)
                             . extract-iam-credential.sh
                             if [ -z "${TEST_PATH}" ]; then
