@@ -4,10 +4,10 @@ unrelease: unrelease-warn
 ifneq (true, $(RELEASE_TEST))
 	$(warning checkout out master)
 	git checkout master
+	git pull
 else
 	$(warning not going to master)
 endif
-	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
