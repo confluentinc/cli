@@ -45,7 +45,9 @@ def job = {
                             echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
                             make deps
                             make build-confluent
-                            aws s3 cp dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz s3://confluent.cloud/confluent-cli-system-test-builds/
+                            cd dist/confluent
+                            targz=(*.tar.gz)
+                            aws s3 cp $targz s3://confluent.cloud/confluent-cli-system-test-builds/
                         '''
                     }
                 }
