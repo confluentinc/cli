@@ -1,13 +1,13 @@
 .PHONY: unrelease
 unrelease: unrelease-warn
 	make unrelease-s3
-	ifneq (true, $(RELEASE_TEST))
-		$(warning Unreleasing on master)
-		git checkout master
-		git pull
-	else
-		$(warning Unrelease test run)
-	endif
+ifneq (true, $(RELEASE_TEST))
+	$(warning Unreleasing on master)
+	git checkout master
+	git pull
+else
+	$(warning Unrelease test run)
+endif
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
