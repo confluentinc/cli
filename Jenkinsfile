@@ -32,6 +32,7 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
+                            export HASH=$(git rev-parse --short=7 HEAD)
                             wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
                             tar -C $(pwd) -xzf go1.14.7.tar.gz
                             export GOROOT=$(pwd)/go
@@ -44,6 +45,7 @@ def job = {
                             echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
                             make deps
                             make build-confluent
+                            aws s3 cp dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz s3://confluent.cloud/confluent-cli-system-test-builds/
                         '''
                     }
                 }
@@ -66,12 +68,13 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''
                             export HASH=$(git rev-parse --short=7 HEAD)
+                            export confluent_s3="https://s3-us-west-2.amazonaws.com"
                             git clone git@github.com:confluentinc/muckrake.git
                             cd muckrake
                             git checkout local_cli
-                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
-                            sed -i "s?get_cli .*?& file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
-                            sed -i "s?get_cli .*?& file://$(pwd)/dist/confluent/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
+                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
+                            sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
+                            sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
                             git checkout -b cli_system_test_$HASH
                             git commit -am "System test configuration for CLI build ${HASH}"
                             git push -u origin cli_system_test_$HASH
@@ -130,6 +133,7 @@ def post = {
                     vagrant destroy -f
                     cd ..
                     git push --delete origin cli_system_test_$HASH
+                    aws s3 rm s3://confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
                 '''
             }
         }
