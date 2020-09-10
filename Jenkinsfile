@@ -35,28 +35,8 @@ def job = {
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
-                            #ls
-                            #cat extract-iam-credential.sh
-                            #. extract-iam-credential.sh
                             echo "AKID IS $AWS_ACCESS_KEY_ID"
                             echo "AK IS $AWS_SECRET_ACCESS_KEY"
-                            #export HASH=$(git rev-parse --short=7 HEAD)
-                            #wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
-                            #tar -C $(pwd) -xzf go1.14.7.tar.gz
-                            #export GOROOT=$(pwd)/go
-                            #export GOPATH=$(pwd)/go/path
-                            #export GOBIN=$(pwd)/go/bin
-                            #export modulePath=$(pwd)/go/src/github.com/confluentinc/cli
-                            #mkdir -p $GOPATH/bin
-                            #mkdir -p $GOROOT/bin
-                            #export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-                            #echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                            #make deps
-                            #make build-confluent
-                            #cd dist/confluent
-                            #targz=$(ls *.tar.gz| head -1)
-                            #nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
-                            #mv $targz $nn
                             nn=README.md
                             aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --body ${nn}
                             aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --acl public-read
