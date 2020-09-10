@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -89,7 +90,35 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 	}
 
 	if _, err := client.Signup.Create(context.Background(), req); err != nil {
-		return err
+		if strings.Contains(err.Error(), "email: already exists") {
+			if _, err := client.Auth.Login(context.Background(), "", f.Responses["email"].(string), f.Responses["password"].(string)); err != nil {
+				pcmd.Println(cmd, "There is already an account associated with this email. If you are unable to login, please ensure your email is verified and your password is correct.")
+				pcmd.Printf(cmd, "A new verification email has been sent to %s. If this email is not received, please contact support@confluent.io.\n", f.Responses["email"].(string))
+				res := &v1.Credentials{
+					Username: f.Responses["email"].(string),
+				}
+				if err := client.Signup.SendVerificationEmail(context.Background(), res); err != nil {
+					return err
+				}
+				v := form.New(form.Field{ID: "verified", Prompt: `Type "y" once verified, or type "n" to exit flow.`, IsYesOrNo: true})
+				if err := v.Prompt(cmd, prompt); err != nil {
+					return err
+				}
+				if !v.Responses["verified"].(bool) {
+					pcmd.Println(cmd, "Exiting.")
+					return nil
+				}
+				if _, err := client.Auth.Login(context.Background(), "", f.Responses["email"].(string), f.Responses["password"].(string)); err != nil {
+					pcmd.ErrPrintln(cmd, "Please ensure that you have verified the email. If you have, then your password is incorrect. Please try \"ccloud login\" using your correct credentials. For assistance, contact support@confluent.io")
+					return nil
+				}
+			}
+			pcmd.Println(cmd, "Welcome, you have been logged into an existing account.")
+			return nil
+		} else {
+			return err
+		}
+
 	}
 
 	pcmd.Printf(cmd, "A verification email has been sent to %s.\n", f.Responses["email"].(string))
@@ -114,7 +143,7 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 
 		if _, err := client.Auth.Login(context.Background(), "", f.Responses["email"].(string), f.Responses["password"].(string)); err != nil {
 			if err.Error() == "username or password is invalid" {
-				pcmd.ErrPrintln(cmd, "Sorry, your email is not verified.")
+				pcmd.ErrPrintln(cmd, "Sorry, your email is not verified. Another verification email was sent to your address. Please click the verification link in that message to verify your email.")
 				continue
 			}
 			return err
