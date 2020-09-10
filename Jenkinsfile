@@ -34,7 +34,7 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
                             ls
-			    cat extract-iam-credential.sh
+                            cat extract-iam-credential.sh
                             . extract-iam-credential.sh
                             export HASH=$(git rev-parse --short=7 HEAD)
                             wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
