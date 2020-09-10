@@ -27,8 +27,8 @@ def job = {
                 ["artifactory/tools_jenkins", "password", "TOOLS_ARTIFACTORY_PASSWORD"],
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                 ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"],
-                ["aws/dev", "access_key_id", "AWS_ACCESS_KEY_ID"],
-                ["aws/dev", "access_key", "AWS_SECRET_ACCESS_KEY"]]) {
+                ["aws/universal_login_prod", "key_id", "AWS_ACCESS_KEY_ID"],
+                ["aws/universal_login_prod", "access_key", "AWS_SECRET_ACCESS_KEY"]]) {
                 withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
