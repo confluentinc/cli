@@ -51,7 +51,10 @@ def job = {
                             make build-confluent
                             cd dist/confluent
                             targz=$(ls *.tar.gz| head -1)
-                            aws s3 cp $targz s3://confluent.cloud/confluent-cli-system-test-builds/ --acl public-read
+                            nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
+                            mv $targz $nn
+                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --body ${nn}
+                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --acl public-read
                         '''
                     }
                 }
