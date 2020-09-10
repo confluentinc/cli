@@ -18,6 +18,7 @@ def job = {
         configureGitSSH("github/confluent_jenkins", "private_key")
 
         stage('Setup Go and Build CLI') {
+            writeFile file:'extract-iam-credential.sh', text:libraryResource('scripts/extract-iam-credential.sh')
             withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                 ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
                 ["github/confluent_jenkins", "user", "GIT_USER"],
@@ -31,8 +32,8 @@ def job = {
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                        writeFile file:'extract-iam-credential.sh', text:libraryResource('scripts/extract-iam-credential.sh')
                         sh '''
+                            ls
                             . extract-iam-credential.sh
                             export HASH=$(git rev-parse --short=7 HEAD)
                             wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
