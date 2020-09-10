@@ -26,16 +26,18 @@ def job = {
                 ["artifactory/tools_jenkins", "user", "TOOLS_ARTIFACTORY_USER"],
                 ["artifactory/tools_jenkins", "password", "TOOLS_ARTIFACTORY_PASSWORD"],
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
-                ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
+                ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"],
+                ["aws/prod", "access_key_id", "AWS_ACCESS_KEY_ID"],
+                ["aws/prod", "access_key", "AWS_SECRET_ACCESS_KEY"]]) {
                 withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
-                            ls
-                            cat extract-iam-credential.sh
-                            . extract-iam-credential.sh
+                            #ls
+                            #cat extract-iam-credential.sh
+                            #. extract-iam-credential.sh
                             export HASH=$(git rev-parse --short=7 HEAD)
                             wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
                             tar -C $(pwd) -xzf go1.14.7.tar.gz
