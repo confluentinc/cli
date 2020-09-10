@@ -33,6 +33,7 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         writeFile file:'extract-iam-credential.sh', text:libraryResource('scripts/extract-iam-credential.sh')
                         sh '''
+                            . extract-iam-credential.sh
                             export HASH=$(git rev-parse --short=7 HEAD)
                             wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --quiet --output-document go1.14.7.tar.gz
                             tar -C $(pwd) -xzf go1.14.7.tar.gz
@@ -48,7 +49,6 @@ def job = {
                             make build-confluent
                             cd dist/confluent
                             targz=$(ls *.tar.gz| head -1)
-                            . extract-iam-credential.sh
                             aws s3 cp $targz s3://confluent.cloud/confluent-cli-system-test-builds/ --acl public-read
                         '''
                     }
