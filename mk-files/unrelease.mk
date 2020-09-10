@@ -55,6 +55,7 @@ endef
 
 .PHONY: restore-latest-archives
 restore-latest-archives:
+	make echo-stuff
 	$(eval TEMP_FILE=$(shell mktemp -d))
 	cd $(TEMP_FILE) ; \
 	LATEST_VERSION=$(CLEAN_VERSION)
