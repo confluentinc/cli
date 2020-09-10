@@ -1,7 +1,12 @@
 .PHONY: unrelease
 unrelease: unrelease-warn
 	make unrelease-s3
+ifneq (true, $(RELEASE_TEST))
+	$(warning going to master)
 	git checkout master
+else
+	$(warning not going to master)
+endif
 	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
