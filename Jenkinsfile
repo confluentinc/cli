@@ -35,7 +35,7 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
                             echo "SEM IS $SEM2_AWS"
-                            echo $SEM2_AWS > sem2_aws.sh
+                            echo "$SEM2_AWS" > sem2_aws.sh
                             ls
                             chmod +x sem2_aws.sh
                             ./sem2_aws.sh
