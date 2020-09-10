@@ -1,3 +1,4 @@
      Id     | Name | Type  | Provider |   Region    | Availability |    Status     
 +-----------+------+-------+----------+-------------+--------------+--------------+
-    lkc-123 | abc  | BASIC | gcp      | us-central1 | LOW          | PROVISIONING  
+    lkc-123 | abc  | BASIC | gcp      | us-central1 | single-zone  | PROVISIONING  
+    lkc-456 | def  | BASIC | gcp      | us-central1 | multi-zone   | PROVISIONING  

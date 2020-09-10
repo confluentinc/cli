@@ -187,7 +187,10 @@ func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error
 			return []byte{}, err
 		}
 		if !isKsqlDB {
-			file = "etc/ksql/ksql-server.properties"
+			file, err = ch.GetFile("etc/ksql/ksql-server.properties")
+			if err != nil {
+				return []byte{}, err
+			}
 		}
 	}
 
