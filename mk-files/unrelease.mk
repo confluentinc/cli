@@ -71,7 +71,7 @@ restore-latest-archives:
 		done ; \
 		rm *checksums.txt; \
 		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
-		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --recursive ; \
+		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
 	done
 	rm -rf $(TEMP_DIR)
 
