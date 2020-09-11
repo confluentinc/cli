@@ -61,13 +61,13 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	if cc = c.getCompletableParent(cmd); cc == nil {
 		return []prompt.Suggest{}
 	}
-	s, ok := c.getCachedSuggestions(cc)
+	suggestions, ok := c.getCachedSuggestions(cc)
 	if !ok {
 		// Shouldn't happen, but just in case.
 		// If this does happen then cache should be in the process of updating.
 		return cc.ServerComplete()
 	}
-	return s
+	return filterSuggestions(d, suggestions)
 }
 
 func (c *ServerSideCompleterImpl) updateCachedSuggestions(cc ServerCompletableCommand) {
@@ -134,14 +134,11 @@ func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {
 	return strings.TrimPrefix(cmd.CommandPath(), c.Root.Name()+" ")
 }
 
-// TODO: Implement
-func (c *ServerSideCompleterImpl) updateSuggestion(cmd ServerCompletableCommand) {
-}
-
 // inCompletableState checks whether the specified command is in a state where it should be considered for completion,
-// which is determined by the following:
+// which is:
 // 1. when not after an uncompleted flag (api-key update --description)
 // 2. when a command is not accepted (ending with a space)
+// TODO: Return false when a suggestion for an argument (like an API key) is accepted?
 func (c *ServerSideCompleterImpl) inCompletableState(d prompt.Document, matchedCmd *cobra.Command) bool {
 	var shouldSuggest = true
 
