@@ -74,8 +74,10 @@ restore-latest-archives: restore-latest-archives-warn
 		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
 	done
 	rm -rf $(TEMP_DIR)
+	@echo "Verifying latest archives with: make test-installers"
+	make test-installers
 
 .PHONY: restore-latest-archives-warn
 restore-latest-archives-warn:
 	@echo -n "Warning: Overriding archives in the latest folder with archives from version v$(CLEAN_VERSION). Continue? (y/n): "
-	@read line; if [ $$line != "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
+	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
