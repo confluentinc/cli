@@ -25,7 +25,7 @@ publish-release-notes: clone-and-setup-docs-repo
 	make build-release-notes CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
 	make publish-release-notes-to-s3 CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
 ifneq (true, $(RELEASE_TEST))
-	make publish-release-notes-to-docs-repo CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
+	make publish-release-notes-to-docs-repo TMP_DOCS=$(TMP_DOCS) CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
 else
 	$(warning RELEASE_TEST=true SKIP submitting docs PR)
 endif
