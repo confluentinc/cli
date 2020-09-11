@@ -93,7 +93,13 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
+	url, valid, errMsg := validateURL(url, "ccloud")
+	if !valid {
+		return errors.Errorf(errors.InvalidLoginURLMsg)
+	}
+	if errMsg != "" {
+		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+	}
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
@@ -186,7 +192,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	url, valid, errMsg := validateURL(url)
+	url, valid, errMsg := validateURL(url, "confluent")
 	if !valid {
 		return errors.Errorf(errors.InvalidLoginURLMsg)
 	}
@@ -362,7 +368,7 @@ func check(err error) {
 	}
 }
 
-func validateURL(url string) (string, bool, string) {
+func validateURL(url string, cli string) (string, bool, string) {
 	protocol_rgx, _ := regexp.Compile(`(\w+)://`)
 	port_rgx, _ := regexp.Compile(`:(\d+\/?)`)
 
@@ -371,14 +377,24 @@ func validateURL(url string) (string, bool, string) {
 
 	var msg []string
 	if !protocol_match {
-		url = "http://" + url
-		msg = append(msg, "http protocol")
+		if cli == "ccloud" {
+			url = "https://" + url
+			msg = append(msg, "https protocol")
+		} else {
+			url = "http://" + url
+			msg = append(msg, "http protocol")
+		}
 	}
-	if !port_match {
+	if !port_match && cli == "confluent" {
 		url = url + ":8090"
 		msg = append(msg, "default MDS port 8090")
 	}
-	pattern := `^\w+://[^/ ]+:\d+(?:\/|$)`
+	var pattern string
+	if cli == "confluent" {
+		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
+	} else {
+		pattern = `^\w+://[^/ ]+`
+	}
 	matched, _ := regexp.Match(pattern, []byte(url))
 
 	return url, matched, strings.Join(msg, " and ")
