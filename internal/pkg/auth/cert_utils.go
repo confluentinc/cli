@@ -19,7 +19,9 @@ func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Clien
 	if err != nil {
 		logger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
 	}
+	logger.Tracef("Loaded certificate pool from system")
 	if certPool == nil {
+		logger.Tracef("(System certificate pool was blank)")
 		certPool = x509.NewCertPool()
 	}
 
@@ -30,17 +32,22 @@ func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Clien
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
 	}
+	logger.Tracef("Specified certificate has been read")
 
 	// Append new cert to the system pool
 	if ok := certPool.AppendCertsFromPEM(certs); !ok {
 		return nil, errors.New(errors.NoCertsAppendedErrorMsg)
 	}
 
+	logger.Tracef("Successfully appended new certificate to the pool")
+
 	// Trust the updated cert pool in our client
 	transport := defaultTransport()
 	transport.TLSClientConfig = &tls.Config{RootCAs: certPool}
+	logger.Tracef("Successfully created TLS config using certificate pool")
 	client := DefaultClient()
 	client.Transport = transport
+	logger.Tracef("Successfully set client properties")
 
 	return client, nil
 }

@@ -128,7 +128,7 @@ func (c *Context) HasMDSLogin() bool {
 	}
 }
 
-func (c *Context) hasLogin() bool {
+func (c *Context) hasCCloudLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case v2.Username:

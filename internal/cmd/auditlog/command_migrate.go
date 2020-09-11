@@ -3,12 +3,14 @@ package auditlog
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 type migrateCmd struct {
@@ -100,6 +102,7 @@ func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 	}
 	for _, warning := range warnings {
 		fmt.Fprintln(os.Stderr, warning)
+		fmt.Println()
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

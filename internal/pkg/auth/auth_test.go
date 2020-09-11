@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/stretchr/testify/require"

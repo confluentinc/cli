@@ -1,5 +1,5 @@
 api_endpoint: http://kafka-api-url
-availability: LOW
+availability: single-zone
 egress: 100
 endpoint: SASL_SSL://kafka-endpoint
 id: lkc-describe

@@ -7,6 +7,7 @@ Available Commands:
   audit-log       Manage audit log configuration.
   cluster         Retrieve metadata about Confluent Platform clusters.
   completion      Print shell completion code.
+  config          Modify the CLI configuration.
   connect         Manage Connect.
   help            Help about any command
   iam             Manage RBAC, ACL and IAM permissions.
