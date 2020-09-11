@@ -7,7 +7,7 @@ import (
 
 type ShellCompleter struct {
 	*CobraCompleter
-	*ServerSideCompleter
+	ServerSideCompleter
 }
 
 func NewShellCompleter(rootCmd *cobra.Command, cliName string) *ShellCompleter {

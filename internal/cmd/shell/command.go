@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
@@ -21,14 +22,16 @@ type command struct {
 	Command   *cobra.Command
 	RootCmd   *cobra.Command
 	config    *v3.Config
+	prerunner pcmd.PreRunner
 	completer *completer.ShellCompleter
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, completer *completer.ShellCompleter) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, prerunner pcmd.PreRunner, completer *completer.ShellCompleter) *cobra.Command {
 	cliCmd := &command{
 		RootCmd:   rootCmd,
 		config:    config,
+		prerunner: prerunner,
 		completer: completer,
 	}
 
@@ -55,7 +58,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	c.RootCmd.AddCommand(quit.NewQuitCmd(c.config))
 
 	msg := "You are already authenticated."
-	if !c.config.HasLogin() {
+	if err := c.prerunner.Authenticated(pcmd.NewAuthenticatedCLICommand(c.Command, c.prerunner))(c.Command, args); err != nil {
 		msg = "You are currently not authenticated."
 	}
 

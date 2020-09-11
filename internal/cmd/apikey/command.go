@@ -445,15 +445,16 @@ func (c *command) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *command) Complete() []prompt.Suggest {
-	//if _, err := c.Context.AuthenticatedState(c.Command); err != nil {
-	//	return []prompt.Suggest{
-	//		{
-	//			Text:        " ",
-	//			Description: "You are currently not authenticated. Please login.",
-	//		},
-	//	}
-	//}
+func (c *command) ServerComplete() []prompt.Suggest {
+	if err := c.PersistentPreRunE(c.Command, []string{}); err != nil {
+		return []prompt.Suggest{
+			{
+				Text: "",
+				Description: err.Error(),	
+			},
+			
+		}
+	}
 	var suggests []prompt.Suggest
 	apiKeys, err := c.fetchAPIKeys()
 	if err != nil {
@@ -483,6 +484,6 @@ func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
 	return userApiKeys, nil
 }
 
-func (c *command) CompletableChildren() []*cobra.Command {
+func (c *command) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
 }

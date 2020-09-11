@@ -59,7 +59,6 @@ type Command struct {
 	// @VisibleForTesting
 	Analytics analytics.Client
 	logger    *log.Logger
-	completer *completer.ShellCompleter
 }
 
 func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
@@ -112,7 +111,8 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
-	command.completer = completer.NewShellCompleter(cli, cliName)
+	shellCompleter := completer.NewShellCompleter(cli, cliName)
+	serverCompleter := shellCompleter.ServerSideCompleter
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.New(cliName, prerunner, ver))
@@ -134,9 +134,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 			return command, nil
 		}
 		apiKeyCmd := apikey.New(prerunner, nil, resolver)
-		command.completer.AddCommand(apiKeyCmd)
+		serverCompleter.AddCommand(apiKeyCmd)
+		cli.AddCommand(apiKeyCmd.Command)
 		
-		cli.AddCommand(apikey.New(prerunner, nil, resolver).Command) // Exposed for testing
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		cli.AddCommand(environment.New(cliName, prerunner))
@@ -145,7 +145,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
 		cli.AddCommand(serviceaccount.New(prerunner))
-		cli.AddCommand(shell.NewShellCmd(cli, cfg, command.completer))
+		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
 		}
