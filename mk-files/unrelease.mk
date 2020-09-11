@@ -59,7 +59,7 @@ define delete-release-notes
 endef
 
 .PHONY: restore-latest-archives
-restore-latest-archives:
+restore-latest-archives: restore-latest-archives-warn
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
@@ -75,3 +75,7 @@ restore-latest-archives:
 	done
 	rm -rf $(TEMP_DIR)
 
+.PHONY: restore-latest-archives-warn
+restore-latest-archives-warn:
+	@echo -n "Warning: Overriding archives in the latest folder with archives from version v$(CLEAN_VERSION). Continue? (y/n): "
+	@read line; if [ $$line != "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
