@@ -153,30 +153,6 @@ func (c *ServerSideCompleterImpl) inCompletableState(d prompt.Document, matchedC
 		return false
 	}
 
-	//// must be a completable child.
-	//if matchedCmd.Parent() == nil {
-	//	return false
-	//}
-	//parent := c.commandKey(matchedCmd.Parent())
-	//v, ok := c.commandsByPath.Load(parent)
-	//if !ok {
-	//	// Should not happen.
-	//	return false
-	//}
-	//cc := v.(ServerCompletableCommand)
-	//hasCompletableChild := false
-	//for _, child := range cc.ServerCompletableChildren() {
-	//	childKey := c.commandKey(child)
-	//	matchedKey := c.commandKey(matchedCmd)
-	//	hasCompletableChild = childKey == matchedKey
-	//	if hasCompletableChild {
-	//		break
-	//	}
-	//}
-	//if !hasCompletableChild {
-	//	return false
-	//}
-
 	matchedCmd.ParseFlags(strings.Fields(d.CurrentLine()))
 
 	addFlags := func(flag *pflag.Flag) {
