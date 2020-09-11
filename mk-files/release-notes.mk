@@ -20,10 +20,10 @@ endef
 RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
 .PHONY: publish-release-notes
 publish-release-notes: clone-and-setup-docs-repo
-	$(eval CCLOUD_DOCS_DIR=$(TMP_DOCS)/ccloud/cli)
+	$(eval CCLOUD_DOCS_DIR=$(TMP_DOCS)/cloud/cli)
 	$(eval CONFLUENT_DOCS_DIR=$(TMP_DOCS)/cli)
-	make build-release-notes
-	make publish-release-notes-to-s3
+	make build-release-notes CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
+	make publish-release-notes-to-s3 CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
 ifneq (true, $(RELEASE_TEST))
 	make publish-release-notes-to-docs-repo
 else
@@ -34,7 +34,7 @@ endif
 
 .PHONY: clone-and-setup-docs-repo
 clone-and-setup-docs-repo:
-	$(eval TMP_BASE=(shell mktemp -d))
+	$(eval TMP_BASE=$(shell mktemp -d))
 	$(eval TMP_DOCS=$(TMP_BASE)/docs)
 	git clone git@github.com:confluentinc/docs.git $(TMP_DOCS)
 	cd $(TMP_DOCS) && \
