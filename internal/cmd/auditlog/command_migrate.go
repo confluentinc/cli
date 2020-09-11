@@ -100,6 +100,7 @@ func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 	}
 	for _, warning := range warnings {
 		fmt.Fprintln(os.Stderr, warning)
+		fmt.Println()
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())
