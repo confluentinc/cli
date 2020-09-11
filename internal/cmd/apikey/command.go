@@ -449,10 +449,9 @@ func (c *command) ServerComplete() []prompt.Suggest {
 	if err := c.PersistentPreRunE(c.Command, []string{}); err != nil {
 		return []prompt.Suggest{
 			{
-				Text: "",
-				Description: err.Error(),	
+				Text:        "",
+				Description: err.Error(),
 			},
-			
 		}
 	}
 	var suggests []prompt.Suggest

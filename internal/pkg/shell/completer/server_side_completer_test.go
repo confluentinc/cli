@@ -1,11 +1,12 @@
 package completer
 
 import (
+	"testing"
+	"time"
+
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestServerSideCompleter_Complete(t *testing.T) {

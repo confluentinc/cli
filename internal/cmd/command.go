@@ -136,7 +136,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		apiKeyCmd := apikey.New(prerunner, nil, resolver)
 		serverCompleter.AddCommand(apiKeyCmd)
 		cli.AddCommand(apiKeyCmd.Command)
-		
+
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		cli.AddCommand(environment.New(cliName, prerunner))

@@ -2,10 +2,11 @@ package completer
 
 import (
 	"fmt"
-	"github.com/c-bata/go-prompt"
-	"github.com/spf13/cobra"
 	"strconv"
 	"strings"
+
+	"github.com/c-bata/go-prompt"
+	"github.com/spf13/cobra"
 )
 
 func createDocument(s string) *prompt.Document {

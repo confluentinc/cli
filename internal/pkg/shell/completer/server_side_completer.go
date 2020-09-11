@@ -10,42 +10,25 @@ import (
 )
 
 type ServerSideCompleterImpl struct {
-	// map[string]*cachingCommand
+	// map[string]ServerCompletableCommand
 	commandsByPath *sync.Map
+	// map[string][]prompt.Suggest
+	cachedSuggestionsByPath *sync.Map
 
 	Root *cobra.Command
 }
 
 func NewServerSideCompleter(root *cobra.Command) *ServerSideCompleterImpl {
 	c := &ServerSideCompleterImpl{
-		Root:           root,
-		commandsByPath: new(sync.Map),
+		Root:                    root,
+		commandsByPath:          new(sync.Map),
+		cachedSuggestionsByPath: new(sync.Map),
 	}
 
 	return c
 }
 
-type cachingCommand struct {
-	ServerCompletableCommand
-	cachedSuggestions []prompt.Suggest
-	mux               sync.Mutex
-}
-
-func (c *cachingCommand) ServerComplete() []prompt.Suggest {
-	if c.cachedSuggestions != nil {
-		c.refreshCache()
-	}
-	return c.cachedSuggestions
-}
-
-func (c *cachingCommand) refreshCache() {
-	//c.mux.Lock()
-	//defer c.mux.Unlock()
-	c.cachedSuggestions = c.ServerCompletableCommand.ServerComplete()
-}
-
-// Complete 
-// high level
+// Complete
 // if NOT in a completable state (spaces, not accepted, etc)
 // 		RETURN
 // if command is completable
@@ -71,29 +54,48 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 
 	cc := c.getCompletableCommand(cmd)
 	if cc != nil {
-		go cc.refreshCache()
+		go c.updateCachedSuggestions(cc)
 		return []prompt.Suggest{}
 	}
 
 	if cc = c.getCompletableParent(cmd); cc == nil {
 		return []prompt.Suggest{}
 	}
+	s, ok := c.getCachedSuggestions(cc)
+	if !ok {
+		// Shouldn't happen, but just in case.
+		// If this does happen then cache should be in the process of updating.
+		return cc.ServerComplete()
+	}
+	return s
+}
 
-	return cc.ServerComplete()
+func (c *ServerSideCompleterImpl) updateCachedSuggestions(cc ServerCompletableCommand) {
+	key := c.commandKey(cc.Cmd())
+	c.cachedSuggestionsByPath.Store(key, cc.ServerComplete())
+}
+
+func (c *ServerSideCompleterImpl) getCachedSuggestions(cc ServerCompletableCommand) ([]prompt.Suggest, bool) {
+	key := c.commandKey(cc.Cmd())
+	v, ok := c.cachedSuggestionsByPath.Load(key)
+	if !ok {
+		return nil, false
+	}
+	return v.([]prompt.Suggest), true
 }
 
 // getCompletableCommand returns a matching ServerCompletableCommand, or nil if one is not found.
-func (c *ServerSideCompleterImpl) getCompletableCommand(cmd *cobra.Command) *cachingCommand {
+func (c *ServerSideCompleterImpl) getCompletableCommand(cmd *cobra.Command) ServerCompletableCommand {
 	v, ok := c.commandsByPath.Load(c.commandKey(cmd))
 	if !ok {
 		return nil
 	}
-	return v.(*cachingCommand)
+	return v.(ServerCompletableCommand)
 }
 
 // getCompletableParent return the completable parent if the specified command is a completable child,
 // and false otherwise.
-func (c *ServerSideCompleterImpl) getCompletableParent(cmd *cobra.Command) *cachingCommand {
+func (c *ServerSideCompleterImpl) getCompletableParent(cmd *cobra.Command) ServerCompletableCommand {
 	parent := cmd.Parent()
 	if parent == nil {
 		return nil
@@ -124,12 +126,7 @@ func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt
 }
 
 func (c *ServerSideCompleterImpl) AddCommand(cmd ServerCompletableCommand) {
-	cc := &cachingCommand{
-		ServerCompletableCommand: cmd,
-		cachedSuggestions:        []prompt.Suggest{},
-		mux:                      sync.Mutex{},
-	}
-	c.commandsByPath.Store(c.commandKey(cmd.Cmd()), cc)
+	c.commandsByPath.Store(c.commandKey(cmd.Cmd()), cmd)
 }
 
 func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {
