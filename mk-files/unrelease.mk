@@ -23,7 +23,7 @@ unrelease-warn:
 	@git --no-pager log --decorate=short --pretty=oneline -n10
 	@echo -n "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version. Continue? (y/n): "
 	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
-	
+
 .PHONY: unrelease-s3
 unrelease-s3:
 	@echo "If you are going to reattempt the release again without the need to edit the release notes, there is no need to delete the release notes from S3."
