@@ -638,8 +638,17 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 			}
+			clusterMultizone := schedv1.KafkaCluster{
+				Id:              "lkc-456",
+				Name:            "def",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				Durability:      1,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+			}
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster},
+				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))

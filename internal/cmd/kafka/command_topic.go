@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	defaultReplicationFactor = 3
+	defaultReplicationFactor  = 3
 	unspecifiedPartitionCount = -1
 )
 

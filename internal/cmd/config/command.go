@@ -9,7 +9,7 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	cliName string
+	cliName   string
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
