@@ -6,7 +6,7 @@ import (
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
