@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func createDocument(s string) *prompt.Document {
+func createDocument(s string) prompt.Document {
 	buf := prompt.NewBuffer()
 	buf.InsertText(s, false, true)
-	return buf.Document()
+	return *buf.Document()
 }
 
 func createNestedCommands(levels int, cmdsPerLevel int) (cmd *cobra.Command) {

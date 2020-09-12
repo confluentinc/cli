@@ -28,7 +28,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("1 "),
+				d: createDocument("1 "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -38,7 +38,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("1 22 "),
+				d: createDocument("1 22 "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -48,7 +48,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("1 2 "),
+				d: createDocument("1 2 "),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("arg"),
@@ -60,7 +60,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("1 2"),
+				d: createDocument("1 2"),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -70,7 +70,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("1 2 arg "),
+				d: createDocument("1 2 arg "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -86,7 +86,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("1 2 --one completed "),
+				d: createDocument("1 2 --one completed "),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("arg"),
@@ -104,7 +104,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("1 2 --one uncompleted"),
+				d: createDocument("1 2 --one uncompleted"),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -113,7 +113,7 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := NewServerSideCompleter(tt.fields.RootCmd)
 			addSuggestionFunctions(c, tt.fields.RootCmd)
-			c.Complete(*createDocument("1 "))  // preload the suggestions
+			c.Complete(createDocument("1 "))   // preload the suggestions
 			time.Sleep(100 * time.Millisecond) // let goroutine run
 			got := c.Complete(tt.args.d)
 			require.Equal(t, tt.want, got)
@@ -121,21 +121,34 @@ func TestServerSideCompleter_Complete(t *testing.T) {
 	}
 }
 
-func addSuggestionFunctions(c *ServerSideCompleter, rootCmd *cobra.Command) {
+func addSuggestionFunctions(c ServerSideCompleter, rootCmd *cobra.Command) {
 	for _, cmd := range rootCmd.Commands() {
-		c.AddSuggestionFunction(cmd, func() []prompt.Suggest {
-			return []prompt.Suggest{
-				newSuggestion("arg"),
-			}
-		})
-
+		testCmd := &testCommand{
+			Command: cmd,
+		}
 		for i, subCmd := range cmd.Commands() {
 			// register only every other sub command
 			if i%2 == 0 {
-				c.AddCommand(subCmd, true)
-			} else {
-				c.AddCommand(subCmd, false)
+				testCmd.completableChildren = append(testCmd.completableChildren, subCmd)
 			}
 		}
+		c.AddCommand(testCmd)
 	}
+}
+
+type testCommand struct {
+	*cobra.Command
+	completableChildren []*cobra.Command
+}
+
+func (c *testCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *testCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
+}
+
+func (c *testCommand) ServerComplete() []prompt.Suggest {
+	return []prompt.Suggest{newSuggestion("arg")}
 }

@@ -29,7 +29,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(1, 1),
 			},
 			args: args{
-				d: *createDocument("this command doesn't even exist "),
+				d: createDocument("this command doesn't even exist "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -39,7 +39,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(1, 2),
 			},
 			args: args{
-				d: *createDocument(""),
+				d: createDocument(""),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("1"),
@@ -52,7 +52,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(1, 3),
 			},
 			args: args{
-				d: *createDocument("11"),
+				d: createDocument("11"),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("11"),
@@ -91,7 +91,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("b"),
+				d: createDocument("b"),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("ba"),
@@ -110,7 +110,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument(""),
+				d: createDocument(""),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("1"),
@@ -127,7 +127,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("--"),
+				d: createDocument("--"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -147,7 +147,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("1 --"),
+				d: createDocument("1 --"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -167,7 +167,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("-"),
+				d: createDocument("-"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -187,7 +187,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("11 -"),
+				d: createDocument("11 -"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -207,7 +207,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("11 2 -"),
+				d: createDocument("11 2 -"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -227,7 +227,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("11 some_arg --"),
+				d: createDocument("11 some_arg --"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -247,7 +247,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("11 -- "),
+				d: createDocument("11 -- "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -257,7 +257,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(2, 2),
 			},
 			args: args{
-				d: *createDocument("1 "),
+				d: createDocument("1 "),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("2"),
@@ -270,7 +270,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: createNestedCommands(3, 3),
 			},
 			args: args{
-				d: *createDocument("1 44 "),
+				d: createDocument("1 44 "),
 			},
 			want: []prompt.Suggest{},
 		},
@@ -286,7 +286,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("1 -o "),
+				d: createDocument("1 -o "),
 			},
 			want: []prompt.Suggest{
 				newSuggestion("2"),
@@ -304,7 +304,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("1 -o -"),
+				d: createDocument("1 -o -"),
 			},
 			want: []prompt.Suggest{
 				{
@@ -325,7 +325,7 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				}(),
 			},
 			args: args{
-				d: *createDocument("1 -o --"),
+				d: createDocument("1 -o --"),
 			},
 			want: []prompt.Suggest{
 				{
