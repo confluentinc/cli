@@ -117,8 +117,16 @@ func (c *ServerSideCompleterImpl) getCompletableParent(cmd *cobra.Command) Serve
 func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt.Suggest {
 	filtered := []prompt.Suggest{}
 	for _, suggestion := range suggestions {
-		// only suggest if it does not appear anywhere in the input
-		if !strings.Contains(d.Text, suggestion.Text) {
+		// only suggest if it does not appear anywhere in the input, 
+		// or if the suggestion is just a message to the user.
+		// go-prompt filters out suggestions with empty string as text,
+		// so we must suggest with at least one space.
+		isMessage := strings.TrimSpace(suggestion.Text) == "" && suggestion.Description != ""
+		if isMessage {
+			// Introduce whitespace, or trim unnecessary whitespace.
+			suggestion.Text = " "
+		}
+		if isMessage || !strings.Contains(d.Text, suggestion.Text) {
 			filtered = append(filtered, suggestion)
 		}
 	}
