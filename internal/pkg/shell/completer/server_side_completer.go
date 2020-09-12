@@ -65,7 +65,7 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	if !ok {
 		// Shouldn't happen, but just in case.
 		// If this does happen then cache should be in the process of updating.
-		return cc.ServerComplete()
+		suggestions = cc.ServerComplete()
 	}
 	return filterSuggestions(d, suggestions)
 }

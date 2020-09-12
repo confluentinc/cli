@@ -111,7 +111,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
-	shellCompleter := completer.NewShellCompleter(cli, cliName)
+	shellCompleter := completer.NewShellCompleter(cli)
 	serverCompleter := shellCompleter.ServerSideCompleter
 
 	cli.Version = ver.Version

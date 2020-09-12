@@ -10,7 +10,7 @@ type ShellCompleter struct {
 	ServerSideCompleter
 }
 
-func NewShellCompleter(rootCmd *cobra.Command, cliName string) *ShellCompleter {
+func NewShellCompleter(rootCmd *cobra.Command) *ShellCompleter {
 	return &ShellCompleter{
 		CobraCompleter:      NewCobraCompleter(rootCmd),
 		ServerSideCompleter: NewServerSideCompleter(rootCmd),
