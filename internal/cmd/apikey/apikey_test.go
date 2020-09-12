@@ -116,7 +116,7 @@ func (suite *APITestSuite) SetupTest() {
 	}
 }
 
-func (suite *APITestSuite) newCMD() *cobra.Command {
+func (suite *APITestSuite) newCMD() *command {
 	client := &ccloud.Client{
 		Auth:           &ccsdkmock.Auth{},
 		Account:        &ccsdkmock.Account{},
@@ -299,6 +299,18 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 	args := suite.keystore.StoreAPIKeyCalls()[0]
 	req.Equal(promptReadString, args.Key.Key)
 	req.Equal(promptReadPass, args.Key.Secret)
+}
+
+func (suite *APITestSuite) TestServerCompletableChildren() {
+	req := require.New(suite.T())
+	suite.isPromptPipe = false
+	cmd := suite.newCMD()
+	completableChildren := cmd.ServerCompletableChildren()
+	expectedChildren := []string{"api-key update", "api-key delete", "api-key store", "api-key use"}
+	req.Len(completableChildren, len(expectedChildren))
+	for i, expectedChild := range expectedChildren {
+		req.Contains(completableChildren[i].CommandPath(), expectedChild)
+	}
 }
 
 func TestApiTestSuite(t *testing.T) {

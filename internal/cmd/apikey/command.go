@@ -107,7 +107,6 @@ func (c *command) init() {
 	updateCmd.Flags().String("description", "", "Description of the API key.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
-	c.completableChildren = append(c.completableChildren, updateCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
@@ -116,7 +115,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
-	c.completableChildren = append(c.completableChildren, deleteCmd)
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -132,7 +130,6 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(storeCmd)
-	c.completableChildren = append(c.completableChildren, storeCmd)
 
 	useCmd := &cobra.Command{
 		Use:   "use <apikey>",
@@ -146,7 +143,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
-	c.completableChildren = append(c.completableChildren, useCmd)
+	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
