@@ -155,11 +155,11 @@ func (c *ServerSideCompleterImpl) inCompletableState(d prompt.Document, matchedC
 		return false
 	}
 
-	matchedCmd.ParseFlags(strings.Fields(d.CurrentLine()))
+	_ = matchedCmd.ParseFlags(strings.Fields(d.CurrentLine()))
 
 	addFlags := func(flag *pflag.Flag) {
 		if flag.Changed {
-			flag.Value.Set(flag.DefValue)
+			_ = flag.Value.Set(flag.DefValue)
 		}
 		if flag.Hidden {
 			return
