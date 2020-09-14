@@ -32,13 +32,13 @@ func NewPaymentCommand(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 		isTest,
 	}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newPaymentDescribeCommand())
+	c.AddCommand(c.newPaymentUpdateCommand())
 
 	return c.Command
 }
 
-func (c *command) newDescribeCommand() *cobra.Command {
+func (c *command) newPaymentDescribeCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "describe",
 		Short: "Print the payment method for an organization.",
@@ -61,7 +61,7 @@ func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (c *command) newUpdateCommand() *cobra.Command {
+func (c *command) newPaymentUpdateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "update",
 		Short: "Update the payment method for an organization.",

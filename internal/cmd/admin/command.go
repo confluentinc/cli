@@ -17,6 +17,7 @@ func New(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 	)
 
 	c.AddCommand(NewPaymentCommand(prerunner, isTest))
+	c.AddCommand(NewUsersCommand(prerunner))
 
 	return c.Command
 }
