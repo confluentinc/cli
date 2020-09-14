@@ -125,7 +125,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {
-		cli.AddCommand(admin.New(prerunner))
+		cli.AddCommand(admin.New(prerunner, isTest))
 		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
 		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))

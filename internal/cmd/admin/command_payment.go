@@ -16,9 +16,10 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+	isTest bool
 }
 
-func NewPaymentCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func NewPaymentCommand(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 	c := &command{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
@@ -28,6 +29,7 @@ func NewPaymentCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			},
 			prerunner,
 		),
+		isTest,
 	}
 
 	c.AddCommand(c.newDescribeCommand())
@@ -87,8 +89,11 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 	}
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
-
-	stripe.Key = "sk_live_z9G2UTa5QjYmTIZkYZgvX8EJ"
+	if c.isTest {
+		stripe.Key = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
+	} else {
+		stripe.Key = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
+	}
 	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
 		Level: 0,
 	}

@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 	c := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "admin", // TODO: rename to org?
@@ -16,7 +16,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner,
 	)
 
-	c.AddCommand(NewPaymentCommand(prerunner))
+	c.AddCommand(NewPaymentCommand(prerunner, isTest))
 
 	return c.Command
 }
