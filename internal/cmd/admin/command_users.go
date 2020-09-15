@@ -49,6 +49,7 @@ func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.AddCommand(c.newUserDescribeCommand())
 	c.AddCommand(c.newUserListCommand())
+	c.AddCommand(c.newUserInviteCommand())
 
 	return c.Command
 }
@@ -121,6 +122,24 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
+func (c userCommand) newUserInviteCommand() (createCmd *cobra.Command) {
+	createCmd = &cobra.Command {
+		Use:   "invite <email>",
+		Short: "Invite a user to join your organization.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.invite),
+	}
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	return
+}
 
-
-
+func (c userCommand) invite(cmd *cobra.Command, args []string) error {
+	email := args[0]
+	newUser := &orgv1.User{Email: email, OrganizationId: c.State.Auth.Organization.Id}
+	user, err := c.Client.User.Invite(context.Background(), newUser)
+	if err != nil {
+		return err
+	}
+	pcmd.Println(cmd, "An email invitation has been sent to " + user.Email)
+	return nil
+}
