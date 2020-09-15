@@ -46,11 +46,10 @@ func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			prerunner,
 		),
 	}
-
 	c.AddCommand(c.newUserDescribeCommand())
 	c.AddCommand(c.newUserListCommand())
 	c.AddCommand(c.newUserInviteCommand())
-
+	c.AddCommand(c.newUserDeleteCommand())
 	return c.Command
 }
 
@@ -129,7 +128,6 @@ func (c userCommand) newUserInviteCommand() (createCmd *cobra.Command) {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.invite),
 	}
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	return
 }
 
@@ -141,5 +139,28 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	pcmd.Println(cmd, "An email invitation has been sent to " + user.Email)
+	return nil
+}
+
+func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
+	deleteCmd = &cobra.Command {
+		Use:   "delete <id>",
+		Short: "Delete a user from your organization.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
+	}
+	return
+}
+
+func (c userCommand) delete(cmd *cobra.Command, args []string) error {
+	userId, err := strconv.ParseInt(args[0], 10, 32)
+	if err != nil {
+		return err
+	}
+	c.Client.User.Delete(context.Background(), &orgv1.User{
+		Id: 			int32(userId),
+		OrganizationId: c.State.Auth.Organization.Id,
+	})
+	pcmd.Println(cmd, "Successfully deleted user.")
 	return nil
 }
