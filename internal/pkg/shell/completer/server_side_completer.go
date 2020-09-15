@@ -19,13 +19,11 @@ type ServerSideCompleterImpl struct {
 }
 
 func NewServerSideCompleter(root *cobra.Command) *ServerSideCompleterImpl {
-	c := &ServerSideCompleterImpl{
+	return &ServerSideCompleterImpl{
 		Root:                    root,
 		commandsByPath:          new(sync.Map),
 		cachedSuggestionsByPath: new(sync.Map),
 	}
-
-	return c
 }
 
 // Complete
