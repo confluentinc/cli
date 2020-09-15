@@ -19,18 +19,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	"time"
 
 	"github.com/confluentinc/bincover"
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
@@ -38,9 +30,15 @@ import (
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -59,6 +57,7 @@ var (
 	confluentTestBin = confluentTestBinNormal
 	covCollector     *bincover.CoverageCollector
 	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	serviceAccountID = int32(12345)
 )
 
 const (
@@ -366,6 +365,10 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
+		if strings.HasPrefix(tt.args, "api-key list") {
+
+		}
+
 		s.validateTestOutput(tt, t, output)
 	})
 }
@@ -457,8 +460,11 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, binaryName)
 }
 
-var keyStore = map[int32]*schedv1.ApiKey{}
-var keyIndex = int32(1)
+var (
+	keyStore        = map[int32]*schedv1.ApiKey{}
+	keyIndex        = int32(1)
+	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+)
 
 type ApiKeyList []*schedv1.ApiKey
 
@@ -534,6 +540,18 @@ func init() {
 		},
 		UserId: 25,
 	}
+	keyStore[200] = &schedv1.ApiKey{
+		Id:     keyIndex,
+		Key:    "SERVICEACCOUNTKEY1",
+		Secret: "SERVICEACCOUNTSECRET1",
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
+			{Id: "lkc-bob", Type: "kafka"},
+		},
+		UserId: serviceAccountID,
+	}
+	for _, k := range keyStore {
+		k.Created = keyTimestamp
+	}
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
@@ -551,6 +569,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", keyIndex)
+			apiKey.Created = keyTimestamp
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
 			} else {
@@ -758,6 +777,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
+	router.HandleFunc("/api/users", handleUsers(t))
 	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }
@@ -835,7 +855,6 @@ func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 			require.NoError(t, err)
 		} else {
 			// Return properties for the selected link.
-
 			describeResponsePayload := linkv1.DescribeLinkResponse{
 				Entries: []*linkv1.DescribeLinkResponseEntry{
 					{
@@ -1410,9 +1429,9 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 				ApiKey: apiKey,
 				Error:  nil,
 			}
-			reply, err := json.Marshal(result)
+			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "DELETE" {
 			req := &schedv1.DeleteApiKeyRequest{}
@@ -1423,9 +1442,9 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 				ApiKey: apiKey,
 				Error:  nil,
 			}
-			reply, err := json.Marshal(result)
+			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		}
 
@@ -1437,7 +1456,7 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 		switch r.Method {
 		case "GET":
 			serviceAccount := &orgv1.User{
-				Id:                 12345,
+				Id:                 serviceAccountID,
 				ServiceName:        "service_account",
 				ServiceDescription: "at your service.",
 			}

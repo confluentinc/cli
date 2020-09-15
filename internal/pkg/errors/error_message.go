@@ -351,6 +351,7 @@ const (
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		ccloudAvoidTimeoutSuggestion
+	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
 	InvalidLoginErrorMsg          = "incorrect email or password"
 	CCloudInvalidLoginSuggestions = ccloudAvoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""

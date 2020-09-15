@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"regexp"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -91,7 +92,13 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
+	url, valid, errMsg := validateURL(url, "ccloud")
+	if !valid {
+		return errors.Errorf(errors.InvalidLoginURLMsg)
+	}
+	if errMsg != "" {
+		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+	}
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
@@ -183,6 +190,13 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
+	}
+	url, valid, errMsg := validateURL(url, "confluent")
+	if !valid {
+		return errors.Errorf(errors.InvalidLoginURLMsg)
+	}
+	if errMsg != "" {
+		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
@@ -349,4 +363,36 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func validateURL(url string, cli string) (string, bool, string) {
+	protocol_rgx, _ := regexp.Compile(`(\w+)://`)
+	port_rgx, _ := regexp.Compile(`:(\d+\/?)`)
+
+	protocol_match := protocol_rgx.MatchString(url)
+	port_match := port_rgx.MatchString(url)
+
+	var msg []string
+	if !protocol_match {
+		if cli == "ccloud" {
+			url = "https://" + url
+			msg = append(msg, "https protocol")
+		} else {
+			url = "http://" + url
+			msg = append(msg, "http protocol")
+		}
+	}
+	if !port_match && cli == "confluent" {
+		url = url + ":8090"
+		msg = append(msg, "default MDS port 8090")
+	}
+	var pattern string
+	if cli == "confluent" {
+		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
+	} else {
+		pattern = `^\w+://[^/ ]+`
+	}
+	matched, _ := regexp.Match(pattern, []byte(url))
+
+	return url, matched, strings.Join(msg, " and ")
 }

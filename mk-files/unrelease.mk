@@ -1,13 +1,19 @@
 .PHONY: unrelease
 unrelease: unrelease-warn
 	make unrelease-s3
+ifneq (true, $(RELEASE_TEST))
+	$(warning Unreleasing on master)
 	git checkout master
 	git pull
+else
+	$(warning Unrelease test run)
+endif
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
 	git reset --hard HEAD~1 # warning: assumes "chore" version bump was last commit
 	git push origin HEAD --force
+	make restore-latest-archives
 
 .PHONY: unrelease-warn
 unrelease-warn:
@@ -51,3 +57,27 @@ define delete-release-notes
 	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
 	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive
 endef
+
+.PHONY: restore-latest-archives
+restore-latest-archives: restore-latest-archives-warn
+	$(eval TEMP_DIR=$(shell mktemp -d))
+	$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
+		aws s3 cp $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
+		cd $(TEMP_DIR)/$${binary}-cli ; \
+		for fname in $${binary}_v$(CLEAN_VERSION)_*; do \
+			newname=`echo "$$fname" | sed 's/_v$(CLEAN_VERSION)/_latest/g'`; \
+			mv $$fname $$newname; \
+		done ; \
+		rm *checksums.txt; \
+		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
+		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
+	done
+	rm -rf $(TEMP_DIR)
+	@echo "Verifying latest archives with: make test-installers"
+	make test-installers
+
+.PHONY: restore-latest-archives-warn
+restore-latest-archives-warn:
+	@echo -n "Warning: Overriding archives in the latest folder with archives from version v$(CLEAN_VERSION). Continue? (y/n): "
+	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi

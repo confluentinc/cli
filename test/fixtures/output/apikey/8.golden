@@ -1,4 +1,4 @@
-       Key      | Owner | Description  | Resource Type | Resource ID  
-+---------------+-------+--------------+---------------+-------------+
-    MYKEY5      |    23 | my-other-app | kafka         | lkc-other1   
-    UIAPIKEY101 |    25 |              | kafka         | lkc-other1   
+       Key      | Description  | Owner |      Owner Email      | Resource Type | Resource ID |       Created         
++---------------+--------------+-------+-----------------------+---------------+-------------+----------------------+
+    MYKEY5      | my-other-app |    23 | bstrauch@confluent.io | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  
+    UIAPIKEY101 |              |    25 | bstrauch@confluent.io | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  

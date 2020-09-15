@@ -19,27 +19,44 @@ endef
 
 RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
 .PHONY: publish-release-notes
-publish-release-notes:
-	@TMP_BASE=$$(mktemp -d) || exit 1; \
-		TMP_DOCS=$${TMP_BASE}/docs; \
-		git clone git@github.com:confluentinc/docs.git $${TMP_DOCS}; \
-		cd $${TMP_DOCS} || exit 1; \
-		git fetch ; \
-		git checkout -b $(RELEASE_NOTES_BRANCH) origin/$(DOCS_BRANCH) || exit 1; \
-		cd - || exit 1; \
-		CCLOUD_DOCS_DIR=$${TMP_DOCS}/cloud/cli; \
-		CONFLUENT_DOCS_DIR=$${TMP_DOCS}/cli; \
-		make release-notes CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR}; \
-		make publish-release-notes-to-local-docs-repo CCLOUD_DOCS_DIR=$${CCLOUD_DOCS_DIR} CONFLUENT_DOCS_DIR=$${CONFLUENT_DOCS_DIR} || exit 1; \
-		cd $${TMP_DOCS} || exit 1; \
-		git add . || exit 1; \
-		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
-		git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
-		git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
-		hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
-		rm -rf $${TMP_BASE}
-	make publish-release-notes-to-s3
+publish-release-notes: clone-and-setup-docs-repo
+	$(eval CCLOUD_DOCS_DIR=$(TMP_DOCS)/cloud/cli)
+	$(eval CONFLUENT_DOCS_DIR=$(TMP_DOCS)/cli)
+	make build-release-notes CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
+	make publish-release-notes-to-s3 CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
+ifneq (true, $(RELEASE_TEST))
+	make publish-release-notes-to-docs-repo TMP_DOCS=$(TMP_DOCS) CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
+else
+	$(warning RELEASE_TEST=true SKIP submitting docs PR)
+endif
+	rm -rf $(TMP_BASE)
 	$(print-publish-release-notes-next-steps)
+
+.PHONY: clone-and-setup-docs-repo
+clone-and-setup-docs-repo:
+	$(eval TMP_BASE=$(shell mktemp -d))
+	$(eval TMP_DOCS=$(TMP_BASE)/docs)
+	git clone git@github.com:confluentinc/docs.git $(TMP_DOCS)
+	cd $(TMP_DOCS) && \
+	git fetch && \
+	git checkout -b $(RELEASE_NOTES_BRANCH)
+
+.PHONY: build-release-notes
+build-release-notes:
+	@echo Previous Release Version: v$(CLEAN_VERSION)
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_DOCS_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
+
+.PHONY: publish-release-notes-to-docs-repo
+publish-release-notes-to-docs-repo:
+	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
+	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
+	$(warning SUBMITTING PR to docs repo)
+	cd $(TMP_DOCS) || exit 1; \
+	git add . || exit 1; \
+	git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
+	git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
+	git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
+	hub pull-request -b $(DOCS_BRANCH) -m "New release notes for $(BUMPED_VERSION)"
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
@@ -64,16 +81,6 @@ define print-publish-release-notes-next-steps
 	@echo
 	@echo "===================="
 endef
-
-.PHONY: release-notes
-release-notes:
-	@echo Previous Release Version: v$(CLEAN_VERSION)
-	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.ccloudReleaseNotesPath=$(CCLOUD_DOCS_DIR) -X main.confluentReleaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
-
-.PHONY: publish-release-notes-to-local-docs-repo
-publish-release-notes-to-local-docs-repo:
-	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
-	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
 
 .PHONY: clean-release-notes
 clean-release-notes:
