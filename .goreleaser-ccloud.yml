@@ -13,8 +13,7 @@ before:
 # NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
-  -
-    binary: ccloud
+  - binary: ccloud
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -26,20 +25,37 @@ builds:
       - all=-trimpath={{.Env.GOPATH}}
     goos:
       - linux
-      - darwin
       - windows
     goarch:
       - amd64
       - 386
-    ignore:
-      - goos: darwin
-        goarch: 386
+    id: "linux-windows-binary"
+  - binary: ccloud
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    id: "darwin-binary"
+    # Signing darwin binary
+    hooks:
+      post: gon gon_ccloud.hcl
 release:
   disable: true
 
 archives:
   - id: binary
     format: binary
+  - id: archive
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 blobs:
   -
