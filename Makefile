@@ -17,12 +17,8 @@ HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 S3_BUCKET_PATH=s3://confluent.cloud
-S3_RELEASE_TEST_FOLDER=cli-release-test
-ifeq (true, $(RELEASE_TEST))
-$(warning IN RELEASE_TEST=true MODE)
-S3_BUCKET_PATH=s3://confluent.cloud/$(S3_RELEASE_TEST_FOLDER)
-$(warning Release test S3_BUCKET_PATH=$(S3_BUCKET_PATH))
-endif
+S3_STAGING_FOLDER_NAME=cli-release-stag
+S3_STAGING_PATH=s3://confluent.cloud/$(S3_STAGING_FOLDER_NAME)
 
 
 .PHONY: clean
@@ -229,7 +225,8 @@ coverage-integ:
 .PHONY: test-installers
 test-installers:
 	@echo Running packaging/installer tests
-	@bash test-installers.sh
+	@ # if ${ARCHIVES_VERSION_TO_TEST} archives latest folder will be tested
+	@bash test-installers.sh ${ARCHIVES_VERSION_TO_TEST}
 
 .PHONY: test-prep
 test-prep: lint
