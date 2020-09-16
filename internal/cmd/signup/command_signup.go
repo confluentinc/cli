@@ -4,6 +4,7 @@ import (
 	"context"
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
@@ -65,7 +66,7 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 		form.Field{ID: "first", Prompt: "First Name"},
 		form.Field{ID: "last", Prompt: "Last Name"},
 		form.Field{ID: "organization", Prompt: "Organization"},
-		form.Field{ID: "password", Prompt: "Password", IsHidden: true},
+		form.Field{ID: "password", Prompt: "Password (8 characters, 1 lowercase, 1 uppercase, 1 number)", IsHidden: true},
 		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true, RequireYes: true},
 		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true, RequireYes: true},
 	)
@@ -150,6 +151,7 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 		}
 
 		pcmd.Println(cmd, "Success! Welcome to Confluent Cloud.")
+		pcmd.Printf(cmd, errors.LoggedInAsMsg, f.Responses["email"])
 		return nil
 	}
 }
