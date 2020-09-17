@@ -51,7 +51,7 @@ download-licenses:
 get-licenses:
 	echo "HELOOOOOO BABY"
 	echo $(LICENSE_BIN_PATH)
-	echo $(LICENS_BIN)
+	echo $(LICENSE_BIN)
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
 	echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
