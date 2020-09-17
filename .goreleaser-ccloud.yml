@@ -26,18 +26,30 @@ builds:
     goos:
       - linux
       - windows
-      - darwin
     goarch:
       - amd64
       - 386
-    ignore:
-      - goos: darwin
-        goarch: 386
+  - binary: ccloud
+    id: darwin-build
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
     hooks:
       post:
         - cmd: gon gon_ccloud.hcl
           env: 
             - GO111MODULE=on
+              
 release:
   disable: true
 
@@ -54,4 +66,10 @@ blobs:
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
-    folder: "{{.Env.S3FOLDER}}/{{.Version}}"
+    folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
+  -
+    ids:
+    - archive
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{.Env.S3FOLDER}}/archives/{{.Version}}"
