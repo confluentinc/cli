@@ -8,7 +8,6 @@ require (
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20200511133814-5174e21577d5 // indirect
 	github.com/Shopify/sarama v1.23.1
-	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/apex/log v1.9.0 // indirect
@@ -41,8 +40,6 @@ require (
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
-	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
-	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/daixiang0/gci v0.0.0-20200727065011-66f1df783cb2 // indirect
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
 	github.com/dghubble/sling v1.3.0 // indirect
@@ -60,6 +57,7 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gofrs/flock v0.7.1 // indirect
 	github.com/gogo/protobuf v1.3.1
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
@@ -73,7 +71,6 @@ require (
 	github.com/goreleaser/goreleaser v0.116.0
 	github.com/goreleaser/nfpm v1.2.1 // indirect
 	github.com/hashicorp/go-hclog v0.9.2
-	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.2.1
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -104,7 +101,6 @@ require (
 	github.com/nishanths/exhaustive v0.0.0-20200708172631-8866003e3856 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/opentracing/opentracing-go v1.0.2 // indirect
-	github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c // indirect
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
@@ -143,8 +139,10 @@ require (
 	go.mongodb.org/mongo-driver v1.0.1 // indirect
 	gocloud.dev v0.20.0 // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
+	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
