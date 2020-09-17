@@ -62,7 +62,7 @@ archives:
     format: binary
   - id: archive
     name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    directory_name_template: "ccloud"
+    folder_template: "ccloud"
     format: tar.gz
     format_overrides:
       - goos: windows
