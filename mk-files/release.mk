@@ -39,9 +39,9 @@ sign:
 download-licenses:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
-	@for binary in ccloud confluent; do \
+	@for binary in ccloud; do \
 		echo Downloading third-party licenses for $${binary} binary ; \
-		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
+		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/signed_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
 		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
 		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
 		echo ; \
@@ -49,15 +49,13 @@ download-licenses:
 
 .PHONY: get-licenses
 get-licenses:
-	echo "HELOOOOOO BABY"
-	echo $(LICENSE_BIN_PATH)
-	echo $(LICENSE_BIN)
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
-	echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
+	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
 	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$(LICENSE_BIN)/licenses -n legal/$(LICENSE_BIN)/notices ; \
-	[ -z "$$(ls -A legal/$(LICENSE_BIN)/licenses)" ] && rmdir legal/$(LICENSE_BIN)/licenses ; \
-	[ -z "$$(ls -A legal/$(LICENSE_BIN)/notices)" ] && rmdir legal/$(LICENSE_BIN)/notices
+	[ -z "$$(ls -A legal/$(LICENSE_BIN)/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
+	[ -z "$$(ls -A legal/$(LICENSE_BIN)/notices)" ] && { echo "ERROR: notices folder not populated" && exit 1; }; \
+	echo Successfully downloaded licenses
 
 .PHONY: dist
 dist: download-licenses
