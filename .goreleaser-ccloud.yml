@@ -46,6 +46,9 @@ builds:
       - amd64
     hooks:
       post:
+        - cmd: golicense .golicense.hcl ./dist/ccloud/signed_darwin_amd64/ccloud | go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/ccloud/licenses -n legal/ccloud/notices
+          env:
+            - GITHUB_TOKEN={{.Env.GITHUB_TOKEN}}
         - cmd: gon gon_ccloud.hcl
           env: 
             - GO111MODULE=on
