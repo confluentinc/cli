@@ -87,7 +87,6 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	// check cpd configs
 	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true, log.New())
 	require.NoError(t, err)
-	// configs for cpd and devel are the same except the callback url
 	require.Equal(t, "https://login-cpd.confluent-dev.io", stateCpd.SSOProviderHost)
 	require.Equal(t, "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb", stateCpd.SSOProviderClientID)
 	require.Equal(t, "https://aware-monkfish.gcp.priv.cpdev.cloud/cli_callback", stateCpd.SSOProviderCallbackUrl)
