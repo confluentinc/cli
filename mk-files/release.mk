@@ -47,6 +47,18 @@ download-licenses:
 		echo ; \
 	done
 
+.PHONY: get-licenses
+get-licenses:
+	echo "HELOOOOOO BABY"
+	echo $(LICENSE_BIN_PATH)
+	echo $(LICENS_BIN)
+	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
+	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
+	echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
+	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$(LICENSE_BIN)/licenses -n legal/$(LICENSE_BIN)/notices ; \
+	[ -z "$$(ls -A legal/$(LICENSE_BIN)/licenses)" ] && rmdir legal/$(LICENSE_BIN)/licenses ; \
+	[ -z "$$(ls -A legal/$(LICENSE_BIN)/notices)" ] && rmdir legal/$(LICENSE_BIN)/notices
+
 .PHONY: dist
 dist: download-licenses
 	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
