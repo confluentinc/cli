@@ -52,7 +52,7 @@ get-licenses:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
 	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
-	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$(LICENSE_BIN)/licenses -n legal/$(LICENSE_BIN)/notices ; \
+	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/licenses -n legal/notices ; \
 	[ -z "$$(ls -A legal/$(LICENSE_BIN)/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
 	[ -z "$$(ls -A legal/$(LICENSE_BIN)/notices)" ] && { echo "ERROR: notices folder not populated" && exit 1; }; \
 	echo Successfully downloaded licenses
