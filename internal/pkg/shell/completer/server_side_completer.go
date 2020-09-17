@@ -42,11 +42,12 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	cmd := c.Root
 	args := strings.Fields(d.CurrentLine())
 
-	if found, _, err := cmd.Find(args); err == nil {
+	if found, foundArgs, err := cmd.Find(args); err == nil {
 		cmd = found
+		args = foundArgs
 	}
 
-	if !c.inCompletableState(d, cmd) {
+	if !c.inCompletableState(d, cmd, args) {
 		return []prompt.Suggest{}
 	}
 
@@ -144,12 +145,29 @@ func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {
 // which is:
 // 1. when not after an uncompleted flag (api-key update --description)
 // 2. when a command is not accepted (ending with a space)
-// TODO: Return false when a suggestion for an argument (like an API key) is accepted?
-func (c *ServerSideCompleterImpl) inCompletableState(d prompt.Document, matchedCmd *cobra.Command) bool {
+// 3. when a command with a positional arg doesn't already have that arg provided
+func (c *ServerSideCompleterImpl) inCompletableState(d prompt.Document, matchedCmd *cobra.Command, args []string) bool {
 	var shouldSuggest = true
 
 	// must be typing a new argument
 	if !strings.HasSuffix(d.CurrentLine(), " ") {
+		return false
+	}
+
+	// This is a heuristic to see if more args can be accepted. If no validation error occurs
+	// for a number of args larger than the current number up to the chosen max, we say that more
+	// args can be accepted. Cases where args only in some valid set (i.e: strings containing
+	// the letter 'a') are accepted aren't considered for now.
+	const maxReasonableArgs = 20
+	canAcceptMoreArgs := false
+	for i := len(args) + 1; i <= maxReasonableArgs; i++ {
+		tmpArgs := make([]string, i)
+		if err := matchedCmd.ValidateArgs(tmpArgs); err == nil {
+			canAcceptMoreArgs = true
+			break
+		}
+	}
+	if !canAcceptMoreArgs {
 		return false
 	}
 
