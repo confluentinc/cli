@@ -116,24 +116,33 @@ func TestNewStateProd(t *testing.T) {
 }
 
 func TestNewStateProdNoBrowser(t *testing.T) {
-	state, err := newState("https://confluent.cloud", true, log.New())
-	require.NoError(t, err)
-	// randomly generated
-	require.True(t, len(state.CodeVerifier) > 10)
-	require.True(t, len(state.CodeChallenge) > 10)
-	require.True(t, len(state.SSOProviderState) > 10)
-	// make sure we didn't so something dumb generating the hashes
-	require.True(t,
-		(state.CodeVerifier != state.CodeChallenge) &&
-			(state.CodeVerifier != state.SSOProviderState) &&
-			(state.CodeChallenge != state.SSOProviderState))
+	for _, authURL := range []string{"", "https://confluent.cloud"} {
+		state, err := newState(authURL, true, log.New())
+		require.NoError(t, err)
+		// randomly generated
+		require.True(t, len(state.CodeVerifier) > 10)
+		require.True(t, len(state.CodeChallenge) > 10)
+		require.True(t, len(state.SSOProviderState) > 10)
+		// make sure we didn't so something dumb generating the hashes
+		require.True(t,
+			(state.CodeVerifier != state.CodeChallenge) &&
+				(state.CodeVerifier != state.SSOProviderState) &&
+				(state.CodeChallenge != state.SSOProviderState))
 
-	require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
-	require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
-	require.Equal(t, state.SSOProviderCallbackUrl, "https://confluent.cloud/cli_callback")
-	require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
-	require.Empty(t, state.SSOProviderAuthenticationCode)
-	require.Empty(t, state.SSOProviderIDToken)
+		require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
+		require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
+		require.Equal(t, state.SSOProviderCallbackUrl, "https://confluent.cloud/cli_callback")
+		require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
+		require.Empty(t, state.SSOProviderAuthenticationCode)
+		require.Empty(t, state.SSOProviderIDToken)
+	}
+}
+
+func TestNewStateInvalidUrl(t *testing.T) {
+	state, err := newState("Invalid url", true, log.New())
+	require.Error(t, err)
+	require.Equal(t, err.Error(), "unrecognized auth url: Invalid url")
+	require.Nil(t, state)
 }
 
 func TestGetAuthorizationUrl(t *testing.T) {
