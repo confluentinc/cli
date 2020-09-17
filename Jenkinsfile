@@ -53,7 +53,8 @@ def job = {
                             nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
                             mv $targz $nn
                             nnn=${nn%.tar.gz}
-                            tar -C $nnn -xzvf $nn ; mkdir unstrip ; mv $nnn unstrip/ ; rm $nn ; tar -cvzf ${nn} unstrip
+                            echo "NN is ${nn}"
+                            mkdir $nnn ; tar -C $(pwd)/$nnn -xzvf $nn ; mkdir unstrip ; mv $nnn unstrip/ ; rm $nn ; tar -cvzf ${nn} unstrip
                             echo "NNN HAS:"
                             ls -lash $nnn
                             echo "UNSTRIP HAS:"
