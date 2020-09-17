@@ -68,7 +68,7 @@ archives:
         format: zip
     files:
       - LICENSE
-      - legal/{{.ProjectName}}/*
+      - legal/{{.ProjectName}}/**/*
 
 blobs:
   -
