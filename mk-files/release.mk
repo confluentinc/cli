@@ -19,7 +19,8 @@ endif
 
 .PHONY: gorelease
 gorelease:
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
+	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CCLOUD_FOLDER) GITHUB_TOKEN=$(token) goreleaser release --rm-dist -f .goreleaser-ccloud.yml
 
 .PHONY: fakegorelease
 fakegorelease:
