@@ -54,7 +54,7 @@ def job = {
                             mv $targz $nn
                             nnn=${nn%.tar.gz}
                             echo "NN is ${nn}"
-                            mkdir $nnn ; tar -C $(pwd)/$nnn -xzvf $nn ; mkdir unstrip ; mv $nnn unstrip/ ; rm $nn ; tar -cvzf ${nn} unstrip
+                            mkdir $nnn ; tar -C $(pwd)/$nnn -xzvf $nn ; rm $nn ; tar -cvzf ${nn} ${nnn}
                             echo "NNN HAS:"
                             ls -lash $nnn
                             echo "UNSTRIP HAS:"
