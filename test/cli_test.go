@@ -758,6 +758,9 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
+	router.HandleFunc("/api/users", handleUsers(t))
+	router.HandleFunc("/api/users/0", handleUser(t))
+	router.HandleFunc("/api/organizations/0/invites", handleInvite(t))
 	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }

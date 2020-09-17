@@ -41,7 +41,7 @@ func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &userCommand{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
-				Use:   "users",
+				Use:   "user",
 				Short: "Manage an organization's users.",
 				Args:  cobra.NoArgs,
 			},
@@ -63,6 +63,7 @@ func (c userCommand) newUserDescribeCommand() (describeCmd *cobra.Command) {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
 	return
 }
 
@@ -89,6 +90,7 @@ func (c userCommand) newUserListCommand() (listCmd *cobra.Command) {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
 	return
 }
 
@@ -139,7 +141,7 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	if !matched {
 		return errors.New("invalid email structure")
 	}
-	newUser := &orgv1.User{Email: email, OrganizationId: c.State.Auth.Organization.Id}
+	newUser := &orgv1.User{Email: email, OrganizationId: c.State.Auth.User.OrganizationId}
 	user, err := c.Client.User.Invite(context.Background(), newUser)
 	if err != nil {
 		return err
@@ -169,10 +171,13 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.Client.User.Delete(context.Background(), &orgv1.User{
+	err = c.Client.User.Delete(context.Background(), &orgv1.User{
 		Id: 			int32(userId),
-		OrganizationId: c.State.Auth.Organization.Id,
+		OrganizationId: c.State.Auth.User.OrganizationId,
 	})
+	if err != nil {
+		return err
+	}
 	pcmd.Println(cmd, "Successfully deleted user.")
 	return nil
 }

@@ -1,0 +1,4 @@
+  ID |       Email        | First Name | Last Name | Deactivated | Resource ID  
++----+--------------------+------------+-----------+-------------+-------------+
+   1 | miles@confluent.io | Miles      | Todzo     | false       | u11          
+   2 | kayla@test.com     | Kayla      | Sawyer    | false       | u17          
