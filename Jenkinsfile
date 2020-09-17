@@ -38,8 +38,8 @@ def job = {
                             echo "AKID IS $AWS_ACCESS_KEY_ID"
                             echo "AK IS $AWS_SECRET_ACCESS_KEY"
                             nn=README.md
-                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --body ${nn}
-                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-tests-builds/${nn} --acl public-read
+                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --body ${nn}
+                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --acl public-read
                         '''
                     }
                 }
