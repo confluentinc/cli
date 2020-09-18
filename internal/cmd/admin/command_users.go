@@ -8,28 +8,29 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 	"regexp"
-	"strconv"
 )
 
 var (
-	listFields          = []string{"Id", "Email", "FirstName", "LastName", "Deactivated", "ResourceId"}
-	humanLabels         = []string{"ID", "Email", "First Name", "Last Name", "Deactivated", "Resource ID"}
+	listFields          = []string{"ResourceId", "Email", "FirstName", "LastName", "Status"}
+	humanLabels         = []string{"Resource ID", "Email", "First Name", "Last Name", "Status"}
 	humanLabelMap		= map[string]string{
-		"Id": "ID",
+		"ResourceId": "Resource ID",
 		"Email":"Email",
 		"FirstName":"First Name",
 		"LastName":"Last Name",
-		"Deactivated":"Deactivated",
-		"ResourceId": "Resource ID",
+		"Status":"Status",
 	}
-	structuredLabels    = []string{"id", "email", "first_name", "last_name", "deactivated", "resource_id"}
-	structuredLabelMap		= map[string]string{
-		"Id": "id",
+	structuredLabels    = []string{"resource_id", "email", "first_name", "last_name", "status"}
+	structuredLabelMap	= map[string]string{
+		"ResourceId": "resource_id",
 		"Email":"email",
 		"FirstName":"first_name",
 		"LastName":"last_name",
-		"Deactivated":"deactivated",
-		"ResourceId": "resource_id",
+		"Status":"status",
+	}
+	statusMap 			= map[bool]string{
+		true: "Active",
+		false: "Pending",
 	}
 )
 
@@ -37,12 +38,20 @@ type userCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
+type userStruct struct {
+	ResourceId  string
+	Email  		string
+	FirstName   string
+	LastName 	string
+	Status		string
+}
+
 func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &userCommand{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:   "user",
-				Short: "Manage an organization's users.",
+				Short: "Manage users.",
 				Args:  cobra.NoArgs,
 			},
 			prerunner,
@@ -57,7 +66,7 @@ func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c userCommand) newUserDescribeCommand() (describeCmd *cobra.Command) {
 	describeCmd = &cobra.Command{
-		Use:   "describe <id>",
+		Use:   "describe <resource id>",
 		Short: "Describe a user.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
@@ -68,18 +77,21 @@ func (c userCommand) newUserDescribeCommand() (describeCmd *cobra.Command) {
 }
 
 func (c userCommand) describe(cmd *cobra.Command, args []string) error {
-	userId, err := strconv.ParseInt(args[0], 10, 32)
-	if err != nil {
-		return err
-	}
+	resourceId := args[0]
 	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{
-		Id:                   int32(userId),
+		ResourceId:           resourceId,
 		OrganizationId:       c.State.Auth.User.OrganizationId,
 	})
 	if err != nil {
 		return err
 	}
-	return output.DescribeObject(cmd, user, listFields, humanLabelMap, structuredLabelMap)
+	return output.DescribeObject(cmd, &userStruct{
+		ResourceId: user.ResourceId,
+		Email:      user.Email,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Status:     statusMap[(user.Verified.Seconds != 0)],
+	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
 func (c userCommand) newUserListCommand() (listCmd *cobra.Command) {
@@ -95,14 +107,6 @@ func (c userCommand) newUserListCommand() (listCmd *cobra.Command) {
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
-	type userStruct struct {
-		Id    		int32
-		Email  		string
-		FirstName   string
-		LastName 	string
-		Deactivated bool
-		ResourceId 	string
-	}
 	users, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return err
@@ -113,13 +117,13 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, user := range users {
+		pcmd.Println(cmd, user.Verified)
 		outputWriter.AddElement(&userStruct{
-			Id: user.Id,
+			ResourceId: user.ResourceId,
 			Email: user.Email,
 			FirstName: user.FirstName,
 			LastName: user.LastName,
-			Deactivated: user.Deactivated,
-			ResourceId: user.ResourceId,
+			Status: statusMap[(user.Verified.Seconds != 0)],
 		})
 	}
 	return outputWriter.Out()
@@ -158,7 +162,7 @@ func validateEmail(email string) bool {
 
 func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
 	deleteCmd = &cobra.Command {
-		Use:   "delete <id>",
+		Use:   "delete <resource id>",
 		Short: "Delete a user from your organization.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
@@ -167,12 +171,9 @@ func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
 }
 
 func (c userCommand) delete(cmd *cobra.Command, args []string) error {
-	userId, err := strconv.ParseInt(args[0], 10, 32)
-	if err != nil {
-		return err
-	}
-	err = c.Client.User.Delete(context.Background(), &orgv1.User{
-		Id: 			int32(userId),
+	resourceId := args[0]
+	err := c.Client.User.Delete(context.Background(), &orgv1.User{
+		ResourceId: 			resourceId,
 		OrganizationId: c.State.Auth.User.OrganizationId,
 	})
 	if err != nil {
