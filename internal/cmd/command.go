@@ -27,6 +27,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	ps1 "github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/quit"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
@@ -145,7 +146,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
 		cli.AddCommand(serviceaccount.New(prerunner))
-		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter))
+		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
 		}
@@ -182,6 +183,15 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 }
 
 func (c *Command) Execute(cliName string, args []string) error {
+	defer func() {
+		if r := recover(); r == quit.PanicKey {
+			// For quit cmd.
+			analytics.SendAnalyticsAndLog(c.Command, args, nil, c.Analytics, c.logger)
+			// For shell cmd.
+			c.sendAndFlushAnalytics(args, nil)
+			pfeedback.HandleFeedbackNudge(cliName, args)
+		}
+	}()
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()

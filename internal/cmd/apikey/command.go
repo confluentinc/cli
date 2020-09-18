@@ -443,9 +443,12 @@ func (c *command) Cmd() *cobra.Command {
 }
 
 func (c *command) ServerComplete() []prompt.Suggest {
-	if err := c.PersistentPreRunE(c.Command, []string{}); err != nil {
+	if c.State == nil {
 		return []prompt.Suggest{}
 	}
+	//if err := c.PersistentPreRunE(c.Command, []string{}); err != nil {
+	//	return []prompt.Suggest{}
+	//}
 	var suggests []prompt.Suggest
 	apiKeys, err := c.fetchAPIKeys()
 	if err != nil {
