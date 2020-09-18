@@ -20,7 +20,7 @@ const (
 	configFlagName                     = "config"
 	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
-	validateFlagName                   = "validate"
+	noValidateFlagName                   = "no-validate"
 )
 
 var (
@@ -88,7 +88,7 @@ func (c *linkCommand) init() {
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
 	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for source cluster.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(validateFlagName, false, "If set, will validate the link to the source cluster before creation.")
+	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -181,7 +181,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validateLink, err := cmd.Flags().GetBool(validateFlagName)
+	skipValidatingLink, err := cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		ClusterId: "",
 		Configs:   configMap,
 	}
-	createOptions := &linkv1.CreateLinkOptions{ValidateLink: validateLink, ValidateOnly: validateOnly}
+	createOptions := &linkv1.CreateLinkOptions{ValidateLink: !skipValidatingLink, ValidateOnly: validateOnly}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
 
 	if err == nil {
