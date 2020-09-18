@@ -179,6 +179,9 @@ func (l *Logger) bufferLogMessage(level Level, message string) {
 
 func (l *Logger) Flush() {
 	for _, buffered := range l.buffer {
+		if buffered.level < l.GetLevel() {
+			continue
+		}
 		switch buffered.level {
 		case ERROR:
 			l.Error(buffered.message)
@@ -192,6 +195,7 @@ func (l *Logger) Flush() {
 			l.Trace(buffered.message)
 		}
 	}
+	l.buffer = []bufferedLog{}
 }
 
 // Log logs a "msg" and key-value pairs.

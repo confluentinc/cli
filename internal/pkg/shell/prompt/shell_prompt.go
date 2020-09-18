@@ -1,12 +1,17 @@
 package prompt
 
 import (
+	"os"
 	"strings"
 
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/feedback"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
@@ -17,22 +22,41 @@ const (
 
 type ShellPrompt struct {
 	*goprompt.Prompt
-	RootCmd *cobra.Command
+	RootCmd *instrumentedCommand
 	completer.Completer
 	Config *v3.Config
 }
 
-func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.Config, opts ...goprompt.Option) *ShellPrompt {
+type instrumentedCommand struct {
+	*cobra.Command
+	analytics analytics.Client
+	logger    *log.Logger
+}
+
+func (c *instrumentedCommand) Execute(cliName string, args []string) error {
+	c.analytics.SetStartTime()
+	c.Command.SetArgs(args)
+	err := c.Command.Execute()
+	errors.DisplaySuggestionsMessage(err, os.Stderr)
+	analytics.SendAnalyticsAndLog(c.Command, args, err, c.analytics, c.logger)
+	feedback.HandleFeedbackNudge(cliName, args)
+	return err
+}
+
+func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.Config, logger *log.Logger, analytics analytics.Client, opts ...goprompt.Option) *ShellPrompt {
 	shell := &ShellPrompt{
 		Completer: compl,
-		RootCmd:   rootCmd,
-		Config:    cfg,
+		RootCmd: &instrumentedCommand{
+			Command:   rootCmd,
+			analytics: analytics,
+			logger:    logger,
+		},
+		Config: cfg,
 	}
 	prompt := goprompt.New(
 		func(in string) {
 			promptArgs := strings.Fields(in)
-			rootCmd.SetArgs(promptArgs)
-			_ = rootCmd.Execute()
+			_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
 		},
 		shell.Complete,
 		opts...,

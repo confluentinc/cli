@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -36,8 +37,9 @@ There are five ways to pass the secret:
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
-	flagResolver pcmd.FlagResolver
+	keystore            keystore.KeyStore
+	flagResolver        pcmd.FlagResolver
+	completableChildren []*cobra.Command
 }
 
 var (
@@ -51,7 +53,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -63,7 +65,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		flagResolver:            resolver,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init() {
@@ -106,12 +108,13 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
+	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -140,6 +143,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
+	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -430,4 +434,50 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 		return "", err
 	}
 	return strings.TrimSpace(val), nil
+}
+
+// Completable implementation
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	if c.State == nil {
+		return []prompt.Suggest{}
+	}
+	//if err := c.PersistentPreRunE(c.Command, []string{}); err != nil {
+	//	return []prompt.Suggest{}
+	//}
+	var suggests []prompt.Suggest
+	apiKeys, err := c.fetchAPIKeys()
+	if err != nil {
+		return suggests
+	}
+	for _, key := range apiKeys {
+		suggests = append(suggests, prompt.Suggest{
+			Text:        key.Key,
+			Description: key.Description,
+		})
+	}
+	return suggests
+}
+
+func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
+	if err != nil {
+		return nil, errors.HandleCommon(err, c.Command)
+	}
+
+	var userApiKeys []*schedv1.ApiKey
+	for _, key := range apiKeys {
+		if key.Id != 0 {
+			userApiKeys = append(userApiKeys, key)
+		}
+	}
+	return userApiKeys, nil
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

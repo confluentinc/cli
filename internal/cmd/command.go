@@ -47,6 +47,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
@@ -110,6 +111,8 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
+	shellCompleter := completer.NewShellCompleter(cli)
+	serverCompleter := shellCompleter.ServerSideCompleter
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.New(cliName, prerunner, ver))
@@ -130,7 +133,10 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		if isAPIKeyCredential(cfg) {
 			return command, nil
 		}
-		cli.AddCommand(apikey.New(prerunner, nil, resolver)) // Exposed for testing
+		apiKeyCmd := apikey.New(prerunner, nil, resolver)
+		serverCompleter.AddCommand(apiKeyCmd)
+		cli.AddCommand(apiKeyCmd.Command)
+
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		cli.AddCommand(environment.New(cliName, prerunner))
@@ -139,7 +145,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
 		cli.AddCommand(serviceaccount.New(prerunner))
-		cli.AddCommand(shell.NewShellCmd(cli, cfg))
+		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
 		}

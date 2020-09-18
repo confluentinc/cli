@@ -7,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
 )
@@ -18,16 +21,24 @@ const (
 )
 
 type command struct {
-	Command *cobra.Command
-	RootCmd *cobra.Command
-	config  *v3.Config
+	Command   *cobra.Command
+	RootCmd   *cobra.Command
+	config    *v3.Config
+	prerunner pcmd.PreRunner
+	completer *completer.ShellCompleter
+	analytics analytics.Client
+	logger    *log.Logger
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, config *v3.Config) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, prerunner pcmd.PreRunner, completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client) *cobra.Command {
 	cliCmd := &command{
-		RootCmd: rootCmd,
-		config:  config,
+		RootCmd:   rootCmd,
+		config:    config,
+		prerunner: prerunner,
+		completer: completer,
+		logger:    logger,
+		analytics: analytics,
 	}
 
 	cliCmd.init()
@@ -50,10 +61,10 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	c.RootCmd.RemoveCommand(c.Command)
 
 	// add shell only quit command
-	c.RootCmd.AddCommand(quit.NewQuitCmd(c.config))
+	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config, c.logger, c.analytics))
 
 	msg := "You are already authenticated."
-	if !c.config.HasLogin() {
+	if err := c.prerunner.Authenticated(pcmd.NewAuthenticatedCLICommand(c.Command, c.prerunner))(c.Command, args); err != nil {
 		msg = "You are currently not authenticated."
 	}
 
@@ -62,9 +73,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
 
 	opts := prompt.DefaultPromptOptions()
-
-	masterCompleter := completer.NewShellCompleter(c.RootCmd, c.config.CLIName)
-	cliPrompt := prompt.NewShellPrompt(c.RootCmd, masterCompleter, c.config, opts...)
+	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, c.logger, c.analytics, opts...)
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt))
 	if err := livePrefixOpt(cliPrompt.Prompt); err != nil {
 		// This returns nil in the go-prompt implementation.
