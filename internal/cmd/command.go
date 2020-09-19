@@ -139,7 +139,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 
 		cli.AddCommand(connector.New(cliName, prerunner))
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
-		cli.AddCommand(environment.New(cliName, prerunner))
+		envCmd := environment.New(cliName, prerunner)
+		serverCompleter.AddCommand(envCmd)
+		cli.AddCommand(envCmd.Command)
 		cli.AddCommand(ksql.New(cliName, prerunner))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
