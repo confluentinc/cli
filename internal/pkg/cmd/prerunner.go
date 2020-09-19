@@ -31,6 +31,8 @@ type PreRunner interface {
 	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
 }
 
+const DoNotTrack = "do-not-track-analytics"
+
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config             *v3.Config
@@ -131,10 +133,22 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
+func ShouldCompleteAuthenticatedCmd(cmd *cobra.Command) bool {
+	if cmd.Annotations == nil {
+		cmd.Annotations = make(map[string]string)
+	}
+	cmd.Annotations[DoNotTrack] = ""
+	err := cmd.PersistentPreRunE(cmd, []string{})
+	delete(cmd.Annotations, DoNotTrack)
+	return err == nil
+}
+
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		r.Analytics.TrackCommand(cmd, args)
+		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
+			r.Analytics.TrackCommand(cmd, args)
+		}
 		command.Config.Config = r.Config
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
