@@ -137,7 +137,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		serverCompleter.AddCommand(apiKeyCmd)
 		cli.AddCommand(apiKeyCmd.Command)
 
-		cli.AddCommand(connector.New(cliName, prerunner))
+		connectorCmd := connector.New(cliName, prerunner)
+		serverCompleter.AddCommand(connectorCmd)
+		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
 		cli.AddCommand(environment.New(cliName, prerunner))
 		cli.AddCommand(ksql.New(cliName, prerunner))

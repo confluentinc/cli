@@ -446,9 +446,6 @@ func (c *command) ServerComplete() []prompt.Suggest {
 	if c.State == nil {
 		return []prompt.Suggest{}
 	}
-	//if err := c.PersistentPreRunE(c.Command, []string{}); err != nil {
-	//	return []prompt.Suggest{}
-	//}
 	var suggests []prompt.Suggest
 	apiKeys, err := c.fetchAPIKeys()
 	if err != nil {
