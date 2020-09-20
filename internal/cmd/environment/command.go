@@ -206,7 +206,7 @@ func (c *command) ServerCompletableChildren() []*cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if c.State == nil {
+	if !pcmd.CanCompleteCommand(c.Command) {
 		return suggestions
 	}
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})

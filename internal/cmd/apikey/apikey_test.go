@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -31,13 +32,15 @@ const (
 	environment       = "testAccount"
 	apiSecretFile     = "./api_secret_test.txt"
 	apiSecretFromFile = "api_secret_test"
+	apiKeyDescription = "Mock Apis"
 )
 
 var (
 	apiValue = &schedv1.ApiKey{
+		UserId:      123,
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
-		Description: "Mock Apis",
+		Description: apiKeyDescription,
 	}
 )
 
@@ -311,6 +314,30 @@ func (suite *APITestSuite) TestServerCompletableChildren() {
 	for i, expectedChild := range expectedChildren {
 		req.Contains(completableChildren[i].CommandPath(), expectedChild)
 	}
+}
+
+func (suite *APITestSuite) TestServerComplete() {
+	req := require.New(suite.T())
+	cmd := suite.newCMD()
+	suggestions := cmd.ServerComplete()
+	expectedSug := []prompt.Suggest{
+		{
+			Text:        apiKeyVal,
+			Description: apiKeyDescription,
+		},
+	}
+	req.ElementsMatch(expectedSug, suggestions)
+	oldUserId := apiValue.UserId
+	apiValue.UserId = 0 // Make internal temporarily.
+	suggestions = cmd.ServerComplete()
+	expectedSug = []prompt.Suggest{}
+	apiValue.UserId = oldUserId
+	req.Empty(suggestions)
+	ctxs := cmd.Config.Contexts
+	cmd.Config.Contexts = nil
+	suggestions = cmd.ServerComplete()
+	cmd.Config.Contexts = ctxs
+	req.Empty(suggestions)
 }
 
 func TestApiTestSuite(t *testing.T) {
