@@ -330,7 +330,6 @@ func (suite *APITestSuite) TestServerComplete() {
 	oldUserId := apiValue.UserId
 	apiValue.UserId = 0 // Make internal temporarily.
 	suggestions = cmd.ServerComplete()
-	expectedSug = []prompt.Suggest{}
 	apiValue.UserId = oldUserId
 	req.Empty(suggestions)
 	ctxs := cmd.Config.Contexts
