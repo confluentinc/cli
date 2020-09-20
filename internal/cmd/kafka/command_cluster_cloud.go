@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/c-bata/go-prompt"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -58,6 +59,7 @@ const (
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
+	completableChildren []*cobra.Command
 }
 
 type describeStruct struct {
@@ -79,7 +81,7 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "cluster",
@@ -90,7 +92,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *clusterCommand) init() {
@@ -161,12 +163,14 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
-	c.AddCommand(&cobra.Command{
+	useCmd := &cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
-	})
+	}
+	c.AddCommand(useCmd)
+	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
@@ -507,4 +511,31 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func (c *clusterCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *clusterCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	if err != nil {
+		return suggestions
+	}
+	for _, cluster := range clusters {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        cluster.Id,
+			Description: cluster.Name,
+		})
+	}
+	return suggestions
+}
+
+func (c *clusterCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }
