@@ -444,7 +444,7 @@ func (c *command) Cmd() *cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggests []prompt.Suggest
-	if !pcmd.ShouldCompleteAuthenticatedCmd(c.Command) {
+	if !pcmd.CanCompleteCommand(c.Command) {
 		return suggests
 	}
 	apiKeys, err := c.fetchAPIKeys()
