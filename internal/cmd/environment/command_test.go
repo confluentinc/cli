@@ -25,11 +25,12 @@ type EnvironmentTestSuite struct {
 func TestEnvironmentTestSuite(t *testing.T) {
 	suite.Run(t, new(EnvironmentTestSuite))
 }
+
 func (suite *EnvironmentTestSuite) SetupTest() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 }
 
-func (suite *EnvironmentTestSuite) newCMD() *command {
+func (suite *EnvironmentTestSuite) newCmd() *command {
 	client := &ccloud.Client{
 		Account: &ccsdkmock.Account{
 			ListFunc: func(context.Context, *v1.Account) ([]*v1.Account, error) {
@@ -53,6 +54,7 @@ func (suite *EnvironmentTestSuite) newCMD() *command {
 	}
 	return New("ccloud", prerunner)
 }
+
 func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
 	cmd := suite.newCMD()
