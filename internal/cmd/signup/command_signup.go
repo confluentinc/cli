@@ -72,10 +72,7 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 	if user != nil {
 		pcmd.Println(cmd, "There is already an account associated with this email. If your email has not been verified, a new verification email will be sent.")
 		pcmd.Println(cmd, "Once your email is verified, please login using \"ccloud login\". For any assistance, contact support@confluent.io.")
-		res := &v1.Credentials{
-			Username: user.Email,
-		}
-		if err := client.Signup.SendVerificationEmail(context.Background(), res); err != nil {
+		if err := client.Signup.SendVerificationEmail(context.Background(), &v1.User{Email: user.Email}); err != nil {
 			return err
 		}
 		return nil
@@ -120,10 +117,7 @@ func signup(cmd *cobra.Command, prompt pcmd.Prompt, client *ccloud.Client) error
 		}
 
 		if !v.Responses["verified"].(bool) {
-			res := &v1.Credentials{
-				Username: fEmail.Responses["email"].(string),
-			}
-			if err := client.Signup.SendVerificationEmail(context.Background(), res); err != nil {
+			if err := client.Signup.SendVerificationEmail(context.Background(), &v1.User{Email: fEmail.Responses["email"].(string)}); err != nil {
 				return err
 			}
 
