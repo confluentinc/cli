@@ -76,6 +76,12 @@ func APICredentialConfigMock() *Config {
 	return conf
 }
 
+func UnauthenticatedCloudConfigMock() *Config {
+	c := AuthenticatedCloudConfigMock()
+	c.Contexts = nil
+	return c
+}
+
 func AuthenticatedConfigMock(cliName string) *Config {
 	authConfig := createAuthConfig(mockUserId, mockEmail, mockEnvironmentId, mockOrganizationId)
 	credential := createUsernameCredential(usernameCredentialName, authConfig)
