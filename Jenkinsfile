@@ -150,6 +150,12 @@ def post = {
                     vagrant destroy -f
                     cd ..
                     git push --delete origin cli_system_test_$HASH
+                '''
+            }
+            withVaultEnv(["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
+                         ["aws/prod_cli_team", "access_key", "AWS_SECRET_ACCESS_KEY"]]){
+                sh '''#!/usr/bin/env bash
+                    export HASH=$(git rev-parse --short=7 HEAD)
                     aws s3 rm s3://confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
                 '''
             }
