@@ -21,7 +21,7 @@ require (
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0
-	github.com/confluentinc/cc-structs/kafka/core v0.419.0
+	github.com/confluentinc/cc-structs/kafka/core v0.601.0
 	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
 	github.com/confluentinc/cc-structs/kafka/org v0.419.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
@@ -29,7 +29,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.51
+	github.com/confluentinc/ccloud-sdk-go v0.0.54
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
