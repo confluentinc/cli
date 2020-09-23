@@ -24,7 +24,7 @@ func NewPaymentCommand(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:   "payment",
-				Short: "Manage an organization's payment method.",
+				Short: "Manage payment method.",
 				Args:  cobra.NoArgs,
 			},
 			prerunner,
@@ -41,7 +41,7 @@ func NewPaymentCommand(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 func (c *command) newDescribeCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "describe",
-		Short: "Print the payment method for an organization.",
+		Short: "Describe the active payment method.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.describeRunE),
 	}
@@ -64,7 +64,7 @@ func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 func (c *command) newUpdateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "update",
-		Short: "Update the payment method for an organization.",
+		Short: "Update the active payment method.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.updateRunE),
 	}
