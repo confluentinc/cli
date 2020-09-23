@@ -152,7 +152,7 @@ def post = {
                     git push --delete origin cli_system_test_$HASH
                 '''
             }
-            withVaultEnv(["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
+            withVaultEnv([["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
                          ["aws/prod_cli_team", "access_key", "AWS_SECRET_ACCESS_KEY"]]){
                 sh '''#!/usr/bin/env bash
                     export HASH=$(git rev-parse --short=7 HEAD)
