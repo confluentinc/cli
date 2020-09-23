@@ -21,8 +21,8 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 # goreleaser does not yet support setting ACLs for S3 so we have set `public-read` manually by copy the file in place
 # dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change not included)
