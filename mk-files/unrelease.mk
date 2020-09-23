@@ -60,20 +60,7 @@ endef
 
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
-	$(eval TEMP_DIR=$(shell mktemp -d))
-	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		aws s3 cp $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
-		cd $(TEMP_DIR)/$${binary}-cli ; \
-		for fname in $${binary}_v$(CLEAN_VERSION)_*; do \
-			newname=`echo "$$fname" | sed 's/_v$(CLEAN_VERSION)/_latest/g'`; \
-			mv $$fname $$newname; \
-		done ; \
-		rm *checksums.txt; \
-		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
-		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
-	done
-	rm -rf $(TEMP_DIR)
+	make copy-archives-to-latest
 	@echo "Verifying latest archives with: make test-installers"
 	make test-installers
 
