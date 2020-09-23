@@ -1,6 +1,8 @@
 .PHONY: release
 release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	make set-acls
+	make copy-archives-to-latest
 	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
