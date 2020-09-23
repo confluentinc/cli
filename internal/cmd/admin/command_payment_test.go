@@ -27,6 +27,10 @@ func TestPaymentDescribe(t *testing.T) {
 }
 
 func TestPaymentUpdate(t *testing.T) {
+	type PaymentUpdateSuite struct {
+		prompt *mock.Prompt
+		expected []string
+	}
 	c := command{
 		AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{
 			CLICommand: &pcmd.CLICommand{
@@ -50,15 +54,38 @@ func TestPaymentUpdate(t *testing.T) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
-	prompt := mock.NewPromptMock(
-		"4242424242424242",
-		"12/70",
-		"999",
-		"Brian Strauch",
-	)
-	err := c.update(cmd, prompt)
-	require.NoError(t, err)
-	require.Contains(t, buf.String(), "Updated.")
+	prompts := []*PaymentUpdateSuite{
+		&PaymentUpdateSuite{
+			prompt:   mock.NewPromptMock(
+				"4242424242424242",
+				"12/70",
+				"999",
+				"Brian Strauch",
+			),
+			expected: []string{"Updated"},
+		},
+		&PaymentUpdateSuite{
+			prompt:   mock.NewPromptMock(
+				"42424242",
+				"4242424242424242",
+				"12/70",
+				"999",
+				"Brian Strauch",
+				),
+			expected: []string{
+				"\"42424242\" is not of valid format for field \"card number\"",
+				"Updated.",
+			},
+		},
+	}
+
+	for _, test := range prompts {
+		err := c.update(cmd, test.prompt)
+		for _, expectedOutput := range test.expected {
+			require.Contains(t, buf.String(), expectedOutput)
+		}
+		require.NoError(t, err)
+	}
 }
 
 func mockAdminCommand() *cobra.Command {
