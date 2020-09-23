@@ -53,12 +53,7 @@ def job = {
                             nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
                             mv $targz $nn
                             nnn=${nn%.tar.gz}
-                            echo "NN is ${nn}"
                             mkdir $nnn ; tar -C $(pwd)/$nnn -xzvf $nn ; rm $nn ; tar -cvzf ${nn} ${nnn}
-                            echo "NNN HAS:"
-                            ls -lash $nnn
-                            echo "UNSTRIP HAS:"
-                            ls -lash unstrip
                             aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --body ${nn}
                             aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --acl public-read
                         '''
