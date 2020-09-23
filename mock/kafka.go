@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+
+	"github.com/golang/protobuf/proto"
+
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/golang/protobuf/proto"
 )
 
 // Compile-time check interface adherence
@@ -84,7 +86,14 @@ func (m *Kafka) UpdateTopic(_ context.Context, _ *schedv1.KafkaCluster, topic *s
 	return assertEquals(topic, <-m.Expect)
 }
 
-func (m *Kafka) ListACLs(_ context.Context, _ *schedv1.KafkaCluster, filter *schedv1.ACLFilter) ([]*schedv1.ACLBinding, error) {
+func (m *Kafka) ListACLs(ctx context.Context, _ *schedv1.KafkaCluster, filter *schedv1.ACLFilter) ([]*schedv1.ACLBinding, error) {
+	// Testing DeleteACLs calls List, then Delete, but only sends the expected message once;
+	// so for now we want to ignore assertions about List while testing Delete
+	if requestor, ok := ctx.Value("requestor").(string); ok {
+		if requestor == "delete" {
+			return nil, nil
+		}
+	}
 	expect := <-m.Expect
 	if filter.PatternFilter.PatternType == schedv1.PatternTypes_ANY {
 		expect.(*schedv1.ACLFilter).PatternFilter.PatternType = schedv1.PatternTypes_ANY

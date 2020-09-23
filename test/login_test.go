@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
@@ -349,4 +350,21 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	s.NoError(err)
 	fmt.Println("Successfully logged in and retrieved auth token")
 	return token
+}
+
+func (s *CLITestSuite) TestMDSLoginURL() {
+	tests := []CLITest{
+		{
+			name:        "invalid URL provided",
+			args:        "login --url http:///test",
+			fixture:     "invalid-login-url.golden",
+			wantErrCode: 1,
+		},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
+	}
 }

@@ -15,20 +15,17 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 
 	tests := []CLITest{
 		{
-			args:
-			fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
+			args: fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2 --bootstrap-servers new_bootstrap_1 --authority NEW.CRN.AUTHORITY.COM", migration1, migration2),
 			fixture: "auditlog/migration-result-with-warnings.golden",
 		},
 		{
-			args:
-			fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
+			args: fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2", malformed, migration2),
 			contains: "Ignoring property file",
 		},
 		{
-			args:
-			fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s", nullFields, nullFields),
+			args:    fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s", nullFields, nullFields),
 			fixture: "auditlog/empty-migration-result.golden",
 		},
 	}

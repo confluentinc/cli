@@ -37,12 +37,15 @@ builds:
 release:
   disable: true
 
-archive:
-  format: binary
+archives:
+  - id: binary
+    format: binary
 
-s3:
+blobs:
   -
+    ids:
+    - binary
+    provider: s3
     bucket: confluent.cloud
     region: us-west-2
-    folder: "ccloud-cli/binaries/{{.Version}}"
-    acl: public-read
+    folder: "{{.Env.S3FOLDER}}/{{.Version}}"

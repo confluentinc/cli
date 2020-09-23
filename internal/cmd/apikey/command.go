@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/spf13/cobra"
-
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -41,9 +43,9 @@ type command struct {
 }
 
 var (
-	listFields              = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listHumanLabels         = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	listStructuredLabels    = []string{"key", "owner", "description", "resource_type", "resource_id"}
+	listFields              = []string{"Key", "Description", "UserId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
@@ -148,8 +150,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		Key          string
 		Description  string
 		UserId       int32
+		UserEmail    string
 		ResourceType string
 		ResourceId   string
+		Created      string
 	}
 	var apiKeys []*schedv1.ApiKey
 
@@ -188,6 +192,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	users := map[int32]*orgv1.User{}
+	serviceAccounts, err := getServiceAccountsMap(c.Client)
+	if err != nil {
+		return err
+	}
+
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
@@ -202,6 +212,23 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
+		var email string
+		if _, ok := serviceAccounts[apiKey.UserId]; ok {
+			email = "<service account>"
+		} else {
+			if user, ok := users[apiKey.UserId]; ok {
+				email = user.Email
+			} else {
+				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
+				if err != nil {
+					return err
+				}
+				email = user.Email
+				users[user.Id] = user
+			}
+		}
+
+		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
@@ -211,7 +238,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
+				UserEmail:    email,
 				ResourceType: pcmd.CloudResourceType,
+				Created:      created,
 			})
 		}
 
@@ -224,12 +253,27 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:          apiKey.Key,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
+				UserEmail:    email,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
+				Created:      created,
 			})
 		}
 	}
+
 	return outputWriter.Out()
+}
+
+func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[int32]bool)
+	for _, sa := range serviceAccounts {
+		saMap[sa.Id] = true
+	}
+	return saMap, nil
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
