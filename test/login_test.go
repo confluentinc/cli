@@ -351,3 +351,20 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	fmt.Println("Successfully logged in and retrieved auth token")
 	return token
 }
+
+func (s *CLITestSuite) TestMDSLoginURL() {
+	tests := []CLITest{
+		{
+			name:        "invalid URL provided",
+			args:        "login --url http:///test",
+			fixture:     "invalid-login-url.golden",
+			wantErrCode: 1,
+		},
+	}
+
+	loginURL := serveMds(s.T()).URL
+
+	for _, tt := range tests {
+		s.runConfluentTest(tt, loginURL)
+	}
+}

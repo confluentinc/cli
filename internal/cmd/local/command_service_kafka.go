@@ -235,12 +235,22 @@ func (c *Command) initFlags(mode string) {
 }
 
 func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
-	isUp, err := c.isRunning("kafka")
+	cloud, err := command.Flags().GetBool("cloud")
 	if err != nil {
 		return err
 	}
-	if !isUp {
-		return c.printStatus(command, "kafka")
+
+	bootSet := command.Flags().Changed("bootstrap-server")
+
+	// Only check if local Kafka is up if we are really connecting to a local Kafka
+	if !(cloud || bootSet) {
+		isUp, err := c.isRunning("kafka")
+		if err != nil {
+			return err
+		}
+		if !isUp {
+			return c.printStatus(command, "kafka")
+		}
 	}
 
 	format, err := command.Flags().GetString("value-format")
@@ -259,10 +269,6 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	var cloudConfigFile string
 	var cloudServer string
 
-	cloud, err := command.Flags().GetBool("cloud")
-	if err != nil {
-		return err
-	}
 	if cloud {
 		cloudConfigFile, err = command.Flags().GetString("config")
 		if err != nil {

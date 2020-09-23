@@ -350,6 +350,76 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 }
 
+func TestValidateUrl(t *testing.T) {
+	req := require.New(t)
+
+	suite := []struct {
+		url_in string
+		valid bool
+		url_out string
+		warning_msg string
+		cli string
+	}{
+		{
+			url_in: "https:///test.com",
+			valid:    false,
+			url_out: "",
+			warning_msg: "default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "test.com",
+			valid:    true,
+			url_out: "http://test.com:8090",
+			warning_msg: "http protocol and default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "test.com:80",
+			valid:    true,
+			url_out: "http://test.com:80",
+			warning_msg: "http protocol",
+			cli: "confluent",
+		},
+		{
+			url_in: "http://test.com",
+			valid:    true,
+			url_out: "http://test.com:8090",
+			warning_msg: "default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "https://127.0.0.1:8090",
+			valid:    true,
+			url_out: "https://127.0.0.1:8090",
+			warning_msg: "",
+			cli: "confluent",
+		},
+		{
+			url_in: "127.0.0.1",
+			valid:    true,
+			url_out: "http://127.0.0.1:8090",
+			warning_msg: "http protocol and default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "devel.cpdev.cloud",
+			valid:	true,
+			url_out: "https://devel.cpdev.cloud",
+			warning_msg: "https protocol",
+			cli: "ccloud",
+		},
+	}
+	for _, s := range suite {
+		url, matched, msg := validateURL(s.url_in, s.cli)
+		req.Equal(s.valid, matched)
+		if s.valid {
+			req.Equal(s.url_out, url)
+		}
+		req.Equal(s.warning_msg, msg)
+	}
+}
+
 func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
 	req := require.New(t)
 	ctx := cfg.Context()

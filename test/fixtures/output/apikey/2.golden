@@ -1,4 +1,5 @@
-    Key    | Owner | Description | Resource Type | Resource ID  
-+----------+-------+-------------+---------------+-------------+
-    MYKEY1 |    12 |             | kafka         | lkc-bob      
-    MYKEY3 |    23 |             | kafka         | lkc-bob      
+          Key          | Description | Owner |      Owner Email      | Resource Type | Resource ID |       Created         
++----------------------+-------------+-------+-----------------------+---------------+-------------+----------------------+
+    MYKEY1             |             |    12 | bstrauch@confluent.io | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
+    MYKEY3             |             |    23 | bstrauch@confluent.io | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
+    SERVICEACCOUNTKEY1 |             | 12345 | <service account>     | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
