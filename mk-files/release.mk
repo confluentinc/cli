@@ -2,7 +2,6 @@
 release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
-	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 
