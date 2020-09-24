@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -117,7 +118,6 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, user := range users {
-		pcmd.Println(cmd, user.Verified)
 		outputWriter.AddElement(&userStruct{
 			ResourceId: user.ResourceId,
 			Email: user.Email,
@@ -166,12 +166,17 @@ func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
 		Short: "Delete a user from your organization.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
+		Hidden: true,
 	}
 	return
 }
 
 func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
+	validFormat := strings.HasPrefix(resourceId, "u-")
+	if !validFormat {
+		return errors.New("please use Resource ID as the command argument, beginning with \"u-\"")
+	}
 	err := c.Client.User.Delete(context.Background(), &orgv1.User{
 		ResourceId: 			resourceId,
 		OrganizationId: c.State.Auth.User.OrganizationId,
