@@ -59,6 +59,7 @@ copy-archives-to-latest:
 # if we update the script to accept both checksums name format, this target would no longer be needed
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
+	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
 	done
