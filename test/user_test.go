@@ -3,6 +3,7 @@ package test
 import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
@@ -27,7 +28,7 @@ func (s *CLITestSuite) TestUserList() {
 func (s *CLITestSuite) TestUserDescribe() {
 	tests := []CLITest {
 		{
-			args:    "admin user describe 0",
+			args:    "admin user describe u-0",
 			fixture: "admin/user-describe.golden",
 		},
 	}
@@ -42,7 +43,7 @@ func (s *CLITestSuite) TestUserDescribe() {
 func (s *CLITestSuite) TestUserDelete() {
 	tests := []CLITest {
 		{
-			args:    "admin user delete 0",
+			args:    "admin user delete u-0",
 			fixture: "admin/user-delete.golden",
 		},
 	}
@@ -80,7 +81,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					LastName:             "Todzo",
 					OrganizationId:       0,
 					Deactivated:          false,
-					Verified:             nil,
+					Verified:             &types.Timestamp{Seconds: 0},
 					ResourceId:           "u11",
 				},
 			}
@@ -93,7 +94,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					LastName:             "Sawyer",
 					OrganizationId:       0,
 					Deactivated:          false,
-					Verified:             nil,
+					Verified:             &types.Timestamp{Seconds: 0},
 					ResourceId:           "u17",
 				})
 			}

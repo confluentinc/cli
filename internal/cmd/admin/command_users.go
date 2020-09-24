@@ -79,6 +79,10 @@ func (c userCommand) newUserDescribeCommand() (describeCmd *cobra.Command) {
 
 func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
+	validFormat := strings.HasPrefix(resourceId, "u-")
+	if !validFormat {
+		return errors.New("please use Resource ID as the command argument, beginning with \"u-\"")
+	}
 	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{
 		ResourceId:           resourceId,
 		OrganizationId:       c.State.Auth.User.OrganizationId,
