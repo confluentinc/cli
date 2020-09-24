@@ -48,10 +48,6 @@ func catchCoreV1Errors(err error) error {
 	if ok {
 		var result error
 		result = multierror.Append(result, e)
-		//result = multierror.Append(result, fmt.Errorf("%s", e.Message))
-		//for name, msg := range e.GetNestedErrors() {
-		//	result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
-		//}
 		return Wrap(result, CCloudBackendErrorPrefix)
 	}
 	return err

@@ -87,6 +87,13 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 	)
 }
 
+func TestSignupWithExistingEmail(t *testing.T) {
+	testSignup(t, mock.NewPromptMock("mtodzo@confluent.io"),
+		"There is already an account associated with this email. If your email has not been verified, a new verification email will be sent.",
+		"Once your email is verified, please login using \"ccloud login\". For any assistance, contact support@confluent.io.",
+	)
+}
+
 func testSignup(t *testing.T, prompt pcmd.Prompt, expected ...string) {
 	cmd := &cobra.Command{}
 	buf := new(bytes.Buffer)
@@ -106,13 +113,21 @@ func mockCcloudClient() *ccloud.Client {
 			CreateFunc: func(_ context.Context, _ *orgv1.SignupRequest) (*orgv1.SignupReply, error) {
 				return nil, nil
 			},
-			SendVerificationEmailFunc: func(_ context.Context, _ *orgv1.Credentials) error {
+			SendVerificationEmailFunc: func(_ context.Context, _ *orgv1.User) error {
 				return nil
 			},
 		},
 		Auth: &ccloudmock.Auth{
 			LoginFunc: func(_ context.Context, _ string, _ string, _ string) (string, error) {
 				return "", nil
+			},
+		},
+		User: &ccloudmock.User{
+			CheckEmailFunc: func(_ context.Context, user *orgv1.User) (*orgv1.User, error){
+				if user.Email == "mtodzo@confluent.io" {
+					return &orgv1.User{Email: "mtodzo@confluent.io"}, nil
+				}
+				return nil, nil
 			},
 		},
 	}

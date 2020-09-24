@@ -1,0 +1,3 @@
+    Key    | Description | Owner |    Owner Email    | Resource Type | Resource ID |       Created         
++----------+-------------+-------+-------------------+---------------+-------------+----------------------+
+    MYKEY9 |             | 12345 | <service account> | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
