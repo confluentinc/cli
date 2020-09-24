@@ -60,7 +60,7 @@ copy-archives-to-latest:
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
 	for binary in ccloud confluent; do \
-		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/ccloud_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/ccloud_$(VERSION)_checksums.txt --acl public-read; \
+		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
 	done
 
 
