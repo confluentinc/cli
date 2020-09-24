@@ -1,7 +1,12 @@
 package test
 
 import (
+	"encoding/json"
+	"net/http"
+	"strconv"
 	"testing"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/stretchr/testify/require"
 
@@ -87,12 +92,12 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 
 		// create api-key for a service account
-		{args: "api-key create --resource lkc-cool1 --service-account 99", fixture: "apikey/24.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account 12345", fixture: "apikey/24.golden"},
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 		{args: "api-key list", fixture: "apikey/25.golden"},
-		{args: "api-key list --service-account 99", fixture: "apikey/26.golden"},
+		{args: "api-key list --service-account 12345", fixture: "apikey/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey/27.golden"},
-		{args: "api-key list --resource lkc-cool1 --service-account 99", fixture: "apikey/26.golden"},
+		{args: "api-key list --resource lkc-cool1 --service-account 12345", fixture: "apikey/50.golden"},
 
 		// create json yaml output
 		{args: "api-key create --description human-output --resource lkc-other1", fixture: "apikey/31.golden"},
@@ -139,5 +144,26 @@ func (s *CLITestSuite) TestAPIKey() {
 	for _, tt := range tests {
 		tt.workflow = true
 		s.runCcloudTest(tt, loginURL)
+	}
+}
+
+func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(r.URL.Query().Get("id"))
+		require.NoError(t, err)
+
+		res := &orgv1.GetUsersReply{
+			Users: []*orgv1.User{
+				{
+					Id:    int32(id),
+					Email: "bstrauch@confluent.io",
+				},
+			},
+		}
+
+		data, err := json.Marshal(res)
+		require.NoError(t, err)
+		_, err = w.Write(data)
+		require.NoError(t, err)
 	}
 }

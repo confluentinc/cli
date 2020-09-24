@@ -40,8 +40,6 @@ release:
 archives:
   - id: binary
     format: binary
-  - id: archive
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 blobs:
   -

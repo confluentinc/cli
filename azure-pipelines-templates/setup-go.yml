@@ -1,0 +1,69 @@
+steps:
+- script: |
+    wget "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: Install Go 1.14.7 (Linux)
+
+- script: |
+    brew install gnu-tar
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: Install gnu-tar (Darwin)
+
+- script: |
+    echo $HOMEBREW_CASK_OPTS
+    brew update
+    brew cask install google-chrome
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: Install chrome (Darwin)
+
+- script: |
+    wget "https://golang.org/dl/go1.14.7.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.14.7.tar.gz"
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: Install Go 1.14.7 (Darwin)
+
+- powershell: |
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri "https://golang.org/dl/go1.14.7.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.14.7.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.14.7.zip "-o$(Agent.BuildDirectory)" -y
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Install Go 1.14.7 (Windows)
+
+# Linux
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Properly configure our custom Go environment (Mac/Linux)
+
+- bash: |
+    echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)\go"
+    echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)\gopath"
+    echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)\go\bin"
+    echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)\go\src\github.com\$(build.repository.name)"
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Properly configure our custom Go environment (Windows)
+
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+    echo '##vso[task.prependpath]$(GOPATH)/bin'
+    mkdir -p ${GOPATH}\bin
+    mkdir -p ${GOROOT}\bin
+  condition: ne( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Set up the Go workspace (non-Windows)
+
+- script: |
+    echo '##vso[task.prependpath]$(GOROOT)\bin'
+    echo '##vso[task.prependpath]$(GOPATH)\bin'
+    echo '##vso[task.setvariable variable=PATH;]$(GOROOT)\bin;$(GOPATH)\bin;$(PATH)'
+    echo '$(GOROOT)'
+    echo '$(GOPATH)'
+    echo '$(PATH)'
+    echo '%PATH%'
+    mkdir ${GOPATH}\bin
+    mkdir ${GOROOT}\bin
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Set up the Go workspace (Windows)
