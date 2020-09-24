@@ -3,6 +3,7 @@ release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	make set-acls
 	make copy-archives-to-latest
+	make rename-archives-checksums 
 	git checkout go.sum
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
@@ -52,6 +53,15 @@ copy-archives-to-latest:
 		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
 	done
 	rm -rf $(TEMP_DIR)
+
+# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
+# chose to not change install script because older versions uses the no-v format
+# if we update the script to accept both checksums name format, this target would no longer be needed
+.PHONY: rename-archives-checksums
+rename-archives-checksums:
+	for binary in ccloud confluent; do \
+		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/ccloud_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/ccloud_$(VERSION)_checksums.txt --acl public-read; \
+	done
 
 
 .PHONY: fakegorelease
