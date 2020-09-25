@@ -1,13 +1,12 @@
 package test
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"encoding/json"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/gogo/protobuf/types"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
-	"encoding/json"
 )
 
 func (s *CLITestSuite) TestUserList() {
@@ -76,12 +75,12 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 			users := []*orgv1.User {
 				&orgv1.User{
 					Id:                   1,
-					Email:                "miles@confluent.io",
-					FirstName:            "Miles",
-					LastName:             "Todzo",
+					Email:                "bstrauch@confluent.io",
+					FirstName:            "Brian",
+					LastName:             "Strauch",
 					OrganizationId:       0,
 					Deactivated:          false,
-					Verified:             &types.Timestamp{Seconds: 0},
+					Verified:             nil,
 					ResourceId:           "u11",
 				},
 			}
@@ -89,12 +88,12 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 			if len(r.URL.Query()["user"]) == 0 {
 				users = append(users, &orgv1.User{
 					Id:                   2,
-					Email:                "kayla@test.com",
-					FirstName:            "Kayla",
-					LastName:             "Sawyer",
+					Email:                "mtodzo@confluent.io",
+					FirstName:            "Miles",
+					LastName:             "Todzo",
 					OrganizationId:       0,
 					Deactivated:          false,
-					Verified:             &types.Timestamp{Seconds: 0},
+					Verified:             nil,
 					ResourceId:           "u17",
 				})
 			}

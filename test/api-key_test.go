@@ -1,12 +1,7 @@
 package test
 
 import (
-	"encoding/json"
-	"net/http"
-	"strconv"
 	"testing"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/stretchr/testify/require"
 
@@ -144,26 +139,5 @@ func (s *CLITestSuite) TestAPIKey() {
 	for _, tt := range tests {
 		tt.workflow = true
 		s.runCcloudTest(tt, loginURL)
-	}
-}
-
-func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := strconv.Atoi(r.URL.Query().Get("id"))
-		require.NoError(t, err)
-
-		res := &orgv1.GetUsersReply{
-			Users: []*orgv1.User{
-				{
-					Id:    int32(id),
-					Email: "bstrauch@confluent.io",
-				},
-			},
-		}
-
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
 	}
 }

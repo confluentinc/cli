@@ -95,7 +95,7 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		Email:      user.Email,
 		FirstName:  user.FirstName,
 		LastName:   user.LastName,
-		Status:     statusMap[(user.Verified.Seconds != 0)],
+		Status:     statusMap[(user.Verified != nil && user.Verified.Seconds != 0)],
 	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
@@ -127,7 +127,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 			Email: user.Email,
 			FirstName: user.FirstName,
 			LastName: user.LastName,
-			Status: statusMap[(user.Verified.Seconds != 0)],
+			Status: statusMap[(user.Verified != nil && user.Verified.Seconds != 0)],
 		})
 	}
 	return outputWriter.Out()
