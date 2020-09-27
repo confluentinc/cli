@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/c-bata/go-prompt"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -35,6 +36,11 @@ const (
 	unspecifiedPartitionCount = -1
 )
 
+type kafkaTopicCommand struct {
+	*hasAPIKeyTopicCommand
+	*authenticatedTopicCommand
+}
+
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
@@ -45,6 +51,7 @@ type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	logger   *log.Logger
 	clientID string
+	completableChildren []*cobra.Command
 }
 
 type partitionDescribeDisplay struct {
@@ -64,7 +71,7 @@ type structuredDescribeDisplay struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *cobra.Command {
+func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	command := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -76,6 +83,9 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 		clientID:            clientID,
 	}
 	hasAPIKeyCmd.init()
+	kafkaTopicCommand := &kafkaTopicCommand{
+		hasAPIKeyTopicCommand:     hasAPIKeyCmd,
+	}
 	if !isAPIKeyLogin {
 		authenticatedCmd := &authenticatedTopicCommand{
 			AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
@@ -83,8 +93,41 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 			clientID:                clientID,
 		}
 		authenticatedCmd.init()
+		kafkaTopicCommand.authenticatedTopicCommand = authenticatedCmd
 	}
-	return command
+	return kafkaTopicCommand
+}
+
+func (k *kafkaTopicCommand) Cmd() *cobra.Command {
+	return k.authenticatedTopicCommand.Command
+}
+
+func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
+	cmd := k.authenticatedTopicCommand
+
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(cmd.Command) {
+		return suggestions
+	}
+	topics, err := cmd.getTopics(cmd.Command)
+	if err != nil {
+		return suggestions
+	}
+	for _, topic := range topics {
+		description := ""
+		if topic.Internal {
+			description = "Internal"
+		}
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        topic.Name,
+			Description: description,
+		})
+	}
+	return suggestions
+}
+
+func (k *kafkaTopicCommand) ServerCompletableChildren() []*cobra.Command {
+	return k.completableChildren
 }
 
 func (h *hasAPIKeyTopicCommand) init() {
@@ -128,7 +171,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 }
 
 func (a *authenticatedTopicCommand) init() {
-	cmd := &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
 		Args:  cobra.NoArgs,
@@ -140,12 +183,12 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	a.AddCommand(cmd)
+	listCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	a.AddCommand(listCmd)
 
-	cmd = &cobra.Command{
+	createCmd = &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -157,17 +200,17 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
-	cmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
-	cmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
-	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
-	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
-	cmd.Flags().SortFlags = false
-	a.AddCommand(cmd)
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
+	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	createCmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
+	createCmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
+	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	createCmd.Flags().SortFlags = false
+	a.AddCommand(createCmd)
 
-	cmd = &cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Short: "Describe a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -179,12 +222,12 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	a.AddCommand(cmd)
+	describeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	a.AddCommand(describeCmd)
 
-	cmd = &cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -196,13 +239,13 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
-	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
-	cmd.Flags().SortFlags = false
-	a.AddCommand(cmd)
+	updateCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	updateCmd.Flags().SortFlags = false
+	a.AddCommand(updateCmd)
 
-	cmd = &cobra.Command{
+	mirrorCmd := &cobra.Command{
 		Use:   "mirror <action> <topic>",
 		Short: "Perform a mirroring action on a Kafka topic.",
 		Args:  cobra.ExactArgs(2),
@@ -215,12 +258,12 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
-	cmd.Flags().SortFlags = false
-	a.AddCommand(cmd)
+	mirrorCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	mirrorCmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
+	mirrorCmd.Flags().SortFlags = false
+	a.AddCommand(mirrorCmd)
 
-	cmd = &cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -232,19 +275,16 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	a.AddCommand(cmd)
+	deleteCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	deleteCmd.Flags().SortFlags = false
+	a.AddCommand(deleteCmd)
+
+	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	resp, err := a.getTopics(cmd)
 	if err != nil {
-		return err
-	}
-	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
-	if err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
 
@@ -812,4 +852,17 @@ func getPartitionDisplay(partition *schedv1.TopicPartitionInfo, topicName string
 		Replicas:  replicas,
 		ISR:       isr,
 	}
+}
+
+func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.TopicDescription, error) {
+	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	if err != nil {
+		return []*schedv1.TopicDescription{}, err
+	}
+	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
+	if err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+	}
+
+	return resp, err
 }
