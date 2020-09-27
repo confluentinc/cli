@@ -443,10 +443,10 @@ func (c *command) Cmd() *cobra.Command {
 }
 
 func (c *command) ServerComplete() []prompt.Suggest {
-	if c.State == nil {
-		return []prompt.Suggest{}
-	}
 	var suggests []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggests
+	}
 	apiKeys, err := c.fetchAPIKeys()
 	if err != nil {
 		return suggests
@@ -468,7 +468,7 @@ func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
 
 	var userApiKeys []*schedv1.ApiKey
 	for _, key := range apiKeys {
-		if key.Id != 0 {
+		if key.UserId != 0 {
 			userApiKeys = append(userApiKeys, key)
 		}
 	}
