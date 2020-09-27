@@ -421,17 +421,17 @@ func (c *command) ServerCompletableChildren() []*cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if c.State == nil {
+	if !pcmd.CanCompleteCommand(c.Command) {
 		return suggestions
 	}
 	connectors, err := c.fetchConnectors()
 	if err != nil {
 		return suggestions
 	}
-	for name, conn := range connectors {
+	for _, conn := range connectors {
 		suggestions = append(suggestions, prompt.Suggest{
 			Text:        conn.Id.Id,
-			Description: name,
+			Description: conn.Info.Name,
 		})
 	}
 	return suggestions
