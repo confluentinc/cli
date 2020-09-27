@@ -3,6 +3,8 @@ package schema_registry
 import (
 	"fmt"
 
+	"github.com/c-bata/go-prompt"
+
 	"github.com/antihax/optional"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -15,11 +17,12 @@ import (
 
 type subjectCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	srClient *srsdk.APIClient
+	srClient            *srsdk.APIClient
+	completableChildren []*cobra.Command
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *subjectCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "subject",
@@ -30,7 +33,36 @@ func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 		srClient:                srClient,
 	}
 	subjectCmd.init(cliName)
-	return subjectCmd.Command
+	return subjectCmd
+}
+
+func (c *subjectCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *subjectCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+
+	subjects, err := c.getSubjects(c.completableChildren[1])
+	if err != nil {
+		return suggestions
+	}
+
+	for _, subject := range subjects {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        subject,
+			Description: "",
+		})
+	}
+
+	return suggestions
+}
+
+func (c *subjectCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }
 
 func (c *subjectCommand) init(cliName string) {
@@ -84,6 +116,7 @@ func (c *subjectCommand) init(cliName string) {
 	describeCmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
+	c.completableChildren = []*cobra.Command{updateCmd, describeCmd}
 }
 
 func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
@@ -142,16 +175,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 	type listDisplay struct {
 		Subject string
 	}
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
-	deleted, err := cmd.Flags().GetBool("deleted")
-	if err != nil {
-		return err
-	}
-	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted)}
-	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
+	list, err := c.getSubjects(cmd)
 	if err != nil {
 		return err
 	}
@@ -203,4 +227,22 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
 	}
 	return nil
+}
+
+func (c *subjectCommand) getSubjects(cmd *cobra.Command) ([]string, error) {
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	if err != nil {
+		return nil, err
+	}
+	deleted, err := cmd.Flags().GetBool("deleted")
+	if err != nil {
+		return nil, err
+	}
+	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted)}
+	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
 }

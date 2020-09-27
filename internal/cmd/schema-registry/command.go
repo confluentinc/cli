@@ -3,6 +3,8 @@ package schema_registry
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -11,23 +13,25 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
-	logger    *log.Logger
-	srClient  *srsdk.APIClient
-	prerunner pcmd.PreRunner
+	*pcmd.CLICommand
+	logger          *log.Logger
+	srClient        *srsdk.APIClient
+	prerunner       pcmd.PreRunner
+	serverCompleter completer.ServerSideCompleter
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func New(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, serverCompleter completer.ServerSideCompleter) *cobra.Command {
+	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "schema-registry",
 			Short: `Manage Schema Registry.`,
 		}, prerunner)
 	cmd := &command{
-		AuthenticatedCLICommand: cliCmd,
-		srClient:                srClient,
-		logger:                  logger,
-		prerunner:               prerunner,
+		CLICommand:      cliCmd,
+		srClient:        srClient,
+		logger:          logger,
+		prerunner:       prerunner,
+		serverCompleter: serverCompleter,
 	}
 	cmd.init(cliName)
 	return cmd.Command
@@ -35,9 +39,15 @@ func New(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 
 func (c *command) init(cliName string) {
 	if cliName == "ccloud" {
-		c.AddCommand(NewClusterCommand(cliName, c.prerunner, c.srClient, c.logger))
-		c.AddCommand(NewSubjectCommand(cliName, c.prerunner, c.srClient))
-		c.AddCommand(NewSchemaCommand(cliName, c.prerunner, c.srClient))
+		clusterCmd := NewClusterCommand(cliName, c.prerunner, c.srClient, c.logger)
+		subjectCmd := NewSubjectCommand(cliName, c.prerunner, c.srClient)
+		schemaCmd := NewSchemaCommand(cliName, c.prerunner, c.srClient)
+
+		c.AddCommand(clusterCmd)
+		c.AddCommand(subjectCmd.Command)
+		c.AddCommand(schemaCmd)
+
+		c.serverCompleter.AddCommand(subjectCmd)
 	} else {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}

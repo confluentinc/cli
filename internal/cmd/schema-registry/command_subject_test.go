@@ -2,8 +2,11 @@ package schema_registry
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
+
+	"github.com/c-bata/go-prompt"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
@@ -82,8 +85,15 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, suite.conf), suite.srClientMock, suite.conf.Logger)
+	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, suite.conf), suite.srClientMock, suite.conf.Logger, &cliMock.ServerSideCompleter{})
 	return cmd
+}
+
+func (suite *SubjectTestSuite) newSubjectCmd() *subjectCommand {
+	client := &ccloud.Client{
+		SchemaRegistry: suite.srMothershipMock,
+	}
+	return NewSubjectCommand("ccloud", cliMock.NewPreRunnerMock(client, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *SubjectTestSuite) TestSubjectList() {
@@ -164,6 +174,53 @@ func (suite *SubjectTestSuite) TestSubjectDescribeDeleted() {
 	retVal := apiMock.ListVersionsCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
 	req.Equal(retVal.LocalVarOptionals.Deleted.Value(), true)
+}
+
+func (suite *SubjectTestSuite) TestServerComplete() {
+	req := suite.Require()
+	type fields struct {
+		Command *subjectCommand
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for authenticated user",
+			fields: fields{
+				Command: suite.newSubjectCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        "subject 1",
+					Description: "",
+				},
+				{
+					Text:        "subject 2",
+					Description: "",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *SubjectTestSuite) TestServerCompletableChildren() {
+	req := require.New(suite.T())
+	cmd := suite.newSubjectCmd()
+	completableChildren := cmd.ServerCompletableChildren()
+	expectedChildren := []string{"subject update", "subject describe"}
+	req.Len(completableChildren, len(expectedChildren))
+	for i, expectedChild := range expectedChildren {
+		req.Contains(completableChildren[i].CommandPath(), expectedChild)
+	}
 }
 
 func TestSubjectSuite(t *testing.T) {
