@@ -198,11 +198,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			continue
 		}
 		// Add '*' only in the case where we are printing out tables
+		outputKey := apiKey.Key
 		if outputWriter.GetOutputFormat() == output.Human {
 			if resourceId != "" && apiKey.Key == currentKey {
-				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+				outputKey = fmt.Sprintf("* %s", apiKey.Key)
 			} else {
-				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+				outputKey = fmt.Sprintf("  %s", apiKey.Key)
 			}
 		}
 
@@ -212,7 +213,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
 			// Cloud key.
 			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
+				Key:          outputKey,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
 				ResourceType: pcmd.CloudResourceType,
@@ -225,7 +226,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		for _, lc := range apiKey.LogicalClusters {
 			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
+				Key:          outputKey,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
 				ResourceType: lc.Type,
