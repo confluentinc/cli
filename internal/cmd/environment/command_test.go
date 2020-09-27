@@ -2,11 +2,12 @@ package environment
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/c-bata/go-prompt"
-	"github.com/confluentinc/cc-structs/kafka/org/v1"
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	"github.com/stretchr/testify/require"
@@ -57,7 +58,7 @@ func (suite *EnvironmentTestSuite) newCmd() *command {
 
 func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	completableChildren := cmd.ServerCompletableChildren()
 	expectedChildren := []string{"environment delete", "environment update", "environment use"}
 	req.Len(completableChildren, len(expectedChildren))
@@ -67,19 +68,46 @@ func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
 }
 
 func (suite *EnvironmentTestSuite) TestServerComplete() {
-	req := require.New(suite.T())
-	cmd := suite.newCMD()
-	suggestions := cmd.ServerComplete()
-	expectedSug := []prompt.Suggest{
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
 		{
-			Text:        "123",
-			Description: "456",
+			name: "suggest for authenticated user",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        "123",
+					Description: "456",
+				},
+			},
+		},
+		{
+			name: "don't suggest for unauthenticated user",
+			fields: fields{
+				Command: func() *command {
+					oldConf := suite.conf
+					suite.conf = v3.UnauthenticatedCloudConfigMock()
+					c := suite.newCmd()
+					suite.conf = oldConf
+					return c
+				}(),
+			},
+			want: nil,
 		},
 	}
-	req.ElementsMatch(expectedSug, suggestions)
-	ctxs := cmd.Config.Contexts
-	cmd.Config.Contexts = nil
-	suggestions = cmd.ServerComplete()
-	cmd.Config.Contexts = ctxs
-	req.Empty(suggestions)
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
 }
