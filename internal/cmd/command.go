@@ -148,7 +148,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
-		cli.AddCommand(serviceaccount.New(prerunner))
+		serviceAccountCmd := serviceaccount.New(prerunner)
+		serverCompleter.AddCommand(serviceAccountCmd)
+		cli.AddCommand(serviceAccountCmd.Command)
 		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
