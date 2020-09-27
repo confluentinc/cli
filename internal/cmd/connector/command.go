@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/c-bata/go-prompt"
+
 	"github.com/confluentinc/cli/internal/pkg/examples"
 
 	"github.com/confluentinc/go-printer"
@@ -20,6 +22,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+	completableChildren []*cobra.Command
 }
 
 type connectorDescribeDisplay struct {
@@ -52,7 +55,7 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *command {
 	cmd := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
@@ -61,11 +64,11 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 			}, prerunner),
 	}
 	cmd.init(cliName)
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init(cliName string) {
-	cmd := &cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -77,12 +80,12 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	describeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 
-	cmd = &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List connectors.",
 		Args:  cobra.NoArgs,
@@ -94,12 +97,12 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	listCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
-	cmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a connector.",
 		Args:  cobra.NoArgs,
@@ -111,14 +114,14 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("config", "", "JSON connector config file.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	panicOnError(cmd.MarkFlagRequired("config"))
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	createCmd.Flags().String("config", "", "JSON connector config file.")
+	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	panicOnError(createCmd.MarkFlagRequired("config"))
+	createCmd.Flags().SortFlags = false
+	c.AddCommand(createCmd)
 
-	cmd = &cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -130,23 +133,23 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	deleteCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	deleteCmd.Flags().SortFlags = false
+	c.AddCommand(deleteCmd)
 
-	cmd = &cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a connector configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
 	}
-	cmd.Flags().String("config", "", "JSON connector config file.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	panicOnError(cmd.MarkFlagRequired("config"))
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	updateCmd.Flags().String("config", "", "JSON connector config file.")
+	updateCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	panicOnError(updateCmd.MarkFlagRequired("config"))
+	updateCmd.Flags().SortFlags = false
+	c.AddCommand(updateCmd)
 
-	cmd = &cobra.Command{
+	pauseCmd := &cobra.Command{
 		Use:   "pause <id>",
 		Short: "Pause a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -158,11 +161,11 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	pauseCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pauseCmd.Flags().SortFlags = false
+	c.AddCommand(pauseCmd)
 
-	cmd = &cobra.Command{
+	resumeCmd := &cobra.Command{
 		Use:   "resume <id>",
 		Short: "Resume a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -174,9 +177,10 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	resumeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	resumeCmd.Flags().SortFlags = false
+	c.AddCommand(resumeCmd)
+	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -405,4 +409,43 @@ func printStructuredDescribe(connector *opv1.ConnectorExpansion, format string) 
 		})
 	}
 	return output.StructuredOutput(format, structuredDisplay)
+}
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+	connectors, err := c.fetchConnectors()
+	if err != nil {
+		return suggestions
+	}
+	for _, conn := range connectors {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        conn.Id.Id,
+			Description: conn.Info.Name,
+		})
+	}
+	return suggestions
+}
+
+func (c *command) fetchConnectors() (map[string]*opv1.ConnectorExpansion, error) {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.Command)
+	if err != nil {
+		return nil, err
+	}
+	connectors, err := c.Client.Connect.ListWithExpansions(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "status,info,id")
+	if err != nil {
+		return nil, err
+	}
+	return connectors, nil
+
 }
