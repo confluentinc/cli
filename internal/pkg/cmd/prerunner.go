@@ -133,7 +133,6 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
-
 // CanCompleteCommand returns whether or not the specified command can be completed. 
 // If the prerunner of the command returns no error, true is returned,
 // and if an error is encountered, false is returned.
