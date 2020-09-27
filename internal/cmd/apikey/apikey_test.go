@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -119,7 +120,7 @@ func (suite *APITestSuite) SetupTest() {
 	}
 }
 
-func (suite *APITestSuite) newCMD() *command {
+func (suite *APITestSuite) newCmd() *command {
 	client := &ccloud.Client{
 		Auth:           &ccsdkmock.Auth{},
 		Account:        &ccsdkmock.Account{},
@@ -156,7 +157,7 @@ func (suite *APITestSuite) newCMD() *command {
 }
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"create", "--resource", srClusterID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -167,7 +168,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 }
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"create", "--resource", suite.kafkaCluster.Id}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -178,7 +179,7 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 }
 
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"create", "--resource", "cloud"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -189,7 +190,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"delete", apiKeyVal}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -200,7 +201,7 @@ func (suite *APITestSuite) TestDeleteApiKey() {
 }
 
 func (suite *APITestSuite) TestListSrApiKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -211,7 +212,7 @@ func (suite *APITestSuite) TestListSrApiKey() {
 }
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -222,7 +223,7 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"list", "--resource", "cloud"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -235,7 +236,7 @@ func (suite *APITestSuite) TestListCloudAPIKey() {
 func (suite *APITestSuite) TestStoreApiKeyForce() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"store", apiKeyVal, apiSecretVal, "--resource", kafkaClusterID}))
 	err := cmd.Execute()
 	// refusing to overwrite existing secret
@@ -254,7 +255,7 @@ func (suite *APITestSuite) TestStoreApiKeyForce() {
 func (suite *APITestSuite) TestStoreApiKeyPipe() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = true
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	// no need to force for new api keys
 	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID}))
 	err := cmd.Execute()
@@ -268,7 +269,7 @@ func (suite *APITestSuite) TestStoreApiKeyPipe() {
 func (suite *APITestSuite) TestStoreApiKeyPromptUserForSecret() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "--resource", kafkaClusterID}))
 	err := cmd.Execute()
 	req.NoError(err)
@@ -281,7 +282,7 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForSecret() {
 func (suite *APITestSuite) TestStoreApiKeyPassSecretByFile() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "@" + apiSecretFile, "--resource", kafkaClusterID}))
 	err := cmd.Execute()
 	req.NoError(err)
@@ -294,7 +295,7 @@ func (suite *APITestSuite) TestStoreApiKeyPassSecretByFile() {
 func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"store", "--resource", kafkaClusterID}))
 	err := cmd.Execute()
 	req.NoError(err)
@@ -307,7 +308,7 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 func (suite *APITestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	completableChildren := cmd.ServerCompletableChildren()
 	expectedChildren := []string{"api-key update", "api-key delete", "api-key store", "api-key use"}
 	req.Len(completableChildren, len(expectedChildren))
@@ -317,28 +318,49 @@ func (suite *APITestSuite) TestServerCompletableChildren() {
 }
 
 func (suite *APITestSuite) TestServerComplete() {
-	req := require.New(suite.T())
-	cmd := suite.newCMD()
-	suggestions := cmd.ServerComplete()
-	expectedSug := []prompt.Suggest{
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
 		{
-			Text:        apiKeyVal,
-			Description: apiKeyDescription,
+			name: "suggest for authenticated user",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        apiKeyVal,
+					Description: apiKeyDescription,
+				},
+			},
+		},
+		{
+			name: "don't suggest for unauthenticated user",
+			fields: fields{
+				Command: func() *command {
+					oldConf := suite.conf
+					suite.conf = v3.UnauthenticatedCloudConfigMock()
+					c := suite.newCmd()
+					suite.conf = oldConf
+					return c
+				}(),
+			},
+			want: nil,
 		},
 	}
-	req.ElementsMatch(expectedSug, suggestions)
-	oldUserId := apiValue.UserId
-	apiValue.UserId = 0 // Make internal temporarily.
-	suggestions = cmd.ServerComplete()
-	apiValue.UserId = oldUserId
-	req.Empty(suggestions)
-	ctxs := cmd.Config.Contexts
-	cmd.Config.Contexts = nil
-	suggestions = cmd.ServerComplete()
-	cmd.Config.Contexts = ctxs
-	req.Empty(suggestions)
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
 }
-
 func TestApiTestSuite(t *testing.T) {
 	suite.Run(t, new(APITestSuite))
 }
