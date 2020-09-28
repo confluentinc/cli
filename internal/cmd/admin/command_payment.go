@@ -78,9 +78,9 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 	pcmd.Println(cmd, "Edit credit card")
 
 	f := form.New(
-		form.Field{ID: "card number", Prompt: "Card number", Regex: `(?:\d[ -]*?){13,19}`},
-		form.Field{ID: "expiration", Prompt: "MM/YY", Regex: `\d{2}/\d{2}`},
-		form.Field{ID: "cvc", Prompt: "CVC", Regex: `\d{3,4}`},
+		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
+		form.Field{ID: "expiration", Prompt: "MM/YY", Regex: `^\d{2}/\d{2}$`},
+		form.Field{ID: "cvc", Prompt: "CVC", Regex: `^\d{3,4}$`, IsHidden: true},
 		form.Field{ID: "name", Prompt: "Cardholder name"},
 	)
 
