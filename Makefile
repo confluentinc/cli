@@ -17,8 +17,8 @@ HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 S3_BUCKET_PATH=s3://confluent.cloud
-S3_STAGING_FOLDER_NAME=cli-release-stag
-S3_STAGING_PATH=s3://confluent.cloud/$(S3_STAGING_FOLDER_NAME)
+S3_STAG_FOLDER_NAME=cli-release-stag
+S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 
 .PHONY: clean
@@ -222,11 +222,6 @@ coverage-integ:
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
       endif
 
-.PHONY: test-installers
-test-installers:
-	@echo Running packaging/installer tests
-	@ # if ${ARCHIVES_VERSION_TO_TEST} archives latest folder will be tested
-	@bash test-installers.sh ${ARCHIVES_VERSION_TO_TEST}
 
 .PHONY: test-prep
 test-prep: lint

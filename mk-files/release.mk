@@ -1,11 +1,10 @@
 .PHONY: release
 release: release-to-staging 
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
-	make verify-release
 	git checkout go.sum
 
 .PHONY: release-to-staging
-release-to-staging: get-release-image commit-release tag-release
+release-to-staging: print-release-to-staging-message get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	make set-acls
 	make copy-archives-to-latest
@@ -13,79 +12,74 @@ release-to-staging: get-release-image commit-release tag-release
 	git checkout go.sum
 	make verify-staging
 
-define print-release-to-staging-message
-	@echo "===================="
-	@echo "RELEASE TO STAGING FOLDER"
-	@echo "===================="
+.PHONY: print-release-to-staging-message
+print-release-to-staging-message:
+	@echo "========================"
+	@echo "RELEASE TO STAG FOLDER"
+	@echo "========================"
 	@echo
 	@echo "- Tags the release"
 	@echo
-	@echo "- Runs `make gorelease` to create binaries"
-	@echo
-	@echo "- Runs `make publish` which does the follwoing:"
-	@echo "   + sign darwin binary"
-	@echo "   + download licenses of "
+	@echo "- Runs `make gorelease` to trigger goreleaser"
+	@echo "   + build binaries"
 	@echo "   + sign darwin binaries"
+	@echo "   + download licenses"
+	@echo "   + build archives containing the downloaded licenses"
+	@echo "   + publish to S3 staging folder"
 	@echo
-	@echo "- Once finished, run 'make publish-release-notes'."
+	@echo "- Copy the new version's archives folder to latest archives folder"
+	@echo
+	@echo "- Verify latest and version-specific archives installers script"
+	@echo
+	@echo "- Verify staging binaries content"
 	@echo
 	@echo "===================="
-endef
 
-.PHONY: copy-staging-to-release
-copy-staging-to-release:
+.PHONY: release-to-prod
+release-to-prod:
 	@$(caasenv-authenticate) && \
 	$(copy-binaries) && \
 	for binary in ccloud confluent; do \
 		for file_type in binaries archives; do \
-			FILE_PATH=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
-			echo "COPYING OVER: $${FILE_PATH}"; \
-			aws s3 cp $(S3_STAGING_PATH)/$${FILE_PATH} $(S3_BUCKET_PATH)/$${FILE_PATH} --recursive --acl public-read || exit 1; \
+			folder_path=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
+			echo "COPYING OVER: $${folder_path}"; \
+			aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1; \
 		done; \
-		LATEST_PATH=$${binary}-cli/archives/latest; \
-		echo "COPYING LATEST FOLDER: $${LATEST_PATH}"; \
-		aws s3 cp $(S3_STAGING_PATH)/$${LATEST_PATH} $(S3_BUCKET_PATH)/$${LATEST_PATH} || exit 1; \
+		latest_folder=$${binary}-cli/archives/latest; \
+		echo "COPYING LATEST FOLDER: $${latest_folder}"; \
+		aws s3 cp $(S3_STAG_PATH)/$${latest_folder} $(S3_BUCKET_PATH)/$${latest_folder} --recursive --acl public-read || exit 1; \
 	done
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
-
-.PHONY: fakerelease
-fakerelease: get-release-image commit-release tag-release
-	@GO111MODULE=on make fakegorelease
-
-GORELEASE_S3_CCLOUD_FOLDER=$(S3_STAGING_FOLDER_NAME)/ccloud-cli/binaries
-GORELEASE_S3_CONFLUENT_FOLDER=$(S3_STAGING_FOLDER_NAME)/confluent-cli/binaries
-S3_CCLOUD_FOLDER=ccloud-cli
-S3_CONFLUENT_FOLDER=confluent-cli
-ifeq (true, $(RELEASE_TEST))
-S3_CCLOUD_FOLDER=$(S3_RELEASE_TEST_FOLDER)/ccloud-cli
-S3_CONFLUENT_FOLDER=$(S3_RELEASE_TEST_FOLDER)/confluent-cli
-endif
+	make verify-release
 
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 # goreleaser does not yet support setting ACLs for S3 so we have set `public-read` manually by copy the file in place
 # dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change not included)
 .PHONY: set-acls
 set-acls:
 	$(caasenv-authenticate) && \
-	aws s3 cp $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
-	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
-	aws s3 cp $(S3_BUCKET_PATH)/ccloud-cli/archives/$(VERSION_NO_V) $(S3_BUCKET_PATH)/ccloud-cli/archives/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
-	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/archives/$(VERSION_NO_V) $(S3_BUCKET_PATH)/confluent-cli/archives/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive
+	for binary in ccloud confluent; do \
+		for file_type in binaries archives; do \
+			folder_path=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
+			echo "SETTING ACLS: $${folder_path}"; \
+			aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
+		done; \
+	done
 
 .PHONY: copy-archives-to-latest
 copy-archives-to-latest:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		aws s3 cp $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
+		aws s3 cp $(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
 		cd $(TEMP_DIR)/$${binary}-cli ; \
 		for fname in $${binary}_v$(CLEAN_VERSION)_*; do \
 			newname=`echo "$$fname" | sed 's/_v$(CLEAN_VERSION)/_latest/g'`; \
@@ -93,7 +87,7 @@ copy-archives-to-latest:
 		done ; \
 		rm *checksums.txt; \
 		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
-		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
+		aws s3 cp ./ $(S3_STAG_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
 	done
 	rm -rf $(TEMP_DIR)
 
@@ -104,7 +98,7 @@ copy-archives-to-latest:
 rename-archives-checksums:
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
+		aws s3 mv $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
 	done
 
 .PHONY: fakegorelease
@@ -168,44 +162,3 @@ endif
 clean-docs:
 	@rm -rf docs/
 
-VERIFY_RELEASE_TARGET ?= $(S3_BUCKET_PATH)
-VERIFY_ARCHIVES_FOLDER_OVERRIDE ?=
-
-.PHONY: verify-staging
-verify-staging:
-	VERIFY_ARCHIVES_FOLDER_TARGET=$(S3_STAGING_FOLDER_NAME) make verify-archive-installers
-	VERIFY_RELEASE_TARGET=$(S3_STAGING_PATH) make verify-binary-files
-
-.PHONY: verify-release
-verify-release:
-	make verify-archive-installers
-	make verify-binary-files
-
-.PHONY: verify-archive-installers
-verify-archive-installers:
-	make test-installers OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_OVERRIDE)
-	make test-installers ARCHIVES_VERSION_TO_TEST=$(VERSION) OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_OVERRIDE)
-
-# check that the expected binaries are present and have --acl public-read
-.PHONY: verify-binary-files
-verify-binary-files:
-	$(eval TEMP_DIR=$(shell mktemp -d))
-	echo $(TEMP_DIR)
-	@$(caasenv-authenticate) && \
-	for binary in ccloud confluent; do \
-		for os in linux darwin windows; do \
-			for arch in amd64 386; do \
-				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
-					continue; \
-				fi ; \
-				suffix="" ; \
-				if [ "$${os}" = "windows" ] ; then \
-					suffix=".exe"; \
-				fi ; \
-				FILE=$(VERIFY_RELEASE_TARGET)/$${binary}-cli/binaries/$(CLEAN_VERSION)/$${binary}_$(CLEAN_VERSION)_$${os}_$${arch}$${suffix}; \
-				echo "Checking binary: $${FILE}"; \
-				aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; }; \
-			done; \
-		done; \
-	done
-	rm -rf $(TEMP_DIR)	
