@@ -141,7 +141,7 @@ Now clone the repo and update your shell profile:
 
 Install the required version of `goreleaser`
 
-    go get github.com/goreleaser/goreleaser@v0.106.0
+    go get github.com/goreleaser/goreleaser@v0.116.0
 
 
 ### Mac Setup Notes
