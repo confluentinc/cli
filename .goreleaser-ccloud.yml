@@ -46,14 +46,14 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: make get-licenses
+        - cmd: make download-licenses
           env:
             - LICENSE_BIN=ccloud
             - LICENSE_BIN_PATH=./dist/ccloud/signed_darwin_amd64/ccloud
         - cmd: gon gon_ccloud.hcl
           env: 
             - GO111MODULE=on
-              
+ 
 release:
   disable: true
 

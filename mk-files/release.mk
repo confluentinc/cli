@@ -7,8 +7,10 @@ release: release-to-staging
 .PHONY: release-to-staging
 release-to-staging: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	make set-acls
+	make copy-archives-to-latest
+	make rename-archives-checksums 
 	git checkout go.sum
-	@GO111MODULE=on VERSION=$(VERSION) make publish
 	make verify-staging
 
 define print-release-to-staging-message
@@ -44,6 +46,8 @@ copy-staging-to-release:
 		echo "COPYING LATEST FOLDER: $${LATEST_PATH}"; \
 		aws s3 cp $(S3_STAGING_PATH)/$${LATEST_PATH} $(S3_BUCKET_PATH)/$${LATEST_PATH} || exit 1; \
 	done
+	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	git checkout go.sum
 
 .PHONY: fakerelease
 fakerelease: get-release-image commit-release tag-release
@@ -63,8 +67,8 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
 # goreleaser does not yet support setting ACLs for S3 so we have set `public-read` manually by copy the file in place
 # dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change not included)
@@ -92,6 +96,16 @@ copy-archives-to-latest:
 		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
 	done
 	rm -rf $(TEMP_DIR)
+
+# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
+# chose to not change install script because older versions uses the no-v format
+# if we update the script to accept both checksums name format, this target would no longer be needed
+.PHONY: rename-archives-checksums
+rename-archives-checksums:
+	$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
+		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
+	done
 
 .PHONY: fakegorelease
 fakegorelease:
