@@ -108,6 +108,7 @@ func TestPaymentRegexValidation(t *testing.T) {
 				"999999", //too long
 				"99", //too short
 				"999a", //non-digit characters
+				"999",
 				"Brian Strauch",
 			),
 			expected: []string{
