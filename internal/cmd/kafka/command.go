@@ -42,6 +42,8 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 			return
 		}
 		clusterCmd := NewClusterCommand(c.prerunner)
+		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
+		// and that doesn't trigger completion.
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)
 		c.AddCommand(NewACLCommand(c.prerunner))
