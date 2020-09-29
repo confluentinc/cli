@@ -20,7 +20,8 @@ verify-release:
 .PHONY: verify-archive-installers
 verify-archive-installers:
 	make test-installers OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
-	make test-installers ARCHIVES_VERSION_TO_TEST=$(VERSION) OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
+	make test-installers ARCHIVES_VERSION_TO_TEST=v$(CLEAN_VERSION) OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
+	@echo "ARCHIVES VERIFICATION PASSED!!!"
 
 # check that the expected binaries are present and have --acl public-read
 .PHONY: verify-binary-files
@@ -45,3 +46,4 @@ verify-binary-files:
 		done; \
 	done
 	rm -rf $(TEMP_DIR)	
+	@echo "BINARY VERIFICATION PASSED!!!"

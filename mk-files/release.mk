@@ -1,10 +1,12 @@
+ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip
+
 .PHONY: release
 release: release-to-staging 
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 
 .PHONY: release-to-staging
-release-to-staging: print-release-to-staging-message get-release-image commit-release tag-release
+release-to-staging: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	make set-acls
 	make copy-archives-to-latest
@@ -74,20 +76,39 @@ set-acls:
 		done; \
 	done
 
+# Update latest archives folder
+# Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
+# e.g. may be using this to restore while cli repo VERSION value is dirty, hence CLEAN_VERSION variable is used
 .PHONY: copy-archives-to-latest
 copy-archives-to-latest:
+	make copy-archive-files-to-latest
+	make copy-archives-checksums-to-latest
+
+
+.PHONY: copy-archive-files-to-latest
+copy-archive-files-to-latest:
+	$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
+		archives_folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
+		latest_folder=$(S3_STAG_PATH)/$${binary}-cli/archives/latest; \
+		for suffix in $(ARCHIVE_TYPES); do \
+			aws s3 cp $${archives_folder}/$${binary}_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/$${binary}_latest_$${suffix} --acl public-read; \
+		done ; \
+	done
+
+# Copy archives checksum file then rename the filenames in the checksum by replacing VERSION to "latest"
+# Then publish the checksum file to S3 latest folder
+.PHONY: copy-archives-checksums-to-latest
+copy-archives-checksums-to-latest:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		aws s3 cp $(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
+		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
+		latest_checksums=$${binary}_latest_checksums.txt; \
 		cd $(TEMP_DIR)/$${binary}-cli ; \
-		for fname in $${binary}_v$(CLEAN_VERSION)_*; do \
-			newname=`echo "$$fname" | sed 's/_v$(CLEAN_VERSION)/_latest/g'`; \
-			mv $$fname $$newname; \
-		done ; \
-		rm *checksums.txt; \
-		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
-		aws s3 cp ./ $(S3_STAG_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
+		aws s3 cp $(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
+		cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
+		aws s3 cp $${latest_checksums} $(S3_STAG_PATH)/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
 	done
 	rm -rf $(TEMP_DIR)
 
