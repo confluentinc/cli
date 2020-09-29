@@ -542,7 +542,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", nil)
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
