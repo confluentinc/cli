@@ -14,29 +14,6 @@ release-to-staging: get-release-image commit-release tag-release
 	git checkout go.sum
 	make verify-staging
 
-.PHONY: print-release-to-staging-message
-print-release-to-staging-message:
-	@echo "========================"
-	@echo "RELEASE TO STAG FOLDER"
-	@echo "========================"
-	@echo
-	@echo "- Tags the release"
-	@echo
-	@echo "- Runs `make gorelease` to trigger goreleaser"
-	@echo "   + build binaries"
-	@echo "   + sign darwin binaries"
-	@echo "   + download licenses"
-	@echo "   + build archives containing the downloaded licenses"
-	@echo "   + publish to S3 staging folder"
-	@echo
-	@echo "- Copy the new version's archives folder to latest archives folder"
-	@echo
-	@echo "- Verify latest and version-specific archives installers script"
-	@echo
-	@echo "- Verify staging binaries content"
-	@echo
-	@echo "===================="
-
 .PHONY: release-to-prod
 release-to-prod:
 	@$(caasenv-authenticate) && \
@@ -105,7 +82,7 @@ copy-archives-checksums-to-latest:
 	for binary in ccloud confluent; do \
 		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
 		latest_checksums=$${binary}_latest_checksums.txt; \
-		cd $(TEMP_DIR)/$${binary}-cli ; \
+		cd $(TEMP_DIR) ; \
 		aws s3 cp $(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
 		cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
 		aws s3 cp $${latest_checksums} $(S3_STAG_PATH)/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
