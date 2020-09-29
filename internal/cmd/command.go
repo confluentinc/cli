@@ -48,8 +48,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	keys "github.com/confluentinc/cli/internal/third-party-keys"
 	"github.com/confluentinc/cli/mock"
 )
 

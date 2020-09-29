@@ -12,7 +12,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	keys "github.com/confluentinc/cli/internal/third-party-keys"
+	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 )
 
 type command struct {
