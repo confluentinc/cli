@@ -49,10 +49,9 @@ import (
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	keys "github.com/confluentinc/cli/internal/third-party-keys"
 	"github.com/confluentinc/cli/mock"
 )
-
-var segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 
 type Command struct {
 	*cobra.Command
@@ -163,7 +162,7 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 	if cliName == "confluent" || isTest {
 		return mock.NewDummyAnalyticsMock()
 	}
-	segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
+	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
 		Logger: analytics.NewLogger(logger),
 	})
 	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())

@@ -9,8 +9,8 @@ import (
 func New(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 	c := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   "admin", // TODO: rename to org?
-			Short: "Perform admin-specific tasks.",
+			Use:   "admin",
+			Short: "Perform administrative tasks for the current organization.",
 			Args:  cobra.NoArgs,
 		},
 		prerunner,

@@ -12,6 +12,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	keys "github.com/confluentinc/cli/internal/third-party-keys"
 )
 
 type command struct {
@@ -90,9 +91,9 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
 	if c.isTest {
-		stripe.Key = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
+		stripe.Key = keys.StripeTestKey
 	} else {
-		stripe.Key = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
+		stripe.Key = keys.StripeLiveKey
 	}
 	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
 		Level: 0,
