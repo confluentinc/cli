@@ -111,6 +111,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/ssgreg/nlreturn/v2 v2.0.1 // indirect
 	github.com/stretchr/testify v1.6.1
+	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tdakkota/asciicheck v0.0.0-20200416190851-d7f85be797a2 // indirect
 	github.com/tetafro/godot v0.4.8 // indirect
 	github.com/tidwall/gjson v1.6.0

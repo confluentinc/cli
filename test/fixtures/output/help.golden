@@ -4,6 +4,7 @@ Usage:
   ccloud [command]
 
 Available Commands:
+  admin             Perform administrative tasks for the current organization.
   api-key           Manage the API keys.
   completion        Print shell completion code.
   config            Modify the CLI configuration.
