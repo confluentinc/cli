@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"strconv"
 	"strings"
 	"testing"
+
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -665,7 +666,7 @@ func newCmd(expect chan interface{}) *cobra.Command {
 			},
 		},
 	}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", nil)
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
