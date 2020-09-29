@@ -19,8 +19,8 @@ verify-release:
 
 .PHONY: verify-archive-installers
 verify-archive-installers:
-	make test-installers OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_OVERRIDE)
-	make test-installers ARCHIVES_VERSION_TO_TEST=$(VERSION) OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_OVERRIDE)
+	make test-installers OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
+	make test-installers ARCHIVES_VERSION_TO_TEST=$(VERSION) OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
 
 # check that the expected binaries are present and have --acl public-read
 .PHONY: verify-binary-files
