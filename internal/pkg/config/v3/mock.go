@@ -12,15 +12,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	mockUserId             = int32(123)
-	mockOrganizationId     = int32(123)
-	mockEnvironmentId      = "testAccount"
-	mockEmail              = "cli-mock-email@confluent.io"
-	mockURL                = "http://test"
-	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
-	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
-	mockAuthToken          = "some.token.here"
+const (
+	mockUserId         = int32(123)
+	mockOrganizationId = int32(123)
+	mockEnvironmentId  = "testAccount"
+	mockEmail          = "cli-mock-email@confluent.io"
+	mockURL            = "http://test"
+	mockAuthToken      = "some.token.here"
 
 	// kafka cluster
 	kafkaClusterId     = "lkc-0000"
@@ -37,8 +35,12 @@ var (
 	srEndpoint  = "https://sr-test"
 	srAPIKey    = "michael"
 	srAPISecret = "scott"
+)
 
-	MockContextName = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
+var (
+	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
+	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
+	mockContextName        = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 )
 
 func AuthenticatedCloudConfigMock() *Config {
@@ -68,7 +70,7 @@ func APICredentialConfigMock() *Config {
 		Logger:     log.New(),
 	})
 
-	ctx, err := newContext(MockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf)
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +109,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 		Logger:     log.New(),
 	})
 
-	ctx, err := newContext(MockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
 	if err != nil {
 		panic(err)
 	}

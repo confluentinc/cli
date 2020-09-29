@@ -58,7 +58,7 @@ const (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
+	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 }
 
