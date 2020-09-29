@@ -8,6 +8,7 @@ DOCS_BRANCH     ?= 5.5.1-post
 
 include ./mk-files/semver.mk
 include ./mk-files/release.mk
+include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
 include ./mk-files/unrelease.mk
 
