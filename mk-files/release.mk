@@ -96,7 +96,8 @@ copy-archives-checksums-to-latest:
 rename-archives-checksums:
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		aws s3 mv $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
+		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
+		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
 	done
 
 .PHONY: fakegorelease
