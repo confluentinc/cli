@@ -13,8 +13,7 @@ before:
 # NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
-  -
-    binary: ccloud
+  - binary: ccloud
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -26,20 +25,51 @@ builds:
       - all=-trimpath={{.Env.GOPATH}}
     goos:
       - linux
-      - darwin
       - windows
     goarch:
       - amd64
       - 386
-    ignore:
-      - goos: darwin
-        goarch: 386
+  - binary: ccloud
+    id: signed
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: make download-licenses
+          env:
+            - LICENSE_BIN=ccloud
+            - LICENSE_BIN_PATH=./dist/ccloud/signed_darwin_amd64/ccloud
+        - cmd: gon gon_ccloud.hcl
+          env:
+            - GO111MODULE=on
+ 
 release:
   disable: true
 
 archives:
   - id: binary
     format: binary
+  - id: archive
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
 
 blobs:
   -
@@ -48,4 +78,11 @@ blobs:
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
-    folder: "{{.Env.S3FOLDER}}/{{.Version}}"
+    folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
+  -
+    ids:
+    - archive
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{.Env.S3FOLDER}}/archives/{{.Version}}"

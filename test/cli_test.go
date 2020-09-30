@@ -777,6 +777,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
+	router.HandleFunc("/api/organizations/0/payment_info", handlePaymentInfo(t))
 	router.HandleFunc("/api/users", handleUsers(t))
 	router.HandleFunc("/api/users/u-0", handleUser(t))
 	router.HandleFunc("/api/organizations/0/invites", handleInvite(t))

@@ -1,8 +1,10 @@
 .PHONY: release
 release: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	make set-acls
+	make copy-archives-to-latest
+	make rename-archives-checksums 
 	git checkout go.sum
-	@GO111MODULE=on VERSION=$(VERSION) make publish
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 
@@ -10,21 +12,58 @@ release: get-release-image commit-release tag-release
 fakerelease: get-release-image commit-release tag-release
 	@GO111MODULE=on make fakegorelease
 
-GORELEASE_S3_CCLOUD_FOLDER=ccloud-cli/binaries
-GORELEASE_S3_CONFLUENT_FOLDER=confluent-cli/binaries
+S3_CCLOUD_FOLDER=ccloud-cli
+S3_CONFLUENT_FOLDER=confluent-cli
 ifeq (true, $(RELEASE_TEST))
-GORELEASE_S3_CCLOUD_FOLDER=$(S3_RELEASE_TEST_FOLDER)/ccloud-cli/binaries
-GORELEASE_S3_CONFLUENT_FOLDER=$(S3_RELEASE_TEST_FOLDER)/confluent-cli/binaries
+S3_CCLOUD_FOLDER=$(S3_RELEASE_TEST_FOLDER)/ccloud-cli
+S3_CONFLUENT_FOLDER=$(S3_RELEASE_TEST_FOLDER)/confluent-cli
 endif
 
 .PHONY: gorelease
 gorelease:
+	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(GORELEASE_S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CCLOUD_FOLDER) goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_CONFLUENT_FOLDER) goreleaser release --rm-dist -f .goreleaser-confluent.yml
+
+# goreleaser does not yet support setting ACLs for S3 so we have set `public-read` manually by copy the file in place
+# dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change not included)
+.PHONY: set-acls
+set-acls:
+	$(caasenv-authenticate) && \
 	aws s3 cp $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
-	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive
+	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) $(S3_BUCKET_PATH)/confluent-cli/binaries/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
+	aws s3 cp $(S3_BUCKET_PATH)/ccloud-cli/archives/$(VERSION_NO_V) $(S3_BUCKET_PATH)/ccloud-cli/archives/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive && \
+	aws s3 cp $(S3_BUCKET_PATH)/confluent-cli/archives/$(VERSION_NO_V) $(S3_BUCKET_PATH)/confluent-cli/archives/$(VERSION_NO_V) --acl public-read --metadata dummy=dummy --recursive
+
+.PHONY: copy-archives-to-latest
+copy-archives-to-latest:
+	$(eval TEMP_DIR=$(shell mktemp -d))
+	$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
+		aws s3 cp $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION) $(TEMP_DIR)/$${binary}-cli --recursive ; \
+		cd $(TEMP_DIR)/$${binary}-cli ; \
+		for fname in $${binary}_v$(CLEAN_VERSION)_*; do \
+			newname=`echo "$$fname" | sed 's/_v$(CLEAN_VERSION)/_latest/g'`; \
+			mv $$fname $$newname; \
+		done ; \
+		rm *checksums.txt; \
+		$(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
+		aws s3 cp ./ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest --acl public-read --recursive ; \
+	done
+	rm -rf $(TEMP_DIR)
+
+# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
+# chose to not change install script because older versions uses the no-v format
+# if we update the script to accept both checksums name format, this target would no longer be needed
+.PHONY: rename-archives-checksums
+rename-archives-checksums:
+	$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
+		aws s3 mv $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_checksums.txt $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_checksums.txt --acl public-read; \
+	done
+
 
 .PHONY: fakegorelease
 fakegorelease:
@@ -32,66 +71,15 @@ fakegorelease:
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
 
-.PHONY: sign
-sign:
-	@GO111MODULE=on gon gon_ccloud.hcl
-	@GO111MODULE=on gon gon_confluent.hcl
-	rm dist/ccloud/ccloud_darwin_amd64/ccloud_signed.zip || true
-	rm dist/confluent/confluent_darwin_amd64/confluent_signed.zip || true
-
 .PHONY: download-licenses
 download-licenses:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
-	@for binary in ccloud confluent; do \
-		echo Downloading third-party licenses for $${binary} binary ; \
-		GITHUB_TOKEN=$(token) golicense .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/$${binary}/licenses -n legal/$${binary}/notices ; \
-		[ -z "$$(ls -A legal/$${binary}/licenses)" ] && rmdir legal/$${binary}/licenses ; \
-		[ -z "$$(ls -A legal/$${binary}/notices)" ] && rmdir legal/$${binary}/notices ; \
-		echo ; \
-	done
-
-.PHONY: dist
-dist: download-licenses
-	@# unfortunately goreleaser only supports one archive right now (either tar/zip or binaries): https://github.com/goreleaser/goreleaser/issues/705
-	@# we had goreleaser upload binaries (they're uncompressed, so goreleaser's parallel uploads will save more time with binaries than archives)
-	@for binary in ccloud confluent; do \
-		for os in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$2 }'); do \
-			for arch in $$(find dist/$${binary} -mindepth 1 -maxdepth 1 -iname $${binary}_$${os}_* -type d | awk -F'/' '{ print $$3 }' | awk -F'_' '{ print $$3 }'); do \
-				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
-					continue ; \
-				fi; \
-				[ "$${os}" = "windows" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-				rm -rf /tmp/$${binary} && mkdir /tmp/$${binary} ; \
-				cp LICENSE /tmp/$${binary} && cp -r legal/$${binary} /tmp/$${binary}/legal ; \
-				cp dist/$${binary}/$${binary}_$${os}_$${arch}/$${binexe} /tmp/$${binary} ; \
-				suffix="" ; \
-				if [ "$${os}" = "windows" ] ; then \
-					suffix=zip ; \
-					cd /tmp >/dev/null && zip -qr $${binary}.$${suffix} $${binary} && cd - >/dev/null ; \
-					mv /tmp/$${binary}.$${suffix} dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix}; \
-				else \
-					suffix=tar.gz ; \
-					tar -czf dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} -C /tmp $${binary} ; \
-				fi ; \
-				cp dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$${binary}/$${binary}_latest_$${os}_$${arch}.$${suffix} ; \
-			done ; \
-		done ; \
-		cd dist/$${binary}/ ; \
-		  $(SHASUM) $${binary}_$(VERSION)_* > $${binary}_$(VERSION)_checksums.txt ; \
-		  $(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
-		  cd ../.. ; \
-	done
-
-.PHONY: publish
-## Note: gorelease target publishes unsigned binaries to the binaries folder in the bucket, we have to overwrite them here after signing
-publish: sign dist
-	@$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		aws s3 cp dist/$${binary}/$${binary}_darwin_amd64/$${binary} $(S3_BUCKET_PATH)/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
-		aws s3 cp dist/$${binary}/ $(S3_BUCKET_PATH)/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
-		aws s3 cp dist/$${binary}/ $(S3_BUCKET_PATH)/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
-	done
+	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
+	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/licenses -n legal/notices ; \
+	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
+	[ -z "$$(ls -A legal/notices)" ] && { echo "ERROR: notices folder not populated" && exit 1; }; \
+	echo Successfully downloaded licenses
 
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.

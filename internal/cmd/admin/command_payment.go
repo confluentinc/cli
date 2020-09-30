@@ -2,18 +2,17 @@ package admin
 
 import (
 	"context"
-	"os"
-	"strings"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/token"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"os"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 )
 
 type command struct {
@@ -26,7 +25,7 @@ func NewPaymentCommand(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:   "payment",
-				Short: "Manage an organization's payment method.",
+				Short: "Manage payment method.",
 				Args:  cobra.NoArgs,
 			},
 			prerunner,
@@ -34,16 +33,16 @@ func NewPaymentCommand(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 		isTest,
 	}
 
-	c.AddCommand(c.newPaymentDescribeCommand())
-	c.AddCommand(c.newPaymentUpdateCommand())
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command
 }
 
-func (c *command) newPaymentDescribeCommand() *cobra.Command {
+func (c *command) newDescribeCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "describe",
-		Short: "Print the payment method for an organization.",
+		Short: "Describe the active payment method.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.describeRunE),
 	}
@@ -63,10 +62,10 @@ func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (c *command) newPaymentUpdateCommand() *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "update",
-		Short: "Update the payment method for an organization.",
+		Short: "Update the active payment method.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.updateRunE),
 	}
@@ -80,9 +79,9 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 	pcmd.Println(cmd, "Edit credit card")
 
 	f := form.New(
-		form.Field{ID: "card number", Prompt: "Card number", Regex: `(?:\d[ -]*?){13,19}`},
-		form.Field{ID: "expiration", Prompt: "MM/YY", Regex: `\d{2}/\d{2}`},
-		form.Field{ID: "cvc", Prompt: "CVC", Regex: `\d{3,4}`},
+		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
+		form.Field{ID: "expiration", Prompt: "MM/YY", Regex: `^\d{2}/\d{2}$`},
+		form.Field{ID: "cvc", Prompt: "CVC", Regex: `^\d{3,4}$`, IsHidden: true},
 		form.Field{ID: "name", Prompt: "Cardholder name"},
 	)
 
@@ -92,9 +91,9 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
 	if c.isTest {
-		stripe.Key = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
+		stripe.Key = keys.StripeTestKey
 	} else {
-		stripe.Key = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
+		stripe.Key = keys.StripeLiveKey
 	}
 	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
 		Level: 0,
