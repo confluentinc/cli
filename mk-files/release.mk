@@ -8,9 +8,8 @@ release: release-to-staging
 .PHONY: release-to-staging
 release-to-staging: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
-	make set-acls
+	make goreleaser-patches
 	make copy-archives-to-latest
-	make rename-archives-checksums 
 	git checkout go.sum
 	make verify-staging
 
@@ -40,8 +39,16 @@ gorelease:
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml
 
-# goreleaser does not yet support setting ACLs for S3 so we have set `public-read` manually by copy the file in place
-# dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change not included)
+# Current goreleaser still has some shortcomings for the our use, and the target patches those issues
+# As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
+.PHONY: goreleaser-patches
+goreleaser-patches:
+	make set-acls
+	make rename-archives-checksums
+
+# goreleaser does not yet support setting ACLs for cloud storage
+# We have to set `public-read` manually by copying the file in place
+# Dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change doesn't count)
 .PHONY: set-acls
 set-acls:
 	$(caasenv-authenticate) && \
@@ -53,17 +60,26 @@ set-acls:
 		done; \
 	done
 
+# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
+# Chose not to change install script to expect no-v because older versions use the format with 'v'
+.PHONY: rename-archives-checksums
+rename-archives-checksums:
+	$(caasenv-authenticate); \
+	for binary in ccloud confluent; do \
+		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
+		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
+	done
+
 # Update latest archives folder
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
 # e.g. may be using this to restore while cli repo VERSION value is dirty, hence CLEAN_VERSION variable is used
 .PHONY: copy-archives-to-latest
 copy-archives-to-latest:
-	make copy-archive-files-to-latest
+	make copy-archives-files-to-latest
 	make copy-archives-checksums-to-latest
 
-
-.PHONY: copy-archive-files-to-latest
-copy-archive-files-to-latest:
+.PHONY: copy-archives-files-to-latest
+copy-archives-files-to-latest:
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		archives_folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
@@ -88,23 +104,6 @@ copy-archives-checksums-to-latest:
 		aws s3 cp $${latest_checksums} $(S3_STAG_PATH)/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
 	done
 	rm -rf $(TEMP_DIR)
-
-# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
-# chose to not change install script because older versions uses the no-v format
-# if we update the script to accept both checksums name format, this target would no longer be needed
-.PHONY: rename-archives-checksums
-rename-archives-checksums:
-	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
-		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
-	done
-
-.PHONY: fakegorelease
-fakegorelease:
-	@GO111MODULE=off go get -u github.com/inconshreveable/mousetrap # dep from cobra -- incompatible with go mod
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-ccloud-fake.yml
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --rm-dist -f .goreleaser-confluent-fake.yml
 
 .PHONY: download-licenses
 download-licenses:
