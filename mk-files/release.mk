@@ -3,20 +3,20 @@ ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_am
 .PHONY: release
 release:
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
-	make release-to-staging	
+	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 
-.PHONY: release-to-staging
-release-to-staging: get-release-image commit-release tag-release
+.PHONY: release-to-stag
+release-to-stag: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
 	make goreleaser-patches
 	make copy-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
-	make verify-staging
+	make verify-stag
 	$(call print-boxed-message,"STAGING RELEASE COMPLETED AND VERIFIED!")
 
 .PHONY: release-to-prod

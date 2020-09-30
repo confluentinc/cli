@@ -7,8 +7,8 @@ test-installers:
 	@ # if ${ARCHIVES_VERSION_TO_TEST} is empty, archives latest folder will be tested
 	@bash test-installers.sh ${ARCHIVES_VERSION_TO_TEST}
 
-.PHONY: verify-staging
-verify-staging:
+.PHONY: verify-stag
+verify-stag:
 	VERIFY_ARCHIVES_FOLDER_TARGET=$(S3_STAG_FOLDER_NAME) make verify-archive-installers
 	VERIFY_RELEASE_TARGET=$(S3_STAG_PATH) make verify-binary-files
 
