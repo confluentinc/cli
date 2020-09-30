@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -12,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -148,7 +148,7 @@ func (c userCommand) newUserInviteCommand() (createCmd *cobra.Command) {
 
 func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	email := args[0]
-	matched := validateEmail(email)
+	matched := utils.ValidateEmail(email)
 	if !matched {
 		return errors.New(errors.BadEmailFormatErrorMsg)
 	}
@@ -159,12 +159,6 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	}
 	pcmd.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
 	return nil
-}
-
-func validateEmail(email string) bool {
-	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	matched := rgxEmail.MatchString(email)
-	return matched
 }
 
 func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
