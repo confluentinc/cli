@@ -8,6 +8,10 @@ const (
 	// format
 	prefixFormat = "%s: %s"
 
+	// admin commands
+	BadResourceIDErrorMsg  = "failed parsing resource id: please ensure resource id begins with \"u-\""
+	BadEmailFormatErrorMsg = "invalid email structure"
+
 	// api-key commands
 	UnableToStoreAPIKeyErrorMsg       = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg    = "command not yet available for non-Kafka cluster resources"

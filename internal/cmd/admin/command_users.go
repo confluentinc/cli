@@ -2,35 +2,38 @@ package admin
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strings"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
-	"regexp"
-	"strings"
 )
 
 var (
-	listFields          = []string{"ResourceId", "Email", "FirstName", "LastName", "Status"}
-	humanLabels         = []string{"Resource ID", "Email", "First Name", "Last Name", "Status"}
-	humanLabelMap		= map[string]string{
+	listFields    = []string{"ResourceId", "Email", "FirstName", "LastName", "Status"}
+	humanLabels   = []string{"Resource ID", "Email", "First Name", "Last Name", "Status"}
+	humanLabelMap = map[string]string{
 		"ResourceId": "Resource ID",
-		"Email":"Email",
-		"FirstName":"First Name",
-		"LastName":"Last Name",
-		"Status":"Status",
+		"Email":      "Email",
+		"FirstName":  "First Name",
+		"LastName":   "Last Name",
+		"Status":     "Status",
 	}
-	structuredLabels    = []string{"resource_id", "email", "first_name", "last_name", "status"}
-	structuredLabelMap	= map[string]string{
+	structuredLabels   = []string{"resource_id", "email", "first_name", "last_name", "status"}
+	structuredLabelMap = map[string]string{
 		"ResourceId": "resource_id",
-		"Email":"email",
-		"FirstName":"first_name",
-		"LastName":"last_name",
-		"Status":"status",
+		"Email":      "email",
+		"FirstName":  "first_name",
+		"LastName":   "last_name",
+		"Status":     "status",
 	}
-	statusMap 			= map[bool]string{
-		true: "Active",
+	statusMap = map[bool]string{
+		true:  "Active",
 		false: "Pending",
 	}
 )
@@ -40,11 +43,11 @@ type userCommand struct {
 }
 
 type userStruct struct {
-	ResourceId  string
-	Email  		string
-	FirstName   string
-	LastName 	string
-	Status		string
+	ResourceId string
+	Email      string
+	FirstName  string
+	LastName   string
+	Status     string
 }
 
 func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -81,11 +84,11 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
 	validFormat := strings.HasPrefix(resourceId, "u-")
 	if !validFormat {
-		return errors.New("please use Resource ID as the command argument, beginning with \"u-\"")
+		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{
-		ResourceId:           resourceId,
-		OrganizationId:       c.State.Auth.User.OrganizationId,
+		ResourceId:     resourceId,
+		OrganizationId: c.State.Auth.User.OrganizationId,
 	})
 	if err != nil {
 		return err
@@ -124,17 +127,17 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	for _, user := range users {
 		outputWriter.AddElement(&userStruct{
 			ResourceId: user.ResourceId,
-			Email: user.Email,
-			FirstName: user.FirstName,
-			LastName: user.LastName,
-			Status: statusMap[(user.Verified != nil && user.Verified.Seconds != 0)],
+			Email:      user.Email,
+			FirstName:  user.FirstName,
+			LastName:   user.LastName,
+			Status:     statusMap[(user.Verified != nil && user.Verified.Seconds != 0)],
 		})
 	}
 	return outputWriter.Out()
 }
 
 func (c userCommand) newUserInviteCommand() (createCmd *cobra.Command) {
-	createCmd = &cobra.Command {
+	createCmd = &cobra.Command{
 		Use:   "invite <email>",
 		Short: "Invite a user to join your organization.",
 		Args:  cobra.ExactArgs(1),
@@ -147,14 +150,14 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	email := args[0]
 	matched := validateEmail(email)
 	if !matched {
-		return errors.New("invalid email structure")
+		return errors.New(errors.BadEmailFormatErrorMsg)
 	}
 	newUser := &orgv1.User{Email: email, OrganizationId: c.State.Auth.User.OrganizationId}
 	user, err := c.Client.User.Invite(context.Background(), newUser)
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "An email invitation has been sent to " + user.Email)
+	pcmd.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
 	return nil
 }
 
@@ -165,11 +168,11 @@ func validateEmail(email string) bool {
 }
 
 func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
-	deleteCmd = &cobra.Command {
-		Use:   "delete <resource id>",
-		Short: "Delete a user from your organization.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+	deleteCmd = &cobra.Command{
+		Use:    "delete <resource id>",
+		Short:  "Delete a user from your organization.",
+		Args:   cobra.ExactArgs(1),
+		RunE:   pcmd.NewCLIRunE(c.delete),
 		Hidden: true,
 	}
 	return
@@ -179,15 +182,15 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
 	validFormat := strings.HasPrefix(resourceId, "u-")
 	if !validFormat {
-		return errors.New("please use Resource ID as the command argument, beginning with \"u-\"")
+		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 	err := c.Client.User.Delete(context.Background(), &orgv1.User{
-		ResourceId: 			resourceId,
+		ResourceId:     resourceId,
 		OrganizationId: c.State.Auth.User.OrganizationId,
 	})
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, "Successfully deleted user.")
+	pcmd.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
 	return nil
 }
