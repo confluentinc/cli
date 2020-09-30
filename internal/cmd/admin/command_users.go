@@ -68,8 +68,8 @@ func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c userCommand) newUserDescribeCommand() (describeCmd *cobra.Command) {
-	describeCmd = &cobra.Command{
+func (c userCommand) newUserDescribeCommand() *cobra.Command {
+	describeCmd := &cobra.Command{
 		Use:   "describe <resource id>",
 		Short: "Describe a user.",
 		Args:  cobra.ExactArgs(1),
@@ -77,7 +77,7 @@ func (c userCommand) newUserDescribeCommand() (describeCmd *cobra.Command) {
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
-	return
+	return describeCmd
 }
 
 func (c userCommand) describe(cmd *cobra.Command, args []string) error {
@@ -102,8 +102,8 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
-func (c userCommand) newUserListCommand() (listCmd *cobra.Command) {
-	listCmd = &cobra.Command{
+func (c userCommand) newUserListCommand() *cobra.Command {
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List an organization's users.",
 		Args:  cobra.NoArgs,
@@ -111,7 +111,7 @@ func (c userCommand) newUserListCommand() (listCmd *cobra.Command) {
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
-	return
+	return listCmd
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
@@ -136,14 +136,14 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (c userCommand) newUserInviteCommand() (createCmd *cobra.Command) {
-	createCmd = &cobra.Command{
+func (c userCommand) newUserInviteCommand() *cobra.Command {
+	createCmd := &cobra.Command{
 		Use:   "invite <email>",
 		Short: "Invite a user to join your organization.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.invite),
 	}
-	return
+	return createCmd
 }
 
 func (c userCommand) invite(cmd *cobra.Command, args []string) error {
@@ -161,15 +161,15 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c userCommand) newUserDeleteCommand() (deleteCmd *cobra.Command) {
-	deleteCmd = &cobra.Command{
+func (c userCommand) newUserDeleteCommand() *cobra.Command {
+	deleteCmd := &cobra.Command{
 		Use:    "delete <resource id>",
 		Short:  "Delete a user from your organization.",
 		Args:   cobra.ExactArgs(1),
 		RunE:   pcmd.NewCLIRunE(c.delete),
 		Hidden: true,
 	}
-	return
+	return deleteCmd
 }
 
 func (c userCommand) delete(cmd *cobra.Command, args []string) error {
