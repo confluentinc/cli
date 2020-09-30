@@ -11,6 +11,7 @@ include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
 include ./mk-files/unrelease.mk
+include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")

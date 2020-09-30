@@ -4,7 +4,7 @@ VERIFY_ARCHIVES_FOLDER_OVERRIDE ?=
 .PHONY: test-installers
 test-installers:
 	@echo Running packaging/installer tests
-	@ # if ${ARCHIVES_VERSION_TO_TEST} archives latest folder will be tested
+	@ # if ${ARCHIVES_VERSION_TO_TEST} is empty, archives latest folder will be tested
 	@bash test-installers.sh ${ARCHIVES_VERSION_TO_TEST}
 
 .PHONY: verify-staging
@@ -12,8 +12,8 @@ verify-staging:
 	VERIFY_ARCHIVES_FOLDER_TARGET=$(S3_STAG_FOLDER_NAME) make verify-archive-installers
 	VERIFY_RELEASE_TARGET=$(S3_STAG_PATH) make verify-binary-files
 
-.PHONY: verify-release
-verify-release:
+.PHONY: verify-prod
+verify-prod:
 	make verify-archive-installers
 	make verify-binary-files
 
@@ -21,7 +21,7 @@ verify-release:
 verify-archive-installers:
 	make test-installers OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
 	make test-installers ARCHIVES_VERSION_TO_TEST=v$(CLEAN_VERSION) OVERRIDE_S3_FOLDER=$(VERIFY_ARCHIVES_FOLDER_TARGET)
-	@echo "ARCHIVES VERIFICATION PASSED!!!"
+	@echo "*** ARCHIVES VERIFICATION PASSED!!! ***"
 
 # check that the expected binaries are present and have --acl public-read
 .PHONY: verify-binary-files
@@ -46,4 +46,4 @@ verify-binary-files:
 		done; \
 	done
 	rm -rf $(TEMP_DIR)	
-	@echo "BINARY VERIFICATION PASSED!!!"
+	@echo "*** BINARIES VERIFICATION PASSED!!! ***"

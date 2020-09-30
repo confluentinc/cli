@@ -1,35 +1,40 @@
 ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip
 
 .PHONY: release
-release: release-to-staging 
+release:
+	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
+	make release-to-staging	
+	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
+	make release-to-prod
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 
 .PHONY: release-to-staging
 release-to-staging: get-release-image commit-release tag-release
 	@GO111MODULE=on make gorelease
+	git checkout go.sum
 	make goreleaser-patches
 	make copy-archives-to-latest
-	git checkout go.sum
+	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
 	make verify-staging
+	$(call print-boxed-message,"STAGING RELEASE COMPLETED AND VERIFIED!")
 
 .PHONY: release-to-prod
 release-to-prod:
 	@$(caasenv-authenticate) && \
-	$(copy-binaries) && \
 	for binary in ccloud confluent; do \
 		for file_type in binaries archives; do \
-			folder_path=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
-			echo "COPYING OVER: $${folder_path}"; \
+			folder_path=$${binary}-cli/$${file_type}/$(CLEAN_VERSION); \
+			echo "COPYING: $${folder_path}"; \
 			aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1; \
 		done; \
 		latest_folder=$${binary}-cli/archives/latest; \
 		echo "COPYING LATEST FOLDER: $${latest_folder}"; \
 		aws s3 cp $(S3_STAG_PATH)/$${latest_folder} $(S3_BUCKET_PATH)/$${latest_folder} --recursive --acl public-read || exit 1; \
 	done
-	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
-	git checkout go.sum
-	make verify-release
+	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
+	make verify-prod
+	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
 
 .PHONY: gorelease
 gorelease:
