@@ -1,7 +1,7 @@
 ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip
 
 .PHONY: release
-release:
+release: get-release-image commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
@@ -10,7 +10,7 @@ release:
 	git checkout go.sum
 
 .PHONY: release-to-stag
-release-to-stag: get-release-image commit-release tag-release
+release-to-stag:
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
 	make goreleaser-patches
