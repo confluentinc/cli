@@ -70,6 +70,9 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	if cmd.Annotations == nil {
 		cmd.Annotations = make(map[string]string)
 	}
+
+	// For the first time, validate the token using the prerunner, which tries to update the JWT if it's invalid.
+	// After the first time, validate using the token validator, which doesn't try to update the JWT because that would be too slow.
 	c.Command.Annotations[pcmd.DoNotTrack] = ""
 	if err := c.prerunner.Authenticated(pcmd.NewAuthenticatedCLICommand(c.Command, c.prerunner))(c.Command, args); err != nil {
 		msg = "You are currently not authenticated."
