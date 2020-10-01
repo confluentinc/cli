@@ -1,9 +1,9 @@
 .PHONY: unrelease-prod
 unrelease-prod:
-	make delete-archives-and-binaries
+	make delete-archives-and-binaries # needs to be run before version tag is reverted
+	make delete-release-notes # needs to be run before version tag is reverted
 	make reset-tag-and-commit
-	make restore-latest-archives
-	make delete-release-notes
+	make restore-latest-archives # needs to be run after version tag is reverted
 
 .PHONY: unrelease-stag
 unrelease-stag:
@@ -39,9 +39,7 @@ delete-archives-and-binaries:
 .PHONY: delete-release-notes
 delete-release-notes:
 	@echo -n "Do you want to delete the release notes from S3? (y/n): "
-	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
-	$(caasenv-authenticate); \
-	$(call delete-release-folder,release-notes)
+	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(caasenv-authenticate); $(call delete-release-folder,release-notes); fi
 
 define delete-release-folder
 	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/$1/$(CLEAN_VERSION) --recursive; \
