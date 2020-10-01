@@ -51,6 +51,8 @@ endef
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
 	make copy-archives-to-latest
+	$(caasenv-authenticate); \
+	$(call copy-release-content-to-prod,archives,latest)
 	@echo "Verifying latest archives with: make test-installers"
 	make test-installers
 

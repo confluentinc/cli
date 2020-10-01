@@ -22,19 +22,20 @@ release-to-stag:
 .PHONY: release-to-prod
 release-to-prod:
 	@$(caasenv-authenticate) && \
-	for binary in ccloud confluent; do \
-		for file_type in binaries archives; do \
-			folder_path=$${binary}-cli/$${file_type}/$(CLEAN_VERSION); \
-			echo "COPYING: $${folder_path}"; \
-			aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1; \
-		done; \
-		latest_folder=$${binary}-cli/archives/latest; \
-		echo "COPYING LATEST FOLDER: $${latest_folder}"; \
-		aws s3 cp $(S3_STAG_PATH)/$${latest_folder} $(S3_BUCKET_PATH)/$${latest_folder} --recursive --acl public-read || exit 1; \
-	done
+	$(call copy-release-content-to-prod,archives,$(CLEAN_VERSION)); \
+	$(call copy-release-content-to-prod,binaries,$(CLEAN_VERSION)); \
+	$(call copy-release-content-to-prod,archives,latest)
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	make verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
+
+define copy-release-content-to-prod
+	for binary in ccloud confluent; do \
+		folder_path=$${binary}-cli/$1/$2; \
+		echo "COPYING: $${folder_path}"; \
+		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1; \
+	done
+endef
 
 .PHONY: gorelease
 gorelease:
