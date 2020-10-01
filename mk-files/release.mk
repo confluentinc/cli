@@ -14,7 +14,7 @@ release-to-stag:
 	@GO111MODULE=on make gorelease
 	git checkout go.sum
 	make goreleaser-patches
-	make copy-archives-to-latest
+	make copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
 	make verify-stag
 	$(call print-boxed-message,"STAGING RELEASE COMPLETED AND VERIFIED!")
@@ -22,14 +22,14 @@ release-to-stag:
 .PHONY: release-to-prod
 release-to-prod:
 	@$(caasenv-authenticate) && \
-	$(call copy-release-content-to-prod,archives,$(CLEAN_VERSION)); \
-	$(call copy-release-content-to-prod,binaries,$(CLEAN_VERSION)); \
-	$(call copy-release-content-to-prod,archives,latest)
+	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
+	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
+	$(call copy-stag-content-to-prod,archives,latest)
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	make verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
 
-define copy-release-content-to-prod
+define copy-stag-content-to-prod
 	for binary in ccloud confluent; do \
 		folder_path=$${binary}-cli/$1/$2; \
 		echo "COPYING: $${folder_path}"; \
@@ -76,40 +76,44 @@ rename-archives-checksums:
 		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
 	done
 
-# Update latest archives folder
+# Update latest archives folder for staging
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
 # e.g. may be using this to restore while cli repo VERSION value is dirty, hence CLEAN_VERSION variable is used
-.PHONY: copy-archives-to-latest
-copy-archives-to-latest:
-	make copy-archives-files-to-latest
-	make copy-archives-checksums-to-latest
+.PHONY: copy-stag-archives-to-latest
+copy-stag-archives-to-latest:
+	$(call copy-archives-files-to-latest,$(S3_STAG_PATH),$(S3_STAG_PATH))
+	$(call copy-archives-checksums-to-latest,$(S3_STAG_PATH),$(S3_STAG_PATH))
 
-.PHONY: copy-archives-files-to-latest
-copy-archives-files-to-latest:
+# first argument: S3 folder of archives we want to copy from
+# second argument: S3 folder destination for latest archives
+define copy-archives-files-to-latest
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
-		archives_folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
-		latest_folder=$(S3_STAG_PATH)/$${binary}-cli/archives/latest; \
+		archives_folder=$1/$${binary}-cli/archives/$(CLEAN_VERSION); \
+		latest_folder=$2/$${binary}-cli/archives/latest; \
 		for suffix in $(ARCHIVE_TYPES); do \
 			aws s3 cp $${archives_folder}/$${binary}_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/$${binary}_latest_$${suffix} --acl public-read; \
 		done ; \
 	done
+endef
 
 # Copy archives checksum file then rename the filenames in the checksum by replacing VERSION to "latest"
 # Then publish the checksum file to S3 latest folder
-.PHONY: copy-archives-checksums-to-latest
-copy-archives-checksums-to-latest:
+# first argument: S3 folder of archives we want to copy from
+# second argument: S3 folder destination for latest archives
+define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
 		latest_checksums=$${binary}_latest_checksums.txt; \
 		cd $(TEMP_DIR) ; \
-		aws s3 cp $(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
+		aws s3 cp $1/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
 		cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
-		aws s3 cp $${latest_checksums} $(S3_STAG_PATH)/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
+		aws s3 cp $${latest_checksums} $2/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
 	done
 	rm -rf $(TEMP_DIR)
+endef
 
 .PHONY: download-licenses
 download-licenses:

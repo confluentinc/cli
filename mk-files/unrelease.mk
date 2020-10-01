@@ -7,9 +7,9 @@ unrelease-prod: unrelease-warn
 
 .PHONY: unrelease-stag
 unrelease-stag: unrelease-warn
+	make delete-release-notes
 	make reset-tag-and-commit
 	make clean-staging-folder
-	make delete-release-notes
 
 .PHONY: reset-tag-and-commit
 reset-tag-and-commit:
@@ -48,11 +48,18 @@ endef
 
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
-	make copy-archives-to-latest
+	make copy-prod-archives-to-stag-latest
+	VERIFY_ARCHIVES_FOLDER_TARGET=$(S3_STAG_FOLDER_NAME) make verify-archive-installers
 	$(caasenv-authenticate); \
-	$(call copy-release-content-to-prod,archives,latest)
+	$(call copy-stag-content-to-prod,archives,latest)
 	@echo "Verifying latest archives with: make test-installers"
 	make test-installers
+
+.PHONY: copy-prod-archives-to-stag-latest
+copy-prod-archives-to-stag-latest:
+	$(call copy-archives-files-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
+	$(call copy-archives-checksums-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
+
 
 .PHONY: restore-latest-archives-warn
 restore-latest-archives-warn:
