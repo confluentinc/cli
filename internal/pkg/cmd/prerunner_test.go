@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -111,7 +110,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 				Config:             cfg,
-				JWTValidator:       pcmd.NewJWTValidator(tt.fields.Logger, clockwork.NewRealClock()),
+				JWTValidator:       pcmd.NewJWTValidator(tt.fields.Logger),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -149,7 +148,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 		},
 		Analytics:          cliMock.NewDummyAnalyticsMock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-		JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
+		JWTValidator:       pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -182,7 +181,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 		},
 		Analytics:          analyticsClient,
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-		JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
+		JWTValidator:       pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -219,7 +218,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		Analytics:          analyticsClient,
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 		Config:             cfg,
-		JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
+		JWTValidator:       pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -321,7 +320,7 @@ func Test_UpdateToken(t *testing.T) {
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				UpdateTokenHandler: updateTokenHandler,
 				Config:             cfg,
-				JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
+				JWTValidator:       pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
@@ -400,7 +399,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				Analytics:          analyticsClient,
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 				Config:             tt.config,
-				JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
+				JWTValidator:       pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{

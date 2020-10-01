@@ -21,14 +21,15 @@ type JWTValidatorImpl struct {
 	Version *version.Version
 }
 
-func NewJWTValidator(logger *log.Logger, clock clockwork.Clock) *JWTValidatorImpl {
+func NewJWTValidator(logger *log.Logger) *JWTValidatorImpl {
 	return &JWTValidatorImpl{
 		Logger: logger,
-		Clock:  clock,
+		Clock:  clockwork.NewRealClock(),
 	}
 }
 
-// validate token (not expired)
+// Validate returns an error if the JWT in the specified context is invalid.
+// The JWT is invalid if it's not parsable or expired.
 func (v *JWTValidatorImpl) Validate(context *v3.Context) error {
 	var authToken string
 	if context != nil {

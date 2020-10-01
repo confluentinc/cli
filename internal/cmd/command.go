@@ -97,7 +97,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		return nil, err
 	}
 	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
-	jwtValidator := pcmd.NewJWTValidator(logger, clockwork.NewRealClock())
+	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
 		Config:             cfg,
 		ConfigLoadingError: configLoadingErr,

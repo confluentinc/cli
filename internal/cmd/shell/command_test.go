@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	goprompt "github.com/c-bata/go-prompt"
-	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
@@ -51,7 +50,7 @@ func Test_prefixState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			text, color := prefixState(cmd.NewJWTValidator(log.New(), clockwork.NewRealClock()), tt.args.config)
+			text, color := prefixState(cmd.NewJWTValidator(log.New()), tt.args.config)
 			require.Equal(t, tt.wantText, text)
 			require.Equal(t, tt.wantColor, color)
 		})
