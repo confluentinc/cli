@@ -331,7 +331,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		} else if command.Context.Credential.CredentialType == v2.Username {
-			err := r.checkUserAuthentication(command.Config, cmd)
+			err := r.ValidateToken(cmd, command.Config)
 			if err != nil {
 				return err
 			}
@@ -358,27 +358,6 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		}
 		return nil
 	}
-}
-
-// Check if user is logged in with valid auth token, for commands that are not of AuthenticatedCLICommand type which already
-// does that check automatically in the prerun
-func (r *PreRun) checkUserAuthentication(cfg *DynamicConfig, cmd *cobra.Command) error {
-	ctx, err := cfg.Context(cmd)
-	if err != nil {
-		return err
-	}
-	_, err = ctx.AuthenticatedState(cmd)
-	if err != nil {
-		return err
-	}
-	if ctx == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
-	}
-	err = r.ValidateToken(cmd, cfg)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
