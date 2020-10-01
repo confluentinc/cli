@@ -1,8 +1,8 @@
 .PHONY: unrelease-prod
 unrelease-prod:
+	make delete-archives-and-binaries
 	make reset-tag-and-commit
 	make restore-latest-archives
-	make delete-archives-and-binaries
 	make delete-release-notes
 
 .PHONY: unrelease-stag
