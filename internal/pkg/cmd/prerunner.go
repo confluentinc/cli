@@ -41,28 +41,9 @@ type PreRun struct {
 	Analytics          analytics.Client
 	FlagResolver       FlagResolver
 	Version            *version.Version
-	JWTValidator       JWTValidator	
+	JWTValidator       JWTValidator
+	UpdateTokenHandler pauth.UpdateTokenHandler
 }
-
-//func NewPreRun(config *v3.Config, configLoadingError error, updateClient update.Client,
-//	cliName string, logger *log.Logger, analytics analytics.Client, flagResolver FlagResolver,
-//	ver *version.Version, jwtValidator JWTValidator) *PreRun {
-//	return &PreRun{
-//		Config:             config,
-//		ConfigLoadingError: configLoadingError,
-//		UpdateClient:       updateClient,
-//		CLIName:            cliName,
-//		Logger:             logger,
-//		Analytics:          analytics,
-//		FlagResolver:       flagResolver,
-//		Version:            ver,
-//		JWTValidator:       &dynamicJWTValidator{
-//			JWTValidator: jwtValidator,
-//			ctx:          config,
-//			CLIName:      cliName,
-//		}
-//	}
-//}
 
 type CLICommand struct {
 	*cobra.Command
@@ -85,19 +66,50 @@ type HasAPIKeyCLICommand struct {
 	Context *DynamicContext
 }
 
-//// dynamicJWTValidator is a thin wrapper around JWTValidator that uses a dynamic context instead of a static one.
-//type dynamicJWTValidator struct {
-//	JWTValidator
-//	config *
-//	CLIName string
-//}
-//
-//func (v *dynamicJWTValidator) Validate() error {
-//	if v.ctx == nil {
-//		return &errors.NoContextError{CLIName: v.CLIName}
-//	}
-//	return v.JWTValidator.Validate(v.ctx.Context)
-//}
+func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
+	if config == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	ctx, err := config.Context(cmd)
+	if err != nil {
+		return err
+	}
+	if ctx == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	err = r.JWTValidator.Validate(ctx.Context)
+	if err == nil {
+		return nil
+	}
+	switch err.(type) {
+	case *ccloud.InvalidTokenError:
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx.Context)
+	case *ccloud.ExpiredTokenError:
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx.Context)
+	}
+	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx.Context)
+	} else {
+		return r.updateToken(err, ctx.Context)
+	}
+}
+
+func (r *PreRun) updateToken(tokenError error, context *v3.Context) error {
+	if context == nil {
+		r.Logger.Debug("Context is nil. Cannot attempt to update auth token.")
+		return tokenError
+	}
+	var updateErr error
+	if r.CLIName == "ccloud" {
+		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(context, r.Version.UserAgent, r.Logger)
+	} else {
+		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(context, r.Logger)
+	}
+	if updateErr == nil {
+		return nil
+	}
+	return tokenError
+}
 
 func (a *AuthenticatedCLICommand) AuthToken() string {
 	return a.State.AuthToken
@@ -199,11 +211,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			if err != nil {
 				return err
 			}
-			if ctx == nil {
-				err = &errors.NoContextError{CLIName: r.CLIName}
-			} else {
-				err = r.JWTValidator.Validate(ctx.Context)
-			}
+			err = r.ValidateToken(cmd, command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				err := ctx.DeleteUserAuth()
@@ -267,7 +275,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
-		return r.JWTValidator.Validate(ctx.Context)
+		return r.ValidateToken(cmd, command.Config)
 	}
 }
 
@@ -297,7 +305,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		}
 		command.Context = ctx
 		command.State = ctx.State
-		return r.JWTValidator.Validate(ctx.Context)
+		return r.ValidateToken(cmd, command.Config)
 	}
 }
 
@@ -323,7 +331,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		} else if command.Context.Credential.CredentialType == v2.Username {
-			err := r.checkUserAuthentication(ctx, cmd)
+			err := r.checkUserAuthentication(command.Config, cmd)
 			if err != nil {
 				return err
 			}
@@ -354,15 +362,19 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 
 // Check if user is logged in with valid auth token, for commands that are not of AuthenticatedCLICommand type which already
 // does that check automatically in the prerun
-func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command) error {
-	_, err := ctx.AuthenticatedState(cmd)
+func (r *PreRun) checkUserAuthentication(cfg *DynamicConfig, cmd *cobra.Command) error {
+	ctx, err := cfg.Context(cmd)
+	if err != nil {
+		return err
+	}
+	_, err = ctx.AuthenticatedState(cmd)
 	if err != nil {
 		return err
 	}
 	if ctx == nil {
 		return &errors.NoContextError{CLIName: r.CLIName}
 	}
-	err = r.JWTValidator.Validate(ctx.Context)
+	err = r.ValidateToken(cmd, cfg)
 	if err != nil {
 		return err
 	}
@@ -510,45 +522,3 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
-
-//func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
-//	// validate token (not expired)
-//	var authToken string
-//	if ctx != nil {
-//		authToken = ctx.State.AuthToken
-//	}
-//	var claims map[string]interface{}
-//	token, err := jwt.ParseSigned(authToken)
-//	if err != nil {
-//		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
-//	}
-//	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-//		return r.updateToken(err, ctx)
-//	}
-//	exp, ok := claims["exp"].(float64)
-//	if !ok {
-//		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
-//	}
-//	if float64(r.Clock.Now().Unix()) > exp {
-//		r.Logger.Debug("Token expired.")
-//		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
-//	}
-//	return nil
-//}
-//
-//func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
-//	if ctx == nil {
-//		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
-//		return tokenError
-//	}
-//	var updateErr error
-//	if r.CLIName == "ccloud" {
-//		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx.Context, r.Version.UserAgent, r.Logger)
-//	} else {
-//		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx.Context, r.Logger)
-//	}
-//	if updateErr == nil {
-//		return nil
-//	}
-//	return tokenError
-//}

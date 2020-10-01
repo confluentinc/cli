@@ -97,7 +97,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		return nil, err
 	}
 	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
-	jwtValidator := pcmd.NewJWTValidator(logger, clockwork.NewRealClock(), cliName, ver, pauth.NewUpdateTokenHandler(netrcHandler))
+	jwtValidator := pcmd.NewJWTValidator(logger, clockwork.NewRealClock())
 	prerunner := &pcmd.PreRun{
 		Config:             cfg,
 		ConfigLoadingError: configLoadingErr,
@@ -108,6 +108,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		Version:            ver,
 		Analytics:          analyticsClient,
 		JWTValidator:       jwtValidator,
+		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 	shellCompleter := completer.NewShellCompleter(cli)
