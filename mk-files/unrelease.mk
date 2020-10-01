@@ -1,18 +1,18 @@
 .PHONY: unrelease-prod
-unrelease-prod:
+unrelease-prod: unrelease-warn
 	make delete-archives-and-binaries # needs to be run before version tag is reverted
 	make delete-release-notes # needs to be run before version tag is reverted
 	make reset-tag-and-commit
 	make restore-latest-archives # needs to be run after version tag is reverted
 
 .PHONY: unrelease-stag
-unrelease-stag:
+unrelease-stag: unrelease-warn
 	make reset-tag-and-commit
 	make clean-staging-folder
 	make delete-release-notes
 
 .PHONY: reset-tag-and-commit
-reset-tag-and-commit: unrelease-warn
+reset-tag-and-commit:
 	git checkout master
 	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
