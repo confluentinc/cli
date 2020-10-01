@@ -109,9 +109,9 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Out:    os.Stdout,
 				},
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
-				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 				Config:             cfg,
+				JWTValidator:       pcmd.NewJWTValidator(tt.fields.Logger, clockwork.NewRealClock()),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -148,8 +148,8 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics:          cliMock.NewDummyAnalyticsMock(),
-		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -181,8 +181,8 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics:          analyticsClient,
-		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
 	}
 
 	root := &cobra.Command{
@@ -217,9 +217,9 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics:          analyticsClient,
-		Clock:              clockwork.NewRealClock(),
 		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 		Config:             cfg,
+		JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
 	}
 
 	root := &cobra.Command{
@@ -319,9 +319,9 @@ func Test_UpdateToken(t *testing.T) {
 					Out:    os.Stdout,
 				},
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
-				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: updateTokenHandler,
 				Config:             cfg,
+				JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
 			}
 
 			root := &cobra.Command{
@@ -350,8 +350,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
 	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
 
-	userNotLoggedIn := v3.AuthenticatedCloudConfigMock()
-	userNotLoggedIn.Context().State.Auth = nil
+	userNotLoggedIn := v3.UnauthenticatedCloudConfigMock()
 
 	tests := []struct {
 		name           string
@@ -393,14 +392,15 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 						return false, "", nil
 					},
 				},
+				CLIName: "ccloud",
 				FlagResolver: &pcmd.FlagResolverImpl{
 					Prompt: &pcmd.RealPrompt{},
 					Out:    os.Stdout,
 				},
 				Analytics:          analyticsClient,
-				Clock:              clockwork.NewRealClock(),
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 				Config:             tt.config,
+				JWTValidator:       pcmd.NewJWTValidator(log.New(), clockwork.NewRealClock()),
 			}
 
 			root := &cobra.Command{
