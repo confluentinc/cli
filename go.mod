@@ -22,6 +22,7 @@ require (
 	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0
 	github.com/confluentinc/cc-structs/kafka/core v0.601.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.593.0
 	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
 	github.com/confluentinc/cc-structs/kafka/org v0.419.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
@@ -29,7 +30,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.419.0
 	github.com/confluentinc/cc-structs/operator v0.419.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.54
+	github.com/confluentinc/ccloud-sdk-go v0.0.55
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
@@ -129,6 +130,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/tools v0.0.0-20200929223013-bf155c11ec6f // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect

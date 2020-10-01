@@ -1,6 +1,9 @@
 package errors
 
 const (
+	//admin commands
+	DeletedUserMsg     = "Successfully deleted user %s."
+	EmailInviteSentMsg = "An email invitation has been sent to %s"
 	// api-key command
 	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
 	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\".\n"

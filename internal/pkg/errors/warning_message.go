@@ -13,7 +13,7 @@ const (
 
 	//login command
 	UsingLoginURLDefaults = "Assuming %s.\n"
-  
+
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +
 		"for cluster %q has been dropped because it contains a MANAGEMENT event category. The OTHER event " +

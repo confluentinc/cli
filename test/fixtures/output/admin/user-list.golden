@@ -1,0 +1,4 @@
+  Resource ID |         Email         | First Name | Last Name | Status   
++-------------+-----------------------+------------+-----------+---------+
+  u11         | bstrauch@confluent.io | Brian      | Strauch   | Pending  
+  u17         | mtodzo@confluent.io   | Miles      | Todzo     | Pending  
