@@ -8,10 +8,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
-	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -40,12 +38,31 @@ type PreRun struct {
 	UpdateClient       update.Client
 	CLIName            string
 	Logger             *log.Logger
-	Clock              clockwork.Clock
 	Analytics          analytics.Client
 	FlagResolver       FlagResolver
 	Version            *version.Version
-	UpdateTokenHandler pauth.UpdateTokenHandler
+	JWTValidator       JWTValidator	
 }
+
+//func NewPreRun(config *v3.Config, configLoadingError error, updateClient update.Client,
+//	cliName string, logger *log.Logger, analytics analytics.Client, flagResolver FlagResolver,
+//	ver *version.Version, jwtValidator JWTValidator) *PreRun {
+//	return &PreRun{
+//		Config:             config,
+//		ConfigLoadingError: configLoadingError,
+//		UpdateClient:       updateClient,
+//		CLIName:            cliName,
+//		Logger:             logger,
+//		Analytics:          analytics,
+//		FlagResolver:       flagResolver,
+//		Version:            ver,
+//		JWTValidator:       &dynamicJWTValidator{
+//			JWTValidator: jwtValidator,
+//			ctx:          config,
+//			CLIName:      cliName,
+//		}
+//	}
+//}
 
 type CLICommand struct {
 	*cobra.Command
@@ -67,6 +84,20 @@ type HasAPIKeyCLICommand struct {
 	*CLICommand
 	Context *DynamicContext
 }
+
+//// dynamicJWTValidator is a thin wrapper around JWTValidator that uses a dynamic context instead of a static one.
+//type dynamicJWTValidator struct {
+//	JWTValidator
+//	config *
+//	CLIName string
+//}
+//
+//func (v *dynamicJWTValidator) Validate() error {
+//	if v.ctx == nil {
+//		return &errors.NoContextError{CLIName: v.CLIName}
+//	}
+//	return v.JWTValidator.Validate(v.ctx.Context)
+//}
 
 func (a *AuthenticatedCLICommand) AuthToken() string {
 	return a.State.AuthToken
@@ -168,7 +199,11 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			if err != nil {
 				return err
 			}
-			err = r.validateToken(cmd, ctx)
+			if ctx == nil {
+				err = &errors.NoContextError{CLIName: r.CLIName}
+			} else {
+				err = r.JWTValidator.Validate(ctx.Context)
+			}
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				err := ctx.DeleteUserAuth()
@@ -232,7 +267,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
-		return r.validateToken(cmd, ctx)
+		return r.JWTValidator.Validate(ctx.Context)
 	}
 }
 
@@ -262,7 +297,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		}
 		command.Context = ctx
 		command.State = ctx.State
-		return r.validateToken(cmd, ctx)
+		return r.JWTValidator.Validate(ctx.Context)
 	}
 }
 
@@ -324,7 +359,10 @@ func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command
 	if err != nil {
 		return err
 	}
-	err = r.validateToken(cmd, ctx)
+	if ctx == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	err = r.JWTValidator.Validate(ctx.Context)
 	if err != nil {
 		return err
 	}
@@ -473,44 +511,44 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
-	// validate token (not expired)
-	var authToken string
-	if ctx != nil {
-		authToken = ctx.State.AuthToken
-	}
-	var claims map[string]interface{}
-	token, err := jwt.ParseSigned(authToken)
-	if err != nil {
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
-	}
-	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return r.updateToken(err, ctx)
-	}
-	exp, ok := claims["exp"].(float64)
-	if !ok {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
-	}
-	if float64(r.Clock.Now().Unix()) > exp {
-		r.Logger.Debug("Token expired.")
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
-	}
-	return nil
-}
-
-func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
-	if ctx == nil {
-		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
-		return tokenError
-	}
-	var updateErr error
-	if r.CLIName == "ccloud" {
-		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx.Context, r.Version.UserAgent, r.Logger)
-	} else {
-		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx.Context, r.Logger)
-	}
-	if updateErr == nil {
-		return nil
-	}
-	return tokenError
-}
+//func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
+//	// validate token (not expired)
+//	var authToken string
+//	if ctx != nil {
+//		authToken = ctx.State.AuthToken
+//	}
+//	var claims map[string]interface{}
+//	token, err := jwt.ParseSigned(authToken)
+//	if err != nil {
+//		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
+//	}
+//	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+//		return r.updateToken(err, ctx)
+//	}
+//	exp, ok := claims["exp"].(float64)
+//	if !ok {
+//		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
+//	}
+//	if float64(r.Clock.Now().Unix()) > exp {
+//		r.Logger.Debug("Token expired.")
+//		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
+//	}
+//	return nil
+//}
+//
+//func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
+//	if ctx == nil {
+//		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
+//		return tokenError
+//	}
+//	var updateErr error
+//	if r.CLIName == "ccloud" {
+//		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx.Context, r.Version.UserAgent, r.Logger)
+//	} else {
+//		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx.Context, r.Logger)
+//	}
+//	if updateErr == nil {
+//		return nil
+//	}
+//	return tokenError
+//}
