@@ -80,7 +80,7 @@ type describeStruct struct {
 	EncryptionKeyId    string
 }
 
-// NewClusterCommand returns the Cobra command for Kafka cluster.
+// NewClusterCommand returns the command for Kafka cluster.
 func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
