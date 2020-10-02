@@ -1,13 +1,3 @@
-VERIFY_BIN_FOLDER ?= $(S3_BUCKET_PATH)
-OVERRIDE_S3_FOLDER ?=
-ARCHIVES_VERSION ?=
-
-# if ARCHIVES_VERSION is empty, archives latest folder will be tested
-.PHONY: test-installers
-test-installers:
-	@echo Running packaging/installer tests
-	@bash test-installers.sh $(ARCHIVES_VERSION)
-
 .PHONY: verify-stag
 verify-stag:
 	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make verify-archive-installers
@@ -15,14 +5,20 @@ verify-stag:
 
 .PHONY: verify-prod
 verify-prod:
-	make verify-archive-installers
-	make verify-binary-files
+	OVERRIDE_S3_FOLDER="" make verify-archive-installers
+	VERIFY_BIN_FOLDER=$(S3_BUCKET_PATH) make verify-binary-files
 
 .PHONY: verify-archive-installers
 verify-archive-installers:
-	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) make test-installers 
-	ARCHIVES_VERSION=v$(CLEAN_VERSION) OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) make test-installers 
+	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION="" make test-installers 
+	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION=v$(CLEAN_VERSION) make test-installers 
 	@echo "*** ARCHIVES VERIFICATION PASSED!!! ***"
+
+# if ARCHIVES_VERSION is empty, latest folder will be tested
+.PHONY: test-installers
+test-installers:
+	@echo Running packaging/installer tests
+	@bash test-installers.sh $(ARCHIVES_VERSION)
 
 # check that the expected binaries are present and have --acl public-read
 .PHONY: verify-binary-files
