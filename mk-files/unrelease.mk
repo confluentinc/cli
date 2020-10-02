@@ -49,7 +49,6 @@ endef
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
 	make copy-prod-archives-to-stag-latest
-	VERIFY_ARCHIVES_FOLDER_TARGET=$(S3_STAG_FOLDER_NAME) make verify-archive-installers
 	$(caasenv-authenticate); \
 	$(call copy-stag-content-to-prod,archives,latest)
 	@echo "Verifying latest archives with: make test-installers"
@@ -59,6 +58,7 @@ restore-latest-archives: restore-latest-archives-warn
 copy-prod-archives-to-stag-latest:
 	$(call copy-archives-files-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
 	$(call copy-archives-checksums-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
+	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) ARCHIVES_VERSION="" make test-installers 
 
 
 .PHONY: restore-latest-archives-warn
