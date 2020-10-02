@@ -96,18 +96,18 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	if err != nil {
 		return nil, err
 	}
-
 	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
+	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
 		Config:             cfg,
 		ConfigLoadingError: configLoadingErr,
 		UpdateClient:       updateClient,
 		CLIName:            cliName,
 		Logger:             logger,
-		Clock:              clockwork.NewRealClock(),
 		FlagResolver:       resolver,
 		Version:            ver,
 		Analytics:          analyticsClient,
+		JWTValidator:       jwtValidator,
 		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
@@ -153,7 +153,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		serviceAccountCmd := serviceaccount.New(prerunner)
 		serverCompleter.AddCommand(serviceAccountCmd)
 		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient))
+		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient, jwtValidator))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
 		}

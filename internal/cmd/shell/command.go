@@ -21,24 +21,27 @@ const (
 )
 
 type command struct {
-	Command   *cobra.Command
-	RootCmd   *cobra.Command
-	config    *v3.Config
-	prerunner pcmd.PreRunner
-	completer *completer.ShellCompleter
-	analytics analytics.Client
-	logger    *log.Logger
+	Command      *cobra.Command
+	RootCmd      *cobra.Command
+	config       *v3.Config
+	prerunner    pcmd.PreRunner
+	completer    *completer.ShellCompleter
+	analytics    analytics.Client
+	logger       *log.Logger
+	jwtValidator pcmd.JWTValidator
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, prerunner pcmd.PreRunner, completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, prerunner pcmd.PreRunner,
+	completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
-		RootCmd:   rootCmd,
-		config:    config,
-		prerunner: prerunner,
-		completer: completer,
-		logger:    logger,
-		analytics: analytics,
+		RootCmd:      rootCmd,
+		config:       config,
+		prerunner:    prerunner,
+		completer:    completer,
+		logger:       logger,
+		analytics:    analytics,
+		jwtValidator: jwtValidator,
 	}
 
 	cliCmd.init()
@@ -64,9 +67,17 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config, c.logger, c.analytics))
 
 	msg := "You are already authenticated."
+	if cmd.Annotations == nil {
+		cmd.Annotations = make(map[string]string)
+	}
+
+	// For the first time, validate the token using the prerunner, which tries to update the JWT if it's invalid.
+	// After the first time, validate using the token validator, which doesn't try to update the JWT because that would be too slow.
+	c.Command.Annotations[pcmd.DoNotTrack] = ""
 	if err := c.prerunner.Authenticated(pcmd.NewAuthenticatedCLICommand(c.Command, c.prerunner))(c.Command, args); err != nil {
 		msg = "You are currently not authenticated."
 	}
+	delete(c.Command.Annotations, pcmd.DoNotTrack)
 
 	// run the shell
 	fmt.Printf("Welcome to the %s shell! %s\n", cliName, msg)
@@ -74,7 +85,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 
 	opts := prompt.DefaultPromptOptions()
 	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, c.logger, c.analytics, opts...)
-	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt))
+	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt.Prompt, c.config, c.jwtValidator))
 	if err := livePrefixOpt(cliPrompt.Prompt); err != nil {
 		// This returns nil in the go-prompt implementation.
 		// This is also what go-prompt does if err != nil.
@@ -83,10 +94,10 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	cliPrompt.Run()
 }
 
-func livePrefixFunc(cliPrompt *prompt.ShellPrompt) func() (prefix string, useLivePrefix bool) {
+func livePrefixFunc(prompt *goprompt.Prompt, config *v3.Config, jwtValidator pcmd.JWTValidator) func() (prefix string, useLivePrefix bool) {
 	return func() (prefix string, useLivePrefix bool) {
-		text, color := prefixState(cliPrompt.Config)
-		if err := goprompt.OptionPrefixTextColor(color)(cliPrompt.Prompt); err != nil {
+		text, color := prefixState(jwtValidator, config)
+		if err := goprompt.OptionPrefixTextColor(color)(prompt); err != nil {
 			// This returns nil in the go-prompt implementation.
 			// This is also what go-prompt does if err != nil for all of its options.
 			panic(err)
@@ -96,9 +107,9 @@ func livePrefixFunc(cliPrompt *prompt.ShellPrompt) func() (prefix string, useLiv
 }
 
 // prefixState returns the text and color of the prompt prefix.
-func prefixState(config *v3.Config) (text string, color goprompt.Color) {
+func prefixState(jwtValidator pcmd.JWTValidator, config *v3.Config) (text string, color goprompt.Color) {
 	prefixColor := watermelonRed
-	if config.HasLogin() {
+	if err := jwtValidator.Validate(config.Context()); err == nil {
 		prefixColor = candyAppleGreen
 	}
 	return fmt.Sprintf("%s > ", config.CLIName), prefixColor
