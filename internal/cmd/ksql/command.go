@@ -8,22 +8,22 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
+	*pcmd.CLICommand
+	prerunner       pcmd.PreRunner
 	serverCompleter completer.ServerSideCompleter
 }
 
 // New returns the default command object for interacting with KSQL.
 func New(cliName string, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "ksql",
 			Short: "Manage ksqlDB applications.",
 		}, prerunner)
 	cmd := &command{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
-		serverCompleter:		 serverCompleter,
+		CLICommand:      cliCmd,
+		prerunner:       prerunner,
+		serverCompleter: serverCompleter,
 	}
 	cmd.init(cliName)
 	return cmd.Command
