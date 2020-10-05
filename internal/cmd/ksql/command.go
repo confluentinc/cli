@@ -1,8 +1,9 @@
 package ksql
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )

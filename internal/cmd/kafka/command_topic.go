@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"github.com/c-bata/go-prompt"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/c-bata/go-prompt"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -32,7 +33,7 @@ import (
 )
 
 const (
-	defaultReplicationFactor = 3
+	defaultReplicationFactor  = 3
 	unspecifiedPartitionCount = -1
 )
 
@@ -49,8 +50,8 @@ type hasAPIKeyTopicCommand struct {
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	logger   *log.Logger
-	clientID string
+	logger              *log.Logger
+	clientID            string
 	completableChildren []*cobra.Command
 }
 
@@ -84,7 +85,7 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 	}
 	hasAPIKeyCmd.init()
 	kafkaTopicCommand := &kafkaTopicCommand{
-		hasAPIKeyTopicCommand:     hasAPIKeyCmd,
+		hasAPIKeyTopicCommand: hasAPIKeyCmd,
 	}
 	if !isAPIKeyLogin {
 		authenticatedCmd := &authenticatedTopicCommand{
@@ -246,10 +247,10 @@ func (a *authenticatedTopicCommand) init() {
 	a.AddCommand(updateCmd)
 
 	mirrorCmd := &cobra.Command{
-		Use:   "mirror <action> <topic>",
-		Short: "Perform a mirroring action on a Kafka topic.",
-		Args:  cobra.ExactArgs(2),
-		RunE:  pcmd.NewCLIRunE(a.mirror),
+		Use:    "mirror <action> <topic>",
+		Short:  "Perform a mirroring action on a Kafka topic.",
+		Args:   cobra.ExactArgs(2),
+		RunE:   pcmd.NewCLIRunE(a.mirror),
 		Hidden: true,
 		Example: examples.BuildExampleString(
 			examples.Example{

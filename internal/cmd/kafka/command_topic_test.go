@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	topicName = "topic"
+	topicName  = "topic"
 	isInternal = false
 )
 
@@ -32,7 +32,7 @@ func (suite *KafkaTopicTestSuite) newCmd(conf *v3.Config) *kafkaTopicCommand {
 			ListTopicsFunc: func(_ context.Context, cluster *v1.KafkaCluster) ([]*v1.TopicDescription, error) {
 				return []*v1.TopicDescription{
 					{
-						Name: topicName,
+						Name:     topicName,
 						Internal: isInternal,
 					},
 				}, nil

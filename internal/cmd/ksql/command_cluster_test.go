@@ -3,19 +3,21 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	cliMock "github.com/confluentinc/cli/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
+
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	clusterId = "some id"
+	clusterId   = "some id"
 	clusterName = "clustertruck"
 )
 
@@ -27,10 +29,10 @@ func (suite *KsqlClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 	client := &ccloud.Client{
 		KSQL: &ccsdkmock.KSQL{
 			ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, err error) {
-				return []*schedv1.KSQLCluster {
+				return []*schedv1.KSQLCluster{
 					{
-						Id:                     clusterId,
-						Name:                   clusterName,
+						Id:   clusterId,
+						Name: clusterName,
 					},
 				}, nil
 			},

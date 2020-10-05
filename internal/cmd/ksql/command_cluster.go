@@ -3,8 +3,9 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"github.com/c-bata/go-prompt"
 	"strconv"
+
+	"github.com/c-bata/go-prompt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
+	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 }
 
