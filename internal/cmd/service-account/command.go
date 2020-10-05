@@ -3,8 +3,9 @@ package service_account
 import (
 	"context"
 	"fmt"
-	"github.com/c-bata/go-prompt"
 	"strconv"
+
+	"github.com/c-bata/go-prompt"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"

@@ -1,4 +1,4 @@
-package kafka
+package ksql
 
 import (
 	"context"
@@ -6,48 +6,47 @@ import (
 	"testing"
 
 	"github.com/c-bata/go-prompt"
-	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	topicName  = "topic"
-	isInternal = false
+	clusterId   = "some id"
+	clusterName = "clustertruck"
 )
 
-type KafkaTopicTestSuite struct {
+type KsqlClusterTestSuite struct {
 	suite.Suite
 }
 
-func (suite *KafkaTopicTestSuite) newCmd(conf *v3.Config) *kafkaTopicCommand {
+func (suite *KsqlClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 	client := &ccloud.Client{
-		Kafka: &ccsdkmock.Kafka{
-			ListTopicsFunc: func(_ context.Context, cluster *v1.KafkaCluster) ([]*v1.TopicDescription, error) {
-				return []*v1.TopicDescription{
+		KSQL: &ccsdkmock.KSQL{
+			ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, err error) {
+				return []*schedv1.KSQLCluster{
 					{
-						Name:     topicName,
-						Internal: isInternal,
+						Id:   clusterId,
+						Name: clusterName,
 					},
 				}, nil
 			},
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, conf)
-	cmd := NewTopicCommand(false, prerunner, nil, "id")
+	cmd := NewClusterCommand(prerunner)
 	return cmd
 }
 
-func (suite *KafkaTopicTestSuite) TestServerComplete() {
+func (suite *KsqlClusterTestSuite) TestServerComplete() {
 	req := suite.Require()
 	type fields struct {
-		Command *kafkaTopicCommand
+		Command *clusterCommand
 	}
 	tests := []struct {
 		name   string
@@ -61,8 +60,8 @@ func (suite *KafkaTopicTestSuite) TestServerComplete() {
 			},
 			want: []prompt.Suggest{
 				{
-					Text:        topicName,
-					Description: "",
+					Text:        clusterId,
+					Description: clusterName,
 				},
 			},
 		},
@@ -83,17 +82,17 @@ func (suite *KafkaTopicTestSuite) TestServerComplete() {
 	}
 }
 
-func (suite *KafkaTopicTestSuite) TestServerCompletableChildren() {
+func (suite *KsqlClusterTestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"topic describe", "topic update", "topic delete"}
+	expectedChildren := []string{"app describe", "app delete", "app configure-acls"}
 	req.Len(completableChildren, len(expectedChildren))
 	for i, expectedChild := range expectedChildren {
 		req.Contains(completableChildren[i].CommandPath(), expectedChild)
 	}
 }
 
-func TestKafkaTopicTestSuite(t *testing.T) {
-	suite.Run(t, new(KafkaTopicTestSuite))
+func TestKsqlClusterTestSuite(t *testing.T) {
+	suite.Run(t, new(KsqlClusterTestSuite))
 }

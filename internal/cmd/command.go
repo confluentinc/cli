@@ -146,7 +146,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		envCmd := environment.New(cliName, prerunner)
 		serverCompleter.AddCommand(envCmd)
 		cli.AddCommand(envCmd.Command)
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
@@ -164,7 +164,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(iam.New(cliName, prerunner))
 		// Never uses it under "confluent", so a nil ServerCompleter is fine.
 		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID, nil))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner, nil))
 		cli.AddCommand(local.New(prerunner))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(secret.New(resolver, secrets.NewPasswordProtectionPlugin(logger)))

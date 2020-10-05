@@ -2,14 +2,16 @@ package kafka
 
 import (
 	"context"
+	"io/ioutil"
+	"strings"
+
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
-	"io/ioutil"
-	"strings"
 )
 
 const (
@@ -298,7 +300,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	alterOptions := &linkv1.AlterLinkOptions{}
 	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config, alterOptions)
-	
+
 	if err == nil {
 		pcmd.Printf(cmd, errors.UpdatedLinkMsg, link)
 	}
