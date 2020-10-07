@@ -132,7 +132,12 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
-		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		var env []string
+		if tt.cliName == "ccloud" {
+			env = []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		} else {
+			env = []string{"XX_CONFLUENT_USERNAME=good@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+		}
 		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
@@ -190,7 +195,12 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
-		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		var env []string
+		if tt.cliName == "ccloud" {
+			env = []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		} else {
+			env = []string{"XX_CONFLUENT_USERNAME=good@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+		}
 		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
