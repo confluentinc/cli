@@ -190,7 +190,9 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	auth := &sdkMock.Auth{}
 	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
 
-	user, pass, err := loginCmd.credentials(loginCmd.Command, "Email", nil)
+	user, err := loginCmd.getUserCredential(loginCmd.Command, "Email", ccloudEmailEnvVar)
+	req.NoError(err)
+	pass, err := loginCmd.getPasswordCred(loginCmd.Command, ccloudPasswordEnvVar)
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -354,60 +356,60 @@ func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
 
 	suite := []struct {
-		url_in string
-		valid bool
-		url_out string
+		url_in      string
+		valid       bool
+		url_out     string
 		warning_msg string
-		cli string
+		cli         string
 	}{
 		{
-			url_in: "https:///test.com",
-			valid:    false,
-			url_out: "",
+			url_in:      "https:///test.com",
+			valid:       false,
+			url_out:     "",
 			warning_msg: "default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "test.com",
-			valid:    true,
-			url_out: "http://test.com:8090",
+			url_in:      "test.com",
+			valid:       true,
+			url_out:     "http://test.com:8090",
 			warning_msg: "http protocol and default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "test.com:80",
-			valid:    true,
-			url_out: "http://test.com:80",
+			url_in:      "test.com:80",
+			valid:       true,
+			url_out:     "http://test.com:80",
 			warning_msg: "http protocol",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "http://test.com",
-			valid:    true,
-			url_out: "http://test.com:8090",
+			url_in:      "http://test.com",
+			valid:       true,
+			url_out:     "http://test.com:8090",
 			warning_msg: "default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "https://127.0.0.1:8090",
-			valid:    true,
-			url_out: "https://127.0.0.1:8090",
+			url_in:      "https://127.0.0.1:8090",
+			valid:       true,
+			url_out:     "https://127.0.0.1:8090",
 			warning_msg: "",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "127.0.0.1",
-			valid:    true,
-			url_out: "http://127.0.0.1:8090",
+			url_in:      "127.0.0.1",
+			valid:       true,
+			url_out:     "http://127.0.0.1:8090",
 			warning_msg: "http protocol and default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "devel.cpdev.cloud",
-			valid:	true,
-			url_out: "https://devel.cpdev.cloud",
+			url_in:      "devel.cpdev.cloud",
+			valid:       true,
+			url_out:     "https://devel.cpdev.cloud",
 			warning_msg: "https protocol",
-			cli: "ccloud",
+			cli:         "ccloud",
 		},
 	}
 	for _, s := range suite {
