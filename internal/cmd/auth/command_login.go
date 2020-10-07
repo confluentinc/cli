@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"regexp"
+	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -20,6 +20,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+)
+
+const (
+	ccloudEmailEnvVar       = "XX_CCLOUD_EMAIL"
+	confluentUsernameEnvVar = "XX_CONFLUENT_USERNAME"
+	ccloudPasswordEnvVar    = "XX_CCLOUD_PASSWORD"
+	confluentPasswordEnvVar = "XX_CONFLUENT_PASSWORD"
 )
 
 type loginCommand struct {
@@ -104,11 +111,19 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	a.Config.NoBrowser = noBrowser
-
-	client := a.anonHTTPClientFactory(url, a.Config.Logger)
-	email, password, err := a.credentials(cmd, "Email", client)
+	email, err := a.getUserCredential(cmd, "Email", ccloudEmailEnvVar)
 	if err != nil {
 		return err
+	}
+	client := a.anonHTTPClientFactory(url, a.Config.Logger)
+	var password string
+	if isSSOUser(email, client) {
+		a.Logger.Trace("User is SSO-enabled so won't prompt for password")
+	} else {
+		password, err = a.getPasswordCred(cmd, ccloudPasswordEnvVar)
+		if err != nil {
+			return err
+		}
 	}
 
 	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser, a.Logger)
@@ -186,6 +201,17 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
+func isSSOUser(email string, cloudClient *ccloud.Client) bool {
+	userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
+	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
+	// email, we want to silently continue and give the illusion of password prompt.
+	// If Auth0ConnectionName is blank ("local" user) still prompt for password
+	if err == nil && userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
+		return true
+	}
+	return false
+}
+
 func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
@@ -198,7 +224,11 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if errMsg != "" {
 		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
-	email, password, err := a.credentials(cmd, "Username", nil)
+	email, err := a.getUserCredential(cmd, "Username", confluentUsernameEnvVar)
+	if err != nil {
+		return err
+	}
+	password, err := a.getPasswordCred(cmd, confluentPasswordEnvVar)
 	if err != nil {
 		return err
 	}
@@ -248,54 +278,33 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudClient *ccloud.Client) (string, string, error) {
-	email := os.Getenv("XX_CCLOUD_EMAIL")
+func (a *loginCommand) getUserCredential(cmd *cobra.Command, userField string, envVar string) (string, error) {
+	email := os.Getenv(envVar)
 	if len(email) == 0 {
-		email = os.Getenv("XX_CONFLUENT_USERNAME")
-	}
-
-	password := os.Getenv("XX_CCLOUD_PASSWORD")
-	if len(password) == 0 {
-		password = os.Getenv("XX_CONFLUENT_PASSWORD")
-	}
-
-	if len(email) == 0 || len(password) == 0 {
 		pcmd.Println(cmd, "Enter your Confluent credentials:")
 	}
-
 	if len(email) == 0 {
 		f := form.New(form.Field{ID: "email", Prompt: userField})
 		if err := f.Prompt(cmd, a.prompt); err != nil {
-			return "", "", err
+			return "", err
 		}
 		email = f.Responses["email"].(string)
 	}
 	a.Logger.Trace("Successfully obtained email")
+	return email, nil
+}
 
-	// In the case of MDS login (`confluent`) or in the case of some of the mocks,
-	// cloudClient will be nll, so we need this check
-	if cloudClient != nil {
-		// If SSO user, don't prompt for password
-		userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
-		// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
-		// email, we want to silently continue and give the illusion of password prompt.
-		// If Auth0ConnectionName is blank ("local" user) still prompt for password
-		if err == nil && userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-			a.Logger.Trace("User is SSO-enabled so won't prompt for password")
-			return email, password, nil
-		}
-	}
-
+func (a *loginCommand) getPasswordCred(cmd *cobra.Command, envVar string) (string, error) {
+	password := os.Getenv(envVar)
 	if len(password) == 0 {
 		f := form.New(form.Field{ID: "password", Prompt: "Password", IsHidden: true})
 		if err := f.Prompt(cmd, a.prompt); err != nil {
-			return "", "", err
+			return "", err
 		}
 		password = f.Responses["password"].(string)
 	}
 	a.Logger.Trace("Successfully obtained password")
-
-	return email, password, nil
+	return password, nil
 }
 
 func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
