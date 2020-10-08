@@ -87,17 +87,17 @@ func TestNetRCCredentialReader(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			netrcHandler := NetrcHandler{FileName: tt.file}
+			netrcHandler := NewNetrcHandler(tt.file)
 			var username, password string
 			var err error
-			if username, password, err = netrcHandler.getNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName); (err != nil) != tt.wantErr {
-				t.Errorf("getNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
+			if username, password, err = netrcHandler.GetNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName); (err != nil) != tt.wantErr {
+				t.Errorf("GetNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
 			if len(tt.want) != 0 && !t.Failed() && username != tt.want[0] {
-				t.Errorf("getNetrcCredenials username got: %+v, want: %+v", username, tt.want[0])
+				t.Errorf("GetNetrcCredentials username got: %+v, want: %+v", username, tt.want[0])
 			}
 			if len(tt.want) == 2 && !t.Failed() && password != tt.want[1] {
-				t.Errorf("getNetrcCredenials password got: %+v, want: %+v", password, tt.want[1])
+				t.Errorf("GetNetrcCredentials password got: %+v, want: %+v", password, tt.want[1])
 			}
 		})
 	}
@@ -167,7 +167,7 @@ func TestNetrcWriter(t *testing.T) {
 			err = ioutil.WriteFile(tempFile.Name(), originalNetrc, 0600)
 			require.NoError(t, err)
 
-			netrcHandler := NetrcHandler{FileName: tempFile.Name()}
+			netrcHandler := NewNetrcHandler(tempFile.Name())
 			err = netrcHandler.WriteNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName, netrcUser, netrcPassword)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
@@ -201,7 +201,7 @@ func TestUpateSSOToken(t *testing.T) {
 		},
 	}
 
-	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
+	netrcHandler := NewNetrcHandler(netrcFilePath)
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloud,
@@ -236,7 +236,7 @@ func TestUpdateCloudLoginCredentialsToken(t *testing.T) {
 			return finalAuthToken, nil
 		},
 	}
-	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
+	netrcHandler := NewNetrcHandler(netrcFilePath)
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloudTokenHandler,
@@ -267,7 +267,7 @@ func TestUpdateConfluent(t *testing.T) {
 			return finalAuthToken, nil
 		},
 	}
-	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
+	netrcHandler := NewNetrcHandler(netrcFilePath)
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		confluentTokenHandler: mockConfluentTokenHandler,
@@ -297,7 +297,7 @@ func TestFailedCCloudUpdate(t *testing.T) {
 			return "", errors.Errorf("Failed to get auth token")
 		},
 	}
-	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
+	netrcHandler := NewNetrcHandler(netrcFilePath)
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		ccloudTokenHandler: mockCCloudTokenHandler,
@@ -325,7 +325,7 @@ func TestFailedConfluentUpdate(t *testing.T) {
 			return "", errors.Errorf("Failed to get auth token")
 		},
 	}
-	netrcHandler := &NetrcHandler{FileName: netrcFilePath}
+	netrcHandler := NewNetrcHandler(netrcFilePath)
 
 	updateTokenHandler := UpdateTokenHandlerImpl{
 		confluentTokenHandler: mockConfluentTokenHandler,

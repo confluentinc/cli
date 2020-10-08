@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -192,7 +193,7 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 
 	user, err := loginCmd.getUserCredential(loginCmd.Command, "Email", pauth.CCloudEmailEnvVar)
 	req.NoError(err)
-	pass, err := loginCmd.getPasswordCred(loginCmd.Command, pauth.CCloudPasswordEnvVar)
+	pass, err := loginCmd.getPasswordCred(loginCmd.Command, pauth.CCloudPasswordEnvVar, "")
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)
@@ -255,7 +256,12 @@ func Test_SelfSignedCerts(t *testing.T) {
 			return mdsClient, nil
 		},
 	}
-	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), prompt, nil, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), nil)
+	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), prompt, nil, nil,
+		mdsClientManager, cliMock.NewDummyAnalyticsMock(),
+		&authMock.MockNetrcHandler{
+			GetNetrcCredentialsFunc: func(string, bool, string) (string, string, error) { return "", "", nil },
+		},
+	)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
 	req.NoError(err)
@@ -495,8 +501,12 @@ func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cli
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, cfg)
-	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
-		cliMock.NewDummyAnalyticsMock(), nil)
+	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt,
+		mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(),
+		&authMock.MockNetrcHandler{
+			GetNetrcCredentialsFunc: func(string, bool, string) (string, string, error) { return "", "", nil },
+		},
+	)
 	return loginCmd, cfg
 }
 

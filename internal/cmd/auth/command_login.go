@@ -24,6 +24,7 @@ import (
 
 type loginCommand struct {
 	*pcmd.CLICommand
+	cliName         string
 	Logger          *log.Logger
 	analyticsClient analytics.Client
 	// for testing
@@ -31,14 +32,15 @@ type loginCommand struct {
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler          *pauth.NetrcHandler
+	netrcHandler          pauth.NetrcHandler
 }
 
 func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *loginCommand {
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler pauth.NetrcHandler) *loginCommand {
 	cmd := &loginCommand{
+		cliName:               cliName,
 		Logger:                log,
 		prompt:                prompt,
 		analyticsClient:       analyticsClient,
@@ -47,12 +49,12 @@ func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, 
 		MDSClientManager:      mdsClientManager,
 		netrcHandler:          netrcHandler,
 	}
-	cmd.init(cliName, prerunner)
+	cmd.init(prerunner)
 	return cmd
 }
 
-func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := getRemoteAPIName(cliName)
+func (a *loginCommand) init(prerunner pcmd.PreRunner) {
+	remoteAPIName := getRemoteAPIName(a.cliName)
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
@@ -62,7 +64,7 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 			return a.CLICommand.PersistentPreRunE(cmd, args)
 		}),
 	}
-	if cliName == "ccloud" {
+	if a.cliName == "ccloud" {
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
 		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 	} else {
@@ -109,11 +111,12 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	client := a.anonHTTPClientFactory(url, a.Config.Logger)
+	ctxName := generateContextName(email, url)
 	var password string
 	if isSSOUser(email, client) {
 		a.Logger.Trace("User is SSO-enabled so won't prompt for password")
 	} else {
-		password, err = a.getPasswordCred(cmd, pauth.CCloudPasswordEnvVar)
+		password, err = a.getPasswordCred(cmd, pauth.CCloudPasswordEnvVar, ctxName)
 		if err != nil {
 			return err
 		}
@@ -134,10 +137,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	if len(user.Accounts) == 0 {
 		return errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
 	}
-	username := user.User.Email
-	name := generateContextName(username, url)
 	var state *v2.ContextState
-	ctx, err := a.Config.FindContext(name)
+	ctx, err := a.Config.FindContext(ctxName)
 	if err == nil {
 		state = ctx.State
 	} else {
@@ -221,7 +222,8 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	password, err := a.getPasswordCred(cmd, pauth.ConfluentPasswordEnvVar)
+	ctxName := generateContextName(email, url)
+	password, err := a.getPasswordCred(cmd, pauth.ConfluentPasswordEnvVar, ctxName)
 	if err != nil {
 		return err
 	}
@@ -275,8 +277,6 @@ func (a *loginCommand) getUserCredential(cmd *cobra.Command, userField string, e
 	email := os.Getenv(envVar)
 	if len(email) == 0 {
 		pcmd.Println(cmd, "Enter your Confluent credentials:")
-	}
-	if len(email) == 0 {
 		f := form.New(form.Field{ID: "email", Prompt: userField})
 		if err := f.Prompt(cmd, a.prompt); err != nil {
 			return "", err
@@ -287,11 +287,18 @@ func (a *loginCommand) getUserCredential(cmd *cobra.Command, userField string, e
 	return email, nil
 }
 
-func (a *loginCommand) getPasswordCred(cmd *cobra.Command, envVar string) (string, error) {
+func (a *loginCommand) getPasswordCred(cmd *cobra.Command, envVar string, ctxName string) (string, error) {
 	password := os.Getenv(envVar)
+	var err error
+	if len(password) == 0 {
+		_, password, err = a.netrcHandler.GetNetrcCredentials(a.cliName, false, ctxName)
+		if err != nil {
+			a.Logger.Debug("Failed to read password from netrc")
+		}
+	}
 	if len(password) == 0 {
 		f := form.New(form.Field{ID: "password", Prompt: "Password", IsHidden: true})
-		if err := f.Prompt(cmd, a.prompt); err != nil {
+		if err = f.Prompt(cmd, a.prompt); err != nil {
 			return "", err
 		}
 		password = f.Responses["password"].(string)
@@ -349,7 +356,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.FileName)
+	pcmd.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.GetFileName())
 	return nil
 }
 

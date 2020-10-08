@@ -1,3 +1,4 @@
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst mock/netrc_handler.go --pkg mock --selfpkg github.com/confluentinc/cli netrc_handler.go NetrcHandler
 package auth
 
 import (
@@ -12,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-var (
+const (
 	// For integration test
 	NetrcIntegrationTestFile = "/tmp/netrc_test"
 
@@ -35,26 +36,21 @@ func (c netrcCredentialType) String() string {
 	return credTypes[c]
 }
 
-func GetNetrcFilePath(isIntegrationTest bool) string {
-	if isIntegrationTest {
-		return NetrcIntegrationTestFile
-	}
-	if runtime.GOOS == "windows" {
-		return "~/_netrc"
-	} else {
-		return "~/.netrc"
-	}
+type NetrcHandler interface {
+	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
+	GetNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error)
+	GetFileName() string
 }
 
-func NewNetrcHandler(netrcFilePath string) *NetrcHandler {
-	return &NetrcHandler{FileName: netrcFilePath}
+func NewNetrcHandler(netrcFilePath string) *NetrcHandlerImpl {
+	return &NetrcHandlerImpl{FileName: netrcFilePath}
 }
 
-type NetrcHandler struct {
+type NetrcHandlerImpl struct {
 	FileName string
 }
 
-func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
+func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
@@ -86,7 +82,7 @@ func (n *NetrcHandler) WriteNetrcCredentials(cliName string, isSSO bool, ctxName
 }
 
 // for username-password credentials the return values are self-explanatory but for sso case the password is the refreshToken
-func (n *NetrcHandler) getNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
+func (n *NetrcHandlerImpl) GetNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return "", "", errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
@@ -133,4 +129,19 @@ func getOrCreateNetrc(filename string) (*netrc.Netrc, error) {
 		}
 	}
 	return n, nil
+}
+
+func (n *NetrcHandlerImpl) GetFileName() string {
+	return n.FileName
+}
+
+func GetNetrcFilePath(isIntegrationTest bool) string {
+	if isIntegrationTest {
+		return NetrcIntegrationTestFile
+	}
+	if runtime.GOOS == "windows" {
+		return "~/_netrc"
+	} else {
+		return "~/.netrc"
+	}
 }

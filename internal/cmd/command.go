@@ -60,7 +60,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler pauth.NetrcHandler) (*Command, error) {
 	logger := log.New()
 	cfg, configLoadingErr := loadConfig(cliName, logger)
 	if cfg != nil {

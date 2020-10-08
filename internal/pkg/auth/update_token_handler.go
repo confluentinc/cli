@@ -17,7 +17,7 @@ type UpdateTokenHandler interface {
 type UpdateTokenHandlerImpl struct {
 	ccloudTokenHandler    CCloudTokenHandler
 	confluentTokenHandler ConfluentTokenHandler
-	netrcHandler          *NetrcHandler
+	netrcHandler          NetrcHandler
 }
 
 var (
@@ -27,7 +27,7 @@ var (
 	successNetrcTokenMsg   = "Token successfully updated with netrc file credentials."
 )
 
-func NewUpdateTokenHandler(netrcHandler *NetrcHandler) UpdateTokenHandler {
+func NewUpdateTokenHandler(netrcHandler NetrcHandler) UpdateTokenHandler {
 	return &UpdateTokenHandlerImpl{
 		ccloudTokenHandler:    &CCloudTokenHandlerImpl{},
 		confluentTokenHandler: &ConfluentTokenHandlerImp{},
@@ -44,7 +44,7 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 	}
 	var token string
 	if userSSO != nil {
-		_, refreshToken, err := u.netrcHandler.getNetrcCredentials("ccloud", true, ctx.Name)
+		_, refreshToken, err := u.netrcHandler.GetNetrcCredentials("ccloud", true, ctx.Name)
 		if err != nil {
 			logger.Debugf(failedRefreshTokenMsg, err)
 			return err
@@ -56,7 +56,7 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 		}
 		logger.Debug(successRefreshTokenMsg)
 	} else {
-		email, password, err := u.netrcHandler.getNetrcCredentials(ctx.Config.CLIName, false, ctx.Name)
+		email, password, err := u.netrcHandler.GetNetrcCredentials(ctx.Config.CLIName, false, ctx.Name)
 		if err != nil {
 			logger.Debugf(err.Error())
 			return err
@@ -72,7 +72,7 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 }
 
 func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthTokenUsingNetrcCredentials(ctx *v3.Context, logger *log.Logger) error {
-	email, password, err := u.netrcHandler.getNetrcCredentials("confluent", false, ctx.Name)
+	email, password, err := u.netrcHandler.GetNetrcCredentials("confluent", false, ctx.Name)
 	if err != nil {
 		logger.Debugf(err.Error())
 		return err
