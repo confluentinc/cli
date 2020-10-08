@@ -22,13 +22,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-const (
-	ccloudEmailEnvVar       = "XX_CCLOUD_EMAIL"
-	confluentUsernameEnvVar = "XX_CONFLUENT_USERNAME"
-	ccloudPasswordEnvVar    = "XX_CCLOUD_PASSWORD"
-	confluentPasswordEnvVar = "XX_CONFLUENT_PASSWORD"
-)
-
 type loginCommand struct {
 	*pcmd.CLICommand
 	Logger          *log.Logger
@@ -111,7 +104,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	a.Config.NoBrowser = noBrowser
-	email, err := a.getUserCredential(cmd, "Email", ccloudEmailEnvVar)
+	email, err := a.getUserCredential(cmd, "Email", pauth.CCloudEmailEnvVar)
 	if err != nil {
 		return err
 	}
@@ -120,7 +113,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	if isSSOUser(email, client) {
 		a.Logger.Trace("User is SSO-enabled so won't prompt for password")
 	} else {
-		password, err = a.getPasswordCred(cmd, ccloudPasswordEnvVar)
+		password, err = a.getPasswordCred(cmd, pauth.CCloudPasswordEnvVar)
 		if err != nil {
 			return err
 		}
@@ -224,11 +217,11 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if errMsg != "" {
 		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
-	email, err := a.getUserCredential(cmd, "Username", confluentUsernameEnvVar)
+	email, err := a.getUserCredential(cmd, "Username", pauth.ConfluentUsernameEnvVar)
 	if err != nil {
 		return err
 	}
-	password, err := a.getPasswordCred(cmd, confluentPasswordEnvVar)
+	password, err := a.getPasswordCred(cmd, pauth.ConfluentPasswordEnvVar)
 	if err != nil {
 		return err
 	}

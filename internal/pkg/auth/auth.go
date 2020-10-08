@@ -7,6 +7,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
+const (
+	CCloudEmailEnvVar       = "XX_CCLOUD_EMAIL"
+	ConfluentUsernameEnvVar = "XX_CONFLUENT_USERNAME"
+	CCloudPasswordEnvVar    = "XX_CCLOUD_PASSWORD"
+	ConfluentPasswordEnvVar = "XX_CONFLUENT_PASSWORD"
+)
+
 // If user is sso then will return refresh token, but if user is email password login then refresh token is ""
 func GetCCloudAuthToken(client *ccloud.Client, url string, email string, password string, noBrowser bool, logger *log.Logger) (string, string, error) {
 	tokenHandler := CCloudTokenHandlerImpl{}

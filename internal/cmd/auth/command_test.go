@@ -36,11 +36,11 @@ import (
 
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
-	currentEmail := os.Getenv("XX_CCLOUD_EMAIL")
-	currentPassword := os.Getenv("XX_CCLOUD_PASSWORD")
+	currentEmail := os.Getenv(pauth.CCloudEmailEnvVar)
+	currentPassword := os.Getenv(pauth.CCloudPasswordEnvVar)
 
-	os.Setenv("XX_CCLOUD_EMAIL", "test-email")
-	os.Setenv("XX_CCLOUD_PASSWORD", "test-password")
+	os.Setenv(pauth.CCloudEmailEnvVar, "test-email")
+	os.Setenv(pauth.CCloudPasswordEnvVar, "test-password")
 
 	prompt := prompt()
 	auth := &sdkMock.Auth{
@@ -76,8 +76,8 @@ func TestCredentialsOverride(t *testing.T) {
 	req.Equal("y0ur.jwt.T0kEn", ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: "test-email", FirstName: "Cody"}, ctx.State.Auth.User)
 
-	os.Setenv("XX_CCLOUD_EMAIL", currentEmail)
-	os.Setenv("XX_CCLOUD_PASSWORD", currentPassword)
+	os.Setenv(pauth.CCloudEmailEnvVar, currentEmail)
+	os.Setenv(pauth.CCloudPasswordEnvVar, currentPassword)
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -190,9 +190,9 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	auth := &sdkMock.Auth{}
 	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
 
-	user, err := loginCmd.getUserCredential(loginCmd.Command, "Email", ccloudEmailEnvVar)
+	user, err := loginCmd.getUserCredential(loginCmd.Command, "Email", pauth.CCloudEmailEnvVar)
 	req.NoError(err)
-	pass, err := loginCmd.getPasswordCred(loginCmd.Command, ccloudPasswordEnvVar)
+	pass, err := loginCmd.getPasswordCred(loginCmd.Command, pauth.CCloudPasswordEnvVar)
 	req.NoError(err)
 	req.Equal("cody@confluent.io", user)
 	req.Equal(" iamrobin ", pass)

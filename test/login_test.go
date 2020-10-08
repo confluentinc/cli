@@ -134,9 +134,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.cliName == "ccloud" {
-			env = []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
 		} else {
-			env = []string{"XX_CONFLUENT_USERNAME=good@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
 		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
@@ -197,9 +197,9 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.cliName == "ccloud" {
-			env = []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
 		} else {
-			env = []string{"XX_CONFLUENT_USERNAME=good@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
 		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
@@ -228,7 +228,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 
 	resetConfiguration(s.T(), "ccloud")
 
-	env := []string{"XX_CCLOUD_EMAIL=" + ssoTestEmail}
+	env := []string{auth.CCloudEmailEnvVar + "=" + ssoTestEmail}
 	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
