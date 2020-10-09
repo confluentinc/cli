@@ -2,7 +2,9 @@ package test
 
 func (s *CLITestSuite) TestEnvironment() {
 	tests := []CLITest{
-		{args: "environment list", fixture: "environment/1.golden"},
+		// only login at the begginning so active env is not reset
+		// tt.workflow=true so login is not reset
+		{args: "environment list", fixture: "environment/1.golden", login: "default"},
 		{args: "environment use not-595", fixture: "environment/2.golden"},
 		{args: "environment update not-595 --name new-other-name", fixture: "environment/3.golden"},
 		{args: "environment list", fixture: "environment/4.golden"},
@@ -20,7 +22,6 @@ func (s *CLITestSuite) TestEnvironment() {
 	loginURL := serve(s.T(), kafkaURL).URL
 
 	for _, tt := range tests {
-		tt.login = "default"
 		tt.workflow = true
 		s.runCcloudTest(tt, loginURL)
 	}
