@@ -116,11 +116,16 @@ func (c *rolebindingCommand) init() {
 		),
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
+	listCmd.Flags().Bool("current-user", false, "Show rolebindings belonging to current user.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
-		c.Example = examples.BuildExampleString(
+		listCmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: "To list the role bindings for current user:",
+				Code: "iam rolebinding list --current-user",
+			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal:",
 				Code: "iam rolebinding list --principal User:frodo",
@@ -357,8 +362,16 @@ func (c *rolebindingCommand) confluentList(cmd *cobra.Command, options *rolebind
 
 func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rolebindingOptions) error {
 	scopeV2 := &options.scopeV2
-	principal := options.principal
-
+	var principal string
+	currentUser, err := cmd.Flags().GetBool("current-user")
+	if err != nil {
+		return err
+	}
+	if currentUser {
+		principal = "User:" + c.State.Auth.User.ResourceId
+	} else {
+		principal = options.principal
+	}
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(
 		c.createContext(),
 		principal,
@@ -454,7 +467,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 }
 
 func (c *rolebindingCommand) ccloudList(cmd *cobra.Command, options *rolebindingOptions) error {
-	if cmd.Flags().Changed("principal") {
+	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
 		return c.listMyRoleBindings(cmd, options)
 	} else if cmd.Flags().Changed("role") {
 		return c.ccloudListRolePrincipals(cmd, options)
