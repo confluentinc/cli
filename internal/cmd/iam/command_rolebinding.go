@@ -3,7 +3,9 @@ package iam
 import (
 	"context"
 	"fmt"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -20,9 +22,12 @@ import (
 )
 
 var (
-	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
-	resourcePatternHumanListLabels      = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
-	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
+	emailRegexPattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+	emailRegex        = regexp.MustCompile(emailRegexPattern)
+
+	resourcePatternListFields           = []string{"Principal", "Email", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternHumanListLabels      = []string{"Principal", "Email", "Role", "ResourceType", "Name", "PatternType"}
+	resourcePatternStructuredListLabels = []string{"principal", "email", "role", "resource_type", "name", "pattern_type"}
 
 	//TODO: please move this to a backend route
 	clusterScopedRoles = map[string]bool{
@@ -63,6 +68,7 @@ type rolebindingCommand struct {
 
 type listDisplay struct {
 	Principal    string
+	Email        string
 	Role         string
 	ResourceType string
 	Name         string
@@ -380,6 +386,11 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
+	userToEmailMap, err := c.userIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
 	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
 	if err != nil {
 		return err
@@ -388,6 +399,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
 		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
+			principalEmail := userToEmailMap[principalName]
 			for roleName, resourcePatterns := range roleBindings {
 				for _, resourcePattern := range resourcePatterns {
 					if cmd.Flags().Changed("resource") {
@@ -401,6 +413,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					}
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
+						Email:        principalEmail,
 						Role:         roleName,
 						ResourceType: resourcePattern.ResourceType,
 						Name:         resourcePattern.Name,
@@ -433,6 +446,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
+						Email:        principalEmail,
 						Role:         roleName,
 						ResourceType: "Organization",
 						Name:         orgName,
@@ -442,6 +456,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 				if len(resourcePatterns) == 0 && environmentScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
+						Email:        principalEmail,
 						Role:         roleName,
 						ResourceType: "Environment",
 						Name:         envName,
@@ -451,6 +466,7 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
+						Email:        principalEmail,
 						Role:         roleName,
 						ResourceType: "Cluster",
 						Name:         clusterName,
@@ -647,20 +663,39 @@ func (c *rolebindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 
+	userToEmailMap, err := c.userIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
 	if err != nil {
 		return err
 	}
 	for _, principal := range principals {
 		displayStruct := &struct {
 			Principal string
+			Email     string
 		}{
 			Principal: principal,
+			Email:     userToEmailMap[principal],
 		}
 		outputWriter.AddElement(displayStruct)
 	}
 	return outputWriter.Out()
+}
+
+func (c *rolebindingCommand) userIdToEmailMap() (map[string]string, error) {
+	userToEmailMap := make(map[string]string)
+	users, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return userToEmailMap, err
+	}
+	for _, u := range users {
+		userToEmailMap["User:"+u.ResourceId] = u.Email
+	}
+	return userToEmailMap, nil
 }
 
 func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOptions, error) {
@@ -682,6 +717,16 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasPrefix(principal, "User:") {
+		principalValue := strings.TrimLeft(principal, "User:")
+		if emailRegex.MatchString(principalValue) {
+			user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue, OrganizationId: c.State.Auth.Organization.Id})
+			if err != nil {
+				return nil, err
+			}
+			principal = "User:" + user.ResourceId
+		}
 	}
 	if cmd.Flags().Changed("principal") {
 		err = c.validatePrincipalFormat(principal)
@@ -797,8 +842,7 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOption
 		displayStruct.Name = resourcePattern.Name
 		displayStruct.PatternType = resourcePattern.PatternType
 	} else {
-		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
-		displayStruct.ResourceType = "Cluster"
+		fieldsSelected = []string{"Principal", "Role"}
 	}
 	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }

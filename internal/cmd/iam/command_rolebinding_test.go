@@ -2,6 +2,10 @@ package iam
 
 import (
 	"context"
+	"fmt"
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	mock2 "github.com/confluentinc/cli/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -13,37 +17,16 @@ import (
 	"testing"
 )
 
-var roleBindingListPatterns = []struct {
+var (
+	notfoundError = fmt.Errorf("User not found")
+)
+
+type roleBindingTest struct {
 	args      []string
 	principal string
 	roleName  string
 	scope     mdsv2alpha1.Scope
-}{
-	{
-		args:      []string{"--current-user"},
-		principal: "User:" + v3.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
-	},
-	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId},
-		principal: "User:" + v3.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
-	},
-	{
-		args:      []string{"--principal", "User:u-xyz"},
-		principal: "User:u-xyz",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
-	},
-	{
-		args:     []string{"--role", "OrganizationAdmin"},
-		roleName: "OrganizationAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
-	},
-	{
-		args:     []string{"--role", "EnvironmentAdmin", "--environment", "env-123"},
-		roleName: "EnvironmentAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
-	},
+	err       error
 }
 
 type expectedListCmdArgs struct {
@@ -74,29 +57,184 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 			return nil, nil, nil
 		},
 	}
-	return New("ccloud", mock2.NewPreRunnerMdsV2Mock(nil, mdsClient, suite.conf))
+	mdsClient.RBACRoleBindingCRUDApi = &mds2mock.RBACRoleBindingCRUDApi{
+		AddRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
+			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		},
+		DeleteRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
+			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		},
+	}
+	userMock := &ccsdkmock.User{
+		DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
+			if arg1.Email == "test@email.com" {
+				return &v1.User{
+					Email:      "test@email.com",
+					ResourceId: v3.MockUserResourceId,
+				}, nil
+			} else {
+				return nil, notfoundError
+			}
+		},
+		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {
+			return []*v1.User{{
+				Email:      "test@email.com",
+				ResourceId: v3.MockUserResourceId,
+			}}, nil
+		},
+		CheckEmailFunc: nil,
+	}
+	client := &ccloud.Client{
+		User: userMock,
+	}
+	return New("ccloud", mock2.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {
 	suite.Run(t, new(RoleBindingTestSuite))
 }
 
+var roleBindingListTests = []roleBindingTest{
+	{
+		args:      []string{"--current-user"},
+		principal: "User:" + v3.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId},
+		principal: "User:" + v3.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:u-xyz"},
+		principal: "User:u-xyz",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:test@email.com"},
+		principal: "User:" + v3.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args: []string{"--principal", "User:notfound@email.com"},
+		err:  notfoundError,
+	},
+	{
+		args:     []string{"--role", "OrganizationAdmin"},
+		roleName: "OrganizationAdmin",
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args:     []string{"--role", "EnvironmentAdmin", "--environment", "env-123"},
+		roleName: "EnvironmentAdmin",
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
+	},
+}
+
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	expect := make(chan interface{})
-	for _, roleBindingListPattern := range roleBindingListPatterns {
+	for _, tc := range roleBindingListTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rolebinding", "list"}, roleBindingListPattern.args...))
+		cmd.SetArgs(append([]string{"rolebinding", "list"}, tc.args...))
 
-		go func() {
-			expect <- expectedListCmdArgs{
-				roleBindingListPattern.principal,
-				roleBindingListPattern.roleName,
-				roleBindingListPattern.scope,
-			}
+		if tc.err == nil {
+			go func() {
+				expect <- expectedListCmdArgs{
+					tc.principal,
+					tc.roleName,
+					tc.scope,
+				}
 
-		}()
+			}()
+			err := cmd.Execute()
+			assert.Nil(suite.T(), err)
+		} else {
+			// error case
+			err := cmd.Execute()
+			assert.Equal(suite.T(), tc.err, err)
+		}
+	}
+}
 
-		err := cmd.Execute()
-		assert.Nil(suite.T(), err)
+var roleBindingCreateDeleteTests = []roleBindingTest{
+	{
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "OrganizationAdmin"},
+		principal: "User:" + v3.MockUserResourceId,
+		roleName:  "OrganizationAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:u-xyz", "--role", "OrganizationAdmin"},
+		principal: "User:u-xyz",
+		roleName:  "OrganizationAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:test@email.com", "--role", "OrganizationAdmin"},
+		principal: "User:" + v3.MockUserResourceId,
+		roleName:  "OrganizationAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+	},
+	{
+		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
+		err:  notfoundError,
+	},
+	{
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", "current"},
+		principal: "User:" + v3.MockUserResourceId,
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
+	},
+}
+
+func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
+	expect := make(chan interface{})
+	for _, tc := range roleBindingCreateDeleteTests {
+		cmd := suite.newMockIamRoleBindingCmd(expect, "")
+		cmd.SetArgs(append([]string{"rolebinding", "create"}, tc.args...))
+
+		if tc.err == nil {
+			go func() {
+				expect <- expectedListCmdArgs{
+					tc.principal,
+					tc.roleName,
+					tc.scope,
+				}
+
+			}()
+			err := cmd.Execute()
+			assert.Nil(suite.T(), err)
+		} else {
+			// error case
+			err := cmd.Execute()
+			assert.Equal(suite.T(), tc.err, err)
+		}
+	}
+}
+
+func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
+	expect := make(chan interface{})
+	for _, tc := range roleBindingCreateDeleteTests {
+		cmd := suite.newMockIamRoleBindingCmd(expect, "")
+		cmd.SetArgs(append([]string{"rolebinding", "delete"}, tc.args...))
+
+		if tc.err == nil {
+			go func() {
+				expect <- expectedListCmdArgs{
+					tc.principal,
+					tc.roleName,
+					tc.scope,
+				}
+
+			}()
+			err := cmd.Execute()
+			assert.Nil(suite.T(), err)
+		} else {
+			// error case
+			err := cmd.Execute()
+			assert.Equal(suite.T(), tc.err, err)
+		}
 	}
 }

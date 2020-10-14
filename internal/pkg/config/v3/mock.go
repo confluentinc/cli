@@ -17,7 +17,7 @@ var (
 	MockUserResourceId     = "u-123"
 	mockOrganizationId     = int32(123)
 	MockOrgResourceId      = "org-resource-id"
-	mockEnvironmentId      = "testAccount"
+	MockEnvironmentId      = "testAccount"
 	mockEmail              = "cli-mock-email@confluent.io"
 	mockURL                = "http://test"
 	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
@@ -79,7 +79,7 @@ func APICredentialConfigMock() *Config {
 }
 
 func AuthenticatedConfigMock(cliName string) *Config {
-	authConfig := createAuthConfig(mockUserId, mockEmail, MockUserResourceId, mockEnvironmentId, mockOrganizationId, MockOrgResourceId)
+	authConfig := createAuthConfig(mockUserId, mockEmail, MockUserResourceId, MockEnvironmentId, mockOrganizationId, MockOrgResourceId)
 	credential := createUsernameCredential(usernameCredentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
@@ -94,7 +94,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
 	srCluster := createSRCluster(srAPIKeyPair)
 	srClusters := map[string]*v2.SchemaRegistryCluster{
-		mockEnvironmentId: srCluster,
+		MockEnvironmentId: srCluster,
 	}
 
 	conf := New(&config.Params{
