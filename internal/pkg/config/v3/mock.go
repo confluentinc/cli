@@ -14,7 +14,9 @@ import (
 
 var (
 	mockUserId             = int32(123)
+	MockUserResourceId     = "u-123"
 	mockOrganizationId     = int32(123)
+	MockOrgResourceId      = "org-resource-id"
 	mockEnvironmentId      = "testAccount"
 	mockEmail              = "cli-mock-email@confluent.io"
 	mockURL                = "http://test"
@@ -77,7 +79,7 @@ func APICredentialConfigMock() *Config {
 }
 
 func AuthenticatedConfigMock(cliName string) *Config {
-	authConfig := createAuthConfig(mockUserId, mockEmail, mockEnvironmentId, mockOrganizationId)
+	authConfig := createAuthConfig(mockUserId, mockEmail, MockUserResourceId, mockEnvironmentId, mockOrganizationId, MockOrgResourceId)
 	credential := createUsernameCredential(usernameCredentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
@@ -134,14 +136,19 @@ func createPlatform(name, server string) *v2.Platform {
 	return platform
 }
 
-func createAuthConfig(userId int32, email string, envId string, organizationId int32) *v1.AuthConfig {
+func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *v1.AuthConfig {
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
 			Id:             userId,
 			Email:          email,
 			OrganizationId: organizationId,
+			ResourceId:     userResourceId,
 		},
 		Account: &orgv1.Account{Id: envId},
+		Organization: &orgv1.Organization{
+			Id:         organizationId,
+			ResourceId: orgResourceId,
+		},
 	}
 	return auth
 }
