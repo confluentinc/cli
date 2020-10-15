@@ -52,6 +52,7 @@ const (
 	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
 
 	// kafka link commands
+	DryRunPrefix   = "[DRY RUN] "
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
 	CreatedLinkMsg = "Created cluster link \"%s\".\n"
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"

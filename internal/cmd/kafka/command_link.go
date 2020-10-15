@@ -230,7 +230,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
 
 	if err == nil {
-		pcmd.Printf(cmd, errors.CreatedLinkMsg, linkName)
+		msg := errors.CreatedLinkMsg
+		if validateOnly {
+			msg = errors.DryRunPrefix + msg
+		}
+		pcmd.Printf(cmd, msg, linkName)
 	}
 
 	return err
