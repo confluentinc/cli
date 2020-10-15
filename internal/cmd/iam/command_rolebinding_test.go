@@ -136,6 +136,11 @@ var roleBindingListTests = []roleBindingTest{
 		roleName: "EnvironmentAdmin",
 		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
 	},
+	{
+		args:     []string{"--role", "EnvironmentAdmin", "--current-env"},
+		roleName: "EnvironmentAdmin",
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
+	},
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
@@ -187,7 +192,13 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		err:  notfoundError,
 	},
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", "current"},
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", "env-123"},
+		principal: "User:" + v3.MockUserResourceId,
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
+	},
+	{
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
 		principal: "User:" + v3.MockUserResourceId,
 		roleName:  "EnvironmentAdmin",
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
