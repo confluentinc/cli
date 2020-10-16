@@ -268,8 +268,8 @@ func (a *loginCommand) getMDSClient(cmd *cobra.Command, url string, caCertPath s
 	if err != nil {
 		return nil, err
 	}
-	caCertParthFlagChagned := cmd.Flags().Changed("ca-cert-path")
-	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, caCertParthFlagChagned, url, a.Logger)
+	caCertPathFlagChanged := cmd.Flags().Changed("ca-cert-path")
+	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, caCertPathFlagChanged, url, a.Logger)
 	if err != nil {
 		return nil, err
 	}

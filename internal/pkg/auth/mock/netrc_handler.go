@@ -16,6 +16,9 @@ type MockNetrcHandler struct {
 	lockGetNetrcCredentials sync.Mutex
 	GetNetrcCredentialsFunc func(cliName string, isSSO bool, ctxName string) (string, string, error)
 
+	lockGetMatchingNetrcCredentials sync.Mutex
+	GetMatchingNetrcCredentialsFunc func(cliName, url string) (string, string, error)
+
 	lockGetFileName sync.Mutex
 	GetFileNameFunc func() string
 
@@ -31,6 +34,10 @@ type MockNetrcHandler struct {
 			CliName string
 			IsSSO   bool
 			CtxName string
+		}
+		GetMatchingNetrcCredentials []struct {
+			CliName string
+			Url     string
 		}
 		GetFileName []struct {
 		}
@@ -131,6 +138,47 @@ func (m *MockNetrcHandler) GetNetrcCredentialsCalls() []struct {
 	return m.calls.GetNetrcCredentials
 }
 
+// GetMatchingNetrcCredentials mocks base method by wrapping the associated func.
+func (m *MockNetrcHandler) GetMatchingNetrcCredentials(cliName, url string) (string, string, error) {
+	m.lockGetMatchingNetrcCredentials.Lock()
+	defer m.lockGetMatchingNetrcCredentials.Unlock()
+
+	if m.GetMatchingNetrcCredentialsFunc == nil {
+		panic("mocker: MockNetrcHandler.GetMatchingNetrcCredentialsFunc is nil but MockNetrcHandler.GetMatchingNetrcCredentials was called.")
+	}
+
+	call := struct {
+		CliName string
+		Url     string
+	}{
+		CliName: cliName,
+		Url:     url,
+	}
+
+	m.calls.GetMatchingNetrcCredentials = append(m.calls.GetMatchingNetrcCredentials, call)
+
+	return m.GetMatchingNetrcCredentialsFunc(cliName, url)
+}
+
+// GetMatchingNetrcCredentialsCalled returns true if GetMatchingNetrcCredentials was called at least once.
+func (m *MockNetrcHandler) GetMatchingNetrcCredentialsCalled() bool {
+	m.lockGetMatchingNetrcCredentials.Lock()
+	defer m.lockGetMatchingNetrcCredentials.Unlock()
+
+	return len(m.calls.GetMatchingNetrcCredentials) > 0
+}
+
+// GetMatchingNetrcCredentialsCalls returns the calls made to GetMatchingNetrcCredentials.
+func (m *MockNetrcHandler) GetMatchingNetrcCredentialsCalls() []struct {
+	CliName string
+	Url     string
+} {
+	m.lockGetMatchingNetrcCredentials.Lock()
+	defer m.lockGetMatchingNetrcCredentials.Unlock()
+
+	return m.calls.GetMatchingNetrcCredentials
+}
+
 // GetFileName mocks base method by wrapping the associated func.
 func (m *MockNetrcHandler) GetFileName() string {
 	m.lockGetFileName.Lock()
@@ -173,6 +221,9 @@ func (m *MockNetrcHandler) Reset() {
 	m.lockGetNetrcCredentials.Lock()
 	m.calls.GetNetrcCredentials = nil
 	m.lockGetNetrcCredentials.Unlock()
+	m.lockGetMatchingNetrcCredentials.Lock()
+	m.calls.GetMatchingNetrcCredentials = nil
+	m.lockGetMatchingNetrcCredentials.Unlock()
 	m.lockGetFileName.Lock()
 	m.calls.GetFileName = nil
 	m.lockGetFileName.Unlock()
