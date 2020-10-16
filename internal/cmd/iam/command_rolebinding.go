@@ -5,7 +5,6 @@ import (
 	"fmt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"net/http"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -22,9 +21,6 @@ import (
 )
 
 var (
-	emailRegexPattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-	emailRegex        = regexp.MustCompile(emailRegexPattern)
-
 	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
 	resourcePatternHumanListLabels      = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
 	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
@@ -725,7 +721,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	}
 	if strings.HasPrefix(principal, "User:") {
 		principalValue := strings.TrimLeft(principal, "User:")
-		if emailRegex.MatchString(principalValue) {
+		if strings.Contains(principalValue, "@") {
 			user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue, OrganizationId: c.State.Auth.Organization.Id})
 			if err != nil {
 				return nil, err
