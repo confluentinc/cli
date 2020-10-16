@@ -74,8 +74,13 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 					Email:      "test@email.com",
 					ResourceId: v3.MockUserResourceId,
 				}, nil
-			} else {
+			} else if arg1.Email == "notfound@email.com" {
 				return nil, notfoundError
+			} else {
+				return &v1.User{
+					Email:      arg1.ResourceId + "@email.com",
+					ResourceId: arg1.ResourceId,
+				}, nil
 			}
 		},
 		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {

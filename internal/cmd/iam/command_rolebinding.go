@@ -822,8 +822,28 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
+	if c.cliName == "ccloud" {
+		return c.displayCcloudCreateAndDeleteOutput(cmd, options)
+	} else {
+		return displayCreateAndDeleteOutput(cmd, options)
+	}
+}
 
-	return displayCreateAndDeleteOutput(cmd, options)
+func (c *rolebindingCommand) displayCcloudCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
+	var fieldsSelected []string
+	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role"}
+	userResourceId := strings.TrimLeft(options.principal, "User:")
+	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId, OrganizationId: c.State.Auth.Organization.Id})
+	if err != nil {
+		return err
+	}
+	displayStruct := &listDisplay{
+		Principal: options.principal,
+		Role:      options.role,
+		Email:     user.Email,
+	}
+	fieldsSelected = []string{"Principal", "Email", "Role"}
+	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
@@ -843,7 +863,8 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOption
 		displayStruct.Name = resourcePattern.Name
 		displayStruct.PatternType = resourcePattern.PatternType
 	} else {
-		fieldsSelected = []string{"Principal", "Role"}
+		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
+		displayStruct.ResourceType = "Cluster"
 	}
 	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }
@@ -894,7 +915,11 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
-	return displayCreateAndDeleteOutput(cmd, options)
+	if c.cliName == "ccloud" {
+		return c.displayCcloudCreateAndDeleteOutput(cmd, options)
+	} else {
+		return displayCreateAndDeleteOutput(cmd, options)
+	}
 }
 
 func check(err error) {
