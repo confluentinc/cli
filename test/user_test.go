@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -96,7 +97,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			users := []*orgv1.User{
-				&orgv1.User{
+				{
 					Id:             1,
 					Email:          "bstrauch@confluent.io",
 					FirstName:      "Brian",
@@ -107,8 +108,9 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					ResourceId:     "u11",
 				},
 			}
+			userId := r.URL.Query().Get("id")
 			// if no query param is present then it's a list call
-			if len(r.URL.Query()["user"]) == 0 {
+			if len(userId) == 0 {
 				users = append(users, &orgv1.User{
 					Id:             2,
 					Email:          "mtodzo@confluent.io",
@@ -119,6 +121,12 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					Verified:       nil,
 					ResourceId:     "u17",
 				})
+			} else {
+				intId, err := strconv.Atoi(userId)
+				require.NoError(t, err)
+				if int32(intId) == deactivatedUserID {
+					users = []*orgv1.User{}
+				}
 			}
 			res := orgv1.GetUsersReply{
 				Users:                users,

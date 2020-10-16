@@ -217,14 +217,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			email = "<service account>"
 		} else {
 			if user, ok := users[apiKey.UserId]; ok {
-				email = user.Email
+				if user != nil {
+					email = user.Email
+				} else {
+					email = "<deactivated user>"
+				}
 			} else {
 				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
 				if err != nil {
-					return err
+					email = "<deactivated user>"
+					users[apiKey.UserId] = nil
+				} else {
+					email = user.Email
+					users[user.Id] = user
 				}
-				email = user.Email
-				users[user.Id] = user
 			}
 		}
 

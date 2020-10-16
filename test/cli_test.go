@@ -51,13 +51,14 @@ var (
 	// this connection is preconfigured in Auth0 to hit a test Okta account
 	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
 	// browser tests by default against devel
-	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
-	cover            = false
-	ccloudTestBin    = ccloudTestBinNormal
-	confluentTestBin = confluentTestBinNormal
-	covCollector     *bincover.CoverageCollector
-	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
-	serviceAccountID = int32(12345)
+	ssoTestLoginUrl   = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	cover             = false
+	ccloudTestBin     = ccloudTestBinNormal
+	confluentTestBin  = confluentTestBinNormal
+	covCollector      *bincover.CoverageCollector
+	environments      = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	serviceAccountID  = int32(12345)
+	deactivatedUserID = int32(6666)
 )
 
 const (
@@ -548,6 +549,15 @@ func init() {
 			{Id: "lkc-bob", Type: "kafka"},
 		},
 		UserId: serviceAccountID,
+	}
+	keyStore[201] = &schedv1.ApiKey{
+		Id:     keyIndex,
+		Key:    "DEACTIVATEDUSERKEY",
+		Secret: "DEACTIVATEDUSERSECRET",
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
+			{Id: "lkc-bob", Type: "kafka"},
+		},
+		UserId: deactivatedUserID,
 	}
 	for _, k := range keyStore {
 		k.Created = keyTimestamp

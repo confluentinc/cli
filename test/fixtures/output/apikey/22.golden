@@ -1,5 +1,6 @@
           Key          | Description | Owner |      Owner Email      |  Resource Type  | Resource ID  |       Created         
 +----------------------+-------------+-------+-----------------------+-----------------+--------------+----------------------+
+    DEACTIVATEDUSERKEY |             |  6666 | <deactivated user>    | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
     MYKEY1             | first-key   |    12 | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
     MYKEY2             |             |    18 | bstrauch@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
     MYKEY3             |             |    23 | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
