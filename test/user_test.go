@@ -31,13 +31,18 @@ func (s *CLITestSuite) TestUserList() {
 func (s *CLITestSuite) TestUserDescribe() {
 	tests := []CLITest{
 		{
-			args:    "admin user describe u-0",
-			fixture: "admin/user-describe.golden",
+			args:    		"admin user describe u-0",
+			wantErrCode: 	1,
+			fixture: 		"admin/user-resource-not-found.golden",
 		},
 		{
-			args:        "admin user describe 0",
-			wantErrCode: 1,
-			fixture:     "admin/user-bad-resource-id.golden",
+			args:			"admin user describe u-17",
+			fixture: 		"admin/user-describe.golden",
+		},
+		{
+			args:       	"admin user describe 0",
+			wantErrCode: 	1,
+			fixture:     	"admin/user-bad-resource-id.golden",
 		},
 	}
 
@@ -107,11 +112,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					Verified:       nil,
 					ResourceId:     "u11",
 				},
-			}
-			userId := r.URL.Query().Get("id")
-			// if no query param is present then it's a list call
-			if len(userId) == 0 {
-				users = append(users, &orgv1.User{
+				{
 					Id:             2,
 					Email:          "mtodzo@confluent.io",
 					FirstName:      "Miles",
@@ -119,15 +120,17 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					OrganizationId: 0,
 					Deactivated:    false,
 					Verified:       nil,
-					ResourceId:     "u17",
-				})
-			} else {
-				intId, err := strconv.Atoi(userId)
-				require.NoError(t, err)
-				if int32(intId) == deactivatedUserID {
-					users = []*orgv1.User{}
-				}
+					ResourceId:     "u-17",
+				},
 			}
+			userId := r.URL.Query().Get("id")
+
+			intId, err := strconv.Atoi(userId)
+			require.NoError(t, err)
+			if int32(intId) == deactivatedUserID {
+				users = []*orgv1.User{}
+			}
+
 			res := orgv1.GetUsersReply{
 				Users:                users,
 				Error:                nil,
