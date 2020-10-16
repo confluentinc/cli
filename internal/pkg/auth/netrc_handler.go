@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/atrox/homedir"
-	"github.com/bgentry/go-netrc/netrc"
+	"github.com/csreesan/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -39,6 +39,7 @@ func (c netrcCredentialType) String() string {
 type NetrcHandler interface {
 	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
 	GetNetrcCredentials(cliName string, isSSO bool, ctxName string) (username string, password string, err error)
+	GetMatchingNetrcCredentials(cliName string, url string) (username string, password string, err error)
 	GetFileName() string
 }
 
@@ -133,6 +134,29 @@ func getOrCreateNetrc(filename string) (*netrc.Netrc, error) {
 
 func (n *NetrcHandlerImpl) GetFileName() string {
 	return n.FileName
+}
+
+func (n *NetrcHandlerImpl) GetMatchingNetrcCredentials(cliName string, url string) (string, string, error) {
+	netrcFile, err := netrc.ParseFile(n.FileName)
+	if err != nil {
+		return "", "", err
+	}
+	machines := netrcFile.GetMachines()
+	for _, m := range machines {
+		if isMatchingMachine(m, cliName, url) {
+			return m.Login, m.Password, nil
+		}
+	}
+	return "", "", nil
+}
+
+func isMatchingMachine(machine *netrc.Machine, cliName string, url string) bool {
+	if cliName == "ccloud" {
+		if strings.HasPrefix(machine.Name, "ccloud") && strings.HasSuffix(machine.Name, url) {
+			return true
+		}
+	}
+	return strings.HasPrefix(machine.Name, "mds") && strings.HasSuffix(machine.Name, url)
 }
 
 func GetNetrcFilePath(isIntegrationTest bool) string {
