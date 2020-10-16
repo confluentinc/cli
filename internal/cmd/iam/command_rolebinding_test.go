@@ -74,7 +74,7 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 					Email:      "test@email.com",
 					ResourceId: v3.MockUserResourceId,
 				}, nil
-			} else if arg1.Email == "notfound@email.com" {
+			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
 				return nil, notfoundError
 			} else {
 				return &v1.User{
@@ -189,6 +189,12 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 	{
 		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", "current"},
 		principal: "User:" + v3.MockUserResourceId,
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
+	},
+	{
+		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", "current"},
+		principal: "User:u-noemail",
 		roleName:  "EnvironmentAdmin",
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
 	},

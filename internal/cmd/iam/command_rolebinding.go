@@ -834,15 +834,16 @@ func (c *rolebindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
 	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId, OrganizationId: c.State.Auth.Organization.Id})
-	if err != nil {
-		return err
-	}
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
-		Email:     user.Email,
 	}
-	fieldsSelected = []string{"Principal", "Email", "Role"}
+	if err != nil {
+		fieldsSelected = []string{"Principal", "Role"}
+	} else {
+		displayStruct.Email = user.Email
+		fieldsSelected = []string{"Principal", "Email", "Role"}
+	}
 	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
 }
 
