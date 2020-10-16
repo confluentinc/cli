@@ -1,6 +1,7 @@
 package schema_registry
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -113,6 +114,24 @@ func (c *schemaCommand) init(cliName string) {
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().SortFlags = false
+	c.AddCommand(cmd)
+
+	cmd = &cobra.Command{
+		Use:   "tree --subject <subject> --version <version>",
+		Short: "Fetches an entire schema tree.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.tree),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
+				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", cliName),
+			},
+		),
+	}
+	RequireSubjectFlag(cmd)
+	cmd.Flags().Int32P("version", "V", 0, "Version of the schema. Must be a specific version")
+	_ = cmd.MarkFlagRequired("version")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
@@ -291,4 +310,56 @@ func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType str
 		}
 	}
 	return nil
+}
+
+func (c *schemaCommand) tree(cmd *cobra.Command, _ []string) error {
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	if err != nil {
+		return err
+	}
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+	version, err := cmd.Flags().GetInt32("version")
+	if err != nil {
+		return err
+	}
+
+	visited := make(map[srsdk.SubjectVersion]bool)
+	schemaTree, err := c.recursiveTree(srClient, ctx, visited, subject, version)
+	if err != nil {
+		return err
+	}
+
+	return output.StructuredOutput(output.JSON.String(), &struct { Schemas []srsdk.Schema `json:"schemas"`}{schemaTree})
+}
+
+func (c *schemaCommand) recursiveTree(srClient *srsdk.APIClient, ctx context.Context, visited map[srsdk.SubjectVersion]bool, subject string, version int32) ([]srsdk.Schema, error) {
+	var schemaTree []srsdk.Schema
+
+	subjectVersion := srsdk.SubjectVersion{Subject: subject, Version: version}
+
+	if visited[subjectVersion] {
+		return schemaTree, nil
+	}
+
+	visited[subjectVersion] = true
+
+	schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, strconv.Itoa(int(version)),
+		&srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)})
+	if err != nil {
+		return nil, err
+	}
+	schemaTree = append(schemaTree, schema)
+
+	for _, reference := range schema.References {
+		subTree, err := c.recursiveTree(srClient, ctx, visited, reference.Subject, reference.Version)
+		if err != nil {
+			return nil, err
+		}
+		schemaTree = append(schemaTree, subTree...)
+	}
+
+	return schemaTree, nil
 }
