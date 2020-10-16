@@ -22,11 +22,9 @@ endif
 ifeq ($(PACKAGE_TYPE),archive)
 PREFIX=$(PACKAGE_NAME)
 SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
-SYSTEMDDIR=$(PREFIX)/lib/systemd/system
 else
 PREFIX=/usr
 SYSCONFDIR=/etc/$(PACKAGE_TITLE)
-SYSTEMDDIR=/lib/systemd/system
 endif
 
 all: install
@@ -70,10 +68,6 @@ install: apply-patches
 	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
-
-	for svc in debian/*.service; do \
-	    install -m 644 -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
-	done
 
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
