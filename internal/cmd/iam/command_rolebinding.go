@@ -823,13 +823,13 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 	if c.cliName == "ccloud" {
-		return c.displayCcloudCreateAndDeleteOutput(cmd, options)
+		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
 }
 
-func (c *rolebindingCommand) displayCcloudCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
+func (c *rolebindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, options *rolebindingOptions) error {
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
@@ -916,7 +916,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	if c.cliName == "ccloud" {
-		return c.displayCcloudCreateAndDeleteOutput(cmd, options)
+		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
