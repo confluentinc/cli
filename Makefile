@@ -4,7 +4,7 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.5.1-post
+DOCS_BRANCH     ?= 6.0.0-post
 
 include ./mk-files/semver.mk
 include ./mk-files/release.mk
