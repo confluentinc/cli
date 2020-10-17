@@ -124,11 +124,12 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 				},
 			}
 			userId := r.URL.Query().Get("id")
-
-			intId, err := strconv.Atoi(userId)
-			require.NoError(t, err)
-			if int32(intId) == deactivatedUserID {
-				users = []*orgv1.User{}
+			if userId != "" {
+				intId, err := strconv.Atoi(userId)
+				require.NoError(t, err)
+				if int32(intId) == deactivatedUserID {
+					users = []*orgv1.User{}
+				}
 			}
 
 			res := orgv1.GetUsersReply{
