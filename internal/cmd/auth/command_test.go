@@ -190,13 +190,10 @@ func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *tes
 	prompt := prompt()
 	auth := &sdkMock.Auth{}
 	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
-
-	user, err := loginCmd.getUserCredential(loginCmd.Command, "Email", pauth.CCloudEmailEnvVar)
+	email, password, err := loginCmd.getCCloudLoginCredentials(loginCmd.Command, loginCmd.jwtHTTPClientFactory(context.Background(), "", "", log.New()))
 	req.NoError(err)
-	pass, err := loginCmd.getPasswordCred(loginCmd.Command, pauth.CCloudPasswordEnvVar, "")
-	req.NoError(err)
-	req.Equal("cody@confluent.io", user)
-	req.Equal(" iamrobin ", pass)
+	req.Equal("cody@confluent.io", email)
+	req.Equal(" iamrobin ", password)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {

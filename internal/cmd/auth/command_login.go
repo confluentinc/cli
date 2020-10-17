@@ -300,8 +300,14 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	}
 
 	mdsClient, err := a.getMDSClient(cmd, url, caCertPath)
+	if err != nil {
+		return err
+	}
 
 	username, password, err := a.getConfluentLoginCredentials(cmd)
+	if err != nil {
+		return err
+	}
 
 	authToken, err := pauth.GetConfluentAuthToken(mdsClient, username, password)
 	if err != nil {
@@ -319,6 +325,9 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	}
 
 	err = a.saveLogin(cmd, username, password, "")
+	if err != nil {
+		return err
+	}
 
 	pcmd.Printf(cmd, errors.LoggedInAsMsg, username)
 	return nil
