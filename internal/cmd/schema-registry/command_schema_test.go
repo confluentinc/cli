@@ -2,6 +2,7 @@ package schema_registry
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/http"
 	"testing"
 
@@ -172,6 +173,40 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingSubject() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
+}
+
+func (suite *SchemaTestSuite) TestDescribeRecursiveBySubjectVersion() {
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	origSchemaByVersionFunc := apiMock.GetSchemaByVersionFunc
+	defer func() {apiMock.GetSchemaByVersionFunc = origSchemaByVersionFunc}()
+
+	apiMock.GetSchemaByVersionFunc = func(ctx context.Context, subject, version string, opts *srsdk.GetSchemaByVersionOpts) (schema srsdk.Schema, response *http.Response, e error) {
+		if subject == "root" && version == "1" {
+			return srsdk.Schema{Schema: "RootSchema",
+				Version: 1,
+				References: []srsdk.SchemaReference{{Subject: "grandchild", Version: 2}, {Subject: "child", Version: 1}}}, nil, nil
+		} else if subject == "child" && version == "1" {
+			return srsdk.Schema{Schema: "Potatoes", Version: 1, References: []srsdk.SchemaReference{{Subject: "grandchild", Version: 2}}}, nil, nil
+		} else if subject == "grandchild" && version == "2" {
+			return srsdk.Schema{Schema: "GrandchildSchema", Version: 2}, nil, nil
+		}
+		return srsdk.Schema{}, nil, errors.New("Invalid arguments received")
+	}
+
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"schema", "tree", "--subject", "root", "--version", "1"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(apiMock.GetSchemaByVersionCalled())
+	calls := apiMock.GetSchemaByVersionCalls()
+	req.Equal(3, len(calls))
+	req.Equal("root", calls[0].Subject)
+	req.Equal("1", calls[0].Version)
+	req.Equal("grandchild", calls[1].Subject)
+	req.Equal("2", calls[1].Version)
+	req.Equal("child", calls[2].Subject)
+	req.Equal("1", calls[2].Version)
 }
 
 func TestSchemaSuite(t *testing.T) {
