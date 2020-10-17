@@ -722,7 +722,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	if strings.HasPrefix(principal, "User:") {
 		principalValue := strings.TrimLeft(principal, "User:")
 		if strings.Contains(principalValue, "@") {
-			user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue, OrganizationId: c.State.Auth.Organization.Id})
+			user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue, OrganizationId: c.State.Auth.Organization.GetId()})
 			if err != nil {
 				return nil, err
 			}
@@ -833,7 +833,7 @@ func (c *rolebindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId, OrganizationId: c.State.Auth.Organization.Id})
+	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId, OrganizationId: c.State.Auth.Organization.GetId()})
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
