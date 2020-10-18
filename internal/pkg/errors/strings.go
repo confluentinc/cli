@@ -1,6 +1,9 @@
 package errors
 
 const (
+	//admin commands
+	DeletedUserMsg     = "Successfully deleted user %s."
+	EmailInviteSentMsg = "An email invitation has been sent to %s"
 	// api-key command
 	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
 	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\".\n"
@@ -12,6 +15,7 @@ const (
 	LoggedOutMsg               = "You are now logged out."
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
+	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -48,12 +52,14 @@ const (
 	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
 
 	// kafka link commands
+	DryRunPrefix   = "[DRY RUN] "
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
 	CreatedLinkMsg = "Created cluster link \"%s\".\n"
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
 	// kafka acl commands
-	DeletedACLsMsg = "Deleted ACLs."
+	DeletedACLsMsg  = "Deleted ACLs.\n"
+	ACLsNotFoundMsg = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."

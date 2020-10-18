@@ -36,31 +36,26 @@ func TestPrompt(t *testing.T) {
 
 func TestShow(t *testing.T) {
 	field := Field{Prompt: "Username"}
-	testShow(t, field, nil, "Username: ")
+	testShow(t, field, "Username: ")
 }
 
 func TestShowYesOrNo(t *testing.T) {
 	field := Field{Prompt: "Ok?", IsYesOrNo: true}
-	testShow(t, field, nil, "Ok? (y/n): ")
+	testShow(t, field, "Ok? (y/n): ")
 }
 
 func TestShowDefault(t *testing.T) {
 	field := Field{Prompt: "Username", DefaultValue: "user"}
-	testShow(t, field, nil, "Username: (user) ")
+	testShow(t, field, "Username: (user) ")
 }
 
-func TestShowSavedValue(t *testing.T) {
-	field := Field{Prompt: "Username"}
-	testShow(t, field, "user", "Username: (user) ")
-}
-
-func testShow(t *testing.T, field Field, savedValue interface{}, output string) {
+func testShow(t *testing.T, field Field, output string) {
 	command := new(cobra.Command)
 
 	out := new(bytes.Buffer)
 	command.SetOut(out)
 
-	show(command, field, savedValue)
+	show(command, field)
 	require.Equal(t, output, out.String())
 }
 
@@ -88,35 +83,46 @@ func TestReadPassword(t *testing.T) {
 	require.Equal(t, "pass", password)
 }
 
-func TestSaveYesOrNo(t *testing.T) {
+func TestValidateYesOrNo(t *testing.T) {
 	field := Field{IsYesOrNo: true}
 
 	for _, val := range []string{"y", "yes"} {
-		res, err := save(field, val)
+		res, err := validate(field, val)
 		require.NoError(t, err)
 		require.True(t, res.(bool))
 	}
 
 	for _, val := range []string{"n", "no"} {
-		res, err := save(field, val)
+		res, err := validate(field, val)
 		require.NoError(t, err)
 		require.False(t, res.(bool))
 	}
 
-	_, err := save(field, "maybe")
+	_, err := validate(field, "maybe")
 	require.Error(t, err)
 }
 
-func TestSaveDefaultVal(t *testing.T) {
+func TestValidateDefaultVal(t *testing.T) {
 	field := Field{DefaultValue: "default"}
 
-	res, err := save(field, "")
+	res, err := validate(field, "")
 	require.Equal(t, "default", res)
 	require.NoError(t, err)
 }
 
-func TestSave(t *testing.T) {
-	res, err := save(Field{}, "res")
+func TestValidate(t *testing.T) {
+	res, err := validate(Field{}, "res")
 	require.Equal(t, "res", res)
+	require.NoError(t, err)
+}
+
+func TestValidateRegexFail(t *testing.T) {
+	_, err := validate(Field{Regex: `(?:[a-z0-9!#$%&'*+\/=?^_\x60{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_\x60{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])`}, "milestodzo.com")
+	require.Error(t, err)
+}
+
+func TestValidateRegexSuccess(t *testing.T) {
+	res, err := validate(Field{Regex: `(?:[a-z0-9!#$%&'*+\/=?^_\x60{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_\x60{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])`}, "mtodzo@confluent.io")
+	require.Equal(t, "mtodzo@confluent.io", res)
 	require.NoError(t, err)
 }

@@ -175,11 +175,12 @@ func TestLogout(t *testing.T) {
 	req := require.New(t)
 
 	cfg := v3.AuthenticatedCloudConfigMock()
+	contextName := cfg.Context().Name
 	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
-	verifyLoggedOutState(t, cfg)
+	verifyLoggedOutState(t, cfg, contextName)
 }
 
 func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
@@ -335,7 +336,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)
-		verifyLoggedOutState(t, cfg)
+		verifyLoggedOutState(t, cfg, ctx.Name)
 
 		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -346,6 +347,76 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// verify that kafka cluster info persists between logging back in again
 		req.Equal(kafkaCluster.ID, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		reflect.DeepEqual(kafkaCluster, ctx.KafkaClusterContext.GetKafkaClusterConfig(kafkaCluster.ID))
+	}
+}
+
+func TestValidateUrl(t *testing.T) {
+	req := require.New(t)
+
+	suite := []struct {
+		url_in string
+		valid bool
+		url_out string
+		warning_msg string
+		cli string
+	}{
+		{
+			url_in: "https:///test.com",
+			valid:    false,
+			url_out: "",
+			warning_msg: "default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "test.com",
+			valid:    true,
+			url_out: "http://test.com:8090",
+			warning_msg: "http protocol and default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "test.com:80",
+			valid:    true,
+			url_out: "http://test.com:80",
+			warning_msg: "http protocol",
+			cli: "confluent",
+		},
+		{
+			url_in: "http://test.com",
+			valid:    true,
+			url_out: "http://test.com:8090",
+			warning_msg: "default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "https://127.0.0.1:8090",
+			valid:    true,
+			url_out: "https://127.0.0.1:8090",
+			warning_msg: "",
+			cli: "confluent",
+		},
+		{
+			url_in: "127.0.0.1",
+			valid:    true,
+			url_out: "http://127.0.0.1:8090",
+			warning_msg: "http protocol and default MDS port 8090",
+			cli: "confluent",
+		},
+		{
+			url_in: "devel.cpdev.cloud",
+			valid:	true,
+			url_out: "https://devel.cpdev.cloud",
+			warning_msg: "https protocol",
+			cli: "ccloud",
+		},
+	}
+	for _, s := range suite {
+		url, matched, msg := validateURL(s.url_in, s.cli)
+		req.Equal(s.valid, matched)
+		if s.valid {
+			req.Equal(s.url_out, url)
+		}
+		req.Equal(s.warning_msg, msg)
 	}
 }
 
@@ -371,9 +442,9 @@ func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
 	}
 }
 
-func verifyLoggedOutState(t *testing.T, cfg *v3.Config) {
+func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string) {
 	req := require.New(t)
-	state := cfg.Context().State
+	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
 }

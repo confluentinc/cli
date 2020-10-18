@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/c-bata/go-prompt"
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -55,6 +57,7 @@ type APITestSuite struct {
 	srMothershipMock *ccsdkmock.SchemaRegistry
 	kafkaMock        *ccsdkmock.Kafka
 	isPromptPipe     bool
+	userMock         *ccsdkmock.User
 }
 
 //Require
@@ -118,6 +121,17 @@ func (suite *APITestSuite) SetupTest() {
 			return nil
 		},
 	}
+	suite.userMock = &ccsdkmock.User{
+		DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
+			return &v1.User{
+				Email: "csreesangkom@confluent.io",
+			}, nil
+		},
+		GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
+			return []*v1.User{}, nil
+		},
+		CheckEmailFunc: nil,
+	}
 }
 
 func (suite *APITestSuite) newCmd() *command {
@@ -127,7 +141,7 @@ func (suite *APITestSuite) newCmd() *command {
 		Kafka:          suite.kafkaMock,
 		SchemaRegistry: suite.srMothershipMock,
 		Connect:        &ccsdkmock.Connect{},
-		User:           &ccsdkmock.User{},
+		User:           suite.userMock,
 		APIKey:         suite.apiMock,
 		KSQL:           &ccsdkmock.KSQL{},
 		Metrics:        &ccsdkmock.Metrics{},

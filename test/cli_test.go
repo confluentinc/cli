@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,14 +19,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	"time"
 
 	"github.com/confluentinc/bincover"
+	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
@@ -36,9 +30,15 @@ import (
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -51,12 +51,14 @@ var (
 	// this connection is preconfigured in Auth0 to hit a test Okta account
 	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
 	// browser tests by default against devel
-	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
-	cover            = false
-	ccloudTestBin    = ccloudTestBinNormal
-	confluentTestBin = confluentTestBinNormal
-	covCollector     *bincover.CoverageCollector
-	environments     = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	ssoTestLoginUrl   = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	cover             = false
+	ccloudTestBin     = ccloudTestBinNormal
+	confluentTestBin  = confluentTestBinNormal
+	covCollector      *bincover.CoverageCollector
+	environments      = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	serviceAccountID  = int32(12345)
+	deactivatedUserID = int32(6666)
 )
 
 const (
@@ -358,9 +360,14 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 			fmt.Println(output)
 		}
 
-		if strings.HasPrefix(tt.args, "kafka cluster create") {
+		if strings.HasPrefix(tt.args, "kafka cluster create") ||
+			strings.HasPrefix(tt.args, "config context current") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+		}
+
+		if strings.HasPrefix(tt.args, "api-key list") {
+
 		}
 
 		s.validateTestOutput(tt, t, output)
@@ -388,6 +395,12 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		}
 
 		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+
+		if strings.HasPrefix(tt.args, "config context list") ||
+			strings.HasPrefix(tt.args, "config context current") {
+			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+		}
 
 		s.validateTestOutput(tt, t, output)
 	})
@@ -448,8 +461,11 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, binaryName)
 }
 
-var keyStore = map[int32]*schedv1.ApiKey{}
-var keyIndex = int32(1)
+var (
+	keyStore        = map[int32]*schedv1.ApiKey{}
+	keyIndex        = int32(1)
+	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+)
 
 type ApiKeyList []*schedv1.ApiKey
 
@@ -525,6 +541,27 @@ func init() {
 		},
 		UserId: 25,
 	}
+	keyStore[200] = &schedv1.ApiKey{
+		Id:     keyIndex,
+		Key:    "SERVICEACCOUNTKEY1",
+		Secret: "SERVICEACCOUNTSECRET1",
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
+			{Id: "lkc-bob", Type: "kafka"},
+		},
+		UserId: serviceAccountID,
+	}
+	keyStore[201] = &schedv1.ApiKey{
+		Id:     keyIndex,
+		Key:    "DEACTIVATEDUSERKEY",
+		Secret: "DEACTIVATEDUSERSECRET",
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
+			{Id: "lkc-bob", Type: "kafka"},
+		},
+		UserId: deactivatedUserID,
+	}
+	for _, k := range keyStore {
+		k.Created = keyTimestamp
+	}
 }
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
@@ -542,6 +579,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
 			apiKey.Secret = fmt.Sprintf("MYSECRET%d", keyIndex)
+			apiKey.Created = keyTimestamp
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
 			} else {
@@ -610,8 +648,17 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 			}
+			clusterMultizone := schedv1.KafkaCluster{
+				Id:              "lkc-456",
+				Name:            "def",
+				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
+				Durability:      1,
+				Status:          0,
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+			}
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster},
+				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -740,6 +787,10 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 		require.NoError(t, err)
 	})
 	router.HandleFunc("/api/organizations/0/price_table", handlePriceTable(t))
+	router.HandleFunc("/api/organizations/0/payment_info", handlePaymentInfo(t))
+	router.HandleFunc("/api/users", handleUsers(t))
+	router.HandleFunc("/api/users/u-0", handleUser(t))
+	router.HandleFunc("/api/organizations/0/invites", handleInvite(t))
 	addMdsv2alpha1(t, router)
 	return httptest.NewServer(router)
 }
@@ -801,14 +852,14 @@ func serveKafkaAPI(t *testing.T) *httptest.Server {
 func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
-		lastElem := parts[len(parts) - 1]
+		lastElem := parts[len(parts)-1]
 
 		if lastElem == "" {
 			// No specific link here, we want a list of ALL links
 
 			listResponsePayload := []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName:"link-1",LinkId:"1234",ClusterId:"Blah"},
-				&linkv1.ListLinksResponseItem{LinkName:"link-2",LinkId:"4567",ClusterId:"blah"},
+				&linkv1.ListLinksResponseItem{LinkName: "link-1", LinkId: "1234", ClusterId: "Blah"},
+				&linkv1.ListLinksResponseItem{LinkName: "link-2", LinkId: "4567", ClusterId: "blah"},
 			}
 
 			listReply, err := json.Marshal(listResponsePayload)
@@ -817,12 +868,11 @@ func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 			require.NoError(t, err)
 		} else {
 			// Return properties for the selected link.
-
 			describeResponsePayload := linkv1.DescribeLinkResponse{
 				Entries: []*linkv1.DescribeLinkResponseEntry{
 					{
-						Name:"replica.fetch.max.bytes",
-						Value:"1048576",
+						Name:  "replica.fetch.max.bytes",
+						Value: "1048576",
 					},
 				},
 			}
@@ -1392,9 +1442,9 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 				ApiKey: apiKey,
 				Error:  nil,
 			}
-			reply, err := json.Marshal(result)
+			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == "DELETE" {
 			req := &schedv1.DeleteApiKeyRequest{}
@@ -1405,9 +1455,9 @@ func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *ht
 				ApiKey: apiKey,
 				Error:  nil,
 			}
-			reply, err := json.Marshal(result)
+			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
+			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		}
 
@@ -1419,7 +1469,7 @@ func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *h
 		switch r.Method {
 		case "GET":
 			serviceAccount := &orgv1.User{
-				Id:                 12345,
+				Id:                 serviceAccountID,
 				ServiceName:        "service_account",
 				ServiceDescription: "at your service.",
 			}

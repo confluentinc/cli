@@ -299,18 +299,19 @@ func TestCreateACLs(t *testing.T) {
 }
 
 func TestDeleteACLs(t *testing.T) {
-	expect := make(chan interface{})
-	for _, resource := range resourcePatterns {
-		args := append([]string{"acl", "delete"}, resource.args...)
-		for _, aclEntry := range aclEntries {
-			cmd := newCmd(expect)
-			cmd.SetArgs(append(args, aclEntry.args...))
+	for i, _ := range resourcePatterns {
+		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
+		for j, _ := range aclEntries {
+			expect := make(chan interface{})
+			cmd := NewCMD(expect)
+			cmd.SetArgs(append(args, aclEntries[j].args...))
+
+			var filters []*schedv1.ACLFilter
+			for _, entry := range aclEntries[j].entries {
+				filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resourcePatterns[i].pattern, Entry: entry}))
+			}
 
 			go func() {
-				var filters []*schedv1.ACLFilter
-				for _, entry := range aclEntry.entries {
-					filters = append(filters, convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry}))
-				}
 				expect <- filters
 			}()
 

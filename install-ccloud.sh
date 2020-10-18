@@ -4,6 +4,14 @@ set -e
 # Manually modified to download from S3 for confluentinc/cli goreleaser config
 #
 
+S3_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud
+S3_CONTENT_CHECK_URL="${S3_URL}?prefix="
+if [[ ! -z "$OVERRIDE_S3_FOLDER" ]]
+then
+	S3_CONTENT_CHECK_URL="${S3_URL}?prefix=${OVERRIDE_S3_FOLDER}/"
+	S3_URL=${S3_URL}/${OVERRIDE_S3_FOLDER}
+fi
+
 usage() {
   this=$1
   cat <<EOF
@@ -120,7 +128,7 @@ adjust_os() {
   true
 }
 s3_releases() {
-  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=${PROJECT_NAME}/archives/&delimiter=/"
+  s3url="{S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/&delimiter=/"
   xml=$(http_copy "$s3url")
   versions=$(echo "$xml" | sed -n 's/</\
 </gp' | sed -n "s/<Prefix>${PROJECT_NAME}\/archives\/\(.*\)\//\1/p") || return 1
@@ -130,7 +138,7 @@ s3_releases() {
 s3_release() {
   version=$1
   test -z "$version" && version="latest"
-  s3url="https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
+  s3url="${S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
   xml=$(http_copy "$s3url")
   exists=$(echo "$xml" | grep "<Key>") || return 1
   test -z "$version" && return 1
@@ -396,11 +404,12 @@ main() {
 
   log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
+  S3_ARCHIVES_URL=${S3_URL}/${PROJECT_NAME}/archives/${VERSION#v}
   NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
   TARBALL=${NAME}.${FORMAT}
-  TARBALL_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${TARBALL}
+  TARBALL_URL=${S3_ARCHIVES_URL}/${TARBALL}
   CHECKSUM=${BINARY}_${VERSION}_checksums.txt
-  CHECKSUM_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud/${PROJECT_NAME}/archives/${VERSION#v}/${CHECKSUM}
+  CHECKSUM_URL=${S3_ARCHIVES_URL}/${CHECKSUM}
 
   execute
 }

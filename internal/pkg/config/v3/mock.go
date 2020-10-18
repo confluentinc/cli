@@ -12,13 +12,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-const (
-	mockUserId         = int32(123)
-	mockOrganizationId = int32(123)
-	mockEnvironmentId  = "testAccount"
-	mockEmail          = "cli-mock-email@confluent.io"
-	mockURL            = "http://test"
-	mockAuthToken      = "some.token.here"
+var (
+	mockUserId             = int32(123)
+	MockUserResourceId     = "u-123"
+	mockOrganizationId     = int32(123)
+	MockOrgResourceId      = "org-resource-id"
+	MockEnvironmentId      = "testAccount"
+	mockEmail              = "cli-mock-email@confluent.io"
+	mockURL                = "http://test"
+	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
+	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
+	mockContextName        = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
+	mockAuthToken          = "some.token.here"
 
 	// kafka cluster
 	kafkaClusterId     = "lkc-0000"
@@ -35,12 +40,6 @@ const (
 	srEndpoint  = "https://sr-test"
 	srAPIKey    = "michael"
 	srAPISecret = "scott"
-)
-
-var (
-	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
-	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
-	mockContextName        = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 )
 
 func AuthenticatedCloudConfigMock() *Config {
@@ -85,7 +84,7 @@ func UnauthenticatedCloudConfigMock() *Config {
 }
 
 func AuthenticatedConfigMock(cliName string) *Config {
-	authConfig := createAuthConfig(mockUserId, mockEmail, mockEnvironmentId, mockOrganizationId)
+	authConfig := createAuthConfig(mockUserId, mockEmail, MockUserResourceId, MockEnvironmentId, mockOrganizationId, MockOrgResourceId)
 	credential := createUsernameCredential(usernameCredentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
@@ -100,7 +99,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
 	srCluster := createSRCluster(srAPIKeyPair)
 	srClusters := map[string]*v2.SchemaRegistryCluster{
-		mockEnvironmentId: srCluster,
+		MockEnvironmentId: srCluster,
 	}
 
 	conf := New(&config.Params{
@@ -142,14 +141,19 @@ func createPlatform(name, server string) *v2.Platform {
 	return platform
 }
 
-func createAuthConfig(userId int32, email string, envId string, organizationId int32) *v1.AuthConfig {
+func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *v1.AuthConfig {
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
 			Id:             userId,
 			Email:          email,
 			OrganizationId: organizationId,
+			ResourceId:     userResourceId,
 		},
 		Account: &orgv1.Account{Id: envId},
+		Organization: &orgv1.Organization{
+			Id:         organizationId,
+			ResourceId: orgResourceId,
+		},
 	}
 	return auth
 }

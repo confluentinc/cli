@@ -1,0 +1,139 @@
+jobs:
+- job: system_test
+  displayName: cli system-tests
+  timeoutInMinutes: 90
+
+  pool:
+    vmImage: 'ubuntu-18.04'
+  
+  variables:
+    IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
+    CI: "true"
+    BIN_PATH: "$(Agent.BuildDirectory)"
+  
+  steps:
+    
+  - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 2.9.1 specified in cc-helm.mk
+    displayName: Helm installer
+    inputs:
+      helmVersionToInstall: 2.9.1
+ 
+  - template: azure-pipelines-templates/setup-secrets.yml
+
+  - template: azure-pipelines-templates/setup-go.yml
+      
+  - bash: |
+      echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+      echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+      echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+      echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+    displayName: Properly configure our custom Go environment
+  
+  - script: |
+      echo '##vso[task.prependpath]$(GOROOT)/bin'
+      echo '##vso[task.prependpath]$(GOPATH)/bin'
+      mkdir -p ${GOPATH}\bin
+      mkdir -p ${GOROOT}\bin
+    displayName: Set up the Go workspace
+  
+  - task: DownloadSecureFile@1
+    name: vaultsecrets
+    displayName: Securely download secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
+    inputs:
+      secureFile: 'vault_secrets'
+  
+  - script: |
+      make deps
+    displayName: make deps
+  
+  - script: |
+      make build
+    displayName: make build
+  
+  - task: GoTool@0
+    inputs:
+      version: '1.12.7'
+    displayName: Switch to Go 1.12.7 for cc-system-tests
+  
+  - bash: |
+      git clone git@github.com:confluentinc/cc-mk-include.git mk-include
+      echo "include ./mk-include/cc-begin.mk" >> Makefile
+      echo "include ./mk-include/cc-end.mk" >> Makefile
+      echo "include ./mk-include/cc-docker.mk" >> Makefile
+      echo "include ./mk-include/cc-vault.mk" >> Makefile
+      echo "include ./mk-include/cc-helm.mk" >> Makefile
+      echo "include ./mk-include/cc-cpd.mk" >> Makefile
+      echo "include ./mk-files/cli-cpd.mk" >> Makefile
+    displayName: clone mk-include and include in Makefile
+  
+  - bash: |
+      make install-vault
+    displayName: install vault
+  
+
+  - bash: |
+      export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
+      . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
+      . mk-include/bin/vault-setup
+      . vault-sem-get-secret ssh_id_rsa
+      . vault-sem-get-secret netrc
+      . vault-sem-get-secret semaphore-secrets-global
+      . vault-sem-get-secret eng_aws
+      . vault-sem-get-secret aws_credentials
+      . vault-sem-get-secret cpd_gcloud
+      . vault-sem-get-secret ssh_config
+      . vault-sem-get-secret gitconfig
+      make docker-login
+      make helm-init-ci
+      make helm-update-repo
+    displayName: try to inject secrets and setup docker and helm
+  
+  - bash: |
+      make gcloud-install
+    displayName: Install gcloud
+  
+  - bash: |
+      make cpd-update
+    displayName: Download CPD
+  
+  - bash: |
+      make checkout-cc-system-tests
+    displayName: checkout cc-system-tests
+  
+  - bash: |
+      make cpd-priv-create-if-missing
+    env:
+      AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
+      AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
+      AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
+    displayName: create cpd cluster
+  
+  - bash: |
+      make show-cpd
+    displayName: show cc-cpd.mk variables
+
+  - bash: |
+      make cpd-deploy-local
+    displayName: cpd deploy
+  
+  - bash: |
+      make cpd-priv-testenv || make cpd-debug-and-err
+    displayName: cpd priv testenv
+  
+  - bash: |
+      CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
+    displayName: make init-env
+  
+  - bash: |
+      make replace-cli-binary
+    displayName: Replace CLI binary
+  
+  - bash: |
+      GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
+    displayName: Run system tests
+  
+  - bash: |
+      make cpd-destroy
+    condition: always()
+    displayName: Free CPD
+  

@@ -8,6 +8,10 @@ const (
 	// format
 	prefixFormat = "%s: %s"
 
+	// admin commands
+	BadResourceIDErrorMsg  = "failed parsing resource id: please ensure resource id begins with \"u-\""
+	BadEmailFormatErrorMsg = "invalid email structure"
+
 	// api-key commands
 	UnableToStoreAPIKeyErrorMsg       = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg    = "command not yet available for non-Kafka cluster resources"
@@ -351,6 +355,7 @@ const (
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		ccloudAvoidTimeoutSuggestion
+	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
 	InvalidLoginErrorMsg          = "incorrect email or password"
 	CCloudInvalidLoginSuggestions = ccloudAvoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
