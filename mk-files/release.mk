@@ -1,4 +1,4 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip
+ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip alpine_amd64.tar.gz
 
 .PHONY: release
 release: get-release-image commit-release tag-release

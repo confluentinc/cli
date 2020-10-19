@@ -26,9 +26,12 @@ verify-binary-files:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	@$(caasenv-authenticate) && \
 	for binary in ccloud confluent; do \
-		for os in linux darwin windows; do \
+		for os in linux darwin windows alpine; do \
 			for arch in amd64 386; do \
 				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
+					continue; \
+				fi ; \
+				if [ "$${os}" = "alpine" ] && [ "$${arch}" = "386" ] ; then \
 					continue; \
 				fi ; \
 				suffix="" ; \
