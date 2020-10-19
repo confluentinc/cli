@@ -24,5 +24,6 @@ COPY .netrc /root/.netrc
 RUN chmod 600 /root/.netrc
 
 RUN cd /go/src/github.com/confluentinc/cli && \
-    make gorelease ; \
-    for file in dist/ccloud/*linux*; do mv -v "$file" "${file/linux/alpine}"; done
+    make gorelease-alpine ; \
+    for file in dist/ccloud/*linux*; do mv -v "$file" "${file/linux/alpine}"; done ; \
+    for file in dist/confluent/*linux*; do mv -v "$file" "${file/linux/alpine}"; done
