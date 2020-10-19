@@ -78,7 +78,8 @@ distclean: clean
 	git reset --hard HEAD
 	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
 
-RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//')
+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
+
 # Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 # the version since RPM versions don't support non-numeric
 # characters. Ultimately, for something like 0.8.2-beta, we want to end up with
