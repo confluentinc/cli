@@ -25,10 +25,8 @@ builds:
       - all=-trimpath={{.Env.GOPATH}}
     goos:
       - linux
-      - windows
     goarch:
       - amd64
-      - 386
     hooks:
       post:
         - cmd: make download-licenses
