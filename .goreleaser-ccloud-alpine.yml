@@ -27,12 +27,6 @@ builds:
       - linux
     goarch:
       - amd64
-    hooks:
-      post:
-        - cmd: make download-licenses
-          env:
-            - LICENSE_BIN=ccloud
-            - LICENSE_BIN_PATH=./dist/ccloud/ccloud_linux_amd64/ccloud
  
 release:
   disable: true

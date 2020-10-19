@@ -27,12 +27,6 @@ builds:
       - linux
     goarch:
       - amd64
-    hooks:
-      post:
-        - cmd: make download-licenses
-          env:
-            - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/confluent/confluent_linux_amd64/confluent
 
 release:
   disable: true
