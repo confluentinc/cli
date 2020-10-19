@@ -40,7 +40,7 @@ endef
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	$(caasenv-authenticate) && \
+	$(caasenv-authenticate) ; \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml
