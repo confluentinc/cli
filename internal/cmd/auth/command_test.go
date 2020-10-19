@@ -184,13 +184,20 @@ func TestLogout(t *testing.T) {
 	verifyLoggedOutState(t, cfg, contextName)
 }
 
-func Test_credentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
+func Test_getCCloudLoginCredentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeginOrEnd(t *testing.T) {
 	req := require.New(t)
 
 	prompt := prompt()
 	auth := &sdkMock.Auth{}
-	loginCmd, _ := newLoginCmd(prompt, auth, nil, "ccloud", req)
-	email, password, err := loginCmd.getCCloudLoginCredentials(loginCmd.Command, loginCmd.jwtHTTPClientFactory(context.Background(), "", "", log.New()))
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: "test-email",
+			}, nil
+		},
+	}
+	loginCmd, _ := newLoginCmd(prompt, auth, user, "ccloud", req)
+	email, password, err := loginCmd.getCCloudLoginCredentials(loginCmd.Command, loginCmd.anonHTTPClientFactory("https://confluent.cloud", log.New()))
 	req.NoError(err)
 	req.Equal("cody@confluent.io", email)
 	req.Equal(" iamrobin ", password)
