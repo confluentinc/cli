@@ -9,7 +9,12 @@ RUN apk update --no-cache && \
     cd goreleaser && \
     git checkout v0.141.0 && \
     go install . && \
-    goreleaser --version && \
+    mkdir -p /go/src/github.com/mitchellh && \
+    cd /go/src/github.com/mitchellh && \
+    git clone https://github.com/mitchellh/golicense.git && \
+    cd golicense && \
+    git checkout v0.1.1 && \
+    go install . && \
     mkdir -p /go/src/github.com/confluentinc/cli && \
     cd /go/src/github.com/confluentinc/cli
 
