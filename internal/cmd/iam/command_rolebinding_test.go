@@ -204,7 +204,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
 	},
 	{
-		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", "current"},
+		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v3.MockEnvironmentId},
 		principal: "User:u-noemail",
 		roleName:  "EnvironmentAdmin",
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
