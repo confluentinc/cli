@@ -128,7 +128,11 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (a *loginCommand) getCCloudLoginCredentials(cmd *cobra.Command, client *ccloud.Client) (string, string, error) {
-	email, password := a.getEnvVarCredentials(pauth.CCloudEmailEnvVar, pauth.CCloudPasswordEnvVar)
+	email, password := a.getEnvVarCredentials(cmd, pauth.CCloudEmailEnvVar, pauth.CCloudPasswordEnvVar)
+	// backward compatibility for deprecated environment variables
+	if len(email) == 0 {
+		email, password = a.getEnvVarCredentials(cmd, "XX_CCLOUD_EMAIL", "XX_CCLOUD_PASSWORD")
+	}
 	var err error
 	if len(email) == 0 {
 		email, password, err = a.getNetrcCredentials(cmd)
@@ -280,7 +284,11 @@ func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
 }
 
 func (a *loginCommand) getConfluentLoginCredentials(cmd *cobra.Command) (string, string, error) {
-	username, password := a.getEnvVarCredentials(pauth.ConfluentUsernameEnvVar, pauth.ConfluentPasswordEnvVar)
+	username, password := a.getEnvVarCredentials(cmd, pauth.ConfluentUsernameEnvVar, pauth.ConfluentPasswordEnvVar)
+	// backward compatibility for deprecated environment variables
+	if len(username) == 0 {
+		username, password = a.getEnvVarCredentials(cmd, "XX_CONFLUENT_USERNAME", "XX_CONFLUENT_PASSWORD")
+	}
 	var err error
 	if len(username) == 0 {
 		username, password, err = a.getNetrcCredentials(cmd)
@@ -376,27 +384,32 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, username, password, refre
 	return nil
 }
 
-func (a *loginCommand) getNetrcCredentials(cmd *cobra.Command) (string, string, error) {
-	url, err := a.getURL(cmd)
-	if err != nil {
-		return "", "", err
-	}
-	return a.netrcHandler.GetMatchingNetrcCredentials(netrc.GetMatchingNetrcCredentialsParams{
-		CLIName: a.cliName,
-		URL:     url,
-	})
-}
-
-func (a *loginCommand) getEnvVarCredentials(userEnvVar string, passwordEnvVar string) (string, string) {
+func (a *loginCommand) getEnvVarCredentials(cmd *cobra.Command, userEnvVar string, passwordEnvVar string) (string, string) {
 	user := os.Getenv(userEnvVar)
 	if len(user) == 0 {
 		return "", ""
 	}
 	password := os.Getenv(passwordEnvVar)
-	if len(passwordEnvVar) == 0 {
+	if len(password) == 0 {
 		return "", ""
 	}
+	pcmd.Printf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
 	return user, password
+}
+
+func (a *loginCommand) getNetrcCredentials(cmd *cobra.Command) (string, string, error) {
+	url, err := a.getURL(cmd)
+	if err != nil {
+		return "", "", err
+	}
+	user, password, err := a.netrcHandler.GetMatchingNetrcCredentials(netrc.GetMatchingNetrcCredentialsParams{
+		CLIName: a.cliName,
+		URL:     url,
+	})
+	if len(user) > 0 && len(password) > 0 {
+		pcmd.Printf(cmd, errors.FoundNetrcCredMsg, user, a.netrcHandler.GetFileName())
+	}
+	return user, password, err
 }
 
 // For Confluent login command, pass nil as ccloudClient argument

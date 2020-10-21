@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	CCloudEmailEnvVar       = "XX_CCLOUD_EMAIL"
-	ConfluentUsernameEnvVar = "XX_CONFLUENT_USERNAME"
-	CCloudPasswordEnvVar    = "XX_CCLOUD_PASSWORD"
-	ConfluentPasswordEnvVar = "XX_CONFLUENT_PASSWORD"
+	CCloudEmailEnvVar       = "CCLOUD_EMAIL"
+	ConfluentUsernameEnvVar = "CONFLUENT_USERNAME"
+	CCloudPasswordEnvVar    = "CCLOUD_PASSWORD"
+	ConfluentPasswordEnvVar = "CONFLUENT_PASSWORD"
 )
 
 // If user is sso then will return refresh token, but if user is email password login then refresh token is ""
