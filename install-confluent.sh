@@ -74,6 +74,7 @@ is_supported_platform() {
   found=1
   case "$platform" in
     linux/amd64) found=0 ;;
+    alpine/amd64) found=0 ;;
     linux/386) found=0 ;;
     darwin/amd64) found=0 ;;
     darwin/386) found=0 ;;
@@ -81,6 +82,7 @@ is_supported_platform() {
     windows/386) found=0 ;;
   esac
   case "$platform" in
+    alpine/386) found=1 ;;
     darwin/386) found=1 ;;
   esac
   return $found
@@ -123,6 +125,7 @@ adjust_os() {
     amd64) OS=x86_64 ;;
     darwin) OS=darwin ;;
     linux) OS=linux ;;
+    alpine) OS=alpine ;;
     windows) OS=windows ;;
   esac
   true
@@ -204,10 +207,14 @@ log_crit() {
 }
 uname_os() {
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  osid=$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release || true)
   case "$os" in
     msys*) os="windows" ;;
     mingw*) os="windows" ;;
     cygwin*) os="windows" ;;
+  esac
+  case "$osid" in
+    alpine*) os="alpine" ;;
   esac
   echo "$os"
 }
@@ -232,6 +239,7 @@ uname_os_check() {
     dragonfly) return 0 ;;
     freebsd) return 0 ;;
     linux) return 0 ;;
+    alpine) return 0 ;;
     android) return 0 ;;
     nacl) return 0 ;;
     netbsd) return 0 ;;
