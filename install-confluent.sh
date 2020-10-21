@@ -207,7 +207,7 @@ log_crit() {
 }
 uname_os() {
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
-  osid=$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release || true)
+  osid=$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release 2>/dev/null || true)
   case "$os" in
     msys*) os="windows" ;;
     mingw*) os="windows" ;;
