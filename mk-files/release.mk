@@ -37,6 +37,7 @@ define copy-stag-content-to-prod
 	done
 endef
 
+# The Alpine container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
 .PHONY: gorelease-alpine
 gorelease-alpine:
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
@@ -49,7 +50,8 @@ gorelease:
 	$(caasenv-authenticate) ; \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml
+	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	./build_alpine.sh
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
