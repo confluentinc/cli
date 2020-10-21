@@ -19,11 +19,21 @@ const (
 	inputFileMds          = "test_files/input-mds"
 	inputFileCcloudLogin  = "test_files/input-ccloud-login"
 	inputFileCcloudSSO    = "test_files/input-ccloud-sso"
-	mdsContext            = "mds-context"
-	ccloudLoginContext    = "ccloud-login"
-	ccloudSSOContext      = "ccloud-sso"
+	mdsContext            = "login-mds-user-http://test"
+	ccloudLoginContext    = "login-ccloud-login-user@confluent.io-http://test"
+	ccloudSSOContext      = "login-ccloud-sso-user@confluent.io-http://test"
 	netrcUser             = "jamal@jj"
 	netrcPassword         = "12345"
+
+	loginURL           = "http://test"
+	ssoFirstURL        = "http://ssofirst"
+	ccloudLogin        = "ccloud-login-user@confluent.io"
+	ccloudLoginDiffURL = "ccloud-login-user-diff-url@confluent.io"
+	ccloudSSOLogin     = "ccloud-sso-user@confluent.io"
+	mdsLogin           = "mds-user"
+	ssoFirstLogin      = "sso-first@confluent.io"
+	mockPassword       = "mock-password"
+	refreshToken       = "refresh-token"
 )
 
 func TestGetNetrcCredentialsWithContextName(t *testing.T) {
@@ -36,7 +46,7 @@ func TestGetNetrcCredentialsWithContextName(t *testing.T) {
 	}{
 		{
 			name: "mds context",
-			want: []string{netrcUser, netrcPassword},
+			want: []string{mdsLogin, mockPassword},
 			params: GetMatchingNetrcCredentialsParams{
 				CLIName: "confluent",
 				CtxName: mdsContext,
@@ -45,7 +55,7 @@ func TestGetNetrcCredentialsWithContextName(t *testing.T) {
 		},
 		{
 			name: "ccloud login context",
-			want: []string{netrcUser, netrcPassword},
+			want: []string{ccloudLogin, mockPassword},
 			params: GetMatchingNetrcCredentialsParams{
 				CLIName: "ccloud",
 				CtxName: ccloudLoginContext,
@@ -54,7 +64,7 @@ func TestGetNetrcCredentialsWithContextName(t *testing.T) {
 		},
 		{
 			name: "ccloud sso context",
-			want: []string{netrcUser, netrcPassword},
+			want: []string{ccloudSSOLogin, refreshToken},
 			params: GetMatchingNetrcCredentialsParams{
 				CLIName: "ccloud",
 				CtxName: ccloudSSOContext,
@@ -79,6 +89,95 @@ func TestGetNetrcCredentialsWithContextName(t *testing.T) {
 			},
 			wantErr: true,
 			file:    netrcFilePath,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			netrcHandler := NewNetrcHandler(tt.file)
+			var username, password string
+			var err error
+			if username, password, err = netrcHandler.GetMatchingNetrcCredentials(tt.params); (err != nil) != tt.wantErr {
+				t.Errorf("GetNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
+			}
+			if len(tt.want) != 0 && !t.Failed() && username != tt.want[0] {
+				t.Errorf("GetNetrcCredentials username got: %+v, want: %+v", username, tt.want[0])
+			}
+			if len(tt.want) == 2 && !t.Failed() && password != tt.want[1] {
+				t.Errorf("GetNetrcCredentials password got: %+v, want: %+v", password, tt.want[1])
+			}
+		})
+	}
+}
+
+func TestGetNetrcCredentialsChooseFirst(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    []string
+		params  GetMatchingNetrcCredentialsParams
+		wantErr bool
+		file    string
+	}{
+		{
+			name: "ccloud login with url",
+			want: []string{ccloudLogin, mockPassword},
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "ccloud",
+				URL:     loginURL,
+			},
+			file: netrcFilePath,
+		},
+		{
+			name: "ccloud login no url",
+			want: []string{ccloudLoginDiffURL, mockPassword},
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "ccloud",
+			},
+			file: netrcFilePath,
+		},
+		{
+			name: "confluent login with url",
+			want: []string{mdsLogin, mockPassword},
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "confluent",
+				URL:     loginURL,
+			},
+			file: netrcFilePath,
+		},
+		{
+			name: "ccloud sso with url",
+			want: []string{ccloudSSOLogin, refreshToken},
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "ccloud",
+				IsSSO:   true,
+				URL:     loginURL,
+			},
+			file: netrcFilePath,
+		},
+		{
+			name: "no sso specified but sso comes first",
+			want: []string{ssoFirstLogin, refreshToken},
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "ccloud",
+				URL:     ssoFirstURL,
+			},
+			file: netrcFilePath,
+		},
+		{
+			name: "No file error",
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "confluent",
+			},
+			wantErr: true,
+			file:    "wrong-file",
+		},
+		{
+			name: "URL doesn't exist",
+			want: []string{"", ""},
+			params: GetMatchingNetrcCredentialsParams{
+				CLIName: "ccloud",
+				URL:     "http://dontexist",
+			},
+			file: netrcFilePath,
 		},
 	}
 	for _, tt := range tests {
