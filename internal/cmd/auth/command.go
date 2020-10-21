@@ -11,10 +11,11 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler pauth.NetrcHandler) []*cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}

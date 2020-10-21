@@ -6,6 +6,8 @@ package mock
 
 import (
 	sync "sync"
+
+	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/internal/pkg/netrc"
 )
 
 // MockNetrcHandler is a mock of NetrcHandler interface
@@ -13,11 +15,8 @@ type MockNetrcHandler struct {
 	lockWriteNetrcCredentials sync.Mutex
 	WriteNetrcCredentialsFunc func(cliName string, isSSO bool, ctxName, username, password string) error
 
-	lockGetNetrcCredentials sync.Mutex
-	GetNetrcCredentialsFunc func(cliName string, isSSO bool, ctxName string) (string, string, error)
-
 	lockGetMatchingNetrcCredentials sync.Mutex
-	GetMatchingNetrcCredentialsFunc func(cliName, url string) (string, string, error)
+	GetMatchingNetrcCredentialsFunc func(params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcCredentialsParams) (string, string, error)
 
 	lockGetFileName sync.Mutex
 	GetFileNameFunc func() string
@@ -30,14 +29,8 @@ type MockNetrcHandler struct {
 			Username string
 			Password string
 		}
-		GetNetrcCredentials []struct {
-			CliName string
-			IsSSO   bool
-			CtxName string
-		}
 		GetMatchingNetrcCredentials []struct {
-			CliName string
-			Url     string
+			Params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcCredentialsParams
 		}
 		GetFileName []struct {
 		}
@@ -94,52 +87,8 @@ func (m *MockNetrcHandler) WriteNetrcCredentialsCalls() []struct {
 	return m.calls.WriteNetrcCredentials
 }
 
-// GetNetrcCredentials mocks base method by wrapping the associated func.
-func (m *MockNetrcHandler) GetNetrcCredentials(cliName string, isSSO bool, ctxName string) (string, string, error) {
-	m.lockGetNetrcCredentials.Lock()
-	defer m.lockGetNetrcCredentials.Unlock()
-
-	if m.GetNetrcCredentialsFunc == nil {
-		panic("mocker: MockNetrcHandler.GetNetrcCredentialsFunc is nil but MockNetrcHandler.GetNetrcCredentials was called.")
-	}
-
-	call := struct {
-		CliName string
-		IsSSO   bool
-		CtxName string
-	}{
-		CliName: cliName,
-		IsSSO:   isSSO,
-		CtxName: ctxName,
-	}
-
-	m.calls.GetNetrcCredentials = append(m.calls.GetNetrcCredentials, call)
-
-	return m.GetNetrcCredentialsFunc(cliName, isSSO, ctxName)
-}
-
-// GetNetrcCredentialsCalled returns true if GetNetrcCredentials was called at least once.
-func (m *MockNetrcHandler) GetNetrcCredentialsCalled() bool {
-	m.lockGetNetrcCredentials.Lock()
-	defer m.lockGetNetrcCredentials.Unlock()
-
-	return len(m.calls.GetNetrcCredentials) > 0
-}
-
-// GetNetrcCredentialsCalls returns the calls made to GetNetrcCredentials.
-func (m *MockNetrcHandler) GetNetrcCredentialsCalls() []struct {
-	CliName string
-	IsSSO   bool
-	CtxName string
-} {
-	m.lockGetNetrcCredentials.Lock()
-	defer m.lockGetNetrcCredentials.Unlock()
-
-	return m.calls.GetNetrcCredentials
-}
-
 // GetMatchingNetrcCredentials mocks base method by wrapping the associated func.
-func (m *MockNetrcHandler) GetMatchingNetrcCredentials(cliName, url string) (string, string, error) {
+func (m *MockNetrcHandler) GetMatchingNetrcCredentials(params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcCredentialsParams) (string, string, error) {
 	m.lockGetMatchingNetrcCredentials.Lock()
 	defer m.lockGetMatchingNetrcCredentials.Unlock()
 
@@ -148,16 +97,14 @@ func (m *MockNetrcHandler) GetMatchingNetrcCredentials(cliName, url string) (str
 	}
 
 	call := struct {
-		CliName string
-		Url     string
+		Params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcCredentialsParams
 	}{
-		CliName: cliName,
-		Url:     url,
+		Params: params,
 	}
 
 	m.calls.GetMatchingNetrcCredentials = append(m.calls.GetMatchingNetrcCredentials, call)
 
-	return m.GetMatchingNetrcCredentialsFunc(cliName, url)
+	return m.GetMatchingNetrcCredentialsFunc(params)
 }
 
 // GetMatchingNetrcCredentialsCalled returns true if GetMatchingNetrcCredentials was called at least once.
@@ -170,8 +117,7 @@ func (m *MockNetrcHandler) GetMatchingNetrcCredentialsCalled() bool {
 
 // GetMatchingNetrcCredentialsCalls returns the calls made to GetMatchingNetrcCredentials.
 func (m *MockNetrcHandler) GetMatchingNetrcCredentialsCalls() []struct {
-	CliName string
-	Url     string
+	Params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcCredentialsParams
 } {
 	m.lockGetMatchingNetrcCredentials.Lock()
 	defer m.lockGetMatchingNetrcCredentials.Unlock()
@@ -218,9 +164,6 @@ func (m *MockNetrcHandler) Reset() {
 	m.lockWriteNetrcCredentials.Lock()
 	m.calls.WriteNetrcCredentials = nil
 	m.lockWriteNetrcCredentials.Unlock()
-	m.lockGetNetrcCredentials.Lock()
-	m.calls.GetNetrcCredentials = nil
-	m.lockGetNetrcCredentials.Unlock()
 	m.lockGetMatchingNetrcCredentials.Lock()
 	m.calls.GetMatchingNetrcCredentials = nil
 	m.lockGetMatchingNetrcCredentials.Unlock()

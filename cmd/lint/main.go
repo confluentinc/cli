@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -215,7 +215,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, pauth.NewNetrcHandler(""))
+		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, netrc.NewNetrcHandler(""))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

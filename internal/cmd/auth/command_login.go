@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
 
 type loginCommand struct {
@@ -33,13 +34,13 @@ type loginCommand struct {
 	prompt                pcmd.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler          pauth.NetrcHandler
+	netrcHandler          netrc.NetrcHandler
 }
 
 func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler pauth.NetrcHandler) *loginCommand {
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *loginCommand {
 	cmd := &loginCommand{
 		cliName:               cliName,
 		Logger:                log,
@@ -111,7 +112,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = a.addOrUpdateContext(state.Auth.User.Email, url, state, "")
+	err = a.addOrUpdateContext(email, url, state, "")
 	if err != nil {
 		return err
 	}
@@ -127,10 +128,10 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (a *loginCommand) getCCloudLoginCredentials(cmd *cobra.Command, client *ccloud.Client) (string, string, error) {
-	email, password := a.getEnvVarCredentials(cmd, pauth.CCloudEmailEnvVar, pauth.CCloudPasswordEnvVar)
+	email, password := a.getEnvVarCredentials(pauth.CCloudEmailEnvVar, pauth.CCloudPasswordEnvVar)
 	var err error
 	if len(email) == 0 {
-		email, password, err = a.GetNetrcCredentials(cmd)
+		email, password, err = a.getNetrcCredentials(cmd)
 		if err != nil {
 			return "", "", err
 		}
@@ -279,10 +280,10 @@ func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
 }
 
 func (a *loginCommand) getConfluentLoginCredentials(cmd *cobra.Command) (string, string, error) {
-	username, password := a.getEnvVarCredentials(cmd, pauth.ConfluentUsernameEnvVar, pauth.ConfluentPasswordEnvVar)
+	username, password := a.getEnvVarCredentials(pauth.ConfluentUsernameEnvVar, pauth.ConfluentPasswordEnvVar)
 	var err error
 	if len(username) == 0 {
-		username, password, err = a.GetNetrcCredentials(cmd)
+		username, password, err = a.getNetrcCredentials(cmd)
 		if err != nil {
 			return "", "", err
 		}
@@ -375,11 +376,18 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, username, password, refre
 	return nil
 }
 
-func (a *loginCommand) GetNetrcCredentials(cmd *cobra.Command) (string, string, error) {
-	return "", "", nil
+func (a *loginCommand) getNetrcCredentials(cmd *cobra.Command) (string, string, error) {
+	url, err := a.getURL(cmd)
+	if err != nil {
+		return "", "", err
+	}
+	return a.netrcHandler.GetMatchingNetrcCredentials(netrc.GetMatchingNetrcCredentialsParams{
+		CLIName: a.cliName,
+		URL:     url,
+	})
 }
 
-func (a *loginCommand) getEnvVarCredentials(cmd *cobra.Command, userEnvVar string, passwordEnvVar string) (string, string) {
+func (a *loginCommand) getEnvVarCredentials(userEnvVar string, passwordEnvVar string) (string, string) {
 	user := os.Getenv(userEnvVar)
 	if len(user) == 0 {
 		return "", ""

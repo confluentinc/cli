@@ -46,6 +46,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
@@ -60,7 +61,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler netrc.NetrcHandler) (*Command, error) {
 	logger := log.New()
 	cfg, configLoadingErr := loadConfig(cliName, logger)
 	if cfg != nil {

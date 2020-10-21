@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -25,7 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	authMock "github.com/confluentinc/cli/internal/pkg/auth/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -262,8 +262,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 	}
 	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), prompt, nil, nil,
 		mdsClientManager, cliMock.NewDummyAnalyticsMock(),
-		&authMock.MockNetrcHandler{
-			GetNetrcCredentialsFunc: func(string, bool, string) (string, string, error) { return "", "", nil },
+		&cliMock.MockNetrcHandler{
+			GetMatchingNetrcCredentialsFunc: func(netrc.GetMatchingNetrcCredentialsParams) (string, string, error) { return "", "", nil },
 		},
 	)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
@@ -507,8 +507,8 @@ func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cli
 	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, cfg)
 	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt,
 		mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(),
-		&authMock.MockNetrcHandler{
-			GetNetrcCredentialsFunc: func(string, bool, string) (string, string, error) { return "", "", nil },
+		&cliMock.MockNetrcHandler{
+			GetMatchingNetrcCredentialsFunc: func(netrc.GetMatchingNetrcCredentialsParams) (string, string, error) { return "", "", nil },
 		},
 	)
 	return loginCmd, cfg

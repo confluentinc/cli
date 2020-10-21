@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -110,7 +111,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				},
 				Analytics:          cliMock.NewDummyAnalyticsMock(),
 				Clock:              clockwork.NewRealClock(),
-				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+				UpdateTokenHandler: auth.NewUpdateTokenHandler(netrc.NewNetrcHandler("")),
 				Config:             cfg,
 			}
 
@@ -149,7 +150,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 		},
 		Analytics:          cliMock.NewDummyAnalyticsMock(),
 		Clock:              clockwork.NewRealClock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(netrc.NewNetrcHandler("")),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -182,7 +183,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 		},
 		Analytics:          analyticsClient,
 		Clock:              clockwork.NewRealClock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(netrc.NewNetrcHandler("")),
 	}
 
 	root := &cobra.Command{
@@ -218,7 +219,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		},
 		Analytics:          analyticsClient,
 		Clock:              clockwork.NewRealClock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(netrc.NewNetrcHandler("")),
 		Config:             cfg,
 	}
 
@@ -399,7 +400,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				},
 				Analytics:          analyticsClient,
 				Clock:              clockwork.NewRealClock(),
-				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+				UpdateTokenHandler: auth.NewUpdateTokenHandler(netrc.NewNetrcHandler("")),
 				Config:             tt.config,
 			}
 

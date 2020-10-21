@@ -7,6 +7,7 @@ import (
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
 
 type UpdateTokenHandler interface {
@@ -17,7 +18,7 @@ type UpdateTokenHandler interface {
 type UpdateTokenHandlerImpl struct {
 	ccloudTokenHandler    CCloudTokenHandler
 	confluentTokenHandler ConfluentTokenHandler
-	netrcHandler          NetrcHandler
+	netrcHandler          netrc.NetrcHandler
 }
 
 var (
@@ -27,7 +28,7 @@ var (
 	successNetrcTokenMsg   = "Token successfully updated with netrc file credentials."
 )
 
-func NewUpdateTokenHandler(netrcHandler NetrcHandler) UpdateTokenHandler {
+func NewUpdateTokenHandler(netrcHandler netrc.NetrcHandler) UpdateTokenHandler {
 	return &UpdateTokenHandlerImpl{
 		ccloudTokenHandler:    &CCloudTokenHandlerImpl{},
 		confluentTokenHandler: &ConfluentTokenHandlerImp{},
@@ -44,7 +45,11 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 	}
 	var token string
 	if userSSO != nil {
-		_, refreshToken, err := u.netrcHandler.GetNetrcCredentials("ccloud", true, ctx.Name)
+		_, refreshToken, err := u.netrcHandler.GetMatchingNetrcCredentials(netrc.GetMatchingNetrcCredentialsParams{
+			CLIName: "ccloud",
+			IsSSO:   true,
+			CtxName: ctx.Name,
+		})
 		if err != nil {
 			logger.Debugf(failedRefreshTokenMsg, err)
 			return err
@@ -56,7 +61,11 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 		}
 		logger.Debug(successRefreshTokenMsg)
 	} else {
-		email, password, err := u.netrcHandler.GetNetrcCredentials(ctx.Config.CLIName, false, ctx.Name)
+		email, password, err := u.netrcHandler.GetMatchingNetrcCredentials(netrc.GetMatchingNetrcCredentialsParams{
+			CLIName: ctx.Config.CLIName,
+			IsSSO:   false,
+			CtxName: ctx.Name,
+		})
 		if err != nil {
 			logger.Debugf(err.Error())
 			return err
@@ -72,7 +81,10 @@ func (u *UpdateTokenHandlerImpl) UpdateCCloudAuthTokenUsingNetrcCredentials(ctx 
 }
 
 func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthTokenUsingNetrcCredentials(ctx *v3.Context, logger *log.Logger) error {
-	email, password, err := u.netrcHandler.GetNetrcCredentials("confluent", false, ctx.Name)
+	email, password, err := u.netrcHandler.GetMatchingNetrcCredentials(netrc.GetMatchingNetrcCredentialsParams{
+		CLIName: "confluent",
+		CtxName: ctx.Name,
+	})
 	if err != nil {
 		logger.Debugf(err.Error())
 		return err
