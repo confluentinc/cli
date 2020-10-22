@@ -132,4 +132,10 @@ const (
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+
+	// shell package
+	AlreadyAuthenticatedMsg      = "You are already authenticated."
+	CurrentlyNotAuthenticatedMsg = "You are currently not authenticated."
+	ShellWelcomeMsg              = "Welcome to the %s shell! %s\n"
+	ShellExitInstructionsMsg     = "Please press `Ctrl-D` or type `quit` to exit."
 )

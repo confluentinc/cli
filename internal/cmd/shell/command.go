@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
@@ -66,7 +67,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	// add shell only quit command
 	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config, c.logger, c.analytics))
 
-	msg := "You are already authenticated."
+	msg := errors.AlreadyAuthenticatedMsg
 	if cmd.Annotations == nil {
 		cmd.Annotations = make(map[string]string)
 	}
@@ -75,13 +76,13 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	// After the first time, validate using the token validator, which doesn't try to update the JWT because that would be too slow.
 	c.Command.Annotations[pcmd.DoNotTrack] = ""
 	if err := c.prerunner.Authenticated(pcmd.NewAuthenticatedCLICommand(c.Command, c.prerunner))(c.Command, args); err != nil {
-		msg = "You are currently not authenticated."
+		msg = errors.CurrentlyNotAuthenticatedMsg
 	}
 	delete(c.Command.Annotations, pcmd.DoNotTrack)
 
 	// run the shell
-	fmt.Printf("Welcome to the %s shell! %s\n", cliName, msg)
-	fmt.Println("Please press `Ctrl-D` or type `quit` to exit.")
+	fmt.Printf(errors.ShellWelcomeMsg, cliName, msg)
+	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
 	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, c.logger, c.analytics, opts...)
