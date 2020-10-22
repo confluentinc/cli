@@ -12,6 +12,11 @@ const (
 	ConfluentUsernameEnvVar = "CONFLUENT_USERNAME"
 	CCloudPasswordEnvVar    = "CCLOUD_PASSWORD"
 	ConfluentPasswordEnvVar = "CONFLUENT_PASSWORD"
+
+	CCloudEmailDeprecatedEnvVar       = "XX_CCLOUD_EMAIL"
+	ConfluentUsernameDeprecatedEnvVar = "XX_CONFLUENT_USERNAME"
+	CCloudPasswordDeprecatedEnvVar    = "XX_CCLOUD_PASSWORD"
+	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
 )
 
 // If user is sso then will return refresh token, but if user is email password login then refresh token is ""

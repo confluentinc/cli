@@ -131,7 +131,7 @@ func (a *loginCommand) getCCloudLoginCredentials(cmd *cobra.Command, client *ccl
 	email, password := a.getEnvVarCredentials(cmd, pauth.CCloudEmailEnvVar, pauth.CCloudPasswordEnvVar)
 	// backward compatibility for deprecated environment variables
 	if len(email) == 0 {
-		email, password = a.getEnvVarCredentials(cmd, "XX_CCLOUD_EMAIL", "XX_CCLOUD_PASSWORD")
+		email, password = a.getEnvVarCredentials(cmd, pauth.CCloudEmailDeprecatedEnvVar, pauth.CCloudPasswordDeprecatedEnvVar)
 	}
 	var err error
 	if len(email) == 0 {
@@ -287,7 +287,7 @@ func (a *loginCommand) getConfluentLoginCredentials(cmd *cobra.Command) (string,
 	username, password := a.getEnvVarCredentials(cmd, pauth.ConfluentUsernameEnvVar, pauth.ConfluentPasswordEnvVar)
 	// backward compatibility for deprecated environment variables
 	if len(username) == 0 {
-		username, password = a.getEnvVarCredentials(cmd, "XX_CONFLUENT_USERNAME", "XX_CONFLUENT_PASSWORD")
+		username, password = a.getEnvVarCredentials(cmd, pauth.ConfluentUsernameDeprecatedEnvVar, pauth.ConfluentPasswordDeprecatedEnvVar)
 	}
 	var err error
 	if len(username) == 0 {
