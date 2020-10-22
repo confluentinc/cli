@@ -74,11 +74,11 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 
 	// For the first time, validate the token using the prerunner, which tries to update the JWT if it's invalid.
 	// After the first time, validate using the token validator, which doesn't try to update the JWT because that would be too slow.
-	c.Command.Annotations[pcmd.DoNotTrack] = ""
+	// Also, let the prerunner track the command analytics as usual, since the shell command doesn't have a normal prerunner that would do this.
+	// TODO: Make the command an AnonymousCLICommand and clean this up to just use the JWT validator.
 	if err := c.prerunner.Authenticated(pcmd.NewAuthenticatedCLICommand(c.Command, c.prerunner))(c.Command, args); err != nil {
 		msg = errors.CurrentlyNotAuthenticatedMsg
 	}
-	delete(c.Command.Annotations, pcmd.DoNotTrack)
 
 	// run the shell
 	fmt.Printf(errors.ShellWelcomeMsg, cliName, msg)
