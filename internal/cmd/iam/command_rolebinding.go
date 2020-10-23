@@ -128,6 +128,7 @@ func (c *rolebindingCommand) init() {
 	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
+		listCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 		listCmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "To list the role bindings for current user:",
@@ -139,11 +140,11 @@ func (c *rolebindingCommand) init() {
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
+				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific role",
-				Code: "iam rolebinding list --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
+				Code: "iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
 			},
 		)
 	} else {
@@ -169,7 +170,8 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	if c.cliName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
+		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding create.")
+		createCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 	} else {
 		createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 		createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
@@ -195,7 +197,8 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	if c.cliName == "ccloud" {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
+		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding delete.")
+		deleteCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 	} else {
 		deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 		deleteCmd.Flags().String("resource", "", "Qualified resource name associated with the role binding.")
@@ -319,16 +322,14 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	orgResourceId := c.State.Auth.Organization.GetResourceId()
 	scopeV2.Path = []string{"organization=" + orgResourceId}
 
-	if cmd.Flags().Changed("environment") {
+	if cmd.Flags().Changed("current-env") {
+		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
+	} else if cmd.Flags().Changed("environment") {
 		env, err := cmd.Flags().GetString("environment")
 		if err != nil {
 			return nil, err
 		}
-		if env == "current" {
-			scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
-		} else {
-			scopeV2.Path = append(scopeV2.Path, "environment="+env)
-		}
+		scopeV2.Path = append(scopeV2.Path, "environment="+env)
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {
@@ -347,12 +348,12 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
 			return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("environment") {
+		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
 			return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 		}
 	}
 
-	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("environment") {
+	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
 		return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 	}
 	return scopeV2, nil

@@ -4,7 +4,11 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 	tests := []CLITest{
 		{
 			name: "ccloud iam rolebinding create cloud-cluster",
-			args: "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
+			args: "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+		},
+		{
+			name: "ccloud iam rolebinding create cloud-cluster",
+			args: "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
 		},
 		{
 			name:        "ccloud iam rolebinding create, invalid use case: missing cloud-cluster",
@@ -26,7 +30,11 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 		},
 		{
 			name: "ccloud iam rolebinding delete cluster-name",
-			args: "iam rolebinding delete --principal User:u-11aaa --role CloudClusterAdmin --environment current --cloud-cluster lkc-1111aaa",
+			args: "iam rolebinding delete --principal User:u-11aaa --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+		},
+		{
+			name: "ccloud iam rolebinding delete cluster-name",
+			args: "iam rolebinding delete --principal User:u-11aaa --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
 		},
 		{
 			name:        "ccloud iam rolebinding delete, invalid use case: missing cloud-cluster",
@@ -275,44 +283,48 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 		},
 		{
 			name:        "ccloud iam rolebinding list, no principal nor role",
-			args:        "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa",
+			args:        "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa",
 			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-list-no-principal-nor-role.golden",
 			wantErrCode: 1,
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --principal User:u-11aaa",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --principal User:u-11aaa",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-1.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --principal User:u-22bbb",
+			args:    "iam rolebinding list --current-env --cloud-cluster lkc-1111aaa --principal User:u-11aaa",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-1.golden",
+		},
+		{
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --principal User:u-22bbb",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-2.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --principal User:u-33ccc",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --principal User:u-33ccc",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-3.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --principal User:u-44ddd",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --principal User:u-44ddd",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-4.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --role OrganizationAdmin",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --role OrganizationAdmin",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-orgadmin.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --role EnvironmentAdmin",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --role EnvironmentAdmin",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-envadmin.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --role CloudClusterAdmin",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-clusteradmin.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o yaml",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o yaml",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-clusteradmin-yaml.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment current --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o json",
+			args:    "iam rolebinding list --environment env-123 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o json",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-clusteradmin-json.golden",
 		},
 	}
