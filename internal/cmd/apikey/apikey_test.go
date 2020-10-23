@@ -8,8 +8,8 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -44,6 +44,7 @@ var (
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
 		Description: apiKeyDescription,
+		Created: types.TimestampNow(),
 	}
 )
 
