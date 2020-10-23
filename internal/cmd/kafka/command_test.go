@@ -303,7 +303,7 @@ func TestDeleteACLs(t *testing.T) {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
 		for j, _ := range aclEntries {
 			expect := make(chan interface{})
-			cmd := NewCMD(expect)
+			cmd := newCmd(expect)
 			cmd.SetArgs(append(args, aclEntries[j].args...))
 
 			var filters []*schedv1.ACLFilter
