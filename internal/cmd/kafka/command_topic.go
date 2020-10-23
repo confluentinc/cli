@@ -100,13 +100,16 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 }
 
 func (k *kafkaTopicCommand) Cmd() *cobra.Command {
-	return k.authenticatedTopicCommand.Command
+	return k.hasAPIKeyTopicCommand.Command
 }
 
 func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
-	cmd := k.authenticatedTopicCommand
 
 	var suggestions []prompt.Suggest
+	cmd := k.authenticatedTopicCommand
+	if cmd == nil {
+		return suggestions
+	}
 	if !pcmd.CanCompleteCommand(cmd.Command) {
 		return suggestions
 	}

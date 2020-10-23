@@ -38,7 +38,7 @@ func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *l
 func (c *command) init(isAPIKeyLogin bool, cliName string) {
 	if cliName == "ccloud" {
 		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
-		c.AddCommand(topicCmd.Cmd())
+		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 		c.serverCompleter.AddCommand(topicCmd)
 		if isAPIKeyLogin {
 			return
