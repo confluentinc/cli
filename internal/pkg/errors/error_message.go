@@ -177,6 +177,8 @@ const (
 	GetNetrcCredentialsFromFileErrorMsg = "unable to get credentials from netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg    = "login credentials not found in netrc file \"%s\""
 	CreateNetrcFileErrorMsg             = "unable to create netrc file \"%s\""
+	FailedToObtainedUserSSOErrorMsg     = "unable to obtain SSO info for user \"%s\""
+	NonSSOUserErrorMsg                  = "tried to obtain SSO token for non SSO user \"%s\""
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"

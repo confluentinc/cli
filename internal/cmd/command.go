@@ -97,18 +97,21 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		return nil, err
 	}
 
+	authTokenHandler := &pauth.AuthTokenHandlerImpl{}
+	nonInteractiveLoginHandler := pauth.NewNonInteractiveLoginHandler(authTokenHandler, netrcHandler, logger)
+
 	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
 	prerunner := &pcmd.PreRun{
-		Config:             cfg,
-		ConfigLoadingError: configLoadingErr,
-		UpdateClient:       updateClient,
-		CLIName:            cliName,
-		Logger:             logger,
-		Clock:              clockwork.NewRealClock(),
-		FlagResolver:       resolver,
-		Version:            ver,
-		Analytics:          analyticsClient,
-		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
+		Config:                     cfg,
+		ConfigLoadingError:         configLoadingErr,
+		UpdateClient:               updateClient,
+		CLIName:                    cliName,
+		Logger:                     logger,
+		Clock:                      clockwork.NewRealClock(),
+		FlagResolver:               resolver,
+		Version:                    ver,
+		Analytics:                  analyticsClient,
+		NonInteractiveLoginHandler: nonInteractiveLoginHandler,
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 
@@ -121,7 +124,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, authTokenHandler, nonInteractiveLoginHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {

@@ -15,7 +15,8 @@ import (
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) []*cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
+	authTokenHandler pauth.AuthTokenHandler, nonInteractiveLoginHandler pauth.NonInteractiveLoginHandler) []*cobra.Command {
 	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
 	}
@@ -24,7 +25,7 @@ func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent
 	}
 	loginCmd := NewLoginCommand(cliName, prerunner, logger, pcmd.NewPrompt(os.Stdin),
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
-		analyticsClient, netrcHandler,
+		analyticsClient, netrcHandler, authTokenHandler, nonInteractiveLoginHandler,
 	)
 	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient)
 	return []*cobra.Command{loginCmd.Command, logoutCmd.Command}

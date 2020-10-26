@@ -19,6 +19,7 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -33,16 +34,16 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config             *v3.Config
-	ConfigLoadingError error
-	UpdateClient       update.Client
-	CLIName            string
-	Logger             *log.Logger
-	Clock              clockwork.Clock
-	Analytics          analytics.Client
-	FlagResolver       FlagResolver
-	Version            *version.Version
-	UpdateTokenHandler pauth.UpdateTokenHandler
+	Config                     *v3.Config
+	ConfigLoadingError         error
+	UpdateClient               update.Client
+	CLIName                    string
+	Logger                     *log.Logger
+	Clock                      clockwork.Clock
+	Analytics                  analytics.Client
+	FlagResolver               FlagResolver
+	Version                    *version.Version
+	NonInteractiveLoginHandler pauth.NonInteractiveLoginHandler
 }
 
 type CLICommand struct {
@@ -486,14 +487,34 @@ func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
 		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
-	var updateErr error
+	token, err := r.getNewAuthToken(ctx)
+	if err != nil {
+		return tokenError
+	}
+	err = ctx.UpdateAuthToken(token)
+	if err != nil {
+		return tokenError
+	}
+	return nil
+}
+
+func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
+	var token string
+	params := netrc.GetMatchingNetrcMachineParams{
+		CLIName: r.CLIName,
+		CtxName: ctx.Name,
+	}
+	var err error
 	if r.CLIName == "ccloud" {
-		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(ctx.Context, r.Version.UserAgent, r.Logger)
+		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(client, ctx.Platform.Server, params)
 	} else {
-		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(ctx.Context, r.Logger)
+		mdsClientManager := pauth.MDSClientManagerImpl{}
+		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		if err != nil {
+			return "", err
+		}
+		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(client, params)
 	}
-	if updateErr == nil {
-		return nil
-	}
-	return tokenError
+	return token, err
 }

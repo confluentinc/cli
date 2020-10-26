@@ -300,7 +300,7 @@ func getFoundCredentialMessage(user, cliName string, setEnvVar, setDeprecatedEnv
 		}
 	}
 	if setNetrcUser {
-		return fmt.Sprint(errors.FoundNetrcCredMsg, user, netrcFile)
+		return fmt.Sprintf(errors.FoundNetrcCredMsg, user, netrcFile)
 	}
 	return ""
 }
@@ -369,8 +369,7 @@ func Test_getCCloudLoginCredentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBeg
 		},
 	}
 	loginCmd, _ := newLoginCmd(prompt, auth, user, "ccloud", req, netrcHandlerNoCredential())
-	email, password, err := loginCmd.getCCloudLoginCredentials(loginCmd.Command, loginCmd.anonHTTPClientFactory("https://confluent.cloud", log.New()))
-	req.NoError(err)
+	email, password := loginCmd.getCCloudLoginCredentials(loginCmd.Command, loginCmd.anonHTTPClientFactory("https://confluent.cloud", log.New()))
 	req.Equal(promptUser, email)
 	req.Equal(promptPassword, password)
 }
@@ -734,6 +733,6 @@ func setConfluentEnvironmentVariables() {
 }
 
 func setConfluentDeprecatedEnvironmentVariables() {
-	os.Setenv(pauth.ConfluentUsernameEnvVar, depEnvUser)
+	os.Setenv(pauth.ConfluentUsernameDeprecatedEnvVar, depEnvUser)
 	os.Setenv(pauth.ConfluentPasswordDeprecatedEnvVar, depEnvPassword)
 }
