@@ -102,7 +102,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	token, creds, err := a.getCCloudTokensAndCredentials(cmd, url)
+	token, creds, err := a.getCCloudTokenAndCredentials(cmd, url)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
-func (a *loginCommand) getCCloudTokensAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
+func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
 	client := a.anonHTTPClientFactory(url, a.Logger)
 
 	token, creds, err := a.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(client)
@@ -154,12 +154,6 @@ func (a *loginCommand) getCCloudTokensAndCredentials(cmd *cobra.Command, url str
 
 func (a *loginCommand) getCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client, url string) (string, *pauth.Credentials, error) {
 	email := a.promptForUser(cmd, "Email")
-	// HACK: SSO integration test extracts email from env var
-	// TODO: remove this hack once we implement prompting for integration test
-	if testEmail := os.Getenv(pauth.CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
-		a.Logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, pauth.CCloudEmailDeprecatedEnvVar)
-		email = testEmail
-	}
 	if isSSOUser(email, client) {
 		noBrowser, err := cmd.Flags().GetBool("no-browser")
 		if err != nil {
@@ -424,6 +418,12 @@ func (a *loginCommand) getEnvVarCredentials(cmd *cobra.Command, userEnvVar strin
 }
 
 func (a *loginCommand) promptForUser(cmd *cobra.Command, userField string) string {
+	// HACK: SSO integration test extracts email from env var
+	// TODO: remove this hack once we implement prompting for integration test
+	if testEmail := os.Getenv(pauth.CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
+		a.Logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, pauth.CCloudEmailDeprecatedEnvVar)
+		return testEmail
+	}
 	pcmd.Println(cmd, "Enter your Confluent credentials:")
 	f := form.New(form.Field{ID: userField, Prompt: userField})
 	if err := f.Prompt(cmd, a.prompt); err != nil {

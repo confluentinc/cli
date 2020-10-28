@@ -487,10 +487,13 @@ func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
 		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
+	r.Logger.Debug("Updating auth token")
 	token, err := r.getNewAuthToken(ctx)
-	if err != nil {
+	if err != nil || token == "" {
+		r.Logger.Debug("Failed to update auth token")
 		return tokenError
 	}
+	r.Logger.Debug("Successfully update auth token")
 	err = ctx.UpdateAuthToken(token)
 	if err != nil {
 		return tokenError
@@ -508,6 +511,9 @@ func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
 	if r.CLIName == "ccloud" {
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
 		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(client, ctx.Platform.Server, params)
+		if err != nil {
+			return "", err
+		}
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
@@ -515,6 +521,9 @@ func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
 			return "", err
 		}
 		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(client, params)
+		if err != nil {
+			return "", err
+		}
 	}
 	return token, err
 }
