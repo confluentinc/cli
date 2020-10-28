@@ -39,7 +39,6 @@ type PreRun struct {
 	UpdateClient               update.Client
 	CLIName                    string
 	Logger                     *log.Logger
-	Clock                      clockwork.Clock
 	Analytics                  analytics.Client
 	FlagResolver               FlagResolver
 	Version                    *version.Version
@@ -85,14 +84,14 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	}
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx.Context)
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
 	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx.Context)
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx.Context)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
 	} else {
-		return r.updateToken(err, ctx.Context)
+		return r.updateToken(err, ctx)
 	}
 }
 

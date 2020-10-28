@@ -5,7 +5,6 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12 // indirect
 	github.com/Azure/azure-amqp-common-go v1.1.4 // indirect
 	github.com/Azure/go-autorest v12.2.0+incompatible
-	github.com/Azure/go-autorest v12.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20200511133814-5174e21577d5 // indirect
 	github.com/Shopify/sarama v1.23.1

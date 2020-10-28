@@ -109,7 +109,6 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		UpdateClient:               updateClient,
 		CLIName:                    cliName,
 		Logger:                     logger,
-		Clock:                      clockwork.NewRealClock(),
 		FlagResolver:               resolver,
 		Version:                    ver,
 		Analytics:                  analyticsClient,

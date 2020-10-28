@@ -39,6 +39,9 @@ const (
 	validAuthToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiO" +
 		"jE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1w" +
 		"bGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+)
+
+var (
 	mockNonInteractiveLoginHandler = &cliMock.MockNonInteractiveLoginHandler{
 		GetCCloudTokenAndCredentialsFromEnvVarFunc: func(client *ccloud.Client) (string, *pauth.Credentials, error) {
 			return "", nil, nil
@@ -125,7 +128,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Out:    os.Stdout,
 				},
 				Analytics:                  cliMock.NewDummyAnalyticsMock(),
-				Clock:                      clockwork.NewRealClock(),
 				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
 				Config:                     cfg,
 				JWTValidator:               pcmd.NewJWTValidator(tt.fields.Logger),
@@ -165,7 +167,6 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics:                  cliMock.NewDummyAnalyticsMock(),
-		Clock:                      clockwork.NewRealClock(),
 		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
 		JWTValidator:               pcmd.NewJWTValidator(log.New()),
 	}
@@ -199,7 +200,6 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics:                  analyticsClient,
-		Clock:                      clockwork.NewRealClock(),
 		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
 		JWTValidator:               pcmd.NewJWTValidator(log.New()),
 	}
@@ -236,7 +236,6 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			Out:    os.Stdout,
 		},
 		Analytics:                  analyticsClient,
-		Clock:                      clockwork.NewRealClock(),
 		Config:                     cfg,
 		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
 		JWTValidator:               pcmd.NewJWTValidator(log.New()),
@@ -339,7 +338,6 @@ func Test_UpdateToken(t *testing.T) {
 					Out:    os.Stdout,
 				},
 				Analytics:                  cliMock.NewDummyAnalyticsMock(),
-				Clock:                      clockwork.NewRealClock(),
 				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
 				Config:                     cfg,
 				JWTValidator:               pcmd.NewJWTValidator(log.New()),
@@ -419,7 +417,6 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 					Out:    os.Stdout,
 				},
 				Analytics:                  analyticsClient,
-				Clock:                      clockwork.NewRealClock(),
 				Config:                     tt.config,
 				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
 				JWTValidator:               pcmd.NewJWTValidator(log.New()),
