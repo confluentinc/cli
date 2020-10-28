@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -25,7 +24,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
-var (
+const (
 	expiredAuthTokenForDevCloud = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdhbml6YXRpb25JZCI6MT" +
 		"U5NCwidXNlcklkIjoxNTM3MiwiZXhwIjoxNTc0NzIwODgzLCJqdGkiOiJkMzFlYjc2OC0zNzIzLTQ4MTEtYjg3" +
 		"Zi1lMTQ2YTQyYmMyMjciLCJpYXQiOjE1NzQ3MTcyODMsImlzcyI6IkNvbmZsdWVudCIsInN1YiI6IjE1MzcyIn" +
@@ -125,10 +124,11 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Prompt: &pcmd.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:          cliMock.NewDummyAnalyticsMock(),
-				Clock:              clockwork.NewRealClock(),
-				Config:             cfg,
+				Analytics:                  cliMock.NewDummyAnalyticsMock(),
+				Clock:                      clockwork.NewRealClock(),
 				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
+				Config:                     cfg,
+				JWTValidator:               pcmd.NewJWTValidator(tt.fields.Logger),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -164,9 +164,10 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Prompt: &pcmd.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          cliMock.NewDummyAnalyticsMock(),
-		Clock:              clockwork.NewRealClock(),
+		Analytics:                  cliMock.NewDummyAnalyticsMock(),
+		Clock:                      clockwork.NewRealClock(),
 		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
+		JWTValidator:               pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -197,9 +198,10 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Prompt: &pcmd.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          analyticsClient,
-		Clock:              clockwork.NewRealClock(),
+		Analytics:                  analyticsClient,
+		Clock:                      clockwork.NewRealClock(),
 		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
+		JWTValidator:               pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -233,10 +235,11 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			Prompt: &pcmd.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          analyticsClient,
-		Clock:              clockwork.NewRealClock(),
-		Config:             cfg,
+		Analytics:                  analyticsClient,
+		Clock:                      clockwork.NewRealClock(),
+		Config:                     cfg,
 		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
+		JWTValidator:               pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -335,10 +338,11 @@ func Test_UpdateToken(t *testing.T) {
 					Prompt: &pcmd.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:          cliMock.NewDummyAnalyticsMock(),
-				Clock:              clockwork.NewRealClock(),
-				Config:             cfg,
+				Analytics:                  cliMock.NewDummyAnalyticsMock(),
+				Clock:                      clockwork.NewRealClock(),
 				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
+				Config:                     cfg,
+				JWTValidator:               pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
@@ -367,8 +371,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
 	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
 
-	userNotLoggedIn := v3.AuthenticatedCloudConfigMock()
-	userNotLoggedIn.Context().State.Auth = nil
+	userNotLoggedIn := v3.UnauthenticatedCloudConfigMock()
 
 	tests := []struct {
 		name           string
@@ -410,14 +413,16 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 						return false, "", nil
 					},
 				},
+				CLIName: "ccloud",
 				FlagResolver: &pcmd.FlagResolverImpl{
 					Prompt: &pcmd.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:          analyticsClient,
-				Clock:              clockwork.NewRealClock(),
-				Config:             tt.config,
+				Analytics:                  analyticsClient,
+				Clock:                      clockwork.NewRealClock(),
+				Config:                     tt.config,
 				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
+				JWTValidator:               pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{

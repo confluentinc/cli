@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/c-bata/go-prompt"
+	"github.com/spf13/cobra"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -38,8 +40,9 @@ There are five ways to pass the secret:
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
-	flagResolver pcmd.FlagResolver
+	keystore            keystore.KeyStore
+	flagResolver        pcmd.FlagResolver
+	completableChildren []*cobra.Command
 }
 
 var (
@@ -53,7 +56,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -65,7 +68,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		flagResolver:            resolver,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init() {
@@ -108,12 +111,13 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
+	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -142,6 +146,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
+	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -204,11 +209,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			continue
 		}
 		// Add '*' only in the case where we are printing out tables
+		outputKey := apiKey.Key
 		if outputWriter.GetOutputFormat() == output.Human {
 			if resourceId != "" && apiKey.Key == currentKey {
-				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+				outputKey = fmt.Sprintf("* %s", apiKey.Key)
 			} else {
-				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+				outputKey = fmt.Sprintf("  %s", apiKey.Key)
 			}
 		}
 
@@ -217,14 +223,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			email = "<service account>"
 		} else {
 			if user, ok := users[apiKey.UserId]; ok {
-				email = user.Email
+				if user != nil {
+					email = user.Email
+				} else {
+					email = "<deactivated user>"
+				}
 			} else {
 				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
 				if err != nil {
-					return err
+					email = "<deactivated user>"
+					users[apiKey.UserId] = nil
+				} else {
+					email = user.Email
+					users[user.Id] = user
 				}
-				email = user.Email
-				users[user.Id] = user
 			}
 		}
 
@@ -235,7 +247,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
 			// Cloud key.
 			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
+				Key:          outputKey,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
 				UserEmail:    email,
@@ -250,7 +262,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		for _, lc := range apiKey.LogicalClusters {
 			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
+				Key:          outputKey,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
 				UserEmail:    email,
@@ -474,4 +486,47 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 		return "", err
 	}
 	return strings.TrimSpace(val), nil
+}
+
+// Completable implementation
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggests []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggests
+	}
+	apiKeys, err := c.fetchAPIKeys()
+	if err != nil {
+		return suggests
+	}
+	for _, key := range apiKeys {
+		suggests = append(suggests, prompt.Suggest{
+			Text:        key.Key,
+			Description: key.Description,
+		})
+	}
+	return suggests
+}
+
+func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
+	if err != nil {
+		return nil, errors.HandleCommon(err, c.Command)
+	}
+
+	var userApiKeys []*schedv1.ApiKey
+	for _, key := range apiKeys {
+		if key.UserId != 0 {
+			userApiKeys = append(userApiKeys, key)
+		}
+	}
+	return userApiKeys, nil
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

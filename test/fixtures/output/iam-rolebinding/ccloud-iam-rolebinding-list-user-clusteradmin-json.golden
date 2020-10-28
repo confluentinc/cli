@@ -1,8 +1,10 @@
 [
   {
+    "email": "u-33ccc@confluent.io",
     "principal": "User:u-33ccc"
   }, 
   {
+    "email": "",
     "principal": "User:u-44ddd"
   }
 ]

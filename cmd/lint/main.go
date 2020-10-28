@@ -40,7 +40,7 @@ var (
 		"whitelist", "yaml", "zstd",
 	}
 	utilityCommands = []string{
-		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>",
+		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",
 	}
 	clusterScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("kafka acl", "kafka topic"),

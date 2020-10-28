@@ -167,7 +167,6 @@ func (c userCommand) newUserDeleteCommand() *cobra.Command {
 		Short:  "Delete a user from your organization.",
 		Args:   cobra.ExactArgs(1),
 		RunE:   pcmd.NewCLIRunE(c.delete),
-		Hidden: true,
 	}
 	return deleteCmd
 }

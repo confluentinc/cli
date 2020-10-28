@@ -1,19 +1,25 @@
-.PHONY: unrelease
-unrelease: unrelease-warn
-	make unrelease-s3
-ifneq (true, $(RELEASE_TEST))
-	$(warning Unreleasing on master)
+.PHONY: unrelease-prod
+unrelease-prod: unrelease-warn
+	make delete-archives-and-binaries # needs to be run before version tag is reverted
+	make delete-release-notes # needs to be run before version tag is reverted
+	make reset-tag-and-commit
+	make restore-latest-archives # needs to be run after version tag is reverted
+
+.PHONY: unrelease-stag
+unrelease-stag: unrelease-warn
+	make delete-release-notes
+	make reset-tag-and-commit
+	make clean-staging-folder
+
+.PHONY: reset-tag-and-commit
+reset-tag-and-commit:
 	git checkout master
 	git pull
-else
-	$(warning Unrelease test run)
-endif
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
 	git reset --hard HEAD~1 # warning: assumes "chore" version bump was last commit
 	git push origin HEAD --force
-	make restore-latest-archives
 
 .PHONY: unrelease-warn
 unrelease-warn:
@@ -24,47 +30,43 @@ unrelease-warn:
 	@echo -n "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version. Continue? (y/n): "
 	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
 
-.PHONY: unrelease-s3
-unrelease-s3:
-	@echo "If you are going to reattempt the release again without the need to edit the release notes, there is no need to delete the release notes from S3."
+.PHONY: delete-archives-and-binaries
+delete-archives-and-binaries:
+	$(caasenv-authenticate); \
+	$(call delete-release-folder,binaries); \
+	$(call delete-release-folder,archives)
+
+.PHONY: delete-release-notes
+delete-release-notes:
 	@echo -n "Do you want to delete the release notes from S3? (y/n): "
-	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then make delete-binaries-archives-and-release-notes; else make delete-binaries-and-archives; fi
+	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(caasenv-authenticate); $(call delete-release-folder,release-notes); fi
 
-.PHONY: delete-binaries-and-archives
-delete-binaries-and-archives:
-	$(caasenv-authenticate); \
-	$(delete-binaries); \
-	$(delete-archives)
-
-.PHONY: delete-binaries-archives-and-release-notes
-delete-binaries-archives-and-release-notes:
-	$(caasenv-authenticate); \
-	$(delete-binaries); \
-	$(delete-archives); \
-	$(delete-release-notes)
-
-define delete-binaries
-	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/binaries/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/binaries/$(CLEAN_VERSION) --recursive
-endef
-
-define delete-archives
-	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/archives/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/archives/$(CLEAN_VERSION) --recursive
-endef
-
-define delete-release-notes
-	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/release-notes/$(CLEAN_VERSION) --recursive; \
-	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(CLEAN_VERSION) --recursive
+define delete-release-folder
+	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/$1/$(CLEAN_VERSION) --recursive; \
+	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/$1/$(CLEAN_VERSION) --recursive
 endef
 
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
-	make copy-archives-to-latest
+	make copy-prod-archives-to-stag-latest
+	$(caasenv-authenticate); \
+	$(call copy-stag-content-to-prod,archives,latest)
 	@echo "Verifying latest archives with: make test-installers"
 	make test-installers
+
+.PHONY: copy-prod-archives-to-stag-latest
+copy-prod-archives-to-stag-latest:
+	$(call copy-archives-files-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
+	$(call copy-archives-checksums-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
+	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) ARCHIVES_VERSION="" make test-installers 
+
 
 .PHONY: restore-latest-archives-warn
 restore-latest-archives-warn:
 	@echo -n "Warning: Overriding archives in the latest folder with archives from version v$(CLEAN_VERSION). Continue? (y/n): "
 	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
+
+.PHONY: clean-staging-folder
+clean-staging-folder:
+	$(caasenv-authenticate); \
+	aws s3 rm $(S3_STAG_PATH) --recursive

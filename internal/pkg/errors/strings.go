@@ -54,6 +54,7 @@ const (
 	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
 
 	// kafka link commands
+	DryRunPrefix   = "[DRY RUN] "
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
 	CreatedLinkMsg = "Created cluster link \"%s\".\n"
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
@@ -133,4 +134,10 @@ const (
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+
+	// shell package
+	AlreadyAuthenticatedMsg      = "You are already authenticated."
+	CurrentlyNotAuthenticatedMsg = "You are currently not authenticated."
+	ShellWelcomeMsg              = "Welcome to the %s shell! %s\n"
+	ShellExitInstructionsMsg     = "Please press `Ctrl-D` or type `quit` to exit."
 )

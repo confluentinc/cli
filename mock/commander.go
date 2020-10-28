@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -17,6 +18,7 @@ type Commander struct {
 	FlagResolver cmd.FlagResolver
 	Client       *ccloud.Client
 	MDSClient    *mds.APIClient
+	MDSv2Client  *mdsv2alpha1.APIClient
 	Version      *version.Version
 	Config       *v3.Config
 }
@@ -32,6 +34,19 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.C
 		FlagResolver: flagResolverMock,
 		Client:       client,
 		MDSClient:    mdsClient,
+		Config:       cfg,
+	}
+}
+
+func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) cmd.PreRunner {
+	flagResolverMock := &cmd.FlagResolverImpl{
+		Prompt: &Prompt{},
+		Out:    os.Stdout,
+	}
+	return &Commander{
+		FlagResolver: flagResolverMock,
+		Client:       client,
+		MDSv2Client:  mdsClient,
 		Config:       cfg,
 	}
 }
@@ -114,5 +129,6 @@ func (c *Commander) HasAPIKey(command *cmd.HasAPIKeyCLICommand) func(cmd *cobra.
 func (c *Commander) setClient(command *cmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
 	command.MDSClient = c.MDSClient
+	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 }

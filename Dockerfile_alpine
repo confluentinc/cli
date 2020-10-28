@@ -1,0 +1,29 @@
+FROM golang:1.14.7-alpine
+
+RUN apk update --no-cache && \
+    apk add --no-cache ca-certificates git alpine-sdk bash && \
+    export GO111MODULE=on && \
+    mkdir -p /go/src/github.com/goreleaser && \
+    cd /go/src/github.com/goreleaser && \
+    git clone https://github.com/goreleaser/goreleaser.git && \
+    cd goreleaser && \
+    git checkout v0.141.0 && \
+    go install . && \
+    mkdir -p /go/src/github.com/mitchellh && \
+    cd /go/src/github.com/mitchellh && \
+    git clone https://github.com/mitchellh/golicense.git && \
+    cd golicense && \
+    git checkout v0.1.1 && \
+    go install . && \
+    mkdir -p /go/src/github.com/confluentinc/cli && \
+    cd /go/src/github.com/confluentinc/cli
+
+COPY . /go/src/github.com/confluentinc/cli/
+
+COPY .netrc /root/.netrc
+RUN chmod 600 /root/.netrc
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    make gorelease-alpine ; \
+    for file in dist/ccloud/*linux*; do mv -v "$file" "${file/linux/alpine}"; done ; \
+    for file in dist/confluent/*linux*; do mv -v "$file" "${file/linux/alpine}"; done

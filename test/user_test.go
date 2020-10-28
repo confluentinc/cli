@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -30,7 +31,12 @@ func (s *CLITestSuite) TestUserList() {
 func (s *CLITestSuite) TestUserDescribe() {
 	tests := []CLITest{
 		{
-			args:    "admin user describe u-0",
+			args:        "admin user describe u-0",
+			wantErrCode: 1,
+			fixture:     "admin/user-resource-not-found.golden",
+		},
+		{
+			args:    "admin user describe u-17",
 			fixture: "admin/user-describe.golden",
 		},
 		{
@@ -96,7 +102,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			users := []*orgv1.User{
-				&orgv1.User{
+				{
 					Id:             1,
 					Email:          "bstrauch@confluent.io",
 					FirstName:      "Brian",
@@ -106,10 +112,7 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					Verified:       nil,
 					ResourceId:     "u11",
 				},
-			}
-			// if no query param is present then it's a list call
-			if len(r.URL.Query()["user"]) == 0 {
-				users = append(users, &orgv1.User{
+				{
 					Id:             2,
 					Email:          "mtodzo@confluent.io",
 					FirstName:      "Miles",
@@ -117,9 +120,46 @@ func handleUsers(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 					OrganizationId: 0,
 					Deactivated:    false,
 					Verified:       nil,
-					ResourceId:     "u17",
-				})
+					ResourceId:     "u-17",
+				},
+				&orgv1.User{
+					Id:             3,
+					Email:          "u-11aaa@confluent.io",
+					FirstName:      "11",
+					LastName:       "Aaa",
+					OrganizationId: 0,
+					Deactivated:    false,
+					Verified:       nil,
+					ResourceId:     "u-11aaa",
+				}, &orgv1.User{
+					Id:             4,
+					Email:          "u-22bbb@confluent.io",
+					FirstName:      "22",
+					LastName:       "Bbb",
+					OrganizationId: 0,
+					Deactivated:    false,
+					Verified:       nil,
+					ResourceId:     "u-22bbb",
+				}, &orgv1.User{
+					Id:             5,
+					Email:          "u-33ccc@confluent.io",
+					FirstName:      "33",
+					LastName:       "Ccc",
+					OrganizationId: 0,
+					Deactivated:    false,
+					Verified:       nil,
+					ResourceId:     "u-33ccc",
+				},
 			}
+			userId := r.URL.Query().Get("id")
+			if userId != "" {
+				intId, err := strconv.Atoi(userId)
+				require.NoError(t, err)
+				if int32(intId) == deactivatedUserID {
+					users = []*orgv1.User{}
+				}
+			}
+
 			res := orgv1.GetUsersReply{
 				Users:                users,
 				Error:                nil,

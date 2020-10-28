@@ -20,15 +20,11 @@ endef
 RELEASE_NOTES_BRANCH ?= cli-$(BUMPED_VERSION)-release-notes
 .PHONY: publish-release-notes
 publish-release-notes: clone-and-setup-docs-repo
-	$(eval CCLOUD_DOCS_DIR=$(TMP_DOCS)/cloud/cli)
-	$(eval CONFLUENT_DOCS_DIR=$(TMP_DOCS)/cli)
+	$(eval CCLOUD_DOCS_DIR=$(TMP_DOCS)/ccloud-cli)
+	$(eval CONFLUENT_DOCS_DIR=$(TMP_DOCS)/confluent-cli)
 	make build-release-notes CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
 	make publish-release-notes-to-s3 CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
-ifneq (true, $(RELEASE_TEST))
 	make publish-release-notes-to-docs-repo TMP_DOCS=$(TMP_DOCS) CCLOUD_DOCS_DIR=$(CCLOUD_DOCS_DIR) CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR)
-else
-	$(warning RELEASE_TEST=true SKIP submitting docs PR)
-endif
 	rm -rf $(TMP_BASE)
 	$(print-publish-release-notes-next-steps)
 
@@ -73,7 +69,7 @@ define print-publish-release-notes-next-steps
 	@echo
 	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs and merge it."
 	@echo
-	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION)/"
+	@echo "- Check release notes file in s3 confluent.cloud/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/"
 	@echo
 	@echo "- Run 'make clean-release-notes' to clean up your local repo"
 	@echo

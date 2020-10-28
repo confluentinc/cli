@@ -23,6 +23,7 @@ Available Commands:
   prompt            Print Confluent Cloud CLI context for your terminal prompt.
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
+  shell             Run the ccloud shell.
   signup            Sign up for Confluent Cloud.
   update            Update the Confluent Cloud CLI.
   version           Show version of the Confluent Cloud CLI.

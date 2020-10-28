@@ -4,8 +4,8 @@ set -e
 # values set in test loop below
 TEST_OS=
 TEST_ARCH=
+ARCHIVES_VERSION=$1
 
-# mock out `uname`
 uname() {
   if [[ "$1" = "-s" ]]; then
     echo ${TEST_OS}
@@ -31,8 +31,12 @@ done
 for cliBinary in ccloud confluent; do
   TEST_OS=$(go env GOOS)
   TEST_ARCH=$(go env GOARCH)
-  output=$(./install-${cliBinary}.sh 2>&1)
+  [[ -z "$ARCHIVES_VERSION" ]] && VERSION_TO_TEST="LATEST" || VERSION_TO_TEST=$ARCHIVES_VERSION
+  echo === TESTING $cliBinary insaller script, VERSION: $VERSION_TO_TEST ===
+  output=$(./install-${cliBinary}.sh -d ${ARCHIVES_VERSION} 2>&1)
   tmpdir=$(echo "${output}" | sed -n 's/.*licenses located in \(.*\)/\1/p')
+  echo "<install-${cliBinary}.sh output and debug log>:"
+  echo $output
 
   ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
   [[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
@@ -48,3 +52,4 @@ for cliBinary in ccloud confluent; do
 done
 
 echo "All tests passed!"
+

@@ -1,6 +1,15 @@
 [
   {
     "created": "1999-02-24T00:00:00Z",
+    "description": "",
+    "key": "DEACTIVATEDUSERKEY",
+    "owner": "6666",
+    "owner_email": "\u003cdeactivated user\u003e",
+    "resource_id": "lkc-bob",
+    "resource_type": "kafka"
+  }, 
+  {
+    "created": "1999-02-24T00:00:00Z",
     "description": "first-key",
     "key": "MYKEY1",
     "owner": "12",

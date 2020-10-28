@@ -5,6 +5,12 @@ set -e
 #
 
 S3_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud
+S3_CONTENT_CHECK_URL="${S3_URL}?prefix="
+if [[ ! -z "$OVERRIDE_S3_FOLDER" ]]
+then
+	S3_CONTENT_CHECK_URL="${S3_URL}?prefix=${OVERRIDE_S3_FOLDER}/"
+	S3_URL=${S3_URL}/${OVERRIDE_S3_FOLDER}
+fi
 
 usage() {
   this=$1
@@ -67,6 +73,7 @@ is_supported_platform() {
   platform=$1
   found=1
   case "$platform" in
+    alpine/amd64) found=0 ;;
     linux/amd64) found=0 ;;
     linux/386) found=0 ;;
     darwin/amd64) found=0 ;;
@@ -75,6 +82,7 @@ is_supported_platform() {
     windows/386) found=0 ;;
   esac
   case "$platform" in
+    alpine/386) found=1 ;;
     darwin/386) found=1 ;;
   esac
   return $found
@@ -117,15 +125,13 @@ adjust_os() {
     amd64) OS=x86_64 ;;
     darwin) OS=darwin ;;
     linux) OS=linux ;;
+    alpine) OS=alpine ;;
     windows) OS=windows ;;
   esac
   true
 }
 s3_releases() {
-  s3url="${S3_URL}?prefix=${PROJECT_NAME}/archives/&delimiter=/"
-  if [ ${RELEASE_TEST} = "true" ]; then
-    s3url="${S3_URL}?prefix=cli-release-test/${PROJECT_NAME}/archives/&delimiter=/"
-  fi
+  s3url="{S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/&delimiter=/"
   xml=$(http_copy "$s3url")
   versions=$(echo "$xml" | sed -n 's/</\
 </gp' | sed -n "s/<Prefix>${PROJECT_NAME}\/archives\/\(.*\)\//\1/p") || return 1
@@ -135,10 +141,7 @@ s3_releases() {
 s3_release() {
   version=$1
   test -z "$version" && version="latest"
-  s3url="${S3_URL}?prefix=${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
-  if [ ${RELEASE_TEST} = "true" ]; then
-    s3url="${S3_URL}?prefix=cli-release-test/${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
-  fi
+  s3url="${S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
   xml=$(http_copy "$s3url")
   exists=$(echo "$xml" | grep "<Key>") || return 1
   test -z "$version" && return 1
@@ -204,10 +207,14 @@ log_crit() {
 }
 uname_os() {
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  osid=$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release 2>/dev/null || true)
   case "$os" in
     msys*) os="windows" ;;
     mingw*) os="windows" ;;
     cygwin*) os="windows" ;;
+  esac
+  case "$osid" in
+    alpine*) os="alpine" ;;
   esac
   echo "$os"
 }
@@ -232,6 +239,7 @@ uname_os_check() {
     dragonfly) return 0 ;;
     freebsd) return 0 ;;
     linux) return 0 ;;
+    alpine) return 0 ;;
     android) return 0 ;;
     nacl) return 0 ;;
     netbsd) return 0 ;;
@@ -404,11 +412,7 @@ main() {
 
   log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
-  ARCHIVES_S3_PATH=${PROJECT_NAME}/archives/${VERSION#v}
-  S3_ARCHIVES_URL=${S3_URL}/${ARCHIVES_S3_PATH}
-  if [ ${RELEASE_TEST} = "true" ]; then
-    S3_ARCHIVES_URL=${S3_URL}/cli-release-test/${ARCHIVES_S3_PATH}
-  fi
+  S3_ARCHIVES_URL=${S3_URL}/${PROJECT_NAME}/archives/${VERSION#v}
   NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
   TARBALL=${NAME}.${FORMAT}
   TARBALL_URL=${S3_ARCHIVES_URL}/${TARBALL}

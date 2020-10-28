@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/c-bata/go-prompt"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
@@ -16,6 +18,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+	completableChildren []*cobra.Command
 }
 
 var (
@@ -31,7 +34,7 @@ const nameLength = 64
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "service-account",
@@ -41,7 +44,36 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		AuthenticatedCLICommand: cliCmd,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
+}
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return suggestions
+	}
+
+	for _, user := range users {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        fmt.Sprintf("%d", user.Id),
+			Description: fmt.Sprintf("%s: %s", user.ServiceName, user.ServiceDescription),
+		})
+	}
+
+	return suggestions
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }
 
 func (c *command) init() {
@@ -90,7 +122,7 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a service account.",
 		Args:  cobra.ExactArgs(1),
@@ -101,7 +133,9 @@ func (c *command) init() {
 				Code: "ccloud service-account delete 2786",
 			},
 		),
-	})
+	}
+	c.AddCommand(deleteCmd)
+	c.completableChildren = []*cobra.Command{updateCmd, deleteCmd}
 }
 
 func requireLen(val string, maxLen int, field string) error {

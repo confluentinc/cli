@@ -280,7 +280,7 @@ func TestCreateACLs(t *testing.T) {
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "create"}, resource.args...)
 		for _, aclEntry := range aclEntries {
-			cmd := NewCMD(expect)
+			cmd := newCmd(expect)
 			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
@@ -303,7 +303,7 @@ func TestDeleteACLs(t *testing.T) {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
 		for j, _ := range aclEntries {
 			expect := make(chan interface{})
-			cmd := NewCMD(expect)
+			cmd := newCmd(expect)
 			cmd.SetArgs(append(args, aclEntries[j].args...))
 
 			var filters []*schedv1.ACLFilter
@@ -325,7 +325,7 @@ func TestDeleteACLs(t *testing.T) {
 func TestListResourceACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(append([]string{"acl", "list"}, resource.args...))
 
 		go func() {
@@ -345,7 +345,7 @@ func TestListPrincipalACL(t *testing.T) {
 			continue
 		}
 		entry := aclEntry.entries[0]
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
@@ -367,7 +367,7 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 				continue
 			}
 			entry := aclEntry.entries[0]
-			cmd := NewCMD(expect)
+			cmd := newCmd(expect)
 			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
 
 			go func() {
@@ -385,7 +385,7 @@ func TestMultipleResourceACL(t *testing.T) {
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
-	cmd := NewCMD(nil)
+	cmd := newCmd(nil)
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
@@ -409,7 +409,7 @@ var Topics = []struct {
 func TestListTopics(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs([]string{"topic", "list"})
 		go func() {
 			expect <- &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.spec.Name}}
@@ -426,7 +426,7 @@ func TestListTopics(t *testing.T) {
 func TestCreateTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(append([]string{"topic", "create"}, topic.args...))
 
 		go func() {
@@ -444,7 +444,7 @@ func TestCreateTopic(t *testing.T) {
 func TestDescribeTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(append([]string{"topic", "describe"}, topic.args[0]))
 
 		go func() {
@@ -462,7 +462,7 @@ func TestDescribeTopic(t *testing.T) {
 func TestDeleteTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(append([]string{"topic", "delete"}, topic.args[0]))
 
 		go func() {
@@ -480,7 +480,7 @@ func TestDeleteTopic(t *testing.T) {
 func TestUpdateTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(append([]string{"topic", "update"}, topic.args[0:3]...))
 		go func() {
 			expect <- &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.spec.Name, Configs: topic.spec.Configs}}
@@ -496,7 +496,7 @@ func TestUpdateTopic(t *testing.T) {
 
 func TestDefaults(t *testing.T) {
 	expect := make(chan interface{})
-	cmd := NewCMD(expect)
+	cmd := newCmd(expect)
 	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
@@ -514,7 +514,7 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 
-	cmd = NewCMD(expect)
+	cmd = newCmd(expect)
 	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
 		"--operation", "read"})
 
@@ -543,7 +543,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client")
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -576,7 +576,7 @@ var Links = []testLink{
 func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
 	expect := make(chan interface{})
 	for _, link := range Links {
-		cmd := NewCMD(expect)
+		cmd := newCmd(expect)
 		cmd.SetArgs(argmaker(link))
 
 		go expector(expect, link)
@@ -654,7 +654,7 @@ func TestCreateLink(t *testing.T) {
 }
 
 /*************** TEST setup/helpers ***************/
-func NewCMD(expect chan interface{}) *cobra.Command {
+func newCmd(expect chan interface{}) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(expect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
@@ -667,7 +667,7 @@ func NewCMD(expect chan interface{}) *cobra.Command {
 			},
 		},
 	}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client")
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

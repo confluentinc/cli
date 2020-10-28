@@ -31,6 +31,7 @@ import (
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
@@ -49,6 +50,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
@@ -99,8 +101,8 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 
 	authTokenHandler := &pauth.AuthTokenHandlerImpl{}
 	nonInteractiveLoginHandler := pauth.NewNonInteractiveLoginHandler(authTokenHandler, netrcHandler, logger)
-
 	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
+	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
 		Config:                     cfg,
 		ConfigLoadingError:         configLoadingErr,
@@ -112,8 +114,11 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		Version:                    ver,
 		Analytics:                  analyticsClient,
 		NonInteractiveLoginHandler: nonInteractiveLoginHandler,
+		JWTValidator:               jwtValidator,
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
+	shellCompleter := completer.NewShellCompleter(cli)
+	serverCompleter := shellCompleter.ServerSideCompleter
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.New(cliName, prerunner, ver))
@@ -131,19 +136,31 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(admin.New(prerunner, isTest))
 		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
-		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter))
 		if isAPIKeyCredential(cfg) {
 			return command, nil
 		}
-		cli.AddCommand(apikey.New(prerunner, nil, resolver)) // Exposed for testing
-		cli.AddCommand(connector.New(cliName, prerunner))
-		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
-		cli.AddCommand(environment.New(cliName, prerunner))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		apiKeyCmd := apikey.New(prerunner, nil, resolver)
+		serverCompleter.AddCommand(apiKeyCmd)
+		cli.AddCommand(apiKeyCmd.Command)
+
+		connectorCmd := connector.New(cliName, prerunner)
+		serverCompleter.AddCommand(connectorCmd)
+		cli.AddCommand(connectorCmd.Command)
+		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
+		serverCompleter.AddCommand(connectorCatalogCmd)
+		cli.AddCommand(connectorCatalogCmd.Command)
+		envCmd := environment.New(cliName, prerunner)
+		serverCompleter.AddCommand(envCmd)
+		cli.AddCommand(envCmd.Command)
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
-		cli.AddCommand(serviceaccount.New(prerunner))
+		serviceAccountCmd := serviceaccount.New(prerunner)
+		serverCompleter.AddCommand(serviceAccountCmd)
+		cli.AddCommand(serviceAccountCmd.Command)
+		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
@@ -153,8 +170,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(iam.New(cliName, prerunner))
-		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		// Never uses it under "confluent", so a nil ServerCompleter is fine.
+		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID, nil))
+		cli.AddCommand(ksql.New(cliName, prerunner, nil))
 		cli.AddCommand(local.New(prerunner))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(secret.New(resolver, secrets.NewPasswordProtectionPlugin(logger)))

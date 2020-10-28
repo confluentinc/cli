@@ -22,11 +22,9 @@ endif
 ifeq ($(PACKAGE_TYPE),archive)
 PREFIX=$(PACKAGE_NAME)
 SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
-SYSTEMDDIR=$(PREFIX)/lib/systemd/system
 else
 PREFIX=/usr
 SYSCONFDIR=/etc/$(PACKAGE_TITLE)
-SYSTEMDDIR=/lib/systemd/system
 endif
 
 all: install
@@ -38,7 +36,6 @@ archive: install
 apply-patches: $(wildcard debian/patches/*)
 ifeq ($(APPLY_PATCHES),yes)
 	git reset --hard HEAD
-	rm -f Makefile # Makefile must be deleted before standard_build_layout.patch is applied
 	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
 endif
 
@@ -72,10 +69,6 @@ install: apply-patches
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
-	for svc in debian/*.service; do \
-	    install -m 644 -o root -g root -D $$svc $(DESTDIR)$(SYSTEMDDIR)/$$(basename $$svc) ; \
-	done
-
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -85,7 +78,8 @@ distclean: clean
 	git reset --hard HEAD
 	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
 
-RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//')
+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
+
 # Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 # the version since RPM versions don't support non-numeric
 # characters. Ultimately, for something like 0.8.2-beta, we want to end up with

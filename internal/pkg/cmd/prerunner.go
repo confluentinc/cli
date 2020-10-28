@@ -8,10 +8,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
-	"github.com/jonboulle/clockwork"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -32,6 +30,8 @@ type PreRunner interface {
 	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
 }
 
+const DoNotTrack = "do-not-track-analytics"
+
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                     *v3.Config
@@ -44,6 +44,7 @@ type PreRun struct {
 	FlagResolver               FlagResolver
 	Version                    *version.Version
 	NonInteractiveLoginHandler pauth.NonInteractiveLoginHandler
+	JWTValidator               JWTValidator
 }
 
 type CLICommand struct {
@@ -65,6 +66,80 @@ type AuthenticatedCLICommand struct {
 type HasAPIKeyCLICommand struct {
 	*CLICommand
 	Context *DynamicContext
+}
+
+func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
+	if config == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	ctx, err := config.Context(cmd)
+	if err != nil {
+		return err
+	}
+	if ctx == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	err = r.JWTValidator.Validate(ctx.Context)
+	if err == nil {
+		return nil
+	}
+	switch err.(type) {
+	case *ccloud.InvalidTokenError:
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx.Context)
+	case *ccloud.ExpiredTokenError:
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx.Context)
+	}
+	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx.Context)
+	} else {
+		return r.updateToken(err, ctx.Context)
+	}
+}
+
+func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
+	if ctx == nil {
+		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
+		return tokenError
+	}
+	r.Logger.Debug("Updating auth token")
+	token, err := r.getNewAuthToken(ctx)
+	if err != nil || token == "" {
+		r.Logger.Debug("Failed to update auth token")
+		return tokenError
+	}
+	r.Logger.Debug("Successfully update auth token")
+	err = ctx.UpdateAuthToken(token)
+	if err != nil {
+		return tokenError
+	}
+	return nil
+}
+
+func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
+	var token string
+	params := netrc.GetMatchingNetrcMachineParams{
+		CLIName: r.CLIName,
+		CtxName: ctx.Name,
+	}
+	var err error
+	if r.CLIName == "ccloud" {
+		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(client, ctx.Platform.Server, params)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		mdsClientManager := pauth.MDSClientManagerImpl{}
+		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		if err != nil {
+			return "", err
+		}
+		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(client, params)
+		if err != nil {
+			return "", err
+		}
+	}
+	return token, err
 }
 
 func (a *AuthenticatedCLICommand) AuthToken() string {
@@ -132,10 +207,25 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
+// CanCompleteCommand returns whether or not the specified command can be completed.
+// If the prerunner of the command returns no error, true is returned,
+// and if an error is encountered, false is returned.
+func CanCompleteCommand(cmd *cobra.Command) bool {
+	if cmd.Annotations == nil {
+		cmd.Annotations = make(map[string]string)
+	}
+	cmd.Annotations[DoNotTrack] = ""
+	err := cmd.PersistentPreRunE(cmd, []string{})
+	delete(cmd.Annotations, DoNotTrack)
+	return err == nil
+}
+
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		r.Analytics.TrackCommand(cmd, args)
+		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
+			r.Analytics.TrackCommand(cmd, args)
+		}
 		command.Config.Config = r.Config
 		command.Version = r.Version
 		command.Config.Resolver = r.FlagResolver
@@ -152,7 +242,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			if err != nil {
 				return err
 			}
-			err = r.validateToken(cmd, ctx)
+			err = r.ValidateToken(cmd, command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				err := ctx.DeleteUserAuth()
@@ -216,7 +306,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
-		return r.validateToken(cmd, ctx)
+		return r.ValidateToken(cmd, command.Config)
 	}
 }
 
@@ -246,7 +336,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		}
 		command.Context = ctx
 		command.State = ctx.State
-		return r.validateToken(cmd, ctx)
+		return r.ValidateToken(cmd, command.Config)
 	}
 }
 
@@ -272,7 +362,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		} else if command.Context.Credential.CredentialType == v2.Username {
-			err := r.checkUserAuthentication(ctx, cmd)
+			err := r.ValidateToken(cmd, command.Config)
 			if err != nil {
 				return err
 			}
@@ -299,20 +389,6 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		}
 		return nil
 	}
-}
-
-// Check if user is logged in with valid auth token, for commands that are not of AuthenticatedCLICommand type which already
-// does that check automatically in the prerun
-func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command) error {
-	_, err := ctx.AuthenticatedState(cmd)
-	if err != nil {
-		return err
-	}
-	err = r.validateToken(cmd, ctx)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
@@ -455,75 +531,4 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 
 	}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
-}
-
-func (r *PreRun) validateToken(cmd *cobra.Command, ctx *DynamicContext) error {
-	// validate token (not expired)
-	var authToken string
-	if ctx != nil {
-		authToken = ctx.State.AuthToken
-	}
-	var claims map[string]interface{}
-	token, err := jwt.ParseSigned(authToken)
-	if err != nil {
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
-	}
-	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return r.updateToken(err, ctx)
-	}
-	exp, ok := claims["exp"].(float64)
-	if !ok {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
-	}
-	if float64(r.Clock.Now().Unix()) > exp {
-		r.Logger.Debug("Token expired.")
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
-	}
-	return nil
-}
-
-func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
-	if ctx == nil {
-		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
-		return tokenError
-	}
-	r.Logger.Debug("Updating auth token")
-	token, err := r.getNewAuthToken(ctx)
-	if err != nil || token == "" {
-		r.Logger.Debug("Failed to update auth token")
-		return tokenError
-	}
-	r.Logger.Debug("Successfully update auth token")
-	err = ctx.UpdateAuthToken(token)
-	if err != nil {
-		return tokenError
-	}
-	return nil
-}
-
-func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
-	var token string
-	params := netrc.GetMatchingNetrcMachineParams{
-		CLIName: r.CLIName,
-		CtxName: ctx.Name,
-	}
-	var err error
-	if r.CLIName == "ccloud" {
-		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(client, ctx.Platform.Server, params)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
-		if err != nil {
-			return "", err
-		}
-		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(client, params)
-		if err != nil {
-			return "", err
-		}
-	}
-	return token, err
 }

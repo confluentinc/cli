@@ -4,12 +4,14 @@ GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
 RELEASE_BRANCH  ?= master
 
-DOCS_BRANCH     ?= 5.5.1-post
+DOCS_BRANCH     ?= 6.0.0-post
 
 include ./mk-files/semver.mk
 include ./mk-files/release.mk
+include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
 include ./mk-files/unrelease.mk
+include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -17,12 +19,8 @@ HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 S3_BUCKET_PATH=s3://confluent.cloud
-S3_RELEASE_TEST_FOLDER=cli-release-test
-ifeq (true, $(RELEASE_TEST))
-$(warning IN RELEASE_TEST=true MODE)
-S3_BUCKET_PATH=s3://confluent.cloud/$(S3_RELEASE_TEST_FOLDER)
-$(warning Release test S3_BUCKET_PATH=$(S3_BUCKET_PATH))
-endif
+S3_STAG_FOLDER_NAME=cli-release-stag
+S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 
 .PHONY: clean
@@ -226,10 +224,6 @@ coverage-integ:
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
       endif
 
-.PHONY: test-installers
-test-installers:
-	@echo Running packaging/installer tests
-	@bash test-installers.sh
 
 .PHONY: test-prep
 test-prep: lint

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/c-bata/go-prompt"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -26,11 +28,12 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
+	prerunner           pcmd.PreRunner
+	completableChildren []*cobra.Command
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "app",
@@ -39,7 +42,37 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
 	cmd.prerunner = prerunner
 	cmd.init()
-	return cmd.Command
+	return cmd
+}
+
+func (c *clusterCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *clusterCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.KSQL.List(context.Background(), req)
+	if err != nil {
+		return suggestions
+	}
+
+	for _, cluster := range clusters {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        cluster.Id,
+			Description: cluster.Name,
+		})
+	}
+
+	return suggestions
+}
+
+func (c *clusterCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }
 
 func (c *clusterCommand) init() {
@@ -77,12 +110,13 @@ func (c *clusterCommand) init() {
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a ksqlDB app.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
+	c.AddCommand(deleteCmd)
 
 	aclsCmd := &cobra.Command{
 		Use:   "configure-acls <id> TOPICS...",
@@ -94,6 +128,8 @@ func (c *clusterCommand) init() {
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
 	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)
+
+	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, aclsCmd}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
