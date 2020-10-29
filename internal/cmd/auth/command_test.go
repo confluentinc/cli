@@ -53,7 +53,7 @@ var (
 		Password: envPassword,
 	}
 
-	mockPrompt = &form.Prompt{
+	mockPrompt = &pmock.Prompt{
 		ReadLineFunc: func() (string, error) {
 			return promptUser, nil
 		},
