@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -124,7 +125,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					},
 				},
 				FlagResolver: &pcmd.FlagResolverImpl{
-					Prompt: &pcmd.RealPrompt{},
+					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
 				Analytics:                  cliMock.NewDummyAnalyticsMock(),
@@ -163,7 +164,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &pcmd.RealPrompt{},
+			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
 		Analytics:                  cliMock.NewDummyAnalyticsMock(),
@@ -196,7 +197,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &pcmd.RealPrompt{},
+			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
 		Analytics:                  analyticsClient,
@@ -232,7 +233,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &pcmd.RealPrompt{},
+			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
 		Analytics:                  analyticsClient,
@@ -334,7 +335,7 @@ func Test_UpdateToken(t *testing.T) {
 					},
 				},
 				FlagResolver: &pcmd.FlagResolverImpl{
-					Prompt: &pcmd.RealPrompt{},
+					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
 				Analytics:                  cliMock.NewDummyAnalyticsMock(),
@@ -413,7 +414,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				},
 				CLIName: "ccloud",
 				FlagResolver: &pcmd.FlagResolverImpl{
-					Prompt: &pcmd.RealPrompt{},
+					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
 				Analytics:                  analyticsClient,

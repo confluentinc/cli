@@ -6,7 +6,7 @@ import (
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -50,7 +50,7 @@ func Test_prefixState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			text, color := prefixState(cmd.NewJWTValidator(log.New()), tt.args.config)
+			text, color := prefixState(pcmd.NewJWTValidator(log.New()), tt.args.config)
 			require.Equal(t, tt.wantText, text)
 			require.Equal(t, tt.wantColor, color)
 		})

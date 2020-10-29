@@ -13,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -55,10 +56,10 @@ func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if card == nil {
-		pcmd.Println(cmd, "Payment method not found. Add one using \"ccloud admin payment update\".")
+		utils.Println(cmd, "Payment method not found. Add one using \"ccloud admin payment update\".")
 		return nil
 	}
-	pcmd.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)
+	utils.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)
 	return nil
 }
 
@@ -72,11 +73,11 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) updateRunE(cmd *cobra.Command, _ []string) error {
-	return c.update(cmd, pcmd.NewPrompt(os.Stdin))
+	return c.update(cmd, form.NewPrompt(os.Stdin))
 }
 
-func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
-	pcmd.Println(cmd, "Edit credit card")
+func (c *command) update(cmd *cobra.Command, prompt form.Prompt) error {
+	utils.Println(cmd, "Edit credit card")
 
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
@@ -123,6 +124,6 @@ func (c *command) update(cmd *cobra.Command, prompt pcmd.Prompt) error {
 		return err
 	}
 
-	pcmd.Println(cmd, "Updated.")
+	utils.Println(cmd, "Updated.")
 	return nil
 }

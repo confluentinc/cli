@@ -88,8 +88,8 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 			return err
 		}
 
-		cmd.Printf(command, "Current configuration of %s:\n", connector)
-		cmd.Println(command, out)
+		utils.Printf(command, "Current configuration of %s:\n", connector)
+		utils.Println(command, out)
 		return nil
 	}
 
@@ -121,7 +121,7 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return err
 	}
 
-	cmd.Println(command, out)
+	utils.Println(command, out)
 	return nil
 }
 
@@ -152,7 +152,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 			return err
 		}
 
-		cmd.Println(command, out)
+		utils.Println(command, out)
 		return nil
 	}
 
@@ -162,7 +162,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 		return err
 	}
 
-	cmd.Println(command, out)
+	utils.Println(command, out)
 	return nil
 }
 
@@ -180,8 +180,8 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *Command) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
-	cmd.Println(command, "Bundled Connectors:")
-	cmd.Println(command, local.BuildTabbedList(connectors))
+	utils.Println(command, "Bundled Connectors:")
+	utils.Println(command, local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -256,7 +256,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		return err
 	}
 
-	cmd.Println(command, out)
+	utils.Println(command, out)
 	return nil
 }
 
@@ -294,9 +294,9 @@ func (c *Command) runConnectConnectorUnloadCommand(command *cobra.Command, args 
 	}
 
 	if len(out) > 0 {
-		cmd.Println(command, out)
+		utils.Println(command, out)
 	} else {
-		cmd.Println(command, "Success.")
+		utils.Println(command, "Success.")
 	}
 	return nil
 }
@@ -342,7 +342,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	cmd.Printf(command, errors.AvailableConnectPluginsMsg, out)
+	utils.Printf(command, errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 

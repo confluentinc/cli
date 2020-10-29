@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/update/s3"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -90,14 +91,14 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
-	pcmd.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
+	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
 
 	if !updateAvailable {
-		pcmd.Println(cmd, errors.UpToDateMsg)
+		utils.Println(cmd, errors.UpToDateMsg)
 		return nil
 	}
 
@@ -120,7 +121,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
-	pcmd.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
+	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
 
 	return nil
 }

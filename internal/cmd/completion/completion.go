@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -80,7 +80,7 @@ func (c *completionCommand) init(cliName string) {
 		Short: "Print shell completion code.",
 		Long:  getLongDescription(cliName),
 		Args:  cobra.ExactArgs(1),
-		RunE:  cmd.NewCLIRunE(c.completion),
+		RunE:  pcmd.NewCLIRunE(c.completion),
 	}
 }
 

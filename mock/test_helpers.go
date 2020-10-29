@@ -17,20 +17,3 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 		SetSpecialPropertyFunc:   func(propertiesKey string, value interface{}) {},
 	}
 }
-
-func NewPromptMock(lines ...string) *Prompt {
-	i := 0
-
-	return &Prompt{
-		ReadLineFunc: func() (string, error) {
-			line := lines[i]
-			i++
-			return line, nil
-		},
-		ReadLineMaskedFunc: func() (string, error) {
-			line := lines[i]
-			i++
-			return line, nil
-		},
-	}
-}

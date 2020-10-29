@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -38,7 +38,7 @@ func main() {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			pcmd.ErrPrintln(cli.Command, err)
+			utils.ErrPrintln(cli.Command, err)
 		}
 		if isTest {
 			bincover.ExitCode = 1

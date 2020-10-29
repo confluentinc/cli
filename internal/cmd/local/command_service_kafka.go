@@ -310,7 +310,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		cmd.Println(command, "Exit with Ctrl+D")
+		utils.Println(command, "Exit with Ctrl+D")
 	}
 
 	kafkaCommand.Env = []string{

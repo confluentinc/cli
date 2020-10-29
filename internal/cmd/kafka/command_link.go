@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -20,7 +21,7 @@ const (
 	configFlagName                     = "config"
 	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
-	noValidateFlagName                   = "no-validate"
+	noValidateFlagName                 = "no-validate"
 )
 
 var (
@@ -234,7 +235,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		if validateOnly {
 			msg = errors.DryRunPrefix + msg
 		}
-		pcmd.Printf(cmd, msg, linkName)
+		utils.Printf(cmd, msg, linkName)
 	}
 
 	return err
@@ -251,7 +252,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	err = c.Client.Kafka.DeleteLink(context.Background(), cluster, link, deletionOptions)
 
 	if err == nil {
-		pcmd.Printf(cmd, errors.DeletedLinkMsg, link)
+		utils.Printf(cmd, errors.DeletedLinkMsg, link)
 	}
 
 	return err
@@ -306,7 +307,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config, alterOptions)
 
 	if err == nil {
-		pcmd.Printf(cmd, errors.UpdatedLinkMsg, link)
+		utils.Printf(cmd, errors.UpdatedLinkMsg, link)
 	}
 
 	return err

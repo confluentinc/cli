@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type loginCommand struct {
@@ -31,7 +32,7 @@ type loginCommand struct {
 	analyticsClient analytics.Client
 	// for testing
 	MDSClientManager           pauth.MDSClientManager
-	prompt                     pcmd.Prompt
+	prompt                     form.Prompt
 	anonHTTPClientFactory      func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory       func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
 	netrcHandler               netrc.NetrcHandler
@@ -39,7 +40,7 @@ type loginCommand struct {
 	nonInteractiveLoginHandler pauth.NonInteractiveLoginHandler
 }
 
-func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
+func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt form.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
@@ -122,8 +123,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
-	pcmd.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
@@ -296,7 +297,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
 	return nil
 }
 
@@ -335,7 +336,7 @@ func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 		return "", errors.Errorf(errors.InvalidLoginURLMsg)
 	}
 	if errMsg != "" {
-		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
 	return url, nil
 }
@@ -393,7 +394,7 @@ func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, creds *pauth.Credent
 		if err != nil {
 			return err
 		}
-		pcmd.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.GetFileName())
+		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.GetFileName())
 	}
 	return nil
 }
@@ -413,7 +414,7 @@ func (a *loginCommand) getEnvVarCredentials(cmd *cobra.Command, userEnvVar strin
 		}
 		return "", ""
 	}
-	pcmd.Printf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
+	utils.Printf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
 	return user, password
 }
 
@@ -424,7 +425,7 @@ func (a *loginCommand) promptForUser(cmd *cobra.Command, userField string) strin
 		a.Logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, pauth.CCloudEmailDeprecatedEnvVar)
 		return testEmail
 	}
-	pcmd.Println(cmd, "Enter your Confluent credentials:")
+	utils.Println(cmd, "Enter your Confluent credentials:")
 	f := form.New(form.Field{ID: userField, Prompt: userField})
 	if err := f.Prompt(cmd, a.prompt); err != nil {
 		return ""

@@ -15,7 +15,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/mock"
+	"github.com/confluentinc/cli/internal/pkg/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 func TestPaymentDescribe(t *testing.T) {
@@ -27,7 +28,7 @@ func TestPaymentDescribe(t *testing.T) {
 }
 
 type PaymentUpdateSuite struct {
-	prompt *mock.Prompt
+	prompt   *mock.Prompt
 	expected []string
 }
 
@@ -39,7 +40,7 @@ func TestPaymentUpdate(t *testing.T) {
 
 	tests := []*PaymentUpdateSuite{
 		&PaymentUpdateSuite{
-			prompt:   mock.NewPromptMock(
+			prompt: mock.NewPromptMock(
 				"4242424242424242",
 				"12/70",
 				"999",
@@ -66,10 +67,10 @@ func TestPaymentRegexValidation(t *testing.T) {
 
 	tests := []*PaymentUpdateSuite{
 		&PaymentUpdateSuite{
-			prompt:   mock.NewPromptMock(
-				"42424242", //too short
+			prompt: mock.NewPromptMock(
+				"42424242",                 //too short
 				"424242424242424242424242", //too long
-				"4242424242a42", //non-digit characters
+				"4242424242a42",            //non-digit characters
 				"4242424242424242",
 				"12/70",
 				"999",
@@ -83,12 +84,12 @@ func TestPaymentRegexValidation(t *testing.T) {
 			},
 		},
 		&PaymentUpdateSuite{
-			prompt:   mock.NewPromptMock(
+			prompt: mock.NewPromptMock(
 				"4242424242424242",
 				"121/70", //too many digits for month
 				"12/701", //too many digits for year
-				"aa/70", //non-digit characters
-				"1270", //no /
+				"aa/70",  //non-digit characters
+				"1270",   //no /
 				"12/70",
 				"999",
 				"Brian Strauch",
@@ -102,12 +103,12 @@ func TestPaymentRegexValidation(t *testing.T) {
 			},
 		},
 		&PaymentUpdateSuite{
-			prompt:   mock.NewPromptMock(
+			prompt: mock.NewPromptMock(
 				"4242424242424242",
 				"12/70",
 				"999999", //too long
-				"99", //too short
-				"999a", //non-digit characters
+				"99",     //too short
+				"999a",   //non-digit characters
 				"999",
 				"Brian Strauch",
 			),
@@ -153,7 +154,7 @@ func getCommand() (c *command) {
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
 	cfg := v3.AuthenticatedCloudConfigMock()
-	return New(mock.NewPreRunnerMock(client, nil, cfg), true)
+	return New(climock.NewPreRunnerMock(client, nil, cfg), true)
 }
 
 func mockClient() (client *ccloud.Client) {

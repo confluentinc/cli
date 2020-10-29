@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -41,7 +42,7 @@ func (c *Command) runDestroyCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.Printf(command, errors.DestroyDeletingMsg, dir)
+	utils.Printf(command, errors.DestroyDeletingMsg, dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}

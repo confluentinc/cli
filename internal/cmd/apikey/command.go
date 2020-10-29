@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -310,7 +311,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if cmd.Flags().Changed("description") {
-		pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 	return nil
 }
@@ -350,8 +351,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
-		pcmd.ErrPrintln(cmd, errors.APIKeyTime)
-		pcmd.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
+		utils.ErrPrintln(cmd, errors.APIKeyTime)
+		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
 	}
 
 	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
@@ -385,7 +386,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
+	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
 	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 
@@ -448,7 +449,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	pcmd.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
+	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
 	return nil
 }
 
@@ -470,7 +471,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.APIKeyUseFailedErrorMsg)
 	}
-	pcmd.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
+	utils.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }
 

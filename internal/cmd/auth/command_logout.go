@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type logoutCommand struct {
@@ -54,6 +55,6 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, errors.LoggedOutMsg)
+	utils.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

@@ -31,6 +31,7 @@ import (
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -48,11 +49,11 @@ const (
 
 var (
 	envCreds = &pauth.Credentials{
-		Username:     envUser,
-		Password:     envPassword,
+		Username: envUser,
+		Password: envPassword,
 	}
 
-	mockPrompt = &cliMock.Prompt{
+	mockPrompt = &form.Prompt{
 		ReadLineFunc: func() (string, error) {
 			return promptUser, nil
 		},
@@ -198,7 +199,7 @@ func TestLoginSuccess(t *testing.T) {
 
 	for _, s := range suite {
 		// Login to the CLI control plane
-		loginCmd, cfg := newLoginCmd(mockPrompt, auth, user, s.cliName, req,  mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
+		loginCmd, cfg := newLoginCmd(mockPrompt, auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
@@ -209,61 +210,61 @@ func TestLoginSuccess(t *testing.T) {
 func TestLoginOrderOfPrecedence(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
-	netrcUser      := "netrc@confleunt.io"
-	netrcPassword  := "netrcpassword"
+	netrcUser := "netrc@confleunt.io"
+	netrcPassword := "netrcpassword"
 	netrcCreds := &pauth.Credentials{
-		Username:     netrcUser,
-		Password:     netrcPassword,
+		Username: netrcUser,
+		Password: netrcPassword,
 	}
 
 	tests := []struct {
-		name                string
-		cliName             string
-		setEnvVar           bool
-		setNetrcUser        bool
-		wantUser            string
+		name         string
+		cliName      string
+		setEnvVar    bool
+		setNetrcUser bool
+		wantUser     string
 	}{
 		{
-			name:                "CCLOUD env var over all other credentials",
-			cliName:             "ccloud",
-			setEnvVar:           true,
-			setNetrcUser:        true,
-			wantUser:            envUser,
+			name:         "CCLOUD env var over all other credentials",
+			cliName:      "ccloud",
+			setEnvVar:    true,
+			setNetrcUser: true,
+			wantUser:     envUser,
 		},
 		{
-			name:                "CCLOUD netrc credential over prompt",
-			cliName:             "ccloud",
-			setEnvVar:           false,
-			setNetrcUser:        true,
-			wantUser:            netrcUser,
+			name:         "CCLOUD netrc credential over prompt",
+			cliName:      "ccloud",
+			setEnvVar:    false,
+			setNetrcUser: true,
+			wantUser:     netrcUser,
 		},
 		{
-			name:                "CCLOUD prompt",
-			cliName:             "ccloud",
-			setEnvVar:           false,
-			setNetrcUser:        false,
-			wantUser:            promptUser,
+			name:         "CCLOUD prompt",
+			cliName:      "ccloud",
+			setEnvVar:    false,
+			setNetrcUser: false,
+			wantUser:     promptUser,
 		},
 		{
-			name:                "CONFLUENT env var over all other credentials",
-			cliName:             "confluent",
-			setEnvVar:           true,
-			setNetrcUser:        true,
-			wantUser:            envUser,
+			name:         "CONFLUENT env var over all other credentials",
+			cliName:      "confluent",
+			setEnvVar:    true,
+			setNetrcUser: true,
+			wantUser:     envUser,
 		},
 		{
-			name:                "CONFLUENT netrc credential over prompt",
-			cliName:             "confluent",
-			setEnvVar:           false,
-			setNetrcUser:        true,
-			wantUser:            netrcUser,
+			name:         "CONFLUENT netrc credential over prompt",
+			cliName:      "confluent",
+			setEnvVar:    false,
+			setNetrcUser: true,
+			wantUser:     netrcUser,
 		},
 		{
-			name:                "CONFLUENT prompt",
-			cliName:             "confluent",
-			setEnvVar:           false,
-			setNetrcUser:        false,
-			wantUser:            promptUser,
+			name:         "CONFLUENT prompt",
+			cliName:      "confluent",
+			setEnvVar:    false,
+			setNetrcUser: false,
+			wantUser:     promptUser,
 		},
 	}
 
@@ -326,7 +327,7 @@ func TestLoginFail(t *testing.T) {
 			return "", nil, &ccloud.InvalidLoginError{}
 		},
 	}
-	loginCmd, _ := newLoginCmd(mockPrompt, mockAuth, mockUser, "ccloud", req,  mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
+	loginCmd, _ := newLoginCmd(mockPrompt, mockAuth, mockUser, "ccloud", req, mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
 	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
@@ -340,7 +341,7 @@ func TestURLRequiredWithMDS(t *testing.T) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	loginCmd, _ := newLoginCmd(mockPrompt, auth, nil, "confluent", req,  mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
+	loginCmd, _ := newLoginCmd(mockPrompt, auth, nil, "confluent", req, mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), "required flag(s) \"url\" not set")
@@ -370,7 +371,7 @@ func Test_promptForCCloudCredentials_NoSpacesAroundEmail_ShouldSupportSpacesAtBe
 		},
 	}
 
-	loginCmd, _ := newLoginCmd(mockPrompt, auth, user, "ccloud", req,  mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
+	loginCmd, _ := newLoginCmd(mockPrompt, auth, user, "ccloud", req, mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
 	_, creds, err := loginCmd.getCCloudTokenAndCredentials(loginCmd.Command, ccloudURL)
 	req.NoError(err)
 	req.Equal(promptUser, creds.Username)
@@ -499,7 +500,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(mockPrompt, auth, user, s.cliName, req,  mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
+		loginCmd, cfg := newLoginCmd(mockPrompt, auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockNonInteractiveLoginHandler)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -630,7 +631,7 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 	req.Empty(state.Auth)
 }
 
-func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
+func newLoginCmd(prompt form.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, nonInteractiveLoginHandler pauth.NonInteractiveLoginHandler) (*loginCommand, *v3.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)

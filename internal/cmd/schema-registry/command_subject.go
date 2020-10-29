@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type subjectCommand struct {
@@ -117,7 +118,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
+	utils.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
 	return nil
 }
 
@@ -134,7 +135,7 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])
+	utils.Printf(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])
 	return nil
 }
 
@@ -167,7 +168,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		return outputWriter.Out()
 	} else {
-		pcmd.Println(cmd, errors.NoSubjectsMsg)
+		utils.Println(cmd, errors.NoSubjectsMsg)
 	}
 	return nil
 }

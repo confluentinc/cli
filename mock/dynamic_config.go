@@ -3,17 +3,17 @@ package mock
 import (
 	"os"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
-func AuthenticatedDynamicConfigMock() *cmd.DynamicConfig {
+func AuthenticatedDynamicConfigMock() *pcmd.DynamicConfig {
 	cfg := v3.AuthenticatedCloudConfigMock()
 	client := mock.NewClientMock()
-	flagResolverMock := &cmd.FlagResolverImpl{
-		Prompt: &Prompt{},
+	flagResolverMock := &pcmd.FlagResolverImpl{
+		Prompt: &mock.Prompt{},
 		Out:    os.Stdout,
 	}
-	return cmd.NewDynamicConfig(cfg, flagResolverMock, client)
+	return pcmd.NewDynamicConfig(cfg, flagResolverMock, client)
 }

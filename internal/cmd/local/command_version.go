@@ -3,10 +3,11 @@ package local
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
+func NewVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "version",
@@ -14,7 +15,7 @@ func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runVersionCommand)
+	c.Command.RunE = pcmd.NewCLIRunE(c.runVersionCommand)
 	return c.Command
 }
 
@@ -34,6 +35,6 @@ func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.Printf(command, "%s: %s\n", flavor, version)
+	utils.Printf(command, "%s: %s\n", flavor, version)
 	return nil
 }
