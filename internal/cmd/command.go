@@ -129,7 +129,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, authTokenHandler, nonInteractiveLoginHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, nonInteractiveLoginHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {

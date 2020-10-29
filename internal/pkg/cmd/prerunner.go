@@ -85,24 +85,24 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	}
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
+		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
 	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
+		return r.updateToken(new(ccloud.ExpiredTokenError), cmd, ctx)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
 	} else {
-		return r.updateToken(err, ctx)
+		return r.updateToken(err, cmd, ctx)
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
+func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
 	if ctx == nil {
 		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
 	r.Logger.Debug("Updating auth token")
-	token, err := r.getNewAuthToken(ctx)
+	token, err := r.getNewAuthToken(cmd, ctx)
 	if err != nil || token == "" {
 		r.Logger.Debug("Failed to update auth token")
 		return tokenError
@@ -115,7 +115,7 @@ func (r *PreRun) updateToken(tokenError error, ctx *DynamicContext) error {
 	return nil
 }
 
-func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
+func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
 	var token string
 	params := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
@@ -124,7 +124,7 @@ func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
 	var err error
 	if r.CLIName == "ccloud" {
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(client, ctx.Platform.Server, params)
+		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
 		if err != nil {
 			return "", err
 		}
@@ -134,7 +134,7 @@ func (r *PreRun) getNewAuthToken(ctx *DynamicContext) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(client, params)
+		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
 		if err != nil {
 			return "", err
 		}
