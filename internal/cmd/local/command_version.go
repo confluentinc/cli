@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func NewVersionCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -34,6 +35,6 @@ func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.Printf(command, "%s: %s\n", flavor, version)
+	utils.Printf(command, "%s: %s\n", flavor, version)
 	return nil
 }

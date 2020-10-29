@@ -12,6 +12,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -102,7 +103,7 @@ func (c *command) initContext(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.InitContextMsg, contextName)
+	utils.Printf(cmd, errors.InitContextMsg, contextName)
 	return nil
 }
 

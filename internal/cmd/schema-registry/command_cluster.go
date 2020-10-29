@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type describeDisplay struct {
@@ -256,7 +257,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	utils.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -273,6 +274,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	utils.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
 
 var (
@@ -25,7 +27,7 @@ type FlagResolver interface {
 }
 
 type FlagResolverImpl struct {
-	Prompt Prompt
+	Prompt form.Prompt
 	Out    io.Writer
 }
 

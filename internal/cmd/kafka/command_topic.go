@@ -30,6 +30,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -363,7 +364,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+	utils.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
 	return nil
 }
 
@@ -417,7 +418,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
 	var entries [][]string
 	titleRow := []string{"Name", "Value"}
 	for name, value := range configMap {
@@ -473,7 +474,7 @@ func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) er
 	switch action {
 	case stopAction:
 		result.GetStopTopicMirror()
-		pcmd.Printf(cmd, errors.StoppedTopicMirrorMsg, topic)
+		utils.Printf(cmd, errors.StoppedTopicMirrorMsg, topic)
 	default:
 		panic("unreachable")
 	}
@@ -493,7 +494,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
+	utils.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
 	return nil
 }
 
@@ -523,7 +524,7 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 		return nil, err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
@@ -590,7 +591,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		metaInfo = info
 	}
 
-	pcmd.ErrPrintln(cmd, errors.StartingProducerMsg)
+	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
 	InitSarama(h.logger)
 	producer, err := NewSaramaProducer(cluster, h.clientID)
@@ -667,7 +668,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
-			pcmd.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -740,17 +741,17 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		pcmd.ErrPrintln(cmd, errors.StoppingConsumer)
+		utils.ErrPrintln(cmd, errors.StoppingConsumer)
 		consumer.Close()
 	}()
 
 	go func() {
 		for err := range consumer.Errors() {
-			pcmd.ErrPrintln(cmd, "ERROR", err)
+			utils.ErrPrintln(cmd, "ERROR", err)
 		}
 	}()
 
-	pcmd.ErrPrintln(cmd, errors.StartingConsumerMsg)
+	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -789,7 +790,7 @@ func toMap(configs []string) (map[string]string, error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
-	pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
+	utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
 		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
 
 	var partitions [][]string
@@ -815,7 +816,7 @@ func printHumanDescribe(cmd *cobra.Command, resp *schedv1.TopicDescription) erro
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	pcmd.Println(cmd, "\nConfiguration\n ")
+	utils.Println(cmd, "\nConfiguration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }

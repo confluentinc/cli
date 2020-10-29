@@ -12,7 +12,7 @@ func AuthenticatedDynamicConfigMock() *cmd.DynamicConfig {
 	cfg := v3.AuthenticatedCloudConfigMock()
 	client := mock.NewClientMock()
 	flagResolverMock := &cmd.FlagResolverImpl{
-		Prompt: &Prompt{},
+		Prompt: &mock.Prompt{},
 		Out:    os.Stdout,
 	}
 	return cmd.NewDynamicConfig(cfg, flagResolverMock, client)

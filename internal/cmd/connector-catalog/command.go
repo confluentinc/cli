@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -138,7 +139,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			return flagErr
 		}
 		if outputFormat == output.Human.String() {
-			pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
+			utils.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
 		} else {
 
 			for _, c := range reply.Configs {

@@ -14,6 +14,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type registryCommand struct {
@@ -195,6 +196,6 @@ func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(cmd, err, response)
 	}
 
-	pcmd.Printf(cmd, errors.UnregisteredClusterMsg, name)
+	utils.Printf(cmd, errors.UnregisteredClusterMsg, name)
 	return nil
 }

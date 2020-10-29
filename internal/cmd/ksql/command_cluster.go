@@ -14,6 +14,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -183,7 +184,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		count += 1
 	}
 	if cluster.Endpoint == "" {
-		pcmd.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -204,7 +205,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
+	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
 
@@ -317,7 +318,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
+		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

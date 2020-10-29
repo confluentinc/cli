@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -16,7 +17,7 @@ func New(cliName string, prerunner pcmd.PreRunner, v *version.Version) *cobra.Co
 			Use:   "version",
 			Short: fmt.Sprintf("Show version of the %s.", version.GetFullCLIName(cliName)),
 			Run: func(cmd *cobra.Command, _ []string) {
-				pcmd.Println(cmd, v)
+				utils.Println(cmd, v)
 			},
 			Args: cobra.NoArgs,
 		}, prerunner)

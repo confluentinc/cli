@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"regexp"
+	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type loginCommand struct {
@@ -28,13 +29,13 @@ type loginCommand struct {
 	analyticsClient analytics.Client
 	// for testing
 	MDSClientManager      pauth.MDSClientManager
-	prompt                pcmd.Prompt
+	prompt                form.Prompt
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
 	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
 	netrcHandler          *pauth.NetrcHandler
 }
 
-func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
+func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt form.Prompt,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *loginCommand {
@@ -97,7 +98,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return errors.Errorf(errors.InvalidLoginURLMsg)
 	}
 	if errMsg != "" {
-		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
@@ -181,8 +182,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
-	pcmd.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	utils.Printf(cmd, errors.LoggedInAsMsg, email)
+	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
@@ -196,7 +197,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return errors.Errorf(errors.InvalidLoginURLMsg)
 	}
 	if errMsg != "" {
-		pcmd.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
 	email, password, err := a.credentials(cmd, "Username", nil)
 	if err != nil {
@@ -244,7 +245,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
+	utils.Printf(cmd, errors.LoggedInAsMsg, email)
 	return nil
 }
 
@@ -260,7 +261,7 @@ func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudCl
 	}
 
 	if len(email) == 0 || len(password) == 0 {
-		pcmd.Println(cmd, "Enter your Confluent credentials:")
+		utils.Println(cmd, "Enter your Confluent credentials:")
 	}
 
 	if len(email) == 0 {
@@ -347,7 +348,7 @@ func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshT
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.FileName)
+	utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.FileName)
 	return nil
 }
 

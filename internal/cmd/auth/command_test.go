@@ -30,7 +30,9 @@ import (
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -354,60 +356,60 @@ func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
 
 	suite := []struct {
-		url_in string
-		valid bool
-		url_out string
+		url_in      string
+		valid       bool
+		url_out     string
 		warning_msg string
-		cli string
+		cli         string
 	}{
 		{
-			url_in: "https:///test.com",
-			valid:    false,
-			url_out: "",
+			url_in:      "https:///test.com",
+			valid:       false,
+			url_out:     "",
 			warning_msg: "default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "test.com",
-			valid:    true,
-			url_out: "http://test.com:8090",
+			url_in:      "test.com",
+			valid:       true,
+			url_out:     "http://test.com:8090",
 			warning_msg: "http protocol and default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "test.com:80",
-			valid:    true,
-			url_out: "http://test.com:80",
+			url_in:      "test.com:80",
+			valid:       true,
+			url_out:     "http://test.com:80",
 			warning_msg: "http protocol",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "http://test.com",
-			valid:    true,
-			url_out: "http://test.com:8090",
+			url_in:      "http://test.com",
+			valid:       true,
+			url_out:     "http://test.com:8090",
 			warning_msg: "default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "https://127.0.0.1:8090",
-			valid:    true,
-			url_out: "https://127.0.0.1:8090",
+			url_in:      "https://127.0.0.1:8090",
+			valid:       true,
+			url_out:     "https://127.0.0.1:8090",
 			warning_msg: "",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "127.0.0.1",
-			valid:    true,
-			url_out: "http://127.0.0.1:8090",
+			url_in:      "127.0.0.1",
+			valid:       true,
+			url_out:     "http://127.0.0.1:8090",
 			warning_msg: "http protocol and default MDS port 8090",
-			cli: "confluent",
+			cli:         "confluent",
 		},
 		{
-			url_in: "devel.cpdev.cloud",
-			valid:	true,
-			url_out: "https://devel.cpdev.cloud",
+			url_in:      "devel.cpdev.cloud",
+			valid:       true,
+			url_out:     "https://devel.cpdev.cloud",
 			warning_msg: "https protocol",
-			cli: "ccloud",
+			cli:         "ccloud",
 		},
 	}
 	for _, s := range suite {
@@ -449,8 +451,8 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 	req.Empty(state.Auth)
 }
 
-func prompt() *cliMock.Prompt {
-	return &cliMock.Prompt{
+func prompt() form.Prompt {
+	return &pmock.Prompt{
 		ReadLineFunc: func() (string, error) {
 			return "cody@confluent.io", nil
 		},
@@ -460,7 +462,7 @@ func prompt() *cliMock.Prompt {
 	}
 }
 
-func newLoginCmd(prompt pcmd.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*loginCommand, *v3.Config) {
+func newLoginCmd(prompt form.Prompt, auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions) (*loginCommand, *v3.Config) {
 	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
 		req.Equal("https://confluent.cloud", baseURL)
 		return &ccloud.Client{Auth: auth, User: user}

@@ -44,7 +44,7 @@ var (
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
 		Description: apiKeyDescription,
-		Created: types.TimestampNow(),
+		Created:     types.TimestampNow(),
 	}
 )
 
@@ -147,7 +147,7 @@ func (suite *APITestSuite) newCmd() *command {
 		KSQL:           &ccsdkmock.KSQL{},
 		Metrics:        &ccsdkmock.Metrics{},
 	}
-	prompt := &cliMock.Prompt{
+	prompt := &mock.Prompt{
 		ReadLineFunc: func() (string, error) {
 			return promptReadString + "\n", nil
 		},

@@ -157,16 +157,16 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
+	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
 	return nil
 }
 
 func (c userCommand) newUserDeleteCommand() *cobra.Command {
 	deleteCmd := &cobra.Command{
-		Use:    "delete <resource id>",
-		Short:  "Delete a user from your organization.",
-		Args:   cobra.ExactArgs(1),
-		RunE:   pcmd.NewCLIRunE(c.delete),
+		Use:   "delete <resource id>",
+		Short: "Delete a user from your organization.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	return deleteCmd
 }
@@ -184,6 +184,6 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
+	utils.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
 	return nil
 }

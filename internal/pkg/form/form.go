@@ -2,14 +2,13 @@ package form
 
 import (
 	"fmt"
-	"strings"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 /*
@@ -37,13 +36,13 @@ type Form struct {
 }
 
 type Field struct {
-	ID				string
-	Prompt			string
-	DefaultValue	interface{}
-	IsYesOrNo		bool
-	IsHidden		bool
-	Regex			string
-	RequireYes		bool
+	ID           string
+	Prompt       string
+	DefaultValue interface{}
+	IsYesOrNo    bool
+	IsHidden     bool
+	Regex        string
+	RequireYes   bool
 }
 
 func New(fields ...Field) *Form {
@@ -53,8 +52,8 @@ func New(fields ...Field) *Form {
 	}
 }
 
-func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
-	for i:=0; i<len(f.Fields); i++ {
+func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
+	for i := 0; i < len(f.Fields); i++ {
 		field := f.Fields[i]
 		show(command, field)
 
@@ -66,14 +65,14 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 		res, err := validate(field, val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatMsg, val, field.ID) == err.Error() {
-				pcmd.ErrPrintln(command, err)
+				utils.ErrPrintln(command, err)
 				i-- //re-prompt on invalid regex
 				continue
 			}
 			return err
 		}
 		if checkRequiredYes(command, field, res) {
-			i--	//re-prompt on required yes
+			i-- //re-prompt on required yes
 		}
 
 		f.Responses[field.ID] = res
@@ -83,18 +82,18 @@ func (f *Form) Prompt(command *cobra.Command, prompt cmd.Prompt) error {
 }
 
 func show(cmd *cobra.Command, field Field) {
-	pcmd.Print(cmd, field.Prompt)
+	utils.Print(cmd, field.Prompt)
 	if field.IsYesOrNo {
-		pcmd.Print(cmd, " (y/n)")
+		utils.Print(cmd, " (y/n)")
 	}
-	pcmd.Print(cmd, ": ")
+	utils.Print(cmd, ": ")
 
 	if field.DefaultValue != nil {
-		pcmd.Printf(cmd, "(%v) ", field.DefaultValue)
+		utils.Printf(cmd, "(%v) ", field.DefaultValue)
 	}
 }
 
-func read(field Field, prompt cmd.Prompt) (string, error) {
+func read(field Field, prompt Prompt) (string, error) {
 	var val string
 	var err error
 
@@ -137,7 +136,7 @@ func validate(field Field, val string) (interface{}, error) {
 
 func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		pcmd.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
+		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false

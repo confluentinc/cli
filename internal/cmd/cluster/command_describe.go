@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type Metadata interface {
@@ -142,7 +143,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	structuredDisplay := &StructuredDisplay{}
 	if meta.ID != "" {
 		if format == output.Human.String() {
-			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
+			utils.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 		} else {
 			structuredDisplay.Crn = meta.ID
 		}
@@ -164,7 +165,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 
 	}
 	if format == output.Human.String() {
-		pcmd.Println(cmd, "Scope:")
+		utils.Println(cmd, "Scope:")
 		printer.RenderCollectionTable(data, describeLabels)
 	} else {
 		return output.StructuredOutput(format, structuredDisplay)

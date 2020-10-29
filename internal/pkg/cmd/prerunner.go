@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -176,7 +177,7 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
-// CanCompleteCommand returns whether or not the specified command can be completed. 
+// CanCompleteCommand returns whether or not the specified command can be completed.
 // If the prerunner of the command returns no error, true is returned,
 // and if an error is encountered, false is returned.
 func CanCompleteCommand(cmd *cobra.Command) bool {
@@ -218,7 +219,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				if err != nil {
 					return err
 				}
-				ErrPrintln(cmd, errors.TokenExpiredMsg)
+				utils.ErrPrintln(cmd, errors.TokenExpiredMsg)
 				analyticsError := r.Analytics.SessionTimedOut()
 				if analyticsError != nil {
 					r.Logger.Debug(analyticsError.Error())
@@ -390,7 +391,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		ErrPrintf(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
+		utils.ErrPrintf(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
 	}
 	return nil
 }
@@ -401,7 +402,7 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
+		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }
 

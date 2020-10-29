@@ -16,6 +16,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -159,7 +160,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		matchingBindingCount += len(resp)
 	}
 	if matchingBindingCount == 0 {
-		pcmd.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
+		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
 		return nil
 	}
 
@@ -167,7 +168,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedACLsMsg)
+	utils.ErrPrintf(cmd, errors.DeletedACLsMsg)
 	return nil
 }
 

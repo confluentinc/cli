@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -27,7 +28,7 @@ var _ cmd.PreRunner = (*Commander)(nil)
 
 func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
-		Prompt: &Prompt{},
+		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
 	}
 	return &Commander{
@@ -40,7 +41,7 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.C
 
 func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) cmd.PreRunner {
 	flagResolverMock := &cmd.FlagResolverImpl{
-		Prompt: &Prompt{},
+		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
 	}
 	return &Commander{

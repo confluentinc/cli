@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -39,6 +40,6 @@ func mockFeedbackCommand(msg string) *cobra.Command {
 	mockConfig := v3.New(&config.Params{CLIName: cliName})
 	mockPreRunner := mock.NewPreRunnerMock(nil, nil, mockConfig)
 	mockAnalytics := mock.NewDummyAnalyticsMock()
-	mockPrompt := mock.NewPromptMock(msg)
+	mockPrompt := pmock.NewPromptMock(msg)
 	return NewFeedbackCmdWithPrompt(cliName, mockPreRunner, mockAnalytics, mockPrompt)
 }

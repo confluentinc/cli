@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -157,7 +158,7 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 	credentialType := c.Config.CredentialType()
 	if credentialType == v2.None {
-		pcmd.Println(cmd, errors.NotLoggedInErrorMsg)
+		utils.Println(cmd, errors.NotLoggedInErrorMsg)
 		return nil
 	}
 	username, err := cmd.Flags().GetBool("username")
@@ -167,12 +168,12 @@ func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 	if username {
 		ctx := c.Config.Config.Context()
 		if credentialType == v2.APIKey {
-			pcmd.Println(cmd, ctx.Credential.APIKeyPair.Key)
+			utils.Println(cmd, ctx.Credential.APIKeyPair.Key)
 		} else {
-			pcmd.Println(cmd, ctx.Credential.Username)
+			utils.Println(cmd, ctx.Credential.Username)
 		}
 	} else {
-		pcmd.Println(cmd, c.Config.CurrentContext)
+		utils.Println(cmd, c.Config.CurrentContext)
 	}
 	return nil
 }

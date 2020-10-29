@@ -18,6 +18,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -254,9 +255,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	trace := connectorExpansion.Status.Connector.Trace
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
+		utils.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
 		if trace != "" {
-			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
+			utils.Printf(cmd, "Error Trace: %s\n", trace)
 		}
 	} else {
 		return output.StructuredOutput(outputFormat, &struct {
@@ -290,7 +291,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
 	return nil
 }
 
@@ -307,7 +308,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.DeletedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.DeletedConnectorMsg, args[0])
 	return nil
 }
 
@@ -324,7 +325,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.PausedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.PausedConnectorMsg, args[0])
 	return nil
 }
 
@@ -341,7 +342,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.ResumedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.ResumedConnectorMsg, args[0])
 	return nil
 }
 
@@ -352,7 +353,7 @@ func panicOnError(err error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) error {
-	pcmd.Println(cmd, "Connector Details")
+	utils.Println(cmd, "Connector Details")
 	data := &connectorDescribeDisplay{
 		Name:   connector.Status.Name,
 		ID:     connector.Id.Id,
@@ -361,7 +362,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 		Trace:  connector.Status.Connector.Trace,
 	}
 	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
-	pcmd.Println(cmd, "\n\nTask Level Details")
+	utils.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
 	titleRow := []string{"TaskId", "State"}
 	for _, task := range connector.Status.Tasks {
@@ -371,7 +372,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 		}, titleRow))
 	}
 	printer.RenderCollectionTable(tasks, titleRow)
-	pcmd.Println(cmd, "\n\nConfiguration Details")
+	utils.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
 	titleRow = []string{"Config", "Value"}
 	for name, value := range connector.Info.Config {

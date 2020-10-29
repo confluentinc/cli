@@ -44,6 +44,7 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
@@ -97,7 +98,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	if err != nil {
 		return nil, err
 	}
-	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
+	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
 		Config:             cfg,

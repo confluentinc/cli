@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -277,7 +278,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)
+		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
@@ -310,7 +311,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	buf.WriteString("\n\n")
-	pcmd.Println(cmd, buf.String())
+	utils.Println(cmd, buf.String())
 
 	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
 	if len(accounts) == 1 {
@@ -319,8 +320,8 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 
 	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
 	for {
-		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
-			pcmd.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
+		if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {
@@ -412,7 +413,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
 	return nil
 }
 
@@ -428,7 +429,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
 	return nil
 }
 

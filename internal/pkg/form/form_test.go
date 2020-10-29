@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/mock"
+	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestPrompt(t *testing.T) {

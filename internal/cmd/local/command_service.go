@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/spinner"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -232,7 +233,7 @@ func (c *Command) runServiceVersionCommand(command *cobra.Command, _ []string) e
 		return err
 	}
 
-	cmd.Println(command, ver)
+	utils.Println(command, ver)
 	return nil
 }
 
@@ -253,7 +254,7 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 		return err
 	}
 
-	cmd.Printf(command, errors.StartingServiceMsg, writeServiceName(service))
+	utils.Printf(command, errors.StartingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -434,7 +435,7 @@ func (c *Command) stopService(command *cobra.Command, service string) error {
 		return c.printStatus(command, service)
 	}
 
-	cmd.Printf(command, errors.StoppingServiceMsg, writeServiceName(service))
+	utils.Printf(command, errors.StoppingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -554,7 +555,7 @@ func (c *Command) printStatus(command *cobra.Command, service string) error {
 		status = color.GreenString("UP")
 	}
 
-	cmd.Printf(command, errors.ServiceStatusMsg, writeServiceName(service), status)
+	utils.Printf(command, errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 

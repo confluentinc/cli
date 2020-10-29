@@ -10,20 +10,21 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
 	analyticsClient analytics.Client
-	prompt          pcmd.Prompt
+	prompt          form.Prompt
 }
 
 func New(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
-	prompt := pcmd.NewPrompt(os.Stdin)
+	prompt := form.NewPrompt(os.Stdin)
 	return NewFeedbackCmdWithPrompt(cliName, prerunner, analytics, prompt)
 }
 
-func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, prompt pcmd.Prompt) *cobra.Command {
+func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, prompt form.Prompt) *cobra.Command {
 	c := command{
 		analyticsClient: analyticsClient,
 		prompt:          prompt,
@@ -48,7 +49,7 @@ func (c *command) feedbackRunE(cmd *cobra.Command, _ []string) error {
 
 	if len(msg) > 0 {
 		c.analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
-		pcmd.Println(cmd, errors.ThanksForFeedbackMsg)
+		utils.Println(cmd, errors.ThanksForFeedbackMsg)
 	}
 	return nil
 }

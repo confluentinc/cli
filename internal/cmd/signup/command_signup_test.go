@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/mock"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestSignupSuccess(t *testing.T) {
@@ -94,7 +94,7 @@ func TestSignupWithExistingEmail(t *testing.T) {
 	)
 }
 
-func testSignup(t *testing.T, prompt pcmd.Prompt, expected ...string) {
+func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	cmd := &cobra.Command{}
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
@@ -123,7 +123,7 @@ func mockCcloudClient() *ccloud.Client {
 			},
 		},
 		User: &ccloudmock.User{
-			CheckEmailFunc: func(_ context.Context, user *orgv1.User) (*orgv1.User, error){
+			CheckEmailFunc: func(_ context.Context, user *orgv1.User) (*orgv1.User, error) {
 				if user.Email == "mtodzo@confluent.io" {
 					return &orgv1.User{Email: "mtodzo@confluent.io"}, nil
 				}

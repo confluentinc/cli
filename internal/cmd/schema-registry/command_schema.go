@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type schemaCommand struct {
@@ -164,7 +165,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
@@ -201,7 +202,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
+		utils.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
 		PrintVersions(versions)
 		return nil
 	} else {
@@ -210,7 +211,7 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		pcmd.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
+		utils.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
 		PrintVersions([]int32{versionResult})
 		return nil
 	}
@@ -281,13 +282,13 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
 
 func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
 	if sType != "" {
-		pcmd.Println(cmd, "Type: "+sType)
+		utils.Println(cmd, "Type: "+sType)
 	}
-	pcmd.Println(cmd, "Schema: "+schema)
+	utils.Println(cmd, "Schema: "+schema)
 	if len(refs) > 0 {
-		pcmd.Println(cmd, "References:")
+		utils.Println(cmd, "References:")
 		for i := 0; i < len(refs); i++ {
-			pcmd.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			utils.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
 	}
 	return nil
