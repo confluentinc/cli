@@ -7,18 +7,18 @@ import (
 	"github.com/spf13/cobra"
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type listCommand struct {
-	*cmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 // NewListCommand returns the sub-command object for listing clusters
-func NewListCommand(prerunner cmd.PreRunner) *cobra.Command {
+func NewListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	listCmd := &listCommand{
-		AuthenticatedCLICommand: cmd.NewAuthenticatedWithMDSCLICommand(
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
 				Use:   "list",
 				Short: "List registered clusters.",
@@ -28,7 +28,7 @@ func NewListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
-	listCmd.RunE = cmd.NewCLIRunE(listCmd.list)
+	listCmd.RunE = pcmd.NewCLIRunE(listCmd.list)
 	return listCmd.Command
 }
 

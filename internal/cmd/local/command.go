@@ -7,24 +7,24 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/local"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type Command struct {
-	*cmd.CLICommand
+	*pcmd.CLICommand
 	ch local.ConfluentHome
 	cc local.ConfluentCurrent
 }
 
-func NewLocalCommand(command *cobra.Command, prerunner cmd.PreRunner) *Command {
+func NewLocalCommand(command *cobra.Command, prerunner pcmd.PreRunner) *Command {
 	return &Command{
-		CLICommand: cmd.NewAnonymousCLICommand(command, prerunner),
+		CLICommand: pcmd.NewAnonymousCLICommand(command, prerunner),
 		ch:         local.NewConfluentHomeManager(),
 		cc:         local.NewConfluentCurrentManager(),
 	}
 }
 
-func New(prerunner cmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "local",
