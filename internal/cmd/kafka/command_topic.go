@@ -189,6 +189,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 	}
 	listCmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	listCmd.Flags().String("environment", "", "Environment ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	a.AddCommand(listCmd)

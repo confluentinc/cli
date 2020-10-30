@@ -196,9 +196,8 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
 			r.Analytics.TrackCommand(cmd, args)
 		}
-		command.Config.Config = r.Config
+		command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver)
 		command.Version = r.Version
-		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return err
 		}

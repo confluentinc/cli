@@ -3,6 +3,7 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -19,6 +20,7 @@ import (
 
 const (
 	defaultConfigFileFmt = "~/.%s/config.json"
+	emptyFieldIndicator = "EMPTY"
 )
 
 var (
@@ -37,6 +39,33 @@ type Config struct {
 	ContextStates      map[string]*v2.ContextState `json:"context_states,omitempty"`
 	CurrentContext     string                      `json:"current_context"`
 	AnonymousId        string                      `json:"anonymous_id,omitempty"`
+	overwrittenAccount	*orgv1.Account
+	overwrittenCurrContext	string
+	overwrittenActiveKafka	string
+}
+
+func (c *Config) SetOverwrittenAccount(acct *orgv1.Account) {
+	if c.overwrittenAccount == nil {
+		c.overwrittenAccount = acct
+	}
+}
+
+func (c *Config) SetOverwrittenCurrContext(contextName string) {
+	if contextName == "" {
+		contextName = emptyFieldIndicator
+	}
+	if c.overwrittenCurrContext == "" {
+		c.overwrittenCurrContext = contextName
+	}
+}
+
+func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
+	if clusterId == "" {
+		clusterId = emptyFieldIndicator
+	}
+	if c.overwrittenActiveKafka == "" {
+		c.overwrittenActiveKafka = clusterId
+	}
 }
 
 // NewBaseConfig initializes a new Config object
@@ -119,6 +148,33 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
+	ctx := c.Context()
+	var tempKafka string
+	if c.overwrittenActiveKafka != "" && ctx != nil && ctx.KafkaClusterContext != nil {
+		if c.overwrittenActiveKafka == emptyFieldIndicator {
+			c.overwrittenActiveKafka = ""
+		}
+		if ctx.KafkaClusterContext.EnvContext &&  ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
+			tempKafka = ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster
+			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = c.overwrittenActiveKafka
+		} else {
+			tempKafka = ctx.KafkaClusterContext.ActiveKafkaCluster
+			ctx.KafkaClusterContext.ActiveKafkaCluster = c.overwrittenActiveKafka
+		}
+	}
+	var tempContext string
+	if c.overwrittenCurrContext != "" && c != nil {
+		if c.overwrittenCurrContext == emptyFieldIndicator {
+			c.overwrittenCurrContext = ""
+		}
+		tempContext = c.CurrentContext
+		c.CurrentContext = c.overwrittenCurrContext
+	}
+	var tempAccount *orgv1.Account
+	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil{
+		tempAccount = ctx.State.Auth.Account
+		ctx.State.Auth.Account = c.overwrittenAccount
+	}
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
@@ -134,6 +190,19 @@ func (c *Config) Save() error {
 	err = ioutil.WriteFile(filename, cfg, 0600)
 	if err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
+	}
+	if tempKafka != "" {
+		if ctx.KafkaClusterContext.EnvContext &&  ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
+			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = tempKafka
+		} else {
+			ctx.KafkaClusterContext.ActiveKafkaCluster = tempKafka
+		}
+	}
+	if tempContext != "" {
+		c.CurrentContext = tempContext
+	}
+	if tempAccount != nil {
+		ctx.State.Auth.Account = tempAccount
 	}
 	return nil
 }

@@ -7,7 +7,6 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/mohae/deepcopy"
 	"github.com/spf13/cobra"
 
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -21,6 +20,7 @@ type DynamicContext struct {
 	*v3.Context
 	resolver FlagResolver
 	client   *ccloud.Client
+	staticContext *v3.Context
 }
 
 func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
@@ -29,6 +29,62 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 		resolver: resolver,
 		client:   client,
 	}
+}
+
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
+	fmt.Println("parsing flags into context")
+	if d.resolver == nil {
+		return nil
+	}
+	envId, err := d.resolver.ResolveEnvironmentFlag(cmd)
+	if err != nil {
+		return err
+	}
+	if envId != "" {
+		envSet := false
+		fmt.Println("1")
+		for _, account := range d.State.Auth.Accounts {
+			if account.Id == envId {
+				fmt.Println("overwriting env " + d.State.Auth.Account.Id + " with " + account.Id)
+				d.Config.SetOverwrittenAccount(d.State.Auth.Account)
+				d.State.Auth.Account = account
+				envSet = true
+			}
+		}
+		if !envSet {
+			fmt.Println("what")
+			return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+		}
+	}
+	fmt.Println("2")
+	fmt.Println("3")
+	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
+	fmt.Println("4")
+	if err != nil {
+		return err
+	}
+	if clusterId != "" {
+		fmt.Println("1")
+		ctx := d.Config.Context()
+		fmt.Println("6")
+		if ctx.KafkaClusterContext.EnvContext {
+			d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
+			fmt.Println("overwriting kafka " + ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster + " with " + clusterId)
+			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = clusterId
+
+		} else {
+			d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.ActiveKafkaCluster)
+			ctx.KafkaClusterContext.ActiveKafkaCluster = clusterId
+		}
+		fmt.Println("set active kafka cluster")
+		_, err = d.FindKafkaCluster(cmd, clusterId)
+		if err != nil {
+			err = errors.CatchKafkaNotFoundError(err, clusterId)
+			return err
+		}
+		fmt.Println("found cluster")
+	}
+	return nil
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
@@ -45,10 +101,11 @@ func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.Kafk
 }
 
 func (d *DynamicContext) getKafkaClusterIDForCommand(cmd *cobra.Command) (string, error) {
-	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
-	if err != nil {
-		return "", err
-	}
+	//clusterId, err := d.resolver.ResolveClusterFlag(cmd)
+	//if err != nil {
+	//	return "", err
+	//}
+	clusterId := ""
 	if clusterId == "" {
 		clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
 	}
@@ -215,20 +272,21 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v2.ContextStat
 	if !hasLogin {
 		return nil, &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
-	envId, err := d.resolveEnvironmentId(cmd)
-	if err != nil {
-		return nil, err
-	}
-	if envId == "" {
-		return d.State, nil
-	}
-	state := deepcopy.Copy(d.State).(*v2.ContextState)
-	for _, account := range d.State.Auth.Accounts {
-		if account.Id == envId {
-			state.Auth.Account = account
-		}
-	}
-	return state, nil
+	return d.State, nil
+	//envId, err := d.resolveEnvironmentId(cmd)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if envId == "" {
+	//	return d.State, nil
+	//}
+	//state := deepcopy.Copy(d.State).(*v2.ContextState)
+	//for _, account := range d.State.Auth.Accounts {
+	//	if account.Id == envId {
+	//		state.Auth.Account = account
+	//	}
+	//}
+	//return state, nil
 }
 
 func (d *DynamicContext) HasAPIKey(cmd *cobra.Command, clusterId string) (bool, error) {
@@ -248,10 +306,11 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 }
 
 func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error) {
-	envId, err := d.resolver.ResolveEnvironmentFlag(cmd)
-	if err != nil {
-		return "", err
-	}
+	//envId, err := d.resolver.ResolveEnvironmentFlag(cmd)
+	//if err != nil {
+	//	return "", err
+	//}
+	envId := ""
 	if d.State == nil || d.State.Auth == nil {
 		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
@@ -262,16 +321,17 @@ func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error
 		}
 		return d.State.Auth.Account.Id, nil
 	}
-	// Environment flag is set.
-	if d.State.Auth.Accounts == nil {
-		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
-	}
-	for _, account := range d.State.Auth.Accounts {
-		if account.Id == envId {
-			return envId, nil
-		}
-	}
-	return "", fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+	return "", nil
+	//// Environment flag is set.
+	//if d.State.Auth.Accounts == nil {
+	//	return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
+	//}
+	//for _, account := range d.State.Auth.Accounts {
+	//	if account.Id == envId {
+	//		return envId, nil
+	//	}
+	//}
+	//return "", fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
 }
 
 func missingDetails(cluster *v2.SchemaRegistryCluster) bool {
