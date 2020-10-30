@@ -101,7 +101,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	}
 
 	authTokenHandler := &pauth.AuthTokenHandlerImpl{}
-	nonInteractiveLoginHandler := pauth.NewNonInteractiveLoginHandler(authTokenHandler, netrcHandler, logger)
+	nonInteractiveLoginHandler := pauth.NewNonInteractiveLoginHandler(authTokenHandler, netrcHandler, form.NewPrompt(os.Stdin), logger)
 	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{

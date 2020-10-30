@@ -2,15 +2,12 @@ package auth
 
 import (
 	"context"
-	"os"
-
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
@@ -24,7 +21,7 @@ func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent
 	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
 		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
 	}
-	loginCmd := NewLoginCommand(cliName, prerunner, logger, form.NewPrompt(os.Stdin),
+	loginCmd := NewLoginCommand(cliName, prerunner, logger,
 		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
 		analyticsClient, netrcHandler, nonInteractiveLoginHandler,
 	)

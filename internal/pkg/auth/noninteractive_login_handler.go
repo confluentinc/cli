@@ -27,23 +27,25 @@ type Credentials struct {
 type NonInteractiveLoginHandler interface {
 	GetCCloudTokenAndCredentialsFromEnvVar(cmd *cobra.Command, client *ccloud.Client) (string, *Credentials, error)
 	GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error)
-	GetCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client, url string) (string, *Credentials, error)
+	GetCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client, url string) (string, *Credentials, error)
 	GetConfluentTokenAndCredentialsFromEnvVar(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error)
 	GetConfluentTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error)
-	GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, prompt form.Prompt, client *mds.APIClient) (string, *Credentials, error)
+	GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error)
 }
 
 type NonInteractiveLoginHandlerImpl struct {
 	authTokenHandler AuthTokenHandler
 	netrcHandler     netrc.NetrcHandler
 	logger           *log.Logger
+	prompt           form.Prompt
 }
 
-func NewNonInteractiveLoginHandler(authTokenHandler AuthTokenHandler, netrcHandler netrc.NetrcHandler, logger *log.Logger) NonInteractiveLoginHandler {
+func NewNonInteractiveLoginHandler(authTokenHandler AuthTokenHandler, netrcHandler netrc.NetrcHandler, prompt form.Prompt, logger *log.Logger) NonInteractiveLoginHandler {
 	return &NonInteractiveLoginHandlerImpl{
 		authTokenHandler: authTokenHandler,
 		netrcHandler:     netrcHandler,
 		logger:           logger,
+		prompt:           prompt,
 	}
 }
 
@@ -124,8 +126,8 @@ func (h *NonInteractiveLoginHandlerImpl) GetConfluentTokenAndCredentialsFromNetr
 	return token, &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 }
 
-func (h *NonInteractiveLoginHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client, url string) (string, *Credentials, error) {
-	email := h.promptForUser(cmd, prompt, "Email")
+func (h *NonInteractiveLoginHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client, url string) (string, *Credentials, error) {
+	email := h.promptForUser(cmd, "Email")
 	if isSSOUser(email, client) {
 		noBrowser, err := cmd.Flags().GetBool("no-browser")
 		if err != nil {
@@ -137,7 +139,7 @@ func (h *NonInteractiveLoginHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(
 		}
 		return token, &Credentials{Username: email, RefreshToken: refreshToken}, nil
 	}
-	password := h.promptForPassword(cmd, prompt)
+	password := h.promptForPassword(cmd)
 	token, err := h.authTokenHandler.GetCCloudCredentialsToken(client, email, password)
 	if err != nil {
 		return "", nil, nil
@@ -145,9 +147,9 @@ func (h *NonInteractiveLoginHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(
 	return token, &Credentials{Username: email, Password: password}, nil
 }
 
-func (h *NonInteractiveLoginHandlerImpl) GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, prompt form.Prompt, client *mds.APIClient) (string, *Credentials, error) {
-	username := h.promptForUser(cmd, prompt, "Username")
-	password := h.promptForPassword(cmd, prompt)
+func (h *NonInteractiveLoginHandlerImpl) GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error) {
+	username := h.promptForUser(cmd, "Username")
+	password := h.promptForPassword(cmd)
 	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password)
 	if err != nil {
 		return "", nil, nil
@@ -155,7 +157,7 @@ func (h *NonInteractiveLoginHandlerImpl) GetConfluentTokenAndCredentialsFromProm
 	return token, &Credentials{Username: username, Password: password}, nil
 }
 
-func (h *NonInteractiveLoginHandlerImpl) promptForUser(cmd *cobra.Command, prompt form.Prompt, userField string) string {
+func (h *NonInteractiveLoginHandlerImpl) promptForUser(cmd *cobra.Command, userField string) string {
 	// HACK: SSO integration test extracts email from env var
 	// TODO: remove this hack once we implement prompting for integration test
 	if testEmail := os.Getenv(CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
@@ -164,16 +166,16 @@ func (h *NonInteractiveLoginHandlerImpl) promptForUser(cmd *cobra.Command, promp
 	}
 	utils.Println(cmd, "Enter your Confluent credentials:")
 	f := form.New(form.Field{ID: userField, Prompt: userField})
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(cmd, h.prompt); err != nil {
 		return ""
 	}
 	return f.Responses[userField].(string)
 }
 
-func (h *NonInteractiveLoginHandlerImpl) promptForPassword(cmd *cobra.Command, prompt form.Prompt) string {
+func (h *NonInteractiveLoginHandlerImpl) promptForPassword(cmd *cobra.Command) string {
 	passwordField := "Password"
 	f := form.New(form.Field{ID: passwordField, Prompt: passwordField, IsHidden: true})
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(cmd, h.prompt); err != nil {
 		return ""
 	}
 	return f.Responses[passwordField].(string)

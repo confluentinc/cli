@@ -4,7 +4,7 @@ require (
 	code.gitea.io/sdk/gitea v0.12.1 // indirect
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12 // indirect
 	github.com/Azure/azure-amqp-common-go v1.1.4 // indirect
-	github.com/Azure/go-autorest v12.2.0+incompatible
+	github.com/Azure/go-autorest v12.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20200511133814-5174e21577d5 // indirect
 	github.com/Shopify/sarama v1.23.1
@@ -14,7 +14,7 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.31.13
-	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bombsimon/wsl v1.2.5 // indirect

@@ -44,16 +44,16 @@ const (
 
 var (
 	mockNonInteractiveLoginHandler = &cliMock.MockNonInteractiveLoginHandler{
-		GetCCloudTokenAndCredentialsFromEnvVarFunc: func(client *ccloud.Client) (string, *pauth.Credentials, error) {
+		GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (string, *pauth.Credentials, error) {
 			return "", nil, nil
 		},
-		GetCCloudTokenAndCredentialsFromNetrcFunc: func(client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+		GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
 			return "", nil, nil
 		},
-		GetConfluentTokenAndCredentialsFromEnvVarFunc: func(client *mds.APIClient) (string, *pauth.Credentials, error) {
+		GetConfluentTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *mds.APIClient) (string, *pauth.Credentials, error) {
 			return "", nil, nil
 		},
-		GetConfluentTokenAndCredentialsFromNetrcFunc: func(client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+		GetConfluentTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
 			return "", nil, nil
 		},
 	}
@@ -318,10 +318,10 @@ func Test_UpdateToken(t *testing.T) {
 			ver := pmock.NewVersionMock()
 
 			mockNonInteractiveLoginHandler := &cliMock.MockNonInteractiveLoginHandler{
-				GetCCloudTokenAndCredentialsFromNetrcFunc: func(client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+				GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
 					return validAuthToken, nil, nil
 				},
-				GetConfluentTokenAndCredentialsFromNetrcFunc: func(client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+				GetConfluentTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
 					return validAuthToken, nil, nil
 				},
 			}
