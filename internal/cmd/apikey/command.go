@@ -40,7 +40,7 @@ There are five ways to pass the secret:
 `
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	keystore            keystore.KeyStore
 	flagResolver        pcmd.FlagResolver
 	completableChildren []*cobra.Command
@@ -58,13 +58,13 @@ var (
 
 // New returns the Cobra command for API Key.
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "api-key",
 			Short: "Manage the API keys.",
-		}, prerunner)
+		}, prerunner, SubcommandFlags)
 	cmd := &command{
-		AuthenticatedCLICommand: cliCmd,
+		AuthenticatedStateFlagCommand: cliCmd,
 		keystore:                keystore,
 		flagResolver:            resolver,
 	}

@@ -15,7 +15,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
 }
 
@@ -30,12 +30,12 @@ var (
 
 // New returns the Cobra command for `environment`.
 func New(cliName string, prerunner pcmd.PreRunner) *command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "environment",
 			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
-		}, prerunner)
-	cmd := &command{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, SubcommandFlags)
+	cmd := &command{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.init()
 	return cmd
 }

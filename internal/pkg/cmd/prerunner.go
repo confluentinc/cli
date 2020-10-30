@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"os"
 	"strings"
 
@@ -60,6 +62,11 @@ type AuthenticatedCLICommand struct {
 	MDSv2Client *mdsv2alpha1.APIClient
 	Context     *DynamicContext
 	State       *v2.ContextState
+}
+
+type AuthenticatedStateFlagCommand struct {
+	*AuthenticatedCLICommand
+	subcommandFlags map[string]*pflag.FlagSet
 }
 
 type HasAPIKeyCLICommand struct {
@@ -131,6 +138,14 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 	return cmd
 }
 
+func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
+	cmd := &AuthenticatedStateFlagCommand{
+		NewAuthenticatedCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+
 func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, prerunner),
@@ -165,6 +180,13 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 		Command:   command,
 		prerunner: prerunner,
 	}
+}
+
+func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
+	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(s.Use)[0]])
+	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().SortFlags = false
+	s.AuthenticatedCLICommand.AddCommand(command)
 }
 
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
@@ -341,9 +363,23 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 			ctx.client = client
 			command.Config.Client = client
-			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
+			cluster, err := r.getClusterForAuthenticatedUser(command, ctx, cmd)
+			//clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
 			if err != nil {
 				return err
+			}
+			clusterId = cluster.ID
+			key, secret, err := ctx.KeyAndSecretFlags(cmd)
+			if err != nil {
+				return err
+			}
+			if key != "" {
+				cluster.APIKey = key
+				if secret != "" {
+					cluster.APIKeys[key] = &v0.APIKeyPair{Key: key, Secret: secret}
+				} else if cluster.APIKeys[key] == nil {
+					return errors.NewErrorWithSuggestions(errors.NoAPISecretStoredOrPassedMsg, errors.NoAPISecretStoredOrPassedSuggestions)
+				}
 			}
 		} else {
 			panic("Invalid Credential Type")
@@ -359,7 +395,28 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		return nil
 	}
 }
+// Check if user is logged in with valid auth token, for commands that are not of AuthenticatedCLICommand type which already
+// does that check automatically in the prerun
+//func (r *PreRun) checkUserAuthentication(ctx *DynamicContext, cmd *cobra.Command) error {
+//	_, err := ctx.AuthenticatedState(cmd)
+//	if err != nil {
+//		return err
+//	}
+//	err = r.ValidateToken(cmd, ctx.Co)
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
 
+// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
+func (r *PreRun) getClusterForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
+	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
+}
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
 func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
 	cluster, err := ctx.GetKafkaClusterForCommand(cmd)

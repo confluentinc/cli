@@ -101,14 +101,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.Kafk
 }
 
 func (d *DynamicContext) getKafkaClusterIDForCommand(cmd *cobra.Command) (string, error) {
-	//clusterId, err := d.resolver.ResolveClusterFlag(cmd)
-	//if err != nil {
-	//	return "", err
-	//}
-	clusterId := ""
-	if clusterId == "" {
-		clusterId = d.KafkaClusterContext.GetActiveKafkaClusterId()
-	}
+	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
@@ -273,20 +266,6 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v2.ContextStat
 		return nil, &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
 	return d.State, nil
-	//envId, err := d.resolveEnvironmentId(cmd)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if envId == "" {
-	//	return d.State, nil
-	//}
-	//state := deepcopy.Copy(d.State).(*v2.ContextState)
-	//for _, account := range d.State.Auth.Accounts {
-	//	if account.Id == envId {
-	//		state.Auth.Account = account
-	//	}
-	//}
-	//return state, nil
 }
 
 func (d *DynamicContext) HasAPIKey(cmd *cobra.Command, clusterId string) (bool, error) {
@@ -302,36 +281,43 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 	if err != nil {
 		return false, nil
 	}
+	key, secret, err := d.KeyAndSecretFlags(cmd)
+	if err != nil {
+		return false, err
+	}
+	if key != "" {
+		if srCluster.SrCredentials == nil {
+			srCluster.SrCredentials = &v0.APIKeyPair{}
+		}
+		srCluster.SrCredentials.Key = key
+	}
+	if secret != "" {
+		srCluster.SrCredentials.Secret = secret
+	}
 	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0), nil
 }
 
+func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
+	// TODO return error if secret is passed without key
+	key, err := d.resolver.ResolveApiKeyFlag(cmd)
+	if err != nil {
+		return "", "", err
+	}
+	secret, err := d.resolver.ResolveApiKeySecretFlag(cmd)
+	if err != nil {
+		return "", "", err
+	}
+	return key, secret, nil
+}
+
 func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error) {
-	//envId, err := d.resolver.ResolveEnvironmentFlag(cmd)
-	//if err != nil {
-	//	return "", err
-	//}
-	envId := ""
 	if d.State == nil || d.State.Auth == nil {
 		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
-	if envId == "" {
-		// Environment flag not set.
-		if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
-			return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
-		}
-		return d.State.Auth.Account.Id, nil
+	if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
+		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
 	}
-	return "", nil
-	//// Environment flag is set.
-	//if d.State.Auth.Accounts == nil {
-	//	return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
-	//}
-	//for _, account := range d.State.Auth.Accounts {
-	//	if account.Id == envId {
-	//		return envId, nil
-	//	}
-	//}
-	//return "", fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+	return d.State.Auth.Account.Id, nil
 }
 
 func missingDetails(cluster *v2.SchemaRegistryCluster) bool {

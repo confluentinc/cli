@@ -114,6 +114,8 @@ const (
 	UnknownValueFormatErrorMsg = "unknown value schema format"
 	TopicExistsErrorMsg        = "topic \"%s\" already exists for Kafka cluster \"%s\""
 	TopicExistsSuggestions     = ListTopicSuggestions
+	NoAPISecretStoredOrPassedMsg 			= "no API secret for API key \"%s\" of resource \"%s\" passed via flag or stored in local CLI state"
+	NoAPISecretStoredOrPassedSuggestions 	= "Pass the API secret with flag \"--api-secret\" or store with `ccloud api-key store %s --resource %s`."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
