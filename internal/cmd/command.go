@@ -101,20 +101,20 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	}
 
 	authTokenHandler := &pauth.AuthTokenHandlerImpl{}
-	nonInteractiveLoginHandler := pauth.NewNonInteractiveLoginHandler(authTokenHandler, netrcHandler, form.NewPrompt(os.Stdin), logger)
+	loginTokenHandler := pauth.NewLoginTokenHandler(authTokenHandler, netrcHandler, form.NewPrompt(os.Stdin), logger)
 	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
-		Config:                     cfg,
-		ConfigLoadingError:         configLoadingErr,
-		UpdateClient:               updateClient,
-		CLIName:                    cliName,
-		Logger:                     logger,
-		FlagResolver:               resolver,
-		Version:                    ver,
-		Analytics:                  analyticsClient,
-		NonInteractiveLoginHandler: nonInteractiveLoginHandler,
-		JWTValidator:               jwtValidator,
+		Config:             cfg,
+		ConfigLoadingError: configLoadingErr,
+		UpdateClient:       updateClient,
+		CLIName:            cliName,
+		Logger:             logger,
+		FlagResolver:       resolver,
+		Version:            ver,
+		Analytics:          analyticsClient,
+		LoginTokenHandler:  loginTokenHandler,
+		JWTValidator:       jwtValidator,
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 	shellCompleter := completer.NewShellCompleter(cli)
@@ -129,7 +129,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, nonInteractiveLoginHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, loginTokenHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {

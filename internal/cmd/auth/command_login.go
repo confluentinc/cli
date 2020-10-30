@@ -29,27 +29,27 @@ type loginCommand struct {
 	Logger          *log.Logger
 	analyticsClient analytics.Client
 	// for testing
-	MDSClientManager           pauth.MDSClientManager
-	anonHTTPClientFactory      func(baseURL string, logger *log.Logger) *ccloud.Client
-	jwtHTTPClientFactory       func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler               netrc.NetrcHandler
-	nonInteractiveLoginHandler pauth.NonInteractiveLoginHandler
+	MDSClientManager      pauth.MDSClientManager
+	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
+	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
+	netrcHandler          netrc.NetrcHandler
+	loginTokenHandler     pauth.LoginTokenHandler
 }
 
 func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
-	nonInteractiveLoginHandler pauth.NonInteractiveLoginHandler) *loginCommand {
+	loginTokenHandler pauth.LoginTokenHandler) *loginCommand {
 	cmd := &loginCommand{
-		cliName:                    cliName,
-		Logger:                     log,
-		analyticsClient:            analyticsClient,
-		anonHTTPClientFactory:      anonHTTPClientFactory,
-		jwtHTTPClientFactory:       jwtHTTPClientFactory,
-		MDSClientManager:           mdsClientManager,
-		netrcHandler:               netrcHandler,
-		nonInteractiveLoginHandler: nonInteractiveLoginHandler,
+		cliName:               cliName,
+		Logger:                log,
+		analyticsClient:       analyticsClient,
+		anonHTTPClientFactory: anonHTTPClientFactory,
+		jwtHTTPClientFactory:  jwtHTTPClientFactory,
+		MDSClientManager:      mdsClientManager,
+		netrcHandler:          netrcHandler,
+		loginTokenHandler:     loginTokenHandler,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -125,7 +125,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
 	client := a.anonHTTPClientFactory(url, a.Logger)
 
-	token, creds, err := a.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
+	token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
 	if err != nil {
 		return "", nil, err
 	}
@@ -133,7 +133,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 		return token, creds, nil
 	}
 
-	token, creds, err = a.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+	token, creds, err = a.loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
 		URL:     url,
 	})
@@ -144,7 +144,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 		return token, creds, nil
 	}
 
-	return a.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromPrompt(cmd, client, url)
+	return a.loginTokenHandler.GetCCloudTokenAndCredentialsFromPrompt(cmd, client, url)
 }
 
 func (a *loginCommand) getCCloudContextState(cmd *cobra.Command, url string, email string, token string) (*v2.ContextState, error) {
@@ -242,7 +242,7 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 		return "", nil, err
 	}
 
-	token, creds, err := a.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
+	token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
 	if err != nil {
 		return "", nil, err
 	}
@@ -250,7 +250,7 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 		return token, creds, nil
 	}
 
-	token, creds, err = a.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
+	token, creds, err = a.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
 		URL:     url,
 	})
@@ -261,7 +261,7 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 		return token, creds, nil
 	}
 
-	return a.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
+	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
 }
 
 func (a *loginCommand) getMDSClient(cmd *cobra.Command, url string, caCertPath string) (*mds.APIClient, error) {

@@ -1,4 +1,5 @@
 package auth
+
 import (
 	"context"
 	"os"
@@ -19,38 +20,37 @@ import (
 )
 
 const (
-	username = "chrissy"
-	password = "password"
-	deprecatedEnvUser = "deprecated-chrissy"
-	deprecatedEnvPassword = "deprecated-password"
-	refreshToken = "refresh-token"
-	ssoAuthToken = "ccloud-sso-auth-token"
-	promptUsername = "prompt-chrissy"
-	promptPassword = "  prompt-password  "
+	username                   = "chrissy"
+	password                   = "password"
+	deprecatedEnvUser          = "deprecated-chrissy"
+	deprecatedEnvPassword      = "deprecated-password"
+	refreshToken               = "refresh-token"
+	ssoAuthToken               = "ccloud-sso-auth-token"
+	promptUsername             = "prompt-chrissy"
+	promptPassword             = "  prompt-password  "
 	ccloudCredentialsAuthToken = "ccloud-credentials-auth-token"
-	confluentAuthToken = "confluent-auth-token"
+	confluentAuthToken         = "confluent-auth-token"
 
 	netrcFileName = ".netrc"
 )
 
 var (
 	usernamePasswordCredentials = &Credentials{
-		Username:     username,
-		Password:     password,
+		Username: username,
+		Password: password,
 	}
 	deprecateEnvCredentials = &Credentials{
-		Username:     deprecatedEnvUser,
-		Password:     deprecatedEnvPassword,
+		Username: deprecatedEnvUser,
+		Password: deprecatedEnvPassword,
 	}
 	ssoCredentials = &Credentials{
 		Username:     username,
 		RefreshToken: refreshToken,
 	}
 	promptCredentials = &Credentials{
-		Username:     promptUsername,
-		Password:     promptPassword,
+		Username: promptUsername,
+		Password: promptPassword,
 	}
-
 
 	ccloudCredMachine = &netrc.Machine{
 		Name:     "ccloud-cred",
@@ -72,21 +72,21 @@ var (
 	}
 )
 
-type NonInteractiveLoginHandlerTestSuite struct {
+type LoginTokenHandlerTestSuite struct {
 	suite.Suite
 	require *require.Assertions
 
-	ccloudClient *ccloud.Client
-	mdsClient    *mdsv1.APIClient
-	logger       *log.Logger
+	ccloudClient     *ccloud.Client
+	mdsClient        *mdsv1.APIClient
+	logger           *log.Logger
 	authTokenHandler AuthTokenHandler
-	netrcHandler  netrc.NetrcHandler
-	prompt       mock.Prompt
+	netrcHandler     netrc.NetrcHandler
+	prompt           mock.Prompt
 
-	nonInteractiveLoginHandler NonInteractiveLoginHandler
+	loginTokenHandler LoginTokenHandler
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) SetupSuite() {
+func (suite *LoginTokenHandlerTestSuite) SetupSuite() {
 	suite.ccloudClient = &ccloud.Client{
 		User: &sdkMock.User{
 			CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
@@ -99,10 +99,10 @@ func (suite *NonInteractiveLoginHandlerTestSuite) SetupSuite() {
 	suite.mdsClient = &mdsv1.APIClient{}
 	suite.logger = log.New()
 	suite.authTokenHandler = &mock.MockAuthTokenHandler{
-		GetCCloudUserSSOFunc: func(client *ccloud.Client, email string) (*orgv1.User,error) {
+		GetCCloudUserSSOFunc: func(client *ccloud.Client, email string) (*orgv1.User, error) {
 			return &orgv1.User{}, nil
 		},
-		GetCCloudCredentialsTokenFunc: func(client *ccloud.Client, email, password string) (string,error) {
+		GetCCloudCredentialsTokenFunc: func(client *ccloud.Client, email, password string) (string, error) {
 			return ccloudCredentialsAuthToken, nil
 		},
 		GetCCloudSSOTokenFunc: func(client *ccloud.Client, url string, noBrowser bool, email string, logger *log.Logger) (string, string, error) {
@@ -140,93 +140,93 @@ func (suite *NonInteractiveLoginHandlerTestSuite) SetupSuite() {
 	}
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) SetupTest() {
+func (suite *LoginTokenHandlerTestSuite) SetupTest() {
 	suite.require = require.New(suite.T())
 	suite.clearCCloudEnvironmentVariables()
 	suite.clearConfluentEnvironmentVariables()
-	suite.nonInteractiveLoginHandler = NewNonInteractiveLoginHandler(suite.authTokenHandler, suite.netrcHandler, &suite.prompt, suite.logger)
+	suite.loginTokenHandler = NewLoginTokenHandler(suite.authTokenHandler, suite.netrcHandler, &suite.prompt, suite.logger)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromEnvVar() {
+func (suite *LoginTokenHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromEnvVar() {
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(CCloudEmailEnvVar, username))
-	token, creds, err := suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
+	token, creds, err := suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
 	suite.require.NoError(err)
 	suite.require.Empty(token)
 	suite.require.Nil(creds)
 
 	suite.setCCloudEnvironmentVariables()
-	token, creds, err = suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
+	token, creds, err = suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
 	suite.require.NoError(err)
 	suite.require.Equal(ccloudCredentialsAuthToken, token)
 	suite.compareCredentials(usernamePasswordCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromDeprecatedEnvVar() {
+func (suite *LoginTokenHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromDeprecatedEnvVar() {
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(CCloudEmailDeprecatedEnvVar, username))
-	token, creds, err := suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
+	token, creds, err := suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
 	suite.require.NoError(err)
 	suite.require.Empty(token)
 	suite.require.Nil(creds)
 
 	suite.setCCloudDeprecatedEnvironmentVariables()
-	token, creds, err = suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
+	token, creds, err = suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
 	suite.require.NoError(err)
 	suite.require.Equal(ccloudCredentialsAuthToken, token)
 	suite.compareCredentials(deprecateEnvCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromEnvVarOrderOfPrecedence() {
+func (suite *LoginTokenHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromEnvVarOrderOfPrecedence() {
 	suite.setCCloudEnvironmentVariables()
 	suite.setCCloudDeprecatedEnvironmentVariables()
-	token, creds, err := suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
+	token, creds, err := suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.ccloudClient)
 	suite.require.NoError(err)
 	suite.require.Equal(ccloudCredentialsAuthToken, token)
 	suite.compareCredentials(usernamePasswordCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromEnvVar() {
+func (suite *LoginTokenHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromEnvVar() {
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(ConfluentUsernameEnvVar, username))
-	token, creds, err := suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
+	token, creds, err := suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
 	suite.require.NoError(err)
 	suite.require.Empty(token)
 	suite.require.Nil(creds)
 
 	suite.setConfluentEnvironmentVariables()
-	token, creds, err = suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
+	token, creds, err = suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
 	suite.require.NoError(err)
 	suite.require.Equal(confluentAuthToken, token)
 	suite.compareCredentials(usernamePasswordCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromDeprecatedEnvVar() {
+func (suite *LoginTokenHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromDeprecatedEnvVar() {
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(ConfluentUsernameDeprecatedEnvVar, username))
-	token, creds, err := suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
+	token, creds, err := suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
 	suite.require.NoError(err)
 	suite.require.Empty(token)
 	suite.require.Nil(creds)
 
 	suite.setConfluentDeprecatedEnvironmentVariables()
-	token, creds, err = suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
+	token, creds, err = suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
 	suite.require.NoError(err)
 	suite.require.Equal(confluentAuthToken, token)
 	suite.compareCredentials(deprecateEnvCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromEnvVarOrderOfPrecedence() {
+func (suite *LoginTokenHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromEnvVarOrderOfPrecedence() {
 	suite.setConfluentEnvironmentVariables()
 	suite.setConfluentDeprecatedEnvironmentVariables()
-	token, creds, err := suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
+	token, creds, err := suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(&cobra.Command{}, suite.mdsClient)
 	suite.require.NoError(err)
 	suite.require.Equal(confluentAuthToken, token)
 	suite.compareCredentials(usernamePasswordCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromNetrcUsernamePassword() {
-	token, creds, err := suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(&cobra.Command{}, suite.ccloudClient, "", netrc.GetMatchingNetrcMachineParams{
+func (suite *LoginTokenHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromNetrcUsernamePassword() {
+	token, creds, err := suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(&cobra.Command{}, suite.ccloudClient, "", netrc.GetMatchingNetrcMachineParams{
 		CLIName: "ccloud",
 		IsSSO:   false,
 	})
@@ -235,8 +235,8 @@ func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentia
 	suite.compareCredentials(usernamePasswordCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromNetrcSSO() {
-	token, creds, err := suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(&cobra.Command{}, suite.ccloudClient, "", netrc.GetMatchingNetrcMachineParams{
+func (suite *LoginTokenHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromNetrcSSO() {
+	token, creds, err := suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(&cobra.Command{}, suite.ccloudClient, "", netrc.GetMatchingNetrcMachineParams{
 		CLIName: "ccloud",
 		IsSSO:   true,
 	})
@@ -245,8 +245,8 @@ func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentia
 	suite.compareCredentials(ssoCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromNetrc() {
-	token, creds, err := suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(&cobra.Command{}, suite.mdsClient, netrc.GetMatchingNetrcMachineParams{
+func (suite *LoginTokenHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromNetrc() {
+	token, creds, err := suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(&cobra.Command{}, suite.mdsClient, netrc.GetMatchingNetrcMachineParams{
 		CLIName: "ccloud",
 		IsSSO:   false,
 	})
@@ -255,60 +255,60 @@ func (suite *NonInteractiveLoginHandlerTestSuite) TestGetConfluentTokenAndCreden
 	suite.compareCredentials(usernamePasswordCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromPrompt() {
-	token, creds, err := suite.nonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromPrompt(&cobra.Command{}, suite.ccloudClient, "")
+func (suite *LoginTokenHandlerTestSuite) TestGetCCloudTokenAndCredentialsFromPrompt() {
+	token, creds, err := suite.loginTokenHandler.GetCCloudTokenAndCredentialsFromPrompt(&cobra.Command{}, suite.ccloudClient, "")
 	suite.require.NoError(err)
 	suite.require.Equal(ccloudCredentialsAuthToken, token)
 	suite.compareCredentials(promptCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromPrompt() {
-	token, creds, err := suite.nonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromPrompt(&cobra.Command{}, suite.mdsClient)
+func (suite *LoginTokenHandlerTestSuite) TestGetConfluentTokenAndCredentialsFromPrompt() {
+	token, creds, err := suite.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(&cobra.Command{}, suite.mdsClient)
 	suite.require.NoError(err)
 	suite.require.Equal(confluentAuthToken, token)
 	suite.compareCredentials(promptCredentials, creds)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) compareCredentials(expect, actual *Credentials) {
+func (suite *LoginTokenHandlerTestSuite) compareCredentials(expect, actual *Credentials) {
 	suite.require.Equal(expect.Username, actual.Username)
 	suite.require.Equal(expect.Password, actual.Password)
 	suite.require.Equal(expect.RefreshToken, actual.RefreshToken)
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) clearCCloudEnvironmentVariables() {
+func (suite *LoginTokenHandlerTestSuite) clearCCloudEnvironmentVariables() {
 	suite.require.NoError(os.Setenv(CCloudEmailEnvVar, ""))
 	suite.require.NoError(os.Setenv(CCloudPasswordEnvVar, ""))
 	suite.require.NoError(os.Setenv(CCloudEmailDeprecatedEnvVar, ""))
 	suite.require.NoError(os.Setenv(CCloudPasswordDeprecatedEnvVar, ""))
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) setCCloudEnvironmentVariables() {
+func (suite *LoginTokenHandlerTestSuite) setCCloudEnvironmentVariables() {
 	suite.require.NoError(os.Setenv(CCloudEmailEnvVar, username))
 	suite.require.NoError(os.Setenv(CCloudPasswordEnvVar, password))
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) setCCloudDeprecatedEnvironmentVariables() {
+func (suite *LoginTokenHandlerTestSuite) setCCloudDeprecatedEnvironmentVariables() {
 	suite.require.NoError(os.Setenv(CCloudEmailDeprecatedEnvVar, deprecatedEnvUser))
 	suite.require.NoError(os.Setenv(CCloudPasswordDeprecatedEnvVar, deprecatedEnvPassword))
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) setConfluentEnvironmentVariables() {
+func (suite *LoginTokenHandlerTestSuite) setConfluentEnvironmentVariables() {
 	suite.require.NoError(os.Setenv(ConfluentUsernameEnvVar, username))
 	suite.require.NoError(os.Setenv(ConfluentPasswordEnvVar, password))
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) setConfluentDeprecatedEnvironmentVariables() {
+func (suite *LoginTokenHandlerTestSuite) setConfluentDeprecatedEnvironmentVariables() {
 	suite.require.NoError(os.Setenv(ConfluentUsernameDeprecatedEnvVar, deprecatedEnvUser))
 	suite.require.NoError(os.Setenv(ConfluentPasswordDeprecatedEnvVar, deprecatedEnvPassword))
 }
 
-func (suite *NonInteractiveLoginHandlerTestSuite) clearConfluentEnvironmentVariables() {
+func (suite *LoginTokenHandlerTestSuite) clearConfluentEnvironmentVariables() {
 	suite.require.NoError(os.Setenv(ConfluentUsernameEnvVar, ""))
 	suite.require.NoError(os.Setenv(ConfluentPasswordEnvVar, ""))
 	suite.require.NoError(os.Setenv(ConfluentUsernameDeprecatedEnvVar, ""))
 	suite.require.NoError(os.Setenv(ConfluentPasswordDeprecatedEnvVar, ""))
 }
 
-func TestNonInteractiveLoginHandler(t *testing.T) {
-	suite.Run(t, new(NonInteractiveLoginHandlerTestSuite))
+func TestLoginTokenHandler(t *testing.T) {
+	suite.Run(t, new(LoginTokenHandlerTestSuite))
 }

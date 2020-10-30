@@ -43,7 +43,7 @@ const (
 )
 
 var (
-	mockNonInteractiveLoginHandler = &cliMock.MockNonInteractiveLoginHandler{
+	mockLoginTokenHandler = &cliMock.MockLoginTokenHandler{
 		GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (string, *pauth.Credentials, error) {
 			return "", nil, nil
 		},
@@ -128,10 +128,10 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:                  cliMock.NewDummyAnalyticsMock(),
-				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
-				Config:                     cfg,
-				JWTValidator:               pcmd.NewJWTValidator(tt.fields.Logger),
+				Analytics:         cliMock.NewDummyAnalyticsMock(),
+				LoginTokenHandler: mockLoginTokenHandler,
+				Config:            cfg,
+				JWTValidator:      pcmd.NewJWTValidator(tt.fields.Logger),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -167,9 +167,9 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:                  cliMock.NewDummyAnalyticsMock(),
-		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
-		JWTValidator:               pcmd.NewJWTValidator(log.New()),
+		Analytics:         cliMock.NewDummyAnalyticsMock(),
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -200,9 +200,9 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:                  analyticsClient,
-		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
-		JWTValidator:               pcmd.NewJWTValidator(log.New()),
+		Analytics:         analyticsClient,
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -236,10 +236,10 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:                  analyticsClient,
-		Config:                     cfg,
-		NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
-		JWTValidator:               pcmd.NewJWTValidator(log.New()),
+		Analytics:         analyticsClient,
+		Config:            cfg,
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -317,7 +317,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			ver := pmock.NewVersionMock()
 
-			mockNonInteractiveLoginHandler := &cliMock.MockNonInteractiveLoginHandler{
+			mockLoginTokenHandler := &cliMock.MockLoginTokenHandler{
 				GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
 					return validAuthToken, nil, nil
 				},
@@ -338,10 +338,10 @@ func Test_UpdateToken(t *testing.T) {
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:                  cliMock.NewDummyAnalyticsMock(),
-				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
-				Config:                     cfg,
-				JWTValidator:               pcmd.NewJWTValidator(log.New()),
+				Analytics:         cliMock.NewDummyAnalyticsMock(),
+				LoginTokenHandler: mockLoginTokenHandler,
+				Config:            cfg,
+				JWTValidator:      pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
@@ -353,9 +353,9 @@ func Test_UpdateToken(t *testing.T) {
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
 			if tt.cliName == "ccloud" {
-				require.True(t, mockNonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
+				require.True(t, mockLoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
 			} else {
-				require.True(t, mockNonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
+				require.True(t, mockLoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
 			}
 		})
 	}
@@ -417,10 +417,10 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:                  analyticsClient,
-				Config:                     tt.config,
-				NonInteractiveLoginHandler: mockNonInteractiveLoginHandler,
-				JWTValidator:               pcmd.NewJWTValidator(log.New()),
+				Analytics:         analyticsClient,
+				Config:            tt.config,
+				LoginTokenHandler: mockLoginTokenHandler,
+				JWTValidator:      pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{

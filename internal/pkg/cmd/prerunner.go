@@ -35,16 +35,16 @@ const DoNotTrack = "do-not-track-analytics"
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config                     *v3.Config
-	ConfigLoadingError         error
-	UpdateClient               update.Client
-	CLIName                    string
-	Logger                     *log.Logger
-	Analytics                  analytics.Client
-	FlagResolver               FlagResolver
-	Version                    *version.Version
-	NonInteractiveLoginHandler pauth.NonInteractiveLoginHandler
-	JWTValidator               JWTValidator
+	Config             *v3.Config
+	ConfigLoadingError error
+	UpdateClient       update.Client
+	CLIName            string
+	Logger             *log.Logger
+	Analytics          analytics.Client
+	FlagResolver       FlagResolver
+	Version            *version.Version
+	LoginTokenHandler  pauth.LoginTokenHandler
+	JWTValidator       JWTValidator
 }
 
 type CLICommand struct {
@@ -124,7 +124,7 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 	var err error
 	if r.CLIName == "ccloud" {
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.NonInteractiveLoginHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
+		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
 		if err != nil {
 			return "", err
 		}
@@ -134,7 +134,7 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 		if err != nil {
 			return "", err
 		}
-		token, _, err = r.NonInteractiveLoginHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
+		token, _, err = r.LoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
 		if err != nil {
 			return "", err
 		}
