@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
@@ -14,8 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -102,12 +99,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	state, err := a.getCCloudContextState(cmd, url, creds.Username, token)
-	if err != nil {
-		return err
-	}
-
-	err = a.addOrUpdateContext(creds.Username, url, state, "")
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, creds.Username, url, token, a.jwtHTTPClientFactory(context.Background(), token, url, a.Logger))
 	if err != nil {
 		return err
 	}
@@ -118,7 +110,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	}
 
 	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
-	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return err
 }
 
@@ -147,60 +139,6 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 	return a.loginTokenHandler.GetCCloudTokenAndCredentialsFromPrompt(cmd, client, url)
 }
 
-func (a *loginCommand) getCCloudContextState(cmd *cobra.Command, url string, email string, token string) (*v2.ContextState, error) {
-	ctxName := generateContextName(email, url)
-	user, err := a.getCCloudUser(cmd, url, token)
-	if err != nil {
-		return nil, err
-	}
-	var state *v2.ContextState
-	ctx, err := a.Config.FindContext(ctxName)
-	if err == nil {
-		state = ctx.State
-	} else {
-		state = new(v2.ContextState)
-	}
-	state.AuthToken = token
-
-	if state.Auth == nil {
-		state.Auth = &v1.AuthConfig{}
-	}
-
-	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
-	// overwrite `Account` (current/active environment) since we want that to be remembered
-	// between CLI sessions.
-	state.Auth.User = user.User
-	state.Auth.Accounts = user.Accounts
-	state.Auth.Organization = user.Organization
-
-	// Default to 0th environment if no suitable environment is already configured
-	hasGoodEnv := false
-	if state.Auth.Account != nil {
-		for _, acc := range state.Auth.Accounts {
-			if acc.Id == state.Auth.Account.Id {
-				hasGoodEnv = true
-			}
-		}
-	}
-	if !hasGoodEnv {
-		state.Auth.Account = state.Auth.Accounts[0]
-	}
-
-	return state, nil
-}
-
-func (a *loginCommand) getCCloudUser(cmd *cobra.Command, url string, token string) (*orgv1.GetUserReply, error) {
-	client := a.jwtHTTPClientFactory(context.Background(), token, url, a.Config.Logger)
-	user, err := client.Auth.User(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	if len(user.Accounts) == 0 {
-		return nil, errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
-	}
-	return user, nil
-}
-
 func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	url, err := a.getURL(cmd)
 	if err != nil {
@@ -217,12 +155,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	state := &v2.ContextState{
-		Auth:      nil,
-		AuthToken: token,
-	}
-
-	err = a.addOrUpdateContext(creds.Username, url, state, caCertPath)
+	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, creds.Username, url, token, caCertPath)
 	if err != nil {
 		return err
 	}
@@ -304,44 +237,6 @@ func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 	return url, nil
 }
 
-func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
-	ctxName := generateContextName(username, url)
-	credName := generateCredentialName(username)
-	platform := &v2.Platform{
-		Name:       strings.TrimPrefix(url, "https://"),
-		Server:     url,
-		CaCertPath: caCertPath,
-	}
-	credential := &v2.Credential{
-		Name:     credName,
-		Username: username,
-		// don't save password if they entered it interactively.
-	}
-	err := a.Config.SavePlatform(platform)
-	if err != nil {
-		return err
-	}
-	err = a.Config.SaveCredential(credential)
-	if err != nil {
-		return err
-	}
-	if ctx, ok := a.Config.Contexts[ctxName]; ok {
-		a.Config.ContextStates[ctxName] = state
-		ctx.State = state
-	} else {
-		err = a.Config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-			"", nil, state)
-	}
-	if err != nil {
-		return err
-	}
-	err = a.Config.SetContext(ctxName)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, creds *pauth.Credentials) error {
 	saveToNetrc, err := cmd.Flags().GetBool("save")
 	if err != nil {
@@ -360,14 +255,6 @@ func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, creds *pauth.Credent
 		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.GetFileName())
 	}
 	return nil
-}
-
-func generateContextName(username string, url string) string {
-	return fmt.Sprintf("login-%s-%s", username, url)
-}
-
-func generateCredentialName(username string) string {
-	return fmt.Sprintf("username-%s", username)
 }
 
 func validateURL(url string, cli string) (string, bool, string) {
