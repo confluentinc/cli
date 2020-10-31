@@ -79,7 +79,7 @@ func (u *UpdateTokenHandlerImpl) UpdateConfluentAuthTokenUsingNetrcCredentials(c
 	}
 	mdsClientManager := MDSClientManagerImpl{}
 	mdsClient, err := mdsClientManager.GetMDSClient(ctx, ctx.Platform.CaCertPath, false, ctx.Platform.Server, logger)
-	token, err := u.confluentTokenHandler.GetAuthToken(mdsClient, email, password)
+	token, err := u.confluentTokenHandler.GetAuthToken(mdsClient, email, password, logger)
 	if err != nil {
 		logger.Debugf(failedNetrcTokenMsg, err)
 		return err

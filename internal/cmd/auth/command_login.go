@@ -220,7 +220,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password)
+	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password, a.Logger)
 	if err != nil {
 		return err
 	}
