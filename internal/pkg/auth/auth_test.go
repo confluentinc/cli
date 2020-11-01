@@ -261,7 +261,7 @@ func TestUpdateConfluent(t *testing.T) {
 	initialAuthToken := "initial-auth"
 	finalAuthToken := "final-auth"
 	mockConfluentTokenHandler := &authMock.MockConfluentTokenHandler{
-		GetAuthTokenFunc: func(mdsClient *mds.APIClient, email, password string) (s string, e error) {
+		GetAuthTokenFunc: func(mdsClient *mds.APIClient, email, password string, logger *log.Logger) (s string, e error) {
 			require.Equal(t, email, mockConfigUser)
 			require.Equal(t, password, mockConfigPassword)
 			return finalAuthToken, nil
@@ -321,7 +321,7 @@ func TestFailedCCloudUpdate(t *testing.T) {
 func TestFailedConfluentUpdate(t *testing.T) {
 	initialAuthToken := "initial-auth"
 	mockConfluentTokenHandler := &authMock.MockConfluentTokenHandler{
-		GetAuthTokenFunc: func(mdsClient *mds.APIClient, email, password string) (s string, e error) {
+		GetAuthTokenFunc: func(mdsClient *mds.APIClient, email, password string, logger *log.Logger) (s string, e error) {
 			return "", errors.Errorf("Failed to get auth token")
 		},
 	}

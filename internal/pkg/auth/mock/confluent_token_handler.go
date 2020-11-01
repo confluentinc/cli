@@ -7,25 +7,27 @@ package mock
 import (
 	sync "sync"
 
+	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 // MockConfluentTokenHandler is a mock of ConfluentTokenHandler interface
 type MockConfluentTokenHandler struct {
 	lockGetAuthToken sync.Mutex
-	GetAuthTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, email, password string) (string, error)
+	GetAuthTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, email, password string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error)
 
 	calls struct {
 		GetAuthToken []struct {
 			MdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
 			Email     string
 			Password  string
+			Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
 	}
 }
 
 // GetAuthToken mocks base method by wrapping the associated func.
-func (m *MockConfluentTokenHandler) GetAuthToken(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, email, password string) (string, error) {
+func (m *MockConfluentTokenHandler) GetAuthToken(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, email, password string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error) {
 	m.lockGetAuthToken.Lock()
 	defer m.lockGetAuthToken.Unlock()
 
@@ -37,15 +39,17 @@ func (m *MockConfluentTokenHandler) GetAuthToken(mdsClient *github_com_confluent
 		MdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
 		Email     string
 		Password  string
+		Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 	}{
 		MdsClient: mdsClient,
 		Email:     email,
 		Password:  password,
+		Logger:    logger,
 	}
 
 	m.calls.GetAuthToken = append(m.calls.GetAuthToken, call)
 
-	return m.GetAuthTokenFunc(mdsClient, email, password)
+	return m.GetAuthTokenFunc(mdsClient, email, password, logger)
 }
 
 // GetAuthTokenCalled returns true if GetAuthToken was called at least once.
@@ -61,6 +65,7 @@ func (m *MockConfluentTokenHandler) GetAuthTokenCalls() []struct {
 	MdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
 	Email     string
 	Password  string
+	Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
 	m.lockGetAuthToken.Lock()
 	defer m.lockGetAuthToken.Unlock()
