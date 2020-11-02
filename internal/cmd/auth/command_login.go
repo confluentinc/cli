@@ -65,7 +65,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 	}
 	if a.cliName == "ccloud" {
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
-		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
+		loginCmd.Flags().String("url", pauth.CCloudURL, "Confluent Cloud service URL.")
 	} else {
 		loginCmd.RunE = pcmd.NewCLIRunE(a.loginMDS)
 		loginCmd.Flags().String("url", "", "Metadata service URL.")

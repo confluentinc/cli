@@ -10,11 +10,13 @@ import (
 	"github.com/mohae/deepcopy"
 	"github.com/spf13/cobra"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
 
 type DynamicContext struct {
@@ -229,6 +231,26 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v2.ContextStat
 		}
 	}
 	return state, nil
+}
+
+func (d *DynamicContext) NoninteractiveCCloudLogin(loginTokenHandler pauth.LoginTokenHandler, cmd *cobra.Command) {
+	token, creds, err := d.getCCloudTokenAndCredentials(loginTokenHandler, cmd, pauth.CCloudURL)
+	fmt.Println(token, creds, err)
+	return
+}
+
+func (d *DynamicContext) getCCloudTokenAndCredentials(loginTokenHandler pauth.LoginTokenHandler, cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
+	token, creds, err := loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, d.client)
+	if err != nil {
+		return "", nil, err
+	}
+	if len(token) > 0 {
+		return token, creds, nil
+	}
+	return loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+		CLIName: d.Config.CLIName,
+		URL:     url,
+	})
 }
 
 func (d *DynamicContext) HasAPIKey(cmd *cobra.Command, clusterId string) (bool, error) {

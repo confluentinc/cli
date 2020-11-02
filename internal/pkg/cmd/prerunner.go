@@ -68,88 +68,6 @@ type HasAPIKeyCLICommand struct {
 	Context *DynamicContext
 }
 
-func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
-	if config == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
-	}
-	ctx, err := config.Context(cmd)
-	if err != nil {
-		return err
-	}
-	if ctx == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
-	}
-	err = r.JWTValidator.Validate(ctx.Context)
-	if err == nil {
-		return nil
-	}
-	switch err.(type) {
-	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
-	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), cmd, ctx)
-	}
-	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
-	} else {
-		return r.updateToken(err, cmd, ctx)
-	}
-}
-
-func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
-	if ctx == nil {
-		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
-		return tokenError
-	}
-	r.Logger.Debug("Updating auth token")
-	token, err := r.getNewAuthToken(cmd, ctx)
-	if err != nil || token == "" {
-		r.Logger.Debug("Failed to update auth token")
-		return tokenError
-	}
-	r.Logger.Debug("Successfully update auth token")
-	err = ctx.UpdateAuthToken(token)
-	if err != nil {
-		return tokenError
-	}
-	return nil
-}
-
-func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
-	var token string
-	params := netrc.GetMatchingNetrcMachineParams{
-		CLIName: r.CLIName,
-		CtxName: ctx.Name,
-	}
-	var err error
-	if r.CLIName == "ccloud" {
-		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
-		if err != nil {
-			return "", err
-		}
-		token, _, err = r.LoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
-		if err != nil {
-			return "", err
-		}
-	}
-	return token, err
-}
-
-func (a *AuthenticatedCLICommand) AuthToken() string {
-	return a.State.AuthToken
-}
-
-func (a *AuthenticatedCLICommand) EnvironmentId() string {
-	return a.State.Auth.Account.Id
-}
-
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, prerunner),
@@ -200,6 +118,14 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
+}
+
+func (a *AuthenticatedCLICommand) AuthToken() string {
+	return a.State.AuthToken
+}
+
+func (a *AuthenticatedCLICommand) EnvironmentId() string {
+	return a.State.Auth.Account.Id
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
@@ -310,6 +236,28 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 	}
 }
 
+func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
+	return nil
+}
+
+func (r *PreRun) getCCloudTokenAndCrendentils(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+	url := pauth.CCloudURL
+	client := a.anonHTTPClientFactory(url, a.Logger)
+
+	token, creds, err := r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
+	if err != nil {
+		return "", nil, err
+	}
+	if len(token) > 0 {
+		return token, creds, nil
+	}
+
+	return r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+		CLIName: r.CLIName,
+		URL:     url,
+	})
+}
+
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
@@ -389,6 +337,84 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		}
 		return nil
 	}
+}
+
+func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
+	if config == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	ctx, err := config.Context(cmd)
+	if err != nil {
+		return err
+	}
+	if ctx == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	err = r.JWTValidator.Validate(ctx.Context)
+	if err == nil {
+		return nil
+	}
+	switch err.(type) {
+	case *ccloud.InvalidTokenError:
+		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
+	case *ccloud.ExpiredTokenError:
+		return r.updateToken(new(ccloud.ExpiredTokenError), cmd, ctx)
+	}
+	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
+	} else {
+		return r.updateToken(err, cmd, ctx)
+	}
+}
+
+func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
+	if ctx == nil {
+		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
+		return tokenError
+	}
+	r.Logger.Debug("Updating auth token")
+	token, err := r.getNewAuthToken(cmd, ctx)
+	if err != nil || token == "" {
+		r.Logger.Debug("Failed to update auth token")
+		return tokenError
+	}
+	r.Logger.Debug("Successfully update auth token")
+	err = ctx.UpdateAuthToken(token)
+	if err != nil {
+		return tokenError
+	}
+	return nil
+}
+
+func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
+	var token string
+	params := netrc.GetMatchingNetrcMachineParams{
+		CLIName: r.CLIName,
+		CtxName: ctx.Name,
+	}
+	var err error
+	if r.CLIName == "ccloud" {
+		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		mdsClientManager := pauth.MDSClientManagerImpl{}
+		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		if err != nil {
+			return "", err
+		}
+		token, _, err = r.LoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
+		if err != nil {
+			return "", err
+		}
+	}
+	return token, err
+}
+
+func (r *PreRun) getCCloudAuthClient() *ccloud.Client {
+	return ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
 }
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster

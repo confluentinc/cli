@@ -16,6 +16,8 @@ import (
 )
 
 const (
+	CCloudURL = "https://confluent.cloud"
+
 	CCloudEmailEnvVar       = "CCLOUD_EMAIL"
 	ConfluentUsernameEnvVar = "CONFLUENT_USERNAME"
 	CCloudPasswordEnvVar    = "CCLOUD_PASSWORD"
