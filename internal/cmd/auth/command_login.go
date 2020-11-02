@@ -122,6 +122,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
+// Order of precedence: env vars > netrc > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
 	client := a.anonHTTPClientFactory(url, a.Logger)
 
@@ -236,6 +238,8 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
+// Order of precedence: env vars > netrc > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url string, caCertPath string) (string, *pauth.Credentials, error) {
 	client, err := a.getMDSClient(cmd, url, caCertPath)
 	if err != nil {
