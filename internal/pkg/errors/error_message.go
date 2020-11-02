@@ -116,6 +116,8 @@ const (
 	TopicExistsSuggestions     = ListTopicSuggestions
 	NoAPISecretStoredOrPassedMsg 			= "no API secret for API key \"%s\" of resource \"%s\" passed via flag or stored in local CLI state"
 	NoAPISecretStoredOrPassedSuggestions 	= "Pass the API secret with flag \"--api-secret\" or store with `ccloud api-key store %s --resource %s`."
+	PassedSecretButNotKeyErrorMsg			= "no API key specified"
+	PassedSecretButNotKeySuggestions		= "Use the \"api-key\" flag to specify an API key."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"

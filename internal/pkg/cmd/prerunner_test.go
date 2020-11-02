@@ -2,6 +2,8 @@ package cmd_test
 
 import (
 	"fmt"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"strings"
@@ -341,8 +343,6 @@ func Test_UpdateToken(t *testing.T) {
 	}
 }
 
-// Test that when context is of username login type it should check auth token and login state
-// And when context is of API key credential then it should not ask for user to login
 func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
@@ -352,11 +352,25 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 
 	userNotLoggedIn := v3.UnauthenticatedCloudConfigMock()
 
+	usernameClusterWithoutKeyOrSecret := v3.AuthenticatedCloudConfigMock()
+	usernameClusterWithoutKeyOrSecret.Context().State.AuthToken = validAuthToken
+	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig("lkc-0000").APIKey = ""
+
+	usernameClusterWithStoredSecret := v3.AuthenticatedCloudConfigMock()
+	usernameClusterWithStoredSecret.Context().State.AuthToken = validAuthToken
+	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig("lkc-0000").APIKeys["miles"] = &v0.APIKeyPair{
+		Key:    "miles",
+		Secret: "secret",
+	}
+	usernameClusterWithoutSecret := v3.AuthenticatedCloudConfigMock()
+	usernameClusterWithoutSecret.Context().State.AuthToken = validAuthToken
 	tests := []struct {
 		name           string
 		config         *v3.Config
 		errMsg         string
 		suggestionsMsg string
+		key            string
+		secret         string
 	}{
 		{
 			name:   "username logged in user",
@@ -378,21 +392,46 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			name:   "api credential context",
 			config: v3.APICredentialConfigMock(),
 		},
+		{
+			name:   "api key and secret passed via flags",
+			key:    "miles",
+			secret: "shhhh",
+			config: usernameClusterWithoutKeyOrSecret,
+		},
+		{
+			name: "api key passed via flag with stored secret",
+			key: "miles",
+			config: usernameClusterWithStoredSecret,
+		},
+		{
+			name: "api key passed via flag without stored secret",
+			key: "miles",
+			errMsg: errors.NoAPISecretStoredOrPassedMsg,
+			suggestionsMsg: errors.NoAPISecretStoredOrPassedSuggestions,
+			config: usernameClusterWithoutSecret,
+		},
+		{
+			name:   "just api secret passed via flag",
+			secret: "shhhh",
+			config: usernameClusterWithoutKeyOrSecret,
+			errMsg: errors.PassedSecretButNotKeyErrorMsg,
+			suggestionsMsg: errors.PassedSecretButNotKeySuggestions,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ver := pmock.NewVersionMock()
 			analyticsClient := cliMock.NewDummyAnalyticsMock()
-
+			logger := log.New()
 			r := &pcmd.PreRun{
+				CLIName: "ccloud",
 				Version: ver,
-				Logger:  log.New(),
+				Logger:  logger,
 				UpdateClient: &mock.Client{
 					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
 						return false, "", nil
 					},
 				},
-				CLIName: "ccloud",
 				FlagResolver: &pcmd.FlagResolverImpl{
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
@@ -400,7 +439,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				Analytics:          analyticsClient,
 				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
 				Config:             tt.config,
-				JWTValidator:       pcmd.NewJWTValidator(log.New()),
+				JWTValidator: 		pcmd.NewJWTValidator(logger),
 			}
 
 			root := &cobra.Command{
@@ -408,8 +447,11 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			}
 			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().String("api-key", "", "Kafka cluster API key.")
+			root.Flags().String("api-secret", "", "API key secret.")
+			root.Flags().String("cluster", "", "Kafka cluster ID.")
 
-			_, err := pcmd.ExecuteCommand(rootCmd.Command)
+			_, err := pcmd.ExecuteCommand(rootCmd.Command, "--api-key", tt.key, "--api-secret", tt.secret)
 			if tt.errMsg != "" {
 				require.Error(t, err)
 				require.Equal(t, tt.errMsg, err.Error())
@@ -419,6 +461,135 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+// Test that when context is of username login type it should check auth token and login state
+// And when context is of API key credential then it should not ask for user to login
+//func TestPreRun_HasAPIKeyCommand(t *testing.T) {
+//	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+//	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
+//
+//	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
+//	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
+//
+//	userNotLoggedIn := v3.UnauthenticatedCloudConfigMock()
+//
+//	tests := []struct {
+//		name           string
+//		config         *v3.Config
+//		errMsg         string
+//		suggestionsMsg string
+//	}{
+//		{
+//			name:   "username logged in user",
+//			config: userNameConfigLoggedIn,
+//		},
+//		{
+//			name:           "not logged in user",
+//			config:         userNotLoggedIn,
+//			errMsg:         errors.NotLoggedInErrorMsg,
+//			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
+//		},
+//		{
+//			name:           "username context corrupted auth token",
+//			config:         userNameCfgCorruptedAuthToken,
+//			errMsg:         errors.CorruptedTokenErrorMsg,
+//			suggestionsMsg: errors.CorruptedTokenSuggestions,
+//		},
+//		{
+//			name:   "api credential context",
+//			config: v3.APICredentialConfigMock(),
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			ver := pmock.NewVersionMock()
+//			analyticsClient := cliMock.NewDummyAnalyticsMock()
+//
+//			r := &pcmd.PreRun{
+//				Version: ver,
+//				Logger:  log.New(),
+//				UpdateClient: &mock.Client{
+//					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+//						return false, "", nil
+//					},
+//				},
+//				CLIName: "ccloud",
+//				FlagResolver: &pcmd.FlagResolverImpl{
+//					Prompt: &form.RealPrompt{},
+//					Out:    os.Stdout,
+//				},
+//				Analytics:          analyticsClient,
+//				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+//				Config:             tt.config,
+//				JWTValidator:       pcmd.NewJWTValidator(log.New()),
+//			}
+//
+//			root := &cobra.Command{
+//				Run: func(cmd *cobra.Command, args []string) {},
+//			}
+//			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
+//			root.Flags().CountP("verbose", "v", "Increase verbosity")
+//
+//			_, err := pcmd.ExecuteCommand(rootCmd.Command)
+//			if tt.errMsg != "" {
+//				require.Error(t, err)
+//				require.Equal(t, tt.errMsg, err.Error())
+//				if tt.suggestionsMsg != "" {
+//					errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
+//				}
+//			} else {
+//				require.NoError(t, err)
+//			}
+//		})
+//	}
+//}
+
+func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
+	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
+
+	subcommandFlags := map[string]*pflag.FlagSet {
+		"root"	:	pcmd.ContextSet(),
+		"one"	:	pcmd.EnvironmentContextSet(),
+		"two"	:	pcmd.KeySecretSet(),
+	}
+	logger := log.New()
+	r := &pcmd.PreRun{
+		CLIName: "ccloud",
+		Version: pmock.NewVersionMock(),
+		Logger:  logger,
+		UpdateClient: &mock.Client{
+			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+				return false, "", nil
+			},
+		},
+		FlagResolver: &pcmd.FlagResolverImpl{
+			Prompt: &form.RealPrompt{},
+			Out:    os.Stdout,
+		},
+		Analytics:          cliMock.NewDummyAnalyticsMock(),
+		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
+		Config:             userNameConfigLoggedIn,
+		JWTValidator: 		pcmd.NewJWTValidator(logger),
+	}
+	cmdRoot := &cobra.Command{Use: "root"}
+	root := pcmd.NewAuthenticatedStateFlagCommand(cmdRoot, r, subcommandFlags)
+
+	for subcommand, _ := range subcommandFlags {
+		t.Run(subcommand, func(t *testing.T) {
+			cmd := &cobra.Command{Use: subcommand}
+			root.AddCommand(cmd)
+			//create flagset of all flags that should be included
+			shouldHaveFlags := subcommandFlags["root"]
+			shouldHaveFlags.AddFlagSet(subcommandFlags[subcommand])
+			//iterate through shouldHaveFlags and make sure they are all attached to cmd
+			shouldHaveFlags.VisitAll(func(flag *pflag.Flag) {
+				f := cmd.Flag(flag.Name)
+				require.NotNil(t, f)
+			})
 		})
 	}
 }

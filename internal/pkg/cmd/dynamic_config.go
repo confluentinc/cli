@@ -34,6 +34,10 @@ func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
 		return err
 	}
 	if ctxName != "" {
+		_, err := d.FindContext(ctxName)
+		if err != nil {
+			return err
+		}
 		d.Config.SetOverwrittenCurrContext(d.Config.CurrentContext)
 		d.Config.CurrentContext = ctxName
 	}
@@ -45,8 +49,8 @@ func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
 	if ctx == nil {
 		return nil
 	}
-	ctx.ParseFlagsIntoContext(cmd)
-	return nil
+	err = ctx.ParseFlagsIntoContext(cmd)
+	return err
 }
 
 func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
@@ -56,7 +60,7 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	}
 	return NewDynamicContext(ctx, d.Resolver, d.Client), nil
 }
-
+//Returns active Context wrapped as a new DynamicContext instance
 func (d *DynamicConfig) Context(cmd *cobra.Command) (*DynamicContext, error) {
 	ctx := d.Config.Context()
 	if ctx == nil {

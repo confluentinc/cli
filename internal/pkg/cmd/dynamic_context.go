@@ -20,7 +20,6 @@ type DynamicContext struct {
 	*v3.Context
 	resolver FlagResolver
 	client   *ccloud.Client
-	staticContext *v3.Context
 }
 
 func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
@@ -32,7 +31,6 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 }
 
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
-	fmt.Println("parsing flags into context")
 	if d.resolver == nil {
 		return nil
 	}
@@ -42,47 +40,36 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	}
 	if envId != "" {
 		envSet := false
-		fmt.Println("1")
 		for _, account := range d.State.Auth.Accounts {
 			if account.Id == envId {
-				fmt.Println("overwriting env " + d.State.Auth.Account.Id + " with " + account.Id)
 				d.Config.SetOverwrittenAccount(d.State.Auth.Account)
 				d.State.Auth.Account = account
 				envSet = true
 			}
 		}
 		if !envSet {
-			fmt.Println("what")
 			return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
 		}
 	}
-	fmt.Println("2")
-	fmt.Println("3")
 	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
-	fmt.Println("4")
 	if err != nil {
 		return err
 	}
 	if clusterId != "" {
-		fmt.Println("1")
 		ctx := d.Config.Context()
-		fmt.Println("6")
 		if ctx.KafkaClusterContext.EnvContext {
 			d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
-			fmt.Println("overwriting kafka " + ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster + " with " + clusterId)
 			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = clusterId
 
 		} else {
 			d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.ActiveKafkaCluster)
 			ctx.KafkaClusterContext.ActiveKafkaCluster = clusterId
 		}
-		fmt.Println("set active kafka cluster")
 		_, err = d.FindKafkaCluster(cmd, clusterId)
 		if err != nil {
 			err = errors.CatchKafkaNotFoundError(err, clusterId)
 			return err
 		}
-		fmt.Println("found cluster")
 	}
 	return nil
 }
@@ -298,7 +285,6 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 }
 
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
-	// TODO return error if secret is passed without key
 	key, err := d.resolver.ResolveApiKeyFlag(cmd)
 	if err != nil {
 		return "", "", err
@@ -306,6 +292,9 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	secret, err := d.resolver.ResolveApiKeySecretFlag(cmd)
 	if err != nil {
 		return "", "", err
+	}
+	if key == "" && secret != "" {
+		return "", "", errors.NewErrorWithSuggestions(errors.PassedSecretButNotKeyErrorMsg, errors.PassedSecretButNotKeySuggestions)
 	}
 	return key, secret, nil
 }

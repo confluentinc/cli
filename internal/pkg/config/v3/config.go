@@ -340,6 +340,9 @@ func (c *Config) SavePlatform(platform *v2.Platform) error {
 // Context returns the user specified context if it exists,
 // the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
+	if c == nil {
+		return nil
+	}
 	return c.Contexts[c.CurrentContext]
 }
 
