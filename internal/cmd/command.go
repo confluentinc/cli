@@ -48,6 +48,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
@@ -63,7 +64,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler netrc.NetrcHandler) (*Command, error) {
 	logger := log.New()
 	cfg, configLoadingErr := loadConfig(cliName, logger)
 	if cfg != nil {
@@ -98,6 +99,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	if err != nil {
 		return nil, err
 	}
+
+	authTokenHandler := &pauth.AuthTokenHandlerImpl{}
+	loginTokenHandler := pauth.NewLoginTokenHandler(authTokenHandler, netrcHandler, form.NewPrompt(os.Stdin), logger)
 	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
@@ -109,8 +113,8 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		FlagResolver:       resolver,
 		Version:            ver,
 		Analytics:          analyticsClient,
+		LoginTokenHandler:  loginTokenHandler,
 		JWTValidator:       jwtValidator,
-		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 	shellCompleter := completer.NewShellCompleter(cli)
@@ -125,7 +129,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, loginTokenHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {

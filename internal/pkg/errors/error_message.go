@@ -168,14 +168,17 @@ const (
 	ReleaseNotesVersionMismatchErrorMsg = "binary version (v%s) and latest release notes version (v%s) mismatch"
 
 	// auth package
-	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
-	ReadCertErrorMsg                 = "failed to read certificate"
-	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
-	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
-	ResolvingNetrcFilepathErrorMsg   = "unable to resolve netrc filepath at \"%s\""
-	GetNetrcCredentialsErrorMsg      = "unable to get credentials from netrc file \"%s\""
-	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
-	CreateNetrcFileErrorMsg          = "unable to create netrc file \"%s\""
+	NoReaderForCustomCertErrorMsg       = "no reader specified for reading custom certificates"
+	ReadCertErrorMsg                    = "failed to read certificate"
+	NoCertsAppendedErrorMsg             = "no certs appended, using system certs only"
+	WriteToNetrcFileErrorMsg            = "unable to write to netrc file \"%s\""
+	ResolvingNetrcFilepathErrorMsg      = "unable to resolve netrc filepath at \"%s\""
+	NetrcCLINameMissingErrorMsg         = "no CLI name specified for netrc credentials"
+	GetNetrcCredentialsFromFileErrorMsg = "unable to get credentials from netrc file \"%s\""
+	NetrcCredentialsNotFoundErrorMsg    = "login credentials not found in netrc file \"%s\""
+	CreateNetrcFileErrorMsg             = "unable to create netrc file \"%s\""
+	FailedToObtainedUserSSOErrorMsg     = "unable to obtain SSO info for user \"%s\""
+	NonSSOUserErrorMsg                  = "tried to obtain SSO token for non SSO user \"%s\""
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"

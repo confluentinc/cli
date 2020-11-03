@@ -17,6 +17,7 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -42,8 +43,8 @@ type PreRun struct {
 	Analytics          analytics.Client
 	FlagResolver       FlagResolver
 	Version            *version.Version
+	LoginTokenHandler  pauth.LoginTokenHandler
 	JWTValidator       JWTValidator
-	UpdateTokenHandler pauth.UpdateTokenHandler
 }
 
 type CLICommand struct {
@@ -84,32 +85,61 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	}
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx.Context)
+		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
 	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx.Context)
+		return r.updateToken(new(ccloud.ExpiredTokenError), cmd, ctx)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx.Context)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
 	} else {
-		return r.updateToken(err, ctx.Context)
+		return r.updateToken(err, cmd, ctx)
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, context *v3.Context) error {
-	if context == nil {
-		r.Logger.Debug("Context is nil. Cannot attempt to update auth token.")
+func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
+	if ctx == nil {
+		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
-	var updateErr error
+	r.Logger.Debug("Updating auth token")
+	token, err := r.getNewAuthToken(cmd, ctx)
+	if err != nil || token == "" {
+		r.Logger.Debug("Failed to update auth token")
+		return tokenError
+	}
+	r.Logger.Debug("Successfully updated auth token")
+	err = ctx.UpdateAuthToken(token)
+	if err != nil {
+		return tokenError
+	}
+	return nil
+}
+
+func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
+	var token string
+	params := netrc.GetMatchingNetrcMachineParams{
+		CLIName: r.CLIName,
+		CtxName: ctx.Name,
+	}
+	var err error
 	if r.CLIName == "ccloud" {
-		updateErr = r.UpdateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentials(context, r.Version.UserAgent, r.Logger)
+		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
+		if err != nil {
+			return "", err
+		}
 	} else {
-		updateErr = r.UpdateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentials(context, r.Logger)
+		mdsClientManager := pauth.MDSClientManagerImpl{}
+		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		if err != nil {
+			return "", err
+		}
+		token, _, err = r.LoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
+		if err != nil {
+			return "", err
+		}
 	}
-	if updateErr == nil {
-		return nil
-	}
-	return tokenError
+	return token, err
 }
 
 func (a *AuthenticatedCLICommand) AuthToken() string {

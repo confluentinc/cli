@@ -13,17 +13,17 @@ import (
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
 type MDSClientManager interface {
-	GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error)
+	GetMDSClient(ctx *v3.Context, caCertPath string, caCertPathFlagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error)
 }
 
 type MDSClientManagerImpl struct{}
 
-func (m *MDSClientManagerImpl) GetMDSClient(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error) {
+func (m *MDSClientManagerImpl) GetMDSClient(ctx *v3.Context, caCertPath string, caCertPathFlagChanged bool, url string, logger *log.Logger) (*mds.APIClient, error) {
 	mdsClient := initializeMDS(ctx, logger)
 	if logger.GetLevel() == log.DEBUG || logger.GetLevel() == log.TRACE {
 		mdsClient.GetConfig().Debug = true
 	}
-	if flagChanged {
+	if caCertPathFlagChanged {
 		if caCertPath == "" {
 			// revert to default client regardless of previously configured client
 			mdsClient.GetConfig().HTTPClient = DefaultClient()
