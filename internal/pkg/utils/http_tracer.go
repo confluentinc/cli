@@ -45,6 +45,9 @@ func HTTPTracedContext(ctx context.Context, logger *log.Logger) context.Context 
 		GotConn: func(connInfo httptrace.GotConnInfo) {
 			logger.Tracef("Got Conn; Info: %+v\n", connInfo)
 		},
+		GetConn: func(hostPort string) {
+			logger.Tracef("Get Conn; Info: %+v\n", hostPort)
+		},
 	}
 
 	return httptrace.WithClientTrace(ctx, trace)
