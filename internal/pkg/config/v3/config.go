@@ -148,33 +148,10 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	ctx := c.Context()
-	var tempKafka string
-	if c.overwrittenActiveKafka != "" && ctx != nil && ctx.KafkaClusterContext != nil {
-		if c.overwrittenActiveKafka == emptyFieldIndicator {
-			c.overwrittenActiveKafka = ""
-		}
-		if ctx.KafkaClusterContext.EnvContext &&  ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
-			tempKafka = ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster
-			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = c.overwrittenActiveKafka
-		} else {
-			tempKafka = ctx.KafkaClusterContext.ActiveKafkaCluster
-			ctx.KafkaClusterContext.ActiveKafkaCluster = c.overwrittenActiveKafka
-		}
-	}
-	var tempContext string
-	if c.overwrittenCurrContext != "" && c != nil {
-		if c.overwrittenCurrContext == emptyFieldIndicator {
-			c.overwrittenCurrContext = ""
-		}
-		tempContext = c.CurrentContext
-		c.CurrentContext = c.overwrittenCurrContext
-	}
-	var tempAccount *orgv1.Account
-	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil{
-		tempAccount = ctx.State.Auth.Account
-		ctx.State.Auth.Account = c.overwrittenAccount
-	}
+	tempKafka := c.resolveOverwrittenKafka()
+	tempContext := c.resolveOverwrittenContext()
+	tempAccount := c.resolveOverwrittenAccount()
+
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
@@ -191,20 +168,76 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
+	c.restoreOverwrittenKafka(tempKafka)
+	c.restoreOverwrittenKafka(tempContext)
+	c.restoreOverwrittenAccount(tempAccount)
+	return nil
+}
+//Check to see if active Kafka cluster has been overwritten by flag value; if so, restore previous active kafka
+//return the flag value so that it can be restored after writing to file so that continued execution uses flag value.
+//This is because we don't want flags to update state
+func (c *Config) resolveOverwrittenKafka() string {
+	ctx := c.Context()
+	var tempKafka string
+	if c.overwrittenActiveKafka != "" && ctx != nil && ctx.KafkaClusterContext != nil {
+		if c.overwrittenActiveKafka == emptyFieldIndicator {
+			c.overwrittenActiveKafka = ""
+		}
+		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
+			tempKafka = ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster
+			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = c.overwrittenActiveKafka
+		} else {
+			tempKafka = ctx.KafkaClusterContext.ActiveKafkaCluster
+			ctx.KafkaClusterContext.ActiveKafkaCluster = c.overwrittenActiveKafka
+		}
+	}
+	return tempKafka
+}
+
+func (c *Config) restoreOverwrittenKafka(tempKafka string) {
+	ctx := c.Context()
 	if tempKafka != "" {
-		if ctx.KafkaClusterContext.EnvContext &&  ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
+		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
 			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = tempKafka
 		} else {
 			ctx.KafkaClusterContext.ActiveKafkaCluster = tempKafka
 		}
 	}
+}
+
+func (c *Config) resolveOverwrittenContext() string {
+	var tempContext string
+	if c.overwrittenCurrContext != "" && c != nil {
+		if c.overwrittenCurrContext == emptyFieldIndicator {
+			c.overwrittenCurrContext = ""
+		}
+		tempContext = c.CurrentContext
+		c.CurrentContext = c.overwrittenCurrContext
+	}
+	return tempContext
+}
+
+func (c *Config) restoreOverwrittenContext(tempContext string) {
 	if tempContext != "" {
 		c.CurrentContext = tempContext
 	}
+}
+
+func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
+	ctx := c.Context()
+	var tempAccount *orgv1.Account
+	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil{
+		tempAccount = ctx.State.Auth.Account
+		ctx.State.Auth.Account = c.overwrittenAccount
+	}
+	return tempAccount
+}
+
+func (c *Config) restoreOverwrittenAccount(tempAccount *orgv1.Account) {
+	ctx := c.Context()
 	if tempAccount != nil {
 		ctx.State.Auth.Account = tempAccount
 	}
-	return nil
 }
 
 func (c *Config) Validate() error {

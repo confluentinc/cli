@@ -312,6 +312,139 @@ func TestConfig_Save(t *testing.T) {
 	}
 }
 
+func TestConfig_OverwrittenKafka(t *testing.T) {
+	//	testConfigsConfluent := SetupTestInputs("confluent")
+	testConfigsCcloud := SetupTestInputs("ccloud")
+	//testConfigsCcloud2 := SetupTestInputs("ccloud")
+
+	tests := []struct {
+		name     		string
+		config   		*Config
+		overwrittenVal	string		//simulates initial config value overwritten by a cluster flag value
+		activeKafka		string		//simulates the cluster flag value
+	}{
+		{
+			name: "test no overwrite value",
+			config:	testConfigsCcloud.statefulConfig,
+			activeKafka: testConfigsCcloud.activeKafka,
+		},
+		{
+			name: "test with overwrite value",
+			config:	testConfigsCcloud.statefulConfig,
+			overwrittenVal: "lkc-test",
+			activeKafka: testConfigsCcloud.activeKafka,
+		},
+		{
+			name: "test no overwrite value",
+			config:	testConfigsCcloud.statelessConfig,
+			activeKafka: testConfigsCcloud.activeKafka,
+		},
+	}
+	for _, tt := range tests {
+		ctx := tt.config.Context()
+		tt.config.SetOverwrittenActiveKafka(tt.overwrittenVal)
+		//resolve should reset the active kafka to be the overwritten value and return the flag value to be used in restore
+		tempKafka := tt.config.resolveOverwrittenKafka()
+		require.Equal(t, tt.activeKafka, tempKafka)
+		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
+			require.Equal(t, tt.overwrittenVal, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
+		} else {
+			require.Equal(t, tt.overwrittenVal, ctx.KafkaClusterContext.ActiveKafkaCluster)
+		}
+		//restore should reset the active kafka to be the flag value
+		tt.config.restoreOverwrittenKafka(tempKafka)
+		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
+			require.Equal(t, tempKafka, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
+		} else {
+			require.Equal(t, tempKafka, ctx.KafkaClusterContext.ActiveKafkaCluster)
+		}
+	}
+}
+
+func TestConfig_OverwrittenContext(t *testing.T) {
+	testConfigsCcloud := SetupTestInputs("ccloud")
+
+	tests := []struct {
+		name           string
+		config         *Config
+		overwrittenVal string //simulates initial context value overwritten by a context flag value
+		currContext    string //simulates the context flag value
+	}{
+		{
+			name:        "test no overwrite value",
+			config:      testConfigsCcloud.statefulConfig,
+			currContext: testConfigsCcloud.statefulConfig.CurrentContext,
+		},
+		{
+			name:           "test with overwrite value",
+			config:         testConfigsCcloud.statefulConfig,
+			overwrittenVal: "test-context",
+			currContext:    testConfigsCcloud.statefulConfig.CurrentContext,
+		},
+		{
+			name:        "test no overwrite value",
+			config:      testConfigsCcloud.statelessConfig,
+			currContext: testConfigsCcloud.statelessConfig.CurrentContext,
+		},
+	}
+	for _, tt := range tests {
+		tt.config.SetOverwrittenCurrContext(tt.overwrittenVal)
+		//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
+		tempContext := tt.config.resolveOverwrittenContext()
+		require.Equal(t, tt.overwrittenVal, tt.config.CurrentContext)
+		require.Equal(t, tt.currContext, tempContext)
+		//restore should reset the current context to be the flag value
+		tt.config.restoreOverwrittenContext(tempContext)
+		require.Equal(t, tt.currContext, tt.config.CurrentContext)
+	}
+}
+
+func TestConfig_OverwrittenAccount(t *testing.T) {
+	testConfigsCcloud := SetupTestInputs("ccloud")
+
+	tests := []struct {
+		name           string
+		config         *Config
+		overwrittenVal *orgv1.Account //simulates initial environment (account) value overwritten by a environment flag
+		activeAccount  string //simulates the environment (account) flag value
+	}{
+		{
+			name:          "test no overwrite value",
+			config:        testConfigsCcloud.statefulConfig,
+			activeAccount: testConfigsCcloud.statefulConfig.Context().State.Auth.Account.Id,
+		},
+		{
+			name:           "test with overwrite value",
+			config:         testConfigsCcloud.statefulConfig,
+			overwrittenVal: &orgv1.Account{Id: "env-test"},
+			activeAccount:  testConfigsCcloud.statefulConfig.Context().State.Auth.Account.Id,
+		},
+		{
+			name:          "test no overwrite value",
+			config:        testConfigsCcloud.statelessConfig,
+		},
+	}
+	for _, tt := range tests {
+		tt.config.SetOverwrittenAccount(tt.overwrittenVal)
+		if tt.config.Context().State.Auth == nil {
+			tempAccount := tt.config.resolveOverwrittenAccount()
+			require.Nil(t, tempAccount)
+			tt.config.restoreOverwrittenAccount(tempAccount)
+			require.Nil(t, tt.config.Context().State.Auth)
+		} else {
+			//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
+			tempAccount := tt.config.resolveOverwrittenAccount()
+			if tt.overwrittenVal != nil {
+				require.Equal(t, tt.overwrittenVal, tt.config.Context().State.Auth.Account)
+				require.Equal(t, tt.activeAccount, tempAccount.Id)
+			}
+			//restore should reset the current context to be the flag value
+			tt.config.restoreOverwrittenAccount(tempAccount)
+			require.Equal(t, tt.activeAccount, tt.config.Context().State.Auth.Account.Id)
+		}
+	}
+}
+
 func TestConfig_getFilename(t *testing.T) {
 	type fields struct {
 		CLIName string
