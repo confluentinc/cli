@@ -44,6 +44,7 @@ type PreRun struct {
 	FlagResolver        FlagResolver
 	Version             *version.Version
 	CCloudClientFactory pauth.CCloudClientFactory
+	MDSClientManager    pauth.MDSClientManager
 	LoginTokenHandler   pauth.LoginTokenHandler
 	JWTValidator        JWTValidator
 }
@@ -438,7 +439,7 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 			return "", err
 		}
 	} else {
-		client, err := r.getMDSClient(ctx)
+		client, err := r.MDSClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
 		if err != nil {
 			return "", err
 		}
@@ -448,11 +449,6 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 		}
 	}
 	return token, err
-}
-
-func (r *PreRun) getMDSClient(ctx *DynamicContext) (*mds.APIClient, error) {
-	mdsClientManager := pauth.MDSClientManagerImpl{}
-	return mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
 }
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster

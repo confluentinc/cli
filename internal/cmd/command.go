@@ -105,6 +105,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
+	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	prerunner := &pcmd.PreRun{
 		Config:              cfg,
 		ConfigLoadingError:  configLoadingErr,
@@ -115,6 +116,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		Version:             ver,
 		Analytics:           analyticsClient,
 		CCloudClientFactory: ccloudClientFactory,
+		MDSClientManager:    mdsClientManager,
 		LoginTokenHandler:   loginTokenHandler,
 		JWTValidator:        jwtValidator,
 	}
@@ -131,7 +133,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ccloudClientFactory, analyticsClient, netrcHandler, loginTokenHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginTokenHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {
