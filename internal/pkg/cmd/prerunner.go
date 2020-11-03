@@ -35,16 +35,17 @@ const DoNotTrack = "do-not-track-analytics"
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config             *v3.Config
-	ConfigLoadingError error
-	UpdateClient       update.Client
-	CLIName            string
-	Logger             *log.Logger
-	Analytics          analytics.Client
-	FlagResolver       FlagResolver
-	Version            *version.Version
-	LoginTokenHandler  pauth.LoginTokenHandler
-	JWTValidator       JWTValidator
+	Config              *v3.Config
+	ConfigLoadingError  error
+	UpdateClient        update.Client
+	CLIName             string
+	Logger              *log.Logger
+	Analytics           analytics.Client
+	FlagResolver        FlagResolver
+	Version             *version.Version
+	CCloudClientFactory pauth.CCloudClientFactory
+	LoginTokenHandler   pauth.LoginTokenHandler
+	JWTValidator        JWTValidator
 }
 
 type CLICommand struct {
@@ -216,33 +217,69 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		err = r.setClients(command)
-		if err != nil {
-			return err
-		}
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return err
 		}
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: r.CLIName}
+			autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
+			if autoLoginErr != nil {
+				r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+				return &errors.NoContextError{CLIName: r.CLIName}
+			}
+			ctx, err = command.Config.Context(cmd)
+			if err != nil {
+				return err
+			}
+			if ctx == nil {
+				return &errors.NoContextError{CLIName: r.CLIName}
+			}
 		}
 		command.Context = ctx
-		command.State, err = ctx.AuthenticatedState(cmd)
+		state, err := ctx.AuthenticatedState(cmd)
+		if err != nil {
+			if _, ok := err.(*errors.NotLoggedInError); ok {
+				autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
+				if autoLoginErr != nil {
+					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+					return err
+				}
+				state, err = ctx.AuthenticatedState(cmd)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+		command.State = state
+		err = r.ValidateToken(cmd, command.Config)
 		if err != nil {
 			return err
 		}
-		return r.ValidateToken(cmd, command.Config)
+		return r.setClients(command)
 	}
 }
 
-func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
+func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error {
+	utils.ErrPrint(cmd, errors.AutoLoginMsg)
+	token, creds, err := r.getCCloudTokenAndCrendentils(cmd)
+	if err != nil {
+		return err
+	}
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, creds.Username, pauth.CCloudURL, token, client)
+	if err != nil {
+		return err
+	}
+	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	r.Logger.Debug("Successfully auto logged in during prerun.")
 	return nil
 }
 
 func (r *PreRun) getCCloudTokenAndCrendentils(cmd *cobra.Command) (string, *pauth.Credentials, error) {
-	url := pauth.CCloudURL
-	client := a.anonHTTPClientFactory(url, a.Logger)
+	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 
 	token, creds, err := r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
 	if err != nil {
@@ -252,6 +289,7 @@ func (r *PreRun) getCCloudTokenAndCrendentils(cmd *cobra.Command) (string, *paut
 		return token, creds, nil
 	}
 
+	url := pauth.CCloudURL
 	return r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		URL:     url,
@@ -394,14 +432,13 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 	}
 	var err error
 	if r.CLIName == "ccloud" {
-		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		client, err := r.getMDSClient(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -413,8 +450,9 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 	return token, err
 }
 
-func (r *PreRun) getCCloudAuthClient() *ccloud.Client {
-	return ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+func (r *PreRun) getMDSClient(ctx *DynamicContext) (*mds.APIClient, error) {
+	mdsClientManager := pauth.MDSClientManagerImpl{}
+	return mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
 }
 
 // if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster

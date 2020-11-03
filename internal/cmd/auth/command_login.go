@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -26,27 +25,23 @@ type loginCommand struct {
 	Logger          *log.Logger
 	analyticsClient analytics.Client
 	// for testing
-	MDSClientManager      pauth.MDSClientManager
-	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
-	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler          netrc.NetrcHandler
-	loginTokenHandler     pauth.LoginTokenHandler
+	MDSClientManager    pauth.MDSClientManager
+	ccloudClientFactory pauth.CCloudClientFactory
+	netrcHandler        netrc.NetrcHandler
+	loginTokenHandler   pauth.LoginTokenHandler
 }
 
-func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger,
-	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
-	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
+func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
 	loginTokenHandler pauth.LoginTokenHandler) *loginCommand {
 	cmd := &loginCommand{
-		cliName:               cliName,
-		Logger:                log,
-		analyticsClient:       analyticsClient,
-		anonHTTPClientFactory: anonHTTPClientFactory,
-		jwtHTTPClientFactory:  jwtHTTPClientFactory,
-		MDSClientManager:      mdsClientManager,
-		netrcHandler:          netrcHandler,
-		loginTokenHandler:     loginTokenHandler,
+		cliName:             cliName,
+		Logger:              log,
+		analyticsClient:     analyticsClient,
+		MDSClientManager:    mdsClientManager,
+		ccloudClientFactory: ccloudClientFactory,
+		netrcHandler:        netrcHandler,
+		loginTokenHandler:   loginTokenHandler,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -99,7 +94,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, creds.Username, url, token, a.jwtHTTPClientFactory(context.Background(), token, url, a.Logger))
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, creds.Username, url, token,
+		a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url))
 	if err != nil {
 		return err
 	}
@@ -115,7 +111,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
-	client := a.anonHTTPClientFactory(url, a.Logger)
+	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
 
 	token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
 	if err != nil {
