@@ -97,7 +97,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra
 	if err != nil || netrcMachine == nil {
 		return "", nil, err
 	}
-	utils.ErrPrint(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 	var token string
 	creds := &Credentials{Username: netrcMachine.User}
 	if netrcMachine.IsSSO {
