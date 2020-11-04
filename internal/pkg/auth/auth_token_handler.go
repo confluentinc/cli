@@ -6,6 +6,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -20,7 +21,7 @@ type AuthTokenHandler interface {
 	GetCCloudCredentialsToken(client *ccloud.Client, email string, password string) (string, error)
 	GetCCloudSSOToken(client *ccloud.Client, url string, noBrowser bool, email string, logger *log.Logger) (string, string, error)
 	RefreshCCloudSSOToken(client *ccloud.Client, refreshToken string, url string, logger *log.Logger) (string, error)
-	GetConfluentAuthToken(mdsClient *mds.APIClient, username string, password string) (string, error)
+	GetConfluentAuthToken(mdsClient *mds.APIClient, username string, password string, logger *log.Logger) (string, error)
 }
 
 type AuthTokenHandlerImpl struct{}
@@ -71,8 +72,12 @@ func (a *AuthTokenHandlerImpl) RefreshCCloudSSOToken(client *ccloud.Client, refr
 	return token, nil
 }
 
-func (a *AuthTokenHandlerImpl) GetConfluentAuthToken(mdsClient *mds.APIClient, username string, password string) (string, error) {
-	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: username, Password: password})
+func (a *AuthTokenHandlerImpl) GetConfluentAuthToken(mdsClient *mds.APIClient, username string, password string, logger *log.Logger) (string, error) {
+	ctx := context.Background()
+	if logger.GetLevel() == log.TRACE {
+		ctx = utils.HTTPTracedContext(ctx, logger)
+	}
+	basicContext := context.WithValue(ctx, mds.ContextBasicAuth, mds.BasicAuth{UserName: username, Password: password})
 	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return "", err

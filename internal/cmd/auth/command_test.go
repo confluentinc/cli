@@ -104,7 +104,7 @@ var (
 		GetCCloudSSOTokenFunc: func(client *ccloud.Client, url string, noBrowser bool, email string, logger *log.Logger) (string, string, error) {
 			return testToken, "refreshToken", nil
 		},
-		GetConfluentAuthTokenFunc: func(mdsClient *mds.APIClient, username, password string) (string, error) {
+		GetConfluentAuthTokenFunc: func(mdsClient *mds.APIClient, username, password string, logger *log.Logger) (string, error) {
 			return testToken, nil
 		},
 	}

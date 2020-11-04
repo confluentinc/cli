@@ -111,7 +111,7 @@ func (suite *LoginTokenHandlerTestSuite) SetupSuite() {
 		RefreshCCloudSSOTokenFunc: func(client *ccloud.Client, refreshToken, url string, logger *log.Logger) (string, error) {
 			return ssoAuthToken, nil
 		},
-		GetConfluentAuthTokenFunc: func(mdsClient *mdsv1.APIClient, username, password string) (string, error) {
+		GetConfluentAuthTokenFunc: func(mdsClient *mdsv1.APIClient, username, password string, logger *log.Logger) (string, error) {
 			return confluentAuthToken, nil
 		},
 	}

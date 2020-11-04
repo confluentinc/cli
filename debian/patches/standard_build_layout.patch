@@ -58,7 +58,11 @@
  
 -show-args:
 -	@echo "VERSION: $(VERSION)"
+<<<<<<< HEAD
 +CLI_VERSION=1.16.3
+=======
++SHELL=/bin/bash
+>>>>>>> e458a4cc0255ad01b1f1372b25dfa8aff9acd375
  
 -#
 -# START DEVELOPMENT HELPERS

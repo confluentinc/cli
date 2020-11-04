@@ -85,7 +85,7 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromEnvVar(cmd *c
 	if len(username) == 0 {
 		return "", nil, nil
 	}
-	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password)
+	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password, h.logger)
 	if err != nil {
 		return "", nil, err
 	}
@@ -119,7 +119,7 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromNetrc(cmd *co
 		return "", nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-	token, err := h.authTokenHandler.GetConfluentAuthToken(client, netrcMachine.User, netrcMachine.Password)
+	token, err := h.authTokenHandler.GetConfluentAuthToken(client, netrcMachine.User, netrcMachine.Password, h.logger)
 	if err != nil {
 		return "", nil, err
 	}
@@ -142,7 +142,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(cmd *cobr
 	password := h.promptForPassword(cmd)
 	token, err := h.authTokenHandler.GetCCloudCredentialsToken(client, email, password)
 	if err != nil {
-		return "", nil, nil
+		return "", nil, err
 	}
 	return token, &Credentials{Username: email, Password: password}, nil
 }
@@ -150,9 +150,9 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(cmd *cobr
 func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error) {
 	username := h.promptForUser(cmd, "Username")
 	password := h.promptForPassword(cmd)
-	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password)
+	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password, h.logger)
 	if err != nil {
-		return "", nil, nil
+		return "", nil, err
 	}
 	return token, &Credentials{Username: username, Password: password}, nil
 }
