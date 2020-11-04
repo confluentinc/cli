@@ -51,7 +51,11 @@ gorelease:
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
-	./build_alpine.sh
+	./build_alpine.sh && \
+	for binary in ccloud confluent; do \
+		aws s3 cp dist/$${binary}/$${binary}_v$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION)/$${binary}_v$(VERSION)_alpine_amd64.tar.gz; \
+		aws s3 cp dist/$${binary}/$${binary}_alpine_amd64 $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION)/$${binary}_alpine_amd64; \
+	done
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
