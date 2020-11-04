@@ -35,6 +35,7 @@ clone-and-setup-docs-repo:
 	git clone git@github.com:confluentinc/docs.git $(TMP_DOCS)
 	cd $(TMP_DOCS) && \
 	git fetch && \
+	git checkout $(DOCS_BRANCH) && \
 	git checkout -b $(RELEASE_NOTES_BRANCH)
 
 .PHONY: build-release-notes

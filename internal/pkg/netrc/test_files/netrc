@@ -1,0 +1,33 @@
+machine leave-me-alone
+        login pls
+        password pls-do
+machine confluent-cli:mds-username-password:login-mds-user-http://test
+        login mds-user
+        password mock-password
+machine confluent-cli:mds-username-password:login-mds-user2-http://test
+        login mds-user-2
+        password mock-password
+machine confluent-cli:ccloud-username-password:login-ccloud-login-user-diff-url@confluent.io-http://differenturl
+        login ccloud-login-user-diff-url@confluent.io
+        password mock-password
+machine confluent-cli:ccloud-username-password:login-ccloud-login-user@confluent.io-http://test
+        login ccloud-login-user@confluent.io
+        password mock-password
+machine confluent-cli:ccloud-username-password:login-ccloud-login-user-2@confluent.io-http://test
+        login ccloud-login-user-2@confluent.io
+        password mock-password
+machine confluent-cli:ccloud-sso-refresh-token:login-ccloud-sso-user@confluent.io-http://test
+        login ccloud-sso-user@confluent.io
+        password refresh-token
+machine confluent-cli:ccloud-sso-refresh-token:login-ccloud-sso-user-2@confluent.io-http://test
+        login ccloud-sso-user-2@confluent.io
+        password refresh-token
+machine confluent-cli:ccloud-sso-refresh-token:login-sso-first@confluent.io-http://ssofirst
+        login sso-first@confluent.io
+        password refresh-token
+machine confluent-cli:ccloud-username-password:login-sso-first@confluent.io-http://ssofirst
+        login sso-first@confluent.io
+        password mock-password
+machine leave-me-alone-too
+        login pls-pls
+        password please

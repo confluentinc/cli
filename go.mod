@@ -14,7 +14,7 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.31.13
-	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bombsimon/wsl v1.2.5 // indirect
@@ -42,7 +42,9 @@ require (
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
+	github.com/csreesan/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/daixiang0/gci v0.0.0-20200727065011-66f1df783cb2 // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
@@ -59,7 +61,6 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gofrs/flock v0.7.1 // indirect
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
@@ -143,11 +144,9 @@ require (
 	go.mongodb.org/mongo-driver v1.0.1 // indirect
 	gocloud.dev v0.20.0 // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/tools v0.0.0-20200929223013-bf155c11ec6f // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
-	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect

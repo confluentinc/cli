@@ -95,21 +95,43 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 	url := fmt.Sprintf("%s?prefix=%s/", r.endpoint, s3DirPrefix)
 	r.Logger.Debugf("Getting available versions from %s", url)
 
-	resp, err := r.getHttpResponse(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	var results []ListBucketResult
+	more := true
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	for more {
+		resp, err := r.getHttpResponse(url)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		var result ListBucketResult
+		err = xml.Unmarshal(body, &result)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result)
+		// ListBucketResult paginates results
+		if result.IsTruncated {
+			// Last key is the "marker" used as the starting point for next page of results
+			marker := result.Contents[len(result.Contents)-1].Key
+			url = fmt.Sprintf("%s?prefix=%s/&marker=%s", r.endpoint, s3DirPrefix, marker)
+		} else {
+			more = false
+		}
 	}
-	var result ListBucketResult
-	err = xml.Unmarshal(body, &result)
-	if err != nil {
-		return nil, err
+
+	// Concatenate paginated results here so rest of code doesn't have to think about pagination
+	result := results[0] // copy most properties from results[0]
+	result.IsTruncated = false
+	for _, r := range results[1:] { // skip results[0]
+		result.Contents = append(result.Contents, r.Contents[1:]...) // don't duplicate "marker" entry
 	}
+
 	return &result, nil
 }
 

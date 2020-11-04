@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -220,7 +221,7 @@ func (s *CLITestSuite) TestUserAgent() {
 
 	serverURL := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
 		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
-	env := []string{"XX_CCLOUD_EMAIL=valid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+	env := []string{fmt.Sprintf("%s=valid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 
 	s.T().Run("ccloud login", func(tt *testing.T) {
 		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
@@ -273,7 +274,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid user or pass", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
-		env := []string{"XX_CCLOUD_EMAIL=incorrect@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
@@ -281,7 +282,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
-		env := []string{"XX_CCLOUD_EMAIL=expired@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
@@ -292,7 +293,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
-		env := []string{"XX_CCLOUD_EMAIL=malformed@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
@@ -304,7 +305,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
-		env := []string{"XX_CCLOUD_EMAIL=invalid@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
@@ -329,7 +330,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 		}
 
 		if tt.login == "default" {
-			env := []string{"XX_CCLOUD_EMAIL=fake@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)

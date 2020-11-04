@@ -5,6 +5,6 @@ machine dont-touch-this-machine
         login cant-touch-this
         password doo-doo-doo-doo
 
-machine confluent-cli:ccloud-username-password:ccloud-login
+machine confluent-cli:ccloud-username-password:login-ccloud-login-user@confluent.io-http://test
 	login jamal@jj
-	password replace-me-pleaseeeeeee
+	password 12345

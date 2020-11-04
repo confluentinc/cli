@@ -12,7 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/ccloud-sdk-go"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -20,12 +21,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 const (
-	expiredAuthTokenForDevCLoud = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdhbml6YXRpb25JZCI6MT" +
+	expiredAuthTokenForDevCloud = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdhbml6YXRpb25JZCI6MT" +
 		"U5NCwidXNlcklkIjoxNTM3MiwiZXhwIjoxNTc0NzIwODgzLCJqdGkiOiJkMzFlYjc2OC0zNzIzLTQ4MTEtYjg3" +
 		"Zi1lMTQ2YTQyYmMyMjciLCJpYXQiOjE1NzQ3MTcyODMsImlzcyI6IkNvbmZsdWVudCIsInN1YiI6IjE1MzcyIn" +
 		"0.r9o6HEaacidXV899sjYDajCfVd_Tczyfk541jzidw8r0TRGz74RxL2UFK0aGyR4tNrJRSOJlYHSEBNMV7" +
@@ -39,6 +42,23 @@ const (
 	validAuthToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiO" +
 		"jE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1w" +
 		"bGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+)
+
+var (
+	mockLoginTokenHandler = &cliMock.MockLoginTokenHandler{
+		GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (string, *pauth.Credentials, error) {
+			return "", nil, nil
+		},
+		GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+			return "", nil, nil
+		},
+		GetConfluentTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *mds.APIClient) (string, *pauth.Credentials, error) {
+			return "", nil, nil
+		},
+		GetConfluentTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+			return "", nil, nil
+		},
+	}
 )
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
@@ -110,10 +130,10 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:          cliMock.NewDummyAnalyticsMock(),
-				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-				Config:             cfg,
-				JWTValidator:       pcmd.NewJWTValidator(tt.fields.Logger),
+				Analytics:         cliMock.NewDummyAnalyticsMock(),
+				LoginTokenHandler: mockLoginTokenHandler,
+				Config:            cfg,
+				JWTValidator:      pcmd.NewJWTValidator(tt.fields.Logger),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -149,9 +169,9 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          cliMock.NewDummyAnalyticsMock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-		JWTValidator:       pcmd.NewJWTValidator(log.New()),
+		Analytics:         cliMock.NewDummyAnalyticsMock(),
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -182,9 +202,9 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          analyticsClient,
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-		JWTValidator:       pcmd.NewJWTValidator(log.New()),
+		Analytics:         analyticsClient,
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -201,7 +221,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 
 func TestPreRun_TokenExpires(t *testing.T) {
 	cfg := v3.AuthenticatedCloudConfigMock()
-	cfg.Context().State.AuthToken = expiredAuthTokenForDevCLoud
+	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
 	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
@@ -218,10 +238,10 @@ func TestPreRun_TokenExpires(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          analyticsClient,
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-		Config:             cfg,
-		JWTValidator:       pcmd.NewJWTValidator(log.New()),
+		Analytics:         analyticsClient,
+		Config:            cfg,
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -248,7 +268,7 @@ func Test_UpdateToken(t *testing.T) {
 		{
 			name:      "ccloud expired token",
 			cliName:   "ccloud",
-			authToken: expiredAuthTokenForDevCLoud,
+			authToken: expiredAuthTokenForDevCloud,
 		},
 		{
 			name:      "ccloud empty token",
@@ -268,7 +288,7 @@ func Test_UpdateToken(t *testing.T) {
 		{
 			name:      "confluent expired token",
 			cliName:   "confluent",
-			authToken: expiredAuthTokenForDevCLoud,
+			authToken: expiredAuthTokenForDevCloud,
 		},
 		{
 			name:      "confluent empty token",
@@ -299,12 +319,12 @@ func Test_UpdateToken(t *testing.T) {
 
 			ver := pmock.NewVersionMock()
 
-			updateTokenHandler := &cliMock.MockUpdateTokenHandler{
-				UpdateCCloudAuthTokenUsingNetrcCredentialsFunc: func(ctx *v3.Context, userAgent string, logger *log.Logger) error {
-					return nil
+			mockLoginTokenHandler := &cliMock.MockLoginTokenHandler{
+				GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+					return validAuthToken, nil, nil
 				},
-				UpdateConfluentAuthTokenUsingNetrcCredentialsFunc: func(ctx *v3.Context, logger *log.Logger) error {
-					return nil
+				GetConfluentTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+					return validAuthToken, nil, nil
 				},
 			}
 			r := &pcmd.PreRun{
@@ -320,10 +340,10 @@ func Test_UpdateToken(t *testing.T) {
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:          cliMock.NewDummyAnalyticsMock(),
-				UpdateTokenHandler: updateTokenHandler,
-				Config:             cfg,
-				JWTValidator:       pcmd.NewJWTValidator(log.New()),
+				Analytics:         cliMock.NewDummyAnalyticsMock(),
+				LoginTokenHandler: mockLoginTokenHandler,
+				Config:            cfg,
+				JWTValidator:      pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
@@ -335,9 +355,9 @@ func Test_UpdateToken(t *testing.T) {
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
 			if tt.cliName == "ccloud" {
-				require.True(t, updateTokenHandler.UpdateCCloudAuthTokenUsingNetrcCredentialsCalled())
+				require.True(t, mockLoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
 			} else {
-				require.True(t, updateTokenHandler.UpdateConfluentAuthTokenUsingNetrcCredentialsCalled())
+				require.True(t, mockLoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
 			}
 		})
 	}
@@ -436,10 +456,10 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 					Prompt: &form.RealPrompt{},
 					Out:    os.Stdout,
 				},
-				Analytics:          analyticsClient,
-				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-				Config:             tt.config,
-				JWTValidator: 		pcmd.NewJWTValidator(logger),
+				Analytics:         analyticsClient,
+				Config:            tt.config,
+				LoginTokenHandler: mockLoginTokenHandler,
+				JWTValidator:      pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
@@ -465,88 +485,6 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	}
 }
 
-// Test that when context is of username login type it should check auth token and login state
-// And when context is of API key credential then it should not ask for user to login
-//func TestPreRun_HasAPIKeyCommand(t *testing.T) {
-//	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
-//	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
-//
-//	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
-//	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
-//
-//	userNotLoggedIn := v3.UnauthenticatedCloudConfigMock()
-//
-//	tests := []struct {
-//		name           string
-//		config         *v3.Config
-//		errMsg         string
-//		suggestionsMsg string
-//	}{
-//		{
-//			name:   "username logged in user",
-//			config: userNameConfigLoggedIn,
-//		},
-//		{
-//			name:           "not logged in user",
-//			config:         userNotLoggedIn,
-//			errMsg:         errors.NotLoggedInErrorMsg,
-//			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
-//		},
-//		{
-//			name:           "username context corrupted auth token",
-//			config:         userNameCfgCorruptedAuthToken,
-//			errMsg:         errors.CorruptedTokenErrorMsg,
-//			suggestionsMsg: errors.CorruptedTokenSuggestions,
-//		},
-//		{
-//			name:   "api credential context",
-//			config: v3.APICredentialConfigMock(),
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			ver := pmock.NewVersionMock()
-//			analyticsClient := cliMock.NewDummyAnalyticsMock()
-//
-//			r := &pcmd.PreRun{
-//				Version: ver,
-//				Logger:  log.New(),
-//				UpdateClient: &mock.Client{
-//					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-//						return false, "", nil
-//					},
-//				},
-//				CLIName: "ccloud",
-//				FlagResolver: &pcmd.FlagResolverImpl{
-//					Prompt: &form.RealPrompt{},
-//					Out:    os.Stdout,
-//				},
-//				Analytics:          analyticsClient,
-//				UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-//				Config:             tt.config,
-//				JWTValidator:       pcmd.NewJWTValidator(log.New()),
-//			}
-//
-//			root := &cobra.Command{
-//				Run: func(cmd *cobra.Command, args []string) {},
-//			}
-//			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
-//			root.Flags().CountP("verbose", "v", "Increase verbosity")
-//
-//			_, err := pcmd.ExecuteCommand(rootCmd.Command)
-//			if tt.errMsg != "" {
-//				require.Error(t, err)
-//				require.Equal(t, tt.errMsg, err.Error())
-//				if tt.suggestionsMsg != "" {
-//					errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
-//				}
-//			} else {
-//				require.NoError(t, err)
-//			}
-//		})
-//	}
-//}
-
 func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
@@ -570,10 +508,10 @@ func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:          cliMock.NewDummyAnalyticsMock(),
-		UpdateTokenHandler: auth.NewUpdateTokenHandler(auth.NewNetrcHandler("")),
-		Config:             userNameConfigLoggedIn,
-		JWTValidator: 		pcmd.NewJWTValidator(logger),
+		Analytics:         cliMock.NewDummyAnalyticsMock(),
+		Config:            userNameConfigLoggedIn,
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(logger),
 	}
 	cmdRoot := &cobra.Command{Use: "root"}
 	root := pcmd.NewAuthenticatedStateFlagCommand(cmdRoot, r, subcommandFlags)

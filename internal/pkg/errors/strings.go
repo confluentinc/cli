@@ -16,6 +16,8 @@ const (
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
+	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\".\n"
+	FoundNetrcCredMsg          = "Found credentials for user \"%s\" from netrc file \"%s\".\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"

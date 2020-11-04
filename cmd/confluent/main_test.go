@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -15,7 +15,7 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	req := require.New(t)
 
 	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("ccloud", true, ver, auth.NewNetrcHandler(""))
+	root, err := cmd.NewConfluentCommand("ccloud", true, ver, netrc.NewNetrcHandler(""))
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
@@ -36,7 +36,7 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req := require.New(t)
 
 	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
-	root, err := cmd.NewConfluentCommand("confluent", true, ver, auth.NewNetrcHandler(""))
+	root, err := cmd.NewConfluentCommand("confluent", true, ver, netrc.NewNetrcHandler(""))
 	req.NoError(err)
 
 	output, err := pcmd.ExecuteCommand(root.Command, "help")
