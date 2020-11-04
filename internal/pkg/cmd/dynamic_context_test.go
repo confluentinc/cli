@@ -1,12 +1,8 @@
 package cmd_test
 
 import (
-	ctxImport "context"
 	"fmt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	sched_v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/ccloud-sdk-go/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -54,13 +50,6 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			environment:	badFlagEnv,
 			ctx: 			getEnvFlagContext(),
 			errMsg: 		fmt.Sprintf(errors.EnvironmentNotFoundErrorMsg, badFlagEnv, getEnvFlagContext().Name),
-		},
-		{
-			name:			"pass cluster from non-active environment",
-			cluster:		flagClusterInEnv,
-			ctx:			getClusterNotFoundInEnvContext(),
-			errMsg: 		fmt.Sprintf(errors.KafkaNotFoundErrorMsg, flagClusterInEnv),
-			suggestionsMsg: errors.KafkaNotFoundSuggestions,
 		},
 		{
 			name:			"pass cluster and environment",
@@ -149,20 +138,6 @@ func getEnvAndClusterFlagContext() *pcmd.DynamicContext {
 		Name:        "miles2",
 	}
 	return envAndClusterFlagContext
-}
-
-func getClusterNotFoundInEnvContext() *pcmd.DynamicContext {
-	config := v3.AuthenticatedCloudConfigMock()
-	clusterNotFoundContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
-		Prompt: &form.RealPrompt{},
-		Out:	os.Stdout,
-	}, 	&ccloud.Client{
-		Kafka:	&mock.Kafka{DescribeFunc: func(ctx ctxImport.Context, cluster *sched_v1.KafkaCluster) (*sched_v1.KafkaCluster, error){
-			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaNotFoundErrorMsg, cluster.Id), errors.KafkaNotFoundSuggestions)
-		}},
-	})
-	clusterNotFoundContext.State.Auth.Accounts = append(clusterNotFoundContext.State.Auth.Accounts, &orgv1.Account{Name: flagEnvironment, Id: flagEnvironment})
-	return clusterNotFoundContext
 }
 
 
