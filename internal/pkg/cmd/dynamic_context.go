@@ -29,7 +29,7 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 		client:   client,
 	}
 }
-
+// Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if d.resolver == nil {
 		return nil
@@ -64,11 +64,6 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		} else {
 			d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.ActiveKafkaCluster)
 			ctx.KafkaClusterContext.ActiveKafkaCluster = clusterId
-		}
-		_, err = d.FindKafkaCluster(cmd, clusterId)
-		if err != nil {
-			err = errors.CatchKafkaNotFoundError(err, clusterId)
-			return err
 		}
 	}
 	return nil
