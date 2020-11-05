@@ -128,10 +128,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 	client := a.anonHTTPClientFactory(url, a.Logger)
 
 	token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
+	if err == nil && len(token) > 0 {
 		return token, creds, nil
 	}
 
@@ -139,10 +136,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 		CLIName: a.cliName,
 		URL:     url,
 	})
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
+	if err == nil && len(token) > 0 {
 		return token, creds, nil
 	}
 
@@ -247,10 +241,7 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 	}
 
 	token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
+	if err == nil && len(token) > 0 {
 		return token, creds, nil
 	}
 
@@ -258,10 +249,7 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 		CLIName: a.cliName,
 		URL:     url,
 	})
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
+	if err == nil && len(token) > 0 {
 		return token, creds, nil
 	}
 

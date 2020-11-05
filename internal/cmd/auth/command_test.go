@@ -339,6 +339,12 @@ func TestLoginFail(t *testing.T) {
 	clearCCloudDeprecatedEnvVar(req)
 	mockLoginTokenHandler := &cliMock.MockLoginTokenHandler{
 		GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (string, *pauth.Credentials, error) {
+			return "", nil, errors.New("DO NOT RETURN THIS ERR")
+		},
+		GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, params netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+			return "", nil, errors.New("DO NOT RETURN THIS ERR")
+		},
+		GetCCloudTokenAndCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client, url string) (string, *pauth.Credentials, error) {
 			return "", nil, &ccloud.InvalidLoginError{}
 		},
 	}

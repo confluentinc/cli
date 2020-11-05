@@ -59,6 +59,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromEnvVar(cmd *cobr
 	}
 	token, err := h.authTokenHandler.GetCCloudCredentialsToken(client, email, password)
 	if err != nil {
+		utils.ErrPrintf(cmd, errors.EnvLoginFailedMsg, err.Error())
 		return "", nil, err
 	}
 	return token, &Credentials{Username: email, Password: password}, nil
@@ -87,6 +88,7 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromEnvVar(cmd *c
 	}
 	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password, h.logger)
 	if err != nil {
+		utils.ErrPrintf(cmd, errors.EnvLoginFailedMsg, err.Error())
 		return "", nil, err
 	}
 	return token, &Credentials{Username: username, Password: password}, nil
@@ -108,6 +110,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra
 		creds.Password = netrcMachine.Password
 	}
 	if err != nil {
+		utils.ErrPrintf(cmd, errors.NetrcLoginFailedMsg, err.Error())
 		return "", nil, err
 	}
 	return token, creds, nil
@@ -121,6 +124,7 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromNetrc(cmd *co
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 	token, err := h.authTokenHandler.GetConfluentAuthToken(client, netrcMachine.User, netrcMachine.Password, h.logger)
 	if err != nil {
+		utils.ErrPrintf(cmd, errors.NetrcLoginFailedMsg, err.Error())
 		return "", nil, err
 	}
 	return token, &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
