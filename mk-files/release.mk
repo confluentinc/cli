@@ -44,6 +44,7 @@ gorelease-alpine:
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
 	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
 
+# This builds the Darwin, Linux (non-Alpine), and Windows binaries using goreleaser on the host computer.  goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.  However, we then have to separately build the Alpine binaries/archives in a Docker container (since we need to use an OS which has the Alpine C runtimes instead of the C runtimes on macOS).  We then also have to manually upload the Alpine build artifacts to S3 since the goreleaser inside the Docker container doesn't have the S3 credentials from the host.
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
@@ -55,6 +56,7 @@ gorelease:
 	for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_alpine_amd64.tar.gz; \
 		aws s3 cp dist/$${binary}/$${binary}_alpine_amd64/$${binary} $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_alpine_amd64; \
+		cat dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums_alpine.txt >> dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt; \
 	done
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
@@ -79,12 +81,14 @@ set-acls:
 	done
 
 # goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
-# Chose not to change install script to expect no-v because older versions use the format with 'v'
+# Chose not to change install script to expect no-v because older versions use the format with 'v'.
+# Also, we first re-upload the checksums file because we concatenate the Alpine checksums to the checksums file after goreleaser has already published it (without the Alpine checksums) to S3
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
 	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
+		aws s3 cp dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt;\
 		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
 	done
 
