@@ -267,18 +267,6 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
 }
 
-func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
-	dynamicContext, err := a.Config.Context(cmd)
-	if err != nil {
-		return nil, err
-	}
-	var ctx *v3.Context
-	if dynamicContext != nil {
-		ctx = dynamicContext.Context
-	}
-	return ctx, nil
-}
-
 func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
