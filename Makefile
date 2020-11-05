@@ -210,7 +210,11 @@ coverage-unit:
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
+      ifdef FORMAT
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) | go run digest.go $(FORMAT)
+      else
 	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+      endif
       endif
 
 .PHONY: coverage-integ
@@ -221,7 +225,11 @@ coverage-integ:
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
+      ifdef FORMAT
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m | go run digest.go $(FORMAT)
+      else
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m $(UNIT_TEST_ARGS)
+      endif
       endif
 
 
