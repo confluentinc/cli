@@ -130,7 +130,7 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 		}
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, r.Logger)
 		if err != nil {
 			return "", err
 		}

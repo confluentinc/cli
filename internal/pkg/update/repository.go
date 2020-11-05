@@ -2,7 +2,7 @@
 package update
 
 import (
-	"github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
+	version "github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
 )
 
 // Repository is a collection of versioned packages

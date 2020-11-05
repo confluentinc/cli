@@ -8,7 +8,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -241,7 +240,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url string, caCertPath string) (string, *pauth.Credentials, error) {
-	client, err := a.getMDSClient(cmd, url, caCertPath)
+	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
 	if err != nil {
 		return "", nil, err
 	}
@@ -266,19 +265,6 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 	}
 
 	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
-}
-
-func (a *loginCommand) getMDSClient(cmd *cobra.Command, url string, caCertPath string) (*mds.APIClient, error) {
-	ctx, err := a.getContext(cmd)
-	if err != nil {
-		return nil, err
-	}
-	caCertPathFlagChanged := cmd.Flags().Changed("ca-cert-path")
-	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, caCertPathFlagChanged, url, a.Logger)
-	if err != nil {
-		return nil, err
-	}
-	return mdsClient, nil
 }
 
 func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {

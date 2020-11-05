@@ -423,7 +423,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		},
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
-		GetMDSClientFunc: func(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (client *mds.APIClient, e error) {
+		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 			mdsClient.GetConfig().HTTPClient, err = pauth.SelfSignedCertClient(certReader, logger)
 			if err != nil {
 				return nil, err
@@ -656,7 +656,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 		}
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
-		GetMDSClientFunc: func(ctx *v3.Context, caCertPath string, flagChanged bool, url string, logger *log.Logger) (client *mds.APIClient, e error) {
+		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 			return mdsClient, nil
 		},
 	}
