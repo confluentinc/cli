@@ -1,7 +1,7 @@
 FROM golang:1.14.7-alpine
 
 RUN apk update --no-cache && \
-    apk add --no-cache ca-certificates git alpine-sdk bash && \
+    apk add --no-cache ca-certificates git alpine-sdk bash sed && \
     export GO111MODULE=on && \
     mkdir -p /go/src/github.com/goreleaser && \
     cd /go/src/github.com/goreleaser && \
@@ -28,4 +28,6 @@ RUN cd /go/src/github.com/confluentinc/cli && \
     for file in dist/ccloud/*linux*; do mv -v "$file" "${file/linux/alpine}"; done ; \
     for file in dist/confluent/*linux*; do mv -v "$file" "${file/linux/alpine}"; done ; \
     for file in dist/ccloud/*.txt; do mv -v "$file" "${file/checksums/checksums_alpine}"; done; \
-    for file in dist/confluent/*.txt; do mv -v "$file" "${file/checksums/checksums_alpine}"; done
+    for file in dist/ccloud/*.txt; do sed -i 's/linux/alpine/g' $file ; done; \
+    for file in dist/confluent/*.txt; do mv -v "$file" "${file/checksums/checksums_alpine}"; done; \
+    for file in dist/confluent/*.txt; do sed -i 's/linux/alpine/g' $file ; done
