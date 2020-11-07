@@ -23,10 +23,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-const (
-	caCertPathReset = "RESET_CA_CERT_PATH"
-)
-
 type loginCommand struct {
 	*pcmd.CLICommand
 	cliName         string
@@ -251,7 +247,6 @@ func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
 		return "", err
 	}
 	if caCertPath == "" {
-		// empty string is equivalent to resetting caCertPath
 		if changed {
 			return "", nil
 		}
