@@ -113,6 +113,7 @@ jobs:
     displayName: show cc-cpd.mk variables
 
   - bash: |
+      make docker-login-ci
       make cpd-deploy-local
     displayName: cpd deploy
   
