@@ -1,7 +1,7 @@
 jobs:
 - job: system_test
   displayName: cli system-tests
-  timeoutInMinutes: 90
+  timeoutInMinutes: 150
 
   pool:
     vmImage: 'ubuntu-18.04'
