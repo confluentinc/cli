@@ -83,7 +83,8 @@ jobs:
       . vault-sem-get-secret cpd_gcloud
       . vault-sem-get-secret ssh_config
       . vault-sem-get-secret gitconfig
-      make docker-login
+      . vault-sem-get-secret artifactory-docker-helm
+      make docker-login-ci
       make helm-init-ci
       make helm-update-repo
     displayName: try to inject secrets and setup docker and helm
@@ -113,7 +114,6 @@ jobs:
     displayName: show cc-cpd.mk variables
 
   - bash: |
-      make docker-login-ci
       make cpd-deploy-local
     displayName: cpd deploy
   
