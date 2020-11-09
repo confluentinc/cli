@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 var (
-	FORMAT_OPTIONS 	= []string{"error-digest", "color"}
-	inFailedTest 	= false
-	inPassedTest 	= false
-	inNoTest		= false
-	inRun			= false
-	inFailedRun		= false
-	buffer			= ""
-	currColor		= colorpkg.FgRed
+	FORMAT_OPTIONS  = []string{"error-digest", "color"}
+	inFailedTest    = false
+	inPassedTest    = false
+	inNoTest        = false
+	inRun           = false
+	inFailedRun     = false
+	buffer          = ""
+	defaultErrColor = colorpkg.FgRed
 )
 
 func main() {
@@ -34,12 +34,6 @@ func main() {
 			break
 		}
 		digest(line, format)
-		//switch format {
-		//case "error-digest":
-		//	errorDigest(line)
-		//case "color":
-		//	color(line)
-		//}
 	}
 }
 
@@ -60,7 +54,8 @@ func digest(line, format string) {
 		updateStatusVals_InRun()
 	case inRun && strings.HasPrefix(trimmed, "Error Trace"):
 		updateStatusVals_FailedRun()
-	case strings.HasPrefix(trimmed, "--- PASS") || strings.HasPrefix(trimmed, "PASS") || strings.HasPrefix(trimmed, "ok"): // passed
+	//passed
+	case strings.HasPrefix(trimmed, "--- PASS") || strings.HasPrefix(trimmed, "PASS") || strings.HasPrefix(trimmed, "ok"):
 		writeOrClearBuffer(format)
 		updateStatusVals_PassedTest()
 	// skipped
@@ -108,111 +103,14 @@ func writeOrClearColorBuffer() {
 }
 
 func getDigestErrColor() colorpkg.Attribute{
-	if currColor == colorpkg.FgRed {
-		currColor = colorpkg.FgMagenta
-		return currColor
+	if defaultErrColor == colorpkg.FgRed {
+		defaultErrColor = colorpkg.FgMagenta
+		return defaultErrColor
 	} else {
-		currColor = colorpkg.FgRed
-		return currColor
+		defaultErrColor = colorpkg.FgRed
+		return defaultErrColor
 	}
 }
-
-//func color2(line string) {
-//	trimmed := strings.TrimSpace(line)
-//	switch {
-//	case strings.HasPrefix(trimmed, "=== RUN"):
-//		writeOrClearErrDigestBuffer()
-//		updateStatusVals_InRun()
-//	case inRun && strings.HasPrefix(trimmed, "Error Trace"):
-//		updateStatusVals_FailedRun()
-//	case strings.HasPrefix(trimmed, "--- PASS") || strings.HasPrefix(trimmed, "PASS") || strings.HasPrefix(trimmed, "ok"): // passed
-//		writeOrClearErrDigestBuffer()
-//		updateStatusVals_PassedTest()
-//	// skipped
-//	case strings.HasPrefix(trimmed, "--- SKIP") || strings.Contains(line, "[no test files]"):
-//		writeOrClearErrDigestBuffer()
-//		updateStatusVals_NoTest()
-//	// failed
-//	case strings.HasPrefix(trimmed, "--- FAIL") || strings.HasPrefix(trimmed, "FAIL"):
-//		writeOrClearErrDigestBuffer()
-//		updateStatusVals_FailedTest()
-//	}
-//	buffer += line + "\n"
-//}
-//
-//func color(line string) {
-//	trimmed := strings.TrimSpace(line)
-//	switch {
-//	case strings.HasPrefix(trimmed, "=== RUN"):
-//		if buffer != "" {
-//			colorpkg.Set(colorpkg.FgCyan)
-//			fmt.Printf("%s\n", buffer)
-//			buffer = ""
-//		}
-//		updateStatusVals_InRun()
-//	case inRun && strings.HasPrefix(trimmed, "Error Trace"):
-//		updateStatusVals(false, false, false, false, true)
-//	case strings.Contains(trimmed, "[no test files]"):
-//		updateStatusVals_NoTest()
-//		colorpkg.Set(colorpkg.FgCyan)
-//	case strings.HasPrefix(trimmed, "--- PASS"): // passed
-//		updateStatusVals_PassedTest()
-//		colorpkg.Set(colorpkg.FgGreen)
-//		line = fmt.Sprintf("✅ %s", line)
-//	case strings.HasPrefix(trimmed, "ok"):
-//		updateStatusVals_PassedTest()
-//		colorpkg.Set(colorpkg.FgGreen)
-//		line = fmt.Sprintf("✅ %s", line)
-//	case strings.HasPrefix(trimmed, "PASS"):
-//		updateStatusVals_PassedTest()
-//		colorpkg.Set(colorpkg.FgGreen)
-//		line = fmt.Sprintf("✅ %s", line)
-//	// skipped
-//	case strings.HasPrefix(trimmed, "--- SKIP"):
-//		updateStatusVals_NoTest()
-//		colorpkg.Set(colorpkg.FgCyan)
-//	// failed
-//	case strings.HasPrefix(trimmed, "--- FAIL"):
-//		updateStatusVals_FailedTest()
-//		colorpkg.Set(colorpkg.FgRed)
-//		line = fmt.Sprintf("❌ %s", line)
-//	case strings.HasPrefix(trimmed, "FAIL"):
-//		updateStatusVals_FailedTest()
-//		colorpkg.Set(colorpkg.FgRed)
-//		line = fmt.Sprintf("❌ %s", line)
-//	default:
-//		if inFailedTest || inFailedRun {
-//			colorpkg.Set(colorpkg.FgRed)
-//		} else if inPassedTest {
-//			colorpkg.Set(colorpkg.FgGreen)
-//		} else if inNoTest {
-//			colorpkg.Set(colorpkg.FgCyan)
-//		}
-//	}
-//	if !inRun {
-//		if buffer != "" {
-//			if inFailedRun {
-//				colorpkg.Set(colorpkg.FgRed)
-//			} else {
-//				colorpkg.Set(colorpkg.FgCyan)
-//			}
-//			fmt.Printf("%s\n", buffer)
-//			buffer = ""
-//		}
-//		fmt.Printf("%s\n", line)
-//	} else {
-//		buffer += line + "\n"
-//	}
-//	colorpkg.Unset()
-//}
-
-//func updateStatusVals(failedTest bool, passedTest bool, noTest bool, run bool, failedRun bool) {
-//	inFailedTest	= failedTest
-//	inPassedTest	= passedTest
-//	inNoTest		= noTest
-//	inRun			= run
-//	inFailedRun		= failedRun
-//}
 
 func updateStatusVals_InRun() {
 	inFailedTest	= false
