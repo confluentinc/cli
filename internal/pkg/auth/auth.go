@@ -126,6 +126,12 @@ func addOrUpdateContext(config *v3.Config, username string, url string, state *v
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state
 		ctx.State = state
+
+		ctx.Platform = platform
+		ctx.PlatformName = platform.Name
+
+		ctx.Credential = credential
+		ctx.CredentialName = credential.Name
 	} else {
 		err = config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
 			"", nil, state)
