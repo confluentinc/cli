@@ -376,14 +376,35 @@ func TestLogout(t *testing.T) {
 
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
-	mdsConfig := mds.NewConfiguration()
-	mdsClient := mds.NewAPIClient(mdsConfig)
 	cfg := v3.New(&config.Params{
 		CLIName:    "confluent",
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
+	loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg)
+	_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
+	req.NoError(err)
+
+	// ensure CaCertPath is stored in Config
+	req.Equal("testcert.pem", cfg.Context().Platform.CaCertPath)
+
+	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
+	// login using ca-cert-path stored in config
+	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090")
+	req.NoError(err)
+	req.Equal("testcert.pem", cfg.Context().Platform.CaCertPath)
+
+	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
+	// reset ca-cert-path
+	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=")
+	req.NoError(err)
+	req.Equal("", cfg.Context().Platform.CaCertPath)
+}
+
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config) *loginCommand {
+	mdsConfig := mds.NewConfiguration()
+	mdsClient := mds.NewAPIClient(mdsConfig)
+
 	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
@@ -434,8 +455,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), nil, nil,
 		mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginTokenHandler)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
-	req.NoError(err)
+
+	return loginCmd
 }
 
 func TestLoginWithExistingContext(t *testing.T) {

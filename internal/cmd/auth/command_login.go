@@ -240,12 +240,12 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 // if ca-cert-path flag is not used, returns caCertPath value from config
 // if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
 func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
-	changed := cmd.Flags().Changed("ca-cert-path")
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return "", err
 	}
 	if caCertPath == "" {
+		changed := cmd.Flags().Changed("ca-cert-path")
 		if changed {
 			return "", nil
 		}
@@ -349,6 +349,12 @@ func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2
 	if ctx, ok := a.Config.Contexts[ctxName]; ok {
 		a.Config.ContextStates[ctxName] = state
 		ctx.State = state
+
+		ctx.Platform = platform
+		ctx.PlatformName = platform.Name
+
+		ctx.Credential = credential
+		ctx.CredentialName = credential.Name
 	} else {
 		err = a.Config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
 			"", nil, state)
