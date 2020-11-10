@@ -28,7 +28,7 @@ type MockAuthTokenHandler struct {
 	RefreshCCloudSSOTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, refreshToken, url string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error)
 
 	lockGetConfluentAuthToken sync.Mutex
-	GetConfluentAuthTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, username, password string) (string, error)
+	GetConfluentAuthTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, username, password string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error)
 
 	calls struct {
 		GetCCloudUserSSO []struct {
@@ -57,6 +57,7 @@ type MockAuthTokenHandler struct {
 			MdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
 			Username  string
 			Password  string
+			Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
 	}
 }
@@ -244,7 +245,7 @@ func (m *MockAuthTokenHandler) RefreshCCloudSSOTokenCalls() []struct {
 }
 
 // GetConfluentAuthToken mocks base method by wrapping the associated func.
-func (m *MockAuthTokenHandler) GetConfluentAuthToken(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, username, password string) (string, error) {
+func (m *MockAuthTokenHandler) GetConfluentAuthToken(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, username, password string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (string, error) {
 	m.lockGetConfluentAuthToken.Lock()
 	defer m.lockGetConfluentAuthToken.Unlock()
 
@@ -256,15 +257,17 @@ func (m *MockAuthTokenHandler) GetConfluentAuthToken(mdsClient *github_com_confl
 		MdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
 		Username  string
 		Password  string
+		Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 	}{
 		MdsClient: mdsClient,
 		Username:  username,
 		Password:  password,
+		Logger:    logger,
 	}
 
 	m.calls.GetConfluentAuthToken = append(m.calls.GetConfluentAuthToken, call)
 
-	return m.GetConfluentAuthTokenFunc(mdsClient, username, password)
+	return m.GetConfluentAuthTokenFunc(mdsClient, username, password, logger)
 }
 
 // GetConfluentAuthTokenCalled returns true if GetConfluentAuthToken was called at least once.
@@ -280,6 +283,7 @@ func (m *MockAuthTokenHandler) GetConfluentAuthTokenCalls() []struct {
 	MdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
 	Username  string
 	Password  string
+	Logger    *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
 	m.lockGetConfluentAuthToken.Lock()
 	defer m.lockGetConfluentAuthToken.Unlock()

@@ -1,7 +1,7 @@
 jobs:
 - job: system_test
   displayName: cli system-tests
-  timeoutInMinutes: 90
+  timeoutInMinutes: 150
 
   pool:
     vmImage: 'ubuntu-18.04'
@@ -83,7 +83,8 @@ jobs:
       . vault-sem-get-secret cpd_gcloud
       . vault-sem-get-secret ssh_config
       . vault-sem-get-secret gitconfig
-      make docker-login
+      . vault-sem-get-secret artifactory-docker-helm
+      make docker-login-ci
       make helm-init-ci
       make helm-update-repo
     displayName: try to inject secrets and setup docker and helm

@@ -131,7 +131,7 @@ adjust_os() {
   true
 }
 s3_releases() {
-  s3url="{S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/&delimiter=/"
+  s3url="${S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/&delimiter=/"
   xml=$(http_copy "$s3url")
   versions=$(echo "$xml" | sed -n 's/</\
 </gp' | sed -n "s/<Prefix>${PROJECT_NAME}\/archives\/\(.*\)\//\1/p") || return 1

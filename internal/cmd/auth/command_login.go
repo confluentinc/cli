@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -114,10 +113,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
 
 	token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
+	if err == nil && len(token) > 0 {
 		return token, creds, nil
 	}
 
@@ -125,10 +121,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 		CLIName: a.cliName,
 		URL:     url,
 	})
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
+	if err == nil && len(token) > 0 {
 		return token, creds, nil
 	}
 
@@ -141,12 +134,12 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	caCertPath, err := a.getCaCertPath(cmd)
 	if err != nil {
 		return err
 	}
 
-	token, creds, err := a.getConfluentTokenAndCredentials(cmd, url, caCertPath)
+	token, creds, err := a.getConfluentTokenAndCredentials(cmd, caCertPath, url)
 	if err != nil {
 		return err
 	}
@@ -165,45 +158,32 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url string, caCertPath string) (string, *pauth.Credentials, error) {
-	client, err := a.getMDSClient(cmd, url, caCertPath)
+// if ca-cert-path flag is not used, returns caCertPath value from config
+// if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
+func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
-
-	token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
-	if err != nil {
-		return "", nil, err
+	if caCertPath == "" {
+		changed := cmd.Flags().Changed("ca-cert-path")
+		if changed {
+			return "", nil
+		}
+		return a.getCaCertPathFromConfig(cmd)
 	}
-	if len(token) > 0 {
-		return token, creds, nil
-	}
-
-	token, creds, err = a.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
-		CLIName: a.cliName,
-		URL:     url,
-	})
-	if err != nil {
-		return "", nil, err
-	}
-	if len(token) > 0 {
-		return token, creds, nil
-	}
-
-	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
+	return caCertPath, nil
 }
 
-func (a *loginCommand) getMDSClient(cmd *cobra.Command, url string, caCertPath string) (*mds.APIClient, error) {
+func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command) (string, error) {
 	ctx, err := a.getContext(cmd)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	caCertPathFlagChanged := cmd.Flags().Changed("ca-cert-path")
-	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, caCertPathFlagChanged, url, a.Logger)
-	if err != nil {
-		return nil, err
+	if ctx != nil {
+		return ctx.Platform.CaCertPath, nil
 	}
-	return mdsClient, nil
+	return "", nil
 }
 
 func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
@@ -216,6 +196,30 @@ func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
 		ctx = dynamicContext.Context
 	}
 	return ctx, nil
+}
+
+// Order of precedence: env vars > netrc > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url string, caCertPath string) (string, *pauth.Credentials, error) {
+	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
+	if err != nil {
+		return "", nil, err
+	}
+
+	token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
+	if err == nil && len(token) > 0 {
+		return token, creds, nil
+	}
+
+	token, creds, err = a.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
+		CLIName: a.cliName,
+		URL:     url,
+	})
+	if err == nil && len(token) > 0 {
+		return token, creds, nil
+	}
+
+	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
 }
 
 func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {

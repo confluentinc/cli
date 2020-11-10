@@ -439,7 +439,7 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 			return "", err
 		}
 	} else {
-		client, err := r.MDSClientManager.GetMDSClient(ctx.Context, ctx.Platform.CaCertPath, false, ctx.Platform.Server, r.Logger)
+		client, err := r.MDSClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, r.Logger)
 		if err != nil {
 			return "", err
 		}

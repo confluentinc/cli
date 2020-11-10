@@ -272,13 +272,15 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		return server.URL
 	}
 
-	s.T().Run("invalid user or pass", func(tt *testing.T) {
-		loginURL := serveErrors(tt)
-		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
-		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
-	})
+	//TODO: add this test back when we add prompt testing for integration test
+	// Now that non-interactive login is offically supported, we ignore failurs from env var and netrc login and give user anothe change at loggin in from prompting
+	//	s.T().Run("invalid user or pass", func(tt *testing.T) {
+	//		loginURL := serveErrors(tt)
+	//		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
+	//		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 1)
+	//		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+	//		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
+	//	})
 
 	s.T().Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)

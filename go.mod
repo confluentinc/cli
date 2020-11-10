@@ -40,6 +40,7 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
 	github.com/csreesan/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/daixiang0/gci v0.0.0-20200727065011-66f1df783cb2 // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
