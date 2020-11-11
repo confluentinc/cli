@@ -14,9 +14,18 @@ import (
 
 	"github.com/c-bata/go-prompt"
 
+	//new imports
+	"encoding/json"
+	"net/http"
+	neturl "net/url"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/dghubble/sling"
 
 	"github.com/Shopify/sarama"
+	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
@@ -71,6 +80,29 @@ type structuredDescribeDisplay struct {
 	Partitions        []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
 	Config            map[string]string          `json:"config" yaml:"config"`
 }
+
+type partitionData struct {
+	TopicName              string  `json:"topic" yaml:"topic"`
+	PartitionId            int32   `json:"partition" yaml:"partition"`
+	LeaderBrokerId         int32   `json:"leader" yaml:"leader"`
+	ReplicaBrokerIds       []int32 `json:"replicas" yaml:"replicas"`
+	InSyncReplicaBrokerIds []int32 `json:"isr" yaml:"isr"`
+}
+
+type topicData struct {
+	TopicName         string            `json:"topic_name" yaml:"topic_name"`
+	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
+	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
+	Partitions        []partitionData   `json:"partitions" yaml:"partitions"`
+	Configs           map[string]string `json:"config" yaml:"config"`
+}
+
+type response struct {
+	Error string `json:"error"`
+	Token string `json:"token"`
+}
+
+//type contextKey string
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
 func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
@@ -183,7 +215,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all topics.",
+				Text: "List all topics of a specified cluster.",
 				Code: "ccloud kafka topic list",
 			},
 		),
@@ -200,8 +232,8 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named ``my_topic`` with default options.",
-				Code: "ccloud kafka topic create my_topic",
+				Text: "Create a topic named ``my_topic`` with default options at specified cluster.",
+				Code: "ccloud kafka topic create my_topic --config cleanup.policy=compact,compression.type=gzip",
 			},
 		),
 	}
@@ -222,8 +254,8 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the ``my_topic`` topic.",
-				Code: "ccloud kafka topic describe my_topic",
+				Text: "Describe the ``my_topic`` topic at specified cluster (providing Kafka REST Proxy endpoint).",
+				Code: "ccloud kafka topic describe my_topic --url http://localhost:8082",
 			},
 		),
 	}
@@ -239,8 +271,8 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
-				Code: `ccloud kafka topic update my_topic --config="retention.ms=259200000"`,
+				Text: "Modify the ``my_topic`` topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).",
+				Code: `ccloud kafka topic update my_topic --url http://localhost:8082 --config="retention.ms=259200000"`,
 			},
 		),
 	}
@@ -275,8 +307,8 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
-				Code: "ccloud kafka topic delete my_topic\nccloud kafka topic delete my_topic_avro",
+				Text: "Delete the topics ``my_topic`` and ``my_topic_avro`` at specified cluster. Use this command carefully as data loss can occur.",
+				Code: "ccloud kafka topic delete my_topic ",
 			},
 		),
 	}
@@ -287,157 +319,524 @@ func (a *authenticatedTopicCommand) init() {
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
+func setServerURL(client *kafkarestv3.APIClient, url string) {
+	fmt.Println("http://" + strings.Trim(url, "9092") + "8090/kafka/v3")
+	client.ChangeBasePath("http://" + strings.Trim(url, "9092") + "8090/kafka/v3")
+}
+
+type kafkaRestV3Error struct {
+	Code    int    `json:"error_code"`
+	Message string `json:"message"`
+}
+
+func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.APIClient, resp *http.Response, err error) error {
+	switch err.(type) {
+	case *neturl.Error: // Handle errors with request url
+		if e, ok := err.(*neturl.Error); ok {
+			// TODO: Currently this error exposes implementation detail
+			// TODO: add message: cluster may not be ready?
+			return errors.Errorf(errors.InvalidFlagValueWithWrappedErrorErrorMsg, url, "url", e.Err)
+		}
+	case kafkarestv3.GenericOpenAPIError:
+		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
+			var decodedError kafkaRestV3Error
+			err = json.Unmarshal(openAPIError.Body(), &decodedError)
+			if err != nil {
+				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+			}
+			// return fmt.Errorf("Kafka REST Proxy backend error:\n\t%v", decodedError.Message)
+			return fmt.Errorf("Kafka REST Proxy backend error:\n\t error msg: %v error code: %v", decodedError.Message, decodedError.Code)
+		}
+	}
+	return err
+}
+
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	resp, err := a.getTopics(cmd)
+	//Get lkc and bootstrap
+	kcc, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kcc.ID
+	bootstrap := kcc.Bootstrap
+	setServerURL(a.KafkaRestClient, bootstrap)
+	kafkaRestClient := a.KafkaRestClient
+
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+	bearerSessionToken := "Bearer " + state.AuthToken
+	accessTokenEndpoint := strings.Trim(a.Context.Platform.Server, "/") + "/api/access_tokens"
+	responses := new(response)
+
+	// Configure and send post request with session token to Auth Service
+	_, err = sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
-	if err != nil {
-		return err
+	// New context with access token to be passed in Kafka-REST call
+	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, responses.Token)
+
+	// Get Topics using Kafka-REST
+	topicGetResp, _, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsGet(newCtx, lkc)
+
+	//Kafka-REST exists
+	if err == nil {
+		topicDatas := topicGetResp.Data
+
+		outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
+		if err != nil {
+			return err
+		}
+		for _, topicData := range topicDatas {
+			outputWriter.AddElement(&topicData)
+		}
+
+		return outputWriter.Out()
+	} else {
+		//Kafka-API backup
+		resp, err := a.getTopics(cmd)
+		if err != nil {
+			return err
+		}
+		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
+		if err != nil {
+			return err
+		}
+		for _, topic := range resp {
+			outputWriter.AddElement(topic)
+		}
+		return outputWriter.Out()
 	}
-	for _, topic := range resp {
-		outputWriter.AddElement(topic)
-	}
-	return outputWriter.Out()
+	// if err != nil {
+	// 	return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
+	// }
 }
 
 func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	//Parse arguments
+	topicName := args[0]
+
+	numPartitions, err := cmd.Flags().GetInt32("partitions")
+	if err != nil {
+		return err
+	}
+	topicConfigStrings, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+	// linkName, err := cmd.Flags().GetString("link")
+	// if err != nil {
+	// 	return err
+	// }
+	// mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
+	// if err != nil {
+	// 	return err
+	// }
+	// dryRun, err := cmd.Flags().GetBool("dry-run")
+	// if err != nil {
+	// 	return err
+	// }
+	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
 	if err != nil {
 		return err
 	}
 
-	topic := &schedv1.Topic{
-		Spec: &schedv1.TopicSpecification{
-			Configs: make(map[string]string)},
-		Validate: false,
-	}
-
-	topic.Spec.Name = args[0]
-
-	topic.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
+	topicConfigsMap, err := toMap(topicConfigStrings)
 	if err != nil {
 		return err
 	}
 
-	topic.Spec.ReplicationFactor = defaultReplicationFactor
-
-	topic.Validate, err = cmd.Flags().GetBool("dry-run")
-	if err != nil {
-		return err
-	}
-
-	configs, err := cmd.Flags().GetStringSlice("config")
-	if err != nil {
-		return err
-	}
-
-	if topic.Spec.Configs, err = toMap(configs); err != nil {
-		return err
-	}
-
-	linkName, err := cmd.Flags().GetString("link")
-	if err != nil {
-		return err
-	}
-
-	mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
-	if err != nil {
-		return err
-	}
-
-	if len(linkName) > 0 || len(mirrorTopic) > 0 {
-		topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
-
-		// Avoid specifying partition count for mirrored topics.
-		topic.Spec.NumPartitions = unspecifiedPartitionCount
-	}
-
-	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
-		ifNotExistsFlag, flagErr := cmd.Flags().GetBool("if-not-exists")
-		if flagErr != nil {
-			return flagErr
+	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+	i := 0
+	for k, v := range topicConfigsMap {
+		v2 := v // create a local copy to use pointer
+		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
+			Name:  k,
+			Value: &v2,
 		}
-		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		i++
+	}
+
+	//Get lkc and bootstrap
+	kcc, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
 		return err
 	}
-	utils.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+	lkc := kcc.ID
+	bootstrap := kcc.Bootstrap
+	setServerURL(a.KafkaRestClient, bootstrap)
+	kafkaRestClient := a.KafkaRestClient
+
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+	bearerSessionToken := "Bearer " + state.AuthToken
+	accessTokenEndpoint := strings.Trim(a.Context.Platform.Server, "/") + "/api/access_tokens"
+	responses := new(response)
+
+	// Configure and send post request with session token to Auth Service
+	_, err = sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
+	if err != nil {
+		return err
+	}
+
+	// New context with access token to be passed in Kafka-REST call
+	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, responses.Token)
+
+	// Create new topic
+	_, _, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsPost(newCtx, lkc, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+		CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
+			TopicName:         topicName,
+			PartitionsCount:   numPartitions,
+			ReplicationFactor: 3,
+			Configs:           topicConfigs,
+			//TODO what about linkName and mirror-topic and dry-run? go-sdk doesn't have these in optional.interface
+		}),
+	})
+
+	if err != nil {
+		// catch error where topic already exists
+		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
+			var decodedError kafkaRestV3Error
+			err2 := json.Unmarshal(openAPIError.Body(), &decodedError)
+			if err2 != nil {
+				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+			}
+			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
+				if ifNotExists == false {
+					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsErrorMsg, topicName), errors.TopicExistsSuggestions)
+				} // ignore error if ifNotExists flag is set
+				return nil
+			}
+		} else {
+			// if error is something else, try Kafka-API
+			// Kafka-API backup
+			cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+			if err != nil {
+				return err
+			}
+
+			topic := &schedv1.Topic{
+				Spec: &schedv1.TopicSpecification{
+					Configs: make(map[string]string)},
+				Validate: false,
+			}
+
+			topic.Spec.Name = args[0]
+
+			topic.Spec.NumPartitions, err = cmd.Flags().GetInt32("partitions")
+			if err != nil {
+				return err
+			}
+
+			topic.Spec.ReplicationFactor = defaultReplicationFactor
+
+			topic.Validate, err = cmd.Flags().GetBool("dry-run")
+			if err != nil {
+				return err
+			}
+
+			configs, err := cmd.Flags().GetStringSlice("config")
+			if err != nil {
+				return err
+			}
+
+			if topic.Spec.Configs, err = toMap(configs); err != nil {
+				return err
+			}
+
+			linkName, err := cmd.Flags().GetString("link")
+			if err != nil {
+				return err
+			}
+
+			mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
+			if err != nil {
+				return err
+			}
+
+			if len(linkName) > 0 || len(mirrorTopic) > 0 {
+				topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
+
+				// Avoid specifying partition count for mirrored topics.
+				topic.Spec.NumPartitions = unspecifiedPartitionCount
+			}
+
+			if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+				ifNotExistsFlag, flagErr := cmd.Flags().GetBool("if-not-exists")
+				if flagErr != nil {
+					return flagErr
+				}
+				err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
+				err = errors.CatchClusterNotReadyError(err, cluster.Id)
+				return err
+			}
+			utils.ErrPrintf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+			return nil
+		}
+		// return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch all other errors
+
+	}
+	// Kafka-REST exists
+	utils.ErrPrintf(cmd, errors.CreatedTopicMsg, topicName) // TODO: why print to StdErr
 	return nil
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	topicName := args[0]
+	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
 	}
 
-	topic := &schedv1.TopicSpecification{Name: args[0]}
-	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
-	if err != nil {
-		return err
-	}
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-	if outputOption == output.Human.String() {
-		return printHumanDescribe(cmd, resp)
+	// Kafka-API
+	if url == "" {
+		cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+		if err != nil {
+			return err
+		}
+
+		topic := &schedv1.TopicSpecification{Name: args[0]}
+		resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+		if err != nil {
+			return err
+		}
+		outputOption, err := cmd.Flags().GetString(output.FlagName)
+		if err != nil {
+			return err
+		}
+		if outputOption == output.Human.String() {
+			return printHumanDescribe(cmd, resp)
+		} else {
+			return printStructuredDescribe(resp, outputOption)
+		}
 	} else {
-		return printStructuredDescribe(resp, outputOption)
+		format, err := cmd.Flags().GetString(output.FlagName)
+		if err != nil {
+			return err
+		} else if output.IsValidFormat(format) == false { // catch format flag
+			return output.NewInvalidOutputFormatFlagError(format)
+		}
+
+		setServerURL(a.KafkaRestClient, url)
+		kafkaRestClient := a.KafkaRestClient
+
+		// Get clusterId
+		kcc, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		if err != nil {
+			return err
+		}
+		lkc := kcc.ID
+
+		// Get partitions
+		topicData := &topicData{}
+		partitionsResp, resp, err := kafkaRestClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), lkc, topicName)
+		if err != nil {
+			return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch topic not exist error
+		} else if partitionsResp.Data == nil {
+			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+		}
+		topicData.TopicName = topicName
+		topicData.PartitionCount = len(partitionsResp.Data)
+		topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
+		for i, partitionResp := range partitionsResp.Data {
+			partitionId := partitionResp.PartitionId
+			partitionData := partitionData{
+				TopicName:   topicName,
+				PartitionId: partitionId,
+			}
+
+			// For each partition, get replicas
+			replicasResp, resp, err := kafkaRestClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(context.Background(), lkc, topicName, partitionId)
+			if err != nil {
+				return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
+			} else if replicasResp.Data == nil {
+				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+			}
+			partitionData.ReplicaBrokerIds = make([]int32, len(replicasResp.Data))
+			partitionData.InSyncReplicaBrokerIds = make([]int32, 0, len(replicasResp.Data))
+			for j, replicaResp := range replicasResp.Data {
+				if replicaResp.IsLeader {
+					partitionData.LeaderBrokerId = replicaResp.BrokerId
+				}
+				partitionData.ReplicaBrokerIds[j] = replicaResp.BrokerId
+				if replicaResp.IsInSync {
+					partitionData.InSyncReplicaBrokerIds = append(partitionData.InSyncReplicaBrokerIds, replicaResp.BrokerId)
+				}
+			}
+			if i == 0 {
+				topicData.ReplicationFactor = len(replicasResp.Data)
+			}
+			topicData.Partitions[i] = partitionData
+		}
+
+		// Get configs
+		configsResp, resp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), lkc, topicName)
+		if err != nil {
+			return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
+		} else if configsResp.Data == nil {
+			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
+		}
+		topicData.Configs = make(map[string]string)
+		for _, config := range configsResp.Data {
+			topicData.Configs[config.Name] = *config.Value
+		}
+
+		// Print topic info
+		if format == output.Human.String() { // human output
+			// Output partitions info
+			utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
+			partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
+			partitionsTableEntries := make([][]string, topicData.PartitionCount)
+			for i, partition := range topicData.Partitions {
+				partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
+			}
+			printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
+			// Output config info
+			utils.Print(cmd, "\nConfiguration\n\n")
+			configsTableLabels := []string{"Name", "Value"}
+			configsTableEntries := make([][]string, len(topicData.Configs))
+			i := 0
+			for name, value := range topicData.Configs {
+				configsTableEntries[i] = printer.ToRow(&struct {
+					name  string
+					value string
+				}{name: name, value: value}, []string{"name", "value"})
+				i++
+			}
+			sort.Slice(configsTableEntries, func(i int, j int) bool {
+				return configsTableEntries[i][0] < configsTableEntries[j][0]
+			})
+			printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
+		} else { // machine output (json or yaml)
+			err = output.StructuredOutput(format, topicData)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
+
 }
 
 func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	// Parse Argument
+	topicName := args[0]
+	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
 	}
 
-	topic := &schedv1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
-
-	configs, err := cmd.Flags().GetStringSlice("config")
-	if err != nil {
-		return err
-	}
-
-	configMap, err := toMap(configs)
-	if err != nil {
-		return err
-	}
-	topic.Configs = copyMap(configMap)
-
-	validate, err := cmd.Flags().GetBool("dry-run")
-	if err != nil {
-		return err
-	}
-	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
-	if err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
-		return err
-	}
-	utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
-	var entries [][]string
-	titleRow := []string{"Name", "Value"}
-	for name, value := range configMap {
-		record := &struct {
-			Name  string
-			Value string
-		}{
-			name,
-			value,
+	// Kafka-API
+	if url == "" {
+		cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+		if err != nil {
+			return err
 		}
-		entries = append(entries, printer.ToRow(record, titleRow))
+
+		topic := &schedv1.TopicSpecification{Name: args[0], Configs: make(map[string]string)}
+
+		configs, err := cmd.Flags().GetStringSlice("config")
+		if err != nil {
+			return err
+		}
+
+		configMap, err := toMap(configs)
+		if err != nil {
+			return err
+		}
+		topic.Configs = copyMap(configMap)
+
+		validate, err := cmd.Flags().GetBool("dry-run")
+		if err != nil {
+			return err
+		}
+		err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
+		if err != nil {
+			err = errors.CatchClusterNotReadyError(err, cluster.Id)
+			return err
+		}
+		utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+		var entries [][]string
+		titleRow := []string{"Name", "Value"}
+		for name, value := range configMap {
+			record := &struct {
+				Name  string
+				Value string
+			}{
+				name,
+				value,
+			}
+			entries = append(entries, printer.ToRow(record, titleRow))
+		}
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i][0] < entries[j][0]
+		})
+		printer.RenderCollectionTable(entries, titleRow)
+		return nil
+	} else {
+		setServerURL(a.KafkaRestClient, url)
+		kafkaRestClient := a.KafkaRestClient
+
+		// Get clusterId
+		kcc, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		if err != nil {
+			return err
+		}
+		lkc := kcc.ID
+
+		// Update Config
+		configStrings, err := cmd.Flags().GetStringSlice("config")
+		if err != nil {
+			return err
+		}
+		configsMap, err := toMap(configStrings)
+		if err != nil {
+			return err
+		}
+		configs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+		i := 0
+		for k, v := range configsMap {
+			v2 := v
+			configs[i] = kafkarestv3.AlterConfigBatchRequestDataData{
+				Name:      k,
+				Value:     &v2,
+				Operation: nil,
+			}
+			i++
+		}
+		resp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(context.Background(), lkc, topicName,
+			&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
+				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+			})
+		if err != nil {
+			return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle config key/value invalid errors
+		}
+		// no errors (config update successful)
+		utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
+		// Print Updated Configs
+		tableLabels := []string{"Name", "Value"}
+		tableEntries := make([][]string, len(configs))
+		for i, config := range configs {
+			tableEntries[i] = printer.ToRow(
+				&struct {
+					Name  string
+					Value string
+				}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
+		}
+		sort.Slice(tableEntries, func(i int, j int) bool {
+			return tableEntries[i][0] < tableEntries[j][0]
+		})
+		printer.RenderCollectionTable(tableEntries, tableLabels)
+		return nil
 	}
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i][0] < entries[j][0]
-	})
-	printer.RenderCollectionTable(entries, titleRow)
-	return nil
 }
 
+//TODO - talk to Agam about kafkarest mirror
 func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) error {
 	const stopAction = "stop"
 
@@ -483,19 +882,63 @@ func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	topicName := args[0]
+
+	//Get lkc and bootstrap
+	kcc, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kcc.ID
+	bootstrap := kcc.Bootstrap
+	setServerURL(a.KafkaRestClient, bootstrap)
+	kafkaRestClient := a.KafkaRestClient
+
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+	bearerSessionToken := "Bearer " + state.AuthToken
+	accessTokenEndpoint := strings.Trim(a.Context.Platform.Server, "/") + "/api/access_tokens"
+	responses := new(response)
+
+	// Configure and send post request with session token to Auth Service
+	_, err = sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
 	if err != nil {
 		return err
 	}
 
-	topic := &schedv1.TopicSpecification{Name: args[0]}
-	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
-	if err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
-		return err
+	// New context with access token to be passed in Kafka-REST call
+	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, responses.Token)
+
+	// Delete topic with Kafka-REST
+	_, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(newCtx, lkc, topicName)
+
+	// if err != nil {
+	// 	return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catches topic name not found (backend error)
+	// }
+
+	// Kafka-REST exists
+	if err == nil {
+		utils.ErrPrintf(cmd, errors.DeletedTopicMsg, topicName) // topic successfully created
+		return nil
+	} else {
+		// Kafka-API backup
+		cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+		if err != nil {
+			return err
+		}
+
+		topic := &schedv1.TopicSpecification{Name: args[0]}
+		err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+		if err != nil {
+			err = errors.CatchClusterNotReadyError(err, cluster.Id)
+			return err
+		}
+		utils.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
+		return nil
 	}
-	utils.ErrPrintf(cmd, errors.DeletedTopicMsg, args[0])
-	return nil
+
 }
 
 func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {

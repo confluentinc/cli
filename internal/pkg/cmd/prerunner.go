@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -56,16 +57,18 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client      *ccloud.Client
-	MDSClient   *mds.APIClient
-	MDSv2Client *mdsv2alpha1.APIClient
-	Context     *DynamicContext
-	State       *v2.ContextState
+	Client          *ccloud.Client
+	MDSClient       *mds.APIClient
+	MDSv2Client     *mdsv2alpha1.APIClient
+	KafkaRestClient *kafkarestv3.APIClient
+	Context         *DynamicContext
+	State           *v2.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
 	*CLICommand
-	Context *DynamicContext
+	KafkaRestClient *kafkarestv3.APIClient
+	Context         *DynamicContext
 }
 
 func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
@@ -152,9 +155,10 @@ func (a *AuthenticatedCLICommand) EnvironmentId() string {
 
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-		Context:    nil,
-		State:      nil,
+		CLICommand:      NewCLICommand(command, prerunner),
+		KafkaRestClient: nil,
+		Context:         nil,
+		State:           nil,
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
@@ -306,6 +310,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
+		command.KafkaRestClient = kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
 		return r.ValidateToken(cmd, command.Config)
 	}
 }
