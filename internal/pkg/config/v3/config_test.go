@@ -358,6 +358,7 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 		} else {
 			require.Equal(t, tempKafka, ctx.KafkaClusterContext.ActiveKafkaCluster)
 		}
+		tt.config.overwrittenActiveKafka = ""
 	}
 }
 
@@ -396,6 +397,7 @@ func TestConfig_OverwrittenContext(t *testing.T) {
 		//restore should reset the current context to be the flag value
 		tt.config.restoreOverwrittenContext(tempContext)
 		require.Equal(t, tt.currContext, tt.config.CurrentContext)
+		tt.config.overwrittenCurrContext = ""
 	}
 }
 
@@ -442,6 +444,7 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 			tt.config.restoreOverwrittenAccount(tempAccount)
 			require.Equal(t, tt.activeAccount, tt.config.Context().State.Auth.Account.Id)
 		}
+		tt.config.overwrittenAccount = nil
 	}
 }
 

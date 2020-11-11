@@ -371,6 +371,10 @@ const (
 		"To create an API key, use `ccloud api-key create --resource %s`.\n" +
 		"To store an existing API key, use `ccloud api-key store --resource %s`."
 
+	//Flag parsing errors
+	EnvironmentFlagWithApiLoginErrorMsg	= "\"environment\" flag should not be passed for API key context"
+	ClusterFlagWithApiLoginErrorMsg		= "\"cluster\" flag should not be passed for API key context, cluster is inferred"
+
 	// Special error types
 	GenericOpenAPIErrorMsg = "Metadata Service backend error: %s: %s"
 )

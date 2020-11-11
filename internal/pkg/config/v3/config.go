@@ -169,7 +169,7 @@ func (c *Config) Save() error {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
 	c.restoreOverwrittenKafka(tempKafka)
-	c.restoreOverwrittenKafka(tempContext)
+	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenAccount(tempAccount)
 	return nil
 }

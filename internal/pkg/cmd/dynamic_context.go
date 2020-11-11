@@ -30,6 +30,7 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 	}
 }
 // Parse "--environment" and "--cluster" flag values into config struct
+//TODO return error if env or cluster flag are passed for API key context
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if d.resolver == nil {
 		return nil
@@ -39,12 +40,16 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		return err
 	}
 	if envId != "" {
+		if d.Credential.CredentialType == v2.APIKey {
+			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
+		}
 		envSet := false
 		for _, account := range d.State.Auth.Accounts {
 			if account.Id == envId {
 				d.Config.SetOverwrittenAccount(d.State.Auth.Account)
 				d.State.Auth.Account = account
 				envSet = true
+				break
 			}
 		}
 		if !envSet {
@@ -56,6 +61,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		return err
 	}
 	if clusterId != "" {
+		if d.Credential.CredentialType == v2.APIKey {
+			return errors.New(errors.ClusterFlagWithApiLoginErrorMsg)
+		}
 		ctx := d.Config.Context()
 		if ctx.KafkaClusterContext.EnvContext {
 			d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)

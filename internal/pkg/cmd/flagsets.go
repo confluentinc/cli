@@ -24,7 +24,7 @@ func ContextSet() *pflag.FlagSet {
 }
 
 func EnvironmentContextSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("cluster-env-context state", pflag.ExitOnError)
+	set := pflag.NewFlagSet("env-context state", pflag.ExitOnError)
 	set.AddFlagSet(EnvironmentSet())
 	set.AddFlagSet(ContextSet())
 	set.SortFlags = false
@@ -35,16 +35,6 @@ func ClusterEnvironmentContextSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("cluster-env-context state", pflag.ExitOnError)
 	set.AddFlagSet(EnvironmentSet())
 	set.AddFlagSet(ClusterSet())
-	set.AddFlagSet(ContextSet())
-	set.SortFlags = false
-	return set
-}
-
-func ApiKeyClusterEnvironmentContextSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("apikey-cluster-env-context", pflag.ExitOnError)
-	set.AddFlagSet(KeySecretSet())
-	set.AddFlagSet(ClusterSet())
-	set.AddFlagSet(EnvironmentSet())
 	set.AddFlagSet(ContextSet())
 	set.SortFlags = false
 	return set

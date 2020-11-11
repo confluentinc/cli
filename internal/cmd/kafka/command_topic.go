@@ -79,7 +79,7 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 		Short: "Manage Kafka topics.",
 	}
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner, ProduceAndConsumeFlags),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
@@ -142,8 +142,6 @@ func (h *hasAPIKeyTopicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(h.produce),
 	}
-	cmd.Flags().AddFlagSet(pcmd.ClusterEnvironmentContextSet())
-	cmd.Flags().AddFlagSet(pcmd.KeySecretSet())
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
@@ -165,8 +163,6 @@ func (h *hasAPIKeyTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.ClusterEnvironmentContextSet())
-	cmd.Flags().AddFlagSet(pcmd.KeySecretSet())
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
