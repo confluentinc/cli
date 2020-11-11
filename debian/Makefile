@@ -1,6 +1,9 @@
 SHELL=/bin/bash
 
 CLI_VERSION=1.16.3
+ifeq ($(PACKAGE_TYPE),)
+PACKAGE_TYPE=deb
+endif
 
 ifndef VERSION
 	VERSION=$(CLI_VERSION)
@@ -77,7 +80,7 @@ clean:
 	rm -rf RPM_BUILDING
 
 distclean: clean
-ifeq ($(PACKAGE_TYPE),archive)
+ifneq ($(PACKAGE_TYPE),deb)
 	git reset --hard HEAD
 	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
 endif
