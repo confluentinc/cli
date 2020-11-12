@@ -263,7 +263,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		return r.setClients(command)
+		return r.setCCloudClient(command)
 	}
 }
 
@@ -312,7 +312,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		err = r.setClients(command)
+		err = r.setMDSClient(command)
 		if err != nil {
 			return err
 		}
@@ -501,23 +501,27 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	}
 }
 
-func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx, err := cliCmd.Config.Context(cliCmd.Command)
 	if err != nil {
 		return err
 	}
-	if r.CLIName == "ccloud" {
-		ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
-		if err != nil {
-			return err
-		}
-		cliCmd.Client = ccloudClient
-		cliCmd.Context.client = ccloudClient
-		cliCmd.Config.Client = ccloudClient
-		cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
-	} else {
-		cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
+	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
+	if err != nil {
+		return err
 	}
+	cliCmd.Client = ccloudClient
+	cliCmd.Context.client = ccloudClient
+	cliCmd.Config.Client = ccloudClient
+	return nil
+}
+
+func (r *PreRun) setMDSClient(cliCmd *AuthenticatedCLICommand) error {
+	ctx, err := cliCmd.Config.Context(cliCmd.Command)
+	if err != nil {
+		return err
+	}
+	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 	return nil
 }
 
