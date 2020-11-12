@@ -97,17 +97,6 @@ var (
 			}, nil
 		},
 	}
-	mockAuthTokenHandler = &pmock.MockAuthTokenHandler{
-		GetCCloudCredentialsTokenFunc: func(client *ccloud.Client, email, password string) (string, error) {
-			return testToken, nil
-		},
-		GetCCloudSSOTokenFunc: func(client *ccloud.Client, url string, noBrowser bool, email string, logger *log.Logger) (string, string, error) {
-			return testToken, "refreshToken", nil
-		},
-		GetConfluentAuthTokenFunc: func(mdsClient *mds.APIClient, username, password string, logger *log.Logger) (string, error) {
-			return testToken, nil
-		},
-	}
 	mockNetrcHandler = &pmock.MockNetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
 		WriteNetrcCredentialsFunc: func(cliName string, isSSO bool, ctxName, username, password string) error {
@@ -146,7 +135,7 @@ func TestCredentialsOverride(t *testing.T) {
 			return testToken, envCreds, nil
 		},
 	}
-	loginCmd, cfg := newLoginCmd(auth, user, "ccloud", req, mockNetrcHandler, mockAuthTokenHandler, mockLoginTokenHandler)
+	loginCmd, cfg := newLoginCmd(auth, user, "ccloud", req, mockNetrcHandler, mockLoginTokenHandler)
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
@@ -202,7 +191,7 @@ func TestLoginSuccess(t *testing.T) {
 
 	for _, s := range suite {
 		// Login to the CLI control plane
-		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginTokenHandler)
+		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockLoginTokenHandler)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
@@ -322,7 +311,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				}
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.cliName, req, mockNetrcHandler, mockAuthTokenHandler, nonInteractiveLoginHandler)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.cliName, req, mockNetrcHandler, nonInteractiveLoginHandler)
 			var loginArgs []string
 			if tt.cliName == "confluent" {
 				loginArgs = []string{"--url=http://localhost:8090"}
@@ -348,7 +337,7 @@ func TestLoginFail(t *testing.T) {
 			return "", nil, &ccloud.InvalidLoginError{}
 		},
 	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockUser, "ccloud", req, mockNetrcHandler, mockAuthTokenHandler, mockLoginTokenHandler)
+	loginCmd, _ := newLoginCmd(mockAuth, mockUser, "ccloud", req, mockNetrcHandler, mockLoginTokenHandler)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
 	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
@@ -362,7 +351,7 @@ func TestURLRequiredWithMDS(t *testing.T) {
 			return "", &ccloud.InvalidLoginError{}
 		},
 	}
-	loginCmd, _ := newLoginCmd(auth, nil, "confluent", req, mockNetrcHandler, mockAuthTokenHandler, mockLoginTokenHandler)
+	loginCmd, _ := newLoginCmd(auth, nil, "confluent", req, mockNetrcHandler, mockLoginTokenHandler)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), "required flag(s) \"url\" not set")
@@ -458,7 +447,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), nil, nil,
+	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), nil,
 		mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginTokenHandler)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -523,7 +512,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginTokenHandler)
+		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockLoginTokenHandler)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -654,15 +643,8 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 	req.Empty(state.Auth)
 }
 
-func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, nonInteractiveLoginHandler pauth.LoginTokenHandler) (*loginCommand, *v3.Config) {
-	var mockAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
-		req.Equal("https://confluent.cloud", baseURL)
-		return &ccloud.Client{Auth: auth, User: user}
-	}
-	var mockJwtHTTPClientFactory = func(ctx context.Context, jwt, baseURL string, logger *log.Logger) *ccloud.Client {
-		return &ccloud.Client{Auth: auth, User: user}
-	}
+func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions,
+	netrcHandler netrc.NetrcHandler, nonInteractiveLoginHandler pauth.LoginTokenHandler) (*loginCommand, *v3.Config) {
 	cfg := v3.New(&config.Params{
 		CLIName:    cliName,
 		MetricSink: nil,
@@ -682,14 +664,22 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 			},
 		}
 	}
+	ccloudClientFactory := &cliMock.MockCCloudClientFactory{
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+			req.Equal("https://confluent.cloud", baseURL)
+			return &ccloud.Client{Auth: auth, User: user}
+		},
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			return &ccloud.Client{Auth: auth, User: user}
+		},
+	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
 		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory(ccloudURL, nil), mdsClient, cfg)
-	loginCmd := NewLoginCommand(cliName, prerunner, log.New(),
-		mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, cfg)
+	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), ccloudClientFactory, mdsClientManager,
 		cliMock.NewDummyAnalyticsMock(), netrcHandler, nonInteractiveLoginHandler)
 	return loginCmd, cfg
 }

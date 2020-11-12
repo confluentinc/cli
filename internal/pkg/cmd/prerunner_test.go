@@ -130,6 +130,11 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				},
 				Analytics:         cliMock.NewDummyAnalyticsMock(),
 				LoginTokenHandler: mockLoginTokenHandler,
+				MDSClientManager:  &cliMock.MockMDSClientManager{
+					GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+						return &mds.APIClient{}, nil
+					},
+				},
 				Config:            cfg,
 				JWTValidator:      pcmd.NewJWTValidator(tt.fields.Logger),
 			}
@@ -239,6 +244,11 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		Analytics:         analyticsClient,
 		Config:            cfg,
 		LoginTokenHandler: mockLoginTokenHandler,
+		MDSClientManager:  &cliMock.MockMDSClientManager{
+			GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+				return &mds.APIClient{}, nil
+			},
+		},
 		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
@@ -340,6 +350,16 @@ func Test_UpdateToken(t *testing.T) {
 				},
 				Analytics:         cliMock.NewDummyAnalyticsMock(),
 				LoginTokenHandler: mockLoginTokenHandler,
+				CCloudClientFactory: &cliMock.MockCCloudClientFactory{
+					AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+						return &ccloud.Client{}
+					},
+				},
+				MDSClientManager:  &cliMock.MockMDSClientManager{
+					GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+						return &mds.APIClient{}, nil
+					},
+				},
 				Config:            cfg,
 				JWTValidator:      pcmd.NewJWTValidator(log.New()),
 			}
@@ -420,6 +440,11 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 				Analytics:         analyticsClient,
 				Config:            tt.config,
 				LoginTokenHandler: mockLoginTokenHandler,
+				CCloudClientFactory: &cliMock.MockCCloudClientFactory{
+					AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+						return &ccloud.Client{}
+					},
+				},
 				JWTValidator:      pcmd.NewJWTValidator(log.New()),
 			}
 
