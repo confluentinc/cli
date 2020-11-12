@@ -1,6 +1,5 @@
 SHELL=/bin/bash
 
-CLI_VERSION=1.16.3
 ifeq ($(PACKAGE_TYPE),)
 PACKAGE_TYPE=deb
 endif
@@ -49,6 +48,8 @@ LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
 install: apply-patches
+	echo "**********ECHOOOING CLI_VERSION********************"
+	echo $(CLI_VERSION)
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
