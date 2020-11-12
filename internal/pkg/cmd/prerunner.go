@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"context"
 	"os"
 	"strings"
@@ -216,9 +215,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
+
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
+
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return err
@@ -238,6 +239,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			}
 		}
 		command.Context = ctx
+
 		state, err := ctx.AuthenticatedState(cmd)
 		if err != nil {
 			if _, ok := err.(*errors.NotLoggedInError); ok {
@@ -255,10 +257,12 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			}
 		}
 		command.State = state
+
 		err = r.ValidateToken(cmd, command.Config)
 		if err != nil {
 			return err
 		}
+
 		return r.setClients(command)
 	}
 }
@@ -508,6 +512,7 @@ func (r *PreRun) setClients(cliCmd *AuthenticatedCLICommand) error {
 			return err
 		}
 		cliCmd.Client = ccloudClient
+		cliCmd.Context.client = ccloudClient
 		cliCmd.Config.Client = ccloudClient
 		cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	} else {
