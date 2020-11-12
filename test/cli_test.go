@@ -98,6 +98,8 @@ type CLITest struct {
 	workflow bool
 	// An optional function that allows you to specify other calls
 	wantFunc func(t *testing.T)
+	// String of input to be written to Stdin for the test; "\n" delimitted
+	stdinInput string
 }
 
 // CLITestSuite is the CLI integration tests.
@@ -127,11 +129,12 @@ func init() {
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
 	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
-	covCollector.Setup()
 	req := require.New(s.T())
+	err := covCollector.Setup()
+	req.NoError(err)
 
 	// dumb but effective
-	err := os.Chdir("..")
+	err = os.Chdir("..")
 	req.NoError(err)
 	err = os.Setenv("XX_CCLOUD_RBAC", "yes")
 	req.NoError(err)
@@ -156,7 +159,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
 	_ = os.Unsetenv("XX_CCLOUD_RBAC")
-	covCollector.TearDown()
+	_ = covCollector.TearDown()
 }
 
 func (s *CLITestSuite) TestConfluentHelp() {
@@ -224,13 +227,13 @@ func (s *CLITestSuite) TestUserAgent() {
 	env := []string{fmt.Sprintf("%s=valid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 
 	s.T().Run("ccloud login", func(tt *testing.T) {
-		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
+		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, "", 0)
 	})
 	s.T().Run("ccloud cluster list", func(tt *testing.T) {
-		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", 0)
+		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", "", 0)
 	})
 	s.T().Run("ccloud topic list", func(tt *testing.T) {
-		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", 0)
+		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", "", 0)
 	})
 }
 
@@ -285,10 +288,10 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	s.T().Run("expired token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, "", 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", "", 1)
 		require.Contains(tt, output, errors.TokenExpiredMsg)
 		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
 	})
@@ -296,11 +299,11 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	s.T().Run("malformed token", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, "", 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", "", 1)
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
@@ -308,11 +311,11 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		loginURL := serveErrors(tt)
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, "", 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(s.T(), ccloudTestBin, []string{}, "kafka cluster list", "", 1)
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
@@ -333,32 +336,32 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 
 		if tt.login == "default" {
 			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
+			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, tt.stdinInput, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.useKafka, tt.stdinInput, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.useKafka, 0)
+			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.useKafka, tt.stdinInput, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
 			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
-			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
+			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), tt.stdinInput, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
-		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode)
+		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.stdinInput, tt.wantErrCode)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -391,13 +394,13 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
-			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
+			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, tt.stdinInput, 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.stdinInput, tt.wantErrCode)
 
 		if strings.HasPrefix(tt.args, "config context list") ||
 			strings.HasPrefix(tt.args, "config context current") {
@@ -431,8 +434,9 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "))
+func runCommand(t *testing.T, binaryName string, env []string, args string, stdinInput string, wantErrCode int) string {
+	fmt.Println("yo")
+	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), stdinInput)
 	if err != nil && wantErrCode == 0 {
 		require.Failf(t, "unexpected error",
 			"exit %d: %s\n%s", exitCode, args, output)

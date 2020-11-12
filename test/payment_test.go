@@ -1,11 +1,11 @@
 package test
 
 import (
+	"encoding/json"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
-	"encoding/json"
 )
 
 func (s *CLITestSuite) TestPaymentDescribe() {
@@ -20,6 +20,21 @@ func (s *CLITestSuite) TestPaymentDescribe() {
 		test.login = "default"
 		loginURL := serve(s.T(), "").URL
 		s.runCcloudTest(test, loginURL)
+	}
+}
+
+func (s *CLITestSuite) TestPaymentUpdate() {
+	tests := []CLITest{
+		{
+			args:    	"admin payment update",
+			stdinInput: "4242424242424242\n12/70\n999\nBrian Strauch\n",
+			fixture: 	"admin/payment-update-success.golden",
+		},
+	}
+	for _, test := range tests {
+		test.login = "default"
+		loginUrl := serve(s.T(), "").URL
+		s.runCcloudTest(test, loginUrl)
 	}
 }
 
