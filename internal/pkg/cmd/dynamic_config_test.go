@@ -58,6 +58,7 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 		cmd.Flags().String("context", "", "Context name.")
 		err := cmd.ParseFlags([]string{"--context", tt.context})
 		require.NoError(t, err)
+		initialCurrentContext := tt.dConfig.CurrentContext
 		err = tt.dConfig.ParseFlagsIntoConfig(cmd)
 		if tt.errMsg != "" {
 			require.Error(t, err)
@@ -71,6 +72,8 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 			require.NoError(t, err)
 			if tt.context != "" {
 				require.Equal(t, tt.context, ctx.Name)
+			} else {
+				require.Equal(t, initialCurrentContext, ctx.Name)
 			}
 		}
 	}

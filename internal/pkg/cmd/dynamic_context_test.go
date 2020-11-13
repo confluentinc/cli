@@ -41,6 +41,10 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			cluster:		flagCluster,
 		},
 		{
+			name:			"read environment from config",
+			ctx: 			getEnvFlagContext(),
+		},
+		{
 			name:			"read environment from flag",
 			environment:	flagEnvironment,
 			ctx: 			getEnvFlagContext(),
@@ -66,6 +70,8 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 		err := cmd.ParseFlags([]string{"--cluster", tt.cluster, "--environment", tt.environment})
 		require.NoError(t, err)
+		initialEnvId := tt.ctx.GetCurrentEnvironmentId()
+		initialActiveKafkaId := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 		err = tt.ctx.ParseFlagsIntoContext(cmd)
 		if tt.errMsg != "" {
 			require.Error(t, err)
@@ -75,14 +81,19 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			}
 		} else {
 			require.NoError(t, err)
+			finalEnv := tt.ctx.GetCurrentEnvironmentId()
+			finalCluster := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 			if tt.environment != "" {
-				env := tt.ctx.GetCurrentEnvironmentId()
-				require.Equal(t, tt.environment, env)
+
+				require.Equal(t, tt.environment, finalEnv)
+			} else {
+				require.Equal(t, initialEnvId, finalEnv)
 			}
 			if tt.cluster != "" {
-				cluster, err := tt.ctx.GetKafkaClusterForCommand(cmd)
 				require.NoError(t, err)
-				require.Equal(t, tt.cluster, cluster.ID)
+				require.Equal(t, tt.cluster, finalCluster)
+			} else {
+				require.Equal(t, initialActiveKafkaId, finalCluster)
 			}
 		}
 	}

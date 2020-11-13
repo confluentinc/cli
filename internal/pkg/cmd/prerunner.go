@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"os"
 	"strings"
 
@@ -400,7 +399,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 			ctx.client = client
 			command.Config.Client = client
-			cluster, err := r.getClusterForAuthenticatedUser(command, ctx, cmd)
+			cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 			if err != nil {
 				return err
 			}
@@ -430,23 +429,6 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		}
 		return nil
 	}
-}
-
-// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
-func (r *PreRun) getClusterForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
-	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return nil, err
-	}
-	return cluster, nil
-}
-// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
-func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
-	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return "", err
-	}
-	return cluster.ID, nil
 }
 
 // if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config

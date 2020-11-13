@@ -36,6 +36,7 @@ type TestInputs struct {
 	activeKafka     string
 	statefulConfig  *Config
 	statelessConfig *Config
+	twoEnvStatefulConfig *Config
 	account         *orgv1.Account
 }
 
@@ -66,6 +67,10 @@ func SetupTestInputs(cliName string) *TestInputs {
 		Id:   accountID,
 		Name: "test-env",
 	}
+	account2 := &orgv1.Account{
+		Id:   "env-flag",
+		Name: "test-env2",
+	}
 	testInputs.account = account
 	state := &v2.ContextState{
 		Auth: &v1.AuthConfig{
@@ -76,6 +81,24 @@ func SetupTestInputs(cliName string) *TestInputs {
 			Account: account,
 			Accounts: []*orgv1.Account{
 				account,
+			},
+			Organization: &orgv1.Organization{
+				Id:   321,
+				Name: "test-org",
+			},
+		},
+		AuthToken: "abc123",
+	}
+	twoEnvState := &v2.ContextState{
+		Auth: &v1.AuthConfig{
+			User: &orgv1.User{
+				Id:    123,
+				Email: "test-user@email",
+			},
+			Account: account,
+			Accounts: []*orgv1.Account{
+				account,
+				account2,
 			},
 			Organization: &orgv1.Organization{
 				Id:   321,
@@ -125,6 +148,22 @@ func SetupTestInputs(cliName string) *TestInputs {
 		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{},
 		State:                  &v2.ContextState{},
 		Logger:                 log.New(),
+	}
+	twoEnvStatefulContext := &Context{
+		Name:           contextName,
+		Platform:       platform,
+		PlatformName:   platform.Name,
+		Credential:     loginCredential,
+		CredentialName: loginCredential.Name,
+		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{
+			accountID: {
+				Id:                     "lsrc-123",
+				SchemaRegistryEndpoint: "http://some-lsrc-endpoint",
+				SrCredentials:          nil,
+			},
+		},
+		State:  twoEnvState,
+		Logger: log.New(),
 	}
 	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
@@ -176,12 +215,40 @@ func SetupTestInputs(cliName string) *TestInputs {
 		},
 		CurrentContext: contextName,
 	}
+	testInputs.twoEnvStatefulConfig = &Config{
+		BaseConfig: &config.BaseConfig{
+			Params: &config.Params{
+				CLIName:    cliName,
+				MetricSink: nil,
+				Logger:     log.New(),
+			},
+			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
+			Ver:      Version,
+		},
+		Platforms: map[string]*v2.Platform{
+			platform.Name: platform,
+		},
+		Credentials: map[string]*v2.Credential{
+			apiCredential.Name:   apiCredential,
+			loginCredential.Name: loginCredential,
+		},
+		Contexts: map[string]*Context{
+			contextName: twoEnvStatefulContext,
+		},
+		ContextStates: map[string]*v2.ContextState{
+			contextName: twoEnvState,
+		},
+		CurrentContext: contextName,
+	}
 
 	statefulContext.Config = testInputs.statefulConfig
 	statefulContext.KafkaClusterContext = NewKafkaClusterContext(statefulContext, testInputs.activeKafka, testInputs.kafkaClusters)
 
 	statelessContext.Config = testInputs.statelessConfig
 	statelessContext.KafkaClusterContext = NewKafkaClusterContext(statelessContext, testInputs.activeKafka, testInputs.kafkaClusters)
+
+	twoEnvStatefulContext.Config = testInputs.twoEnvStatefulConfig
+	twoEnvStatefulContext.KafkaClusterContext = NewKafkaClusterContext(twoEnvStatefulContext, testInputs.activeKafka, testInputs.kafkaClusters)
 
 	return testInputs
 }
@@ -264,10 +331,13 @@ func TestConfig_Save(t *testing.T) {
 	testConfigsConfluent := SetupTestInputs("confluent")
 	testConfigsCcloud := SetupTestInputs("ccloud")
 	tests := []struct {
-		name     string
-		config   *Config
-		wantFile string
-		wantErr  bool
+		name           string
+		config         *Config
+		wantFile       string
+		wantErr        bool
+		kafkaOverwrite string
+		contextOverwrite string
+		accountOverwrite *orgv1.Account
 	}{
 		{
 			name:     "save confluent config with state to file",
@@ -289,15 +359,79 @@ func TestConfig_Save(t *testing.T) {
 			config:   testConfigsCcloud.statelessConfig,
 			wantFile: "test_json/stateless_ccloud.json",
 		},
+		{
+			name:           "save stateless ccloud config with kafka overwrite to file",
+			config:         testConfigsCcloud.statefulConfig,
+			wantFile:       "test_json/stateful_ccloud.json",
+			kafkaOverwrite: "lkc-clusterFlag",
+		},
+		{
+			name:           "save stateless ccloud config with kafka and context overwrite to file",
+			config:         testConfigsCcloud.statefulConfig,
+			wantFile:       "test_json/stateful_ccloud.json",
+			kafkaOverwrite: "lkc-clusterFlag",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
+			ctx := tt.config.Context()
+			if tt.kafkaOverwrite != "" {
+				tt.config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+				ctx.KafkaClusterContext.SetActiveKafkaCluster(tt.kafkaOverwrite)
+			}
+			if tt.contextOverwrite != "" {
+				tt.config.SetOverwrittenCurrContext(tt.config.CurrentContext)
+				tt.config.CurrentContext = tt.contextOverwrite
+			}
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			got, _ := ioutil.ReadFile(configFile.Name())
+			want, _ := ioutil.ReadFile(tt.wantFile)
+			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
+				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
+			}
+			fd, err := os.Stat(configFile.Name())
+			require.NoError(t, err)
+			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
+				t.Errorf("Config.Save() file should only be readable by user")
+			}
+			os.Remove(configFile.Name())
+		})
+	}
+}
+
+func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
+	testConfigsCcloud := SetupTestInputs("ccloud")
+	tests := []struct {
+		name           string
+		config         *Config
+		wantFile       string
+		wantErr        bool
+		accountOverwrite *orgv1.Account
+	}{
+		{
+			name:     "save ccloud config with state and account overwrite to file",
+			config:   testConfigsCcloud.twoEnvStatefulConfig,
+			wantFile: "test_json/account_overwrite.json",
+			accountOverwrite: &orgv1.Account{Id: "env-flag"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+			tt.config.Filename = configFile.Name()
+			if tt.accountOverwrite != nil {
+				tt.config.SetOverwrittenAccount(tt.config.Context().State.Auth.Account)
+				tt.config.Context().State.Auth.Account = tt.accountOverwrite
+			}
+			if err := tt.config.Save(); (err != nil) != tt.wantErr {
+				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			got, _ := ioutil.ReadFile(configFile.Name())
+			got = append(got, '\n') //account for extra newline at the end of the json file
 			want, _ := ioutil.ReadFile(tt.wantFile)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))

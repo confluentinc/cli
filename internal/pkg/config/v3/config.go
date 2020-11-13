@@ -144,13 +144,13 @@ func (c *Config) Load() error {
 
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
+	tempKafka := c.resolveOverwrittenKafka()
+	tempAccount := c.resolveOverwrittenAccount()
+	tempContext := c.resolveOverwrittenContext()
 	err := c.Validate()
 	if err != nil {
 		return err
 	}
-	tempKafka := c.resolveOverwrittenKafka()
-	tempContext := c.resolveOverwrittenContext()
-	tempAccount := c.resolveOverwrittenAccount()
 
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
@@ -168,14 +168,14 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
-	c.restoreOverwrittenKafka(tempKafka)
 	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenAccount(tempAccount)
+	c.restoreOverwrittenKafka(tempKafka)
 	return nil
 }
-//Check to see if active Kafka cluster has been overwritten by flag value; if so, restore previous active kafka
-//return the flag value so that it can be restored after writing to file so that continued execution uses flag value.
-//This is because we don't want flags to update state
+// If active Kafka cluster has been overwritten by flag value; if so, replace with previous active kafka
+// Return the flag value so that it can be restored after writing to file so that continued execution uses flag value
+// This prevents flags from updating state
 func (c *Config) resolveOverwrittenKafka() string {
 	ctx := c.Context()
 	var tempKafka string
@@ -183,28 +183,20 @@ func (c *Config) resolveOverwrittenKafka() string {
 		if c.overwrittenActiveKafka == emptyFieldIndicator {
 			c.overwrittenActiveKafka = ""
 		}
-		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
-			tempKafka = ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster
-			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = c.overwrittenActiveKafka
-		} else {
-			tempKafka = ctx.KafkaClusterContext.ActiveKafkaCluster
-			ctx.KafkaClusterContext.ActiveKafkaCluster = c.overwrittenActiveKafka
-		}
+		tempKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(c.overwrittenActiveKafka)
 	}
 	return tempKafka
 }
-
+// Restore the flag cluster back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenKafka(tempKafka string) {
 	ctx := c.Context()
 	if tempKafka != "" {
-		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
-			ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = tempKafka
-		} else {
-			ctx.KafkaClusterContext.ActiveKafkaCluster = tempKafka
-		}
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
 	}
 }
-
+// Switch the initial config context back into the struct so that it is saved and not the flag value
+// Return the overwriting flag context value so that it can be restored after writing the file
 func (c *Config) resolveOverwrittenContext() string {
 	var tempContext string
 	if c.overwrittenCurrContext != "" && c != nil {
@@ -216,13 +208,14 @@ func (c *Config) resolveOverwrittenContext() string {
 	}
 	return tempContext
 }
-
+// Restore the flag context back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenContext(tempContext string) {
 	if tempContext != "" {
 		c.CurrentContext = tempContext
 	}
 }
-
+// Switch the initial config account back into the struct so that it is saved and not the flag value
+// Return the overwriting flag account value so that it can be restored after writing the file
 func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 	ctx := c.Context()
 	var tempAccount *orgv1.Account
@@ -232,7 +225,7 @@ func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 	}
 	return tempAccount
 }
-
+// Restore the flag account back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenAccount(tempAccount *orgv1.Account) {
 	ctx := c.Context()
 	if tempAccount != nil {
