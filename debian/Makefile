@@ -1,10 +1,5 @@
 SHELL=/bin/bash
 
-CLI_VERSION=1.16.3
-ifeq ($(PACKAGE_TYPE),)
-PACKAGE_TYPE=deb
-endif
-
 ifndef VERSION
 	VERSION=$(CLI_VERSION)
 endif
