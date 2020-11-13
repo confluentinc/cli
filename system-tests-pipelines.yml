@@ -16,7 +16,7 @@ jobs:
   - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
     displayName: Helm installer
     inputs:
-      helmVersionToInstall: v3.3.4
+      helmVersionToInstall: 3.3.4
  
   - template: azure-pipelines-templates/setup-secrets.yml
 
