@@ -86,15 +86,13 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			finalEnv := tt.ctx.GetCurrentEnvironmentId()
 			finalCluster := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 			if tt.environment != "" {
-
 				require.Equal(t, tt.environment, finalEnv)
 			} else {
 				require.Equal(t, initialEnvId, finalEnv)
 			}
 			if tt.cluster != "" {
-				require.NoError(t, err)
 				require.Equal(t, tt.cluster, finalCluster)
-			} else {
+			} else if tt.environment == ""{
 				require.Equal(t, initialActiveKafkaId, finalCluster)
 			}
 		}
