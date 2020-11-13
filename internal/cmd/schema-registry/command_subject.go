@@ -28,7 +28,7 @@ func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 		}, prerunner, SubjectSubcommandFlags)
 	subjectCmd := &subjectCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		srClient:                srClient,
+		srClient:                      srClient,
 	}
 	subjectCmd.init(cliName)
 	return subjectCmd.Command

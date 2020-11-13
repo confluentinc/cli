@@ -94,7 +94,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
 		}, prerunner, ClusterSubcommandFlags)
 	cmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:               prerunner,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
 	return cmd

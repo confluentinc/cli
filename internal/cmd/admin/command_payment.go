@@ -2,13 +2,15 @@ package admin
 
 import (
 	"context"
+	"os"
+	"strings"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/token"
-	"os"
-	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"

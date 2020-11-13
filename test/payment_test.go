@@ -1,11 +1,12 @@
 package test
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/stretchr/testify/require"
+	"encoding/json"
 	"net/http"
 	"testing"
-	"encoding/json"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestPaymentDescribe() {
@@ -26,17 +27,17 @@ func (s *CLITestSuite) TestPaymentDescribe() {
 func handlePaymentInfo(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := orgv1.GetPaymentInfoReply{
-			Card:                 &orgv1.Card{
-				Cardholder:           "Miles Todzo",
-				Brand:                "Visa",
-				Last4:                "4242",
-				ExpMonth:             "01",
-				ExpYear:              "99",
+			Card: &orgv1.Card{
+				Cardholder: "Miles Todzo",
+				Brand:      "Visa",
+				Last4:      "4242",
+				ExpMonth:   "01",
+				ExpYear:    "99",
 			},
-			Organization:         &orgv1.Organization{
-				Id:                      0,
+			Organization: &orgv1.Organization{
+				Id: 0,
 			},
-			Error:                nil,
+			Error: nil,
 		}
 		data, err := json.Marshal(res)
 		require.NoError(t, err)

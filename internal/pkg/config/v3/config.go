@@ -3,10 +3,11 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/atrox/homedir"
 	"github.com/blang/semver"
@@ -20,7 +21,7 @@ import (
 
 const (
 	defaultConfigFileFmt = "~/.%s/config.json"
-	emptyFieldIndicator = "EMPTY"
+	emptyFieldIndicator  = "EMPTY"
 )
 
 var (
@@ -30,18 +31,18 @@ var (
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck bool                        `json:"disable_update_check"`
-	DisableUpdates     bool                        `json:"disable_updates"`
-	NoBrowser          bool                        `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*v2.Platform     `json:"platforms,omitempty"`
-	Credentials        map[string]*v2.Credential   `json:"credentials,omitempty"`
-	Contexts           map[string]*Context         `json:"contexts,omitempty"`
-	ContextStates      map[string]*v2.ContextState `json:"context_states,omitempty"`
-	CurrentContext     string                      `json:"current_context"`
-	AnonymousId        string                      `json:"anonymous_id,omitempty"`
-	overwrittenAccount	*orgv1.Account
-	overwrittenCurrContext	string
-	overwrittenActiveKafka	string
+	DisableUpdateCheck     bool                        `json:"disable_update_check"`
+	DisableUpdates         bool                        `json:"disable_updates"`
+	NoBrowser              bool                        `json:"no_browser" hcl:"no_browser"`
+	Platforms              map[string]*v2.Platform     `json:"platforms,omitempty"`
+	Credentials            map[string]*v2.Credential   `json:"credentials,omitempty"`
+	Contexts               map[string]*Context         `json:"contexts,omitempty"`
+	ContextStates          map[string]*v2.ContextState `json:"context_states,omitempty"`
+	CurrentContext         string                      `json:"current_context"`
+	AnonymousId            string                      `json:"anonymous_id,omitempty"`
+	overwrittenAccount     *orgv1.Account
+	overwrittenCurrContext string
+	overwrittenActiveKafka string
 }
 
 func (c *Config) SetOverwrittenAccount(acct *orgv1.Account) {
@@ -173,6 +174,7 @@ func (c *Config) Save() error {
 	c.restoreOverwrittenKafka(tempKafka)
 	return nil
 }
+
 // If active Kafka cluster has been overwritten by flag value; if so, replace with previous active kafka
 // Return the flag value so that it can be restored after writing to file so that continued execution uses flag value
 // This prevents flags from updating state
@@ -188,6 +190,7 @@ func (c *Config) resolveOverwrittenKafka() string {
 	}
 	return tempKafka
 }
+
 // Restore the flag cluster back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenKafka(tempKafka string) {
 	ctx := c.Context()
@@ -195,6 +198,7 @@ func (c *Config) restoreOverwrittenKafka(tempKafka string) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
 	}
 }
+
 // Switch the initial config context back into the struct so that it is saved and not the flag value
 // Return the overwriting flag context value so that it can be restored after writing the file
 func (c *Config) resolveOverwrittenContext() string {
@@ -208,23 +212,26 @@ func (c *Config) resolveOverwrittenContext() string {
 	}
 	return tempContext
 }
+
 // Restore the flag context back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenContext(tempContext string) {
 	if tempContext != "" {
 		c.CurrentContext = tempContext
 	}
 }
+
 // Switch the initial config account back into the struct so that it is saved and not the flag value
 // Return the overwriting flag account value so that it can be restored after writing the file
 func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 	ctx := c.Context()
 	var tempAccount *orgv1.Account
-	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil{
+	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
 		tempAccount = ctx.State.Auth.Account
 		ctx.State.Auth.Account = c.overwrittenAccount
 	}
 	return tempAccount
 }
+
 // Restore the flag account back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenAccount(tempAccount *orgv1.Account) {
 	ctx := c.Context()

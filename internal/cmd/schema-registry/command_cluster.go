@@ -53,8 +53,8 @@ func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 		}, prerunner, ClusterSubcommandFlags)
 	clusterCmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		srClient:                srClient,
-		logger:                  logger,
+		srClient:                      srClient,
+		logger:                        logger,
 	}
 	clusterCmd.init(cliName)
 	return clusterCmd.Command

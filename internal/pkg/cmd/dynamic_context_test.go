@@ -2,69 +2,71 @@ package cmd_test
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 var (
-	flagEnvironment 	= "env-test"
-	flagCluster 		= "lkc-0001"
-	flagClusterInEnv	= "lkc-0002"
-	badFlagEnv			= "bad-env"
+	flagEnvironment  = "env-test"
+	flagCluster      = "lkc-0001"
+	flagClusterInEnv = "lkc-0002"
+	badFlagEnv       = "bad-env"
 )
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 	tests := []struct {
-		name			string
-		ctx				*pcmd.DynamicContext
-		cluster			string
-		environment		string
-		errMsg			string
-		suggestionsMsg	string
+		name           string
+		ctx            *pcmd.DynamicContext
+		cluster        string
+		environment    string
+		errMsg         string
+		suggestionsMsg string
 	}{
 		{
-			name:			"read cluster from config",
-			ctx:			getBaseContext(),
+			name: "read cluster from config",
+			ctx:  getBaseContext(),
 		},
 		{
-			name:			"read cluster from flag",
-			ctx:			getClusterFlagContext(),
-			cluster:		flagCluster,
+			name:    "read cluster from flag",
+			ctx:     getClusterFlagContext(),
+			cluster: flagCluster,
 		},
 		{
-			name:			"read environment from config",
-			ctx: 			getEnvFlagContext(),
+			name: "read environment from config",
+			ctx:  getEnvFlagContext(),
 		},
 		{
-			name:			"read environment from flag",
-			environment:	flagEnvironment,
-			ctx: 			getEnvFlagContext(),
+			name:        "read environment from flag",
+			environment: flagEnvironment,
+			ctx:         getEnvFlagContext(),
 		},
 		{
-			name:			"environment not found",
-			environment:	badFlagEnv,
-			ctx: 			getEnvFlagContext(),
-			errMsg: 		fmt.Sprintf(errors.EnvironmentNotFoundErrorMsg, badFlagEnv, getEnvFlagContext().Name),
+			name:        "environment not found",
+			environment: badFlagEnv,
+			ctx:         getEnvFlagContext(),
+			errMsg:      fmt.Sprintf(errors.EnvironmentNotFoundErrorMsg, badFlagEnv, getEnvFlagContext().Name),
 		},
 		{
-			name:			"pass cluster and environment",
-			cluster:		flagClusterInEnv,
-			environment: 	flagEnvironment,
-			ctx:			getEnvAndClusterFlagContext(),
+			name:        "pass cluster and environment",
+			cluster:     flagClusterInEnv,
+			environment: flagEnvironment,
+			ctx:         getEnvAndClusterFlagContext(),
 		},
 	}
 	for _, tt := range tests {
 		cmd := &cobra.Command{
-			Run:                        func(cmd *cobra.Command, args []string) {},
+			Run: func(cmd *cobra.Command, args []string) {},
 		}
 		cmd.Flags().String("environment", "", "Environment ID.")
 		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -116,8 +118,8 @@ func getClusterFlagContext() *pcmd.DynamicContext {
 	}, pmock.NewClientMock())
 	// create cluster that will be used in "--cluster" flag value
 	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &v1.KafkaClusterConfig{
-		ID:          flagCluster,
-		Name:        "miles",
+		ID:   flagCluster,
+		Name: "miles",
 	}
 	return clusterFlagContext
 }
@@ -145,10 +147,8 @@ func getEnvAndClusterFlagContext() *pcmd.DynamicContext {
 		KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{},
 	}
 	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment].KafkaClusterConfigs[flagClusterInEnv] = &v1.KafkaClusterConfig{
-		ID:          flagClusterInEnv,
-		Name:        "miles2",
+		ID:   flagClusterInEnv,
+		Name: "miles2",
 	}
 	return envAndClusterFlagContext
 }
-
-

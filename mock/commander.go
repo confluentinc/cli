@@ -1,8 +1,9 @@
 package mock
 
 import (
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"os"
+
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"

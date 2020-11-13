@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 

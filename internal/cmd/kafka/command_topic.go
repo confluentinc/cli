@@ -91,8 +91,8 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 	if !isAPIKeyLogin {
 		authenticatedCmd := &authenticatedTopicCommand{
 			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, TopicSubcommandFlags),
-			logger:                  logger,
-			clientID:                clientID,
+			logger:                        logger,
+			clientID:                      clientID,
 		}
 		authenticatedCmd.init()
 		kafkaTopicCommand.authenticatedTopicCommand = authenticatedCmd

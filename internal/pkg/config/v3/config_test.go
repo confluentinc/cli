@@ -32,12 +32,12 @@ var (
 )
 
 type TestInputs struct {
-	kafkaClusters   map[string]*v1.KafkaClusterConfig
-	activeKafka     string
-	statefulConfig  *Config
-	statelessConfig *Config
+	kafkaClusters        map[string]*v1.KafkaClusterConfig
+	activeKafka          string
+	statefulConfig       *Config
+	statelessConfig      *Config
 	twoEnvStatefulConfig *Config
-	account         *orgv1.Account
+	account              *orgv1.Account
 }
 
 func SetupTestInputs(cliName string) *TestInputs {
@@ -331,11 +331,11 @@ func TestConfig_Save(t *testing.T) {
 	testConfigsConfluent := SetupTestInputs("confluent")
 	testConfigsCcloud := SetupTestInputs("ccloud")
 	tests := []struct {
-		name           string
-		config         *Config
-		wantFile       string
-		wantErr        bool
-		kafkaOverwrite string
+		name             string
+		config           *Config
+		wantFile         string
+		wantErr          bool
+		kafkaOverwrite   string
 		contextOverwrite string
 		accountOverwrite *orgv1.Account
 	}{
@@ -406,16 +406,16 @@ func TestConfig_Save(t *testing.T) {
 func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 	testConfigsCcloud := SetupTestInputs("ccloud")
 	tests := []struct {
-		name           string
-		config         *Config
-		wantFile       string
-		wantErr        bool
+		name             string
+		config           *Config
+		wantFile         string
+		wantErr          bool
 		accountOverwrite *orgv1.Account
 	}{
 		{
-			name:     "save ccloud config with state and account overwrite to file",
-			config:   testConfigsCcloud.twoEnvStatefulConfig,
-			wantFile: "test_json/account_overwrite.json",
+			name:             "save ccloud config with state and account overwrite to file",
+			config:           testConfigsCcloud.twoEnvStatefulConfig,
+			wantFile:         "test_json/account_overwrite.json",
 			accountOverwrite: &orgv1.Account{Id: "env-flag"},
 		},
 	}
@@ -452,25 +452,25 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 	//testConfigsCcloud2 := SetupTestInputs("ccloud")
 
 	tests := []struct {
-		name     		string
-		config   		*Config
-		overwrittenVal	string		//simulates initial config value overwritten by a cluster flag value
-		activeKafka		string		//simulates the cluster flag value
+		name           string
+		config         *Config
+		overwrittenVal string //simulates initial config value overwritten by a cluster flag value
+		activeKafka    string //simulates the cluster flag value
 	}{
 		{
-			name: "test no overwrite value",
-			config:	testConfigsCcloud.statefulConfig,
+			name:        "test no overwrite value",
+			config:      testConfigsCcloud.statefulConfig,
 			activeKafka: testConfigsCcloud.activeKafka,
 		},
 		{
-			name: "test with overwrite value",
-			config:	testConfigsCcloud.statefulConfig,
+			name:           "test with overwrite value",
+			config:         testConfigsCcloud.statefulConfig,
 			overwrittenVal: "lkc-test",
-			activeKafka: testConfigsCcloud.activeKafka,
+			activeKafka:    testConfigsCcloud.activeKafka,
 		},
 		{
-			name: "test no overwrite value",
-			config:	testConfigsCcloud.statelessConfig,
+			name:        "test no overwrite value",
+			config:      testConfigsCcloud.statelessConfig,
 			activeKafka: testConfigsCcloud.activeKafka,
 		},
 	}
@@ -542,7 +542,7 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 		name           string
 		config         *Config
 		overwrittenVal *orgv1.Account //simulates initial environment (account) value overwritten by a environment flag
-		activeAccount  string //simulates the environment (account) flag value
+		activeAccount  string         //simulates the environment (account) flag value
 	}{
 		{
 			name:          "test no overwrite value",
@@ -556,8 +556,8 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 			activeAccount:  testConfigsCcloud.statefulConfig.Context().State.Auth.Account.Id,
 		},
 		{
-			name:          "test no overwrite value",
-			config:        testConfigsCcloud.statelessConfig,
+			name:   "test no overwrite value",
+			config: testConfigsCcloud.statelessConfig,
 		},
 	}
 	for _, tt := range tests {

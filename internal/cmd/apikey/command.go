@@ -65,8 +65,8 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		}, prerunner, SubcommandFlags)
 	cmd := &command{
 		AuthenticatedStateFlagCommand: cliCmd,
-		keystore:                keystore,
-		flagResolver:            resolver,
+		keystore:                      keystore,
+		flagResolver:                  resolver,
 	}
 	cmd.init()
 	return cmd

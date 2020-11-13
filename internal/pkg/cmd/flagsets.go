@@ -48,7 +48,7 @@ func KeySecretSet() *pflag.FlagSet {
 	return set
 }
 
-func CombineFlagSet(flagSet *pflag.FlagSet, toAdd ... *pflag.FlagSet) *pflag.FlagSet {
+func CombineFlagSet(flagSet *pflag.FlagSet, toAdd ...*pflag.FlagSet) *pflag.FlagSet {
 	for _, set := range toAdd {
 		flagSet.AddFlagSet(set)
 	}

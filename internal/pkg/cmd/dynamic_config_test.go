@@ -2,15 +2,17 @@ package cmd_test
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
@@ -26,34 +28,34 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 		Out:    os.Stdout,
 	}, pmock.NewClientMock())
 	dynamicConfigFlag.Contexts["test-context"] = &v3.Context{
-		Name:                   "test-context",
+		Name: "test-context",
 	}
 	tests := []struct {
-		name			string
-		context			string
-		dConfig			*pcmd.DynamicConfig
-		errMsg			string
-		suggestionsMsg	string
+		name           string
+		context        string
+		dConfig        *pcmd.DynamicConfig
+		errMsg         string
+		suggestionsMsg string
 	}{
 		{
-			name:    	"read context from config",
-			dConfig: 	dynamicConfigBase,
+			name:    "read context from config",
+			dConfig: dynamicConfigBase,
 		},
 		{
-			name:		"read context from flag",
-			context: 	"test-context",
-			dConfig: 	dynamicConfigFlag,
+			name:    "read context from flag",
+			context: "test-context",
+			dConfig: dynamicConfigFlag,
 		},
 		{
-			name:		"bad-context specified with flag",
-			context:	"bad-context",
-			dConfig: 	dynamicConfigFlag,
-			errMsg: 	fmt.Sprintf(errors.ContextNotExistErrorMsg, "bad-context"),
+			name:    "bad-context specified with flag",
+			context: "bad-context",
+			dConfig: dynamicConfigFlag,
+			errMsg:  fmt.Sprintf(errors.ContextNotExistErrorMsg, "bad-context"),
 		},
 	}
 	for _, tt := range tests {
 		cmd := &cobra.Command{
-			Run:                        func(cmd *cobra.Command, args []string) {},
+			Run: func(cmd *cobra.Command, args []string) {},
 		}
 		cmd.Flags().String("context", "", "Context name.")
 		err := cmd.ParseFlags([]string{"--context", tt.context})

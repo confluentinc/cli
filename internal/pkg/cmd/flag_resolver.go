@@ -25,7 +25,7 @@ type FlagResolver interface {
 	ResolveEnvironmentFlag(cmd *cobra.Command) (string, error)
 	ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error)
 	ResolveApiKeyFlag(cmd *cobra.Command) (string, error)
-	ResolveApiKeySecretFlag(cmd *cobra.Command)(string, error)
+	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
 }
 
 type FlagResolverImpl struct {

@@ -48,7 +48,7 @@ func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:               prerunner,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
 	return cmd.Command

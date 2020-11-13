@@ -2,17 +2,21 @@ package cmd_test
 
 import (
 	"fmt"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/spf13/pflag"
+
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
@@ -24,7 +28,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 const (
@@ -419,22 +422,22 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			config: usernameClusterWithoutKeyOrSecret,
 		},
 		{
-			name: "api key passed via flag with stored secret",
-			key: "miles",
+			name:   "api key passed via flag with stored secret",
+			key:    "miles",
 			config: usernameClusterWithStoredSecret,
 		},
 		{
-			name: "api key passed via flag without stored secret",
-			key: "miles",
-			errMsg: errors.NoAPISecretStoredOrPassedMsg,
+			name:           "api key passed via flag without stored secret",
+			key:            "miles",
+			errMsg:         errors.NoAPISecretStoredOrPassedMsg,
 			suggestionsMsg: errors.NoAPISecretStoredOrPassedSuggestions,
-			config: usernameClusterWithoutSecret,
+			config:         usernameClusterWithoutSecret,
 		},
 		{
-			name:   "just api secret passed via flag",
-			secret: "shhhh",
-			config: usernameClusterWithoutKeyOrSecret,
-			errMsg: errors.PassedSecretButNotKeyErrorMsg,
+			name:           "just api secret passed via flag",
+			secret:         "shhhh",
+			config:         usernameClusterWithoutKeyOrSecret,
+			errMsg:         errors.PassedSecretButNotKeyErrorMsg,
 			suggestionsMsg: errors.PassedSecretButNotKeySuggestions,
 		},
 	}
@@ -489,16 +492,16 @@ func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
-	subcommandFlags := map[string]*pflag.FlagSet {
-		"root"	:	pcmd.ContextSet(),
-		"one"	:	pcmd.EnvironmentContextSet(),
-		"two"	:	pcmd.KeySecretSet(),
+	subcommandFlags := map[string]*pflag.FlagSet{
+		"root": pcmd.ContextSet(),
+		"one":  pcmd.EnvironmentContextSet(),
+		"two":  pcmd.KeySecretSet(),
 	}
 	// checked against to ensure that ONLY the intended flags are added
-	shouldNotHaveFlags := map[string]*pflag.FlagSet {
-		"root"	:	pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one"	:	pcmd.KeySecretSet(),
-		"two"	:	pcmd.EnvironmentSet(),
+	shouldNotHaveFlags := map[string]*pflag.FlagSet{
+		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
+		"one":  pcmd.KeySecretSet(),
+		"two":  pcmd.EnvironmentSet(),
 	}
 	logger := log.New()
 	r := &pcmd.PreRun{
@@ -548,16 +551,16 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
-	subcommandFlags := map[string]*pflag.FlagSet {
-		"root"	:	pcmd.ContextSet(),
-		"one"	:	pcmd.EnvironmentContextSet(),
-		"two"	:	pcmd.KeySecretSet(),
+	subcommandFlags := map[string]*pflag.FlagSet{
+		"root": pcmd.ContextSet(),
+		"one":  pcmd.EnvironmentContextSet(),
+		"two":  pcmd.KeySecretSet(),
 	}
 	// checked against to ensure that ONLY the intended flags are added
-	shouldNotHaveFlags := map[string]*pflag.FlagSet {
-		"root"	:	pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one"	:	pcmd.KeySecretSet(),
-		"two"	:	pcmd.EnvironmentSet(),
+	shouldNotHaveFlags := map[string]*pflag.FlagSet{
+		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
+		"one":  pcmd.KeySecretSet(),
+		"two":  pcmd.EnvironmentSet(),
 	}
 	logger := log.New()
 	r := &pcmd.PreRun{

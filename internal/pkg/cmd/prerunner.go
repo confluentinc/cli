@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"context"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"os"
 	"strings"
+
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -71,7 +72,7 @@ type AuthenticatedStateFlagCommand struct {
 
 type HasAPIKeyCLICommand struct {
 	*CLICommand
-	Context *DynamicContext
+	Context         *DynamicContext
 	subcommandFlags map[string]*pflag.FlagSet
 }
 
@@ -189,8 +190,8 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunn
 
 func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *HasAPIKeyCLICommand {
 	cmd := &HasAPIKeyCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-		Context:    nil,
+		CLICommand:      NewCLICommand(command, prerunner),
+		Context:         nil,
 		subcommandFlags: flagMap,
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(cmd))

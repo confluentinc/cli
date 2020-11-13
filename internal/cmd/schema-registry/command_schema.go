@@ -30,7 +30,7 @@ func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.
 		}, prerunner, SchemaSubcommandFlags)
 	schemaCmd := &schemaCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		srClient:                srClient,
+		srClient:                      srClient,
 	}
 	schemaCmd.init(cliName)
 	return schemaCmd.Command

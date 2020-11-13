@@ -3,18 +3,20 @@ package iam
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"testing"
+
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	mock2 "github.com/confluentinc/cli/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	mds2mock "github.com/confluentinc/mds-sdk-go/mdsv2alpha1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"net/http"
-	"testing"
+
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	mock2 "github.com/confluentinc/cli/mock"
 )
 
 var (

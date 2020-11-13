@@ -29,6 +29,7 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 		client:   client,
 	}
 }
+
 // Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if d.resolver == nil {

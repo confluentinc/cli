@@ -3,10 +3,11 @@ package iam
 import (
 	"context"
 	"fmt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"net/http"
 	"sort"
 	"strings"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
