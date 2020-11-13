@@ -64,6 +64,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			return nil, nil, err
 		}
 	}
+	// Check if --api-key and --api-secret flags were set, if so, insert them as the credentials for the sr cluster
 	key, secret, err := currCtx.KeyAndSecretFlags(cmd)
 	if err != nil {
 		return nil, nil, err
