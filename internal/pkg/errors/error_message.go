@@ -307,9 +307,9 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
+	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
+	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
+	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."
 	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %v"
 
 	// catcher
@@ -340,8 +340,8 @@ const (
 
 	// Kafka REST Proxy Errors
 	InternalServerErrorMsg         = "internal server error"
-	InternalServerErrorSuggestions = "Check the status of your Kafka cluster or please submit a support ticket."
-	
+	InternalServerErrorSuggestions = "Please check the status of your Kafka cluster or submit a support ticket."
+
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
 	ccloudAvoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `ccloud login --save`."

@@ -116,6 +116,13 @@ func NewInvalidOutputFormatFlagError(format string) error {
 }
 
 // IsValidFormat - returns whether a format string is a valid format (human, json, yaml)
-func IsValidFormat(format string) bool {
-	return format == Human.String() || format == JSON.String() || format == YAML.String()
+func IsValidFormatString(format string) bool {
+	isValid := false
+
+	for _, formatString := range allFormatStrings {
+		if format == formatString {
+			isValid = true
+		}
+	}
+	return isValid
 }
