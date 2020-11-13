@@ -21,6 +21,10 @@ var (
 	notfoundError = fmt.Errorf("User not found")
 )
 
+const (
+	env123 = "env-123"
+)
+
 type roleBindingTest struct {
 	args      []string
 	principal string
@@ -42,6 +46,7 @@ type RoleBindingTestSuite struct {
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
+	v3.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
 func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
@@ -192,10 +197,10 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		err:  notfoundError,
 	},
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", "env-123"},
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
 		principal: "User:" + v3.MockUserResourceId,
 		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
 		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},

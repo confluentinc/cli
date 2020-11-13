@@ -78,12 +78,17 @@ type listDisplay struct {
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
 func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
-		&cobra.Command{
-			Use:   "rolebinding",
-			Short: "Manage RBAC and IAM role bindings.",
-			Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
-		}, prerunner)
+	cobraRolebindingCmd := &cobra.Command{
+		Use:   "rolebinding",
+		Short: "Manage RBAC and IAM role bindings.",
+		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+	}
+	var cliCmd *cmd.AuthenticatedCLICommand
+	if cliName == "confluent" {
+		cliCmd = cmd.NewAuthenticatedWithMDSCLICommand(cobraRolebindingCmd, prerunner)
+	} else {
+		cliCmd = cmd.NewAuthenticatedCLICommand(cobraRolebindingCmd, prerunner)
+	}
 	roleBindingCmd := &rolebindingCommand{
 		AuthenticatedCLICommand: cliCmd,
 		cliName:                 cliName,

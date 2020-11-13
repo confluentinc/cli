@@ -79,7 +79,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
-		if err == nil {
+		if err != nil {
 			return err
 		}
 		return nil

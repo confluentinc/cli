@@ -154,6 +154,9 @@ func createAuthConfig(userId int32, email string, userResourceId string, envId s
 			Id:         organizationId,
 			ResourceId: orgResourceId,
 		},
+		Accounts: []*orgv1.Account{
+			{Id: envId},
+		},
 	}
 	return auth
 }
@@ -207,4 +210,13 @@ func setUpConfig(conf *Config, ctx *Context, platform *v2.Platform, credential *
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
+}
+
+
+func AddEnvironmentToConfigMock(config *Config, envId string, envName string) {
+	accounts := config.Context().State.Auth.Accounts
+	config.Context().State.Auth.Accounts = append(accounts, &orgv1.Account{
+		Id:    envId,
+		Name:  envName,
+	})
 }
