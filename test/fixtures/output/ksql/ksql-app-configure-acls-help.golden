@@ -4,8 +4,10 @@ Usage:
   ccloud ksql app configure-acls <id> TOPICS... [flags]
 
 Flags:
-      --cluster string   Kafka cluster ID.
-      --dry-run          If specified, print the ACLs that will be set and exit.
+      --dry-run              If specified, print the ACLs that will be set and exit.
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       Context name.
 
 Global Flags:
   -h, --help            Show help for this command.

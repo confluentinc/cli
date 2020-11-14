@@ -40,21 +40,21 @@ var (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	logger   *log.Logger
 	srClient *srsdk.APIClient
 }
 
 func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry cluster.",
-		}, prerunner)
+		}, prerunner, ClusterSubcommandFlags)
 	clusterCmd := &clusterCommand{
-		AuthenticatedCLICommand: cliCmd,
-		srClient:                srClient,
-		logger:                  logger,
+		AuthenticatedStateFlagCommand: cliCmd,
+		srClient:                      srClient,
+		logger:                        logger,
 	}
 	clusterCmd.init(cliName)
 	return clusterCmd.Command

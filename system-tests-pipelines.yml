@@ -13,10 +13,10 @@ jobs:
   
   steps:
     
-  - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 2.9.1 specified in cc-helm.mk
+  - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
     displayName: Helm installer
     inputs:
-      helmVersionToInstall: 2.9.1
+      helmVersionToInstall: 3.3.4
  
   - template: azure-pipelines-templates/setup-secrets.yml
 
@@ -85,7 +85,7 @@ jobs:
       . vault-sem-get-secret gitconfig
       . vault-sem-get-secret artifactory-docker-helm
       make docker-login-ci
-      make helm-init-ci
+      make helm-setup-ci
       make helm-update-repo
     displayName: try to inject secrets and setup docker and helm
   

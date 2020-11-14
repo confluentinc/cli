@@ -62,7 +62,7 @@ const (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 }
@@ -87,14 +87,14 @@ type describeStruct struct {
 
 // NewClusterCommand returns the command for Kafka cluster.
 func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters.",
-		}, prerunner)
+		}, prerunner, ClusterSubcommandFlags)
 	cmd := &clusterCommand{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
+		AuthenticatedStateFlagCommand: cliCmd,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
 	return cmd

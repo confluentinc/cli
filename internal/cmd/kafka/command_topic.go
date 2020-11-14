@@ -50,7 +50,7 @@ type hasAPIKeyTopicCommand struct {
 	clientID  string
 }
 type authenticatedTopicCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	logger              *log.Logger
 	clientID            string
 	completableChildren []*cobra.Command
@@ -79,7 +79,7 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 		Short: "Manage Kafka topics.",
 	}
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner, ProduceAndConsumeFlags),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
@@ -90,9 +90,9 @@ func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.L
 	}
 	if !isAPIKeyLogin {
 		authenticatedCmd := &authenticatedTopicCommand{
-			AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(command, prerunner),
-			logger:                  logger,
-			clientID:                clientID,
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, TopicSubcommandFlags),
+			logger:                        logger,
+			clientID:                      clientID,
 		}
 		authenticatedCmd.init()
 		kafkaTopicCommand.authenticatedTopicCommand = authenticatedCmd
@@ -142,7 +142,6 @@ func (h *hasAPIKeyTopicCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(h.produce),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
@@ -164,7 +163,6 @@ func (h *hasAPIKeyTopicCommand) init() {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -188,7 +186,6 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	listCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	a.AddCommand(listCmd)
@@ -205,7 +202,6 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	createCmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
@@ -227,7 +223,6 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	describeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	a.AddCommand(describeCmd)
@@ -244,7 +239,6 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	updateCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	updateCmd.Flags().SortFlags = false
@@ -263,7 +257,6 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	mirrorCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	mirrorCmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
 	mirrorCmd.Flags().SortFlags = false
 	a.AddCommand(mirrorCmd)
@@ -280,8 +273,6 @@ func (a *authenticatedTopicCommand) init() {
 			},
 		),
 	}
-	deleteCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	deleteCmd.Flags().SortFlags = false
 	a.AddCommand(deleteCmd)
 
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}

@@ -28,19 +28,19 @@ var (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
 func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "app",
 			Short: "Manage ksqlDB apps.",
-		}, prerunner)
-	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, SubcommandFlags)
+	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.prerunner = prerunner
 	cmd.init()
 	return cmd
@@ -93,7 +93,6 @@ func (c *clusterCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().String("image", "", "Image to run (internal).")
@@ -125,7 +124,6 @@ func (c *clusterCommand) init() {
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.configureACLs),
 	}
-	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
 	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)

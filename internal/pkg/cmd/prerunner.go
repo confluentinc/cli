@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -65,9 +67,15 @@ type AuthenticatedCLICommand struct {
 	State       *v2.ContextState
 }
 
+type AuthenticatedStateFlagCommand struct {
+	*AuthenticatedCLICommand
+	subcommandFlags map[string]*pflag.FlagSet
+}
+
 type HasAPIKeyCLICommand struct {
 	*CLICommand
-	Context *DynamicContext
+	Context         *DynamicContext
+	subcommandFlags map[string]*pflag.FlagSet
 }
 
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
@@ -78,6 +86,14 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
+	return cmd
+}
+
+func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
+	cmd := &AuthenticatedStateFlagCommand{
+		NewAuthenticatedCLICommand(command, prerunner),
+		flagMap,
+	}
 	return cmd
 }
 
@@ -92,10 +108,11 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunn
 	return cmd
 }
 
-func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
+func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *HasAPIKeyCLICommand {
 	cmd := &HasAPIKeyCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-		Context:    nil,
+		CLICommand:      NewCLICommand(command, prerunner),
+		Context:         nil,
+		subcommandFlags: flagMap,
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(cmd))
 	cmd.Command = command
@@ -117,6 +134,13 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	}
 }
 
+func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
+	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(s.Use)[0]])
+	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().SortFlags = false
+	s.AuthenticatedCLICommand.AddCommand(command)
+}
+
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
@@ -131,6 +155,8 @@ func (a *AuthenticatedCLICommand) EnvironmentId() string {
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
+	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(h.Use)[0]])
+	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(command.Use)[0]])
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }
@@ -154,9 +180,11 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
 			r.Analytics.TrackCommand(cmd, args)
 		}
-		command.Config.Config = r.Config
+		err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver)
+		if err != nil {
+			return err
+		}
 		command.Version = r.Version
-		command.Config.Resolver = r.FlagResolver
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return err
 		}
@@ -219,7 +247,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return err
@@ -302,7 +329,42 @@ func (r *PreRun) getCCloudTokenAndCrendentils(cmd *cobra.Command) (string, *paut
 	})
 }
 
-// Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
+func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
+	ctx, err := cliCmd.Config.Context(cliCmd.Command)
+	if err != nil {
+		return err
+	}
+	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
+	if err != nil {
+		return err
+	}
+	cliCmd.Client = ccloudClient
+	cliCmd.Config.Client = ccloudClient
+	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
+	return nil
+}
+
+func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
+	var baseURL string
+	var authToken string
+	var logger *log.Logger
+	var userAgent string
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+		state, err := ctx.AuthenticatedState(cmd)
+		if err != nil {
+			return nil, err
+		}
+		authToken = state.AuthToken
+		logger = ctx.Logger
+		userAgent = ver.UserAgent
+	}
+	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
+		BaseURL: baseURL, Logger: logger, UserAgent: userAgent,
+	}), nil
+}
+
+// Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
@@ -312,7 +374,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		err = r.setMDSClient(command)
+		err = r.setConfluentClient(command)
 		if err != nil {
 			return err
 		}
@@ -330,6 +392,44 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		command.State = ctx.State
 		return r.ValidateToken(cmd, command.Config)
 	}
+}
+
+func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) error {
+	ctx, err := cliCmd.Config.Context(cliCmd.Command)
+	if err != nil {
+		return err
+	}
+	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
+	return nil
+}
+
+func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
+	mdsConfig := mds.NewConfiguration()
+	if ctx == nil {
+		return mds.NewAPIClient(mdsConfig)
+	}
+	mdsConfig.BasePath = ctx.Platform.Server
+	mdsConfig.UserAgent = ver.UserAgent
+	if ctx.Platform.CaCertPath == "" {
+		return mds.NewAPIClient(mdsConfig)
+	}
+	caCertPath := ctx.Platform.CaCertPath
+	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	caCertFile, err := os.Open(caCertPath)
+	if err == nil {
+		defer caCertFile.Close()
+		mdsConfig.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
+		if err != nil {
+			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+			mdsConfig.HTTPClient = pauth.DefaultClient()
+		}
+	} else {
+		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		mdsConfig.HTTPClient = pauth.DefaultClient()
+
+	}
+	return mds.NewAPIClient(mdsConfig)
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
@@ -364,9 +464,22 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 			ctx.client = client
 			command.Config.Client = client
-			clusterId, err = r.getClusterIdForAuthenticatedUser(command, ctx, cmd)
+			cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 			if err != nil {
 				return err
+			}
+			clusterId = cluster.ID
+			key, secret, err := ctx.KeyAndSecretFlags(cmd)
+			if err != nil {
+				return err
+			}
+			if key != "" {
+				cluster.APIKey = key
+				if secret != "" {
+					cluster.APIKeys[key] = &v0.APIKeyPair{Key: key, Secret: secret}
+				} else if cluster.APIKeys[key] == nil {
+					return errors.NewErrorWithSuggestions(errors.NoAPISecretStoredOrPassedMsg, errors.NoAPISecretStoredOrPassedSuggestions)
+				}
 			}
 		} else {
 			panic("Invalid Credential Type")
@@ -499,79 +612,6 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
-}
-
-func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx, err := cliCmd.Config.Context(cliCmd.Command)
-	if err != nil {
-		return err
-	}
-	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
-	if err != nil {
-		return err
-	}
-	cliCmd.Client = ccloudClient
-	cliCmd.Context.client = ccloudClient
-	cliCmd.Config.Client = ccloudClient
-	return nil
-}
-
-func (r *PreRun) setMDSClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx, err := cliCmd.Config.Context(cliCmd.Command)
-	if err != nil {
-		return err
-	}
-	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
-	return nil
-}
-
-func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
-	var baseURL string
-	var authToken string
-	var logger *log.Logger
-	var userAgent string
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-		state, err := ctx.AuthenticatedState(cmd)
-		if err != nil {
-			return nil, err
-		}
-		authToken = state.AuthToken
-		logger = ctx.Logger
-		userAgent = ver.UserAgent
-	}
-	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
-		BaseURL: baseURL, Logger: logger, UserAgent: userAgent,
-	}), nil
-}
-
-func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
-	mdsConfig := mds.NewConfiguration()
-	if ctx == nil {
-		return mds.NewAPIClient(mdsConfig)
-	}
-	mdsConfig.BasePath = ctx.Platform.Server
-	mdsConfig.UserAgent = ver.UserAgent
-	if ctx.Platform.CaCertPath == "" {
-		return mds.NewAPIClient(mdsConfig)
-	}
-	caCertPath := ctx.Platform.CaCertPath
-	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	caCertFile, err := os.Open(caCertPath)
-	if err == nil {
-		defer caCertFile.Close()
-		mdsConfig.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
-		if err != nil {
-			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = pauth.DefaultClient()
-		}
-	} else {
-		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsConfig.HTTPClient = pauth.DefaultClient()
-
-	}
-	return mds.NewAPIClient(mdsConfig)
 }
 
 func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {

@@ -1,7 +1,5 @@
 SHELL=/bin/bash
 
-CLI_VERSION=1.16.3
-
 ifndef VERSION
 	VERSION=$(CLI_VERSION)
 endif
@@ -75,6 +73,12 @@ clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
 	rm -rf RPM_BUILDING
+
+distclean: clean
+ifneq ($(PACKAGE_TYPE),deb)
+	git reset --hard HEAD
+	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
+endif
 
 RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 

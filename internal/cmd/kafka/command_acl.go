@@ -26,24 +26,22 @@ var (
 )
 
 type aclCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
 func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "acl",
 			Short: "Manage Kafka ACLs.",
-		}, prerunner)
-	cmd := &aclCommand{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, AclSubcommandFlags)
+	cmd := &aclCommand{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *aclCommand) init() {
-	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
-
 	createCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",

@@ -46,6 +46,8 @@ var (
 		linter.IncludeCommandContains("kafka acl", "kafka topic"),
 		// only on children of kafka topic commands
 		linter.ExcludeCommand("kafka topic"),
+		//only on children of kafka acl commands
+		linter.ExcludeCommand("kafka acl"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
