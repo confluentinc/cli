@@ -345,7 +345,7 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 	}), nil
 }
 
-// Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
+// Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.Anonymous(command.CLICommand)(cmd, args)
