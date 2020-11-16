@@ -247,41 +247,16 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		ctx, err := command.Config.Context(cmd)
+
+		ctx, err := r.getCommandContext(cmd, command)
 		if err != nil {
 			return err
 		}
-		if ctx == nil {
-			autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
-			if autoLoginErr != nil {
-				r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
-				return &errors.NoContextError{CLIName: r.CLIName}
-			}
-			ctx, err = command.Config.Context(cmd)
-			if err != nil {
-				return err
-			}
-			if ctx == nil {
-				return &errors.NoContextError{CLIName: r.CLIName}
-			}
-		}
 		command.Context = ctx
 
-		state, err := ctx.AuthenticatedState(cmd)
+		state, err := r.getCommandState(cmd, ctx)
 		if err != nil {
-			if _, ok := err.(*errors.NotLoggedInError); ok {
-				autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
-				if autoLoginErr != nil {
-					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
-					return err
-				}
-				state, err = ctx.AuthenticatedState(cmd)
-				if err != nil {
-					return err
-				}
-			} else {
-				return err
-			}
+			return err
 		}
 		command.State = state
 
@@ -289,9 +264,50 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
-
 		return r.setCCloudClient(command)
 	}
+}
+
+func (r *PreRun) getCommandContext(cmd *cobra.Command, command *AuthenticatedCLICommand) (*DynamicContext, error) {
+	ctx, err := command.Config.Context(cmd)
+	if err != nil {
+		return nil, err
+	}
+	if ctx == nil {
+		autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
+		if autoLoginErr != nil {
+			r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+			return nil, &errors.NoContextError{CLIName: r.CLIName}
+		}
+		ctx, err = command.Config.Context(cmd)
+		if err != nil {
+			return nil, err
+		}
+		if ctx == nil {
+			return nil, &errors.NoContextError{CLIName: r.CLIName}
+		}
+	}
+	return ctx, nil
+}
+
+func (r *PreRun) getCommandState(cmd *cobra.Command, ctx *DynamicContext) (*v2.ContextState, error) {
+	state, err := ctx.AuthenticatedState(cmd)
+	if err != nil {
+		if _, ok := err.(*errors.NotLoggedInError); ok {
+			autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
+			if autoLoginErr != nil {
+				r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+				return nil, err
+			}
+			state, err = ctx.AuthenticatedState(cmd)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+	return state, nil
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error {
@@ -339,6 +355,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		return err
 	}
 	cliCmd.Client = ccloudClient
+	cliCmd.Context.client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	return nil

@@ -135,13 +135,13 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 				},
 				Analytics:         cliMock.NewDummyAnalyticsMock(),
 				LoginTokenHandler: mockLoginTokenHandler,
-				MDSClientManager:  &cliMock.MockMDSClientManager{
+				MDSClientManager: &cliMock.MockMDSClientManager{
 					GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 						return &mds.APIClient{}, nil
 					},
 				},
-				Config:            cfg,
-				JWTValidator:      pcmd.NewJWTValidator(tt.fields.Logger),
+				Config:       cfg,
+				JWTValidator: pcmd.NewJWTValidator(tt.fields.Logger),
 			}
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -249,12 +249,12 @@ func TestPreRun_TokenExpires(t *testing.T) {
 		Analytics:         analyticsClient,
 		Config:            cfg,
 		LoginTokenHandler: mockLoginTokenHandler,
-		MDSClientManager:  &cliMock.MockMDSClientManager{
+		MDSClientManager: &cliMock.MockMDSClientManager{
 			GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 				return &mds.APIClient{}, nil
 			},
 		},
-		JWTValidator:      pcmd.NewJWTValidator(log.New()),
+		JWTValidator: pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{
@@ -360,13 +360,13 @@ func Test_UpdateToken(t *testing.T) {
 						return &ccloud.Client{}
 					},
 				},
-				MDSClientManager:  &cliMock.MockMDSClientManager{
+				MDSClientManager: &cliMock.MockMDSClientManager{
 					GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 						return &mds.APIClient{}, nil
 					},
 				},
-				Config:            cfg,
-				JWTValidator:      pcmd.NewJWTValidator(log.New()),
+				Config:       cfg,
+				JWTValidator: pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
@@ -487,7 +487,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 						return &ccloud.Client{}
 					},
 				},
-				JWTValidator:      pcmd.NewJWTValidator(log.New()),
+				JWTValidator: pcmd.NewJWTValidator(log.New()),
 			}
 
 			root := &cobra.Command{
