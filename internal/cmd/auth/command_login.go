@@ -139,7 +139,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	token, creds, err := a.getConfluentTokenAndCredentials(cmd, caCertPath, url)
+	token, creds, err := a.getConfluentTokenAndCredentials(cmd, url, caCertPath)
 	if err != nil {
 		return err
 	}
