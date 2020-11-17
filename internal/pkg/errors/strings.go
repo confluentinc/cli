@@ -103,7 +103,7 @@ const (
 	NotifyUpdateMsg        = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
 		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
-	AutoLoginMsg = "You are not logged in. Attempting auto login with environment variables or netrc credentials.\n"
+	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"

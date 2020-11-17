@@ -311,16 +311,20 @@ func (r *PreRun) getCommandState(cmd *cobra.Command, ctx *DynamicContext) (*v2.C
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error {
-	utils.ErrPrint(cmd, errors.AutoLoginMsg)
 	token, creds, err := r.getCCloudTokenAndCrendentils(cmd)
 	if err != nil {
 		return err
+	}
+	if token == "" || creds == nil {
+		r.Logger.Debug("No non-interactive login credentials")
+		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
 	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, creds.Username, pauth.CCloudURL, token, client)
 	if err != nil {
 		return err
 	}
+	utils.ErrPrint(cmd, errors.AutoLoginMsg)
 	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
 	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	r.Logger.Debug("Successfully auto logged in during prerun.")
