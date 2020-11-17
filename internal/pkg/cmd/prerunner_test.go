@@ -64,6 +64,27 @@ var (
 	}
 )
 
+func getPreRunBase() *pcmd.PreRun {
+	return &pcmd.PreRun{
+		CLIName: "ccloud",
+		Config: v3.AuthenticatedCloudConfigMock(),
+		Version: pmock.NewVersionMock(),
+		Logger:  log.New(),
+		UpdateClient: &mock.Client{
+			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+				return false, "", nil
+			},
+		},
+		FlagResolver: &pcmd.FlagResolverImpl{
+			Prompt: &form.RealPrompt{},
+			Out:    os.Stdout,
+		},
+		Analytics:         cliMock.NewDummyAnalyticsMock(),
+		LoginTokenHandler: mockLoginTokenHandler,
+		JWTValidator:      pcmd.NewJWTValidator(log.New()),
+	}
+}
+
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	type fields struct {
 		Logger  *log.Logger
@@ -117,27 +138,14 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ver := pmock.NewVersionMock()
 			cfg := v3.New(nil)
 			cfg, err := load.LoadAndMigrate(cfg)
 			require.NoError(t, err)
-			r := &pcmd.PreRun{
-				Version: ver,
-				Logger:  tt.fields.Logger,
-				UpdateClient: &mock.Client{
-					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-						return false, "", nil
-					},
-				},
-				FlagResolver: &pcmd.FlagResolverImpl{
-					Prompt: &form.RealPrompt{},
-					Out:    os.Stdout,
-				},
-				Analytics:         cliMock.NewDummyAnalyticsMock(),
-				LoginTokenHandler: mockLoginTokenHandler,
-				Config:            cfg,
-				JWTValidator:      pcmd.NewJWTValidator(tt.fields.Logger),
-			}
+
+			r := getPreRunBase()
+			r.Logger = tt.fields.Logger
+			r.JWTValidator = pcmd.NewJWTValidator(tt.fields.Logger)
+			r.Config = cfg
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
@@ -156,25 +164,14 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	ver := pmock.NewVersionMock()
-
 	calledAnonymous := false
-	r := &pcmd.PreRun{
-		Version: ver,
-		Logger:  log.New(),
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-				calledAnonymous = true
-				return false, "", nil
-			},
+
+	r := getPreRunBase()
+	r.UpdateClient = &mock.Client{
+		CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+			calledAnonymous = true
+			return false, "", nil
 		},
-		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &form.RealPrompt{},
-			Out:    os.Stdout,
-		},
-		Analytics:         cliMock.NewDummyAnalyticsMock(),
-		LoginTokenHandler: mockLoginTokenHandler,
-		JWTValidator:      pcmd.NewJWTValidator(log.New()),
 	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -190,25 +187,10 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
-	r := &pcmd.PreRun{
-		Version: ver,
-		Logger:  log.New(),
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-				return false, "", nil
-			},
-		},
-		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &form.RealPrompt{},
-			Out:    os.Stdout,
-		},
-		Analytics:         analyticsClient,
-		LoginTokenHandler: mockLoginTokenHandler,
-		JWTValidator:      pcmd.NewJWTValidator(log.New()),
-	}
+	r := getPreRunBase()
+	r.Analytics = analyticsClient
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
@@ -226,26 +208,11 @@ func TestPreRun_TokenExpires(t *testing.T) {
 	cfg := v3.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
-	ver := pmock.NewVersionMock()
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
 
-	r := &pcmd.PreRun{
-		Version: ver,
-		Logger:  log.New(),
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-				return false, "", nil
-			},
-		},
-		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &form.RealPrompt{},
-			Out:    os.Stdout,
-		},
-		Analytics:         analyticsClient,
-		Config:            cfg,
-		LoginTokenHandler: mockLoginTokenHandler,
-		JWTValidator:      pcmd.NewJWTValidator(log.New()),
-	}
+	r := getPreRunBase()
+	r.Config = cfg
+	r.Analytics = analyticsClient
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
@@ -320,8 +287,6 @@ func Test_UpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = tt.authToken
 
-			ver := pmock.NewVersionMock()
-
 			mockLoginTokenHandler := &cliMock.MockLoginTokenHandler{
 				GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
 					return validAuthToken, nil, nil
@@ -330,24 +295,10 @@ func Test_UpdateToken(t *testing.T) {
 					return validAuthToken, nil, nil
 				},
 			}
-			r := &pcmd.PreRun{
-				CLIName: tt.cliName,
-				Version: ver,
-				Logger:  log.New(),
-				UpdateClient: &mock.Client{
-					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-						return false, "", nil
-					},
-				},
-				FlagResolver: &pcmd.FlagResolverImpl{
-					Prompt: &form.RealPrompt{},
-					Out:    os.Stdout,
-				},
-				Analytics:         cliMock.NewDummyAnalyticsMock(),
-				LoginTokenHandler: mockLoginTokenHandler,
-				Config:            cfg,
-				JWTValidator:      pcmd.NewJWTValidator(log.New()),
-			}
+			r := getPreRunBase()
+			r.CLIName = tt.cliName
+			r.Config = cfg
+			r.LoginTokenHandler = mockLoginTokenHandler
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
@@ -443,27 +394,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ver := pmock.NewVersionMock()
-			analyticsClient := cliMock.NewDummyAnalyticsMock()
-			logger := log.New()
-			r := &pcmd.PreRun{
-				CLIName: "ccloud",
-				Version: ver,
-				Logger:  logger,
-				UpdateClient: &mock.Client{
-					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-						return false, "", nil
-					},
-				},
-				FlagResolver: &pcmd.FlagResolverImpl{
-					Prompt: &form.RealPrompt{},
-					Out:    os.Stdout,
-				},
-				Analytics:         analyticsClient,
-				Config:            tt.config,
-				LoginTokenHandler: mockLoginTokenHandler,
-				JWTValidator:      pcmd.NewJWTValidator(log.New()),
-			}
+			r := getPreRunBase()
+			r.CLIName = "ccloud"
+			r.Config = tt.config
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
@@ -503,25 +436,10 @@ func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 		"one":  pcmd.KeySecretSet(),
 		"two":  pcmd.EnvironmentSet(),
 	}
-	logger := log.New()
-	r := &pcmd.PreRun{
-		CLIName: "ccloud",
-		Version: pmock.NewVersionMock(),
-		Logger:  logger,
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-				return false, "", nil
-			},
-		},
-		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &form.RealPrompt{},
-			Out:    os.Stdout,
-		},
-		Analytics:         cliMock.NewDummyAnalyticsMock(),
-		Config:            userNameConfigLoggedIn,
-		LoginTokenHandler: mockLoginTokenHandler,
-		JWTValidator:      pcmd.NewJWTValidator(logger),
-	}
+
+	r := getPreRunBase()
+	r.Config = userNameConfigLoggedIn
+
 	cmdRoot := &cobra.Command{Use: "root"}
 	root := pcmd.NewAuthenticatedStateFlagCommand(cmdRoot, r, subcommandFlags)
 
@@ -562,25 +480,10 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 		"one":  pcmd.KeySecretSet(),
 		"two":  pcmd.EnvironmentSet(),
 	}
-	logger := log.New()
-	r := &pcmd.PreRun{
-		CLIName: "ccloud",
-		Version: pmock.NewVersionMock(),
-		Logger:  logger,
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-				return false, "", nil
-			},
-		},
-		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &form.RealPrompt{},
-			Out:    os.Stdout,
-		},
-		Analytics:         cliMock.NewDummyAnalyticsMock(),
-		Config:            userNameConfigLoggedIn,
-		LoginTokenHandler: mockLoginTokenHandler,
-		JWTValidator:      pcmd.NewJWTValidator(logger),
-	}
+
+	r := getPreRunBase()
+	r.Config = userNameConfigLoggedIn
+
 	cmdRoot := &cobra.Command{Use: "root"}
 	root := pcmd.NewHasAPIKeyCLICommand(cmdRoot, r, subcommandFlags)
 
