@@ -7,6 +7,6 @@ Standards-Version: 3.9.3
 Homepage: http://confluent.io
 
 Package: confluent-cli
-Depends: ${misc:Depends}
 Architecture: any
+Depends: ${misc:Depends}
 Description: Command Line Interface for managing Confluent Platform
