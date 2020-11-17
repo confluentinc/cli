@@ -7,4 +7,5 @@ Standards-Version: 3.9.3
 Homepage: http://confluent.io
 
 Package: confluent-cli
+Architecture: any
 Description: Command Line Interface for managing Confluent Platform
