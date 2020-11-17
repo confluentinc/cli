@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -28,6 +29,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
+
+	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
 
 const (
@@ -381,6 +386,126 @@ func Test_UpdateToken(t *testing.T) {
 				require.True(t, mockLoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
 			} else {
 				require.True(t, mockLoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
+			}
+		})
+	}
+}
+
+func TestPrerun_AutoLogin(t *testing.T) {
+	creds := &pauth.Credentials{
+		Username:     "csreesangkom",
+		Password:     "csreepassword",
+	}
+	tests := []struct {
+		name      string
+		cliName   string
+		unauthenticated bool
+	}{
+		{
+			name:      "auto login triggered",
+			cliName:   "ccloud",
+			unauthenticated: true,
+		},
+		{
+			name:      "auto login not triggered",
+			cliName:   "ccloud",
+			unauthenticated: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var cfg *v3.Config
+			if tt.cliName == "ccloud" {
+				cfg = v3.AuthenticatedCloudConfigMock()
+			} else {
+				cfg = v3.AuthenticatedConfluentConfigMock()
+			}
+
+			if tt.unauthenticated {
+				err := pauth.PersistLogoutToConfig(cfg)
+				require.NoError(t, err)
+			}
+
+			ver := pmock.NewVersionMock()
+
+			r := &pcmd.PreRun{
+				CLIName: tt.cliName,
+				Version: ver,
+				Logger:  log.New(),
+				UpdateClient: &mock.Client{
+					CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+						return false, "", nil
+					},
+				},
+				FlagResolver: &pcmd.FlagResolverImpl{
+					Prompt: &form.RealPrompt{},
+					Out:    os.Stdout,
+				},
+				Analytics:         cliMock.NewDummyAnalyticsMock(),
+				LoginTokenHandler: &cliMock.MockLoginTokenHandler{
+					GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (s string, credentials *pauth.Credentials, e error) {
+						return "", nil, nil
+					},
+					GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+						return validAuthToken, creds, nil
+					},
+				},
+				CCloudClientFactory: &cliMock.MockCCloudClientFactory{
+					JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+						return &ccloud.Client{Auth: &sdkMock.Auth{
+							UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+								return &orgv1.GetUserReply{
+									User: &orgv1.User{
+										Id:        23,
+										Email:     "",
+										FirstName: "",
+									},
+									Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+								}, nil
+							},
+						}}
+					},
+					AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+						return &ccloud.Client{}
+					},
+				},
+				MDSClientManager: &cliMock.MockMDSClientManager{
+					GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+						return &mds.APIClient{}, nil
+					},
+				},
+				Config:       cfg,
+				JWTValidator: pcmd.NewJWTValidator(log.New()),
+			}
+
+			root := &cobra.Command{
+				Run: func(cmd *cobra.Command, args []string) {},
+			}
+			var rootCmd *pcmd.AuthenticatedCLICommand
+			if tt.cliName == "ccloud" {
+				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
+			} else {
+				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
+			}
+
+			root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+			out, err := pcmd.ExecuteCommand(rootCmd.Command)
+			require.NoError(t, err)
+			if tt.cliName == "ccloud" {
+				if tt.unauthenticated {
+					require.True(t, mockLoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
+					require.Contains(t, out, errors.AutoLoginMsg)
+					require.Contains(t, out, errors.LoggedInAsMsg, creds.Username)
+				} else {
+					require.False(t, mockLoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
+				}
+			} else {
+				if tt.unauthenticated {
+					require.True(t, mockLoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
+				} else {
+					require.False(t, mockLoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
+				}
 			}
 		})
 	}

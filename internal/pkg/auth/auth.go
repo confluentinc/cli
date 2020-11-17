@@ -29,6 +29,19 @@ const (
 	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
 )
 
+func PersistLogoutToConfig(config *v3.Config) error {
+	ctx := config.Context()
+	if ctx == nil {
+		return nil
+	}
+	err := ctx.DeleteUserAuth()
+	if err != nil {
+		return err
+	}
+	ctx.Config.CurrentContext = ""
+	return config.Save()
+}
+
 func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
 	state, err := getCCloudContextState(config, email, url, token, client)
 	if err != nil {

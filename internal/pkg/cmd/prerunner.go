@@ -274,6 +274,7 @@ func (r *PreRun) getCommandContext(cmd *cobra.Command, command *AuthenticatedCLI
 		return nil, err
 	}
 	if ctx == nil {
+		// attempt to log user in with non-interactive credentials
 		autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
 		if autoLoginErr != nil {
 			r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
@@ -294,6 +295,7 @@ func (r *PreRun) getCommandState(cmd *cobra.Command, ctx *DynamicContext) (*v2.C
 	state, err := ctx.AuthenticatedState(cmd)
 	if err != nil {
 		if _, ok := err.(*errors.NotLoggedInError); ok {
+			// attempt to log user in with non-interactive credentials
 			autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
 			if autoLoginErr != nil {
 				r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
@@ -311,12 +313,12 @@ func (r *PreRun) getCommandState(cmd *cobra.Command, ctx *DynamicContext) (*v2.C
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error {
-	token, creds, err := r.getCCloudTokenAndCrendentils(cmd)
+	token, creds, err := r.getCCloudTokenAndCredentials(cmd)
 	if err != nil {
 		return err
 	}
 	if token == "" || creds == nil {
-		r.Logger.Debug("No non-interactive login credentials")
+		r.Logger.Debug("No non-interactive login failed")
 		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
@@ -327,26 +329,29 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error 
 	utils.ErrPrint(cmd, errors.AutoLoginMsg)
 	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
 	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
-	r.Logger.Debug("Successfully auto logged in during prerun.")
 	return nil
 }
 
-func (r *PreRun) getCCloudTokenAndCrendentils(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
 	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 
 	token, creds, err := r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
 	if err != nil {
-		return "", nil, err
+		r.Logger.Debug("Env var login failed: ", err.Error())
 	}
 	if len(token) > 0 {
 		return token, creds, nil
 	}
 
 	url := pauth.CCloudURL
-	return r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+	token, creds, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		URL:     url,
 	})
+	if err != nil {
+		r.Logger.Debug("Netrc login failed: ", err.Error())
+	}
+	return token, creds, err
 }
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
