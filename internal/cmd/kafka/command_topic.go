@@ -309,11 +309,6 @@ func (a *authenticatedTopicCommand) init() {
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
-func setServerURL(bootstrap string) string {
-	return "http://" + strings.TrimSuffix(bootstrap, "9092") + "8090/kafka/v3"
-	//client.ChangeBasePath("http://" + strings.Trim(url, "9092") + "8090/kafka/v3")
-}
-
 type kafkaRestV3Error struct {
 	Code    int    `json:"error_code"`
 	Message string `json:"message"`
@@ -339,7 +334,13 @@ func handleCommonKafkaRestClientErrors(url string, err error) error {
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	lkc, kafkaRestURL, err := getKafkaRestSetup(a, cmd)
+	kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
 	if err != nil {
 		return err
 	}
@@ -348,7 +349,12 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	a.KafkaRestClient.ChangeBasePath(kafkaRestURL)
 	kafkaRestClient := a.KafkaRestClient
 
-	accessToken, err := getAccessToken(a, cmd)
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 	if err != nil {
 		return err
 	}
@@ -357,10 +363,10 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
 
 	topicGetResp, httpResp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsGet(newCtx, lkc)
-	statusCode := httpResp.StatusCode
 
 	// Kafka-REST exists and no error
-	if statusCode == 200 && err == nil {
+	if err == nil && httpResp != nil && httpResp.StatusCode == 200 {
+		fmt.Println("using kafka rest")
 		topicDatas := topicGetResp.Data
 
 		outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
@@ -375,7 +381,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka-REST exists but Kafka-REST error occurred
-	if statusCode >= 400 && statusCode != 404 && err != nil {
+	if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
 		return handleCommonKafkaRestClientErrors(kafkaRestURL, err)
 	}
 
@@ -439,7 +445,13 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		i++
 	}
 
-	lkc, kafkaRestURL, err := getKafkaRestSetup(a, cmd)
+	kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
 	if err != nil {
 		return err
 	}
@@ -448,7 +460,12 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	a.KafkaRestClient.ChangeBasePath(kafkaRestURL)
 	kafkaRestClient := a.KafkaRestClient
 
-	accessToken, err := getAccessToken(a, cmd)
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 	if err != nil {
 		return err
 	}
@@ -466,16 +483,16 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			//TODO what about linkName and mirror-topic and dry-run? go-sdk doesn't have these in optional.interface
 		}),
 	})
-	statusCode := httpResp.StatusCode
 
 	// Kafka-REST exists and no error
-	if statusCode == 201 && err == nil {
+	if err == nil && httpResp != nil && httpResp.StatusCode == 201 {
+		fmt.Println("using kafka rest")
 		utils.ErrPrintf(cmd, errors.CreatedTopicMsg, topicName)
 		return nil
 	}
 
 	// Kafka-REST exists but Kafka-REST error occurred
-	if statusCode >= 400 && statusCode != 404 && err != nil {
+	if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
 		// Catch error where topic already exists
 		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
 			var decodedError kafkaRestV3Error
@@ -485,7 +502,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			}
 			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
 				if ifNotExists == false {
-					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsErrorMsg, topicName), errors.TopicExistsSuggestions)
+					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, lkc), fmt.Sprintf(errors.TopicExistsSuggestions, lkc, lkc))
 				} // ignore error if ifNotExists flag is set
 				return nil
 			}
@@ -567,7 +584,13 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return output.NewInvalidOutputFormatFlagError(outputFormat)
 	}
 
-	lkc, kafkaRestURL, err := getKafkaRestSetup(a, cmd)
+	kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
 	if err != nil {
 		return err
 	}
@@ -576,7 +599,12 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	a.KafkaRestClient.ChangeBasePath(kafkaRestURL)
 	kafkaRestClient := a.KafkaRestClient
 
-	accessToken, err := getAccessToken(a, cmd)
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 	if err != nil {
 		return err
 	}
@@ -587,10 +615,11 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	// Get partitions
 	topicData := &topicData{}
 	partitionsResp, httpResp, err := kafkaRestClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(newCtx, lkc, topicName)
-	statusCode := httpResp.StatusCode
 
 	// Kafka-REST exists and no error
-	if statusCode == 200 && err == nil {
+	if err == nil && httpResp != nil && httpResp.StatusCode == 200 {
+		fmt.Println("using kafka rest")
+
 		topicData.TopicName = topicName
 		topicData.PartitionCount = len(partitionsResp.Data)
 		topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
@@ -673,7 +702,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	// Kafka-REST exists but Kafka-REST error occurred
-	if statusCode >= 400 && statusCode != 404 && err != nil {
+	if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
 		return handleCommonKafkaRestClientErrors(kafkaRestURL, err)
 	}
 
@@ -722,16 +751,26 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		i++
 	}
 
-	lkc, kafkaRestURL, err := getKafkaRestSetup(a, cmd)
+	kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
 	}
+	lkc := kafkaClusterConfig.ID
 
+	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
+	if err != nil {
+		return err
+	}
 	// set Kafka-REST client to correct URL
 	a.KafkaRestClient.ChangeBasePath(kafkaRestURL)
 	kafkaRestClient := a.KafkaRestClient
 
-	accessToken, err := getAccessToken(a, cmd)
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 	if err != nil {
 		return err
 	}
@@ -743,10 +782,11 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
 			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
 		})
-	statusCode := httpResp.StatusCode
 
 	// Kafka-REST exists and no error
-	if statusCode == 204 && err == nil {
+	if err == nil && httpResp != nil && httpResp.StatusCode == 204 {
+		fmt.Println("using kafka rest")
+
 		// Config update successful
 		utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
 		// Print Updated Configs
@@ -767,7 +807,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka-REST exists but Kafka-REST error occurred
-	if statusCode >= 400 && statusCode != 404 && err != nil {
+	if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
 		return handleCommonKafkaRestClientErrors(kafkaRestURL, err)
 	}
 
@@ -867,7 +907,13 @@ func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) er
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	lkc, kafkaRestURL, err := getKafkaRestSetup(a, cmd)
+	kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
 	if err != nil {
 		return err
 	}
@@ -876,7 +922,12 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	a.KafkaRestClient.ChangeBasePath(kafkaRestURL)
 	kafkaRestClient := a.KafkaRestClient
 
-	accessToken, err := getAccessToken(a, cmd)
+	state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 	if err != nil {
 		return err
 	}
@@ -886,17 +937,18 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	// Delete topic with Kafka-REST
 	httpResp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(newCtx, lkc, topicName)
-	statusCode := httpResp.StatusCode
 
 	// Kafka-REST exists and no error
-	if statusCode == 204 && err == nil {
+	if err == nil && httpResp != nil && httpResp.StatusCode == 204 {
+		fmt.Println("using kafka rest")
+
 		// Topic succesfully deleted
 		utils.ErrPrintf(cmd, errors.DeletedTopicMsg, topicName)
 		return nil
 	}
 
 	// Kafka-REST exists but Kafka-REST error occurred
-	if statusCode >= 400 && statusCode != 404 && err != nil {
+	if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
 		return handleCommonKafkaRestClientErrors(kafkaRestURL, err)
 	}
 
