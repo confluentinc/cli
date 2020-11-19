@@ -55,6 +55,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromEnvVar(cmd *cobr
 		email, password = h.getEnvVarCredentials(cmd, CCloudEmailDeprecatedEnvVar, CCloudPasswordDeprecatedEnvVar)
 	}
 	if len(email) == 0 {
+		h.logger.Debug("Found no credentials from environment variables")
 		return "", nil, nil
 	}
 	token, err := h.authTokenHandler.GetCCloudCredentialsToken(client, email, password)
@@ -84,6 +85,7 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromEnvVar(cmd *c
 		username, password = h.getEnvVarCredentials(cmd, ConfluentUsernameDeprecatedEnvVar, ConfluentPasswordDeprecatedEnvVar)
 	}
 	if len(username) == 0 {
+		h.logger.Debug("Found no credentials from environment variables")
 		return "", nil, nil
 	}
 	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password, h.logger)
@@ -95,8 +97,13 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromEnvVar(cmd *c
 }
 
 func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error) {
+	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
 	if err != nil || netrcMachine == nil {
+		h.logger.Debug("Failed to get netrc machine for credentials")
+		if err != nil {
+			h.logger.Debugf("Get netrc machine error: %s", err.Error())
+		}
 		return "", nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
@@ -117,8 +124,13 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra
 }
 
 func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error) {
+	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
 	if err != nil || netrcMachine == nil {
+		h.logger.Debug("Failed to get netrc machine for credentials")
+		if err != nil {
+			h.logger.Debugf("Get netrc machine error: %s", err.Error())
+		}
 		return "", nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
@@ -137,6 +149,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(cmd *cobr
 		if err != nil {
 			return "", nil, err
 		}
+		h.logger.Debug("Accquiring Token for SSO User.")
 		token, refreshToken, err := h.authTokenHandler.GetCCloudSSOToken(client, url, noBrowser, email, h.logger)
 		if err != nil {
 			return "", nil, err

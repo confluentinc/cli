@@ -113,6 +113,9 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 	token, err := r.getNewAuthToken(cmd, ctx)
 	if err != nil || token == "" {
 		r.Logger.Debug("Failed to update auth token")
+		if err != nil {
+			r.Logger.Debugf("Update token error : %s", err.Error())
+		}
 		return tokenError
 	}
 	r.Logger.Debug("Successfully updated auth token")
