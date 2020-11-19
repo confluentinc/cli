@@ -4,9 +4,11 @@ Usage:
   ccloud ksql app create <name> [flags]
 
 Flags:
-      --cluster string   Kafka cluster ID.
-      --csu int32        Number of CSUs to use in the cluster. (default 4)
-  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+      --csu int32            Number of CSUs to use in the cluster. (default 4)
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       Context name.
 
 Global Flags:
   -h, --help            Show help for this command.

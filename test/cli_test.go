@@ -57,7 +57,7 @@ var (
 	ccloudTestBin     = ccloudTestBinNormal
 	confluentTestBin  = confluentTestBinNormal
 	covCollector      *bincover.CoverageCollector
-	environments      = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}}
+	environments      = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
 	serviceAccountID  = int32(12345)
 	deactivatedUserID = int32(6666)
 )

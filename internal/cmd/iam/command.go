@@ -14,7 +14,7 @@ type command struct {
 // New returns the default command object for interacting with RBAC.
 func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	var cliCmd *pcmd.AuthenticatedCLICommand
-	if cliName != "ccloud" {
+	if cliName == "confluent" {
 		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
 				Use:   "iam",

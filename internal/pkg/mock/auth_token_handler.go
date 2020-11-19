@@ -9,8 +9,9 @@ import (
 
 	github_com_confluentinc_cc_structs_kafka_org_v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go"
-	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // MockAuthTokenHandler is a mock of AuthTokenHandler interface

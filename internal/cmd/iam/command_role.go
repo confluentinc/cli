@@ -38,12 +38,17 @@ type prettyRole struct {
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
 func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
-		&cobra.Command{
-			Use:   "role",
-			Short: "Manage RBAC and IAM roles.",
-			Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
-		}, prerunner)
+	cobraRoleCmd := &cobra.Command{
+		Use:   "role",
+		Short: "Manage RBAC and IAM roles.",
+		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
+	}
+	var cliCmd *cmd.AuthenticatedCLICommand
+	if cliName == "confluent" {
+		cliCmd = cmd.NewAuthenticatedWithMDSCLICommand(cobraRoleCmd, prerunner)
+	} else {
+		cliCmd = cmd.NewAuthenticatedCLICommand(cobraRoleCmd, prerunner)
+	}
 	roleCmd := &roleCommand{
 		AuthenticatedCLICommand: cliCmd,
 		cliName:                 cliName,

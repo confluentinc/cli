@@ -16,7 +16,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
 }
 
@@ -33,10 +33,10 @@ var (
 // New returns the default command object for interacting with Connect.
 func New(cliName string, prerunner pcmd.PreRunner) *command {
 	cmd := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cobra.Command{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
 			Use:   "connector-catalog",
 			Short: "Catalog of connectors and their configurations.",
-		}, prerunner),
+		}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
 	return cmd
@@ -59,7 +59,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	describeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
@@ -76,7 +75,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	listCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)

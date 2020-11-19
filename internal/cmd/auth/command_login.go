@@ -8,7 +8,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -203,12 +202,12 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	caCertPath, err := a.getCaCertPath(cmd)
 	if err != nil {
 		return err
 	}
 
-	token, creds, err := a.getConfluentTokenAndCredentials(cmd, url, caCertPath)
+	token, creds, err := a.getConfluentTokenAndCredentials(cmd, caCertPath, url)
 	if err != nil {
 		return err
 	}
@@ -232,10 +231,50 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
+// if ca-cert-path flag is not used, returns caCertPath value from config
+// if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
+func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return "", err
+	}
+	if caCertPath == "" {
+		changed := cmd.Flags().Changed("ca-cert-path")
+		if changed {
+			return "", nil
+		}
+		return a.getCaCertPathFromConfig(cmd)
+	}
+	return caCertPath, nil
+}
+
+func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command) (string, error) {
+	ctx, err := a.getContext(cmd)
+	if err != nil {
+		return "", err
+	}
+	if ctx != nil {
+		return ctx.Platform.CaCertPath, nil
+	}
+	return "", nil
+}
+
+func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
+	dynamicContext, err := a.Config.Context(cmd)
+	if err != nil {
+		return nil, err
+	}
+	var ctx *v3.Context
+	if dynamicContext != nil {
+		ctx = dynamicContext.Context
+	}
+	return ctx, nil
+}
+
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url string, caCertPath string) (string, *pauth.Credentials, error) {
-	client, err := a.getMDSClient(cmd, url, caCertPath)
+func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, caCertPath string, url string) (string, *pauth.Credentials, error) {
+	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
 	if err != nil {
 		return "", nil, err
 	}
@@ -256,31 +295,6 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, url s
 	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
 }
 
-func (a *loginCommand) getMDSClient(cmd *cobra.Command, url string, caCertPath string) (*mds.APIClient, error) {
-	ctx, err := a.getContext(cmd)
-	if err != nil {
-		return nil, err
-	}
-	caCertPathFlagChanged := cmd.Flags().Changed("ca-cert-path")
-	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, caCertPathFlagChanged, url, a.Logger)
-	if err != nil {
-		return nil, err
-	}
-	return mdsClient, nil
-}
-
-func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
-	dynamicContext, err := a.Config.Context(cmd)
-	if err != nil {
-		return nil, err
-	}
-	var ctx *v3.Context
-	if dynamicContext != nil {
-		ctx = dynamicContext.Context
-	}
-	return ctx, nil
-}
-
 func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
@@ -297,29 +311,38 @@ func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 }
 
 func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
-	ctxName := generateContextName(username, url)
-	credName := generateCredentialName(username)
 	platform := &v2.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
+
+	credName := generateCredentialName(username)
 	credential := &v2.Credential{
 		Name:     credName,
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := a.Config.SavePlatform(platform)
+	err := a.Config.SaveCredential(credential)
 	if err != nil {
 		return err
 	}
-	err = a.Config.SaveCredential(credential)
+
+	err = a.Config.SavePlatform(platform)
 	if err != nil {
 		return err
 	}
+
+	ctxName := generateContextName(username, url)
 	if ctx, ok := a.Config.Contexts[ctxName]; ok {
 		a.Config.ContextStates[ctxName] = state
 		ctx.State = state
+
+		ctx.Platform = platform
+		ctx.PlatformName = platform.Name
+
+		ctx.Credential = credential
+		ctx.CredentialName = credential.Name
 	} else {
 		err = a.Config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
 			"", nil, state)
@@ -327,6 +350,7 @@ func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2
 	if err != nil {
 		return err
 	}
+
 	err = a.Config.SetContext(ctxName)
 	if err != nil {
 		return err

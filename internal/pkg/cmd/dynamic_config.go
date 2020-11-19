@@ -21,6 +21,40 @@ func NewDynamicConfig(config *v3.Config, resolver FlagResolver, client *ccloud.C
 	}
 }
 
+func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, resolver FlagResolver) error {
+	d.Config = cfg
+	d.Resolver = resolver
+	err := d.ParseFlagsIntoConfig(cmd)
+	return err
+}
+
+// Parse "--context" flag value into config struct
+// Call ParseFlagsIntoContext which handles environment and cluster flags
+func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
+	ctxName, err := d.Resolver.ResolveContextFlag(cmd)
+	if err != nil {
+		return err
+	}
+	if ctxName != "" {
+		_, err := d.FindContext(ctxName)
+		if err != nil {
+			return err
+		}
+		d.Config.SetOverwrittenCurrContext(d.Config.CurrentContext)
+		d.Config.CurrentContext = ctxName
+	}
+	//called to initiate DynamicContext so that flags are parsed into context
+	ctx, err := d.Context(cmd)
+	if err != nil {
+		return err
+	}
+	if ctx == nil {
+		return nil
+	}
+	err = ctx.ParseFlagsIntoContext(cmd)
+	return err
+}
+
 func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	ctx, err := d.Config.FindContext(name)
 	if err != nil {
@@ -29,14 +63,8 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	return NewDynamicContext(ctx, d.Resolver, d.Client), nil
 }
 
+//Returns active Context wrapped as a new DynamicContext instance
 func (d *DynamicConfig) Context(cmd *cobra.Command) (*DynamicContext, error) {
-	ctxName, err := d.Resolver.ResolveContextFlag(cmd)
-	if err != nil {
-		return nil, err
-	}
-	if ctxName != "" {
-		return d.FindContext(ctxName)
-	}
 	ctx := d.Config.Context()
 	if ctx == nil {
 		return nil, nil

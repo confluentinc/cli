@@ -42,17 +42,17 @@ func (s *CLITestSuite) TestPaymentUpdate() {
 func handlePaymentInfo(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := orgv1.GetPaymentInfoReply{
-			Card:                 &orgv1.Card{
-				Cardholder:           "Miles Todzo",
-				Brand:                "Visa",
-				Last4:                "4242",
-				ExpMonth:             "01",
-				ExpYear:              "99",
+			Card: &orgv1.Card{
+				Cardholder: "Miles Todzo",
+				Brand:      "Visa",
+				Last4:      "4242",
+				ExpMonth:   "01",
+				ExpYear:    "99",
 			},
-			Organization:         &orgv1.Organization{
-				Id:                      0,
+			Organization: &orgv1.Organization{
+				Id: 0,
 			},
-			Error:                nil,
+			Error: nil,
 		}
 		data, err := json.Marshal(res)
 		require.NoError(t, err)

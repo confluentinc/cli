@@ -24,6 +24,8 @@ type FlagResolver interface {
 	ResolveClusterFlag(cmd *cobra.Command) (string, error)
 	ResolveEnvironmentFlag(cmd *cobra.Command) (string, error)
 	ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error)
+	ResolveApiKeyFlag(cmd *cobra.Command) (string, error)
+	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
 }
 
 type FlagResolverImpl struct {
@@ -159,4 +161,28 @@ func (r *FlagResolverImpl) ResolveResourceId(cmd *cobra.Command) (resourceType s
 		resourceType = KafkaResourceType
 	}
 	return resourceType, resourceId, nil
+}
+
+func (r *FlagResolverImpl) ResolveApiKeyFlag(cmd *cobra.Command) (string, error) {
+	const keyFlag = "api-key"
+	if cmd.Flags().Changed(keyFlag) {
+		key, err := cmd.Flags().GetString(keyFlag)
+		if err != nil {
+			return "", err
+		}
+		return key, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error) {
+	const secretFlag = "api-secret"
+	if cmd.Flags().Changed(secretFlag) {
+		secret, err := cmd.Flags().GetString(secretFlag)
+		if err != nil {
+			return "", err
+		}
+		return secret, nil
+	}
+	return "", nil
 }

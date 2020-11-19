@@ -22,7 +22,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
 }
 
@@ -58,11 +58,11 @@ var (
 // New returns the default command object for interacting with Connect.
 func New(cliName string, prerunner pcmd.PreRunner) *command {
 	cmd := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use:   "connector",
 				Short: "Manage Kafka Connect.",
-			}, prerunner),
+			}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
 	return cmd
@@ -81,7 +81,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	describeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
@@ -98,7 +97,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	listCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -116,7 +114,6 @@ func (c *command) init(cliName string) {
 		),
 	}
 	createCmd.Flags().String("config", "", "JSON connector config file.")
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	panicOnError(createCmd.MarkFlagRequired("config"))
 	createCmd.Flags().SortFlags = false
@@ -134,8 +131,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	deleteCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	deleteCmd.Flags().SortFlags = false
 	c.AddCommand(deleteCmd)
 
 	updateCmd := &cobra.Command{
@@ -145,7 +140,6 @@ func (c *command) init(cliName string) {
 		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("config", "", "JSON connector config file.")
-	updateCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	panicOnError(updateCmd.MarkFlagRequired("config"))
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
@@ -162,8 +156,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	pauseCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	pauseCmd.Flags().SortFlags = false
 	c.AddCommand(pauseCmd)
 
 	resumeCmd := &cobra.Command{
@@ -178,8 +170,6 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	resumeCmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	resumeCmd.Flags().SortFlags = false
 	c.AddCommand(resumeCmd)
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
 }

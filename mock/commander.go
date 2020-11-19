@@ -1,8 +1,9 @@
 package mock
 
 import (
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"os"
+
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -79,7 +80,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
-		if err == nil {
+		if err != nil {
 			return err
 		}
 		return nil
