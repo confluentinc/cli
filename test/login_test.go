@@ -138,7 +138,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
 		//TODO add save test using stdin input
-		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, "", 0)
+		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL,0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
 		if tt.cliName == "ccloud" {
@@ -201,7 +201,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
-		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, "", 0)
+		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
 		if tt.cliName == "ccloud" {

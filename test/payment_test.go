@@ -5,6 +5,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/require"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -27,7 +28,7 @@ func (s *CLITestSuite) TestPaymentUpdate() {
 	tests := []CLITest{
 		{
 			args:    	"admin payment update",
-			stdinInput: "4242424242424242\n12/70\n999\nBrian Strauch\n",
+			cmdFuncs: 	[]cmdFunc{stdinPipeFunc(strings.NewReader("4242424242424242\n12/70\n999\nBrian Strauch\n"))},
 			fixture: 	"admin/payment-update-success.golden",
 		},
 	}
