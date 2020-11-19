@@ -69,7 +69,7 @@ func getPreRunBase() *pcmd.PreRun {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:         cliMock.NewDummyAnalyticsMock(),
+		Analytics: cliMock.NewDummyAnalyticsMock(),
 		LoginTokenHandler: &cliMock.MockLoginTokenHandler{
 			GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (string, *pauth.Credentials, error) {
 				return "", nil, nil
@@ -97,7 +97,7 @@ func getPreRunBase() *pcmd.PreRun {
 				return &mds.APIClient{}, nil
 			},
 		},
-		JWTValidator:      pcmd.NewJWTValidator(log.New()),
+		JWTValidator: pcmd.NewJWTValidator(log.New()),
 	}
 }
 
@@ -338,17 +338,17 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		Password: "csreepassword",
 	}
 	tests := []struct {
-		name            string
-		cliName         string
+		name              string
+		cliName           string
 		loginTokenHandler *cliMock.MockLoginTokenHandler
-		envVarChecked    bool
-		netrcChecked     bool
-		wantErr          bool
+		envVarChecked     bool
+		netrcChecked      bool
+		wantErr           bool
 	}{
 		{
-			name:            "successful auto login from netrc",
-			cliName:         "ccloud",
-			loginTokenHandler:	&cliMock.MockLoginTokenHandler{
+			name:    "no env var credentials but successful login from netrc",
+			cliName: "ccloud",
+			loginTokenHandler: &cliMock.MockLoginTokenHandler{
 				GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (s string, credentials *pauth.Credentials, e error) {
 					return "", nil, nil
 				},
@@ -357,12 +357,12 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			},
 			envVarChecked: true,
-			netrcChecked: true,
+			netrcChecked:  true,
 		},
 		{
-			name:            "successful auto login from env var",
-			cliName:         "ccloud",
-			loginTokenHandler:	&cliMock.MockLoginTokenHandler{
+			name:    "successful login from env var",
+			cliName: "ccloud",
+			loginTokenHandler: &cliMock.MockLoginTokenHandler{
 				GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (s string, credentials *pauth.Credentials, e error) {
 					return validAuthToken, creds, nil
 				},
@@ -371,12 +371,12 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			},
 			envVarChecked: true,
-			netrcChecked: false,
+			netrcChecked:  false,
 		},
 		{
-			name:            "env var failed but netrc succeeds",
-			cliName:         "ccloud",
-			loginTokenHandler:	&cliMock.MockLoginTokenHandler{
+			name:    "env var failed but netrc succeeds",
+			cliName: "ccloud",
+			loginTokenHandler: &cliMock.MockLoginTokenHandler{
 				GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (s string, credentials *pauth.Credentials, e error) {
 					return "", nil, errors.New("ENV VAR FAILED")
 				},
@@ -385,12 +385,12 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			},
 			envVarChecked: true,
-			netrcChecked: true,
+			netrcChecked:  true,
 		},
 		{
-			name:            "failed non-interactive login",
-			cliName:         "ccloud",
-			loginTokenHandler:	&cliMock.MockLoginTokenHandler{
+			name:    "failed non-interactive login",
+			cliName: "ccloud",
+			loginTokenHandler: &cliMock.MockLoginTokenHandler{
 				GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (s string, credentials *pauth.Credentials, e error) {
 					return "", nil, errors.New("ENV VAR FAILED")
 				},
@@ -399,8 +399,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			},
 			envVarChecked: true,
-			netrcChecked: true,
-			wantErr: true,
+			netrcChecked:  true,
+			wantErr:       true,
 		},
 	}
 	for _, tt := range tests {
@@ -413,7 +413,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			}
 			err := pauth.PersistLogoutToConfig(cfg)
 			require.NoError(t, err)
-
 
 			r := getPreRunBase()
 			r.CLIName = tt.cliName
@@ -470,14 +469,14 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 }
 
-func TestPrerun_AutoLoginNotTriggered(t *testing.T) {
+func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {
-		name            string
-		cliName         string
+		name    string
+		cliName string
 	}{
 		{
-			name:            "auto login not triggered",
-			cliName:         "ccloud",
+			name:    "ccloud logged in user",
+			cliName: "ccloud",
 		},
 	}
 	for _, tt := range tests {

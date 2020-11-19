@@ -318,7 +318,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error 
 		return err
 	}
 	if token == "" || creds == nil {
-		r.Logger.Debug("No non-interactive login failed")
+		r.Logger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
@@ -337,7 +337,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 
 	token, creds, err := r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
 	if err != nil {
-		r.Logger.Debug("Env var login failed: ", err.Error())
+		r.Logger.Debug("Prerun env var login failed: ", err.Error())
 	}
 	if len(token) > 0 {
 		return token, creds, nil
@@ -349,7 +349,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 		URL:     url,
 	})
 	if err != nil {
-		r.Logger.Debug("Netrc login failed: ", err.Error())
+		r.Logger.Debug("Prerun netrc login failed: ", err.Error())
 	}
 	return token, creds, err
 }
@@ -556,7 +556,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 		return tokenError
 	}
 	r.Logger.Debug("Updating auth token")
-	token, err := r.getNewAuthToken(cmd, ctx)
+	token, err := r.getUpdatedAuthToken(cmd, ctx)
 	if err != nil || token == "" {
 		r.Logger.Debug("Failed to update auth token")
 		return tokenError
@@ -569,7 +569,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 	return nil
 }
 
-func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
+func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
 	var token string
 	params := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
@@ -593,15 +593,6 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 		}
 	}
 	return token, err
-}
-
-// if context is authenticated, client is created and used to for DynamicContext.FindKafkaCluster for finding active cluster
-func (r *PreRun) getClusterIdForAuthenticatedUser(command *HasAPIKeyCLICommand, ctx *DynamicContext, cmd *cobra.Command) (string, error) {
-	cluster, err := ctx.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return "", err
-	}
-	return cluster.ID, nil
 }
 
 // if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config

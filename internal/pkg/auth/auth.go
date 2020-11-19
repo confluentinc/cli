@@ -42,6 +42,14 @@ func PersistLogoutToConfig(config *v3.Config) error {
 	return config.Save()
 }
 
+func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string) error {
+	state := &v2.ContextState{
+		Auth:      nil,
+		AuthToken: token,
+	}
+	return addOrUpdateContext(config, username, url, state, caCertPath)
+}
+
 func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
 	state, err := getCCloudContextState(config, email, url, token, client)
 	if err != nil {
@@ -54,12 +62,48 @@ func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, tok
 	return state.Auth.Account, nil
 }
 
-func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string) error {
-	state := &v2.ContextState{
-		Auth:      nil,
-		AuthToken: token,
+func addOrUpdateContext(config *v3.Config, username string, url string, state *v2.ContextState, caCertPath string) error {
+	ctxName := generateContextName(username, url)
+	credName := generateCredentialName(username)
+	platform := &v2.Platform{
+		Name:       strings.TrimPrefix(url, "https://"),
+		Server:     url,
+		CaCertPath: caCertPath,
 	}
-	return addOrUpdateContext(config, username, url, state, caCertPath)
+	credential := &v2.Credential{
+		Name:     credName,
+		Username: username,
+		// don't save password if they entered it interactively.
+	}
+	err := config.SavePlatform(platform)
+	if err != nil {
+		return err
+	}
+	err = config.SaveCredential(credential)
+	if err != nil {
+		return err
+	}
+	if ctx, ok := config.Contexts[ctxName]; ok {
+		config.ContextStates[ctxName] = state
+		ctx.State = state
+
+		ctx.Platform = platform
+		ctx.PlatformName = platform.Name
+
+		ctx.Credential = credential
+		ctx.CredentialName = credential.Name
+	} else {
+		err = config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
+			"", nil, state)
+	}
+	if err != nil {
+		return err
+	}
+	err = config.SetContext(ctxName)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func getCCloudContextState(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*v2.ContextState, error) {
@@ -113,50 +157,6 @@ func getCCloudUser(token string, client *ccloud.Client) (*orgv1.GetUserReply, er
 		return nil, errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
 	}
 	return user, nil
-}
-
-func addOrUpdateContext(config *v3.Config, username string, url string, state *v2.ContextState, caCertPath string) error {
-	ctxName := generateContextName(username, url)
-	credName := generateCredentialName(username)
-	platform := &v2.Platform{
-		Name:       strings.TrimPrefix(url, "https://"),
-		Server:     url,
-		CaCertPath: caCertPath,
-	}
-	credential := &v2.Credential{
-		Name:     credName,
-		Username: username,
-		// don't save password if they entered it interactively.
-	}
-	err := config.SavePlatform(platform)
-	if err != nil {
-		return err
-	}
-	err = config.SaveCredential(credential)
-	if err != nil {
-		return err
-	}
-	if ctx, ok := config.Contexts[ctxName]; ok {
-		config.ContextStates[ctxName] = state
-		ctx.State = state
-
-		ctx.Platform = platform
-		ctx.PlatformName = platform.Name
-
-		ctx.Credential = credential
-		ctx.CredentialName = credential.Name
-	} else {
-		err = config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-			"", nil, state)
-	}
-	if err != nil {
-		return err
-	}
-	err = config.SetContext(ctxName)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func generateContextName(username string, url string) string {
