@@ -77,6 +77,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
+	loginCmd.Flags().Bool("prompt", false, "Skip non-interactive logins and prompt for login credentials.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or refresh token (in the case of SSO) to local netrc file.")
 	loginCmd.Flags().SortFlags = false
 	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
@@ -126,17 +127,24 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
 	client := a.anonHTTPClientFactory(url, a.Logger)
 
-	token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
-	if err == nil && len(token) > 0 {
-		return token, creds, nil
+	promptOnly, err := cmd.Flags().GetBool("prompt")
+	if err != nil {
+		return "", nil, err
 	}
 
-	token, creds, err = a.loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
-		CLIName: a.cliName,
-		URL:     url,
-	})
-	if err == nil && len(token) > 0 {
-		return token, creds, nil
+	if !promptOnly {
+		token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
+		if err == nil && len(token) > 0 {
+			return token, creds, nil
+		}
+
+		token, creds, err = a.loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+			CLIName: a.cliName,
+			URL:     url,
+		})
+		if err == nil && len(token) > 0 {
+			return token, creds, nil
+		}
 	}
 
 	return a.loginTokenHandler.GetCCloudTokenAndCredentialsFromPrompt(cmd, client, url)
@@ -279,17 +287,24 @@ func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, caCer
 		return "", nil, err
 	}
 
-	token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
-	if err == nil && len(token) > 0 {
-		return token, creds, nil
+	promptOnly, err := cmd.Flags().GetBool("prompt")
+	if err != nil {
+		return "", nil, err
 	}
 
-	token, creds, err = a.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
-		CLIName: a.cliName,
-		URL:     url,
-	})
-	if err == nil && len(token) > 0 {
-		return token, creds, nil
+	if !promptOnly {
+		token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
+		if err == nil && len(token) > 0 {
+			return token, creds, nil
+		}
+
+		token, creds, err = a.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
+			CLIName: a.cliName,
+			URL:     url,
+		})
+		if err == nil && len(token) > 0 {
+			return token, creds, nil
+		}
 	}
 
 	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)

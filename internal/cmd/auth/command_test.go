@@ -334,6 +334,77 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 	}
 }
 
+func TestPromptLoginFlag(t *testing.T) {
+	req := require.New(t)
+	clearCCloudDeprecatedEnvVar(req)
+	envToken := "env_token"
+	netrcToken := "netrc_token"
+	wrongCreds := &pauth.Credentials{
+		Username: "wrong_user",
+		Password: "wrong_password",
+	}
+
+	tests := []struct {
+		name    string
+		cliName string
+	}{
+		{
+			name:    "ccloud loging prompt flag",
+			cliName: "ccloud",
+		},
+		{
+			name:    "confluent login prompt flag",
+			cliName: "confluent",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			loginTokenHandler := &cliMock.MockLoginTokenHandler{
+				GetCCloudTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *ccloud.Client) (string, *pauth.Credentials, error) {
+					return envToken, wrongCreds, nil
+				},
+				GetCCloudTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+					return netrcToken, wrongCreds, nil
+				},
+				GetCCloudTokenAndCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client, url string) (string, *pauth.Credentials, error) {
+					return testToken, &pauth.Credentials{
+						Username: promptUser,
+						Password: promptPassword,
+					}, nil
+				},
+				GetConfluentTokenAndCredentialsFromEnvVarFunc: func(cmd *cobra.Command, client *mds.APIClient) (string, *pauth.Credentials, error) {
+					return envToken, wrongCreds, nil
+				},
+				GetConfluentTokenAndCredentialsFromNetrcFunc: func(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *pauth.Credentials, error) {
+					return netrcToken, wrongCreds, nil
+				},
+				GetConfluentTokenAndCredentialsFromPromptFunc: func(cmd *cobra.Command, client *mds.APIClient) (string, *pauth.Credentials, error) {
+					return testToken, &pauth.Credentials{
+						Username: promptUser,
+						Password: promptPassword,
+					}, nil
+				},
+			}
+			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.cliName, req, mockNetrcHandler, mockAuthTokenHandler, loginTokenHandler)
+			loginArgs := []string{"--prompt"}
+			if tt.cliName == "confluent" {
+				loginArgs = append(loginArgs, "--url=http://localhost:8090")
+			}
+			output, err := pcmd.ExecuteCommand(loginCmd.Command, loginArgs...)
+			req.NoError(err)
+
+			req.False(loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVarCalled())
+			req.False(loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrcCalled())
+
+			req.False(loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVarCalled())
+			req.False(loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrcCalled())
+
+			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		})
+	}
+}
+
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
