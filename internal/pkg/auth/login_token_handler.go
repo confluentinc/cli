@@ -75,6 +75,7 @@ func (h *LoginTokenHandlerImpl) getEnvVarCredentials(cmd *cobra.Command, userEnv
 		return "", ""
 	}
 	utils.ErrPrintf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
+	utils.ErrPrint(cmd, errors.RemoveCredsMsg)
 	return user, password
 }
 
@@ -100,6 +101,7 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra
 		return "", nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+	utils.ErrPrint(cmd, errors.RemoveCredsMsg)
 	var token string
 	creds := &Credentials{Username: netrcMachine.User}
 	if netrcMachine.IsSSO {
@@ -122,6 +124,7 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromNetrc(cmd *co
 		return "", nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+	utils.ErrPrint(cmd, errors.RemoveCredsMsg)
 	token, err := h.authTokenHandler.GetConfluentAuthToken(client, netrcMachine.User, netrcMachine.Password, h.logger)
 	if err != nil {
 		utils.ErrPrintf(cmd, errors.NetrcLoginFailedMsg, err.Error())

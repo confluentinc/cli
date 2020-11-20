@@ -20,6 +20,7 @@ const (
 	EnvLoginFailedMsg          = "Non-interactive login with environment variables failed: %s\n"
 	FoundNetrcCredMsg          = "Found credentials for user \"%s\" from netrc file \"%s\".\n"
 	NetrcLoginFailedMsg        = "Non-interactive login with netrc failed: %s\n"
+	RemoveCredsMsg             = "Remove these credentials to stop non-interactive login."
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
