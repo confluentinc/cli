@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -93,6 +94,76 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	kafkaRestGetConfig := convertAclBindingToGetParams(acl[0].ACLBinding)
+
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
+	if err != nil {
+		return err
+	}
+
+	// Set Kafka-REST client to correct URL
+	c.KafkaRestClient.ChangeBasePath(kafkaRestURL)
+	kafkaRestClient := c.KafkaRestClient
+
+	state, err := c.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, c.Context.Platform.Server)
+	if err != nil {
+		return err
+	}
+
+	// create new context with access token to be used in Kafka-REST call
+	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
+
+	aclGetResp, httpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsGet(newCtx, lkc, &kafkaRestGetConfig)
+
+	// Kafka-REST exists and no error
+	if err == nil && httpResp != nil && httpResp.StatusCode == 200 {
+		fmt.Println("using kafka rest list")
+		aclDatas := aclGetResp.Data
+		aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+		aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+		outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, os.Stdout)
+		if err != nil {
+			return err
+		}
+		for _, aclData := range aclDatas {
+			record := &struct {
+				ServiceAccountId string
+				Permission       string
+				Operation        string
+				Resource         string
+				Name             string
+				Type             string
+			}{
+				aclData.Principal,
+				string(aclData.Permission),
+				string(aclData.Operation),
+				string(aclData.ResourceType),
+				aclData.Host,
+				string(aclData.PatternType),
+			}
+			outputWriter.AddElement(record)
+		}
+		return outputWriter.Out()
+
+	}
+
+	// Kafka-REST exists but Kafka-REST error occurred
+	if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
+		return handleCommonKafkaRestClientErrors(kafkaRestURL, err)
+	}
+
+	// Kafka-REST does not exist, use Kafka-API
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return err
@@ -119,6 +190,57 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		bindings = append(bindings, acl.ACLBinding)
 	}
 
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
+	if err != nil {
+		return err
+	}
+
+	// Set Kafka-REST client to correct URL
+	c.KafkaRestClient.ChangeBasePath(kafkaRestURL)
+	kafkaRestClient := c.KafkaRestClient
+
+	state, err := c.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, c.Context.Platform.Server)
+	if err != nil {
+		return err
+	}
+
+	// create new context with access token to be used in Kafka-REST call
+	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
+
+	kafkaRestExists := true
+	for _, binding := range bindings {
+		kafkaRestPostConfig := convertAclBindingToPostParams(binding)
+
+		httpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsPost(newCtx, lkc, &kafkaRestPostConfig)
+
+		if err != nil && httpResp == nil {
+			kafkaRestExists = false
+			break
+		}
+		// Kafka-REST exists but Kafka-REST error occurred
+		if err != nil && httpResp != nil && httpResp.StatusCode >= 400 && httpResp.StatusCode != 404 {
+			return handleCommonKafkaRestClientErrors(kafkaRestURL, err)
+		}
+	}
+
+	// Kafka REST sent all requests successfully
+	if kafkaRestExists {
+		fmt.Println("using kafka rest create")
+		return aclutil.PrintACLs(cmd, bindings, os.Stdout)
+	}
+
+	// Kafka-REST does not exist, use Kafka-API
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return err
@@ -145,12 +267,75 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
+	if err != nil {
+		return err
+	}
+
+	// Set Kafka-REST client to correct URL
+	c.KafkaRestClient.ChangeBasePath(kafkaRestURL)
+	kafkaRestClient := c.KafkaRestClient
+
+	state, err := c.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := getAccessToken(state, c.Context.Platform.Server)
+	if err != nil {
+		return err
+	}
+
+	// create new context with access token to be used in Kafka-REST call
+	newCtx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
+
+	matchingBindingCount := 0
+	kafkaRestExists := true
+
+	for _, filter := range filters {
+		// Check to see if Kafka-REST is enabled and if specified ACL to be deleted exists
+		kafkaRestGetConfig := convertAclFilterToGetParams(filter)
+		aclGetResp, httpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsGet(newCtx, lkc, &kafkaRestGetConfig)
+
+		// Kafka-REST exists and ACL response is not empty(ACL exists), so delete
+		if err == nil && httpResp != nil && httpResp.StatusCode == 200 && len(aclGetResp.Data) > 0 {
+			kafkaRestPostConfig := convertAclFilterToPostParams(filter)
+
+			_, deleteHttpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsDelete(newCtx, lkc, &kafkaRestPostConfig)
+			fmt.Println("using kafka rest delete")
+			if err == nil && deleteHttpResp != nil && deleteHttpResp.StatusCode == 200 {
+				matchingBindingCount += len(aclGetResp.Data)
+			} else {
+				handleCommonKafkaRestClientErrors(kafkaRestURL, err)
+			}
+		}
+
+		// Kafka-REST is not enabled, use Kafka-API failover
+		if err != nil && httpResp == nil {
+			kafkaRestExists = false
+			break
+		}
+	}
+
+	// Kafka-REST exists and was able to delete at least one ACL
+	if kafkaRestExists && matchingBindingCount > 0 {
+		utils.ErrPrintf(cmd, errors.DeletedACLsMsg)
+		return nil
+	}
+
+	// Use Kafka-API
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return err
 	}
 
-	matchingBindingCount := 0
+	matchingBindingCount = 0
 	for _, acl := range acls {
 		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
 		resp, err := c.Client.Kafka.ListACLs(context.WithValue(context.Background(), "requestor", "delete"), cluster, convertToFilter(acl.ACLBinding))

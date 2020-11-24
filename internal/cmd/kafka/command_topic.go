@@ -15,7 +15,6 @@ import (
 	"github.com/c-bata/go-prompt"
 
 	"encoding/json"
-	neturl "net/url"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -314,25 +313,6 @@ type kafkaRestV3Error struct {
 	Message string `json:"message"`
 }
 
-func handleCommonKafkaRestClientErrors(url string, err error) error {
-	switch err.(type) {
-	case *neturl.Error: // Handle errors with request url
-		if e, ok := err.(*neturl.Error); ok {
-			return errors.Errorf(errors.InvalidFlagValueWithWrappedErrorErrorMsg, url, "url", e.Err)
-		}
-	case kafkarestv3.GenericOpenAPIError:
-		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
-			var decodedError kafkaRestV3Error
-			err = json.Unmarshal(openAPIError.Body(), &decodedError)
-			if err != nil {
-				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
-			}
-			return fmt.Errorf("Kafka REST Proxy API failed with: error msg: %v error code: %v", decodedError.Message, decodedError.Code)
-		}
-	}
-	return err
-}
-
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
@@ -340,7 +320,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	lkc := kafkaClusterConfig.ID
 
-	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
 	if err != nil {
 		return err
 	}
@@ -451,7 +431,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 	lkc := kafkaClusterConfig.ID
 
-	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
 	if err != nil {
 		return err
 	}
@@ -590,7 +570,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 	lkc := kafkaClusterConfig.ID
 
-	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
 	if err != nil {
 		return err
 	}
@@ -757,7 +737,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 	lkc := kafkaClusterConfig.ID
 
-	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
 	if err != nil {
 		return err
 	}
@@ -913,7 +893,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 	lkc := kafkaClusterConfig.ID
 
-	kafkaRestURL, err := getKafkaRestSetup(kafkaClusterConfig)
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
 	if err != nil {
 		return err
 	}

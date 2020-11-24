@@ -341,6 +341,7 @@ const (
 	// Kafka REST Proxy Errors
 	InternalServerErrorMsg         = "internal server error"
 	InternalServerErrorSuggestions = "Please check the status of your Kafka cluster or submit a support ticket."
+	InvalidBootstrapServerErrorMsg = "Invalid bootstrap server."
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
