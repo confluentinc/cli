@@ -232,7 +232,7 @@ test-prep: lint
       endif
 
 .PHONY: test
-test: test-prep coverage-unit coverage-integ test-installers
+test: test-prep coverage-integ test-installers
 
 .PHONY: unit-test
 unit-test: test-prep coverage-unit
