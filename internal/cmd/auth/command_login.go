@@ -151,7 +151,7 @@ func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url stri
 }
 
 func (a *loginCommand) getCCloudContextState(cmd *cobra.Command, url string, email string, token string) (*v2.ContextState, error) {
-	ctxName := generateContextName(email, url)
+	ctxName := generateContextName(email, url, "")
 	user, err := a.getCCloudUser(cmd, url, token)
 	if err != nil {
 		return nil, err
@@ -348,7 +348,7 @@ func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2
 		return err
 	}
 
-	ctxName := generateContextName(username, url)
+	ctxName := generateContextName(username, url, caCertPath)
 	if ctx, ok := a.Config.Contexts[ctxName]; ok {
 		a.Config.ContextStates[ctxName] = state
 		ctx.State = state
@@ -393,8 +393,11 @@ func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, creds *pauth.Credent
 	return nil
 }
 
-func generateContextName(username string, url string) string {
-	return fmt.Sprintf("login-%s-%s", username, url)
+func generateContextName(username string, url string, caCertPath string) string {
+	if caCertPath == "" {
+		return fmt.Sprintf("login-%s-%s", username, url)
+	}
+	return fmt.Sprintf("login-%s-%s-cacertpath-%s", username, url, caCertPath)
 }
 
 func generateCredentialName(username string) string {
