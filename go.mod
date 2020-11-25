@@ -57,7 +57,6 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gofrs/flock v0.7.1 // indirect
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.21.0
@@ -93,7 +92,6 @@ require (
 	github.com/mattn/go-zglob v0.0.3 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mitchellh/golicense v0.1.1
-	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/nakabonne/nestif v0.3.0 // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/nishanths/exhaustive v0.0.0-20200708172631-8866003e3856 // indirect
@@ -132,11 +130,9 @@ require (
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	gocloud.dev v0.20.0 // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/tools v0.0.0-20200929223013-bf155c11ec6f // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
-	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
@@ -145,6 +141,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go => ../ccloud-sdk-go
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/spf13/cobra => github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad

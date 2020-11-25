@@ -132,8 +132,13 @@ func (m *Kafka) CreateLink(ctx context.Context, destination *schedv1.KafkaCluste
 	return nil
 }
 
-func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster) ([]string, error) {
-	return []string{"link-1", "link-2"}, nil
+func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster, includeTopics bool) (*linkv1.ListLinksResponse, error) {
+	return &linkv1.ListLinksResponse{
+		Links: []*linkv1.ListLinksResponseItem{
+			&linkv1.ListLinksResponseItem{LinkName: "link-1"},
+			&linkv1.ListLinksResponseItem{LinkName: "link-2"},
+		},
+	}, nil
 }
 
 func (m *Kafka) DescribeLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string) (*linkv1.LinkProperties, error) {
