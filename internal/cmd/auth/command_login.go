@@ -239,9 +239,15 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-// if ca-cert-path flag is not used, returns caCertPath value from config
-// if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
-func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
+// Current functionality:
+// empty ca-cert-path is equivalent to not using ca-cert-path flag
+// if users want to login with ca-cert-path they must explicilty use the flag every time they login
+//
+// For legacy users:
+// if ca-cert-path flag is not used, returns caCertPath value stored for the login context in config
+// if user passes empty string for ca-cert-path flag then reset the ca-cert-path
+// only for legacy contexts it is still possible that the context name not containing cacertpath has ca-cert-path stored
+func (a *loginCommand) getCaCertPath(cmd *cobra.Command,  ) (string, error) {
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return "", err
@@ -251,6 +257,8 @@ func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
 		if changed {
 			return "", nil
 		}
+		// support legacy users who may still have ca-cert-path stored in config
+		// for newer users, the existing context is guaranteed to not have ca-cert-path if flag is not specified
 		return a.getCaCertPathFromConfig(cmd)
 	}
 	return caCertPath, nil
@@ -393,6 +401,8 @@ func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, creds *pauth.Credent
 	return nil
 }
 
+// if users use cacertpath then include that in the context name
+// (legacy users may still have context without cacertpath in the name but have cacertpath stored)
 func generateContextName(username string, url string, caCertPath string) string {
 	if caCertPath == "" {
 		return fmt.Sprintf("login-%s-%s", username, url)

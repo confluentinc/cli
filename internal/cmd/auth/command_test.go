@@ -461,21 +461,29 @@ func Test_SelfSignedCerts(t *testing.T) {
 	loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
 	req.NoError(err)
-
 	// ensure CaCertPath is stored in Config
-	req.Equal("testcert.pem", cfg.Context().Platform.CaCertPath)
+	ctx := cfg.Context()
+	req.Equal("testcert.pem", ctx.Platform.CaCertPath)
+	req.Equal("login-prompt-user@confluent.io-http://localhost:8090-cacertpath-testcert.pem", ctx.Name)
 
 	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
 	// login using ca-cert-path stored in config
 	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090")
 	req.NoError(err)
-	req.Equal("testcert.pem", cfg.Context().Platform.CaCertPath)
+	ctx = cfg.Context()
+	req.Equal("", ctx.Platform.CaCertPath)
+	req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
 
 	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
-	// reset ca-cert-path
+
+	// resetting ca-cert-path is only for legacy users who may have ca-cert-path stored in config but not in context name
+	// for newer users logins with and without ca-cert-path will be for two different contexts one with ca-cert-path in name and another without
+	// hence, for newer users there is no longer a use or need for resetting ca-cert-path as they will simply be logged in to the context without it
 	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=")
 	req.NoError(err)
-	req.Equal("", cfg.Context().Platform.CaCertPath)
+	ctx = cfg.Context()
+	req.Equal("", ctx.Platform.CaCertPath)
+	req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
 }
 
 func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config) *loginCommand {
