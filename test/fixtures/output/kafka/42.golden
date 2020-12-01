@@ -1,5 +1,5 @@
 {
-  "id": "lkc-describe-dedicated",
+  "id": "lkc-describe-infinite",
   "name": "kafka-cluster",
   "type": "DEDICATED",
   "cluster_size": 1,

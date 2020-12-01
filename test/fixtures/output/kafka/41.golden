@@ -1,5 +1,5 @@
 +--------------+---------------------------+
-| Id           | lkc-describe-dedicated    |
+| Id           | lkc-describe-infinite     |
 | Name         | kafka-cluster             |
 | Type         | DEDICATED                 |
 | Ingress      |                       100 |
