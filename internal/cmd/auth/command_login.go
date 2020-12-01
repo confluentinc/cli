@@ -15,7 +15,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -28,27 +27,29 @@ type loginCommand struct {
 	Logger          *log.Logger
 	analyticsClient analytics.Client
 	// for testing
-	MDSClientManager      pauth.MDSClientManager
-	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
-	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler          netrc.NetrcHandler
-	loginTokenHandler     pauth.LoginTokenHandler
+	MDSClientManager        pauth.MDSClientManager
+	anonHTTPClientFactory   func(baseURL string, logger *log.Logger) *ccloud.Client
+	jwtHTTPClientFactory    func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
+	netrcHandler            netrc.NetrcHandler
+	loginCredentialsManager pauth.LoginCredentialsManager
+	authTokenHandler        pauth.AuthTokenHandler
 }
 
 func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger,
 	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
 	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
-	loginTokenHandler pauth.LoginTokenHandler) *loginCommand {
+	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) *loginCommand {
 	cmd := &loginCommand{
-		cliName:               cliName,
-		Logger:                log,
-		analyticsClient:       analyticsClient,
-		anonHTTPClientFactory: anonHTTPClientFactory,
-		jwtHTTPClientFactory:  jwtHTTPClientFactory,
-		MDSClientManager:      mdsClientManager,
-		netrcHandler:          netrcHandler,
-		loginTokenHandler:     loginTokenHandler,
+		cliName:                 cliName,
+		Logger:                  log,
+		analyticsClient:         analyticsClient,
+		anonHTTPClientFactory:   anonHTTPClientFactory,
+		jwtHTTPClientFactory:    jwtHTTPClientFactory,
+		MDSClientManager:        mdsClientManager,
+		netrcHandler:            netrcHandler,
+		loginCredentialsManager: loginCredentialsManager,
+		authTokenHandler:        authTokenHandler,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -97,57 +98,64 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	token, creds, err := a.getCCloudTokenAndCredentials(cmd, url)
+	credentials, err := a.getCCloudCredentials(cmd, url)
 	if err != nil {
 		return err
 	}
 
-	state, err := a.getCCloudContextState(cmd, url, creds.Username, token)
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	err = a.addOrUpdateContext(creds.Username, url, state, "")
+	client := a.anonHTTPClientFactory(url, a.Logger)
+	token, refreshToken, err := a.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser)
+
+	state, err := a.getCCloudContextState(cmd, url, credentials.Username, token)
 	if err != nil {
 		return err
 	}
 
-	err = a.saveLoginToNetrc(cmd, creds)
+	err = a.addOrUpdateContext(credentials.Username, url, state, "")
 	if err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	// If refresh token is available, we want to save that in the place of password
+	if refreshToken != "" {
+		credentials.Password = refreshToken
+	}
+	err = a.saveLoginToNetrc(cmd, credentials)
+	if err != nil {
+		return err
+	}
+
+	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
 	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
 	return err
 }
 
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (a *loginCommand) getCCloudTokenAndCredentials(cmd *cobra.Command, url string) (string, *pauth.Credentials, error) {
+func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	client := a.anonHTTPClientFactory(url, a.Logger)
 
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	if !promptOnly {
-		token, creds, err := a.loginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
-		if err == nil && len(token) > 0 {
-			return token, creds, nil
-		}
-
-		token, creds, err = a.loginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+	if promptOnly {
+		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client))
+	}
+	return pauth.GetLoginCredentials(
+		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
+		a.loginCredentialsManager.GetCCloudCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
 			CLIName: a.cliName,
 			URL:     url,
-		})
-		if err == nil && len(token) > 0 {
-			return token, creds, nil
-		}
-	}
-
-	return a.loginTokenHandler.GetCCloudTokenAndCredentialsFromPrompt(cmd, client, url)
+		}),
+		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client),
+	)
 }
 
 func (a *loginCommand) getCCloudContextState(cmd *cobra.Command, url string, email string, token string) (*v2.ContextState, error) {
@@ -210,12 +218,22 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	caCertPath, err := a.getCaCertPath(cmd)
+	credentials, err := a.getConfluentCredentials(cmd, url)
 	if err != nil {
 		return err
 	}
 
-	token, creds, err := a.getConfluentTokenAndCredentials(cmd, caCertPath, url)
+	caCertPath, err := a.getCaCertPath(cmd, generateContextName(credentials.Username, url))
+	if err != nil {
+		return err
+	}
+
+	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
+	if err != nil {
+		return err
+	}
+
+	token, err := a.authTokenHandler.GetConfluentToken(client, credentials)
 	if err != nil {
 		return err
 	}
@@ -225,23 +243,44 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		AuthToken: token,
 	}
 
-	err = a.addOrUpdateContext(creds.Username, url, state, caCertPath)
+	err = a.addOrUpdateContext(credentials.Username, url, state, caCertPath)
 	if err != nil {
 		return err
 	}
 
-	err = a.saveLoginToNetrc(cmd, creds)
+	err = a.saveLoginToNetrc(cmd, credentials)
 	if err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
 	return nil
+}
+
+// Order of precedence: env vars > netrc > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+	promptOnly, err := cmd.Flags().GetBool("prompt")
+	if err != nil {
+		return nil, err
+	}
+
+	if promptOnly {
+		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
+	}
+	return pauth.GetLoginCredentials(
+		a.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
+		a.loginCredentialsManager.GetConfluentCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
+			CLIName: a.cliName,
+			URL:     url,
+		}),
+		a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd),
+	)
 }
 
 // if ca-cert-path flag is not used, returns caCertPath value from config
 // if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
-func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
+func (a *loginCommand) getCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return "", err
@@ -251,63 +290,17 @@ func (a *loginCommand) getCaCertPath(cmd *cobra.Command) (string, error) {
 		if changed {
 			return "", nil
 		}
-		return a.getCaCertPathFromConfig(cmd)
+		return a.getCaCertPathFromConfig(cmd, contextName)
 	}
 	return caCertPath, nil
 }
 
-func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command) (string, error) {
-	ctx, err := a.getContext(cmd)
-	if err != nil {
-		return "", err
+func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command, contextName string) (string, error) {
+	ctx, ok := a.Config.Contexts[contextName]
+	if !ok {
+		return "", nil
 	}
-	if ctx != nil {
-		return ctx.Platform.CaCertPath, nil
-	}
-	return "", nil
-}
-
-func (a *loginCommand) getContext(cmd *cobra.Command) (*v3.Context, error) {
-	dynamicContext, err := a.Config.Context(cmd)
-	if err != nil {
-		return nil, err
-	}
-	var ctx *v3.Context
-	if dynamicContext != nil {
-		ctx = dynamicContext.Context
-	}
-	return ctx, nil
-}
-
-// Order of precedence: env vars > netrc > prompt
-// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (a *loginCommand) getConfluentTokenAndCredentials(cmd *cobra.Command, caCertPath string, url string) (string, *pauth.Credentials, error) {
-	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
-	if err != nil {
-		return "", nil, err
-	}
-
-	promptOnly, err := cmd.Flags().GetBool("prompt")
-	if err != nil {
-		return "", nil, err
-	}
-
-	if !promptOnly {
-		token, creds, err := a.loginTokenHandler.GetConfluentTokenAndCredentialsFromEnvVar(cmd, client)
-		if err == nil && len(token) > 0 {
-			return token, creds, nil
-		}
-
-		token, creds, err = a.loginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, netrc.GetMatchingNetrcMachineParams{
-			CLIName: a.cliName,
-			URL:     url,
-		})
-		if err == nil && len(token) > 0 {
-			return token, creds, nil
-		}
-	}
-
-	return a.loginTokenHandler.GetConfluentTokenAndCredentialsFromPrompt(cmd, client)
+	return ctx.Platform.CaCertPath, nil
 }
 
 func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
@@ -373,18 +366,13 @@ func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2
 	return nil
 }
 
-func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, creds *pauth.Credentials) error {
+func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, credentials *pauth.Credentials) error {
 	saveToNetrc, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 	if saveToNetrc {
-		var err error
-		if creds.RefreshToken == "" {
-			err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, false, a.Config.Config.Context().Name, creds.Username, creds.Password)
-		} else {
-			err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, true, a.Config.Config.Context().Name, creds.Username, creds.RefreshToken)
-		}
+		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, credentials.IsSSO, a.Config.Config.Context().Name, credentials.Username, credentials.Password)
 		if err != nil {
 			return err
 		}

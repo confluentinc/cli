@@ -37,16 +37,17 @@ const DoNotTrack = "do-not-track-analytics"
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config             *v3.Config
-	ConfigLoadingError error
-	UpdateClient       update.Client
-	CLIName            string
-	Logger             *log.Logger
-	Analytics          analytics.Client
-	FlagResolver       FlagResolver
-	Version            *version.Version
-	LoginTokenHandler  pauth.LoginTokenHandler
-	JWTValidator       JWTValidator
+	Config                  *v3.Config
+	ConfigLoadingError      error
+	UpdateClient            update.Client
+	CLIName                 string
+	Logger                  *log.Logger
+	Analytics               analytics.Client
+	FlagResolver            FlagResolver
+	Version                 *version.Version
+	LoginCredentialsManager pauth.LoginCredentialsManager
+	AuthTokenHandler        pauth.AuthTokenHandler
+	JWTValidator            JWTValidator
 }
 
 type CLICommand struct {
@@ -132,10 +133,13 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 		CLIName: r.CLIName,
 		CtxName: ctx.Name,
 	}
-	var err error
 	if r.CLIName == "ccloud" {
+		credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCCloudCredentialsFromNetrc(cmd, params))
+		if err != nil {
+			return "", err
+		}
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
+		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 		if err != nil {
 			return "", err
 		}
@@ -145,12 +149,13 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 		if err != nil {
 			return "", err
 		}
-		token, _, err = r.LoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
+		credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetConfluentCredentialsFromNetrc(cmd, params))
+		token, err = r.AuthTokenHandler.GetConfluentToken(client, credentials)
 		if err != nil {
 			return "", err
 		}
 	}
-	return token, err
+	return token, nil
 }
 
 func (a *AuthenticatedCLICommand) AuthToken() string {

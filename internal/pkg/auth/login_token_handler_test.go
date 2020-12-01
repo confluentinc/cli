@@ -24,8 +24,6 @@ const (
 	password                   = "password"
 	deprecatedEnvUser          = "deprecated-chrissy"
 	deprecatedEnvPassword      = "deprecated-password"
-	refreshToken               = "refresh-token"
-	ssoAuthToken               = "ccloud-sso-auth-token"
 	promptUsername             = "prompt-chrissy"
 	promptPassword             = "  prompt-password  "
 	ccloudCredentialsAuthToken = "ccloud-credentials-auth-token"
