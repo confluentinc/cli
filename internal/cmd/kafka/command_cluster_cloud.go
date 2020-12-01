@@ -479,7 +479,7 @@ func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaClu
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
 	clusterStorage := strconv.Itoa(int(cluster.Storage))
-	if clusterStorage == "-1" {
+	if clusterStorage == "-1" || cluster.InfiniteStorage {
 		clusterStorage = "Infinite"
 	}
 
