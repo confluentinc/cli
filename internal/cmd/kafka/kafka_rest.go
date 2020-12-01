@@ -49,9 +49,9 @@ func bootstrapServersToRestURL(bootstrap string) (string, error) {
 	if _, err := strconv.Atoi(server[serverLength-4:]); err == nil && serverLength > 5 && server[serverLength-5] == ':' {
 		//TODO: change to https when config is fixed
 		return "http://" + server[:serverLength-4] + kafkaPort + "/kafka/v3", nil
-	} else {
-		return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
 	}
+
+	return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
 }
 
 func getAccessToken(authenticatedState *v2.ContextState, server string) (string, error) {

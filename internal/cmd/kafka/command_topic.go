@@ -346,7 +346,6 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 
 	// Kafka-REST exists and no error
 	if err == nil && httpResp != nil && httpResp.StatusCode == 200 {
-		fmt.Println("using kafka rest")
 		topicDatas := topicGetResp.Data
 
 		outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
@@ -466,7 +465,6 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	// Kafka-REST exists and no error
 	if err == nil && httpResp != nil && httpResp.StatusCode == 201 {
-		fmt.Println("using kafka rest")
 		utils.ErrPrintf(cmd, errors.CreatedTopicMsg, topicName)
 		return nil
 	}
@@ -598,7 +596,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 	// Kafka-REST exists and no error
 	if err == nil && httpResp != nil && httpResp.StatusCode == 200 {
-		fmt.Println("using kafka rest")
 
 		topicData.TopicName = topicName
 		topicData.PartitionCount = len(partitionsResp.Data)
@@ -765,7 +762,6 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	// Kafka-REST exists and no error
 	if err == nil && httpResp != nil && httpResp.StatusCode == 204 {
-		fmt.Println("using kafka rest")
 
 		// Config update successful
 		utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
@@ -920,7 +916,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	// Kafka-REST exists and no error
 	if err == nil && httpResp != nil && httpResp.StatusCode == 204 {
-		fmt.Println("using kafka rest")
 
 		// Topic succesfully deleted
 		utils.ErrPrintf(cmd, errors.DeletedTopicMsg, topicName)

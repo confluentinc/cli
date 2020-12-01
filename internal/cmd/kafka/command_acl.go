@@ -128,7 +128,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 
 	// Kafka-REST exists and no error
 	if err == nil && httpResp != nil && httpResp.StatusCode == 200 {
-		fmt.Println("using kafka rest list")
 		aclDatas := aclGetResp.Data
 		aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
 		aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
@@ -236,7 +235,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	// Kafka REST sent all requests successfully
 	if kafkaRestExists {
-		fmt.Println("using kafka rest create")
 		return aclutil.PrintACLs(cmd, bindings, os.Stdout)
 	}
 
@@ -308,7 +306,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			kafkaRestPostConfig := convertAclFilterToPostParams(filter)
 
 			_, deleteHttpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsDelete(newCtx, lkc, &kafkaRestPostConfig)
-			fmt.Println("using kafka rest delete")
 			if err == nil && deleteHttpResp != nil && deleteHttpResp.StatusCode == 200 {
 				matchingBindingCount += len(aclGetResp.Data)
 			} else {
