@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/log_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli login_token_handler.go LoginTokenHandler
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/log_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli login_token_handler.go LoginCredentialsHandler
 package auth
 
 import (
@@ -9,7 +9,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -19,54 +18,46 @@ import (
 )
 
 type Credentials struct {
-	Username     string
-	Password     string
-	RefreshToken string
+	Username string
+	Password string
+	IsSSO    bool
 }
 
-type LoginTokenHandler interface {
-	GetCCloudTokenAndCredentialsFromEnvVar(cmd *cobra.Command, client *ccloud.Client) (string, *Credentials, error)
-	GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error)
-	GetCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client, url string) (string, *Credentials, error)
-	GetConfluentTokenAndCredentialsFromEnvVar(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error)
-	GetConfluentTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error)
-	GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error)
+type LoginCredentialsHandler interface {
+	GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) *Credentials
+	GetCCloudCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) (*Credentials, error)
+	GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) (*Credentials, error)
+	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) *Credentials
+	GetConfluentCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) (*Credentials, error)
+	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) (*Credentials, error)
 }
 
-type LoginTokenHandlerImpl struct {
-	authTokenHandler AuthTokenHandler
-	netrcHandler     netrc.NetrcHandler
-	logger           *log.Logger
-	prompt           form.Prompt
+type LoginCredentialsHandlerImpl struct {
+	netrcHandler netrc.NetrcHandler
+	logger       *log.Logger
+	prompt       form.Prompt
 }
 
-func NewLoginTokenHandler(authTokenHandler AuthTokenHandler, netrcHandler netrc.NetrcHandler, prompt form.Prompt, logger *log.Logger) LoginTokenHandler {
-	return &LoginTokenHandlerImpl{
-		authTokenHandler: authTokenHandler,
-		netrcHandler:     netrcHandler,
-		logger:           logger,
-		prompt:           prompt,
+func NewLoginCredentialsHandler(netrcHandler netrc.NetrcHandler, prompt form.Prompt, logger *log.Logger) LoginCredentialsHandler {
+	return &LoginCredentialsHandlerImpl{
+		netrcHandler: netrcHandler,
+		logger:       logger,
+		prompt:       prompt,
 	}
 }
 
-func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromEnvVar(cmd *cobra.Command, client *ccloud.Client) (string, *Credentials, error) {
+func (h *LoginCredentialsHandlerImpl) GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) *Credentials {
 	email, password := h.getEnvVarCredentials(cmd, CCloudEmailEnvVar, CCloudPasswordEnvVar)
 	if len(email) == 0 {
 		email, password = h.getEnvVarCredentials(cmd, CCloudEmailDeprecatedEnvVar, CCloudPasswordDeprecatedEnvVar)
 	}
 	if len(email) == 0 {
 		h.logger.Debug("Found no credentials from environment variables")
-		return "", nil, nil
 	}
-	token, err := h.authTokenHandler.GetCCloudCredentialsToken(client, email, password)
-	if err != nil {
-		utils.ErrPrintf(cmd, errors.EnvLoginFailedMsg, err.Error())
-		return "", nil, err
-	}
-	return token, &Credentials{Username: email, Password: password}, nil
+	return &Credentials{Username: email, Password: password}
 }
 
-func (h *LoginTokenHandlerImpl) getEnvVarCredentials(cmd *cobra.Command, userEnvVar string, passwordEnvVar string) (string, string) {
+func (h *LoginCredentialsHandlerImpl) getEnvVarCredentials(cmd *cobra.Command, userEnvVar string, passwordEnvVar string) (string, string) {
 	user := os.Getenv(userEnvVar)
 	if len(user) == 0 {
 		return "", ""
@@ -79,24 +70,18 @@ func (h *LoginTokenHandlerImpl) getEnvVarCredentials(cmd *cobra.Command, userEnv
 	return user, password
 }
 
-func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromEnvVar(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error) {
+func (h *LoginCredentialsHandlerImpl) GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) *Credentials {
 	username, password := h.getEnvVarCredentials(cmd, ConfluentUsernameEnvVar, ConfluentPasswordEnvVar)
 	if len(username) == 0 {
 		username, password = h.getEnvVarCredentials(cmd, ConfluentUsernameDeprecatedEnvVar, ConfluentPasswordDeprecatedEnvVar)
 	}
 	if len(username) == 0 {
 		h.logger.Debug("Found no credentials from environment variables")
-		return "", nil, nil
 	}
-	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password, h.logger)
-	if err != nil {
-		utils.ErrPrintf(cmd, errors.EnvLoginFailedMsg, err.Error())
-		return "", nil, err
-	}
-	return token, &Credentials{Username: username, Password: password}, nil
+	return &Credentials{Username: username, Password: password}
 }
 
-func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *ccloud.Client, url string, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error) {
+func (h *LoginCredentialsHandlerImpl) GetCCloudCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) (*Credentials, error) {
 	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
 	if err != nil || netrcMachine == nil {
@@ -104,26 +89,17 @@ func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromNetrc(cmd *cobra
 		if err != nil {
 			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 		}
-		return "", nil, err
+		return nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-	var token string
-	creds := &Credentials{Username: netrcMachine.User}
+	creds := &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}
 	if netrcMachine.IsSSO {
-		token, err = h.authTokenHandler.RefreshCCloudSSOToken(client, netrcMachine.Password, url, h.logger)
-		creds.RefreshToken = netrcMachine.Password
-	} else {
-		token, err = h.authTokenHandler.GetCCloudCredentialsToken(client, netrcMachine.User, netrcMachine.Password)
-		creds.Password = netrcMachine.Password
+		creds.IsSSO = true
 	}
-	if err != nil {
-		utils.ErrPrintf(cmd, errors.NetrcLoginFailedMsg, err.Error())
-		return "", nil, err
-	}
-	return token, creds, nil
+	return creds, nil
 }
 
-func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromNetrc(cmd *cobra.Command, client *mds.APIClient, filterParams netrc.GetMatchingNetrcMachineParams) (string, *Credentials, error) {
+func (h *LoginCredentialsHandlerImpl) GetConfluentCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) (*Credentials, error) {
 	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
 	if err != nil || netrcMachine == nil {
@@ -131,50 +107,29 @@ func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromNetrc(cmd *co
 		if err != nil {
 			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 		}
-		return "", nil, err
+		return nil, err
 	}
 	utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-	token, err := h.authTokenHandler.GetConfluentAuthToken(client, netrcMachine.User, netrcMachine.Password, h.logger)
-	if err != nil {
-		utils.ErrPrintf(cmd, errors.NetrcLoginFailedMsg, err.Error())
-		return "", nil, err
-	}
-	return token, &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
+	return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 }
 
-func (h *LoginTokenHandlerImpl) GetCCloudTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client, url string) (string, *Credentials, error) {
+func (h *LoginCredentialsHandlerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) (*Credentials, error) {
 	email := h.promptForUser(cmd, "Email")
 	if isSSOUser(email, client) {
-		noBrowser, err := cmd.Flags().GetBool("no-browser")
-		if err != nil {
-			return "", nil, err
-		}
-		h.logger.Debug("Accquiring Token for SSO User.")
-		token, refreshToken, err := h.authTokenHandler.GetCCloudSSOToken(client, url, noBrowser, email, h.logger)
-		if err != nil {
-			return "", nil, err
-		}
-		return token, &Credentials{Username: email, RefreshToken: refreshToken}, nil
+		h.logger.Debug("Entered email belongs to an SSO user.")
+		return &Credentials{Username: email, IsSSO: true}, nil
 	}
 	password := h.promptForPassword(cmd)
-	token, err := h.authTokenHandler.GetCCloudCredentialsToken(client, email, password)
-	if err != nil {
-		return "", nil, err
-	}
-	return token, &Credentials{Username: email, Password: password}, nil
+	return &Credentials{Username: email, Password: password}, nil
 }
 
-func (h *LoginTokenHandlerImpl) GetConfluentTokenAndCredentialsFromPrompt(cmd *cobra.Command, client *mds.APIClient) (string, *Credentials, error) {
+func (h *LoginCredentialsHandlerImpl) GetConfluentCredentialsFromPrompt(cmd *cobra.Command) (*Credentials, error) {
 	username := h.promptForUser(cmd, "Username")
 	password := h.promptForPassword(cmd)
-	token, err := h.authTokenHandler.GetConfluentAuthToken(client, username, password, h.logger)
-	if err != nil {
-		return "", nil, err
-	}
-	return token, &Credentials{Username: username, Password: password}, nil
+	return &Credentials{Username: username, Password: password}, nil
 }
 
-func (h *LoginTokenHandlerImpl) promptForUser(cmd *cobra.Command, userField string) string {
+func (h *LoginCredentialsHandlerImpl) promptForUser(cmd *cobra.Command, userField string) string {
 	// HACK: SSO integration test extracts email from env var
 	// TODO: remove this hack once we implement prompting for integration test
 	if testEmail := os.Getenv(CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
@@ -189,7 +144,7 @@ func (h *LoginTokenHandlerImpl) promptForUser(cmd *cobra.Command, userField stri
 	return f.Responses[userField].(string)
 }
 
-func (h *LoginTokenHandlerImpl) promptForPassword(cmd *cobra.Command) string {
+func (h *LoginCredentialsHandlerImpl) promptForPassword(cmd *cobra.Command) string {
 	passwordField := "Password"
 	f := form.New(form.Field{ID: passwordField, Prompt: passwordField, IsHidden: true})
 	if err := f.Prompt(cmd, h.prompt); err != nil {
