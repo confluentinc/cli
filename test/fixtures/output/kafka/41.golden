@@ -1,7 +1,7 @@
 +--------------+---------------------------+
 | Id           | lkc-describe-infinite     |
 | Name         | kafka-cluster             |
-| Type         | DEDICATED                 |
+| Type         | BASIC                     |
 | Ingress      |                       100 |
 | Egress       |                       100 |
 | Storage      | Infinite                  |
@@ -11,5 +11,4 @@
 | Status       | PROVISIONING              |
 | Endpoint     | SASL_SSL://kafka-endpoint |
 | ApiEndpoint  | http://kafka-api-url      |
-| ClusterSize  |                         1 |
 +--------------+---------------------------+
