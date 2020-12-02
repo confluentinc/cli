@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/test/test-server"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -29,7 +30,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
@@ -57,9 +57,10 @@ var (
 	ccloudTestBin     = ccloudTestBinNormal
 	confluentTestBin  = confluentTestBinNormal
 	covCollector      *bincover.CoverageCollector
-	environments      = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
+	//environments      = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
 	serviceAccountID  = int32(12345)
 	deactivatedUserID = int32(6666)
+	testServer *httptest.Server
 )
 
 const (
@@ -129,6 +130,7 @@ func (s *CLITestSuite) SetupSuite() {
 	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
 	covCollector.Setup()
 	req := require.New(s.T())
+	testServer = test_server.StartTestServer(s.T())
 
 	// dumb but effective
 	err := os.Chdir("..")
@@ -157,6 +159,7 @@ func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
 	_ = os.Unsetenv("XX_CCLOUD_RBAC")
 	covCollector.TearDown()
+	testServer.Close()
 }
 
 func (s *CLITestSuite) TestConfluentHelp() {
@@ -200,27 +203,27 @@ func (s *CLITestSuite) TestCcloudHelp() {
 	}
 }
 
-func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		require.Regexp(t, expected, r.Header.Get("User-Agent"))
-	}
-}
+//func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		require.Regexp(t, expected, r.Header.Get("User-Agent"))
+//	}
+//}
 
 func (s *CLITestSuite) TestUserAgent() {
-	checkUserAgent := func(t *testing.T, expected string) string {
-		kafkaApiRouter := http.NewServeMux()
-		kafkaApiRouter.HandleFunc("/", assertUserAgent(t, expected))
-		kafkaApiServer := httptest.NewServer(kafkaApiRouter)
-		cloudRouter := http.NewServeMux()
-		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
-		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
-		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDeleteDescribe(t, kafkaApiServer.URL)))
-		return httptest.NewServer(cloudRouter).URL
-	}
-
-	serverURL := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
-		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
+	//checkUserAgent := func(t *testing.T, expected string) string {
+	//	kafkaApiRouter := http.NewServeMux()
+	//	kafkaApiRouter.HandleFunc("/", assertUserAgent(t, expected))
+	//	kafkaApiServer := httptest.NewServer(kafkaApiRouter)
+	//	cloudRouter := http.NewServeMux()
+	//	cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), handleLogin(t)))
+	//	cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), handleMe(t)))
+	//	cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), handleCheckEmail(t)))
+	//	cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), handleKafkaClusterGetListDeleteDescribe(t, kafkaApiServer.URL)))
+	//	return httptest.NewServer(cloudRouter).URL
+	//}
+	serverURL := testServer.URL
+	//serverURL := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
+	//	"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
 	env := []string{fmt.Sprintf("%s=valid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 
 	s.T().Run("ccloud login", func(tt *testing.T) {
@@ -250,8 +253,8 @@ func (s *CLITestSuite) TestCcloudErrors() {
 			req.NoError(err)
 		}
 		router := http.NewServeMux()
-		router.HandleFunc("/api/sessions", handleLogin(t))
-		router.HandleFunc("/api/me", handleMe(t))
+		//router.HandleFunc("/api/sessions", test_server.handleLogin(t))
+		//router.HandleFunc("/api/me", test_server.handleMe(t))
 		router.HandleFunc("/api/check_email/", handleCheckEmail(t))
 		router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 			switch r.Header.Get("Authorization") {
@@ -330,7 +333,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest, loginURL string) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-
+		loginURL := testServer.URL
 		if tt.login == "default" {
 			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
@@ -569,9 +572,9 @@ func init() {
 
 func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router := http.NewServeMux()
-	router.HandleFunc("/api/sessions", handleLogin(t))
+	//router.HandleFunc("/api/sessions", test_server.handleLogin(t))
 	router.HandleFunc("/api/check_email/", handleCheckEmail(t))
-	router.HandleFunc("/api/me", handleMe(t))
+	//router.HandleFunc("/api/me", test_server.handleMe(t))
 	router.HandleFunc("/api/api_keys", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			req := &schedv1.CreateApiKeyRequest{}
@@ -605,32 +608,32 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 			require.NoError(t, err)
 		}
 	})
-	router.HandleFunc("/api/api_keys/", handleAPIKeyUpdateAndDelete(t))
-	router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == "POST" {
-			req := &orgv1.CreateAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			account := &orgv1.Account{
-				Id:             "a-5555",
-				Name:           req.Account.Name,
-				OrganizationId: 0,
-			}
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
-				Account: account,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-	})
-	router.HandleFunc("/api/accounts/a-595", handleEnvironmentRequests(t, "a-595"))
-	router.HandleFunc("/api/accounts/not-595", handleEnvironmentRequests(t, "not-595"))
+	//router.HandleFunc("/api/api_keys/", handleAPIKeyUpdateAndDelete(t))
+	//router.HandleFunc("/api/accounts", func(w http.ResponseWriter, r *http.Request) {
+	//	if r.Method == "GET" {
+	//		b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: test_server.environments})
+	//		require.NoError(t, err)
+	//		_, err = io.WriteString(w, string(b))
+	//		require.NoError(t, err)
+	//	} else if r.Method == "POST" {
+	//		req := &orgv1.CreateAccountRequest{}
+	//		err := utilv1.UnmarshalJSON(r.Body, req)
+	//		require.NoError(t, err)
+	//		account := &orgv1.Account{
+	//			Id:             "a-5555",
+	//			Name:           req.Account.Name,
+	//			OrganizationId: 0,
+	//		}
+	//		b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
+	//			Account: account,
+	//		})
+	//		require.NoError(t, err)
+	//		_, err = io.WriteString(w, string(b))
+	//		require.NoError(t, err)
+	//	}
+	//})
+	//router.HandleFunc("/api/accounts/a-595", handleEnvironmentRequests(t, "a-595"))
+	//router.HandleFunc("/api/accounts/not-595", handleEnvironmentRequests(t, "not-595"))
 	router.HandleFunc("/api/clusters/lkc-describe", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated-pending", handleKafkaClusterDescribeTest(t))
@@ -887,48 +890,48 @@ func handleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req := require.New(t)
-		b, err := ioutil.ReadAll(r.Body)
-		req.NoError(err)
-		auth := &struct {
-			Email    string
-			Password string
-		}{}
-		err = json.Unmarshal(b, auth)
-		req.NoError(err)
-		switch auth.Email {
-		case "incorrect@user.com":
-			w.WriteHeader(http.StatusForbidden)
-		case "expired@user.com":
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
-		case "malformed@user.com":
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
-		case "invalid@user.com":
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "invalid"})
-		default:
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"})
-		}
-	}
-}
+//func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		req := require.New(t)
+//		b, err := ioutil.ReadAll(r.Body)
+//		req.NoError(err)
+//		auth := &struct {
+//			Email    string
+//			Password string
+//		}{}
+//		err = json.Unmarshal(b, auth)
+//		req.NoError(err)
+//		switch auth.Email {
+//		case "incorrect@user.com":
+//			w.WriteHeader(http.StatusForbidden)
+//		case "expired@user.com":
+//			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
+//		case "malformed@user.com":
+//			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
+//		case "invalid@user.com":
+//			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "invalid"})
+//		default:
+//			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"})
+//		}
+//	}
+//}
 
-func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
-			User: &orgv1.User{
-				Id:         23,
-				Email:      "cody@confluent.io",
-				FirstName:  "Cody",
-				ResourceId: "u-11aaa",
-			},
-			Accounts: environments,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
+//func handleMe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
+//			User: &orgv1.User{
+//				Id:         23,
+//				Email:      "cody@confluent.io",
+//				FirstName:  "Cody",
+//				ResourceId: "u-11aaa",
+//			},
+//			Accounts: environments,
+//		})
+//		require.NoError(t, err)
+//		_, err = io.WriteString(w, string(b))
+//		require.NoError(t, err)
+//	}
+//}
 
 func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1388,84 +1391,84 @@ func handleConnectPlugins(t *testing.T) func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		for _, f := range funcs {
-			f(w, r)
-		}
-	}
-}
+//func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		for _, f := range funcs {
+//			f(w, r)
+//		}
+//	}
+//}
 
-func handleEnvironmentRequests(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		for _, env := range environments {
-			if env.Id == id {
-				// env found
-				if r.Method == "GET" {
-					b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-				} else if r.Method == "PUT" {
-					req := &orgv1.UpdateAccountRequest{}
-					err := utilv1.UnmarshalJSON(r.Body, req)
-					require.NoError(t, err)
-					env.Name = req.Account.Name
-					b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-				} else if r.Method == "DELETE" {
-					b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-				}
-				return
-			}
-		}
-		// env not found
-		w.WriteHeader(http.StatusNotFound)
-	}
-}
+//func handleEnvironmentRequests(t *testing.T, id string) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		for _, env := range test_server.environments {
+//			if env.Id == id {
+//				// env found
+//				if r.Method == "GET" {
+//					b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+//					require.NoError(t, err)
+//					_, err = io.WriteString(w, string(b))
+//					require.NoError(t, err)
+//				} else if r.Method == "PUT" {
+//					req := &orgv1.UpdateAccountRequest{}
+//					err := utilv1.UnmarshalJSON(r.Body, req)
+//					require.NoError(t, err)
+//					env.Name = req.Account.Name
+//					b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
+//					require.NoError(t, err)
+//					_, err = io.WriteString(w, string(b))
+//					require.NoError(t, err)
+//				} else if r.Method == "DELETE" {
+//					b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
+//					require.NoError(t, err)
+//					_, err = io.WriteString(w, string(b))
+//					require.NoError(t, err)
+//				}
+//				return
+//			}
+//		}
+//		// env not found
+//		w.WriteHeader(http.StatusNotFound)
+//	}
+//}
 
-func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		urlSplit := strings.Split(r.URL.Path, "/")
-		keyId, err := strconv.Atoi(urlSplit[len(urlSplit)-1])
-		require.NoError(t, err)
-		index := int32(keyId)
-		apiKey := keyStore[index]
-		if r.Method == "PUT" {
-			req := &schedv1.UpdateApiKeyRequest{}
-			err = utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			apiKey.Description = req.ApiKey.Description
-			result := &schedv1.UpdateApiKeyReply{
-				ApiKey: apiKey,
-				Error:  nil,
-			}
-			b, err := utilv1.MarshalJSONToBytes(result)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == "DELETE" {
-			req := &schedv1.DeleteApiKeyRequest{}
-			err = utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			delete(keyStore, index)
-			result := &schedv1.DeleteApiKeyReply{
-				ApiKey: apiKey,
-				Error:  nil,
-			}
-			b, err := utilv1.MarshalJSONToBytes(result)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-
-	}
-}
+//func handleAPIKeyUpdateAndDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		urlSplit := strings.Split(r.URL.Path, "/")
+//		keyId, err := strconv.Atoi(urlSplit[len(urlSplit)-1])
+//		require.NoError(t, err)
+//		index := int32(keyId)
+//		apiKey := keyStore[index]
+//		if r.Method == "PUT" {
+//			req := &schedv1.UpdateApiKeyRequest{}
+//			err = utilv1.UnmarshalJSON(r.Body, req)
+//			require.NoError(t, err)
+//			apiKey.Description = req.ApiKey.Description
+//			result := &schedv1.UpdateApiKeyReply{
+//				ApiKey: apiKey,
+//				Error:  nil,
+//			}
+//			b, err := utilv1.MarshalJSONToBytes(result)
+//			require.NoError(t, err)
+//			_, err = io.WriteString(w, string(b))
+//			require.NoError(t, err)
+//		} else if r.Method == "DELETE" {
+//			req := &schedv1.DeleteApiKeyRequest{}
+//			err = utilv1.UnmarshalJSON(r.Body, req)
+//			require.NoError(t, err)
+//			delete(keyStore, index)
+//			result := &schedv1.DeleteApiKeyReply{
+//				ApiKey: apiKey,
+//				Error:  nil,
+//			}
+//			b, err := utilv1.MarshalJSONToBytes(result)
+//			require.NoError(t, err)
+//			_, err = io.WriteString(w, string(b))
+//			require.NoError(t, err)
+//		}
+//
+//	}
+//}
 
 func handleServiceAccountRequests(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

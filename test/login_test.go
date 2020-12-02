@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
@@ -90,10 +90,8 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 }
 
 func serveLogin(t *testing.T) *httptest.Server {
-	router := http.NewServeMux()
-	router.HandleFunc("/api/sessions", handleLogin(t))
-	router.HandleFunc("/api/check_email/", handleCheckEmail(t))
-	router.HandleFunc("/api/me", handleMe(t))
+	//router := http.NewServeMux()
+	router := test_server.NewCCloudRouter(t)
 	return httptest.NewServer(router)
 }
 
