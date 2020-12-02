@@ -37,18 +37,19 @@ const DoNotTrack = "do-not-track-analytics"
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config              *v3.Config
-	ConfigLoadingError  error
-	UpdateClient        update.Client
-	CLIName             string
-	Logger              *log.Logger
-	Analytics           analytics.Client
-	FlagResolver        FlagResolver
-	Version             *version.Version
-	CCloudClientFactory pauth.CCloudClientFactory
-	MDSClientManager    pauth.MDSClientManager
-	LoginTokenHandler   pauth.LoginTokenHandler
-	JWTValidator        JWTValidator
+	Config                  *v3.Config
+	ConfigLoadingError      error
+	UpdateClient            update.Client
+	CLIName                 string
+	Logger                  *log.Logger
+	Analytics               analytics.Client
+	FlagResolver            FlagResolver
+	Version                 *version.Version
+	CCloudClientFactory     pauth.CCloudClientFactory
+	MDSClientManager        pauth.MDSClientManager
+	LoginCredentialsManager pauth.LoginCredentialsManager
+	AuthTokenHandler        pauth.AuthTokenHandler
+	JWTValidator            JWTValidator
 }
 
 type CLICommand struct {
@@ -333,25 +334,27 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error 
 }
 
 func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
-	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
-
-	token, creds, err := r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromEnvVar(cmd, client)
-	if err != nil {
-		r.Logger.Debug("Prerun env var login failed: ", err.Error())
-	}
-	if len(token) > 0 {
-		return token, creds, nil
-	}
-
 	url := pauth.CCloudURL
-	token, creds, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, url, netrc.GetMatchingNetrcMachineParams{
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		URL:     url,
-	})
-	if err != nil {
-		r.Logger.Debug("Prerun netrc login failed: ", err.Error())
 	}
-	return token, creds, err
+	credentials, err := pauth.GetLoginCredentials(
+		r.LoginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+	)
+	if err != nil {
+		r.Logger.Debug("Prerun env var login failed: ", err.Error())
+		return "", nil, err
+	}
+
+	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token, credentials, err
 }
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
@@ -570,29 +573,34 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 }
 
 func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
-	var token string
 	params := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		CtxName: ctx.Name,
 	}
-	var err error
+	credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params))
+	if err != nil {
+		return "", err
+	}
+
+	var token string
 	if r.CLIName == "ccloud" {
-		client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
-		token, _, err = r.LoginTokenHandler.GetCCloudTokenAndCredentialsFromNetrc(cmd, client, ctx.Platform.Server, params)
+		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		client, err := r.MDSClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, r.Logger)
+		mdsClientManager := pauth.MDSClientManagerImpl{}
+		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, r.Logger)
 		if err != nil {
 			return "", err
 		}
-		token, _, err = r.LoginTokenHandler.GetConfluentTokenAndCredentialsFromNetrc(cmd, client, params)
+		token, err = r.AuthTokenHandler.GetConfluentToken(client, credentials)
 		if err != nil {
 			return "", err
 		}
 	}
-	return token, err
+	return token, nil
 }
 
 // if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config

@@ -63,7 +63,7 @@ func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, tok
 }
 
 func addOrUpdateContext(config *v3.Config, username string, url string, state *v2.ContextState, caCertPath string) error {
-	ctxName := generateContextName(username, url)
+	ctxName := GenerateContextName(username, url)
 	credName := generateCredentialName(username)
 	platform := &v2.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -107,7 +107,7 @@ func addOrUpdateContext(config *v3.Config, username string, url string, state *v
 }
 
 func getCCloudContextState(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*v2.ContextState, error) {
-	ctxName := generateContextName(email, url)
+	ctxName := GenerateContextName(email, url)
 	user, err := getCCloudUser(token, client)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func getCCloudUser(token string, client *ccloud.Client) (*orgv1.GetUserReply, er
 	return user, nil
 }
 
-func generateContextName(username string, url string) string {
+func GenerateContextName(username string, url string) string {
 	return fmt.Sprintf("login-%s-%s", username, url)
 }
 

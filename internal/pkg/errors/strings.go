@@ -16,10 +16,13 @@ const (
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
-	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\".\n"
-	EnvLoginFailedMsg          = "Non-interactive login with environment variables failed: %s\n"
-	FoundNetrcCredMsg          = "Found credentials for user \"%s\" from netrc file \"%s\".\n"
-	NetrcLoginFailedMsg        = "Non-interactive login with netrc failed: %s\n"
+	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s " +
+		StopNonInteractiveMsg + ".\n"
+	EnvLoginFailedMsg = "Non-interactive login with environment variables failed: %s\n"
+	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s " +
+		StopNonInteractiveMsg + ".\n"
+	NetrcLoginFailedMsg = "Non-interactive login with netrc failed: %s\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"

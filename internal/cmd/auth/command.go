@@ -12,10 +12,12 @@ import (
 
 // New returns a list of auth-related Cobra commands.
 func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager,
-	analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginTokenHandler pauth.LoginTokenHandler) []*cobra.Command {
+	analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
+	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) []*cobra.Command {
 	loginCmd := NewLoginCommand(cliName, prerunner, logger,
 		ccloudClientFactory, mdsClientManager,
-		analyticsClient, netrcHandler, loginTokenHandler,
+		analyticsClient, netrcHandler, loginCredentialsManager,
+		authTokenHandler,
 	)
 	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient)
 	return []*cobra.Command{loginCmd.Command, logoutCmd.Command}
