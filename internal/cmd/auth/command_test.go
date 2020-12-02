@@ -77,11 +77,6 @@ var (
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
 		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
@@ -96,17 +91,18 @@ var (
 				return nil, nil
 			}
 		},
-		GetConfluentCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
 		GetConfluentCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
 					Password: promptPassword,
 				}, nil
+			}
+		},
+
+		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
 			}
 		},
 	}
@@ -157,7 +153,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -301,11 +297,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
 				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
@@ -320,11 +311,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetConfluentCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
 				GetConfluentCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
@@ -333,6 +319,19 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
+
+				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+			}
+			if tt.setNetrcUser {
+				nonInteractiveLoginHandler.GetCredentialsFromNetrcFunc = func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return netrcCreds, nil
+					}
+				}
 			}
 			if tt.cliName == "ccloud" {
 				if tt.setEnvVar {
@@ -342,25 +341,11 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}
 					}
 				}
-				if tt.setNetrcUser {
-					nonInteractiveLoginHandler.GetCCloudCredentialsFromNetrcFunc = func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-						return func() (*pauth.Credentials, error) {
-							return netrcCreds, nil
-						}
-					}
-				}
 			} else {
 				if tt.setEnvVar {
 					nonInteractiveLoginHandler.GetConfluentCredentialsFromEnvVarFunc = func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
-						}
-					}
-				}
-				if tt.setNetrcUser {
-					nonInteractiveLoginHandler.GetConfluentCredentialsFromNetrcFunc = func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-						return func() (*pauth.Credentials, error) {
-							return netrcCreds, nil
 						}
 					}
 				}
@@ -407,11 +392,6 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
-				GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return wrongCreds, nil
-					}
-				},
 				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
@@ -426,17 +406,18 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
-				GetConfluentCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return wrongCreds, nil
-					}
-				},
 				GetConfluentCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
 							Password: promptPassword,
 						}, nil
+					}
+				},
+
+				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return wrongCreds, nil
 					}
 				},
 			}
@@ -449,10 +430,8 @@ func TestPromptLoginFlag(t *testing.T) {
 			req.NoError(err)
 
 			req.False(mockLoginCredentialsManager.GetCCloudCredentialsFromEnvVarCalled())
-			req.False(mockLoginCredentialsManager.GetCCloudCredentialsFromNetrcCalled())
-
 			req.False(mockLoginCredentialsManager.GetConfluentCredentialsFromEnvVarCalled())
-			req.False(mockLoginCredentialsManager.GetConfluentCredentialsFromNetrcCalled())
+			req.False(mockLoginCredentialsManager.GetCredentialsFromNetrcCalled())
 
 			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		})
@@ -468,7 +447,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}

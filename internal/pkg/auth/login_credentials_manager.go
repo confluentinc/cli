@@ -31,32 +31,28 @@ type environmentVariables struct {
 }
 
 // Get login credentials using the functions from LoginCredentialsManager
-// Functions are called in order and credentials are returned right away if found from a function
+// Functions are called in order and credentials are returned right away if found from a function without attempting the other functions
 func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Credentials, error) {
 	var credentials *Credentials
 	var err error
 	for _, credentialsFunc := range credentialsFuncs {
 		credentials, err = credentialsFunc()
 		if err == nil && credentials != nil && credentials.Username != "" {
-			break
+			return credentials, nil
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	if credentials == nil || credentials.Username == "" {
-		return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
-	}
-	return credentials, err
+	return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
 }
 
 type LoginCredentialsManager interface {
 	GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetCCloudCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
 	GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error)
 	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
 	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
+	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
 }
 
 type LoginCredentialsManagerImpl struct {
@@ -120,7 +116,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cob
 	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
 }
 
-func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 		netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
@@ -132,27 +128,7 @@ func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromNetrc(cmd *cobra.C
 			return nil, err
 		}
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-		creds := &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}
-		if netrcMachine.IsSSO {
-			creds.IsSSO = true
-		}
-		return creds, nil
-	}
-}
-
-func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
-	return func() (*Credentials, error) {
-		h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
-		netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
-		if err != nil || netrcMachine == nil {
-			h.logger.Debug("Failed to get netrc machine for credentials")
-			if err != nil {
-				h.logger.Debugf("Get netrc machine error: %s", err.Error())
-			}
-			return nil, err
-		}
-		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
+		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
 }
 

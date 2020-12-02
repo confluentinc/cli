@@ -152,7 +152,7 @@ func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pa
 	}
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
-		a.loginCredentialsManager.GetCCloudCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
 			CLIName: a.cliName,
 			URL:     url,
 		}),
@@ -272,7 +272,7 @@ func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (
 	}
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
-		a.loginCredentialsManager.GetConfluentCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
 			CLIName: a.cliName,
 			URL:     url,
 		}),

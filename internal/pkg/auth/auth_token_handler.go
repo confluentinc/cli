@@ -15,7 +15,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/sso"
 )
 
-// Make into interface in order to create mock for testing
 type AuthTokenHandler interface {
 	GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error)
 	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
@@ -29,10 +28,10 @@ func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
 	return &AuthTokenHandlerImpl{logger}
 }
 
-// Second string returned is refreh token if the user performs SSO login
+// Second string returned is refresh token if the user performs SSO login
 func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error) {
 	if credentials.IsSSO {
-		// SSO password is the refresh token, if not present then user must preform SSO login
+		// SSO password is the refresh token, if not present then user must perform SSO login, if present then refresh token automatically obtains a new token
 		if credentials.Password != "" {
 			token, err := a.refreshCCloudSSOToken(client, credentials.Password)
 			return token, "", err

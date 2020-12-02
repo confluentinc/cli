@@ -128,16 +128,17 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 }
 
 func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
-	var token string
 	params := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		CtxName: ctx.Name,
 	}
+	credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params))
+	if err != nil {
+		return "", err
+	}
+
+	var token string
 	if r.CLIName == "ccloud" {
-		credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCCloudCredentialsFromNetrc(cmd, params))
-		if err != nil {
-			return "", err
-		}
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
 		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 		if err != nil {
@@ -146,10 +147,6 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, r.Logger)
-		if err != nil {
-			return "", err
-		}
-		credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetConfluentCredentialsFromNetrc(cmd, params))
 		if err != nil {
 			return "", err
 		}
