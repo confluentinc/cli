@@ -95,6 +95,8 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd.Flags().String("apikey", "", "Kafka API key for the ksqlDB cluster to use.")
+	createCmd.Flags().String("apikey-secret", "", "Secret for the Kafka API key.")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -162,6 +164,23 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	kafkaApiKey, err := cmd.Flags().GetString("apikey")
+	if err != nil {
+		return err
+	}
+	kafkaApiKeySecret, err := cmd.Flags().GetString("apikey-secret")
+	if err != nil {
+		return err
+	}
+	if kafkaApiKey != "" || kafkaApiKeySecret != "" {
+		fmt.Println("we're setting the api key")
+		cfg.KafkaApiKey = &schedv1.ApiKey{
+			Key:    kafkaApiKey,
+			Secret: kafkaApiKeySecret,
+		}
+	}
+
 	image, err := cmd.Flags().GetString("image")
 	if err == nil && len(image) > 0 {
 		cfg.Image = image
