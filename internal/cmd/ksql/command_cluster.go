@@ -174,7 +174,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if kafkaApiKey != "" || kafkaApiKeySecret != "" {
-		fmt.Println("we're setting the api key")
 		cfg.KafkaApiKey = &schedv1.ApiKey{
 			Key:    kafkaApiKey,
 			Secret: kafkaApiKeySecret,
@@ -311,8 +310,9 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 	if err != nil {
 		return "", err
 	}
+
 	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) || (cluster.KafkaApiKey != nil && user.Id == cluster.KafkaApiKey.UserId) {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
