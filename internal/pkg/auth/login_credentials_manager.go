@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/log_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli login_token_handler.go LoginCredentialsManager
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli login_credentials_manager.go LoginCredentialsManager
 package auth
 
 import (
@@ -23,6 +23,13 @@ type Credentials struct {
 	IsSSO    bool
 }
 
+type environmentVariables struct {
+	username string
+	password string
+	deprecatedUsername string
+	deprecatedPassword string
+}
+
 // Get login credentials using the functions from LoginCredentialsManager
 // Functions are called in order and credentials are returned right away if found from a function
 func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Credentials, error) {
@@ -30,9 +37,15 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 	var err error
 	for _, credentialsFunc := range credentialsFuncs {
 		credentials, err = credentialsFunc()
-		if err == nil && credentials.Username != "" {
+		if err == nil && credentials != nil && credentials.Username != "" {
 			break
 		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if credentials == nil || credentials.Username == "" {
+		return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
 	}
 	return credentials, err
 }
@@ -61,13 +74,24 @@ func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Pro
 }
 
 func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+	envVars := environmentVariables{
+		username:           CCloudEmailEnvVar,
+		password:           CCloudPasswordEnvVar,
+		deprecatedUsername: CCloudEmailDeprecatedEnvVar,
+		deprecatedPassword: CCloudPasswordDeprecatedEnvVar,
+	}
+	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
+}
+
+func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Command, envVars environmentVariables) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		email, password := h.getEnvVarCredentials(cmd, CCloudEmailEnvVar, CCloudPasswordEnvVar)
+		email, password := h.getEnvVarCredentials(cmd, envVars.username, envVars.password)
 		if len(email) == 0 {
-			email, password = h.getEnvVarCredentials(cmd, CCloudEmailDeprecatedEnvVar, CCloudPasswordDeprecatedEnvVar)
+			email, password = h.getEnvVarCredentials(cmd, envVars.deprecatedUsername, envVars.deprecatedPassword)
 		}
 		if len(email) == 0 {
 			h.logger.Debug("Found no credentials from environment variables")
+			return nil, nil
 		}
 		return &Credentials{Username: email, Password: password}, nil
 	}
@@ -87,16 +111,13 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(cmd *cobra.Command, u
 }
 
 func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
-	return func() (*Credentials, error) {
-		username, password := h.getEnvVarCredentials(cmd, ConfluentUsernameEnvVar, ConfluentPasswordEnvVar)
-		if len(username) == 0 {
-			username, password = h.getEnvVarCredentials(cmd, ConfluentUsernameDeprecatedEnvVar, ConfluentPasswordDeprecatedEnvVar)
-		}
-		if len(username) == 0 {
-			h.logger.Debug("Found no credentials from environment variables")
-		}
-		return &Credentials{Username: username, Password: password}, nil
+	envVars := environmentVariables{
+		username:           ConfluentUsernameEnvVar,
+		password:           ConfluentPasswordEnvVar,
+		deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
+		deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
 	}
+	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
 }
 
 func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {

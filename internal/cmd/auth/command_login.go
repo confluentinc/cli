@@ -110,7 +110,9 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 
 	client := a.anonHTTPClientFactory(url, a.Logger)
 	token, refreshToken, err := a.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser)
-
+	if err != nil {
+		return err
+	}
 	state, err := a.getCCloudContextState(cmd, url, credentials.Username, token)
 	if err != nil {
 		return err

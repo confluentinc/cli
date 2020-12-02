@@ -150,6 +150,9 @@ func (r *PreRun) getNewAuthToken(cmd *cobra.Command, ctx *DynamicContext) (strin
 			return "", err
 		}
 		credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetConfluentCredentialsFromNetrc(cmd, params))
+		if err != nil {
+			return "", err
+		}
 		token, err = r.AuthTokenHandler.GetConfluentToken(client, credentials)
 		if err != nil {
 			return "", err
