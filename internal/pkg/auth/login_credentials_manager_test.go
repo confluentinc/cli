@@ -12,26 +12,27 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
 
 const (
-	deprecatedEnvUser          = "deprecated-chrissy"
-	deprecatedEnvPassword      = "deprecated-password"
+	deprecatedEnvUser     = "deprecated-chrissy"
+	deprecatedEnvPassword = "deprecated-password"
 
-	envUsername                = "env-username"
-	envPassword                = "env-password"
+	envUsername = "env-username"
+	envPassword = "env-password"
 
-	netrcUsername              = "netrc-username"
-	netrcPassword              = "netrc-password"
+	netrcUsername = "netrc-username"
+	netrcPassword = "netrc-password"
 
-	ssoUsername                = "sso-username"
-	refreshToken               = "refresh-token"
+	ssoUsername  = "sso-username"
+	refreshToken = "refresh-token"
 
-	promptUsername             = "prompt-chrissy"
-	promptPassword             = "  prompt-password  "
+	promptUsername = "prompt-chrissy"
+	promptPassword = "  prompt-password  "
 
 	netrcFileName = ".netrc"
 )
@@ -51,9 +52,9 @@ var (
 		IsSSO:    false,
 	}
 	ssoCredentials = &Credentials{
-		Username:     ssoUsername,
+		Username: ssoUsername,
 		Password: refreshToken,
-		IsSSO:  true,
+		IsSSO:    true,
 	}
 	promptCredentials = &Credentials{
 		Username: promptUsername,
@@ -84,10 +85,10 @@ type LoginCredentialsManagerTestSuite struct {
 	suite.Suite
 	require *require.Assertions
 
-	ccloudClient     *ccloud.Client
-	logger           *log.Logger
-	netrcHandler     netrc.NetrcHandler
-	prompt           *mock.Prompt
+	ccloudClient *ccloud.Client
+	logger       *log.Logger
+	netrcHandler netrc.NetrcHandler
+	prompt       *mock.Prompt
 
 	loginCredentialsManager LoginCredentialsManager
 }
@@ -258,7 +259,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 		loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{}),
 		loginCredentialsManager.GetCCloudCredentialsFromNetrc(&cobra.Command{}, netrc.GetMatchingNetrcMachineParams{
 			CLIName: "ccloud",
-			IsSSO: false,
+			IsSSO:   false,
 		}),
 		loginCredentialsManager.GetCCloudCredentialsFromPrompt(&cobra.Command{}, suite.ccloudClient),
 	)
@@ -271,7 +272,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 		loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{}),
 		loginCredentialsManager.GetCCloudCredentialsFromNetrc(&cobra.Command{}, netrc.GetMatchingNetrcMachineParams{
 			CLIName: "ccloud",
-			IsSSO: false,
+			IsSSO:   false,
 		}),
 		loginCredentialsManager.GetCCloudCredentialsFromPrompt(&cobra.Command{}, suite.ccloudClient),
 	)
@@ -285,7 +286,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 		loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{}),
 		loginCredentialsManager.GetCCloudCredentialsFromNetrc(&cobra.Command{}, netrc.GetMatchingNetrcMachineParams{
 			CLIName: "ccloud",
-			IsSSO: false,
+			IsSSO:   false,
 		}),
 		loginCredentialsManager.GetCCloudCredentialsFromPrompt(&cobra.Command{}, suite.ccloudClient),
 	)

@@ -8,8 +8,9 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go"
-	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 )
 
 // MockAuthTokenHandler is a mock of AuthTokenHandler interface

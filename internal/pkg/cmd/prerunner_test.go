@@ -2,11 +2,12 @@ package cmd_test
 
 import (
 	"fmt"
-	"github.com/confluentinc/mds-sdk-go/mdsv1"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/spf13/pflag"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/ccloud-sdk-go"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
@@ -54,12 +56,12 @@ var (
 			}
 		},
 		GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
-		return func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
 		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
-		return func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
@@ -77,7 +79,7 @@ var (
 func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		CLIName: "ccloud",
-		Config: v3.AuthenticatedCloudConfigMock(),
+		Config:  v3.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{
@@ -89,10 +91,10 @@ func getPreRunBase() *pcmd.PreRun {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		Analytics:         cliMock.NewDummyAnalyticsMock(),
+		Analytics:               cliMock.NewDummyAnalyticsMock(),
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:      pcmd.NewJWTValidator(log.New()),
-		AuthTokenHandler: mockAuthTokenHandler,
+		JWTValidator:            pcmd.NewJWTValidator(log.New()),
+		AuthTokenHandler:        mockAuthTokenHandler,
 	}
 }
 
@@ -301,12 +303,12 @@ func Test_UpdateToken(t *testing.T) {
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
 				GetCCloudCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{Username:"username", Password: "password"}, nil
+						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
 				},
 				GetConfluentCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{Username:"username", Password: "password"}, nil
+						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
 				},
 			}

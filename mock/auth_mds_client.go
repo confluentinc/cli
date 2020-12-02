@@ -7,8 +7,9 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // MockMDSClientManager is a mock of MDSClientManager interface

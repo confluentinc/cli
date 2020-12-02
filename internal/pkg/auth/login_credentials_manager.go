@@ -24,8 +24,8 @@ type Credentials struct {
 }
 
 type environmentVariables struct {
-	username string
-	password string
+	username           string
+	password           string
 	deprecatedUsername string
 	deprecatedPassword string
 }
