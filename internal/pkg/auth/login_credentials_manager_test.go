@@ -279,7 +279,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcCredentials, creds)
 
-	// No credentials in env var but credentials in netrc so netrc credentials should be returned
+	// Credentials in environment variables has highest order of precedence
 	suite.setCCloudEnvironmentVariables()
 	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.logger)
 	creds, err = GetLoginCredentials(

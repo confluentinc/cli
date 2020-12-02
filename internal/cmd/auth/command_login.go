@@ -150,12 +150,13 @@ func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pa
 	if promptOnly {
 		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client))
 	}
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: a.cliName,
+		URL:     url,
+	}
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
-		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
-			CLIName: a.cliName,
-			URL:     url,
-		}),
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client),
 	)
 }
@@ -270,12 +271,13 @@ func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (
 	if promptOnly {
 		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
 	}
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: a.cliName,
+		URL:     url,
+	}
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
-		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrc.GetMatchingNetrcMachineParams{
-			CLIName: a.cliName,
-			URL:     url,
-		}),
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd),
 	)
 }
