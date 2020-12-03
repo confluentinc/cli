@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -81,18 +80,14 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
 
-func serveLogin(t *testing.T) *httptest.Server {
-	//router := http.NewServeMux()
+func serveLogin(t *testing.T) *test_server.CloudTestBackend {
 	router := test_server.NewCCloudRouter(t)
-	return httptest.NewServer(router)
+	return test_server.NewSingleTestBackend(router, test_server.NewEmptyKafkaRouter())
 }
 
 func (s *CLITestSuite) TestSaveUsernamePassword() {
@@ -102,17 +97,21 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		loginURL string
 		bin      string
 	}
+	cloudBackend := serveLogin(s.T())
+	defer cloudBackend.Close()
+	mdsServer := serveMds(s.T())
+	defer mdsServer.Close()
 	tests := []saveTest{
 		{
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).URL,
+			cloudBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(s.T()).URL,
+			mdsServer.URL,
 			confluentTestBin,
 		},
 	}
@@ -172,7 +171,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).URL,
+			serveLogin(s.T()).GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{

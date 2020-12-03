@@ -29,11 +29,8 @@ func (s *CLITestSuite) TestCcloudIAM() {
 		{args: "iam role list", fixture: "iam/ccloud-iam-role-list.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

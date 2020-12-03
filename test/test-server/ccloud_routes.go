@@ -27,7 +27,7 @@ var (
 	environments  = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
 )
 // Handler for: "/api/me"
-func handleMe(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 			User: &orgv1.User{
@@ -44,7 +44,7 @@ func handleMe(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/sessions"
-func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := require.New(t)
 		b, err := ioutil.ReadAll(r.Body)
@@ -70,7 +70,7 @@ func handleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 // Handler for: "/api/check_email/{email}"
-func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := require.New(t)
 		vars := mux.Vars(r)
@@ -89,7 +89,7 @@ func handleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 // Handler for: "/api/accounts/{id}"
-func handleEnvironmentRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleEnvironmentRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
@@ -126,7 +126,7 @@ func handleEnvironmentRequests(t *testing.T) func(http.ResponseWriter, *http.Req
 	}
 }
 // Handler for: "/api/accounts"
-func handleEnvironmentsRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleEnvironmentsRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
@@ -152,7 +152,7 @@ func handleEnvironmentsRequests(t *testing.T) func(http.ResponseWriter, *http.Re
 	}
 }
 
-func handlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := orgv1.GetPaymentInfoReply{
 			Card: &orgv1.Card{
@@ -185,7 +185,7 @@ const (
 	exampleUnit         = "GB"
 )
 // Handler for "/api/organizations/
-func handlePriceTable(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prices := map[string]float64{
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
@@ -212,7 +212,7 @@ var (
 )
 
 // Handler for: "/api/service_accounts"
-func handleServiceAccountRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleServiceAccountRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
@@ -278,7 +278,7 @@ func init() {
 	fillKeyStore()
 }
 // Handler for: "/api/api_keys"
-func handleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			req := &schedv1.CreateApiKeyRequest{}
@@ -314,7 +314,7 @@ func handleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 // Handler for: "/api/api_keys/{key}"
-func handleApiKey(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		keyStr := vars["key"]
@@ -352,12 +352,11 @@ func handleApiKey(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 // Handler for: "/api/clusters"
-func handleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("in /clusters")
 		if r.Method == "POST" {
-			fmt.Println("issa post")
-			handleKafkaClusterCreate(t)(w, r)
+			c.HandleKafkaClusterCreate(t)(w, r)
 		} else if r.Method == "GET" {
 			cluster := schedv1.KafkaCluster{
 				Id:              "lkc-123",
@@ -387,9 +386,8 @@ func handleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 // Handler for POST "/api/clusters"
-func handleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in create !!!")
 		req := &schedv1.CreateKafkaClusterRequest{}
 		err := utilv1.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
@@ -408,7 +406,7 @@ func handleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.
 					ServiceProvider: req.Config.ServiceProvider,
 					Region:          req.Config.Region,
 					Endpoint:        "SASL_SSL://kafka-endpoint",
-					ApiEndpoint:     apiUrl,
+					ApiEndpoint:     c.kafkaApiUrl,
 				},
 			})
 		} else {
@@ -424,7 +422,7 @@ func handleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.
 					ServiceProvider: req.Config.ServiceProvider,
 					Region:          req.Config.Region,
 					Endpoint:        "SASL_SSL://kafka-endpoint",
-					ApiEndpoint:     apiUrl,
+					ApiEndpoint:     c.kafkaApiUrl,
 				},
 			})
 		}
@@ -433,34 +431,34 @@ func handleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.
 		require.NoError(t, err)
 	}
 }
-// Handler for: "/api/clusters/{cluster}"
-func handleCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+// Handler for: "/api/clusters/{id}"
+func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
 		switch clusterId {
 		case "lkc-describe":
-			handleKafkaClusterDescribe(t)(w, r)
+			c.HandleKafkaClusterDescribe(t)(w, r)
 		case "lkc-describe-dedicated":
-			handleKafkaClusterDescribeDedicated(t)(w, r)
+			c.HandleKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
-			handleKafkaClusterDescribeDedicatedPending(t)(w, r)
+			c.HandleKafkaClusterDescribeDedicatedPending(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
-			handleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
+			c.HandleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
 		case "lkc-update":
-			handleKafkaClusterUpdateRequest(t)(w, r)
+			c.HandleKafkaClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated":
-			handleKafkaDedicatedClusterUpdate(t)(w, r)
+			c.HandleKafkaDedicatedClusterUpdate(t)(w, r)
 		case "lkc-unknown":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 		default:
-			handleKafkaClusterGetListDeleteDescribe(t)(w, r)
+			c.HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
 	}
 }
 // Handler for GET "api/clusters/
-func handleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
@@ -473,7 +471,7 @@ func handleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *htt
 	}
 }
 // Handler for GET "/api/clusters/lkc-dedicated"
-func handleKafkaClusterDescribeDedicated(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterDescribeDedicated(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -490,7 +488,7 @@ func handleKafkaClusterDescribeDedicated(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for GET "/api/clusters/lkc-dedicated-pending"
-func handleKafkaClusterDescribeDedicatedPending(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -508,7 +506,7 @@ func handleKafkaClusterDescribeDedicatedPending(t *testing.T) func(w http.Respon
 }
 
 // Handler for GET "/api/clusters/lkc-dedicated-with-encryption"
-func handleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("encryption")
 		vars := mux.Vars(r)
@@ -526,7 +524,7 @@ func handleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http
 	}
 }
 // Default handler for get, list, delete, describe "api/clusters/{cluster}"
-func handleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -538,7 +536,7 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseW
 		require.NotEmpty(t, r.URL.Query().Get("account_id"))
 		// Now return the KafkaCluster with updated ApiEndpoint
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.ApiEndpoint = apiUrl
+		cluster.ApiEndpoint = c.kafkaApiUrl
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: cluster,
 		})
@@ -548,7 +546,7 @@ func handleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseW
 	}
 }
 // Handler for GET/PUT "api/clusters/lkc-update"
-func handleKafkaClusterUpdateRequest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Describe client call
 		var out []byte
@@ -588,7 +586,7 @@ func handleKafkaClusterUpdateRequest(t *testing.T) func(w http.ResponseWriter, r
 	}
 }
 // Handler for GET/PUT "api/clusters/lkc-update-dedicated"
-func handleKafkaDedicatedClusterUpdate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaDedicatedClusterUpdate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == "GET" {
@@ -641,7 +639,7 @@ func handleKafkaDedicatedClusterUpdate(t *testing.T) func(w http.ResponseWriter,
 	}
 }
 // Handler for: "api/env_metadata"
-func handleEnvMetadata(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleEnvMetadata(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clouds := []*schedv1.CloudMetadata{
 			{
@@ -697,7 +695,7 @@ func handleEnvMetadata(t *testing.T) func(w http.ResponseWriter, r *http.Request
 	}
 }
 // Handler for: "/api/schema_registries"
-func handleSchemaRegistriesRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleSchemaRegistriesRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")
@@ -721,7 +719,7 @@ func handleSchemaRegistriesRequests(t *testing.T) func(http.ResponseWriter, *htt
 	}
 }
 // Handler for: "/api/ksqls"
-func handelKsqlsRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleKsqlsRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &schedv1.KSQLCluster{
 			Id:                "lksqlc-ksql5",
@@ -759,7 +757,7 @@ func handelKsqlsRequests(t *testing.T) func(http.ResponseWriter, *http.Request) 
 	}
 }
 // Handler for: "/api/ksqls/{id}"
-func handleKsqlRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleKsqlRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ksqlId := vars["id"]
@@ -803,7 +801,7 @@ func handleKsqlRequests(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/users"
-func handleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			users := []*orgv1.User{
@@ -833,7 +831,7 @@ func handleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/users/{id}
-func handleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := orgv1.DeleteUserReply{
 			Error: nil,
@@ -845,7 +843,7 @@ func handleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/organizations/{id}/invites"
-func handleInvite(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		bs := string(body)
@@ -864,28 +862,28 @@ func handleInvite(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-func handleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 }
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-func handleConnectorPause(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 }
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-func handleConnectorResume(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorResume(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 }
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors"
-func handleConnectors(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["env"]
@@ -924,7 +922,7 @@ func handleConnectors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors-plugins"
-func handlePlugins(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("handling plugons")
 		if r.Method == "GET" {
@@ -944,7 +942,7 @@ func handlePlugins(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	}
 }
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
-func handleConnectCatalog(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		configInfos := &opv1.ConfigInfos{
 			Name:       "",
@@ -1008,7 +1006,7 @@ func handleConnectCatalog(t *testing.T) func(http.ResponseWriter, *http.Request)
 	}
 }
 
-func handleConnectUpdate(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectUpdate(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
