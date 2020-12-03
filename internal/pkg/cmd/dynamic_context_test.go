@@ -92,7 +92,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			}
 			if tt.cluster != "" {
 				require.Equal(t, tt.cluster, finalCluster)
-			} else if tt.environment == ""{
+			} else if tt.environment == "" {
 				require.Equal(t, initialActiveKafkaId, finalCluster)
 			}
 		}

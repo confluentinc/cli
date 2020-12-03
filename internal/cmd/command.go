@@ -100,21 +100,22 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		return nil, err
 	}
 
-	authTokenHandler := &pauth.AuthTokenHandlerImpl{}
-	loginTokenHandler := pauth.NewLoginTokenHandler(authTokenHandler, netrcHandler, form.NewPrompt(os.Stdin), logger)
+	authTokenHandler := pauth.NewAuthTokenHandler(logger)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger)
 	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	prerunner := &pcmd.PreRun{
-		Config:             cfg,
-		ConfigLoadingError: configLoadingErr,
-		UpdateClient:       updateClient,
-		CLIName:            cliName,
-		Logger:             logger,
-		FlagResolver:       resolver,
-		Version:            ver,
-		Analytics:          analyticsClient,
-		LoginTokenHandler:  loginTokenHandler,
-		JWTValidator:       jwtValidator,
+		Config:                  cfg,
+		ConfigLoadingError:      configLoadingErr,
+		UpdateClient:            updateClient,
+		CLIName:                 cliName,
+		Logger:                  logger,
+		FlagResolver:            resolver,
+		Version:                 ver,
+		Analytics:               analyticsClient,
+		LoginCredentialsManager: loginCredentialsManager,
+		AuthTokenHandler:        authTokenHandler,
+		JWTValidator:            jwtValidator,
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 	shellCompleter := completer.NewShellCompleter(cli)
@@ -129,7 +130,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, loginTokenHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {

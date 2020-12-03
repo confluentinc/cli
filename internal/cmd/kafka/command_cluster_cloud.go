@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -75,7 +76,7 @@ type describeStruct struct {
 	PendingClusterSize int32
 	NetworkIngress     int32
 	NetworkEgress      int32
-	Storage            int32
+	Storage            string
 	ServiceProvider    string
 	Region             string
 	Availability       string
@@ -477,6 +478,11 @@ func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaClu
 }
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
+	clusterStorage := strconv.Itoa(int(cluster.Storage))
+	if clusterStorage == "-1" || cluster.InfiniteStorage {
+		clusterStorage = "Infinite"
+	}
+
 	return &describeStruct{
 		Id:                 cluster.Id,
 		Name:               cluster.Name,
@@ -485,7 +491,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		PendingClusterSize: cluster.PendingCku,
 		NetworkIngress:     cluster.NetworkIngress,
 		NetworkEgress:      cluster.NetworkEgress,
-		Storage:            cluster.Storage,
+		Storage:            clusterStorage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
 		Availability:       durabilityToAvaiablityNameMap[cluster.Durability.String()],
