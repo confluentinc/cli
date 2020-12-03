@@ -492,40 +492,88 @@ func TestLogout(t *testing.T) {
 
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
-	cfg := v3.New(&config.Params{
-		CLIName:    "confluent",
-		MetricSink: nil,
-		Logger:     log.New(),
-	})
-	loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg)
-	_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
-	req.NoError(err)
-	// ensure CaCertPath is stored in Config
-	ctx := cfg.Context()
-	req.Equal("testcert.pem", ctx.Platform.CaCertPath)
-	req.Equal("login-prompt-user@confluent.io-http://localhost:8090-cacertpath-testcert.pem", ctx.Name)
+	tests := []struct {
+		name    string
+		caCertPathFlag string
+	}{
+		{
+			name:    "specified ca-cert-path",
+			caCertPathFlag: "testcert.pem",
+		},
+		{
+			name:    "confluent login prompt flag",
+			caCertPathFlag: "",
+		},
+	}
 
-	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
-	// login using ca-cert-path stored in config
-	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090")
-	req.NoError(err)
-	ctx = cfg.Context()
-	req.Equal("", ctx.Platform.CaCertPath)
-	req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := v3.New(&config.Params{
+				CLIName:    "confluent",
+				MetricSink: nil,
+				Logger:     log.New(),
+			})
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.caCertPathFlag)
+			_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", tt.caCertPathFlag))
+			req.NoError(err)
 
-	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
+			ctx := cfg.Context()
 
-	// resetting ca-cert-path is only for legacy users who may have ca-cert-path stored in config but not in context name
-	// for newer users logins with and without ca-cert-path will be for two different contexts one with ca-cert-path in name and another without
-	// hence, for newer users there is no longer a use or need for resetting ca-cert-path as they will simply be logged in to the context without it
-	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=")
-	req.NoError(err)
-	ctx = cfg.Context()
-	req.Equal("", ctx.Platform.CaCertPath)
-	req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
+			// ensure the right CaCertPath is stored in Config
+			req.Equal(tt.caCertPathFlag, ctx.Platform.CaCertPath)
+
+			// check context name
+			if tt.caCertPathFlag != "" {
+				req.Equal("login-prompt-user@confluent.io-http://localhost:8090-cacertpath-testcert.pem", ctx.Name)
+			} else {
+				req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
+			}
+		})
+	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config) *loginCommand {
+func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
+	originalCaCertPath := "ogcert.pem"
+
+	req := require.New(t)
+	tests := []struct {
+		name    string
+		useCaCertPathFlag bool
+		expectedCaCertPath string
+	}{
+		{
+			name:    "use existing caCertPath in config",
+			useCaCertPathFlag: false,
+			expectedCaCertPath: originalCaCertPath,
+		},
+		{
+			name:    "reset ca-cert-path",
+			useCaCertPathFlag: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctxName := "login-prompt-user@confluent.io-http://localhost:8090"
+			cfg := v3.AuthenticatedConfigMockWithContextName("confluent", ctxName)
+			cfg.Contexts[ctxName].Platform.CaCertPath = originalCaCertPath
+
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)
+			args := []string{"--url=http://localhost:8090"}
+			if tt.useCaCertPathFlag {
+				args = append(args, "--ca-cert-path=")
+			}
+			_, err := pcmd.ExecuteCommand(loginCmd.Command, args...)
+			req.NoError(err)
+
+			ctx := cfg.Context()
+			// ensure the right CaCertPath is stored in Config
+			req.Equal(tt.expectedCaCertPath, ctx.Platform.CaCertPath)
+		})
+	}
+}
+
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config, expectedCaCertPath string) *loginCommand {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
@@ -569,6 +617,8 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
 		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+			// ensure the right caCertPath is used
+			req.Equal(expectedCaCertPath, caCertPath)
 			mdsClient.GetConfig().HTTPClient, err = pauth.SelfSignedCertClient(certReader, logger)
 			if err != nil {
 				return nil, err
