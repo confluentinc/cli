@@ -422,6 +422,9 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) error {
 
 func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
+	if r.Logger.GetLevel() == log.DEBUG || r.Logger.GetLevel() == log.TRACE {
+		mdsConfig.Debug = true
+	}
 	if ctx == nil {
 		return mds.NewAPIClient(mdsConfig)
 	}
@@ -436,14 +439,14 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	caCertFile, err := os.Open(caCertPath)
 	if err == nil {
 		defer caCertFile.Close()
-		mdsConfig.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
+		mdsConfig.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
 		if err != nil {
 			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = pauth.DefaultClient()
+			mdsConfig.HTTPClient = utils.DefaultClient()
 		}
 	} else {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsConfig.HTTPClient = pauth.DefaultClient()
+		mdsConfig.HTTPClient = utils.DefaultClient()
 
 	}
 	return mds.NewAPIClient(mdsConfig)
@@ -551,6 +554,9 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 
 func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
+	if r.Logger.GetLevel() == log.DEBUG || r.Logger.GetLevel() == log.TRACE {
+		mdsv2Config.Debug = true
+	}
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
@@ -565,14 +571,14 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	caCertFile, err := os.Open(caCertPath)
 	if err == nil {
 		defer caCertFile.Close()
-		mdsv2Config.HTTPClient, err = pauth.SelfSignedCertClient(caCertFile, r.Logger)
+		mdsv2Config.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
 		if err != nil {
 			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsv2Config.HTTPClient = pauth.DefaultClient()
+			mdsv2Config.HTTPClient = utils.DefaultClient()
 		}
 	} else {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsv2Config.HTTPClient = pauth.DefaultClient()
+		mdsv2Config.HTTPClient = utils.DefaultClient()
 
 	}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)

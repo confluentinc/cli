@@ -86,10 +86,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
-	ctx := context.Background()
-	if a.logger.GetLevel() == log.TRACE {
-		ctx = utils.HTTPTracedContext(ctx, a.logger)
-	}
+	ctx := utils.GetContext(a.logger)
 	basicContext := context.WithValue(ctx, mds.ContextBasicAuth, mds.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
 	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
