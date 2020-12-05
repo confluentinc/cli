@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/jonboulle/clockwork"
@@ -172,7 +171,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		}
 	} else if cliName == "confluent" {
 		cli.AddCommand(auditlog.New(prerunner))
-		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(iam.New(cliName, prerunner))
 		// Never uses it under "confluent", so a nil ServerCompleter is fine.
