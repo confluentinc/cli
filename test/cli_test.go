@@ -46,7 +46,7 @@ var (
 	ccloudTestBin     = ccloudTestBinNormal
 	confluentTestBin  = confluentTestBinNormal
 	covCollector      *bincover.CoverageCollector
-	testBackend       *test_server.CloudTestBackend
+	testBackend       *test_server.TestBackend
 )
 
 const (
@@ -168,10 +168,8 @@ func (s *CLITestSuite) TestConfluentHelp() {
 		}
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -195,7 +193,7 @@ func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, 
 }
 
 func (s *CLITestSuite) TestUserAgent() {
-	checkUserAgent := func(t *testing.T, expected string) *test_server.CloudTestBackend {
+	checkUserAgent := func(t *testing.T, expected string) *test_server.TestBackend {
 		kafkaApiRouter := test_server.NewEmptyKafkaRouter()
 		kafkaApiRouter.PathPrefix("/").HandlerFunc(assertUserAgent(t, expected))
 		cloudRouter := test_server.NewCCloudRouter(t)
@@ -203,7 +201,7 @@ func (s *CLITestSuite) TestUserAgent() {
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), cloudRouter.HandleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), cloudRouter.HandleCheckEmail(t)))
 		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), cloudRouter.HandleKafkaClusterGetListDeleteDescribe(t)))
-		return test_server.NewSingleTestBackend(cloudRouter, kafkaApiRouter)
+		return test_server.NewSingleCloudTestBackend(cloudRouter, kafkaApiRouter)
 	}
 	backend := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
 		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
@@ -226,7 +224,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	type errorer interface {
 		GetError() *corev1.Error
 	}
-	serveErrors := func(t *testing.T) *test_server.CloudTestBackend {
+	serveErrors := func(t *testing.T) *test_server.TestBackend {
 		req := require.New(t)
 		write := func(w http.ResponseWriter, resp proto.Message) {
 			if r, ok := resp.(errorer); ok {
@@ -253,7 +251,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 				req.Fail("reached the unreachable", "auth=%s", r.Header.Get("Authorization"))
 			}
 		})
-		backend := test_server.NewSingleTestBackend(router, test_server.NewKafkaRouter(t))
+		backend := test_server.NewSingleCloudTestBackend(router, test_server.NewKafkaRouter(t))
 		return backend
 	}
 
@@ -367,7 +365,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	})
 }
 
-func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
+func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
@@ -378,7 +376,12 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest, loginURL string) {
 		if !tt.workflow {
 			resetConfiguration(t, "confluent")
 		}
-
+		var loginURL string
+		if tt.loginURL != "" {
+			loginURL = tt.loginURL
+		} else {
+			loginURL = testBackend.GetMdsUrl()
+		}
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
 			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)

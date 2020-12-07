@@ -85,9 +85,14 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	}
 }
 
-func serveLogin(t *testing.T) *test_server.CloudTestBackend {
+func serveLogin(t *testing.T) *test_server.TestBackend {
 	router := test_server.NewCCloudRouter(t)
-	return test_server.NewSingleTestBackend(router, test_server.NewEmptyKafkaRouter())
+	return test_server.NewSingleCloudTestBackend(router, test_server.NewEmptyKafkaRouter())
+}
+
+func serveMDS(t *testing.T) *test_server.TestBackend {
+	router := test_server.NewMdsRouter(t)
+	return test_server.NewSingleConfluentTestBackend(router)
 }
 
 func (s *CLITestSuite) TestSaveUsernamePassword() {
@@ -99,7 +104,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	}
 	cloudBackend := serveLogin(s.T())
 	defer cloudBackend.Close()
-	mdsServer := serveMds(s.T())
+	mdsServer := serveMDS(s.T())
 	defer mdsServer.Close()
 	tests := []saveTest{
 		{
@@ -111,7 +116,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			mdsServer.URL,
+			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
@@ -166,19 +171,23 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
 	}
+	cloudServer := serveLogin(s.T())
+	defer cloudServer.Close()
+	mdsServer := serveMDS(s.T())
+	defer mdsServer.Close()
 	tests := []updateTest{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).GetCloudUrl(),
+			cloudServer.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(s.T()).URL,
+			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
@@ -372,10 +381,11 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 			wantErrCode: 1,
 		},
 	}
-
-	loginURL := serveMds(s.T()).URL
+	mdsServer := serveMDS(s.T())
+	defer mdsServer.Close()
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		tt.loginURL = mdsServer.GetMdsUrl()
+		s.runConfluentTest(tt)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -354,7 +355,6 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 // Handler for: "/api/clusters"
 func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in /clusters")
 		if r.Method == "POST" {
 			c.HandleKafkaClusterCreate(t)(w, r)
 		} else if r.Method == "GET" {
@@ -508,7 +508,6 @@ func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) f
 // Handler for GET "/api/clusters/lkc-dedicated-with-encryption"
 func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("encryption")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
@@ -924,7 +923,6 @@ func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors-plugins"
 func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("handling plugons")
 		if r.Method == "GET" {
 			connectorPlugin1 := &opv1.ConnectorPluginInfo{
 				Class: "AzureBlobSink",
@@ -1010,5 +1008,20 @@ func (c *CloudRouter) HandleConnectUpdate(t *testing.T) func(http.ResponseWriter
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
+	}
+}
+// Handler for: "/api/metadata/security/v2alpha1/authenticate"
+func (c CloudRouter) HandleV2Authenticate(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
+		reply := &mds.AuthenticationResponse{
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			TokenType: "dunno",
+			ExpiresIn: 9999999999,
+		}
+		b, err := json.Marshal(&reply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
 	}
 }

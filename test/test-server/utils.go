@@ -133,8 +133,6 @@ func apiKeysFilter(url *url.URL) []*schedv1.ApiKey {
 	return apiKeys
 }
 
-
-
 var (
 	resourceNotFoundErrMsg = `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 )

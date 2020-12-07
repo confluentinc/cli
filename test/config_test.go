@@ -38,10 +38,9 @@ func (s *CLITestSuite) TestConfluentConfig() {
 	}
 
 	resetConfiguration(s.T(), "confluent")
-	loginURL := serveMds(s.T()).URL
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }

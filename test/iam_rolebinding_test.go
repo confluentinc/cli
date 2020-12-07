@@ -146,11 +146,9 @@ func (s *CLITestSuite) TestConfluentIAMRoleBindingCRUD() {
 		},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -262,11 +260,9 @@ func (s *CLITestSuite) TestConfluentIAMRolebindingList() {
 		},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
