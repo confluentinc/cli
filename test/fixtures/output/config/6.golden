@@ -1,4 +1,5 @@
 credential: api-key-hi
+disable_tracking: false
 kafka_cluster_context:
   active_kafka: anonymous-id
   environment_context: false

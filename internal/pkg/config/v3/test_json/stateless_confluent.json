@@ -51,7 +51,8 @@
           }
         }
       },
-      "schema_registry_clusters": {}
+      "schema_registry_clusters": {},
+      "disable_tracking": false
     }
   },
   "context_states": {

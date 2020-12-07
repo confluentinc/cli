@@ -61,6 +61,7 @@ type Command struct {
 	*cobra.Command
 	// @VisibleForTesting
 	Analytics analytics.Client
+	Config    *v3.Config
 	logger    *log.Logger
 }
 
@@ -117,7 +118,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		AuthTokenHandler:        authTokenHandler,
 		JWTValidator:            jwtValidator,
 	}
-	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
+	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger, Config: cfg}
 	shellCompleter := completer.NewShellCompleter(cli)
 	serverCompleter := shellCompleter.ServerSideCompleter
 
@@ -199,21 +200,18 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 	return currCtx != nil && currCtx.Credential != nil && currCtx.Credential.CredentialType == v2.APIKey
 }
 
-func (c *Command) Execute(cliName string, args []string) error {
+func (c *Command) Execute(args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	c.sendAndFlushAnalytics(args, err)
-	pfeedback.HandleFeedbackNudge(cliName, args)
+	pfeedback.HandleFeedbackNudge(c.Config.CLIName, args)
 	return err
 }
 
 func (c *Command) sendAndFlushAnalytics(args []string, err error) {
-	analyticsError := c.Analytics.SendCommandAnalytics(c.Command, args, err)
-	if analyticsError != nil {
-		c.logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
-	}
+	analytics.SendAnalyticsAndLog(c.Command, c.Config, args, err, c.Analytics, c.logger)
 	err = c.Analytics.Close()
 	if err != nil {
 		c.logger.Debug(err)

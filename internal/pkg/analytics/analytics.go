@@ -454,7 +454,16 @@ func apiKeyStoreSecretHandler(args []string) []string {
 	return args
 }
 
-func SendAnalyticsAndLog(cmd *cobra.Command, args []string, err error, client Client, logger *log.Logger) {
+func SendAnalyticsAndLog(cmd *cobra.Command, cfg *v3.Config, args []string, err error, client Client, logger *log.Logger) {
+	ctx := cfg.Context()
+	if ctx != nil && ctx.DisableTracking {
+		logger.Debug("Tracking disabled")
+		return
+	}
+	if ctx == nil && cfg.CLIName == "confluent" {
+		logger.Debug("Tracking disabled as context is not found for Confluent CLI user")
+		return
+	}
 	analyticsError := client.SendCommandAnalytics(cmd, args, err)
 	if analyticsError != nil {
 		logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())

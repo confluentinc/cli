@@ -47,7 +47,7 @@ func main() {
 			exit(1)
 		}
 	}
-	err = cli.Execute(cliName, os.Args[1:])
+	err = cli.Execute(os.Args[1:])
 	if err != nil {
 		if isTest {
 			bincover.ExitCode = 1

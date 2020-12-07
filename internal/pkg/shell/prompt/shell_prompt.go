@@ -33,13 +33,13 @@ type instrumentedCommand struct {
 	logger    *log.Logger
 }
 
-func (c *instrumentedCommand) Execute(cliName string, args []string) error {
+func (c *instrumentedCommand) Execute(cfg *v3.Config, args []string) error {
 	c.analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
-	analytics.SendAnalyticsAndLog(c.Command, args, err, c.analytics, c.logger)
-	feedback.HandleFeedbackNudge(cliName, args)
+	analytics.SendAnalyticsAndLog(c.Command, cfg, args, err, c.analytics, c.logger)
+	feedback.HandleFeedbackNudge(cfg.CLIName, args)
 	return err
 }
 
@@ -56,7 +56,7 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 	prompt := goprompt.New(
 		func(in string) {
 			promptArgs := strings.Fields(in)
-			_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
+			_ = shell.RootCmd.Execute(cfg, promptArgs)
 		},
 		shell.Complete,
 		opts...,

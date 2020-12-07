@@ -99,8 +99,9 @@ func (suite *AnalyticsTestSuite) TestHelpCall() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{"ccloud", "--help"})
+	err := command.Execute([]string{"ccloud", "--help"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -127,8 +128,9 @@ func (suite *AnalyticsTestSuite) TestSuccessWithFlagAndArgs() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{arg1, arg2, "--" + flagName, flagArg})
+	err := command.Execute([]string{arg1, arg2, "--" + flagName, flagArg})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -170,8 +172,9 @@ func (suite *AnalyticsTestSuite) TestSetSpecialProperty() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{})
+	err := command.Execute([]string{})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -202,8 +205,9 @@ func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgs() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{arg1, arg2, "--" + flagName, flagArg, "-h"})
+	err := command.Execute([]string{arg1, arg2, "--" + flagName, flagArg, "-h"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -258,8 +262,9 @@ func (suite *AnalyticsTestSuite) TestHelpWithFlagAndArgsSwapOrder() {
 	command := cmd.Command{
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{"login", "--" + flagName, flagArg, "user", arg1, arg2, "--help"})
+	err := command.Execute([]string{"login", "--" + flagName, flagArg, "user", arg1, arg2, "--help"})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -307,8 +312,9 @@ func (suite *AnalyticsTestSuite) TestLogin() {
 	command := cmd.Command{
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{"login"})
+	err := command.Execute([]string{"login"})
 	req.NoError(err)
 
 	req.Equal(2, len(suite.output))
@@ -371,8 +377,9 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 	command := cmd.Command{
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{"login", "user"})
+	err := command.Execute([]string{"login", "user"})
 	req.NoError(err)
 
 	req.Equal(2, len(suite.output))
@@ -392,7 +399,7 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnLogin() {
 		}
 	}
 
-	err = command.Execute(ccloudName, []string{"login", "other"})
+	err = command.Execute([]string{"login", "other"})
 	req.NoError(err)
 
 	req.Equal(4, len(suite.output))
@@ -437,9 +444,9 @@ func (suite *AnalyticsTestSuite) TestAnonymousIdResetOnContextSwitch() {
 	command := cmd.Command{
 		Command:   contextUseCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-
-	err := command.Execute(ccloudName, []string{})
+	err := command.Execute([]string{})
 	req.NoError(err)
 
 	req.Equal(2, len(suite.output))
@@ -475,8 +482,9 @@ func (suite *AnalyticsTestSuite) TestUserNotLoggedIn() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{})
+	err := command.Execute([]string{})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -505,8 +513,9 @@ func (suite *AnalyticsTestSuite) TestSessionTimedOut() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{})
+	err := command.Execute([]string{})
 	req.NoError(err)
 
 	req.Equal(1, len(suite.output))
@@ -534,8 +543,9 @@ func (suite *AnalyticsTestSuite) TestErrorReturnedByCommand() {
 	command := cmd.Command{
 		Command:   cobraCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{})
+	err := command.Execute([]string{})
 	req.NotNil(err)
 
 	req.Equal(1, len(suite.output))
@@ -561,8 +571,9 @@ func (suite *AnalyticsTestSuite) TestMalformedCommand() {
 	command := cmd.Command{
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
-	err := command.Execute(ccloudName, []string{unknownCmd})
+	err := command.Execute([]string{unknownCmd})
 	req.NotNil(err)
 
 	req.Equal(1, len(suite.output))
@@ -593,13 +604,14 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 	command := cmd.Command{
 		Command:   rootCmd,
 		Analytics: suite.analyticsClient,
+		Config:    suite.config,
 	}
 
 	pipeSymbol := "-"
 	filePathArg := "@/file.txt"
 	secondArgs := []string{apiSecret, pipeSymbol, filePathArg}
 	for _, secondArg := range secondArgs {
-		err := command.Execute(ccloudName, []string{"api-key", "store", apiKey, secondArg})
+		err := command.Execute([]string{"api-key", "store", apiKey, secondArg})
 		req.NoError(err)
 
 		req.Equal(1, len(suite.output))

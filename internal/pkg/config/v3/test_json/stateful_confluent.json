@@ -57,7 +57,8 @@
           "schema_registry_endpoint": "http://some-lsrc-endpoint",
           "schema_registry_credentials": null
         }
-      }
+      },
+      "disable_tracking": false
     }
   },
   "context_states": {

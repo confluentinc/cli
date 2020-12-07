@@ -20,6 +20,7 @@ type Context struct {
 	CredentialName         string                               `json:"credential" hcl:"credential"`
 	KafkaClusterContext    *KafkaClusterContext                 `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
 	SchemaRegistryClusters map[string]*v2.SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
+	DisableTracking        bool                                 `json:"disable_tracking" hcl:"disable_tracking"`
 	State                  *v2.ContextState                     `json:"-" hcl:"-"`
 	Logger                 *log.Logger                          `json:"-" hcl:"-"`
 	Config                 *Config                              `json:"-" hcl:"-"`
