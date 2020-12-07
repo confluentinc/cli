@@ -38,6 +38,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.61
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.1
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
@@ -46,7 +47,7 @@ require (
 	github.com/daixiang0/gci v0.0.0-20200727065011-66f1df783cb2 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
-	github.com/dghubble/sling v1.3.0 // indirect
+	github.com/dghubble/sling v1.3.0
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
@@ -55,6 +56,7 @@ require (
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.3.0 // indirect
 	github.com/go-critic/go-critic v0.5.0 // indirect
+	github.com/go-delve/delve v1.5.0 // indirect
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -107,6 +109,7 @@ require (
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
+	github.com/ramya-rao-a/go-outline v0.0.0-20200117021646-2a048b4510eb // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
 	github.com/ryancurrah/gomodguard v1.1.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.3.0 // indirect
@@ -120,6 +123,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
+	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.0.1 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/stripe/stripe-go v70.15.0+incompatible
