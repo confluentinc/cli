@@ -98,7 +98,7 @@ var v2RbacRoles = map[string]string{
 		}`,
 }
 
-var v2RoutesAndReplies  = map[string]string{
+var v2RoutesAndReplies = map[string]string{
 	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,
 	"/api/metadata/security/v2alpha1/roleNames": `[
 			"CCloudRoleBindingAdmin",

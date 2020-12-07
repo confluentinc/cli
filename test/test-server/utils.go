@@ -1,13 +1,14 @@
 package test_server
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -157,7 +158,7 @@ func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
 	}
 }
 
-func buildUser(id int32, email string, firstName string, lastName string, resourceId string) *orgv1.User{
+func buildUser(id int32, email string, firstName string, lastName string, resourceId string) *orgv1.User {
 	return &orgv1.User{
 		Id:             id,
 		Email:          email,

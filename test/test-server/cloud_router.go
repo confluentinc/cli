@@ -1,42 +1,43 @@
 package test_server
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 // cloud urls
 const (
-	sessions			= "/api/sessions"
-	me					= "/api/me"
-	checkEmail			= "/api/check_email/{email}"
-	account				= "/api/accounts/{id}"
-	accounts			= "/api/accounts"
-	apiKey				= "/api/api_keys/{key}"
-	apiKeys				= "/api/api_keys"
-	cluster				= "/api/clusters/{id}"
-	clusters			= "/api/clusters"
-	envMetadata			= "/api/env_metadata"
-	serviceAccounts		= "/api/service_accounts"
-	schemaRegistries	= "/api/schema_registries"
-	schemaRegistry		= "/api/schema_registries/{id}"
-	ksql				= "/api/ksqls/{id}"
-	ksqls				= "/api/ksqls"
-	priceTable			= "/api/organizations/{id}/price_table"
-	paymentInfo			= "/api/organizations/{id}/payment_info"
-	invites				= "/api/organizations/{id}/invites"
-	user				= "/api/users/{id}"
-	users				= "/api/users"
-	connector			= "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-	connectorPause		= "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-	connectorResume		= "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-	connectorUpdate		= "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-	connectors			= "/api/accounts/{env}/clusters/{cluster}/connectors"
-	connectorPlugins	= "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
-	connectCatalog		= "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
+	sessions            = "/api/sessions"
+	me                  = "/api/me"
+	checkEmail          = "/api/check_email/{email}"
+	account             = "/api/accounts/{id}"
+	accounts            = "/api/accounts"
+	apiKey              = "/api/api_keys/{key}"
+	apiKeys             = "/api/api_keys"
+	cluster             = "/api/clusters/{id}"
+	clusters            = "/api/clusters"
+	envMetadata         = "/api/env_metadata"
+	serviceAccounts     = "/api/service_accounts"
+	schemaRegistries    = "/api/schema_registries"
+	schemaRegistry      = "/api/schema_registries/{id}"
+	ksql                = "/api/ksqls/{id}"
+	ksqls               = "/api/ksqls"
+	priceTable          = "/api/organizations/{id}/price_table"
+	paymentInfo         = "/api/organizations/{id}/payment_info"
+	invites             = "/api/organizations/{id}/invites"
+	user                = "/api/users/{id}"
+	users               = "/api/users"
+	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
+	connectorPause      = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
+	connectorResume     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
+	connectorUpdate     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
+	connectors          = "/api/accounts/{env}/clusters/{cluster}/connectors"
+	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
+	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 )
 
@@ -44,25 +45,28 @@ type CloudRouter struct {
 	*mux.Router
 	kafkaApiUrl string
 }
+
 // New CloudRouter with all cloud handlers
 func NewCCloudRouter(t *testing.T) *CloudRouter {
 	c := NewEmptyCloudRouter()
 	c.addCloudRoutes(t)
 	return c
 }
+
 // New CLoudRouter with no predefined handlers
 func NewEmptyCloudRouter() *CloudRouter {
 	return &CloudRouter{
 		Router: mux.NewRouter(),
 	}
 }
+
 // Add handlers for cloud endpoints
 func (c *CloudRouter) addCloudRoutes(t *testing.T) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t))
 	c.HandleFunc(checkEmail, c.HandleCheckEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
-	c.HandleFunc(serviceAccounts, c.HandleServiceAccountRequests(t))
+	c.HandleFunc(serviceAccounts, c.HandleServiceAccount(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
@@ -92,8 +96,8 @@ func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRep
 }
 
 func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
-	c.HandleFunc(schemaRegistries, c.HandleSchemaRegistriesRequests(t))
-	c.HandleFunc(schemaRegistry, c.HandleSchemaRegistriesRequests(t))
+	c.HandleFunc(schemaRegistries, c.HandleSchemaRegistries(t))
+	c.HandleFunc(schemaRegistry, c.HandleSchemaRegistries(t))
 }
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
@@ -108,8 +112,8 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
-	c.HandleFunc(ksqls, c.HandleKsqlsRequests(t))
-	c.HandleFunc(ksql, c.HandleKsqlRequests(t))
+	c.HandleFunc(ksqls, c.HandleKsqls(t))
+	c.HandleFunc(ksql, c.HandleKsql(t))
 }
 
 func (c *CloudRouter) addClusterRoutes(t *testing.T) {
@@ -123,8 +127,8 @@ func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
-	c.HandleFunc(accounts, c.HandleEnvironmentsRequests(t))
-	c.HandleFunc(account, c.HandleEnvironmentRequests(t))
+	c.HandleFunc(accounts, c.HandleEnvironments(t))
+	c.HandleFunc(account, c.HandleEnvironment(t))
 }
 
 func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {

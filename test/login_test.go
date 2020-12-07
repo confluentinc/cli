@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	test_server "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/chromedp/chromedp"
 

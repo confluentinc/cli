@@ -1,7 +1,7 @@
 package test_server
 
 var v1RbacRoles = map[string]string{
-		"DeveloperRead": `{
+	"DeveloperRead": `{
                       "name":"DeveloperRead",
                       "accessPolicy":{
                               "scopeType":"Resource",
@@ -12,7 +12,7 @@ var v1RbacRoles = map[string]string{
                                       {"resourceType":"Subject","operations":["Read","ReadCompatibility"]},
                                       {"resourceType":"Connector","operations":["ReadStatus","ReadConfig"]},
                                       {"resourceType":"Topic","operations":["Read","Describe"]}]}}`,
-		"DeveloperWrite": `{
+	"DeveloperWrite": `{
                       "name":"DeveloperWrite",
                       "accessPolicy":{
                               "scopeType":"Resource",
@@ -24,19 +24,19 @@ var v1RbacRoles = map[string]string{
                                       {"resourceType":"KsqlCluster","operations":["Contribute"]},
                                       {"resourceType":"Connector","operations":["ReadStatus","Configure"]},
                                       {"resourceType":"TransactionalId","operations":["Write","Describe"]}]}}`,
-		"SecurityAdmin": `{
+	"SecurityAdmin": `{
                       "name":"SecurityAdmin",
                       "accessPolicy":{
                               "scopeType":"Cluster",
                               "allowedOperations":[
                                       {"resourceType":"All","operations":["DescribeAccess"]}]}}`,
-		"SystemAdmin": `{
+	"SystemAdmin": `{
                       "name":"SystemAdmin",
                       "accessPolicy":{
                               "scopeType":"Cluster",
                               "allowedOperations":[
                                       {"resourceType":"All","operations":["All"]}]}}`,
-	}
+}
 var v1RoutesAndReplies = map[string]string{
 	"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",

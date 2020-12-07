@@ -67,7 +67,7 @@ var (
 func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		CLIName: "ccloud",
-		Config: v3.AuthenticatedCloudConfigMock(),
+		Config:  v3.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{

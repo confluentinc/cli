@@ -1,22 +1,23 @@
 package test_server
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"path"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-	authenticate 		= "/security/1.0/authenticate"
-	registryClusters 	= "/security/1.0/registry/clusters"
-	v1Base				= "/security/1.0/roles"
-	v2Base				= "/api/metadata/security/v2alpha1/roles"
-	v2InvalidRole		= "/api/metadata/security/v2alpha1/roles/InvalidRole"
+	authenticate     = "/security/1.0/authenticate"
+	registryClusters = "/security/1.0/registry/clusters"
+	v1Base           = "/security/1.0/roles"
+	v2Base           = "/api/metadata/security/v2alpha1/roles"
+	v2InvalidRole    = "/api/metadata/security/v2alpha1/roles/InvalidRole"
 )
 
 type MdsRouter struct {

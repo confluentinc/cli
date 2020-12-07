@@ -1,21 +1,22 @@
 package test_server
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 // kafka urls
 const (
-	aclsCreate				= "/2.0/kafka/{id}/acls"
-	aclsList				= "/2.0/kafka/{cluster}/acls:search"
-	aclsDelete				= "/2.0/kafka/{cluster}/acls/delete"
-	link					= "/2.0/kafka/{cluster}/links/{link}"
-	links					= "/2.0/kafka/{cluster}/links"
-	topicMirrorStop			= "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
+	aclsCreate      = "/2.0/kafka/{id}/acls"
+	aclsList        = "/2.0/kafka/{cluster}/acls:search"
+	aclsDelete      = "/2.0/kafka/{cluster}/acls/delete"
+	link            = "/2.0/kafka/{cluster}/links/{link}"
+	links           = "/2.0/kafka/{cluster}/links"
+	topicMirrorStop = "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
 )
 
 type KafkaRouter struct {

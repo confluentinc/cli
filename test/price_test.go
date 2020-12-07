@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	exampleCloud        = "aws"
-	exampleRegion       = "us-east-1"
+	exampleCloud  = "aws"
+	exampleRegion = "us-east-1"
 )
 
 func (s *CLITestSuite) TestPriceList() {

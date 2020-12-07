@@ -2,12 +2,14 @@ package test_server
 
 import (
 	"encoding/json"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
+
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/stretchr/testify/require"
 )
+
 // Handler for: "/security/1.0/registry/clusters"
 func (m MdsRouter) HandleRegistryClusters(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -90,6 +92,7 @@ func (m MdsRouter) HandleRegistryClusters(t *testing.T) func(http.ResponseWriter
 		}
 	}
 }
+
 // Handler for: "/security/1.0/authenticate"
 func (m MdsRouter) HandleAuthenticate(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

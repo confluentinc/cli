@@ -2,14 +2,16 @@ package test_server
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"testing"
+
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net/http"
-	"testing"
 )
+
 // Handler for: "/2.0/kafka/{cluster}/acls:search"
 func (k *KafkaRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +34,7 @@ func (k *KafkaRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseWrit
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/2.0/kafka/{cluster}/acls"
 func (k *KafkaRouter) HandleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +50,7 @@ func (k *KafkaRouter) HandleKafkaACLsCreate(t *testing.T) func(w http.ResponseWr
 		}
 	}
 }
+
 // Handler for: "/2.0/kafka/{cluster}/acls/delete"
 func (k *KafkaRouter) HandleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +64,7 @@ func (k *KafkaRouter) HandleKafkaACLsDelete(t *testing.T) func(w http.ResponseWr
 		}
 	}
 }
+
 // Handler for: "/2.0/kafka/{cluster}/links"
 func (k *KafkaRouter) HandleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -99,8 +104,9 @@ func (k *KafkaRouter) HandleKafkaLink(t *testing.T) func(w http.ResponseWriter, 
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
-func (k *KafkaRouter) HandleKafkaTopicMirrorStop(t *testing.T) func (w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topic := vars["topic"]

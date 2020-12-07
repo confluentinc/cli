@@ -3,15 +3,6 @@ package test
 import (
 	"flag"
 	"fmt"
-	"github.com/confluentinc/bincover"
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/cli/test/test-server"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -23,6 +14,17 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/bincover"
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	test_server "github.com/confluentinc/cli/test/test-server"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -41,12 +43,12 @@ var (
 	// this connection is preconfigured in Auth0 to hit a test Okta account
 	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
 	// browser tests by default against devel
-	ssoTestLoginUrl   = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
-	cover             = false
-	ccloudTestBin     = ccloudTestBinNormal
-	confluentTestBin  = confluentTestBinNormal
-	covCollector      *bincover.CoverageCollector
-	testBackend       *test_server.TestBackend
+	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	cover            = false
+	ccloudTestBin    = ccloudTestBinNormal
+	confluentTestBin = confluentTestBinNormal
+	covCollector     *bincover.CoverageCollector
+	testBackend      *test_server.TestBackend
 )
 
 const (
