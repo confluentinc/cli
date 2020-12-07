@@ -141,7 +141,6 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go => ../ccloud-sdk-go
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/spf13/cobra => github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
