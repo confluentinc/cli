@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -65,6 +66,7 @@ func (suite *ConfigCommandTestSuite) TestStatisticsDisableFailedForNotLoggedInUs
 	cmd.SetArgs(append([]string{"context", "statistics", "disable"}))
 	err := cmd.Execute()
 	req.Error(err)
+	req.Contains(err.Error(), errors.NotLoggedInErrorMsg)
 
 	// should have no effects
 	req.False(ctx.DisableTracking)
@@ -81,6 +83,7 @@ func (suite *ConfigCommandTestSuite) TestStatisticsEnableFailedForNotLoggedInUse
 	cmd.SetArgs(append([]string{"context", "statistics", "enable"}))
 	err := cmd.Execute()
 	req.Error(err)
+	req.Contains(err.Error(), errors.NotLoggedInErrorMsg)
 
 	// should have no effects
 	req.True(ctx.DisableTracking)
