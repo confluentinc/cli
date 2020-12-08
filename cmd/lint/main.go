@@ -106,6 +106,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
+		// statistics commands have no args (disable, enable commands)
+		linter.ExcludeCommandContains("config context statistics"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
@@ -124,6 +126,7 @@ var rules = []linter.Rule{
 	linter.Filter(
 		linter.RequireSingular("Use"),
 		linter.ExcludeCommandContains("local"),
+		linter.ExcludeCommandContains("config context statistics"),
 	),
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),

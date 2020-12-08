@@ -23,9 +23,9 @@ func NewQuitCmd(prerunner pcmd.PreRunner, config *v3.Config, logger *log.Logger,
 	quitCmd.Run = func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Exiting %s shell.\n", config.CLIName)
 		// For quit pcmd.
-		analytics.SendAnalyticsAndLog(quitCmd.Command, config, args, nil, client, logger)
+		_ = client.SendCommandAnalytics(quitCmd.Command, args, nil)
 		// For shell pcmd.
-		analytics.SendAnalyticsAndLog(quitCmd.Command.Parent(), config, args, nil, client, logger)
+		_ = client.SendCommandAnalytics(quitCmd.Command.Parent(), args, nil)
 		err := client.Close()
 		if err != nil {
 			logger.Debug(err)

@@ -78,9 +78,9 @@ type Client interface {
 	TrackCommand(cmd *cobra.Command, args []string)
 	SetCommandType(commandType CommandType)
 	SessionTimedOut() error
+	SetSpecialProperty(propertiesKey string, value interface{})
 	SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error
 	Close() error
-	SetSpecialProperty(propertiesKey string, value interface{})
 }
 
 type cmdPage struct {
@@ -95,6 +95,7 @@ type ClientObj struct {
 	client  segment.Client
 	config  *v3.Config
 	clock   clockwork.Clock
+	logger  *log.Logger
 
 	// cache data until we flush events to segment (when each cmd call finishes)
 	cmdPages   []*cmdPage
@@ -111,13 +112,14 @@ type userInfo struct {
 	anonymousId    string
 }
 
-func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock, logger *log.Logger) *ClientObj {
 	client := &ClientObj{
 		cliName:    cliName,
 		config:     cfg,
 		client:     segmentClient,
 		cliVersion: version,
 		clock:      clock,
+		logger:     logger,
 	}
 	return client
 }
@@ -171,15 +173,34 @@ func (a *ClientObj) catchHelpCall(rootCmd *cobra.Command, args []string) {
 	}
 }
 
+// Checks if context disabled tracking before sending analytics
+// Even if disable tracking is set in the command execution the config is still updated because config stored are pointers
+// so they point to the same memory
 func (a *ClientObj) SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error {
+	ctx := a.config.Context()
+	if ctx != nil && ctx.DisableTracking {
+		a.logger.Debug("Tracking disabled for current context.")
+		return nil
+	}
+	if ctx == nil && a.cliName == "confluent" {
+		a.logger.Debug("Tracking disabled for nil context.")
+		return nil
+	}
 	a.catchHelpCall(cmd, args)
 	if cmdExecutionError != nil {
 		err := a.sendCommandFailed(cmdExecutionError)
 		a.updateCmdPages()
+		if err != nil {
+			a.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
+			return err
+		}
 		return err
 	}
 	err := a.sendCommandSucceeded()
 	a.updateCmdPages()
+	if err != nil {
+		a.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
+	}
 	return err
 }
 
@@ -452,20 +473,4 @@ func apiKeyStoreSecretHandler(args []string) []string {
 		return argsCopy
 	}
 	return args
-}
-
-func SendAnalyticsAndLog(cmd *cobra.Command, cfg *v3.Config, args []string, err error, client Client, logger *log.Logger) {
-	ctx := cfg.Context()
-	if ctx != nil && ctx.DisableTracking {
-		logger.Debug("Tracking disabled")
-		return
-	}
-	if ctx == nil && cfg.CLIName == "confluent" {
-		logger.Debug("Tracking disabled as context is not found for Confluent CLI user")
-		return
-	}
-	analyticsError := client.SendCommandAnalytics(cmd, args, err)
-	if analyticsError != nil {
-		logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
-	}
 }

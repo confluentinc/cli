@@ -189,7 +189,7 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
 		Logger: analytics.NewLogger(logger),
 	})
-	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())
+	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock(), logger)
 }
 
 func isAPIKeyCredential(cfg *v3.Config) bool {
@@ -211,7 +211,7 @@ func (c *Command) Execute(args []string) error {
 }
 
 func (c *Command) sendAndFlushAnalytics(args []string, err error) {
-	analytics.SendAnalyticsAndLog(c.Command, c.Config, args, err, c.Analytics, c.logger)
+	_ = c.Analytics.SendCommandAnalytics(c.Command, args, err)
 	err = c.Analytics.Close()
 	if err != nil {
 		c.logger.Debug(err)

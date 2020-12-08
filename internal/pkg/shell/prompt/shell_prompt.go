@@ -38,7 +38,7 @@ func (c *instrumentedCommand) Execute(cfg *v3.Config, args []string) error {
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
-	analytics.SendAnalyticsAndLog(c.Command, cfg, args, err, c.analytics, c.logger)
+	_ = c.analytics.SendCommandAnalytics(c.Command, args, err)
 	feedback.HandleFeedbackNudge(cfg.CLIName, args)
 	return err
 }

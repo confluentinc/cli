@@ -27,6 +27,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -84,7 +85,7 @@ func (suite *AnalyticsTestSuite) SetupTest() {
 		},
 		CloseFunc: func() error { return nil },
 	}
-	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime))
+	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime), log.New())
 }
 
 func (suite *AnalyticsTestSuite) TestHelpCall() {
