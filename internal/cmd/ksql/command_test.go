@@ -23,6 +23,8 @@ const (
 	ksqlClusterID     = "lksqlc-12345"
 	physicalClusterID = "pksqlc-zxcvb"
 	outputTopicPrefix = "pksqlc-abcde"
+	keyString         = "key"
+	keySecretString   = "secret"
 	serviceAcctID     = int32(123)
 	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
 +------------------+------------+------------------+------------------+------------------------------+----------+
@@ -175,25 +177,8 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 	req.Equal(expectedACLs, buf.String())
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQL() {
-	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID}))
-
-	var nilKey *schedv1.ApiKey
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.ksqlc.CreateCalled())
-	cfg := suite.ksqlc.CreateCalls()[0].Arg1
-	req.Equal("", cfg.Image)
-	req.Equal(uint32(4), cfg.TotalNumCsu)
-	req.Equal(nilKey, cfg.KafkaApiKey)
-}
-
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	cmd := suite.newCMD()
-	keyString := "key"
-	keySecretString := "secret"
 	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString, "--apikey-secret", keySecretString}))
 
 	err := cmd.Execute()
@@ -210,7 +195,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--image", "foo"}))
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--image", "foo", "--apikey", keyString, "--apikey-secret", keySecretString}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
