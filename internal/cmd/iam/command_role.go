@@ -27,7 +27,7 @@ var (
 )
 
 type roleCommand struct {
-	*cmd.AuthenticatedCLICommand
+	*cmd.AuthenticatedStateFlagCommand
 	cliName string
 }
 
@@ -43,14 +43,14 @@ func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
 		Short: "Manage RBAC and IAM roles.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
-	var cliCmd *cmd.AuthenticatedCLICommand
+	var cliCmd *cmd.AuthenticatedStateFlagCommand
 	if cliName == "confluent" {
-		cliCmd = cmd.NewAuthenticatedWithMDSCLICommand(cobraRoleCmd, prerunner)
+		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRoleCmd, prerunner, RoleSubcommandFlags)
 	} else {
-		cliCmd = cmd.NewAuthenticatedCLICommand(cobraRoleCmd, prerunner)
+		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
 	}
 	roleCmd := &roleCommand{
-		AuthenticatedCLICommand: cliCmd,
+		AuthenticatedStateFlagCommand: cliCmd,
 		cliName:                 cliName,
 	}
 	roleCmd.init()

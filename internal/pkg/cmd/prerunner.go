@@ -185,6 +185,14 @@ func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunne
 	return cmd
 }
 
+func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
+	cmd := &AuthenticatedStateFlagCommand{
+		NewAuthenticatedWithMDSCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+
 func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, prerunner),
@@ -223,8 +231,8 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 }
 
 func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(s.Use)[0]])
-	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
+	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
 	command.Flags().SortFlags = false
 	s.AuthenticatedCLICommand.AddCommand(command)
 }
@@ -235,8 +243,8 @@ func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(h.Use)[0]])
-	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().AddFlagSet(h.subcommandFlags[h.Name()])
+	command.Flags().AddFlagSet(h.subcommandFlags[command.Name()])
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }

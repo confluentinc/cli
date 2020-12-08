@@ -18,7 +18,7 @@ import (
 )
 
 type registryCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 }
 
 const (
@@ -31,14 +31,14 @@ const (
 // NewRegisterCommand registers a cluster to the Cluster Registry in MDS
 func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	registerCmd := &registryCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(
 			&cobra.Command{
 				Use:   "register",
 				Short: "Register cluster.",
 				Long:  "Register cluster with the MDS cluster registry.",
 				Args:  cobra.NoArgs,
 			},
-			prerunner),
+			prerunner, RegistryFlags),
 	}
 	registerCmd.Flags().String("cluster-name", "", "Cluster name.")
 	check(registerCmd.MarkFlagRequired("cluster-name"))
@@ -58,14 +58,14 @@ func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func NewUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	unregisterCmd := &registryCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(
 			&cobra.Command{
 				Use:   "unregister",
 				Short: "Unregister cluster.",
 				Long:  "Unregister cluster from the MDS cluster registry.",
 				Args:  cobra.NoArgs,
 			},
-			prerunner),
+			prerunner, RegistryFlags),
 	}
 	unregisterCmd.Flags().String("cluster-name", "", "Cluster Name.")
 	check(unregisterCmd.MarkFlagRequired("cluster-name"))
