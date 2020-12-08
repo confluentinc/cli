@@ -12,19 +12,19 @@ import (
 )
 
 type listCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 // NewListCommand returns the sub-command object for listing clusters
 func NewListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	listCmd := &listCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
 				Use:   "list",
 				Short: "List registered clusters.",
 				Long:  "List clusters that are registered with the MDS cluster registry.",
 			},
-			prerunner, ListFlags),
+			prerunner),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false

@@ -71,6 +71,11 @@ type AuthenticatedStateFlagCommand struct {
 	subcommandFlags map[string]*pflag.FlagSet
 }
 
+type StateFlagCommand struct {
+	*CLICommand
+	subcommandFlags map[string]*pflag.FlagSet
+}
+
 type HasAPIKeyCLICommand struct {
 	*CLICommand
 	Context         *DynamicContext
@@ -193,6 +198,14 @@ func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner P
 	return cmd
 }
 
+func NewStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
+	cmd := &StateFlagCommand{
+		NewCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+
 func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, prerunner),
@@ -240,6 +253,13 @@ func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
+}
+
+func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
+	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
+	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
+	command.Flags().SortFlags = false
+	s.Command.AddCommand(command)
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
