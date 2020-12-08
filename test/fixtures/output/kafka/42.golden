@@ -1,16 +1,14 @@
 {
-  "id": "lkc-describe-dedicated-with-encryption",
+  "id": "lkc-describe-infinite",
   "name": "kafka-cluster",
-  "type": "DEDICATED",
-  "cluster_size": 1,
+  "type": "BASIC",
   "ingress": 100,
   "egress": 100,
-  "storage": "500",
+  "storage": "Infinite",
   "provider": "aws",
   "region": "us-west-2",
   "availability": "single-zone",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://kafka-api-url",
-  "encryption_key_id": "abc123"
+  "api_endpoint": "http://kafka-api-url"
 }

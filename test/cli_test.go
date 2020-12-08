@@ -635,6 +635,7 @@ func serve(t *testing.T, kafkaAPIURL string) *httptest.Server {
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated-pending", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-describe-dedicated-with-encryption", handleKafkaClusterDescribeTest(t))
+	router.HandleFunc("/api/clusters/lkc-describe-infinite", handleKafkaClusterDescribeTest(t))
 	router.HandleFunc("/api/clusters/lkc-update", handleKafkaClusterUpdateTest(t))
 	router.HandleFunc("/api/clusters/lkc-update-dedicated", handleKafkaDedicatedClusterUpdateTest(t))
 	router.HandleFunc("/api/clusters/", handleKafkaClusterGetListDeleteDescribe(t, kafkaAPIURL))
@@ -1012,6 +1013,8 @@ func handleKafkaClusterDescribeTest(t *testing.T) func(w http.ResponseWriter, r 
 			cluster.Cku = 1
 			cluster.EncryptionKeyId = "abc123"
 			cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
+		case "lkc-describe-infinite":
+			cluster.Storage = -1
 		}
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: cluster,

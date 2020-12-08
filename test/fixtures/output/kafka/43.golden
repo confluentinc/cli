@@ -1,12 +1,12 @@
-api_endpoint: http://127.0.0.1:12345
+api_endpoint: http://kafka-api-url
 availability: single-zone
 egress: 100
 endpoint: SASL_SSL://kafka-endpoint
-id: lkc-def963
+id: lkc-describe-infinite
 ingress: 100
-name: my-new-cluster
+name: kafka-cluster
 provider: aws
-region: us-east-1
+region: us-west-2
 status: PROVISIONING
-storage: "5000"
+storage: Infinite
 type: BASIC

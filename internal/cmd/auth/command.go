@@ -11,8 +11,8 @@ import (
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager,
-	analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
+func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
 	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) []*cobra.Command {
 	loginCmd := NewLoginCommand(cliName, prerunner, logger,
 		ccloudClientFactory, mdsClientManager,
