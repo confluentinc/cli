@@ -91,7 +91,6 @@ type cmdPage struct {
 	commandType CommandType
 }
 type ClientObj struct {
-	cliName string
 	client  segment.Client
 	config  *v3.Config
 	clock   clockwork.Clock
@@ -112,9 +111,8 @@ type userInfo struct {
 	anonymousId    string
 }
 
-func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock, logger *log.Logger) *ClientObj {
+func NewAnalyticsClient(cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock, logger *log.Logger) *ClientObj {
 	client := &ClientObj{
-		cliName:    cliName,
 		config:     cfg,
 		client:     segmentClient,
 		cliVersion: version,
@@ -182,7 +180,7 @@ func (a *ClientObj) SendCommandAnalytics(cmd *cobra.Command, args []string, cmdE
 		a.logger.Debug("Tracking disabled for current context.")
 		return nil
 	}
-	if ctx == nil && a.cliName == "confluent" {
+	if ctx == nil && a.config.CLIName == "confluent" {
 		a.logger.Debug("Tracking disabled for nil context.")
 		return nil
 	}
@@ -284,7 +282,7 @@ func (a *ClientObj) identify() error {
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.activeCmd.cliVersion)
-	traits.Set(CliNameTraitsKey, a.cliName)
+	traits.Set(CliNameTraitsKey, a.config.CLIName)
 	traits.Set(CredentialPropertiesKey, a.activeCmd.user.credentialType)
 	if a.activeCmd.user.credentialType == v2.APIKey.String() {
 		traits.Set(ApiKeyPropertiesKey, a.activeCmd.user.apiKey)
@@ -344,7 +342,7 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.activeCmd.properties.Set(CredentialPropertiesKey, a.activeCmd.user.credentialType)
-	if a.cliName == "ccloud" && a.activeCmd.user.credentialType == v2.Username.String() {
+	if a.config.CLIName == "ccloud" && a.activeCmd.user.credentialType == v2.Username.String() {
 		a.activeCmd.properties.Set(OrgIdPropertiesKey, a.activeCmd.user.organizationId)
 		a.activeCmd.properties.Set(EmailPropertiesKey, a.activeCmd.user.email)
 	}
@@ -370,7 +368,7 @@ func (a *ClientObj) getUser() userInfo {
 	if user.credentialType == v2.APIKey.String() {
 		user.apiKey = a.getCredApiKey()
 	}
-	if a.cliName == "ccloud" {
+	if a.config.CLIName == "ccloud" {
 		userId, organizationId, email := a.getCloudUserInfo()
 		user.id = userId
 		user.organizationId = organizationId

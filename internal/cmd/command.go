@@ -189,7 +189,7 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
 		Logger: analytics.NewLogger(logger),
 	})
-	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock(), logger)
+	return analytics.NewAnalyticsClient(cfg, cliVersion, segmentClient, clockwork.NewRealClock(), logger)
 }
 
 func isAPIKeyCredential(cfg *v3.Config) bool {

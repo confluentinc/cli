@@ -68,15 +68,8 @@ type AnalyticsTestSuite struct {
 	output          []segment.Message
 }
 
-func (suite *AnalyticsTestSuite) SetupSuite() {
-	suite.config = v3.AuthenticatedCloudConfigMock()
-	suite.config.CLIName = ccloudName
-	suite.createContexts()
-	suite.createStates()
-	suite.createCredentials()
-}
-
 func (suite *AnalyticsTestSuite) SetupTest() {
+	suite.createConfigState()
 	suite.output = make([]segment.Message, 0)
 	suite.mockClient = &mock.SegmentClient{
 		EnqueueFunc: func(m segment.Message) error {
@@ -85,7 +78,15 @@ func (suite *AnalyticsTestSuite) SetupTest() {
 		},
 		CloseFunc: func() error { return nil },
 	}
-	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config.CLIName, suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime), log.New())
+	suite.analyticsClient = analytics.NewAnalyticsClient(suite.config, version, suite.mockClient, clockwork.NewFakeClockAt(testTime), log.New())
+}
+
+func (suite *AnalyticsTestSuite) createConfigState() {
+	suite.config = v3.AuthenticatedCloudConfigMock()
+	suite.config.CLIName = ccloudName
+	suite.createContexts()
+	suite.createStates()
+	suite.createCredentials()
 }
 
 func (suite *AnalyticsTestSuite) TestHelpCall() {
@@ -633,6 +634,153 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 		}
 		suite.output = make([]segment.Message, 0)
 	}
+}
+
+func (suite *AnalyticsTestSuite) TestAnalyticsDisabledInConfig() {
+	req := require.New(suite.T())
+
+	// assume user is logged in
+	suite.loginUser()
+
+	// disable tracking in config
+	suite.config.Context().DisableTracking = true
+
+	command := cmd.Command{
+		Analytics: suite.analyticsClient,
+		Config:    suite.config,
+	}
+
+	// Test for Successful Command
+	command.Command = &cobra.Command{
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	err := command.Execute([]string{})
+	req.Nil(err)
+	// no output because tracking is disabled
+	req.Equal(0, len(suite.output))
+
+	// Test for Command That Throws Error
+	command.Command = &cobra.Command{
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return fmt.Errorf(errorMessage)
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	err = command.Execute([]string{})
+	req.NotNil(err)
+	// no output because tracking is disabled
+	req.Equal(0, len(suite.output))
+
+	// Test for Malformed Command
+	rootCmd := &cobra.Command{
+		Use: suite.config.CLIName,
+	}
+	randomCmd := &cobra.Command{
+		Use:    "random",
+		Run:    func(cmd *cobra.Command, args []string) {},
+		PreRun: suite.preRunFunc(),
+	}
+	rootCmd.AddCommand(randomCmd)
+	command.Command = rootCmd
+	err = command.Execute([]string{"randomstring"})
+	req.NotNil(err)
+	// no output because tracking is disabled
+	req.Equal(0, len(suite.output))
+}
+
+func (suite *AnalyticsTestSuite) TestAnalyticsDisabledInCommand() {
+	req := require.New(suite.T())
+
+	// assume user is logged in
+	suite.loginUser()
+
+	// make sure tracking is not originally disabled
+	suite.config.Context().DisableTracking = false
+
+	cobraCmd := &cobra.Command{
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			suite.config.Context().Config.Context().DisableTracking = true
+			return nil
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+		Config:    suite.config,
+	}
+	err := command.Execute([]string{})
+	req.Nil(err)
+
+	// no output because tracking is disabled, this includes not tracking the command that disables the tracking
+	req.Equal(0, len(suite.output))
+}
+
+func (suite *AnalyticsTestSuite) TestAnalyticsEnabledInCommand() {
+	req := require.New(suite.T())
+
+	// assume user is logged in
+	suite.loginUser()
+
+	// initially tracking is disabled
+	suite.config.Context().DisableTracking = true
+
+	cobraCmd := &cobra.Command{
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			suite.config.Context().DisableTracking = false
+			return nil
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+		Config:    suite.config,
+	}
+	err := command.Execute([]string{})
+	req.Nil(err)
+
+	req.Equal(1, len(suite.output))
+	page, ok := suite.output[0].(segment.Page)
+	req.True(ok)
+
+	suite.checkPageBasic(page)
+	suite.checkPageLoggedIn(page)
+	suite.checkPageSuccess(page)
+}
+
+func (suite *AnalyticsTestSuite) TestAnalyticsDisabledForNotLoggedInConfluentUser() {
+	req := require.New(suite.T())
+
+	// user is not logged in
+	suite.logOut()
+
+	suite.config.CLIName = "confluent"
+
+	cobraCmd := &cobra.Command{
+		Use: "command",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+		PreRun: suite.preRunFunc(),
+	}
+	command := cmd.Command{
+		Command:   cobraCmd,
+		Analytics: suite.analyticsClient,
+		Config:    suite.config,
+	}
+	err := command.Execute([]string{})
+	req.Nil(err)
+
+	// no output because tracking is disabled, this includes not tracking the command that disables the tracking
+	req.Equal(0, len(suite.output))
 }
 
 // --------------------------- setup helper functions -------------------------------
