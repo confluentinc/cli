@@ -219,3 +219,19 @@ func AddEnvironmentToConfigMock(config *Config, envId string, envName string) {
 		Name: envName,
 	})
 }
+
+// TODO: move this else where as this is not a function that is exclusive to config mock
+func SetConfigLogoutState(config *Config) error {
+	ctx := config.Context()
+	if ctx == nil {
+		return nil
+	}
+
+	err := ctx.DeleteUserAuth()
+	if err != nil {
+		return err
+	}
+
+	config.CurrentContext = ""
+	return nil
+}
