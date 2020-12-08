@@ -109,6 +109,9 @@ func (c *contextCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	})
+	if c.cliName == "confluent" {
+		c.AddCommand(NewTracking(c))
+	}
 }
 
 func (c *contextCommand) list(cmd *cobra.Command, _ []string) error {
