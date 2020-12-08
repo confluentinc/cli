@@ -47,9 +47,9 @@ type CloudRouter struct {
 }
 
 // New CloudRouter with all cloud handlers
-func NewCCloudRouter(t *testing.T) *CloudRouter {
+func NewCloudRouter(t *testing.T) *CloudRouter {
 	c := NewEmptyCloudRouter()
-	c.addCloudRoutes(t)
+	c.buildCcloudRouter(t)
 	return c
 }
 
@@ -61,7 +61,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 }
 
 // Add handlers for cloud endpoints
-func (c *CloudRouter) addCloudRoutes(t *testing.T) {
+func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t))
 	c.HandleFunc(checkEmail, c.HandleCheckEmail(t))

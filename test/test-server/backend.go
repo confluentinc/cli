@@ -15,7 +15,7 @@ type TestBackend struct {
 }
 
 func StartTestBackend(t *testing.T) *TestBackend {
-	cloudRouter := NewCCloudRouter(t)
+	cloudRouter := NewCloudRouter(t)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
 	ccloud := &TestBackend{

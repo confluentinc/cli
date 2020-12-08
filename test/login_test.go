@@ -87,7 +87,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 }
 
 func serveLogin(t *testing.T) *test_server.TestBackend {
-	router := test_server.NewCCloudRouter(t)
+	router := test_server.NewCloudRouter(t)
 	return test_server.NewSingleCloudTestBackend(router, test_server.NewEmptyKafkaRouter())
 }
 

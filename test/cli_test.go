@@ -198,7 +198,7 @@ func (s *CLITestSuite) TestUserAgent() {
 	checkUserAgent := func(t *testing.T, expected string) *test_server.TestBackend {
 		kafkaApiRouter := test_server.NewEmptyKafkaRouter()
 		kafkaApiRouter.PathPrefix("/").HandlerFunc(assertUserAgent(t, expected))
-		cloudRouter := test_server.NewCCloudRouter(t)
+		cloudRouter := test_server.NewCloudRouter(t)
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), cloudRouter.HandleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), cloudRouter.HandleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), cloudRouter.HandleCheckEmail(t)))
@@ -237,7 +237,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 			_, err = io.WriteString(w, string(b))
 			req.NoError(err)
 		}
-		router := test_server.NewCCloudRouter(t)
+		router := test_server.NewCloudRouter(t)
 		router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
 			switch r.Header.Get("Authorization") {
 			// TODO: these assume the upstream doesn't change its error responses. Fragile, fragile, fragile. :(
