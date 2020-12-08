@@ -171,6 +171,7 @@ func TestCredentialsOverride(t *testing.T) {
 	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
 	ctx := cfg.Context()
 	req.NotNil(ctx)
+	req.Equal(pauth.GenerateContextName(envUser, ccloudURL), ctx.Name)
 
 	req.Equal(testToken, ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
