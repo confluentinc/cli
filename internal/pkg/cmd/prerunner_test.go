@@ -450,7 +450,7 @@ func TestStateFlagCommand_AddCommand(t *testing.T) {
 	r.Config = userNameConfigLoggedIn
 
 	cmdRoot := &cobra.Command{Use: "root"}
-	root := pcmd.NewStateFlagCommand(cmdRoot, r, subcommandFlags)
+	root := pcmd.NewAnonymousStateFlagCommand(cmdRoot, r, subcommandFlags)
 
 	for subcommand, _ := range subcommandFlags {
 		t.Run(subcommand, func(t *testing.T) {
