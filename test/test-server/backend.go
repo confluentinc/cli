@@ -18,7 +18,7 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	cloudRouter := NewCloudRouter(t)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
-	ccloud := &TestBackend{
+	backend := &TestBackend{
 		cloud:       httptest.NewServer(cloudRouter),
 		cloudRouter: cloudRouter,
 		kafka:       httptest.NewServer(kafkaRouter),
@@ -26,8 +26,8 @@ func StartTestBackend(t *testing.T) *TestBackend {
 		mds:         httptest.NewServer(mdsRouter),
 		mdsRouter:   mdsRouter,
 	}
-	cloudRouter.kafkaApiUrl = ccloud.kafka.URL
-	return ccloud
+	cloudRouter.kafkaApiUrl = backend.kafka.URL
+	return backend
 }
 
 func (b *TestBackend) Close() {

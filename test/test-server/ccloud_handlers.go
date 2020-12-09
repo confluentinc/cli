@@ -92,42 +92,39 @@ func (c *CloudRouter) HandleCheckEmail(t *testing.T) func(w http.ResponseWriter,
 		req.NoError(err)
 	}
 }
-
 // Handler for: "/api/accounts/{id}"
 func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-		for _, env := range environments {
-			if env.Id == envId {
-				// env found
-				if r.Method == "GET" {
-					b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-				} else if r.Method == "PUT" {
-					req := &orgv1.UpdateAccountRequest{}
-					err := utilv1.UnmarshalJSON(r.Body, req)
-					require.NoError(t, err)
-					env.Name = req.Account.Name
-					b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-				} else if r.Method == "DELETE" {
-					b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-					_, err = io.WriteString(w, string(b))
-					require.NoError(t, err)
-				}
-				return
+		if found, env := contains(environments, envId); found {
+			switch r.Method {
+			case "GET":
+				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+			case "PUT":
+				req := &orgv1.UpdateAccountRequest{}
+				err := utilv1.UnmarshalJSON(r.Body, req)
+				require.NoError(t, err)
+				env.Name = req.Account.Name
+				b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+			case "DELETE":
+				b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
 			}
+		} else {
+			// env not found
+			w.WriteHeader(http.StatusNotFound)
 		}
-		// env not found
-		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -213,7 +210,7 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 	}
 }
 
-var (
+const (
 	serviceAccountID  = int32(12345)
 	deactivatedUserID = int32(6666)
 )
