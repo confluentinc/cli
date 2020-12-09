@@ -189,7 +189,7 @@ func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunne
 	}
 	return cmd
 }
-// Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
+// Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
 func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
 	cmd := &AuthenticatedStateFlagCommand{
 		NewAuthenticatedWithMDSCLICommand(command, prerunner),
@@ -198,9 +198,9 @@ func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner P
 	return cmd
 }
 // Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
-func NewStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
+func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
 	cmd := &StateFlagCommand{
-		NewCLICommand(command, prerunner),
+		NewAnonymousCLICommand(command, prerunner),
 		flagMap,
 	}
 	return cmd
