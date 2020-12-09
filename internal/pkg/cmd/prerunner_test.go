@@ -345,12 +345,12 @@ func Test_UpdateToken(t *testing.T) {
 	}
 }
 
-type credentialsFuncReturnValues struct {
-	creds *pauth.Credentials
-	err   error
-}
-
 func TestPrerun_AutoLogin(t *testing.T) {
+	type credentialsFuncReturnValues struct {
+		creds *pauth.Credentials
+		err   error
+	}
+
 	creds := &pauth.Credentials{
 		Username: "csreesangkom",
 		Password: "csreepassword",
