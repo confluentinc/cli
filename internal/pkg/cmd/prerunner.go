@@ -190,8 +190,10 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			return err
 		}
 		r.Logger.Flush()
-		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
-			return err
+		if r.CLIName == "ccloud" {
+			if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
+				return err
+			}
 		}
 		r.warnIfConfluentLocal(cmd)
 		if r.Config != nil {
