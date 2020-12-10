@@ -81,6 +81,9 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		case "lkc-unknown":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
+		case "lkc-describe-infinite":
+			c.HandleKafkaClusterDescribeInfinite(t)(w, r)
+
 		default:
 			c.HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
@@ -101,7 +104,7 @@ func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.Respo
 	}
 }
 
-// Handler for GET "/api/clusters/lkc-dedicated"
+// Handler for GET "/api/clusters/lkc-describe-dedicated"
 func (c *CloudRouter) HandleKafkaClusterDescribeDedicated(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -118,7 +121,7 @@ func (c *CloudRouter) HandleKafkaClusterDescribeDedicated(t *testing.T) func(w h
 	}
 }
 
-// Handler for GET "/api/clusters/lkc-dedicated-pending"
+// Handler for GET "/api/clusters/lkc-describe-dedicated-pending"
 func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -136,7 +139,7 @@ func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) f
 	}
 }
 
-// Handler for GET "/api/clusters/lkc-dedicated-with-encryption"
+// Handler for GET "/api/clusters/lkc-describe-dedicated-with-encryption"
 func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -145,6 +148,21 @@ func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testi
 		cluster.Cku = 1
 		cluster.EncryptionKeyId = "abc123"
 		cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: cluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+// Handler for GET "/api/clusters/lkc-describe-infinite
+func (c *CloudRouter) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getBaseDescribeCluster(id, "kafka-cluster")
+		cluster.Storage = -1
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: cluster,
 		})

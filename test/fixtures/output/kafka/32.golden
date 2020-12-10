@@ -9,5 +9,5 @@ name: kafka-cluster
 provider: aws
 region: us-west-2
 status: PROVISIONING
-storage: 500
+storage: "500"
 type: DEDICATED
