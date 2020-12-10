@@ -299,9 +299,9 @@ func TestCreateACLs(t *testing.T) {
 }
 
 func TestDeleteACLs(t *testing.T) {
-	for i, _ := range resourcePatterns {
+	for i := range resourcePatterns {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
-		for j, _ := range aclEntries {
+		for j := range aclEntries {
 			expect := make(chan interface{})
 			cmd := newCmd(expect)
 			cmd.SetArgs(append(args, aclEntries[j].args...))
