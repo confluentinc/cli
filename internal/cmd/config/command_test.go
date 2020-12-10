@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/mock"
@@ -60,7 +61,7 @@ func (suite *ConfigCommandTestSuite) TestStatisticsDisableFailedForNotLoggedInUs
 
 	ctx := suite.conf.Context()
 	ctx.DisableTracking = false
-	_ = v3.SetConfigLogoutState(suite.conf)
+	_ = auth.PersistLogoutToConfig(suite.conf)
 
 	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"context", "statistics", "disable"}))
@@ -77,7 +78,7 @@ func (suite *ConfigCommandTestSuite) TestStatisticsEnableFailedForNotLoggedInUse
 
 	ctx := suite.conf.Context()
 	ctx.DisableTracking = true
-	_ = v3.SetConfigLogoutState(suite.conf)
+	_ = auth.PersistLogoutToConfig(suite.conf)
 
 	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"context", "statistics", "enable"}))
