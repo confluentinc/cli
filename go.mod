@@ -34,7 +34,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.61
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.1
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.3
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787

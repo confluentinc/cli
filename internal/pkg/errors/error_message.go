@@ -320,7 +320,7 @@ const (
 	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
 	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
 	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."
-	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %v"
+	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %w"
 
 	// catcher
 	CCloudBackendErrorPrefix           = "CCloud backend error"
@@ -348,10 +348,14 @@ const (
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 
-	// Kafka REST Proxy Errors
-	InternalServerErrorMsg         = "internal server error"
-	InternalServerErrorSuggestions = "Please check the status of your Kafka cluster or submit a support ticket."
-	InvalidBootstrapServerErrorMsg = "Invalid bootstrap server."
+	// Kafka REST Proxy errors
+	InternalServerErrorMsg         = "Internal server error"
+	UnknownErrorMsg                = "Unknown error"
+	InternalServerErrorSuggestions = "Please check the status of your Kafka cluster or submit a support ticket"
+	InvalidBootstrapServerErrorMsg = "Invalid bootstrap server"
+	EmptyResponseMsg               = "Empty server response"
+	KafkaRestErrorMsg              = "Kafka REST request failed: %s %s: %s"
+	UnexpectedStatusMsg            = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."

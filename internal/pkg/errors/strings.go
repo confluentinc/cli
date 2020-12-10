@@ -54,6 +54,7 @@ const (
 	StartingConsumerMsg    = "Starting Kafka Consumer. ^C or ^D to exit"
 	CreatedTopicMsg        = "Created topic \"%s\".\n"
 	DeletedTopicMsg        = "Deleted topic \"%s\".\n"
+	UnknownTopicMsg        = "Unknown topic: \"%s\".\n"
 	UpdateTopicConfigMsg   = "Updated the following configs for topic \"%s\":\n"
 	InvalidMirrorActionMsg = "Invalid mirror action \"%s\" provided.\n"
 	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"

@@ -3,6 +3,7 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	neturl "net/url"
 	"strconv"
 	"strings"
@@ -15,28 +16,46 @@ import (
 	"github.com/dghubble/sling"
 )
 
-const kafkaPort = "8090"
+const kafkaRestPort = "8090"
 
 type response struct {
 	Error string `json:"error"`
 	Token string `json:"token"`
 }
 
-func handleCommonKafkaRestClientErrors(url string, err error) error {
+func kafkaRestHttpError(httpResp *http.Response) error {
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(errors.KafkaRestErrorMsg, httpResp.Request.Method, httpResp.Request.URL, httpResp.Status),
+		errors.InternalServerErrorSuggestions)
+}
+
+func parseOpenAPIError(err error) (*kafkaRestV3Error, error) {
+	if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
+		var decodedError kafkaRestV3Error
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
+func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	switch err.(type) {
-	case *neturl.Error: // Handle errors with request url
+	case *neturl.Error:
 		if e, ok := err.(*neturl.Error); ok {
 			return errors.Errorf(errors.InvalidFlagValueWithWrappedErrorErrorMsg, url, "url", e.Err)
 		}
 	case kafkarestv3.GenericOpenAPIError:
-		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
-			var decodedError kafkaRestV3Error
-			err = json.Unmarshal(openAPIError.Body(), &decodedError)
-			if err != nil {
-				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
-			}
-			return fmt.Errorf("Kafka REST Proxy API failed with: error msg: %v error code: %v", decodedError.Message, decodedError.Code)
+		openAPIError, parseErr := parseOpenAPIError(err)
+		if parseErr == nil {
+			return fmt.Errorf("REST request failed: %v (%v)", openAPIError.Message, openAPIError.Code)
 		}
+		if httpResp != nil && httpResp.StatusCode >= 400 {
+			return kafkaRestHttpError(httpResp)
+		}
+		return errors.NewErrorWithSuggestions(errors.UnknownErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 	return err
 }
@@ -47,8 +66,8 @@ func bootstrapServersToRestURL(bootstrap string) (string, error) {
 	server := bootstrapServers[0]
 	serverLength := len(server)
 	if _, err := strconv.Atoi(server[serverLength-4:]); err == nil && serverLength > 5 && server[serverLength-5] == ':' {
-		//TODO: change to https when config is fixed
-		return "http://" + server[:serverLength-4] + kafkaPort + "/kafka/v3", nil
+		// TODO: http -> https
+		return "http://" + server[:serverLength-4] + kafkaRestPort + "/kafka/v3", nil
 	}
 
 	return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
@@ -68,8 +87,8 @@ func getAccessToken(authenticatedState *v2.ContextState, server string) (string,
 	return responses.Token, nil
 }
 
-// Converts ACLBindings to Kafka Rest get parameters
-func convertAclBindingToGetParams(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsGetOpts {
+// Converts ACLBinding to Kafka REST GET parameters
+func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsGetOpts {
 	var kafkaRestConfig kafkarestv3.ClustersClusterIdAclsGetOpts
 
 	if acl.Pattern.ResourceType.String() != "UNKNOWN" {
@@ -96,8 +115,8 @@ func convertAclBindingToGetParams(acl *schedv1.ACLBinding) kafkarestv3.ClustersC
 	return kafkaRestConfig
 }
 
-// Converts ACLBindings to Kafka Rest post parameters
-func convertAclBindingToPostParams(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsPostOpts {
+// Converts ACLBinding to Kafka REST POST parameters
+func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsPostOpts {
 	var aclRequestData kafkarestv3.CreateAclRequestData
 
 	if acl.Pattern.ResourceType.String() != "UNKNOWN" {
@@ -108,7 +127,6 @@ func convertAclBindingToPostParams(acl *schedv1.ACLBinding) kafkarestv3.Clusters
 		aclRequestData.PatternType = kafkarestv3.AclPatternType(acl.Pattern.PatternType.String())
 	}
 
-	// TODO: ResourceName not specified in SDK, check with Rigel
 	aclRequestData.ResourceName = acl.Pattern.Name
 	aclRequestData.Principal = acl.Entry.Principal
 	aclRequestData.Host = acl.Entry.Host
@@ -127,36 +145,8 @@ func convertAclBindingToPostParams(acl *schedv1.ACLBinding) kafkarestv3.Clusters
 	return kafkaRestConfig
 }
 
-// Converts ACLFilters to Kafka Rest get parameters
-func convertAclFilterToGetParams(acl *schedv1.ACLFilter) kafkarestv3.ClustersClusterIdAclsGetOpts {
-	var kafkaRestConfig kafkarestv3.ClustersClusterIdAclsGetOpts
-
-	if acl.PatternFilter.ResourceType.String() != "UNKNOWN" {
-		kafkaRestConfig.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
-	}
-
-	kafkaRestConfig.ResourceName = optional.NewString(acl.PatternFilter.Name)
-
-	if acl.PatternFilter.PatternType.String() != "UNKNOWN" {
-		kafkaRestConfig.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.PatternFilter.PatternType.String()))
-	}
-
-	kafkaRestConfig.Principal = optional.NewString(acl.EntryFilter.Principal)
-	kafkaRestConfig.Host = optional.NewString(acl.EntryFilter.Host)
-
-	if acl.EntryFilter.Operation.String() != "UNKNOWN" {
-		kafkaRestConfig.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.EntryFilter.Operation.String()))
-	}
-
-	if acl.EntryFilter.PermissionType.String() != "UNKNOWN" {
-		kafkaRestConfig.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.EntryFilter.PermissionType.String()))
-	}
-
-	return kafkaRestConfig
-}
-
-// Converts ACLFilters to Kafka Rest post parameters
-func convertAclFilterToPostParams(acl *schedv1.ACLFilter) kafkarestv3.ClustersClusterIdAclsDeleteOpts {
+// Converts ACLFilter to Kafka REST DELETE parameters
+func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.ClustersClusterIdAclsDeleteOpts {
 	var kafkaRestConfig kafkarestv3.ClustersClusterIdAclsDeleteOpts
 
 	if acl.PatternFilter.ResourceType.String() != "UNKNOWN" {
