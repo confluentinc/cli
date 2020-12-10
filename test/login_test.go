@@ -86,12 +86,12 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	}
 }
 
-func serveLogin(t *testing.T) *test_server.TestBackend {
+func serveCloudBackend(t *testing.T) *test_server.TestBackend {
 	router := test_server.NewCloudRouter(t)
 	return test_server.NewSingleCloudTestBackend(router, test_server.NewEmptyKafkaRouter())
 }
 
-func serveMDS(t *testing.T) *test_server.TestBackend {
+func serveMDSBackend(t *testing.T) *test_server.TestBackend {
 	router := test_server.NewMdsRouter(t)
 	return test_server.NewSingleConfluentTestBackend(router)
 }
@@ -103,9 +103,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		loginURL string
 		bin      string
 	}
-	cloudBackend := serveLogin(s.T())
+	cloudBackend := serveCloudBackend(s.T())
 	defer cloudBackend.Close()
-	mdsServer := serveMDS(s.T())
+	mdsServer := serveMDSBackend(s.T())
 	defer mdsServer.Close()
 	tests := []saveTest{
 		{
@@ -172,9 +172,9 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
 	}
-	cloudServer := serveLogin(s.T())
+	cloudServer := serveCloudBackend(s.T())
 	defer cloudServer.Close()
-	mdsServer := serveMDS(s.T())
+	mdsServer := serveMDSBackend(s.T())
 	defer mdsServer.Close()
 	tests := []updateTest{
 		{
@@ -382,7 +382,7 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 			wantErrCode: 1,
 		},
 	}
-	mdsServer := serveMDS(s.T())
+	mdsServer := serveMDSBackend(s.T())
 	defer mdsServer.Close()
 
 	for _, tt := range tests {
