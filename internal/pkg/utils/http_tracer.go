@@ -10,8 +10,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-// HTTPTracedContext returns a context.Context that verbosely traces many HTTP events that occur during the request
-func HTTPTracedContext(ctx context.Context, logger *log.Logger) context.Context {
+func GetContext(logger *log.Logger) context.Context {
+	ctx := context.Background()
+	if logger.GetLevel() == log.TRACE {
+		ctx = httpTracedContext(ctx, logger)
+	}
+	return ctx
+}
+
+// httpTracedContext returns a context.Context that verbosely traces many HTTP events that occur during the request
+func httpTracedContext(ctx context.Context, logger *log.Logger) context.Context {
 	trace := &httptrace.ClientTrace{
 		DNSStart: func(dnsInfo httptrace.DNSStartInfo) {
 			logger.Tracef("DNS Start; Info: %+v\n", dnsInfo)
