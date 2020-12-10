@@ -1,9 +1,6 @@
 package auth
 
 import (
-	"context"
-
-	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -14,17 +11,13 @@ import (
 )
 
 // New returns a list of auth-related Cobra commands.
-func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
+func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
 	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) []*cobra.Command {
-	var defaultAnonHTTPClientFactory = func(baseURL string, logger *log.Logger) *ccloud.Client {
-		return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: logger, UserAgent: userAgent})
-	}
-	var defaultJwtHTTPClientFactory = func(ctx context.Context, jwt string, baseURL string, logger *log.Logger) *ccloud.Client {
-		return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: logger, UserAgent: userAgent})
-	}
 	loginCmd := NewLoginCommand(cliName, prerunner, logger,
-		defaultAnonHTTPClientFactory, defaultJwtHTTPClientFactory, &pauth.MDSClientManagerImpl{},
-		analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler,
+		ccloudClientFactory, mdsClientManager,
+		analyticsClient, netrcHandler, loginCredentialsManager,
+		authTokenHandler,
 	)
 	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient)
 	return []*cobra.Command{loginCmd.Command, logoutCmd.Command}
