@@ -166,7 +166,7 @@ func GenerateContextName(username string, url string, caCertPath string) string 
 	if caCertPath == "" {
 		return fmt.Sprintf("login-%s-%s", username, url)
 	}
-	return fmt.Sprintf("login-%s-%s-cacertpath-%s", username, url, caCertPath)
+	return fmt.Sprintf("login-%s-%s?cacertpath=%s", username, url, caCertPath)
 }
 
 func generateCredentialName(username string) string {
