@@ -48,7 +48,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().String("context", "", "Context name.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -58,8 +57,6 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
 	}
-	useCmd.Flags().String("context", "", "Context name.")
-	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 
 	createCmd := &cobra.Command{

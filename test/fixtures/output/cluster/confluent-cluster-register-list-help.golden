@@ -11,7 +11,7 @@ Flags:
       --connect-cluster-id string           Kafka Connect cluster ID.
       --hosts string                        A comma separated list of hosts.
       --protocol string                     Security protocol.
-      --context string                      Context name.
+      --context string                      CLI Context name.
 
 Global Flags:
   -h, --help            Show help for this command.

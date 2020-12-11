@@ -6,7 +6,7 @@ Usage:
 Flags:
       --file string      A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.
       --force            Updates the configuration, overwriting any concurrent modifications.
-      --context string   Context name.
+      --context string   CLI Context name.
 
 Global Flags:
   -h, --help            Show help for this command.
