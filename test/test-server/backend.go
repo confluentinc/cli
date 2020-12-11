@@ -5,13 +5,12 @@ import (
 	"testing"
 )
 
+// TestBackend consists of the servers for necessary mocked backend services
+// Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined
 type TestBackend struct {
 	cloud       *httptest.Server
-	cloudRouter *CloudRouter
 	kafka       *httptest.Server
-	kafkaRouter *KafkaRouter
 	mds         *httptest.Server
-	mdsRouter   *MdsRouter
 }
 
 func StartTestBackend(t *testing.T) *TestBackend {
@@ -20,11 +19,8 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	mdsRouter := NewMdsRouter(t)
 	backend := &TestBackend{
 		cloud:       httptest.NewServer(cloudRouter),
-		cloudRouter: cloudRouter,
 		kafka:       httptest.NewServer(kafkaRouter),
-		kafkaRouter: kafkaRouter,
 		mds:         httptest.NewServer(mdsRouter),
-		mdsRouter:   mdsRouter,
 	}
 	cloudRouter.kafkaApiUrl = backend.kafka.URL
 	return backend
@@ -53,21 +49,23 @@ func (b *TestBackend) GetKafkaUrl() string {
 func (b *TestBackend) GetMdsUrl() string {
 	return b.mds.URL
 }
-func NewSingleCloudTestBackend(cloudRouter *CloudRouter, kafkaRouter *KafkaRouter) *TestBackend {
+// Creates and returns new TestBackend struct with passed CloudRouter and KafkaRouter
+// Use this to spin up a backend for a ccloud cli test that requires non-default endpoint behavior or needs additional endpoints
+// Define/override the endpoints on the corresponding routers
+func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *KafkaRouter) *TestBackend {
 	ccloud := &TestBackend{
 		cloud:       httptest.NewServer(cloudRouter),
-		cloudRouter: cloudRouter,
 		kafka:       httptest.NewServer(kafkaRouter),
-		kafkaRouter: kafkaRouter,
 	}
-	ccloud.cloudRouter.kafkaApiUrl = ccloud.kafka.URL
+	cloudRouter.kafkaApiUrl = ccloud.kafka.URL
 	return ccloud
 }
-
-func NewSingleConfluentTestBackend(mdsRouter *MdsRouter) *TestBackend {
+// Creates and returns new TestBackend struct with passed MdsRouter
+// Use this to spin up a backend for a confluent cli test that requires non-default endpoint behavior or needs additional endpoints
+// Define/override the endpoints on the mdsRouter
+func NewConfluentTestBackendFromRouter(mdsRouter *MdsRouter) *TestBackend {
 	confluent := &TestBackend{
 		mds:       httptest.NewServer(mdsRouter),
-		mdsRouter: mdsRouter,
 	}
 	return confluent
 }

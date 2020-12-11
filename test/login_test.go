@@ -88,12 +88,12 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 
 func serveCloudBackend(t *testing.T) *test_server.TestBackend {
 	router := test_server.NewCloudRouter(t)
-	return test_server.NewSingleCloudTestBackend(router, test_server.NewEmptyKafkaRouter())
+	return test_server.NewCloudTestBackendFromRouters(router, test_server.NewEmptyKafkaRouter())
 }
 
 func serveMDSBackend(t *testing.T) *test_server.TestBackend {
 	router := test_server.NewMdsRouter(t)
-	return test_server.NewSingleConfluentTestBackend(router)
+	return test_server.NewConfluentTestBackendFromRouter(router)
 }
 
 func (s *CLITestSuite) TestSaveUsernamePassword() {

@@ -171,7 +171,7 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 	}
 }
 
-func contains(environments []*orgv1.Account, reqEnvId string) (bool, *orgv1.Account) {
+func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool, *orgv1.Account) {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
 			return true, env

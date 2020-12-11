@@ -203,7 +203,7 @@ func (s *CLITestSuite) TestUserAgent() {
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), cloudRouter.HandleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), cloudRouter.HandleCheckEmail(t)))
 		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), cloudRouter.HandleKafkaClusterGetListDeleteDescribe(t)))
-		return test_server.NewSingleCloudTestBackend(cloudRouter, kafkaApiRouter)
+		return test_server.NewCloudTestBackendFromRouters(cloudRouter, kafkaApiRouter)
 	}
 	backend := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
 		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
@@ -253,7 +253,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 				req.Fail("reached the unreachable", "auth=%s", r.Header.Get("Authorization"))
 			}
 		})
-		backend := test_server.NewSingleCloudTestBackend(router, test_server.NewKafkaRouter(t))
+		backend := test_server.NewCloudTestBackendFromRouters(router, test_server.NewKafkaRouter(t))
 		return backend
 	}
 
@@ -315,12 +315,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-		var loginURL string
-		if tt.loginURL != "" {
-			loginURL = tt.loginURL
-		} else {
-			loginURL = testBackend.GetCloudUrl()
-		}
+		loginURL := getLoginURL("ccloud", tt)
 		if tt.login == "default" {
 			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
@@ -378,12 +373,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "confluent")
 		}
-		var loginURL string
-		if tt.loginURL != "" {
-			loginURL = tt.loginURL
-		} else {
-			loginURL = testBackend.GetMdsUrl()
-		}
+		loginURL := getLoginURL("confluent", tt)
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
 			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
@@ -402,6 +392,20 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 
 		s.validateTestOutput(tt, t, output)
 	})
+}
+
+func getLoginURL(cliName string, tt CLITest) string {
+	if tt.loginURL != "" {
+		return tt.loginURL
+	}
+	switch cliName {
+	case "ccloud":
+		return testBackend.GetCloudUrl()
+	case "confluent":
+		return testBackend.GetMdsUrl()
+	default:
+		return ""
+	}
 }
 
 func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {

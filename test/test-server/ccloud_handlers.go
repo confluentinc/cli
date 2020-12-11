@@ -26,7 +26,28 @@ import (
 
 var (
 	environments = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
+	keyStore        = map[int32]*schedv1.ApiKey{}
+	keyIndex        = int32(1)
+	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	)
+
+const (
+	exampleAvailability = "low"
+	exampleCloud        = "aws"
+	exampleClusterType  = "basic"
+	exampleMetric       = "ConnectNumRecords"
+	exampleNetworkType  = "internet"
+	examplePrice        = 1
+	exampleRegion       = "us-east-1"
+	exampleUnit         = "GB"
+
+	serviceAccountID  = int32(12345)
+	deactivatedUserID = int32(6666)
 )
+// Fill API keyStore with default data
+func init() {
+	fillKeyStore()
+}
 
 // Handler for: "/api/me"
 func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Request) {
@@ -97,7 +118,7 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-		if found, env := contains(environments, envId); found {
+		if valid, env := isValidEnvironmentId(environments, envId); valid {
 			switch r.Method {
 			case "GET":
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
@@ -127,7 +148,6 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 		}
 	}
 }
-
 // Handler for: "/api/accounts"
 func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +174,7 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter,
 		}
 	}
 }
-
+// Handler for: "/api/organizations/{id}/payment_info"
 func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := orgv1.GetPaymentInfoReply{
@@ -176,19 +196,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, 
 		require.NoError(t, err)
 	}
 }
-
-const (
-	exampleAvailability = "low"
-	exampleCloud        = "aws"
-	exampleClusterType  = "basic"
-	exampleMetric       = "ConnectNumRecords"
-	exampleNetworkType  = "internet"
-	examplePrice        = 1
-	exampleRegion       = "us-east-1"
-	exampleUnit         = "GB"
-)
-
-// Handler for "/api/organizations/
+// Handler for "/api/organizations/"
 func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prices := map[string]float64{
@@ -209,12 +217,6 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 		require.NoError(t, err)
 	}
 }
-
-const (
-	serviceAccountID  = int32(12345)
-	deactivatedUserID = int32(6666)
-)
-
 // Handler for: "/api/service_accounts"
 func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -271,17 +273,6 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 		}
 	}
 }
-
-var (
-	keyStore        = map[int32]*schedv1.ApiKey{}
-	keyIndex        = int32(1)
-	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
-)
-
-func init() {
-	fillKeyStore()
-}
-
 // Handler for: "/api/api_keys"
 func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
