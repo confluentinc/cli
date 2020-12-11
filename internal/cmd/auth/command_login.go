@@ -165,9 +165,9 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	// if users want to login with ca-cert-path they must explicilty use the flag every time they login
 	//
 	// For legacy users:
-	// if ca-cert-path flag is not used, returns caCertPath value stored for the login context in config
-	// if user passes empty string for ca-cert-path flag then reset the ca-cert-path
-	// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path in config)
+	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
+	// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
+	// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return err
@@ -228,7 +228,7 @@ func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (
 
 func (a *loginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
 	changed := cmd.Flags().Changed("ca-cert-path")
-	// if flag used but empty string is passed means user intends to reset the ca-cert-path
+	// if flag used but empty string is passed then user intends to reset the ca-cert-path
 	if changed {
 		return "", nil
 	}

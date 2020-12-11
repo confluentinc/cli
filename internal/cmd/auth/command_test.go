@@ -503,7 +503,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			caCertPathFlag: "testcert.pem",
 		},
 		{
-			name:           "confluent login prompt flag",
+			name:           "no ca-cert-path flag",
 			caCertPathFlag: "",
 		},
 	}
