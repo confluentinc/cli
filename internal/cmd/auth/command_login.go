@@ -228,6 +228,7 @@ func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (
 
 func (a *loginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
 	changed := cmd.Flags().Changed("ca-cert-path")
+	// if flag used but empty string is passed means user intends to reset the ca-cert-path
 	if changed {
 		return "", nil
 	}
