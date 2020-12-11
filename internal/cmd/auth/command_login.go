@@ -106,8 +106,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token,
-		a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url))
+	client = a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
 	}

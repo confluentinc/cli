@@ -526,7 +526,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 
 			// check context name
 			if tt.caCertPathFlag != "" {
-				req.Equal("login-prompt-user@confluent.io-http://localhost:8090-cacertpath-testcert.pem", ctx.Name)
+				req.Equal("login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem", ctx.Name)
 			} else {
 				req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
 			}
