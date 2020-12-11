@@ -106,8 +106,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token,
-		a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url))
+	client = a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
 	}
@@ -160,9 +160,24 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	caCertPath, err := a.getCaCertPath(cmd, pauth.GenerateContextName(credentials.Username, url))
+	// Current functionality:
+	// empty ca-cert-path is equivalent to not using ca-cert-path flag
+	// if users want to login with ca-cert-path they must explicilty use the flag every time they login
+	//
+	// For legacy users:
+	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
+	// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
+	// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return err
+	}
+	if caCertPath == "" {
+		contextName := pauth.GenerateContextName(credentials.Username, url, "")
+		caCertPath, err = a.checkLegacyContextCaCertPath(cmd, contextName)
+		if err != nil {
+			return err
+		}
 	}
 
 	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
@@ -211,24 +226,12 @@ func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (
 	)
 }
 
-// if ca-cert-path flag is not used, returns caCertPath value from config
-// if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
-func (a *loginCommand) getCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-	if err != nil {
-		return "", err
+func (a *loginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
+	changed := cmd.Flags().Changed("ca-cert-path")
+	// if flag used but empty string is passed then user intends to reset the ca-cert-path
+	if changed {
+		return "", nil
 	}
-	if caCertPath == "" {
-		changed := cmd.Flags().Changed("ca-cert-path")
-		if changed {
-			return "", nil
-		}
-		return a.getCaCertPathFromConfig(cmd, contextName)
-	}
-	return caCertPath, nil
-}
-
-func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command, contextName string) (string, error) {
 	ctx, ok := a.Config.Contexts[contextName]
 	if !ok {
 		return "", nil
