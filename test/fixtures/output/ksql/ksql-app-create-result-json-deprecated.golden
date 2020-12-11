@@ -1,0 +1,10 @@
+(DEPRECATED) In a future release, apikey and apikey-secret will be required flags when creating a ksql cluster.
+{
+  "id": "lksqlc-ksql5",
+  "name": "account ksql",
+  "kafka": "lkc-qwert",
+  "endpoint": "SASL_SSL://ksql-endpoint",
+  "storage": 101,
+  "status": "PROVISIONING",
+  "topic_prefix": "pksqlc-abcde"
+}

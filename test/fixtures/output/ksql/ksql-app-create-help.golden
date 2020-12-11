@@ -6,8 +6,8 @@ Usage:
 Flags:
       --csu int32              Number of CSUs to use in the cluster. (default 4)
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
-      --apikey string          Kafka API key for the ksqlDB cluster to use.
-      --apikey-secret string   Secret for the Kafka API key.
+      --apikey string          Kafka API key for the ksqlDB cluster to use (recommended).
+      --apikey-secret string   Secret for the Kafka API key (recommended).
       --environment string     Environment ID.
       --cluster string         Kafka cluster ID.
       --context string         CLI Context name.

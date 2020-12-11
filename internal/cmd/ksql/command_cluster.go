@@ -95,10 +95,8 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().String("apikey", "", "Kafka API key for the ksqlDB cluster to use.")
-	createCmd.Flags().String("apikey-secret", "", "Secret for the Kafka API key.")
-	_ = createCmd.MarkFlagRequired("apikey")
-	_ = createCmd.MarkFlagRequired("apikey-secret")
+	createCmd.Flags().String("apikey", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
+	createCmd.Flags().String("apikey-secret", "", "Secret for the Kafka API key (recommended).")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -175,9 +173,16 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfg.KafkaApiKey = &schedv1.ApiKey{
-		Key:    kafkaApiKey,
-		Secret: kafkaApiKeySecret,
+
+	if kafkaApiKey != "" && kafkaApiKeySecret != "" {
+		cfg.KafkaApiKey = &schedv1.ApiKey{
+			Key:    kafkaApiKey,
+			Secret: kafkaApiKeySecret,
+		}
+	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
+		return fmt.Errorf("both apikey and apikey-secret must be provided")
+	} else {
+		fmt.Println("(DEPRECATED) In a future release, apikey and apikey-secret will be required flags when creating a ksql cluster.")
 	}
 
 	image, err := cmd.Flags().GetString("image")

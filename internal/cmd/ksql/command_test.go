@@ -177,6 +177,19 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 	req.Equal(expectedACLs, buf.String())
 }
 
+func (suite *KSQLTestSuite) TestCreateKSQL() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.CreateCalled())
+	cfg := suite.ksqlc.CreateCalls()[0].Arg1
+	req.Equal("", cfg.Image)
+	req.Equal(uint32(4), cfg.TotalNumCsu)
+}
+
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	cmd := suite.newCMD()
 	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString, "--apikey-secret", keySecretString}))
@@ -192,10 +205,32 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	req.Equal(keySecretString, cfg.KafkaApiKey.Secret)
 }
 
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey-secret", keySecretString}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err)
+	req.False(suite.ksqlc.CreateCalled())
+	req.Equal("both apikey and apikey-secret must be provided", err.Error())
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err)
+	req.False(suite.ksqlc.CreateCalled())
+	req.Equal("both apikey and apikey-secret must be provided", err.Error())
+}
+
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--image", "foo", "--apikey", keyString, "--apikey-secret", keySecretString}))
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--image", "foo"}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
