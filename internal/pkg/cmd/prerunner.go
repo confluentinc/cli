@@ -344,7 +344,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
-		r.Logger.Debug("Prerun env var login failed: ", err.Error())
+		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
 		return "", nil, err
 	}
 
@@ -356,7 +356,145 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 
 	return token, credentials, err
 }
+func (r *PreRun) ConfluentAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error {
+	token, creds, err := r.getConfluentTokenAndCredentials(cmd)
+	if err != nil {
+		return err
+	}
+	if token == "" || creds == nil {
+		r.Logger.Debug("Non-interactive login failed: no credentials")
+		return nil
+	}
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, creds.Username, pauth.CCloudURL, token, client)
+	if err != nil {
+		return err
+	}
+	utils.ErrPrint(cmd, errors.AutoLoginMsg)
+	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	return nil
+}
 
+func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+	envVarUrl := os.Getenv(pauth.ConfluentURLEnvVar)
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: "confluent",
+	}
+	var credsFuncs []func() (*pauth.Credentials, error)
+	if envVarUrl != "" {
+		credsFuncs = []func() (*pauth.Credentials, error){
+			r.LoginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		}
+	} else {
+		credsFuncs = []func() (*pauth.Credentials, error){
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		}
+	}
+	credentials, err := pauth.GetLoginCredentials(credsFuncs)
+	if err != nil {
+		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
+		return "", nil, err
+	}
+
+	caCertPath := os.Getenv(pauth.ConfluentCaCertPathEnvVar)
+	if caCertPath == "" {
+		r.logger.Debug("No ca-cert-path passed for prerun login")
+	} else {
+		r.logger.Debug("ca-cert-path: %s", caCertPath)
+	}
+	client, err := r.MDSClientManager.GetMDSClient(url, caCertPath, r.Logger)
+	if err != nil {
+		return "", nil, err
+	}
+	token, _, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token, credentials, err
+}
+
+func (r *PreRun) getConfluentTokenAndCredentialsFromEnvVar(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+	envVarUrl := os.Getenv(pauth.ConfluentURLEnvVar)
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: "confluent",
+	}
+	var credsFuncs []func() (*pauth.Credentials, error)
+	if envVarUrl != "" {
+		credsFuncs = []func() (*pauth.Credentials, error){
+			r.LoginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		}
+	} else {
+		credsFuncs = []func() (*pauth.Credentials, error){
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		}
+	}
+	credentials, err := pauth.GetLoginCredentials(credsFuncs)
+	if err != nil {
+		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
+		return "", nil, err
+	}
+
+	caCertPath := os.Getenv(pauth.ConfluentCaCertPathEnvVar)
+	if caCertPath == "" {
+		r.logger.Debug("No ca-cert-path passed for prerun login")
+	} else {
+		r.logger.Debug("ca-cert-path: %s", caCertPath)
+	}
+	client, err := r.MDSClientManager.GetMDSClient(url, caCertPath, r.Logger)
+	if err != nil {
+		return "", nil, err
+	}
+	token, _, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token, credentials, err
+}
+
+func (r *PreRun) getConfluentTokenAndCredentialsFromNetrc(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+	envVarUrl := os.Getenv(pauth.ConfluentURLEnvVar)
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: "confluent",
+	}
+	var credsFuncs []func() (*pauth.Credentials, error)
+	if envVarUrl != "" {
+		credsFuncs = []func() (*pauth.Credentials, error){
+			r.LoginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		}
+	} else {
+		credsFuncs = []func() (*pauth.Credentials, error){
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		}
+	}
+	credentials, err := pauth.GetLoginCredentials(credsFuncs)
+	if err != nil {
+		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
+		return "", nil, err
+	}
+
+	caCertPath := os.Getenv(pauth.ConfluentCaCertPathEnvVar)
+	if caCertPath == "" {
+		r.logger.Debug("No ca-cert-path passed for prerun login")
+	} else {
+		r.logger.Debug("ca-cert-path: %s", caCertPath)
+	}
+	client, err := r.MDSClientManager.GetMDSClient(url, caCertPath, r.Logger)
+	if err != nil {
+		return "", nil, err
+	}
+	token, _, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token, credentials, err
+}
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx, err := cliCmd.Config.Context(cliCmd.Command)
 	if err != nil {
