@@ -6,6 +6,7 @@ RELEASE_BRANCH  ?= master
 
 DOCS_BRANCH     ?= 6.0.0-post
 
+include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
