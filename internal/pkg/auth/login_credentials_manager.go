@@ -23,8 +23,8 @@ type Credentials struct {
 	IsSSO    bool
 
 	// Only for Confluent Prerun login
-	URL        string
-	CaCertPath string
+	PrerunLoginURL        string
+	PrerunLoginCaCertPath string
 }
 
 type environmentVariables struct {
@@ -58,7 +58,7 @@ type LoginCredentialsManager interface {
 	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
 
-	// ONly for Confluent Prerun login
+	// Only for Confluent Prerun login
 	GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
 	GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error)
 }
@@ -126,18 +126,26 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cob
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
-		netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
-		if err != nil || netrcMachine == nil {
-			h.logger.Debug("Failed to get netrc machine for credentials")
-			if err != nil {
-				h.logger.Debugf("Get netrc machine error: %s", err.Error())
-			}
+		netrcMachine, err := h.getNetrcMachine(filterParams)
+		if err != nil {
+			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
+}
+
+func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
+	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
+	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
+	if err != nil {
+		return nil, err
+	}
+	if netrcMachine == nil {
+		return nil, errors.Errorf("Found no netrc machine using the filter: %+v", filterParams)
+	}
+	return netrcMachine, err
 }
 
 func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error) {
@@ -199,13 +207,25 @@ func isSSOUser(email string, cloudClient *ccloud.Client) bool {
 // Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables
 // URL and ca-cert-path (if exists) are returned in addtion to username and passowrd
 func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
-	envVars := environmentVariables{
-		username:           ConfluentUsernameEnvVar,
-		password:           ConfluentPasswordEnvVar,
-		deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
-		deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+	return func() (*Credentials, error) {
+		url := os.Getenv(ConfluentURLEnvVar)
+		if url == "" {
+			return nil, errors.New("No URL env var set")
+		}
+		envVars := environmentVariables{
+			username:           ConfluentUsernameEnvVar,
+			password:           ConfluentPasswordEnvVar,
+			deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
+			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+		}
+		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
+		if err != nil {
+			return nil, err
+		}
+		creds.PrerunLoginURL = url
+		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCaCertPathEnvVar)
+		return creds, nil
 	}
-	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
 }
 
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
@@ -216,20 +236,12 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd
 		CLIName: "confluent",
 	}
 	return func() (*Credentials, error) {
-		h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
-		netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
-		if err != nil || netrcMachine == nil {
-			h.logger.Debug("Failed to get netrc machine for credentials")
-			if err != nil {
-				h.logger.Debugf("Get netrc machine error: %s", err.Error())
-			}
+		netrcMachine, err := h.getNetrcMachine(filterParams)
+		if err != nil {
+			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
-}
-
-func extractURLAndCaCertPathFromNetrcMachineName(machineName string) (string, string) {
-
 }
