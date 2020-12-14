@@ -67,7 +67,7 @@ func parseContextName(nameSubstring string) (username string, url string, caCert
 	// -1 to exclude "-"
 	username = prefixToIndex(contextName, urlIndex-1)
 
-	// +1 to exluce "-"
+	// +1 to exclude "-"
 	rest := suffixFromIndex(contextName, len(username)+1)
 
 	questionMarkIndex := strings.Index(rest, "?")
@@ -75,7 +75,7 @@ func parseContextName(nameSubstring string) (username string, url string, caCert
 		url = rest
 	} else {
 		url = prefixToIndex(rest, questionMarkIndex)
-		caCertPath = suffixFromIndex(rest, len("cacertpath")+2)
+		caCertPath = suffixFromIndex(rest, questionMarkIndex + len("cacertpath")+2)
 	}
 	return
 }
