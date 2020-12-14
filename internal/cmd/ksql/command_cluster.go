@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/c-bata/go-prompt"
@@ -180,9 +181,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			Secret: kafkaApiKeySecret,
 		}
 	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
-		return fmt.Errorf("both apikey and apikey-secret must be provided")
+		return fmt.Errorf(errors.APIKeyAndSecretBothRequired)
 	} else {
-		fmt.Println("(DEPRECATED) In a future release, apikey and apikey-secret will be required flags when creating a ksql cluster.")
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
 	}
 
 	image, err := cmd.Flags().GetString("image")

@@ -213,7 +213,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both apikey and apikey-secret must be provided", err.Error())
+	req.Equal("both --apikey and --apikey-secret must be provided", err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
@@ -224,7 +224,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both apikey and apikey-secret must be provided", err.Error())
+	req.Equal("both --apikey and --apikey-secret must be provided", err.Error())
 }
 
 

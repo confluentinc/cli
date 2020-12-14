@@ -130,7 +130,8 @@ const (
 	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
-	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
+	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
+	APIKeyAndSecretBothRequired = "both --apikey and --apikey-secret must be provided"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"

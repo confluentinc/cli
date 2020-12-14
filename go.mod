@@ -1,12 +1,8 @@
 module github.com/confluentinc/cli
 
 require (
-<<<<<<< HEAD
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12 // indirect
 	github.com/Azure/azure-amqp-common-go v1.1.4 // indirect
-=======
-	code.gitea.io/sdk/gitea v0.12.1 // indirect
->>>>>>> add go mod and sum
 	github.com/Azure/go-autorest v12.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
@@ -18,14 +14,11 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-<<<<<<< HEAD
 	github.com/bombsimon/wsl v1.2.5 // indirect
-=======
-	github.com/bombsimon/wsl/v3 v3.1.0 // indirect
->>>>>>> add go mod and sum
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/chromedp/chromedp v0.5.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
+	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0
@@ -78,12 +71,8 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
-<<<<<<< HEAD
 	github.com/kamilsk/retry/v4 v4.0.0 // indirect
 	github.com/klauspost/cpuid v1.2.0 // indirect
-=======
-	github.com/kyoh86/exportloopref v0.1.7 // indirect
->>>>>>> add go mod and sum
 	github.com/linkedin/goavro/v2 v2.9.8
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.12
@@ -91,18 +80,13 @@ require (
 	github.com/mitchellh/golicense v0.1.1
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
+	github.com/opentracing/opentracing-go v1.0.2 // indirect
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
-<<<<<<< HEAD
 	github.com/securego/gosec v0.0.0-20191002120514-e680875ea14d // indirect
-=======
-	github.com/ryancurrah/gomodguard v1.1.0 // indirect
-	github.com/ryanrolds/sqlclosecheck v0.3.0 // indirect
-	github.com/securego/gosec/v2 v2.4.0 // indirect
->>>>>>> add go mod and sum
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
 	github.com/spf13/cobra v1.0.0
@@ -114,7 +98,6 @@ require (
 	github.com/tidwall/pretty v1.0.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v1.1.0
-<<<<<<< HEAD
 	github.com/uber-go/atomic v1.3.2 // indirect
 	github.com/uber/jaeger-client-go v2.15.0+incompatible // indirect
 	github.com/uber/jaeger-lib v1.5.0 // indirect
@@ -122,15 +105,6 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go.mongodb.org/mongo-driver v1.0.1 // indirect
-=======
-	github.com/ulikunitz/xz v0.5.8 // indirect
-	github.com/uudashr/gocognit v1.0.1 // indirect
-	github.com/valyala/quicktemplate v1.5.1 // indirect
-	github.com/xanzy/go-gitlab v0.36.0 // indirect
-	github.com/xeipuuv/gojsonschema v1.2.0
-	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	gocloud.dev v0.20.0 // indirect
->>>>>>> add go mod and sum
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
@@ -141,11 +115,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
-<<<<<<< HEAD
 	pack.ag/amqp v0.11.0 // indirect
-=======
-	mvdan.cc/gofumpt v0.0.0-20200709182408-4fd085cb6d5f // indirect
->>>>>>> add go mod and sum
 )
 
 replace (
