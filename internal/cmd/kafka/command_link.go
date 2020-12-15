@@ -26,9 +26,9 @@ const (
 )
 
 var (
-	keyValueFields = []string{"Key", "Value"}
+	keyValueFields      = []string{"Key", "Value"}
 	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
-	linkFields = []string{"LinkName"}
+	linkFields          = []string{"LinkName"}
 )
 
 type keyValueDisplay struct {
@@ -177,7 +177,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 		for _, link := range resp.Links {
 			if len(link.Topics) > 0 {
-				for topic, _ := range link.Topics {
+				for topic := range link.Topics {
 					outputWriter.AddElement(
 						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
 				}
