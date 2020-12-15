@@ -302,11 +302,74 @@ var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{r
     "Resource" : "*"
 }{{end}}`))
 
-func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string, clouds []*schedv1.CloudMetadata) error {
-	accounts := getEnvironmentsForCloud(cloud, clouds)
+type validateEncryptionKeyInput struct {
+	Cloud     string
+	Clouds    []*schedv1.CloudMetadata
+	AccountID string
+}
+
+func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
+	switch input.Cloud {
+	case "aws":
+		return c.validateAWSEncryptionKey(cmd, input)
+	case "gcp":
+		return c.validateGCPEncryptionKey(cmd, input)
+	default:
+		return fmt.Errorf("we don't support BYOK on %s", input.Cloud)
+	}
+}
+
+var permitBYOKGCP = template.Must(template.New("byok_gcp_permissions").Parse(`Create a role with these permissions, add this identity as a member of your key, and grant your role to the member:
+
+Permissions:
+  - cloudkms.cryptoKeyVersions.useToDecrypt
+  - cloudkms.cryptoKeyVersions.useToEncrypt
+  - cloudkms.cryptoKeys.get
+
+Identity:
+  {{.ExternalIdentity}}
+`))
+
+func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
+	ctx := context.Background()
+	// The call is idempotent so repeated create commands return the same ID for the same account.
+	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	err = permitBYOKGCP.Execute(buf, struct {
+		ExternalIdentity string
+	}{
+		ExternalIdentity: externalID,
+	})
+	if err != nil {
+		return err
+	}
+	buf.WriteString("\n\n")
+	utils.Println(cmd, buf.String())
+
+	prompt := "Please confirm you've authorized the key for this identity: " + externalID
+	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
+	for {
+		if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
+			continue
+		}
+		if !f.Responses["authorized"].(bool) {
+			return errors.Errorf(errors.AuthorizeIdentityErrorMsg, externalID)
+
+		}
+		return nil
+	}
+	return nil
+}
+
+func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
+	accounts := getEnvironmentsForCloud(input.Cloud, input.Clouds)
 
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyBYOKPermissionsHeaderMsg)
+	buf.WriteString(errors.CopyBYOKAWSPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)

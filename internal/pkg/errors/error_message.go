@@ -92,6 +92,7 @@ const (
 	FailedToRenderKeyPolicyErrorMsg      = "BYOK error: failed to render key policy"
 	FailedToReadConfirmationErrorMsg     = "BYOK error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg            = "BYOK error: please authorize the accounts (%s) for the key"
+	AuthorizeIdentityErrorMsg            = "BYOK error: please authorize this identity (%s) for the key"
 	CKUOnlyForDedicatedErrorMsg          = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	CKUMoreThanZeroErrorMsg              = "`--cku` value must be greater than 0"
 	CloudRegionNotAvailableErrorMsg      = "\"%s\" is not an available region for \"%s\""
