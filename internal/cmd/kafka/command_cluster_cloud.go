@@ -319,7 +319,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, input validat
 	case "gcp":
 		return c.validateGCPEncryptionKey(cmd, input)
 	default:
-		return fmt.Errorf("we don't support BYOK on %s", input.Cloud)
+		return errors.New(errors.BYOKSupportErrorMsg)
 	}
 }
 
