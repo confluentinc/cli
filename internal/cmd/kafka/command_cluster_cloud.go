@@ -323,7 +323,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, input validat
 	}
 }
 
-var permitBYOKGCP = template.Must(template.New("byok_gcp_permissions").Parse(`Create a role with these permissions, add this identity as a member of your key, and grant your role to the member:
+var permitBYOKGCP = template.Must(template.New("byok_gcp_permissions").Parse(`Create a role with these permissions, add the identity as a member of your key, and grant your role to the member:
 
 Permissions:
   - cloudkms.cryptoKeyVersions.useToDecrypt
