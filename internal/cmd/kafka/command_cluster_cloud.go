@@ -12,6 +12,7 @@ import (
 	"github.com/c-bata/go-prompt"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -216,6 +217,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	spew.Dump("clouds", clouds, "cloud", cloud, "region", region)
 	err = checkCloudAndRegion(cloud, region, clouds)
 	if err != nil {
 		return err

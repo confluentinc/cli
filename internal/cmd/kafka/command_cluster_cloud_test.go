@@ -6,13 +6,18 @@ import (
 	"testing"
 
 	"github.com/c-bata/go-prompt"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -81,6 +86,54 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 			req.Equal(tt.want, got)
 		})
 	}
+}
+
+func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
+	req := require.New(suite.T())
+	root := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	root.prerunner.
+	client := &ccloud.Client{
+		Kafka: &ccsdkmock.Kafka{},
+		ExternalIdentity: &ccsdkmock.ExternalIdentity{
+			CreateExternalIdentityFunc: func(_ context.Context, cloud, accountID string) (string, error) {
+				return "id-xyz", nil
+			},
+		},
+		EnvironmentMetadata: &ccsdkmock.EnvironmentMetadata{
+			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
+				return []*schedv1.CloudMetadata{{
+					Id:       "gcp",
+					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
+					Regions:  []*schedv1.Region{{IsSchedulable: true, Id: "us-central1"}},
+				}}, nil
+			},
+		},
+	}
+	root.AuthenticatedCLICommand.State = &v2.ContextState{
+		Auth: &configv1.AuthConfig{
+			Account: &orgv1.Account{
+				Id: "abc",
+			},
+		},
+	}
+	root.Client = client
+	cmd, args, err := root.Command.Find([]string{
+		"create",
+		"gcp-byok-test",
+	})
+	req.NoError(err)
+	err = cmd.ParseFlags([]string{
+		"--cloud=gcp",
+		"--region=us-central1",
+		"--type=dedicated",
+		"--cku=1",
+		"--encryption-key=xyz",
+	})
+	req.NoError(err)
+	suite.T().Logf("args: %#v", args)
+	err = cmd.RunE(cmd, args)
+	req.NoError(err)
+	fmt.Printf("%#v", cmd)
 }
 
 func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {
