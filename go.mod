@@ -81,7 +81,6 @@ require (
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/mattn/go-zglob v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.1.1
-	github.com/nakabonne/nestif v0.3.0 // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/onsi/ginkgo v1.13.0 // indirect
@@ -125,6 +124,7 @@ require (
 )
 
 replace (
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.2.0+incompatible
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/spf13/cobra => github.com/spf13/cobra v0.0.6-0.20190805155617-b80588d523ec
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
