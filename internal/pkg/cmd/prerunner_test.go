@@ -351,9 +351,16 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		err   error
 	}
 
-	creds := &pauth.Credentials{
-		Username: "csreesangkom",
+	username := "csreesangkom"
+
+	ccloudCreds := &pauth.Credentials{
+		Username: username,
 		Password: "csreepassword",
+	}
+	confluentCreds := &pauth.Credentials{
+		Username: username,
+		Password: "csreepassword",
+		PrerunLoginURL:        "http://localhost:8090",
 	}
 	tests := []struct {
 		name          string
@@ -365,32 +372,65 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		netrcReturn   credentialsFuncReturnValues
 	}{
 		{
-			name:          "no env var credentials but successful login from netrc",
+			name:          "CCloud no env var credentials but successful login from netrc",
 			cliName:       "ccloud",
 			envVarReturn:  credentialsFuncReturnValues{nil, nil},
-			netrcReturn:   credentialsFuncReturnValues{creds, nil},
+			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
-			name:          "successful login from env var",
+			name:          "Confluent no env var credentials but successful login from netrc",
+			cliName:       "confluent",
+			envVarReturn:  credentialsFuncReturnValues{nil, nil},
+			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarChecked: true,
+			netrcChecked:  true,
+		},
+		{
+			name:          "CCloud successful login from env var",
 			cliName:       "ccloud",
-			envVarReturn:  credentialsFuncReturnValues{creds, nil},
-			netrcReturn:   credentialsFuncReturnValues{creds, nil},
+			envVarReturn:  credentialsFuncReturnValues{ccloudCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  false,
 		},
 		{
-			name:          "env var failed but netrc succeeds",
+			name:          "Confluent successful login from env var",
+			cliName:       "confluent",
+			envVarReturn:  credentialsFuncReturnValues{confluentCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarChecked: true,
+			netrcChecked:  false,
+		},
+		{
+			name:          "CCloud env var failed but netrc succeeds",
 			cliName:       "ccloud",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
-			netrcReturn:   credentialsFuncReturnValues{creds, nil},
+			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
-			name:          "failed non-interactive login",
+			name:          "Confluent env var failed but netrc succeeds",
+			cliName:       "confluent",
+			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
+			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarChecked: true,
+			netrcChecked:  true,
+		},
+		{
+			name:          "CCloud failed non-interactive login",
 			cliName:       "ccloud",
+			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
+			netrcReturn:   credentialsFuncReturnValues{nil, errors.New("NETRC FAILED")},
+			envVarChecked: true,
+			netrcChecked:  true,
+			wantErr:       true,
+		},
+		{
+			name:          "Confluent failed non-interactive login",
+			cliName:       "confluent",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
 			netrcReturn:   credentialsFuncReturnValues{nil, errors.New("NETRC FAILED")},
 			envVarChecked: true,
@@ -440,18 +480,32 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			}
 
-			var envVarCalled bool
-			var netrcCalled bool
+			var ccloudEnvVarCalled bool
+			var ccloudNetrcCalled bool
+			var confluentEnvVarCalled bool
+			var confluentNetrcCalled bool
 			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 				GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						envVarCalled = true
+						ccloudEnvVarCalled = true
 						return tt.envVarReturn.creds, tt.envVarReturn.err
 					}
 				},
 				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						netrcCalled = true
+						ccloudNetrcCalled = true
+						return tt.netrcReturn.creds, tt.netrcReturn.err
+					}
+				},
+				GetConfluentPrerunCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						confluentEnvVarCalled = true
+						return tt.envVarReturn.creds, tt.envVarReturn.err
+					}
+				},
+				GetConfluentPrerunCredentialsFromNetrcFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+					return func() (credentials *pauth.Credentials, e error) {
+						confluentNetrcCalled = true
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
 				},
@@ -470,13 +524,22 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			out, err := pcmd.ExecuteCommand(rootCmd.Command)
 
-			require.Equal(t, tt.netrcChecked, netrcCalled)
-			require.Equal(t, tt.envVarChecked, envVarCalled)
+			if tt.cliName == "ccloud" {
+				require.Equal(t, tt.envVarChecked, ccloudEnvVarCalled)
+				require.Equal(t, tt.netrcChecked, ccloudNetrcCalled)
+				require.False(t, confluentEnvVarCalled)
+				require.False(t, confluentNetrcCalled)
+			} else {
+				require.Equal(t, tt.envVarChecked, confluentEnvVarCalled)
+				require.Equal(t, tt.netrcChecked, confluentNetrcCalled)
+				require.False(t, ccloudEnvVarCalled)
+				require.False(t, ccloudNetrcCalled)
+			}
 
 			if !tt.wantErr {
 				require.NoError(t, err)
 				require.Contains(t, out, errors.AutoLoginMsg)
-				require.Contains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, creds.Username))
+				require.Contains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
 			} else {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), errors.NotLoggedInErrorMsg)
@@ -493,6 +556,10 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 		{
 			name:    "ccloud logged in user",
 			cliName: "ccloud",
+		},
+		{
+			name:    "confluent logged in user",
+			cliName: "confluent",
 		},
 	}
 	for _, tt := range tests {

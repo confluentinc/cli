@@ -210,7 +210,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 	return func() (*Credentials, error) {
 		url := os.Getenv(ConfluentURLEnvVar)
 		if url == "" {
-			return nil, errors.New("No URL env var set")
+			return nil, errors.New(errors.NoURLEnvVarErrorMsg)
 		}
 		envVars := environmentVariables{
 			username:           ConfluentUsernameEnvVar,

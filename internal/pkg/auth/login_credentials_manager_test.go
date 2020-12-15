@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"testing"
 
@@ -35,6 +37,12 @@ const (
 	promptPassword = "  prompt-password  "
 
 	netrcFileName = ".netrc"
+
+	prerunNetrcUsername = "csreesangkom"
+	prerunNetrPassword  = "password"
+
+	prerunURL = "http://test"
+	caCertPath = "cert-path"
 )
 
 var (
@@ -60,6 +68,30 @@ var (
 		Username: promptUsername,
 		Password: promptPassword,
 	}
+	envPrerunCredentials = &Credentials{
+		Username:              envUsername,
+		Password:              envPassword,
+		PrerunLoginURL:        prerunURL,
+		PrerunLoginCaCertPath: "",
+	}
+	envPrerunCredentialsWithCaCertPath = &Credentials{
+		Username:              envUsername,
+		Password:              envPassword,
+		PrerunLoginURL:        prerunURL,
+		PrerunLoginCaCertPath: caCertPath,
+	}
+	netrcPrerunCredentials = &Credentials{
+		Username:              prerunNetrcUsername,
+		Password:              prerunNetrPassword,
+		PrerunLoginURL:        prerunURL,
+		PrerunLoginCaCertPath: "",
+	}
+	netrcPrerunCredentialsWithCaCertPath = &Credentials{
+		Username:              prerunNetrcUsername,
+		Password:              prerunNetrPassword,
+		PrerunLoginURL:        prerunURL,
+		PrerunLoginCaCertPath: caCertPath,
+	}
 
 	ccloudCredMachine = &netrc.Machine{
 		Name:     "ccloud-cred",
@@ -77,6 +109,19 @@ var (
 		Name:     "confluent",
 		User:     netrcUsername,
 		Password: netrcPassword,
+		IsSSO:    false,
+	}
+
+	confluentNetrcPrerunMachine = &netrc.Machine{
+		Name:     fmt.Sprintf("confluent-cli:mds-username-password:login-%s-%s", prerunNetrcUsername, prerunURL),
+		User:     prerunNetrcUsername,
+		Password: prerunNetrPassword,
+		IsSSO:    false,
+	}
+	confluentNetrcPrerunMachineWithCaCertPath = &netrc.Machine{
+		Name:     fmt.Sprintf("confluent-cli:mds-username-password:login-%s-%s?cacertpath=%s", prerunNetrcUsername, prerunURL, caCertPath),
+		User:     prerunNetrcUsername,
+		Password: prerunNetrPassword,
 		IsSSO:    false,
 	}
 )
@@ -226,6 +271,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestConfluentGetCredentialsFromNe
 	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.GetMatchingNetrcMachineParams{
 		CLIName: "confluent",
 		IsSSO:   false,
+		URL:     "http://hi",
 	})()
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcCredentials, creds)
@@ -241,6 +287,59 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromPr
 	creds, err := suite.loginCredentialsManager.GetConfluentCredentialsFromPrompt(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
+}
+
+func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromEnvVar() {
+	// incomplete as this only sets username and password but not URL which is needed for Prerun login
+	suite.setConfluentEnvironmentVariables()
+	creds, err := suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
+	suite.require.Error(err)
+	suite.require.Equal(errors.NoURLEnvVarErrorMsg, err.Error())
+	suite.require.Nil(creds)
+
+	// Set URL
+	suite.require.NoError(os.Setenv(ConfluentURLEnvVar, prerunURL))
+	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
+	suite.require.NoError(err)
+	suite.compareCredentials(envPrerunCredentials, creds)
+
+	// Set ca-cert-pat
+	suite.require.NoError(os.Setenv(ConfluentCaCertPathEnvVar, caCertPath))
+	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
+	suite.require.NoError(err)
+	suite.compareCredentials(envPrerunCredentialsWithCaCertPath, creds)
+
+}
+
+func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromNetrc() {
+	// no cacertpath
+	netrcHandler := &mock.MockNetrcHandler{
+		GetMatchingNetrcMachineFunc: func(params netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
+			return confluentNetrcPrerunMachine, nil
+		},
+		GetFileNameFunc: func() string {
+			return netrcFileName
+		},
+	}
+	loginCredentialsManager := NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.logger)
+	creds, err := loginCredentialsManager.GetConfluentPrerunCredentialsFromNetrc(&cobra.Command{})()
+	suite.require.NoError(err)
+	suite.compareCredentials(netrcPrerunCredentials, creds)
+
+
+	// with cacertpath
+	netrcHandler = &mock.MockNetrcHandler{
+		GetMatchingNetrcMachineFunc: func(params netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
+			return confluentNetrcPrerunMachineWithCaCertPath, nil
+		},
+		GetFileNameFunc: func() string {
+			return netrcFileName
+		},
+	}
+	loginCredentialsManager = NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.logger)
+	creds, err = loginCredentialsManager.GetConfluentPrerunCredentialsFromNetrc(&cobra.Command{})()
+	suite.require.NoError(err)
+	suite.compareCredentials(netrcPrerunCredentialsWithCaCertPath, creds)
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
@@ -298,6 +397,10 @@ func (suite *LoginCredentialsManagerTestSuite) compareCredentials(expect, actual
 	suite.require.Equal(expect.Username, actual.Username)
 	suite.require.Equal(expect.Password, actual.Password)
 	suite.require.Equal(expect.IsSSO, actual.IsSSO)
+
+	// For prerun credentials only, for others theses should be empty strings
+	suite.require.Equal(expect.PrerunLoginURL, actual.PrerunLoginURL)
+	suite.require.Equal(expect.PrerunLoginCaCertPath, actual.PrerunLoginCaCertPath)
 }
 
 func (suite *LoginCredentialsManagerTestSuite) clearCCloudEnvironmentVariables() {
