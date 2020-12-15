@@ -211,14 +211,14 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
@@ -301,14 +301,14 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				printAclsDeleted(matchingBindingCount)
+				_ = printAclsDeleted(matchingBindingCount)
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					printAclsDeleted(matchingBindingCount)
+					_ = printAclsDeleted(matchingBindingCount)
 				}
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
@@ -316,7 +316,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			if httpResp.StatusCode == 200 {
 				matchingBindingCount += len(deleteResp.Data)
 			} else {
-				printAclsDeleted(matchingBindingCount)
+				_ = printAclsDeleted(matchingBindingCount)
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)

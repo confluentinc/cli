@@ -633,11 +633,10 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			if outputOption == output.Human.String() {
-				printHumanDescribe(cmd, topicData)
-			} else {
-				return output.StructuredOutput(outputOption, topicData)
+				return printHumanDescribe(cmd, topicData)
 			}
-			return nil
+
+			return output.StructuredOutput(outputOption, topicData)
 		}
 	}
 
