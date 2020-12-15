@@ -134,13 +134,12 @@ func (m *Kafka) CreateLink(ctx context.Context, destination *schedv1.KafkaCluste
 
 func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster, includeTopics bool) (*linkv1.ListLinksResponse, error) {
 	if includeTopics {
-		topics := make(map[string]bool)
-		topics["topic-1"] = true
-		topics["topic-2"] = true
-
 		return &linkv1.ListLinksResponse{
 			Links: []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName: "link-1", Topics: topics},
+				&linkv1.ListLinksResponseItem{LinkName: "link-1", Topics: []string{
+					"topic-1",
+					"topic-2",
+				}},
 				&linkv1.ListLinksResponseItem{LinkName: "link-2"},
 			},
 		}, nil
