@@ -241,7 +241,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if encryptionKeyID != "" {
-		if err := c.validateEncryptionKey(cmd, cloud, clouds); err != nil {
+		if err := c.validateEncryptionKey(cmd, validateEncryptionKeyInput{
+			Cloud:          cloud,
+			MetadataClouds: clouds,
+			AccountID:      c.EnvironmentId(),
+		}); err != nil {
 			return err
 		}
 	}
@@ -303,9 +307,9 @@ var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{r
 }{{end}}`))
 
 type validateEncryptionKeyInput struct {
-	Cloud     string
-	Clouds    []*schedv1.CloudMetadata
-	AccountID string
+	Cloud          string
+	MetadataClouds []*schedv1.CloudMetadata
+	AccountID      string
 }
 
 func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
@@ -362,11 +366,10 @@ func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, input vali
 		}
 		return nil
 	}
-	return nil
 }
 
 func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
-	accounts := getEnvironmentsForCloud(input.Cloud, input.Clouds)
+	accounts := getEnvironmentsForCloud(input.Cloud, input.MetadataClouds)
 
 	buf := new(bytes.Buffer)
 	buf.WriteString(errors.CopyBYOKAWSPermissionsHeaderMsg)
