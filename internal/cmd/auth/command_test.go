@@ -495,16 +495,19 @@ func TestLogout(t *testing.T) {
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
 	tests := []struct {
-		name           string
-		caCertPathFlag string
+		name                string
+		caCertPathFlag      string
+		expectedContextName string
 	}{
 		{
-			name:           "specified ca-cert-path",
-			caCertPathFlag: "testcert.pem",
+			name:                "specified ca-cert-path",
+			caCertPathFlag:      "testcert.pem",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
 		},
 		{
-			name:           "no ca-cert-path flag",
-			caCertPathFlag: "",
+			name:                "no ca-cert-path flag",
+			caCertPathFlag:      "",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090",
 		},
 	}
 
@@ -524,12 +527,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			// ensure the right CaCertPath is stored in Config
 			req.Equal(tt.caCertPathFlag, ctx.Platform.CaCertPath)
 
-			// check context name
-			if tt.caCertPathFlag != "" {
-				req.Equal("login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem", ctx.Name)
-			} else {
-				req.Equal("login-prompt-user@confluent.io-http://localhost:8090", ctx.Name)
-			}
+			req.Equal(tt.expectedContextName, ctx.Name)
 		})
 	}
 }
@@ -556,9 +554,9 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctxName := "login-prompt-user@confluent.io-http://localhost:8090"
-			cfg := v3.AuthenticatedConfigMockWithContextName("confluent", ctxName)
-			cfg.Contexts[ctxName].Platform.CaCertPath = originalCaCertPath
+			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
+			cfg := v3.AuthenticatedConfigMockWithContextName("confluent", legacyContextName)
+			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)
 			args := []string{"--url=http://localhost:8090"}
@@ -569,8 +567,9 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 			req.NoError(err)
 
 			ctx := cfg.Context()
-			// ensure the right CaCertPath is stored in Config
+			// ensure the right CaCertPath is stored in Config and context name is the right name
 			req.Equal(tt.expectedCaCertPath, ctx.Platform.CaCertPath)
+			req.Equal(legacyContextName, ctx.Name)
 		})
 	}
 }

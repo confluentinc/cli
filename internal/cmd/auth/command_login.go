@@ -107,6 +107,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	}
 
 	client = a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+
 	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
@@ -168,6 +169,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
 	// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
 	// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
+	var isLegacyContext bool
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return err
@@ -178,6 +180,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
+		isLegacyContext = caCertPath != ""
 	}
 
 	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
@@ -190,7 +193,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath)
+	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
 	if err != nil {
 		return err
 	}
