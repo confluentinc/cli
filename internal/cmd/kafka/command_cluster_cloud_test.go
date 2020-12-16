@@ -1,13 +1,15 @@
 package kafka
 
 import (
+	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/c-bata/go-prompt"
+	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/stretchr/testify/require"
@@ -19,6 +21,7 @@ import (
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -82,7 +85,6 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
@@ -91,14 +93,27 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	req := require.New(suite.T())
 	root := suite.newCmd(v3.AuthenticatedCloudConfigMock())
-	root.prerunner.
-	client := &ccloud.Client{
-		Kafka: &ccsdkmock.Kafka{},
-		ExternalIdentity: &ccsdkmock.ExternalIdentity{
-			CreateExternalIdentityFunc: func(_ context.Context, cloud, accountID string) (string, error) {
-				return "id-xyz", nil
-			},
+	kafkaMock := &ccsdkmock.Kafka{
+		CreateFunc: func(ctx context.Context, config *v1.KafkaClusterConfig) (*v1.KafkaCluster, error) {
+			return &v1.KafkaCluster{
+				Id:              "lkc-xyz",
+				Name:            "gcp-byok-test",
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+				Deployment: &v1.Deployment{
+					Sku: corev1.Sku_DEDICATED,
+				},
+			}, nil
 		},
+	}
+	idMock := &ccsdkmock.ExternalIdentity{
+		CreateExternalIdentityFunc: func(_ context.Context, cloud, accountID string) (string, error) {
+			return "id-xyz", nil
+		},
+	}
+	client := &ccloud.Client{
+		Kafka:            kafkaMock,
+		ExternalIdentity: idMock,
 		EnvironmentMetadata: &ccsdkmock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
@@ -117,6 +132,8 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 		},
 	}
 	root.Client = client
+	var buf bytes.Buffer
+	root.SetOut(&buf)
 	cmd, args, err := root.Command.Find([]string{
 		"create",
 		"gcp-byok-test",
@@ -130,10 +147,32 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 		"--encryption-key=xyz",
 	})
 	req.NoError(err)
-	suite.T().Logf("args: %#v", args)
-	err = cmd.RunE(cmd, args)
+	err = root.create(cmd, args, mock.NewPromptMock(
+		"y", // yes customer has granted key access
+	))
 	req.NoError(err)
-	fmt.Printf("%#v", cmd)
+	got, want := buf.Bytes(), []byte(`Create a role with these permissions, add the identity as a member of your key, and grant your role to the member:
+
+Permissions:
+  - cloudkms.cryptoKeyVersions.useToDecrypt
+  - cloudkms.cryptoKeyVersions.useToEncrypt
+  - cloudkms.cryptoKeys.get
+
+Identity:
+  id-xyz
+
+
+Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 5 minutes for the Kafka cluster to be ready.
+`)
+	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
+	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)
+	req.Equal("gcp", idMock.CreateExternalIdentityCalls()[0].Cloud)
+	req.Equal("abc", kafkaMock.CreateCalls()[0].Config.AccountId)
+	req.Equal("gcp", kafkaMock.CreateCalls()[0].Config.ServiceProvider)
+	req.Equal("us-central1", kafkaMock.CreateCalls()[0].Config.Region)
+	req.Equal("xyz", kafkaMock.CreateCalls()[0].Config.EncryptionKeyId)
+	req.Equal(int32(1), kafkaMock.CreateCalls()[0].Config.Cku)
+	req.Equal(corev1.Sku_DEDICATED, kafkaMock.CreateCalls()[0].Config.Deployment.Sku)
 }
 
 func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {

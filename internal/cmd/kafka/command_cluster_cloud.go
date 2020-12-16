@@ -117,7 +117,9 @@ func (c *clusterCommand) init() {
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
+			return c.create(cmd, args, form.NewPrompt(os.Stdin))
+		}),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
@@ -204,7 +206,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.Prompt) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -243,7 +245,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if encryptionKeyID != "" {
-		if err := c.validateEncryptionKey(cmd, validateEncryptionKeyInput{
+		if err := c.validateEncryptionKey(cmd, prompt, validateEncryptionKeyInput{
 			Cloud:          cloud,
 			MetadataClouds: clouds,
 			AccountID:      c.EnvironmentId(),
@@ -314,12 +316,12 @@ type validateEncryptionKeyInput struct {
 	AccountID      string
 }
 
-func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
+func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
 	switch input.Cloud {
 	case "aws":
-		return c.validateAWSEncryptionKey(cmd, input)
+		return c.validateAWSEncryptionKey(cmd, prompt, input)
 	case "gcp":
-		return c.validateGCPEncryptionKey(cmd, input)
+		return c.validateGCPEncryptionKey(cmd, prompt, input)
 	default:
 		return errors.New(errors.BYOKSupportErrorMsg)
 	}
@@ -333,10 +335,9 @@ Permissions:
   - cloudkms.cryptoKeys.get
 
 Identity:
-  {{.ExternalIdentity}}
-`))
+  {{.ExternalIdentity}}`))
 
-func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
+func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
 	ctx := context.Background()
 	// The call is idempotent so repeated create commands return the same ID for the same account.
 	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
@@ -355,10 +356,13 @@ func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, input vali
 	buf.WriteString("\n\n")
 	utils.Println(cmd, buf.String())
 
-	prompt := "Please confirm you've authorized the key for this identity: " + externalID
-	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
+	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
+	f := form.New(
+		form.Field{ID: "authorized",
+			Prompt:    promptMsg,
+			IsYesOrNo: true})
 	for {
-		if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+		if err := f.Prompt(cmd, prompt); err != nil {
 			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
@@ -370,7 +374,7 @@ func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, input vali
 	}
 }
 
-func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, input validateEncryptionKeyInput) error {
+func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
 	accounts := getEnvironmentsForCloud(input.Cloud, input.MetadataClouds)
 
 	buf := new(bytes.Buffer)
@@ -382,14 +386,14 @@ func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, input vali
 	buf.WriteString("\n\n")
 	utils.Println(cmd, buf.String())
 
-	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
+	promptMsg := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
 	if len(accounts) == 1 {
-		prompt = "Please confirm you've authorized the key for this account: " + accounts[0]
+		promptMsg = "Please confirm you've authorized the key for this account: " + accounts[0]
 	}
 
-	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
+	f := form.New(form.Field{ID: "authorized", Prompt: promptMsg, IsYesOrNo: true})
 	for {
-		if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+		if err := f.Prompt(cmd, prompt); err != nil {
 			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
