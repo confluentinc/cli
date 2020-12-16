@@ -75,7 +75,7 @@ func parseContextName(nameSubstring string) (username string, url string, caCert
 		url = rest
 	} else {
 		url = prefixToIndex(rest, questionMarkIndex)
-		caCertPath = suffixFromIndex(rest, questionMarkIndex + len("cacertpath")+2)
+		caCertPath = suffixFromIndex(rest, questionMarkIndex+len("cacertpath")+2)
 	}
 	return
 }

@@ -3,9 +3,10 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"os"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -41,7 +42,7 @@ const (
 	prerunNetrcUsername = "csreesangkom"
 	prerunNetrPassword  = "password"
 
-	prerunURL = "http://test"
+	prerunURL  = "http://test"
 	caCertPath = "cert-path"
 )
 
@@ -325,7 +326,6 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	creds, err := loginCredentialsManager.GetConfluentPrerunCredentialsFromNetrc(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcPrerunCredentials, creds)
-
 
 	// with cacertpath
 	netrcHandler = &mock.MockNetrcHandler{

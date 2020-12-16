@@ -358,9 +358,9 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		Password: "csreepassword",
 	}
 	confluentCreds := &pauth.Credentials{
-		Username: username,
-		Password: "csreepassword",
-		PrerunLoginURL:        "http://localhost:8090",
+		Username:       username,
+		Password:       "csreepassword",
+		PrerunLoginURL: "http://localhost:8090",
 	}
 	tests := []struct {
 		name          string

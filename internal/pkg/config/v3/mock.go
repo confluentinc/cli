@@ -124,15 +124,15 @@ func UnauthenticatedCloudConfigMock() *Config {
 }
 
 type mockConfigParams struct {
-	cliName string
-	contextName string
-	userId  int32
+	cliName        string
+	contextName    string
+	userId         int32
 	userResourceId string
-	username string
-	url string
-	envId string
-	orgId int32
-	orgResourceId string
+	username       string
+	url            string
+	envId          string
+	orgId          int32
+	orgResourceId  string
 	credentialName string
 }
 
