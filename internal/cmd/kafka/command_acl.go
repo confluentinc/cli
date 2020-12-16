@@ -116,7 +116,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, c.Context.Platform.Server)
 		if err != nil {
 			return err
@@ -191,7 +190,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, c.Context.Platform.Server)
 		if err != nil {
 			return err
@@ -221,6 +219,16 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
 				return kafkaRestError(kafkaRestURL, err, httpResp)
+			}
+
+			if httpResp != nil && httpResp.StatusCode != 201 {
+				if i > 0 {
+					// unlikely
+					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				}
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
 			}
 		}
 
@@ -280,7 +288,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, c.Context.Platform.Server)
 		if err != nil {
 			return err

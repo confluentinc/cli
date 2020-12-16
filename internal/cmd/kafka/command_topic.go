@@ -325,7 +325,6 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 		if err != nil {
 			return err
@@ -441,7 +440,6 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 		if err != nil {
 			return err
@@ -554,7 +552,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 		if err != nil {
 			return err
@@ -704,7 +701,6 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 		if err != nil {
 			return err
@@ -869,7 +865,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-
 		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
 		if err != nil {
 			return err

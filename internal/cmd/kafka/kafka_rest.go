@@ -66,8 +66,7 @@ func bootstrapServersToRestURL(bootstrap string) (string, error) {
 	server := bootstrapServers[0]
 	serverLength := len(server)
 	if _, err := strconv.Atoi(server[serverLength-4:]); err == nil && serverLength > 5 && server[serverLength-5] == ':' {
-		// TODO: http -> https
-		return "http://" + server[:serverLength-4] + kafkaRestPort + "/kafka/v3", nil
+		return "https://" + server[:serverLength-4] + kafkaRestPort + "/kafka/v3", nil
 	}
 
 	return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
