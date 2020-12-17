@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/c-bata/go-prompt"
@@ -85,6 +86,7 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
