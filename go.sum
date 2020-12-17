@@ -257,8 +257,8 @@ github.com/confluentinc/cc-structs/operator v0.419.0 h1:qX2PwktPTUUVoO4r/hkkwYmg
 github.com/confluentinc/cc-structs/operator v0.419.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
 github.com/confluentinc/cc-utils-public v0.1.0 h1:0EkUM94lvOLoYQIoaglfCldLCjJTNDiITYoGqUZrpS4=
 github.com/confluentinc/cc-utils-public v0.1.0/go.mod h1:9GIApQ66kQGr+ROZvop7GFyxpXyzwIi83ZedYrHLQUU=
-github.com/confluentinc/ccloud-sdk-go v0.0.67-0.20201215183530-cd6364c799b2 h1:6Vv6+6JZlnoY4AgcZnJ6dDoLaeKGIK81M5jk5nQgNTQ=
-github.com/confluentinc/ccloud-sdk-go v0.0.67-0.20201215183530-cd6364c799b2/go.mod h1:MDj0wrScEdGe0zn/sJ5TqL5bcb3Do+fyJsDDCaGQiho=
+github.com/confluentinc/ccloud-sdk-go v0.0.67 h1:y8CSeDaZAnrTi/GjrKihvUENhEftn+TM1p+dIjYs64g=
+github.com/confluentinc/ccloud-sdk-go v0.0.67/go.mod h1:MDj0wrScEdGe0zn/sJ5TqL5bcb3Do+fyJsDDCaGQiho=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.27.0 h1:vMwXpIxA3qTGHOBjOH3bN4wE5Wwxn+Ln0RoVd2VSzQk=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.27.0/go.mod h1:5CnD8OX1RjuqCRlLORp2XdlBWC0gpIekPgBt1Ih1yZc=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
@@ -1271,10 +1271,6 @@ golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375/go.mod h1:EkVYQZoAsY45+roY
 golang.org/x/tools v0.0.0-20200601175630-2caf76543d99/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=
 golang.org/x/tools v0.0.0-20200606014950-c42cb6316fb6/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=
 golang.org/x/tools v0.0.0-20200608174601-1b747fd94509/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=
-golang.org/x/tools v0.0.0-20201211185031-d93e913c1a58 h1:1Bs6RVeBFtLZ8Yi1Hk07DiOqzvwLD/4hln4iahvFlag=
-golang.org/x/tools v0.0.0-20201211185031-d93e913c1a58/go.mod h1:emZCQorbCU4vsT4fOWvOPXz4eW1wZW4PmDk9uLelYpA=
-golang.org/x/tools v0.0.0-20201215171152-6307297f4651 h1:bdfqbHwYVvhLEIkESR524rqSsmV06Og3Fgz60LE7vZc=
-golang.org/x/tools v0.0.0-20201215171152-6307297f4651/go.mod h1:emZCQorbCU4vsT4fOWvOPXz4eW1wZW4PmDk9uLelYpA=
 golang.org/x/tools v0.0.0-20201215192005-fa10ef0b8743 h1:SLHKXsC4wI4NdEGVGe/yxcTBkF/mPUS7agW3Qt5smVg=
 golang.org/x/tools v0.0.0-20201215192005-fa10ef0b8743/go.mod h1:emZCQorbCU4vsT4fOWvOPXz4eW1wZW4PmDk9uLelYpA=
 golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
