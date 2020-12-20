@@ -330,7 +330,7 @@ func injectConfig(data []byte, config map[string]string) []byte {
 	// at least one thing, then ensure we put a newline before
 	// injecting any of our new content so as to not corrupt the config file
 	if len(config) > 0 && len(data) > 0 {
-		data = append(data, []byte("\n"))
+		data = append(data, []byte("\n")...)
 	}
 
 	for key, val := range config {
