@@ -6,8 +6,11 @@ release: get-release-image commit-release tag-release
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
+	$(call print-boxed-message,"PUBLISHING DOCS")
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
+	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
+	make publish-dockerhub
 
 .PHONY: release-to-stag
 release-to-stag:
