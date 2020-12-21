@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	test_server "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/chromedp/chromedp"
 
@@ -81,20 +81,19 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
 
-func serveLogin(t *testing.T) *httptest.Server {
-	router := http.NewServeMux()
-	router.HandleFunc("/api/sessions", handleLogin(t))
-	router.HandleFunc("/api/check_email/", handleCheckEmail(t))
-	router.HandleFunc("/api/me", handleMe(t))
-	return httptest.NewServer(router)
+func serveCloudBackend(t *testing.T) *test_server.TestBackend {
+	router := test_server.NewCloudRouter(t)
+	return test_server.NewCloudTestBackendFromRouters(router, test_server.NewEmptyKafkaRouter())
+}
+
+func serveMDSBackend(t *testing.T) *test_server.TestBackend {
+	router := test_server.NewMdsRouter(t)
+	return test_server.NewConfluentTestBackendFromRouter(router)
 }
 
 func (s *CLITestSuite) TestSaveUsernamePassword() {
@@ -104,17 +103,21 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		loginURL string
 		bin      string
 	}
+	cloudBackend := serveCloudBackend(s.T())
+	defer cloudBackend.Close()
+	mdsServer := serveMDSBackend(s.T())
+	defer mdsServer.Close()
 	tests := []saveTest{
 		{
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).URL,
+			cloudBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(s.T()).URL,
+			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
@@ -169,19 +172,23 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
 	}
+	cloudServer := serveCloudBackend(s.T())
+	defer cloudServer.Close()
+	mdsServer := serveMDSBackend(s.T())
+	defer mdsServer.Close()
 	tests := []updateTest{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).URL,
+			cloudServer.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(s.T()).URL,
+			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
@@ -375,10 +382,11 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 			wantErrCode: 1,
 		},
 	}
-
-	loginURL := serveMds(s.T()).URL
+	mdsServer := serveMDSBackend(s.T())
+	defer mdsServer.Close()
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		tt.loginURL = mdsServer.GetMdsUrl()
+		s.runConfluentTest(tt)
 	}
 }

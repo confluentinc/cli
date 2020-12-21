@@ -12,11 +12,8 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry subject --help", fixture: "schema-registry/schema-registry-subject-help.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
