@@ -177,7 +177,7 @@ cmd/lint/en_US.dic:
 
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
-	@GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+	@GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS) -ldflags '-buildmode=exe'
 
 .PHONY: lint-go
 lint-go:
