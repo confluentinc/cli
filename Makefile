@@ -185,7 +185,9 @@ lint-go:
 
 .PHONY: lint
 lint:
-ifeq ("$${OS}","Windows_NT")
+ifeq ($(shell uname),Darwin)
+	true
+else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
 	make lint-go && \
