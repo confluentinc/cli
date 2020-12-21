@@ -177,14 +177,18 @@ cmd/lint/en_US.dic:
 
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
-	@GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS) -ldflags '-buildmode=exe'
+	@GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
 
 .PHONY: lint-go
 lint-go:
 	@GO111MODULE=on golangci-lint run --timeout=10m
 
 .PHONY: lint
-lint: lint-go lint-cli lint-installers
+lint:
+	[ "$${OS}" != "Windows_NT" ] && \
+	make lint-go && \
+	make lint-cli && \
+	make lint-installers
 
 .PHONY: lint-installers
 ## Lints the CLI installation scripts
