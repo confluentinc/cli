@@ -256,6 +256,8 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHe
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oVlqmbfWRTr/5NYVo8GDz3avvt58OMXoCL7k=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
 github.com/confluentinc/cc-structs v0.645.0 h1:rTEBlrodmoEJYErbBOB9khLp74cuPnYEAiz3R6NNUbI=
+github.com/confluentinc/cc-structs v0.660.0 h1:OQtrtr8DehqPuqqwGNVS0oAkPBid+BJhWiIsWbNJLHo=
+github.com/confluentinc/cc-structs v0.668.0 h1:A2d1R8LFFHLB7fmVnIkswV1XMtOCIeXvUQi72hWEAmw=
 github.com/confluentinc/cc-structs/kafka/auth v0.411.0 h1:xLK7PuiXtosjwdBLpEJwY6eITDNMaLd/LfQvr5d6G4g=
 github.com/confluentinc/cc-structs/kafka/auth v0.411.0/go.mod h1:d9eox2L34QVcFwy9AhvYmY3XZFwhQEFh23bxrGOepL0=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.580.0/go.mod h1:tRjkznzgdB0F+oLZuMQLAk3irMx1CZVyj9tmaSv0Obs=
@@ -290,6 +292,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.580.0/go.mod h1:EA+pLAi+Q6
 github.com/confluentinc/cc-structs/kafka/scheduler v0.584.0 h1:uqHYQUSDdQAD3CpyovQzOAMumuBLbtrGUepMbmgxv88=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.584.0/go.mod h1:EA+pLAi+Q6qrMuybEmegZLCYyw4hybannorj5agfydQ=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.645.0 h1:cj3SOcWVDIcX4juHRlK3M8crFbMyxRr23P+K4YccVH8=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.660.0 h1:XA3aJIfsYUHSTUCIGOVlWkC6oy5okTDit3WTmbhCpy4=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.668.0 h1:9L2lZiQzBsD8343B5b7HovDvWPVsBJ6+Ttqr7hhgDS0=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
@@ -302,6 +306,8 @@ github.com/confluentinc/cc-utils-public v0.1.0 h1:0EkUM94lvOLoYQIoaglfCldLCjJTND
 github.com/confluentinc/cc-utils-public v0.1.0/go.mod h1:9GIApQ66kQGr+ROZvop7GFyxpXyzwIi83ZedYrHLQUU=
 github.com/confluentinc/ccloud-sdk-go v0.0.60 h1:bTvIpelho8BkgVPEUvOjRJb7lFCukxY5WlC+nhossH4=
 github.com/confluentinc/ccloud-sdk-go v0.0.60/go.mod h1:aAUL9g5FwGLthVGc9e8oA2qcINiNAA/oUTp0sjXHaq4=
+github.com/confluentinc/ccloud-sdk-go v0.0.61 h1:uCp30+zk6w9xrZr6IK1BA0iHQkE86g6iGVb5XwfZyi8=
+github.com/confluentinc/ccloud-sdk-go v0.0.61/go.mod h1:aAUL9g5FwGLthVGc9e8oA2qcINiNAA/oUTp0sjXHaq4=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
 github.com/confluentinc/go-printer v0.13.0 h1:zgmoYZPQ51xjOPSW4G+QimPcoZEAflCb4UsgvlKA544=
