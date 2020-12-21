@@ -17,11 +17,9 @@ func (s *CLITestSuite) TestCluster() {
 		{args: "schema-registry cluster list", fixture: "cluster/confluent-cluster-list-type-schema-registry.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 
 	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "false")
@@ -37,10 +35,8 @@ func (s *CLITestSuite) TestClusterRegistry() {
 		{args: "cluster unregister", fixture: "cluster/confluent-cluster-unregister-missing-name.golden", wantErrCode: 1},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }

@@ -12,11 +12,8 @@ func (s *CLITestSuite) TestServiceAccount() {
 		{args: "service-account update 12345 --description new-description", fixture: "service-account/service-account-update.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

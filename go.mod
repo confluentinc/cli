@@ -73,6 +73,7 @@ require (
 	github.com/goreleaser/chglog v0.1.1 // indirect
 	github.com/goreleaser/goreleaser v0.116.0
 	github.com/goreleaser/nfpm v1.2.1 // indirect
+	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.2.1

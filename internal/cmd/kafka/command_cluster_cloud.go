@@ -268,7 +268,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		cfg.Cku = int32(cku)
 	}
-
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)

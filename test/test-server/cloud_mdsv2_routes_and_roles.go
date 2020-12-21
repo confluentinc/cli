@@ -1,22 +1,7 @@
-package test
+package test_server
 
-import (
-	"encoding/json"
-	"io"
-	"net/http"
-	"path"
-	"sort"
-	"strings"
-	"testing"
-
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-
-	"github.com/stretchr/testify/require"
-)
-
-var (
-	rbacRolesV2 = map[string]string{
-		"CCloudRoleBindingAdmin": `{
+var v2RbacRoles = map[string]string{
+	"CCloudRoleBindingAdmin": `{
 			"name": "CCloudRoleBindingAdmin",
 			"policy": {
 				"bindingScope": "root",
@@ -24,7 +9,7 @@ var (
 				"allowedOperations": [
 				{"resourceType":"SecurityMetadata","operations":["Describe","Alter"]},
 				{"resourceType":"Organization","operations":["AlterAccess","DescribeAccess"]}]}}`,
-		"CloudClusterAdmin": `{
+	"CloudClusterAdmin": `{
 			"name": "CloudClusterAdmin",
 			"policies": [
 			{
@@ -49,7 +34,7 @@ var (
 				{"resourceType": "User","operations": ["Describe","Invite"]},
 				{"resourceType": "ServiceAccount","operations": ["Describe"]}]
 			}]}`,
-		"EnvironmentAdmin": `{
+	"EnvironmentAdmin": `{
 			"name": "EnvironmentAdmin",
 			"policies": [
 			{
@@ -81,7 +66,7 @@ var (
 				{"resourceType": "SupportPlan","operations": ["Describe"]}
 				]
 			}]}`,
-		"OrganizationAdmin": `{
+	"OrganizationAdmin": `{
 			"name": "OrganizationAdmin",
 			"policy": {
 				"bindingScope": "organization",
@@ -111,34 +96,17 @@ var (
 				]
 			}
 		}`,
-	}
-)
+}
 
-func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
-	req := require.New(t)
-	router.HandleFunc("/api/metadata/security/v2alpha1/authenticate", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
-		reply := &mds.AuthenticationResponse{
-			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
-			TokenType: "dunno",
-			ExpiresIn: 9999999999,
-		}
-		b, err := json.Marshal(&reply)
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
-	})
-	router.Handle("/api/metadata/security/v2alpha1/roles/InvalidRole", http.NotFoundHandler())
-
-	routesAndReplies := map[string]string{
-		"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,
-		"/api/metadata/security/v2alpha1/roleNames": `[
+var v2RoutesAndReplies = map[string]string{
+	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,
+	"/api/metadata/security/v2alpha1/roleNames": `[
 			"CCloudRoleBindingAdmin",
 			"CloudClusterAdmin",
 			"EnvironmentAdmin",
 			"OrganizationAdmin"
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-11aaa": `[
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-11aaa": `[
 			{
 				"scope": {
 				  	"path": [
@@ -170,7 +138,7 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-22bbb": `[
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-22bbb": `[
 		  	{
 				"scope": {
 				  	"path": [
@@ -187,7 +155,7 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-33ccc": `[
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-33ccc": `[
 		  	{
 				"scope": {
 				  	"path": [
@@ -205,7 +173,7 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-44ddd": `[
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-44ddd": `[
 		  	{
 				"scope": {
 				  	"path": [
@@ -223,41 +191,13 @@ func addMdsv2alpha1(t *testing.T, router *http.ServeMux) {
 				}
 		  	}
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
+	"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
 			"User:u-11aaa"
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/role/EnvironmentAdmin": `[
+	"/api/metadata/security/v2alpha1/lookup/role/EnvironmentAdmin": `[
 			"User:u-22bbb"
 		]`,
-		"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
+	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
 			"User:u-33ccc", "User:u-44ddd"
 		]`,
-	}
-	addRolesV2(routesAndReplies)
-
-	for route, reply := range routesAndReplies {
-		s := reply
-		router.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/json")
-			_, err := io.WriteString(w, s)
-			req.NoError(err)
-		})
-	}
-}
-
-func addRolesV2(routesAndReplies map[string]string) {
-	base := "/api/metadata/security/v2alpha1/roles"
-	var roleNameList []string
-	for roleName, roleInfo := range rbacRolesV2 {
-		routesAndReplies[path.Join(base, roleName)] = roleInfo
-		roleNameList = append(roleNameList, roleName)
-	}
-
-	sort.Strings(roleNameList)
-
-	var allRoles []string
-	for _, roleName := range roleNameList {
-		allRoles = append(allRoles, rbacRolesV2[roleName])
-	}
-	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
 }
