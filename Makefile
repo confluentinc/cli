@@ -185,10 +185,13 @@ lint-go:
 
 .PHONY: lint
 lint:
-	[ "$${OS}" != "Windows_NT" ] && \
+ifeq ("$${OS}","Windows_NT")
+	true
+else
 	make lint-go && \
 	make lint-cli && \
 	make lint-installers
+endif
 
 .PHONY: lint-installers
 ## Lints the CLI installation scripts
