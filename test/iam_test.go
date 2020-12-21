@@ -10,11 +10,9 @@ func (s *CLITestSuite) TestConfluentIAM() {
 		{args: "iam role list", fixture: "iam/confluent-iam-role-list.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -29,11 +27,8 @@ func (s *CLITestSuite) TestCcloudIAM() {
 		{args: "iam role list", fixture: "iam/ccloud-iam-role-list.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

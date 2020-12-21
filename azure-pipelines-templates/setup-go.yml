@@ -13,7 +13,7 @@ steps:
 - script: |
     echo $HOMEBREW_CASK_OPTS
     brew update
-    brew cask install google-chrome
+    brew install --cask google-chrome
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: Install chrome (Darwin)
 

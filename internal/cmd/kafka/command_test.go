@@ -600,6 +600,17 @@ func TestListLinks(t *testing.T) {
 	)
 }
 
+func TestListLinksWithTopics(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "list", "--include-topics"}
+		},
+		func(expect chan interface{}, link testLink) {
+		},
+	)
+}
+
 func TestDescribeLink(t *testing.T) {
 	linkTestHelper(
 		t,

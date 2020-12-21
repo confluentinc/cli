@@ -30,11 +30,9 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 		},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
