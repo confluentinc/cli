@@ -159,7 +159,7 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachin
 func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
 	if params.CtxName != "" {
-		contextNameRegex = params.CtxName
+		contextNameRegex = escapeSpecialRegexChars(params.CtxName)
 	} else if params.URL != "" {
 		url := strings.ReplaceAll(params.URL, ".", `\.`)
 		contextNameRegex = fmt.Sprintf(".*-%s", url)
@@ -182,6 +182,18 @@ func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
 	}
 
 	return regexp.MustCompile(regexString)
+}
+
+func escapeSpecialRegexChars(s string) string {
+	specialChars := `\^${}[]().*+?|<>-&`
+	res := ""
+	for _, c := range s {
+		if strings.ContainsRune(specialChars, c) {
+			res += `\`
+		}
+		res += string(c)
+	}
+	return res
 }
 
 func isSSOMachine(machineName string) bool {

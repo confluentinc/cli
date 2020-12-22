@@ -24,49 +24,58 @@ const (
 	ccloudSSOContext      = "login-ccloud-sso-user@confluent.io-http://test"
 	netrcUser             = "jamal@jj"
 	netrcPassword         = "12345"
+	specialCharsContext   = `login-chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io-http://the-special-one`
 
-	loginURL           = "http://test"
-	ssoFirstURL        = "http://ssofirst"
-	ccloudLogin        = "ccloud-login-user@confluent.io"
-	ccloudLoginDiffURL = "ccloud-login-user-diff-url@confluent.io"
-	ccloudSSOLogin     = "ccloud-sso-user@confluent.io"
-	mdsLogin           = "mds-user"
-	ssoFirstLogin      = "sso-first@confluent.io"
-	mockPassword       = "mock-password"
-	refreshToken       = "refresh-token"
+	loginURL          = "http://test"
+	ssoFirstURL       = "http://ssofirst"
+	ccloudLogin       = "ccloud-login-user@confluent.io"
+	ccloudDiffLogin   = "ccloud-login-user-diff-url@confluent.io"
+	ccloudDiffURL     = "http://differenturl"
+	ccloudSSOLogin    = "ccloud-sso-user@confluent.io"
+	mdsLogin          = "mds-user"
+	ssoFirstLogin     = "sso-first@confluent.io"
+	mockPassword      = "mock-password"
+	refreshToken      = "refresh-token"
+	specialCharsLogin = `chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io`
 )
 
 var (
 	ccloudMachine = &Machine{
-		Name:     "confluent-cli:ccloud-username-password:login-ccloud-login-user@confluent.io-http://test",
+		Name:     "confluent-cli:ccloud-username-password:" + ccloudLoginContext,
 		User:     ccloudLogin,
 		Password: mockPassword,
 		IsSSO:    false,
 	}
 
 	ccloudDiffURLMachine = &Machine{
-		Name:     "confluent-cli:ccloud-username-password:login-ccloud-login-user-diff-url@confluent.io-http://differenturl",
-		User:     ccloudLoginDiffURL,
+		Name:     "confluent-cli:ccloud-username-password:login-" + ccloudDiffLogin + "-" + ccloudDiffURL,
+		User:     ccloudDiffLogin,
 		Password: mockPassword,
 		IsSSO:    false,
 	}
 	ccloudSSOMachine = &Machine{
-		Name:     "confluent-cli:ccloud-sso-refresh-token:login-ccloud-sso-user@confluent.io-http://test",
+		Name:     "confluent-cli:ccloud-sso-refresh-token:" + ccloudSSOContext,
 		User:     ccloudSSOLogin,
 		Password: refreshToken,
 		IsSSO:    true,
 	}
 	confluentMachine = &Machine{
-		Name:     "confluent-cli:mds-username-password:login-mds-user-http://test",
+		Name:     "confluent-cli:mds-username-password:" + mdsContext,
 		User:     mdsLogin,
 		Password: mockPassword,
 		IsSSO:    false,
 	}
 	ssoFirstMachine = &Machine{
-		Name:     "confluent-cli:ccloud-sso-refresh-token:login-sso-first@confluent.io-http://ssofirst",
+		Name:     "confluent-cli:ccloud-sso-refresh-token:login-sso-first@confluent.io-" + ssoFirstURL,
 		User:     ssoFirstLogin,
 		Password: refreshToken,
 		IsSSO:    true,
+	}
+	specialCharsMachine = &Machine{
+		Name:     "confluent-cli:ccloud-username-password:" + specialCharsContext,
+		User:     specialCharsLogin,
+		Password: mockPassword,
+		IsSSO:    false,
 	}
 )
 
@@ -124,6 +133,15 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			},
 			file: netrcFilePath,
 		},
+		{
+			name: "Context name with special characters",
+			want: specialCharsMachine,
+			params: GetMatchingNetrcMachineParams{
+				CLIName: "ccloud",
+				CtxName: specialCharsContext,
+			},
+			file: netrcFilePath,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -139,6 +157,9 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 						t.Error("GetMatchingNetrcMachine expect nil machine but got non nil machine")
 					}
 				} else {
+					if machine == nil {
+						t.Errorf("Expected to find want : %+v but found no machines", machine)
+					}
 					if !isIdenticalMachine(tt.want, machine) {
 						t.Errorf("GetMatchingNetrcMachine mismatch\ngot: %+v \nwant: %+v", machine, tt.want)
 					}
@@ -241,6 +262,9 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 						t.Error("GetMatchingNetrcMachine expect nil machine but got non nil machine")
 					}
 				} else {
+					if machine == nil {
+						t.Errorf("Expected to find want : %+v but found no machines", machine)
+					}
 					if !isIdenticalMachine(tt.want, machine) {
 						t.Errorf("GetMatchingNetrcMachine mismatch \ngot: %+v \nwant: %+v", machine, tt.want)
 					}
@@ -339,7 +363,8 @@ func TestNetrcWriter(t *testing.T) {
 func TestGetMachineNameRegex(t *testing.T) {
 	url := "https://confluent.cloud"
 	ccloudCtxName := "login-csreesangkom@confleunt.io-https://confluent.cloud"
-	confluentCtxName := "mds-username-password:login-csreesangkom@confluent.io-http://localhost:8090"
+	confluentCtxName := "login-csreesangkom@confluent.io-http://localhost:8090"
+	specialCharsCtxName := `login-csreesangkom+adoooo+\/@-+\^${}[]().*+?|<>-&@confleunt.io-https://confluent.cloud`
 	tests := []struct {
 		name          string
 		params        GetMatchingNetrcMachineParams
@@ -421,6 +446,34 @@ func TestGetMachineNameRegex(t *testing.T) {
 			nonMatchNames: []string{
 				getNetrcMachineName("confluent", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
 				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
+			},
+		},
+		{
+			name: "ccloud-special-chars",
+			params: GetMatchingNetrcMachineParams{
+				CLIName: "ccloud",
+				CtxName: specialCharsCtxName,
+			},
+			matchNames: []string{
+				getNetrcMachineName("ccloud", false, specialCharsCtxName),
+				getNetrcMachineName("ccloud", true, specialCharsCtxName),
+			},
+			nonMatchNames: []string{
+				getNetrcMachineName("ccloud", false, ccloudCtxName),
+				getNetrcMachineName("ccloud", true, ccloudCtxName),
+			},
+		},
+		{
+			name: "confluent-special-chars",
+			params: GetMatchingNetrcMachineParams{
+				CLIName: "confluent",
+				CtxName: specialCharsCtxName,
+			},
+			matchNames: []string{
+				getNetrcMachineName("confluent", false, specialCharsCtxName),
+			},
+			nonMatchNames: []string{
+				getNetrcMachineName("confluent", false, ccloudCtxName),
 			},
 		},
 	}

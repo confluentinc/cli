@@ -64,7 +64,7 @@ type rolebindingOptions struct {
 }
 
 type rolebindingCommand struct {
-	*cmd.AuthenticatedCLICommand
+	*cmd.AuthenticatedStateFlagCommand
 	cliName string
 }
 
@@ -84,14 +84,14 @@ func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Comma
 		Short: "Manage RBAC and IAM role bindings.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
-	var cliCmd *cmd.AuthenticatedCLICommand
+	var cliCmd *cmd.AuthenticatedStateFlagCommand
 	if cliName == "confluent" {
-		cliCmd = cmd.NewAuthenticatedWithMDSCLICommand(cobraRolebindingCmd, prerunner)
+		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRolebindingCmd, prerunner, RolebindingSubcommandFlags)
 	} else {
-		cliCmd = cmd.NewAuthenticatedCLICommand(cobraRolebindingCmd, prerunner)
+		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRolebindingCmd, prerunner, nil)
 	}
 	roleBindingCmd := &rolebindingCommand{
-		AuthenticatedCLICommand: cliCmd,
+		AuthenticatedStateFlagCommand: cliCmd,
 		cliName:                 cliName,
 	}
 	roleBindingCmd.init()

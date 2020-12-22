@@ -16,17 +16,17 @@ import (
 )
 
 type aclCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	cliName string
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
 func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(&cobra.Command{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(&cobra.Command{
 			Use:   "acl",
 			Short: "Manage Kafka ACLs (5.4+ only).",
-		}, prerunner),
+		}, prerunner, AclSubcommandFlags),
 		cliName: cliName,
 	}
 

@@ -1,0 +1,41 @@
+List Kafka ACLs for a resource.
+
+Usage:
+  confluent iam acl list [flags]
+
+Examples:
+List all the ACLs for the specified Kafka cluster:
+
+::
+
+  confluent iam acl list --kafka-cluster-id <kafka-cluster-id>
+
+List all the ACLs for the specified cluster that include allow permissions for the user Jane:
+
+::
+
+  confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane
+
+
+
+Flags:
+      --kafka-cluster-id string   Kafka cluster ID for scope of ACL commands.
+      --allow                     ACL permission to allow access.
+      --deny                      ACL permission to restrict access to resource.
+      --principal string          Principal for this operation with User: or Group: prefix.
+      --host string               Set host for access. (default "*")
+      --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --cluster-scope             Set the cluster resource. With this option the ACL grants
+                                  access to the provided operations on the Kafka cluster itself.
+      --consumer-group string     Set the Consumer Group resource.
+      --transactional-id string   Set the TransactionalID resource.
+      --topic string              Set the topic resource. With this option the ACL grants the provided
+                                  operations on the topics that start with that prefix, depending on whether
+                                  the --prefix option was also passed.
+      --prefix                    Set to match all resource names prefixed with this value.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string            CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -13,3 +13,7 @@ var SubcommandFlags = map[string]*pflag.FlagSet{
 	"delete":         cmd.EnvironmentContextSet(),
 	"configure-acls": cmd.ClusterEnvironmentContextSet(),
 }
+
+var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
+	"cluster":        cmd.ContextSet(),
+}

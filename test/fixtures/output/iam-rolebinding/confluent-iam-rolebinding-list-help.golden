@@ -1,0 +1,54 @@
+List the role bindings for a particular principal and/or role, and a particular scope.
+
+Usage:
+  confluent iam rolebinding list [flags]
+
+Examples:
+Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:
+
+::
+
+  iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic
+
+To list the role bindings for a specific principal:
+
+::
+
+  iam rolebinding list --kafka-cluster-id $CID --principal User:frodo
+
+To list the role bindings for a specific principal, filtered to a specific role:
+
+::
+
+  iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead
+
+To list the principals bound to a specific role:
+
+::
+
+  iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite
+
+To list the principals bound to a specific resource with a specific role:
+
+::
+
+  iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties
+
+
+
+Flags:
+      --principal string                    Principal whose rolebindings should be listed.
+      --current-user                        Show rolebindings belonging to current user.
+      --role string                         List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
+      --kafka-cluster-id string             Kafka cluster ID for scope of rolebinding listings.
+      --resource string                     If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.
+      --schema-registry-cluster-id string   Schema Registry cluster ID for scope of rolebinding listings.
+      --ksql-cluster-id string              ksqlDB cluster ID for scope of rolebinding listings.
+      --connect-cluster-id string           Kafka Connect cluster ID for scope of rolebinding listings.
+      --cluster-name string                 Cluster name to uniquely identify the cluster for rolebinding listings.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string                      CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

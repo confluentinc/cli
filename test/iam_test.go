@@ -2,19 +2,19 @@ package test
 
 func (s *CLITestSuite) TestConfluentIAM() {
 	tests := []CLITest{
+		{args: "iam role describe --help", fixture: "iam/confluent-iam-role-describe-help.golden"},
 		{args: "iam role describe DeveloperRead -o json", fixture: "iam/confluent-iam-role-describe-json.golden"},
 		{args: "iam role describe DeveloperRead -o yaml", fixture: "iam/confluent-iam-role-describe-yaml.golden"},
 		{args: "iam role describe DeveloperRead", fixture: "iam/confluent-iam-role-describe.golden"},
+		{args: "iam role list --help", fixture: "iam/confluent-iam-role-list-help.golden"},
 		{args: "iam role list -o json", fixture: "iam/confluent-iam-role-list-json.golden"},
 		{args: "iam role list -o yaml", fixture: "iam/confluent-iam-role-list-yaml.golden"},
 		{args: "iam role list", fixture: "iam/confluent-iam-role-list.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -29,11 +29,8 @@ func (s *CLITestSuite) TestCcloudIAM() {
 		{args: "iam role list", fixture: "iam/ccloud-iam-role-list.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

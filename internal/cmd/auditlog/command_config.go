@@ -16,20 +16,20 @@ import (
 )
 
 type configCommand struct {
-	*cmd.AuthenticatedCLICommand
+	*cmd.AuthenticatedStateFlagCommand
 	prerunner cmd.PreRunner
 }
 
 // NewRouteCommand returns the sub-command object for interacting with audit log route rules.
 func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
+	cliCmd := cmd.NewAuthenticatedWithMDSStateFlagCommand(
 		&cobra.Command{
 			Use:   "config",
 			Short: "Manage the audit log configuration specification.",
 			Long:  "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
-		}, prerunner)
+		}, prerunner, ConfigSubcommandFlags)
 	command := &configCommand{
-		AuthenticatedCLICommand: cliCmd,
+		AuthenticatedStateFlagCommand: cliCmd,
 		prerunner:               prerunner,
 	}
 	command.init()

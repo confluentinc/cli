@@ -16,10 +16,13 @@ const (
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
-	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\".\n"
-	EnvLoginFailedMsg          = "Non-interactive login with environment variables failed: %s\n"
-	FoundNetrcCredMsg          = "Found credentials for user \"%s\" from netrc file \"%s\".\n"
-	NetrcLoginFailedMsg        = "Non-interactive login with netrc failed: %s\n"
+	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s " +
+		StopNonInteractiveMsg + ".\n"
+	EnvLoginFailedMsg = "Non-interactive login with environment variables failed: %s\n"
+	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s " +
+		StopNonInteractiveMsg + ".\n"
+	NetrcLoginFailedMsg = "Non-interactive login with netrc failed: %s\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -103,6 +106,7 @@ const (
 	NotifyUpdateMsg        = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
 		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
+	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"
