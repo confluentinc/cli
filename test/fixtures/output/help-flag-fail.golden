@@ -6,6 +6,7 @@ Usage:
 Available Commands:
   admin             Perform administrative tasks for the current organization.
   api-key           Manage the API keys.
+  audit-log         Manage audit log configuration.
   completion        Print shell completion code.
   config            Modify the CLI configuration.
   connector         Manage Kafka Connect.

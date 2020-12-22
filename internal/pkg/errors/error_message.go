@@ -23,6 +23,7 @@ const (
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
+	AuditLogsNotEnabledErrorMsg		  = "Audit Logs are not enabled for this organization."
 
 	// login command
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"

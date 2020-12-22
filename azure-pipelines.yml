@@ -41,6 +41,7 @@ steps:
 # make targets separately
 - script: |
     make test
+  timeoutInMinutes: 90
   displayName: 'make test'
 
 - script: |
