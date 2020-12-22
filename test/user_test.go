@@ -49,6 +49,12 @@ func (s *CLITestSuite) TestUserDelete() {
 			wantErrCode: 1,
 			fixture:     "admin/user-bad-resource-id.golden",
 		},
+		{
+			args:		 "admin user delete u-1",
+			wantErrCode: 1,
+			fixture: 	 "admin/user-delete-dne.golden",
+		},
+
 	}
 
 	for _, test := range tests {
@@ -69,9 +75,9 @@ func (s *CLITestSuite) TestUserInvite() {
 			fixture:     "admin/user-bad-email.golden",
 		},
 		{
-			args:        "admin user invite test@error.io",
+			args:        "admin user invite user@exists.com",
 			wantErrCode: 1,
-			fixture:     "admin/user-invite-generic-error.golden",
+			fixture:     "admin/user-invite-user-already-active.golden",
 		},
 	}
 
