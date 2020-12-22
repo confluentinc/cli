@@ -24,7 +24,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e
+	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0
 	github.com/confluentinc/cc-structs/kafka/core v0.601.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.593.0
@@ -63,7 +63,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.2
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
-	github.com/golangci/golangci-lint v1.21.0
+	github.com/golangci/golangci-lint v1.30.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/google/go-github/v25 v25.0.2
 	github.com/google/go-github/v28 v28.1.1 // indirect
@@ -71,8 +71,7 @@ require (
 	github.com/google/rpmpack v0.0.0-20200731134257-3685799e8fdf // indirect
 	github.com/google/uuid v1.1.1
 	github.com/goreleaser/chglog v0.1.1 // indirect
-	github.com/goreleaser/goreleaser v0.116.0
-	github.com/goreleaser/nfpm v1.2.1 // indirect
+	github.com/goreleaser/goreleaser v0.142.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/go-multierror v1.0.0

@@ -100,12 +100,6 @@ type CLITestSuite struct {
 	suite.Suite
 }
 
-//type cmdFunc struct {
-//	bincover.PreCmdFunc
-//	bincover.P
-//	isPreCmdFunc bool	//true: function should be executed before the command is run; false: function should be executed afterwards
-//}
-
 // TestCLI runs the CLI integration test suite.
 func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
