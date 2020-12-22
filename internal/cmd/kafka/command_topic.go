@@ -222,7 +222,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 	}
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic config overrides ('key=value') for the topic being created.")
 	createCmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
 	createCmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
@@ -415,9 +415,10 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 		i := 0
 		for k, v := range topicConfigsMap {
+			val := v
 			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 				Name:  k,
-				Value: &v,
+				Value: &val,
 			}
 			i++
 		}
@@ -671,13 +672,19 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if useRest {
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+
+	if useRest && !dryRun {
 		kafkaRestConfigs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 		i := 0
 		for k, v := range configsMap {
+			val := v
 			kafkaRestConfigs[i] = kafkarestv3.AlterConfigBatchRequestDataData{
 				Name:      k,
-				Value:     &v,
+				Value:     &val,
 				Operation: nil,
 			}
 			i++
@@ -768,11 +775,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 	topic.Configs = copyMap(configMap)
 
-	validate, err := cmd.Flags().GetBool("dry-run")
-	if err != nil {
-		return err
-	}
-	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: validate})
+	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
 	if err != nil {
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err

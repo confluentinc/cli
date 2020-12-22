@@ -51,7 +51,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can only specify one of these flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, if you want to specify both ``consumer-group`` and ``topic``, you must specify this as two separate commands:",
+				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources:",
 				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
 			},
 		),
@@ -223,7 +223,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 			if httpResp != nil && httpResp.StatusCode != 201 {
 				if i > 0 {
-					// unlikely
 					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
 				return errors.NewErrorWithSuggestions(
@@ -308,14 +307,14 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = printAclsDeleted(matchingBindingCount)
+				printAclsDeleted(cmd, matchingBindingCount)
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = printAclsDeleted(matchingBindingCount)
+					printAclsDeleted(cmd, matchingBindingCount)
 				}
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
@@ -323,7 +322,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			if httpResp.StatusCode == 200 {
 				matchingBindingCount += len(deleteResp.Data)
 			} else {
-				_ = printAclsDeleted(matchingBindingCount)
+				printAclsDeleted(cmd, matchingBindingCount)
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
@@ -332,7 +331,8 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 		if kafkaRestExists {
 			// Kafka REST is available and at least one ACL was deleted
-			return printAclsDeleted(matchingBindingCount)
+			printAclsDeleted(cmd, matchingBindingCount)
+			return nil
 		}
 	}
 
@@ -420,12 +420,10 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 	}
 }
 
-func printAclsDeleted(count int) error {
+func printAclsDeleted(cmd *cobra.Command, count int) {
 	if count == 0 {
-		_, err := fmt.Println("No ACLs deleted")
-		return err
+		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
 	} else {
-		_, err := fmt.Printf("Deleted %d ACLs\n", count)
-		return err
+		utils.ErrPrintf(cmd, fmt.Sprintf(errors.DeletedACLsCountMsg, count))
 	}
 }
