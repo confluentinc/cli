@@ -1,5 +1,3 @@
-timeoutInMinutes: 90
-
 strategy:
   matrix:
     windows:
@@ -43,6 +41,7 @@ steps:
 # make targets separately
 - script: |
     make test
+  timeoutInMinutes: 90
   displayName: 'make test'
 
 - script: |
