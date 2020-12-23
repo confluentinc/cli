@@ -33,6 +33,15 @@ steps:
   displayName: 'Install hub (Darwin)'
 
 - script: |
+    make generate-packaging-patch
+    if git diff-index --quiet HEAD --; then
+      true
+    else
+      false
+    fi
+  displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
+
+- script: |
     make deps
   displayName: 'make deps'
 
