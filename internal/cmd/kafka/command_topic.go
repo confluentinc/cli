@@ -653,7 +653,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
 		_, offset, err := producer.SendMessage(msg)
 		if err != nil {
-			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, cluster.ID, topic)
+			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, topic, cluster.ID)
 			if isTopicNotExistError {
 				scanErr = err
 				close(input)
