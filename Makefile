@@ -79,11 +79,11 @@ endif
 
 .PHONY: run-ccloud
 run-ccloud:
-	 @go run -ldflags '-X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
+	 @go run -ldflags '-buildmode=exe -X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
 
 .PHONY: run-confluent
 run-confluent:
-	 @go run -ldflags '-X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
+	 @go run -ldflags '-buildmode=exe -X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
@@ -116,7 +116,7 @@ build-integ-nonrace:
 build-integ-ccloud-nonrace:
 	binary="ccloud_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
 	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
 
@@ -124,7 +124,7 @@ build-integ-ccloud-nonrace:
 build-integ-confluent-nonrace:
 	binary="confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
 
@@ -137,7 +137,7 @@ build-integ-race:
 build-integ-ccloud-race:
 	binary="ccloud_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
 	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
@@ -145,7 +145,7 @@ build-integ-ccloud-race:
 build-integ-confluent-race:
 	binary="confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
 		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
@@ -184,7 +184,16 @@ lint-go:
 	@GO111MODULE=on golangci-lint run --timeout=10m
 
 .PHONY: lint
-lint: lint-go lint-cli lint-installers
+lint:
+ifeq ($(shell uname),Darwin)
+	true
+else ifneq (,$(findstring NT,$(shell uname)))
+	true
+else
+	make lint-go && \
+	make lint-cli && \
+	make lint-installers
+endif
 
 .PHONY: lint-installers
 ## Lints the CLI installation scripts
@@ -206,22 +215,22 @@ lint-licenses: build
 coverage-unit:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
       endif
 
 .PHONY: coverage-integ
 coverage-integ:
       ifdef CI
 	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m -ldflags '-buildmode=exe'
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15ma -ldflags '-buildmode=exe'
       endif
 
 
