@@ -1,6 +1,6 @@
---- cli/Makefile	2020-11-10 14:46:48.000000000 -0800
-+++ debian/Makefile	2020-11-13 12:27:47.000000000 -0800
-@@ -1,249 +1,130 @@
+--- cli/Makefile	2020-12-23 11:10:48.000000000 -0800
++++ debian/Makefile	2020-11-18 20:14:22.000000000 -0800
+@@ -1,258 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -76,10 +76,24 @@
 -SHASUM ?= sha256sum
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
-+endif
-+
+ endif
+ 
+-show-args:
+-	@echo "VERSION: $(VERSION)"
 +all: install
-+
+ 
+-#
+-# START DEVELOPMENT HELPERS
+-# Usage: make run-ccloud -- version
+-#        make run-ccloud -- --version
+-#
+-
+-# If the first argument is "run-ccloud"...
+-ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
+-  # use the rest as arguments for "run-ccloud"
+-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+-  # ...and turn them into do-nothing targets
+-  $(eval $(RUN_ARGS):;@:)
 +archive: install
 +	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 +	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
@@ -88,8 +102,15 @@
 +ifeq ($(APPLY_PATCHES),yes)
 +	git reset --hard HEAD
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
-+endif
-+
+ endif
+ 
+-# If the first argument is "run-confluent"...
+-ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
+-  # use the rest as arguments for "run-confluent"
+-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+-  # ...and turn them into do-nothing targets
+-  $(eval $(RUN_ARGS):;@:)
+-endif
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -114,56 +135,14 @@
 +		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
 +		chmod 755 $${filepath} ; \
 +	done
-+
-+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
-+
-+	chown -R root:root $(DESTDIR)$(PREFIX)
-+
-+clean:
-+	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
-+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
-+	rm -rf RPM_BUILDING
-+
-+distclean: clean
-+ifneq ($(PACKAGE_TYPE),deb)
-+	git reset --hard HEAD
-+	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
- endif
  
--show-args:
--	@echo "VERSION: $(VERSION)"
-+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
- 
--#
--# START DEVELOPMENT HELPERS
--# Usage: make run-ccloud -- version
--#        make run-ccloud -- --version
--#
--
--# If the first argument is "run-ccloud"...
--ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
--  # use the rest as arguments for "run-ccloud"
--  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
--  # ...and turn them into do-nothing targets
--  $(eval $(RUN_ARGS):;@:)
--endif
--
--# If the first argument is "run-confluent"...
--ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
--  # use the rest as arguments for "run-confluent"
--  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
--  # ...and turn them into do-nothing targets
--  $(eval $(RUN_ARGS):;@:)
--endif
--
 -.PHONY: run-ccloud
 -run-ccloud:
--	 @go run -ldflags '-X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
+-	 @go run -ldflags '-buildmode=exe -X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
 -
 -.PHONY: run-confluent
 -run-confluent:
--	 @go run -ldflags '-X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
+-	 @go run -ldflags '-buildmode=exe -X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
 -
 -#
 -# END DEVELOPMENT HELPERS
@@ -196,7 +175,7 @@
 -build-integ-ccloud-nonrace:
 -	binary="ccloud_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+-	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
 -	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 -	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
 -
@@ -204,7 +183,7 @@
 -build-integ-confluent-nonrace:
 -	binary="confluent_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+-	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
 -		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 -		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
 -
@@ -217,7 +196,7 @@
 -build-integ-ccloud-race:
 -	binary="ccloud_test_race" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=ccloud \
+-	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
 -	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 -	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 -
@@ -225,7 +204,7 @@
 -build-integ-confluent-race:
 -	binary="confluent_test_race" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	GO111MODULE=on go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).cliName=confluent \
+-	GO111MODULE=on go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
 -		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
 -		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 -
@@ -245,6 +224,45 @@
 -	true
 -else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 -	make release
+-else
+-	true
+-endif
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+ 
+-cmd/lint/en_US.aff:
+-	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
++	chown -R root:root $(DESTDIR)$(PREFIX)
+ 
+-cmd/lint/en_US.dic:
+-	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
++clean:
++	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
++	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
++	rm -rf RPM_BUILDING
++
++distclean: clean
++ifneq ($(PACKAGE_TYPE),deb)
++	git reset --hard HEAD
++	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
++endif
++
++RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
+ 
+-.PHONY: lint-cli
+-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+-	@GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-
+-.PHONY: lint-go
+-lint-go:
+-	@GO111MODULE=on golangci-lint run --timeout=10m
+-
+-.PHONY: lint
+-lint:
+-ifeq ($(shell uname),Darwin)
+-	true
+-else ifneq (,$(findstring NT,$(shell uname)))
+-	true
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
@@ -257,12 +275,27 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	true
+-	make lint-go && \
+-	make lint-cli && \
+-	make lint-installers
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  
--cmd/lint/en_US.aff:
--	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+-.PHONY: lint-installers
+-## Lints the CLI installation scripts
+-lint-installers:
+-	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
+-
+-.PHONY: lint-licenses
+-## Scan and validate third-party dependeny licenses
+-lint-licenses: build
+-	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
+-	@for binary in ccloud confluent; do \
+-		echo Licenses for $${binary} binary ; \
+-		[ -t 0 ] && args="" || args="-plain" ; \
+-		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
+-		echo ; \
+-	done
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
@@ -286,37 +319,9 @@
 +	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
- 
--cmd/lint/en_US.dic:
--	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
++
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
- 
--.PHONY: lint-cli
--lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	@GO111MODULE=on go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
--
--.PHONY: lint-go
--lint-go:
--	@GO111MODULE=on golangci-lint run --timeout=10m
--
--.PHONY: lint
--lint: lint-go lint-cli lint-installers
--
--.PHONY: lint-installers
--## Lints the CLI installation scripts
--lint-installers:
--	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
--
--.PHONY: lint-licenses
--## Scan and validate third-party dependeny licenses
--lint-licenses: build
--	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
--	@for binary in ccloud confluent; do \
--		echo Licenses for $${binary} binary ; \
--		[ -t 0 ] && args="" || args="-plain" ; \
--		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
--		echo ; \
--	done
++
 +RPM_BUILDING/%:
 +	mkdir -p $@
  
@@ -324,22 +329,22 @@
 -coverage-unit:
 -      ifdef CI
 -	@# Run unit tests with coverage.
--	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 -      else
 -	@# Run unit tests.
--	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
+-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -      endif
 -
 -.PHONY: coverage-integ
 -coverage-integ:
 -      ifdef CI
 -	@# Run integration tests with coverage.
--	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
+-	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m -ldflags '-buildmode=exe'
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 -      else
 -	@# Run integration tests.
--	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m
+-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m -ldflags '-buildmode=exe'
 -      endif
 -
 -
