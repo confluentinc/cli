@@ -23,7 +23,7 @@ const (
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
-	AuditLogsNotEnabledErrorMsg		  = "Audit Logs are not enabled for this organization."
+	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization."
 
 	// login command
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
@@ -119,6 +119,9 @@ const (
 	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `ccloud api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
 	PassedSecretButNotKeySuggestions     = "Use the \"api-key\" flag to specify an API key."
+	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
+	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
+		"If your topic is compacted, ensure you are producing a record with a key."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
