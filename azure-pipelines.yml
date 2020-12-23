@@ -36,10 +36,6 @@ steps:
     make deps
   displayName: 'make deps'
 
-- script: |
-    make build
-  displayName: 'make build'
-
 # make test will build the CLI as part of its work
 # (for integration tests), so no need to run build
 # make targets separately
