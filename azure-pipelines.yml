@@ -40,7 +40,7 @@ steps:
     else
       false
     fi
-  condition: eq( variables['Agent.OS'], 'Linux' )
+  condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
 
 - script: |
