@@ -45,17 +45,7 @@ steps:
 # make generate-packaging-patch will update the timestamp (in the first line of the patch file), so we should ignore that line for the diff
 - script: |
     make generate-packaging-patch
-    #git commit -am "f"
-    #git push
-    git version
-    echo "herwe1"
-    git status
-    echo "here we go"
-    git diff
-    #diff -w -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
-    #git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'
-    #cat debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'
-    diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}' | dos2unix) <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}' | dos2unix)
+    diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
     #condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
 
