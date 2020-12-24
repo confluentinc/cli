@@ -47,6 +47,7 @@ steps:
     make generate-packaging-patch
     #git commit -am "f"
     #git push
+    git version
     echo "herwe1"
     git status
     echo "here we go"
