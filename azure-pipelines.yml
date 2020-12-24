@@ -35,6 +35,8 @@ steps:
 # make generate-packaging-patch will update the timestamp (in the first line of the patch file), so we should ignore that line for the diff
 - script: |
     make generate-packaging-patch
+    git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'
+    cat debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'
     if diff -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'); then
       true
     else
