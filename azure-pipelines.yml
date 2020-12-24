@@ -27,6 +27,11 @@ steps:
   displayName: 'Install hub (Linux)'
 
 - script: |
+    apt install dos2unix
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Install dos2unix (Linux)'
+
+- script: |
     curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-darwin-amd64-2.11.1.tgz | sudo gtar -xvz -C /usr/local/bin --strip-components=2 hub-darwin-amd64-2.11.1/bin/hub
     sudo chmod 755 /usr/local/bin/hub
   condition: eq( variables['Agent.OS'], 'Darwin' )
@@ -43,7 +48,7 @@ steps:
     else
       false
     fi
-    #condition: eq( variables['Agent.OS'], 'Darwin' )
+    condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
 
 - script: |
