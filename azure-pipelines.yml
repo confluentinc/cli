@@ -47,6 +47,8 @@ steps:
     make generate-packaging-patch
     #git commit -am "f"
     #git push
+    echo "herwe1"
+    git status
     echo "here we go"
     git diff
     #diff -w -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
