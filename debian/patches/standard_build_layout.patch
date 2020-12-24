@@ -1,4 +1,4 @@
---- cli/Makefile	2020-12-23 21:42:42.000000000 -0800
+--- cli/Makefile	2020-12-24 11:30:24.000000000 -0800
 +++ debian/Makefile	2020-11-18 20:14:22.000000000 -0800
 @@ -1,258 +1,130 @@
 -SHELL           := /bin/bash
@@ -369,6 +369,6 @@
 -
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+-	diff --binary -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 +RELEASE_%:
 +	echo 0 > $@
