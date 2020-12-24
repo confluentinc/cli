@@ -256,7 +256,3 @@ doctoc:
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
-
-.PHONY: asdf
-asdf:
-	echo foo
