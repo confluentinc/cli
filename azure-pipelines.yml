@@ -27,7 +27,7 @@ steps:
   displayName: 'Install hub (Linux)'
 
 - script: |
-    apt install dos2unix
+    sudo apt install dos2unix
   condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Install dos2unix (Linux)'
 
