@@ -27,6 +27,11 @@ steps:
   displayName: 'Install hub (Linux)'
 
 - script: |
+    brew install dos2unix
+  condition: eq( variables['Agent.OS'], 'Darwin' )
+  displayName: 'Install dos2unix (Darwin)'
+
+- script: |
     sudo apt install dos2unix
   condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Install dos2unix (Linux)'
@@ -45,7 +50,7 @@ steps:
     #git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'
     #cat debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}'
     diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}' | dos2unix) <(cat debian/patches/standard_build_layout.patch | awk '{if (NR!=1) {print}}' | dos2unix)
-  condition: eq( variables['Agent.OS'], 'Linux' )
+    #condition: eq( variables['Agent.OS'], 'Linux' )
   displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
 
 - script: |
