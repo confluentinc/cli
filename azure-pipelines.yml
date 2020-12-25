@@ -32,6 +32,13 @@ steps:
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install hub (Darwin)'
 
+# make generate-packaging-patch will update the timestamp (in the first two lines of the patch file), so we should ignore that line for the diff
+- script: |
+    make generate-packaging-patch
+    diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
+
 - script: |
     make deps
   displayName: 'make deps'
