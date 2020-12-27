@@ -3,6 +3,7 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
+	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -599,8 +600,18 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 // Handler for: "/api/users/{id}
 func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := orgv1.DeleteUserReply{
-			Error: nil,
+		vars := mux.Vars(r)
+		userId := vars["id"]
+		var res orgv1.DeleteUserReply
+		switch userId {
+		case "u-1":
+			res = orgv1.DeleteUserReply{
+				Error: &v1.Error{Message: "user not found"},
+			}
+		default:
+			res = orgv1.DeleteUserReply{
+				Error: nil,
+			}
 		}
 		data, err := json.Marshal(res)
 		require.NoError(t, err)
@@ -614,18 +625,23 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		bs := string(body)
-		if strings.Contains(bs, "test@error.io") {
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			res := flowv1.SendInviteReply{
+		var res flowv1.SendInviteReply
+		switch {
+		case strings.Contains(bs, "user@exists.com"):
+			res = flowv1.SendInviteReply{
+				Error: &v1.Error{Message: "User is already active"},
+				User:  nil,
+			}
+		default:
+			res = flowv1.SendInviteReply{
 				Error: nil,
 				User:  buildUser(1, "miles@confluent.io", "Miles", "Todzo", ""),
 			}
-			data, err := json.Marshal(res)
-			require.NoError(t, err)
-			_, err = w.Write(data)
-			require.NoError(t, err)
 		}
+		data, err := json.Marshal(res)
+		require.NoError(t, err)
+		_, err = w.Write(data)
+		require.NoError(t, err)
 	}
 }
 
