@@ -48,11 +48,11 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 		{
 			name:        "error if topic already exists",
-			args:        "kafka topic create integ",
+			args:        "kafka topic create dupTopic",
 			fixture:     "topic-exists.golden",
 			wantErrCode: 1,
 			login:       "default",
-			useKafka:    "lkc-abc123",
+			useKafka:    "lkc-create-topic",
 			authKafka:   "true",
 		},
 		{
