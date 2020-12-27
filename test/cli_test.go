@@ -287,7 +287,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("malformed token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL,0)
+		output := runCommand(tt, ccloudTestBin, env, "login --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
@@ -436,8 +436,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, coverageCollectorOptions ... bincover.CoverageCollectorOption) string {
-	//options := parseCmdFuncsToCoverageCollectorOptions(cmdFuncs)
+func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, coverageCollectorOptions ...bincover.CoverageCollectorOption) string {
 	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), coverageCollectorOptions...)
 	if err != nil && wantErrCode == 0 {
 		require.Failf(t, "unexpected error",
@@ -446,12 +445,13 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 	require.Equal(t, wantErrCode, exitCode, output)
 	return output
 }
+
 // Parses pre and post CmdFuncs into CoverageCollectorOptions which can be unsed in covCollector.RunBinary()
 func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, postCmdFuncs []bincover.PostCmdFunc) []bincover.CoverageCollectorOption {
-	if len(preCmdFuncs) == 0 && len(postCmdFuncs) == 0{
+	if len(preCmdFuncs) == 0 && len(postCmdFuncs) == 0 {
 		return []bincover.CoverageCollectorOption{}
 	}
-	var options[]bincover.CoverageCollectorOption
+	var options []bincover.CoverageCollectorOption
 	return append(options, bincover.PreExec(preCmdFuncs...), bincover.PostExec(postCmdFuncs...))
 }
 
@@ -459,29 +459,29 @@ func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, 
 // returns a cmdFunc struct with the StdinPipe functionality and isPreCmdFunc set to true
 // takes an io.Reader with the desired input read into it
 func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
-		return func(cmd *exec.Cmd) error {
-			buf, err := ioutil.ReadAll(stdinInput)
-			fmt.Printf("%s", buf)
-			if err != nil {
-				return err
-			}
-			if len(buf) == 0 {
-				return nil
-			}
-			writer, err := cmd.StdinPipe()
-			if err != nil {
-				return err
-			}
-			_, err = writer.Write(buf)
-			if err != nil {
-				return err
-			}
-			err = writer.Close()
-			if err != nil {
-				return err
-			}
+	return func(cmd *exec.Cmd) error {
+		buf, err := ioutil.ReadAll(stdinInput)
+		fmt.Printf("%s", buf)
+		if err != nil {
+			return err
+		}
+		if len(buf) == 0 {
 			return nil
 		}
+		writer, err := cmd.StdinPipe()
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(buf)
+		if err != nil {
+			return err
+		}
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }
 
 func resetConfiguration(t *testing.T, cliName string) {
