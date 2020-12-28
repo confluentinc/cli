@@ -89,6 +89,10 @@ type CLITest struct {
 	workflow bool
 	// An optional function that allows you to specify other calls
 	wantFunc func(t *testing.T)
+	// Optional functions that will be executed directly before the command is run (i.e. overwriting stdin before run)
+	preCmdFuncs []bincover.PreCmdFunc
+	// Optional functions that will be executed directly after the command is run
+	postCmdFuncs []bincover.PostCmdFunc
 }
 
 // CLITestSuite is the CLI integration tests.
@@ -118,12 +122,13 @@ func init() {
 // SetupSuite builds the CLI binary to test
 func (s *CLITestSuite) SetupSuite() {
 	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
-	covCollector.Setup()
 	req := require.New(s.T())
+	err := covCollector.Setup()
+	req.NoError(err)
 	testBackend = test_server.StartTestBackend(s.T())
 
 	// dumb but effective
-	err := os.Chdir("..")
+	err = os.Chdir("..")
 	req.NoError(err)
 	err = os.Setenv("XX_CCLOUD_RBAC", "yes")
 	req.NoError(err)
@@ -148,7 +153,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
 	_ = os.Unsetenv("XX_CCLOUD_RBAC")
-	covCollector.TearDown()
+	_ = covCollector.TearDown()
 	testBackend.Close()
 }
 
@@ -343,7 +348,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 				fmt.Println(output)
 			}
 		}
-		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode)
+		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
+		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -381,8 +387,8 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 				fmt.Println(output)
 			}
 		}
-
-		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode)
+		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
+		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode, covCollectorOptions...)
 
 		if strings.HasPrefix(tt.args, "config context list") ||
 			strings.HasPrefix(tt.args, "config context current") {
@@ -430,14 +436,52 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int) string {
-	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "))
+func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, coverageCollectorOptions ...bincover.CoverageCollectorOption) string {
+	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), coverageCollectorOptions...)
 	if err != nil && wantErrCode == 0 {
 		require.Failf(t, "unexpected error",
 			"exit %d: %s\n%s", exitCode, args, output)
 	}
 	require.Equal(t, wantErrCode, exitCode, output)
 	return output
+}
+
+// Parses pre and post CmdFuncs into CoverageCollectorOptions which can be unsed in covCollector.RunBinary()
+func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, postCmdFuncs []bincover.PostCmdFunc) []bincover.CoverageCollectorOption {
+	if len(preCmdFuncs) == 0 && len(postCmdFuncs) == 0 {
+		return []bincover.CoverageCollectorOption{}
+	}
+	var options []bincover.CoverageCollectorOption
+	return append(options, bincover.PreExec(preCmdFuncs...), bincover.PostExec(postCmdFuncs...))
+}
+
+// Used for tests needing to overwrite StdIn for mock input
+// returns a cmdFunc struct with the StdinPipe functionality and isPreCmdFunc set to true
+// takes an io.Reader with the desired input read into it
+func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
+	return func(cmd *exec.Cmd) error {
+		buf, err := ioutil.ReadAll(stdinInput)
+		fmt.Printf("%s", buf)
+		if err != nil {
+			return err
+		}
+		if len(buf) == 0 {
+			return nil
+		}
+		writer, err := cmd.StdinPipe()
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(buf)
+		if err != nil {
+			return err
+		}
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }
 
 func resetConfiguration(t *testing.T, cliName string) {

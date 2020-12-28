@@ -3,6 +3,7 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
+	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -25,11 +26,11 @@ import (
 )
 
 var (
-	environments = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
+	environments    = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
 	keyStore        = map[int32]*schedv1.ApiKey{}
 	keyIndex        = int32(1)
 	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
-	)
+)
 
 const (
 	exampleAvailability = "low"
@@ -44,6 +45,7 @@ const (
 	serviceAccountID  = int32(12345)
 	deactivatedUserID = int32(6666)
 )
+
 // Fill API keyStore with default data
 func init() {
 	fillKeyStore()
@@ -60,6 +62,15 @@ func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Req
 				ResourceId: "u-11aaa",
 			},
 			Accounts: environments,
+			Organization: &orgv1.Organization{
+				Id: 42,
+				AuditLog: &orgv1.AuditLog{
+					ClusterId:        "lkc-ab123",
+					AccountId:        "env-987zy",
+					ServiceAccountId: 1337,
+					TopicName:        "confluent-audit-log-events",
+				},
+			},
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
@@ -113,6 +124,7 @@ func (c *CloudRouter) HandleCheckEmail(t *testing.T) func(w http.ResponseWriter,
 		req.NoError(err)
 	}
 }
+
 // Handler for: "/api/accounts/{id}"
 func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +160,7 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 		}
 	}
 }
+
 // Handler for: "/api/accounts"
 func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -174,28 +187,38 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter,
 		}
 	}
 }
+
 // Handler for: "/api/organizations/{id}/payment_info"
 func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := orgv1.GetPaymentInfoReply{
-			Card: &orgv1.Card{
-				Cardholder: "Miles Todzo",
-				Brand:      "Visa",
-				Last4:      "4242",
-				ExpMonth:   "01",
-				ExpYear:    "99",
-			},
-			Organization: &orgv1.Organization{
-				Id: 0,
-			},
-			Error: nil,
+		switch r.Method {
+		case "POST": //admin payment update
+			req := &orgv1.UpdatePaymentInfoRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			require.NotEmpty(t, req.StripeToken)
+		case "GET": // admin payment describe
+			res := orgv1.GetPaymentInfoReply{
+				Card: &orgv1.Card{
+					Cardholder: "Miles Todzo",
+					Brand:      "Visa",
+					Last4:      "4242",
+					ExpMonth:   "01",
+					ExpYear:    "99",
+				},
+				Organization: &orgv1.Organization{
+					Id: 0,
+				},
+				Error: nil,
+			}
+			data, err := json.Marshal(res)
+			require.NoError(t, err)
+			_, err = w.Write(data)
+			require.NoError(t, err)
 		}
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
 	}
 }
+
 // Handler for "/api/organizations/"
 func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -217,6 +240,7 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/api/service_accounts"
 func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -273,6 +297,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 		}
 	}
 }
+
 // Handler for: "/api/api_keys"
 func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -583,8 +608,18 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 // Handler for: "/api/users/{id}
 func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := orgv1.DeleteUserReply{
-			Error: nil,
+		vars := mux.Vars(r)
+		userId := vars["id"]
+		var res orgv1.DeleteUserReply
+		switch userId {
+		case "u-1":
+			res = orgv1.DeleteUserReply{
+				Error: &v1.Error{Message: "user not found"},
+			}
+		default:
+			res = orgv1.DeleteUserReply{
+				Error: nil,
+			}
 		}
 		data, err := json.Marshal(res)
 		require.NoError(t, err)
@@ -598,18 +633,23 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		bs := string(body)
-		if strings.Contains(bs, "test@error.io") {
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			res := flowv1.SendInviteReply{
+		var res flowv1.SendInviteReply
+		switch {
+		case strings.Contains(bs, "user@exists.com"):
+			res = flowv1.SendInviteReply{
+				Error: &v1.Error{Message: "User is already active"},
+				User:  nil,
+			}
+		default:
+			res = flowv1.SendInviteReply{
 				Error: nil,
 				User:  buildUser(1, "miles@confluent.io", "Miles", "Todzo", ""),
 			}
-			data, err := json.Marshal(res)
-			require.NoError(t, err)
-			_, err = w.Write(data)
-			require.NoError(t, err)
 		}
+		data, err := json.Marshal(res)
+		require.NoError(t, err)
+		_, err = w.Write(data)
+		require.NoError(t, err)
 	}
 }
 
