@@ -191,23 +191,31 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter,
 // Handler for: "/api/organizations/{id}/payment_info"
 func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := orgv1.GetPaymentInfoReply{
-			Card: &orgv1.Card{
-				Cardholder: "Miles Todzo",
-				Brand:      "Visa",
-				Last4:      "4242",
-				ExpMonth:   "01",
-				ExpYear:    "99",
-			},
-			Organization: &orgv1.Organization{
-				Id: 0,
-			},
-			Error: nil,
+		switch r.Method {
+		case "POST": //admin payment update
+			req := &orgv1.UpdatePaymentInfoRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			require.NotEmpty(t, req.StripeToken)
+		case "GET": // admin payment describe
+			res := orgv1.GetPaymentInfoReply{
+				Card: &orgv1.Card{
+					Cardholder: "Miles Todzo",
+					Brand:      "Visa",
+					Last4:      "4242",
+					ExpMonth:   "01",
+					ExpYear:    "99",
+				},
+				Organization: &orgv1.Organization{
+					Id: 0,
+				},
+				Error: nil,
+			}
+			data, err := json.Marshal(res)
+			require.NoError(t, err)
+			_, err = w.Write(data)
+			require.NoError(t, err)
 		}
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
 	}
 }
 

@@ -255,6 +255,8 @@ github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 h1:sIWhdehnHPCWoZeM
 github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2/go.mod h1:HNotNNYHefttEUajcmByCW4bWNBiYd7s5mNZWzB62r0=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e h1:AD1FNb9oVlqmbfWRTr/5NYVo8GDz3avvt58OMXoCL7k=
 github.com/confluentinc/bincover v0.0.0-20191217221125-80a7bb37ae5e/go.mod h1:SDRY3Jkno8P4DtD+znY7Rysg2vI+puuknPxZ4ummZJ4=
+github.com/confluentinc/bincover v0.2.0 h1:WSS3MqzwJbosCLMOuF3tJ0pMpALzBfrm80Tb+/3gbQs=
+github.com/confluentinc/bincover v0.2.0/go.mod h1:qeI1wx0RxdGTZtrJY0HVlgJ4NqC/X2Z+fHbvy87tgHE=
 github.com/confluentinc/cc-structs v0.645.0 h1:rTEBlrodmoEJYErbBOB9khLp74cuPnYEAiz3R6NNUbI=
 github.com/confluentinc/cc-structs v0.660.0 h1:OQtrtr8DehqPuqqwGNVS0oAkPBid+BJhWiIsWbNJLHo=
 github.com/confluentinc/cc-structs v0.668.0 h1:A2d1R8LFFHLB7fmVnIkswV1XMtOCIeXvUQi72hWEAmw=
