@@ -1,1 +1,4 @@
-Error: error describing topic topic2
+Error: CCloud backend error: 1 error occurred:
+	* error describing topic topic2: topic not found
+
+

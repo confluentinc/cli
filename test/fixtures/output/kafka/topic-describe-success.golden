@@ -5,5 +5,6 @@ Topic: topic1 PartitionCount: 1 ReplicationFactor: 1
 
 Configuration
  
-  Name | Value  
-+------+-------+
+     Name    |   Value    
++------------+-----------+
+  testConfig | testValue  

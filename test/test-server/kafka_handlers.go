@@ -154,6 +154,14 @@ func (k *KafkaRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWrite
 			}
 		case "lkc-no-topics":
 			listTopicReply = schedv1.ListTopicReply{Topics: []*schedv1.TopicDescription{}}
+		default: //cluster not ready
+			w.WriteHeader(http.StatusInternalServerError)
+			listTopicReply = schedv1.ListTopicReply{Error: &schedv1.KafkaAPIError{Message: "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed"}}
+			topicReply, err := json.Marshal(listTopicReply.Error)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(topicReply))
+			require.NoError(t, err)
+			return
 		}
 		topicReply, err := json.Marshal(listTopicReply.Topics)
 		require.NoError(t, err)
@@ -211,6 +219,12 @@ func (k *KafkaRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.ResponseW
 		default:
 			w.WriteHeader(http.StatusNotFound)
 			describeTopicReply = &schedv1.DescribeTopicReply{Error: &schedv1.KafkaAPIError{Message: "topic not found"}}
+			var err error
+			topicReply, err := json.Marshal(describeTopicReply.Error)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(topicReply))
+			require.NoError(t, err)
+			return
 		}
 		topicReply, err := json.Marshal(describeTopicReply.Topic)
 		require.NoError(t, err)
@@ -241,20 +255,16 @@ func (k *KafkaRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.ResponseWri
 //Handler for: "/2.0/kafka/{cluster}/topics/{topic}/config"
 func (k *KafkaRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var listTopicConfigReply schedv1.ListTopicConfigReply
+		var listTopicConfigReply *schedv1.ListTopicConfigReply
 		if r.Method == "GET" { //part of describe call
-			listTopicConfigReply = schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{}}}
+			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "testConfig", Value: "testValue"}}}}
+			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(topicReply))
+			require.NoError(t, err)
 		}
-		// POSTs are part of update calls
-		vars := mux.Vars(r)
-		topic := vars["topic"]
-		switch topic {
-
-		}
-		topicReply, err := json.Marshal(listTopicConfigReply)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(topicReply))
-		require.NoError(t, err)
+		// PUTs are part of update calls
+		// nothing to validate
 	}
 }
 
