@@ -91,7 +91,6 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
-
 	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, c.logger, c.analytics, opts...)
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt.Prompt, c.config, c.jwtValidator))
 	if err := livePrefixOpt(cliPrompt.Prompt); err != nil {
