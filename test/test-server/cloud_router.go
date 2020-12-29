@@ -39,6 +39,8 @@ const (
 	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
 	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
+	signup				= "/api/signup"
+	verifyEmail			= "/api/email_verifications"
 )
 
 type CloudRouter struct {
@@ -64,7 +66,9 @@ func NewEmptyCloudRouter() *CloudRouter {
 func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t))
-	c.HandleFunc(checkEmail, c.HandleCheckEmail(t))
+	c.HandleFunc(checkEmail, c.HandleCheckEmail(t)).SkipClean()
+	c.HandleFunc(signup, c.HandleSignup(t))
+	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
 	c.HandleFunc(serviceAccounts, c.HandleServiceAccount(t))
 	c.addSchemaRegistryRoutes(t)
@@ -78,12 +82,12 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addV2AlphaRoutes(t)
 }
 
-func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
+func (c *CloudRouter) addV2AlphaRoutes(t *testing.T) {
 	c.HandleFunc(v2alphaAuthenticate, c.HandleV2Authenticate(t))
 	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies, v2RbacRoles)
 }
 
-func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies, rbacRoles map[string]string) {
+func (c *CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies, rbacRoles map[string]string) {
 	addRoles(base, routesAndReplies, rbacRoles)
 	for route, reply := range routesAndReplies {
 		s := reply
