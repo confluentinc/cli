@@ -39,6 +39,8 @@ const (
 	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
 	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
+	signup				= "/api/signup"
+	verifyEmail			= "/api/email_verifications"
 )
 
 type CloudRouter struct {
@@ -65,6 +67,8 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t))
 	c.HandleFunc(checkEmail, c.HandleCheckEmail(t))
+	c.HandleFunc(signup, c.HandleSignup(t))
+	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
 	c.HandleFunc(serviceAccounts, c.HandleServiceAccount(t))
 	c.addSchemaRegistryRoutes(t)

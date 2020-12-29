@@ -117,6 +117,10 @@ func (c *CloudRouter) HandleCheckEmail(t *testing.T) func(w http.ResponseWriter,
 			reply.User = &orgv1.User{
 				Email: "cody@confluent.io",
 			}
+		case "already-exists@confluent.io":
+			reply.User = &orgv1.User{
+				Id: 1,
+			}
 		}
 		b, err := utilv1.MarshalJSONToBytes(reply)
 		req.NoError(err)
@@ -823,5 +827,30 @@ func (c CloudRouter) HandleV2Authenticate(t *testing.T) func(http.ResponseWriter
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
+	}
+}
+// Handler for: "/api/signup"
+func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &orgv1.SignupRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
+		require.NotEmpty(t, req.Organization.Name)
+		require.NotEmpty(t, req.User)
+		require.NotEmpty(t, req.Credentials)
+		signupReply := &orgv1.SignupReply{}
+		reply, err := utilv1.MarshalJSONToBytes(signupReply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
+	}
+}
+// Handler for: "/api/email_verifications"
+func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := &flowv1.CreateEmailVerificationRequest{}
+		err := utilv1.UnmarshalJSON(r.Body, req)
+		require.NoError(t, err)
+		w.WriteHeader(http.StatusOK)
 	}
 }
