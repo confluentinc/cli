@@ -72,7 +72,6 @@ func signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error
 	user, _ := client.User.CheckEmail(context.Background(), &v1.User{
 		Email: fEmail.Responses["email"].(string),
 	})
-
 	if user != nil {
 		utils.Println(cmd, "There is already an account associated with this email. If your email has not been verified, a new verification email will be sent.")
 		utils.Println(cmd, "Once your email is verified, please login using \"ccloud login\". For any assistance, contact support@confluent.io.")

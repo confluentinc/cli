@@ -174,7 +174,7 @@ func (k *KafkaRouter) HandleKafkaCreateTopic(t *testing.T) func(http.ResponseWri
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
-		spec := &schedv1.TopicSpecification{}//CreateTopicRequest{}
+		spec := &schedv1.TopicSpecification{}
 		err := utilv1.UnmarshalJSON(r.Body, spec)
 		require.NoError(t, err)
 		topicName := spec.Name
