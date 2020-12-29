@@ -164,7 +164,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		serviceAccountCmd := serviceaccount.New(prerunner)
 		serverCompleter.AddCommand(serviceAccountCmd)
 		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, cfg, prerunner, shellCompleter, logger, analyticsClient, jwtValidator))
+		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, logger, analyticsClient, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
