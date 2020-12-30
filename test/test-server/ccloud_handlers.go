@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	environments    = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}}
+	environments    = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: "env-srUpdate", Name: "srUpdate"}}
 	keyStore        = map[int32]*schedv1.ApiKey{}
 	keyIndex        = int32(1)
 	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
@@ -461,31 +461,6 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) func(w http.ResponseWriter
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
-		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/schema_registries"
-func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		id := q.Get("id")
-		if id == "" {
-			id = "lsrc-1234"
-		}
-		accountId := q.Get("account_id")
-		srCluster := &schedv1.SchemaRegistryCluster{
-			Id:        id,
-			AccountId: accountId,
-			Name:      "account schema-registry",
-			Endpoint:  "SASL_SSL://sr-endpoint",
-		}
-		fmt.Println(srCluster)
-		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetSchemaRegistryClusterReply{
-			Cluster: srCluster,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	}
 }

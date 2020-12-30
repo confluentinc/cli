@@ -11,18 +11,22 @@ type TestBackend struct {
 	cloud       *httptest.Server
 	kafka       *httptest.Server
 	mds         *httptest.Server
+	sr			*httptest.Server
 }
 
 func StartTestBackend(t *testing.T) *TestBackend {
 	cloudRouter := NewCloudRouter(t)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
+	srRouter := NewSRRouter(t)
 	backend := &TestBackend{
 		cloud:       httptest.NewServer(cloudRouter),
 		kafka:       httptest.NewServer(kafkaRouter),
 		mds:         httptest.NewServer(mdsRouter),
+		sr: 		 httptest.NewServer(srRouter),
 	}
 	cloudRouter.kafkaApiUrl = backend.kafka.URL
+	cloudRouter.srApiUrl = backend.sr.URL
 	return backend
 }
 
@@ -35,6 +39,9 @@ func (b *TestBackend) Close() {
 	}
 	if b.mds != nil {
 		b.mds.Close()
+	}
+	if b.sr != nil {
+		b.sr.Close()
 	}
 }
 
