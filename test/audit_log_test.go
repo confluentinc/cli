@@ -3,11 +3,8 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"regexp"
-	"runtime"
-
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"regexp"
 )
 
 func (s *CLITestSuite) TestAuditLogConfig() {
@@ -76,11 +73,12 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 }
 
 func (s *CLITestSuite) TestAuditConfigMigrate() {
-	migration1 := getInputFixturePath("config-migration-server1.golden", s)
-	migration2 := getInputFixturePath("config-migration-server2.golden", s)
+	s.Fail("")
+	migration1 := GetInputFixturePath(s.T(), "auditlog","config-migration-server1.golden")
+	migration2 := GetInputFixturePath(s.T(), "auditlog","config-migration-server2.golden")
 
-	malformed := getInputFixturePath("malformed-migration.golden", s)
-	nullFields := getInputFixturePath("null-fields-migration.golden", s)
+	malformed := GetInputFixturePath(s.T(), "auditlog","malformed-migration.golden")
+	nullFields := GetInputFixturePath(s.T(), "auditlog","null-fields-migration.golden")
 
 	tests := []CLITest{
 		{
@@ -103,12 +101,4 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 		tt.login = "default"
 		s.runConfluentTest(tt)
 	}
-}
-
-func getInputFixturePath(file string, suite *CLITestSuite) string {
-	_, callerFileName, _, ok := runtime.Caller(0)
-	if !ok {
-		suite.Fail("problems recovering caller information")
-	}
-	return filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "auditlog", file)
 }

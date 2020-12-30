@@ -1,10 +1,6 @@
 package test_server
 
 import (
-	"encoding/json"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/stretchr/testify/require"
-	"net/http"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -12,10 +8,16 @@ import (
 
 // schema registry urls
 const (
-	get = "/"
+	get                  = "/"
 	updateTopLevelConfig = "/config"
-	updateTopLevelMode 	 = "/mode"
-
+	updateTopLevelMode   = "/mode"
+	subjectVersions      = "/subjects/{subject}/versions"
+	subject              = "/subjects/{subject}"
+	subjectVersion       = "/subjects/{subject}/versions/{version}"
+	schemaById           = "/schemas/ids/{id}"
+	subjects             = "/subjects"
+	subjectLevelConfig	 = "/config/{subject}"
+	modeSubject			 = "/mode/{subject}"
 )
 
 type SRRouter struct {
@@ -38,34 +40,11 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 	s.HandleFunc(get, s.HandleSRGet(t))
 	s.HandleFunc(updateTopLevelConfig, s.HandleSRUpdateTopLevelConfig(t))
 	s.HandleFunc(updateTopLevelMode, s.HandleSRUpdateTopLevelMode(t))
-}
-// Handler for: "/"
-func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(map[string]interface{}{})
-		require.NoError(t, err)
-	}
-}
-// Handler for: "/config"
-func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ConfigUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
-		require.NoError(t, err)
-	}
-}
-// Handler for: "/mode"
-func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ModeUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
-		require.NoError(t, err)
-	}
+	s.HandleFunc(subjectVersions, s.HandleSRSubjectVersions(t))
+	s.HandleFunc(subject, s.HandleSRSubject(t))
+	s.HandleFunc(subjectVersion, s.HandleSRSubjectVersion(t))
+	s.HandleFunc(schemaById, s.HandleSRById(t))
+	s.HandleFunc(subjects, s.HandleSRSubjects(t))
+	s.HandleFunc(subjectLevelConfig, s.HandleSRSubjectConfig(t))
+	s.HandleFunc(modeSubject, s.HandleSRSubjectMode(t))
 }

@@ -13,7 +13,7 @@ var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
 }
 
 var SubjectSubcommandFlags = map[string]*pflag.FlagSet{
-	"acl": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
+	"subject": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
 }
 
 var SchemaSubcommandFlags = map[string]*pflag.FlagSet{
