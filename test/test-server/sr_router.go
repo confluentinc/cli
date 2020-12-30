@@ -43,7 +43,8 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{})
+		err := json.NewEncoder(w).Encode(map[string]interface{}{})
+		require.NoError(t, err)
 	}
 }
 // Handler for: "/config"
@@ -53,7 +54,8 @@ func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.Response
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+		err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+		require.NoError(t, err)
 	}
 }
 // Handler for: "/mode"
@@ -63,6 +65,7 @@ func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) func(http.ResponseWr
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
+		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
+		require.NoError(t, err)
 	}
 }
