@@ -73,7 +73,6 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 }
 
 func (s *CLITestSuite) TestAuditConfigMigrate() {
-	s.Fail("")
 	migration1 := GetInputFixturePath(s.T(), "auditlog","config-migration-server1.golden")
 	migration2 := GetInputFixturePath(s.T(), "auditlog","config-migration-server2.golden")
 
