@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	SRUpdateEnvId = "env-srUpdate"
+	SRApiEnvId = "env-srUpdate"
 )
 
 // Handler for: "/api/schema_registries"
@@ -24,9 +24,9 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWri
 		}
 		accountId := q.Get("account_id")
 		var endpoint string
-		// for update commands (use accountId to differentiate) we want to use the SR server URL so that we can make subsequent requests there
+		// for sr commands that use the sr api (use accountId to differentiate) we want to use the SR server URL so that we can make subsequent requests there
 		// for describe commands we want to use a standard endpoint so that it will always match the test fixture
-		if accountId == SRUpdateEnvId {
+		if accountId == SRApiEnvId {
 			endpoint = c.srApiUrl
 		} else {
 			endpoint = "SASL_SSL://sr-endpoint"
