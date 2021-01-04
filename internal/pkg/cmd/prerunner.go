@@ -73,6 +73,11 @@ type AuthenticatedStateFlagCommand struct {
 	subcommandFlags map[string]*pflag.FlagSet
 }
 
+type StateFlagCommand struct {
+	*CLICommand
+	subcommandFlags map[string]*pflag.FlagSet
+}
+
 type HasAPIKeyCLICommand struct {
 	*CLICommand
 	Context         *DynamicContext
@@ -89,10 +94,26 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 	cmd.Command = command
 	return cmd
 }
-
+// Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
 	cmd := &AuthenticatedStateFlagCommand{
 		NewAuthenticatedCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+// Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
+func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
+	cmd := &AuthenticatedStateFlagCommand{
+		NewAuthenticatedWithMDSCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+// Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
+func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
+	cmd := &StateFlagCommand{
+		NewAnonymousCLICommand(command, prerunner),
 		flagMap,
 	}
 	return cmd
@@ -136,8 +157,8 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 }
 
 func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(s.Use)[0]])
-	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
+	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
 	command.Flags().SortFlags = false
 	s.AuthenticatedCLICommand.AddCommand(command)
 }
@@ -145,6 +166,13 @@ func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
+}
+
+func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
+	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
+	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
+	command.Flags().SortFlags = false
+	s.Command.AddCommand(command)
 }
 
 func (a *AuthenticatedCLICommand) AuthToken() string {
@@ -156,8 +184,8 @@ func (a *AuthenticatedCLICommand) EnvironmentId() string {
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(h.Use)[0]])
-	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().AddFlagSet(h.subcommandFlags[h.Name()])
+	command.Flags().AddFlagSet(h.subcommandFlags[command.Name()])
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }

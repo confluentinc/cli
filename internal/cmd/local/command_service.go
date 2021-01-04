@@ -326,6 +326,14 @@ func (c *Command) configService(service string, configFile string) error {
 }
 
 func injectConfig(data []byte, config map[string]string) []byte {
+	// If there is existing config data, and we are going to inject
+	// at least one thing, then ensure we put a newline before
+	// injecting any of our new content so as to not corrupt the config file.
+	// We don't need to do this if the last character is already a newline.
+	if len(config) > 0 && len(data) > 0 && string(data[len(data)-1:]) != "\n" {
+		data = append(data, []byte("\n")...)
+	}
+
 	for key, val := range config {
 		re := regexp.MustCompile(fmt.Sprintf(`(?m)^(#\s)?%s=.+\n`, key))
 		line := []byte(fmt.Sprintf("%s=%s\n", key, val))

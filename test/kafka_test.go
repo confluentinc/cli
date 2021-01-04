@@ -79,12 +79,10 @@ func (s *CLITestSuite) TestKafka() {
 	}
 
 	resetConfiguration(s.T(), "ccloud")
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
 
 	for _, tt := range tests {
 		tt.login = "default"
 		tt.workflow = true
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

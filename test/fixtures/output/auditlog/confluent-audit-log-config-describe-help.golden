@@ -1,0 +1,11 @@
+Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.
+
+Usage:
+  confluent audit-log config describe [flags]
+
+Flags:
+      --context string   CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

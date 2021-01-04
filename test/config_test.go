@@ -21,12 +21,10 @@ func (s *CLITestSuite) TestCCloudConfig() {
 	}
 
 	resetConfiguration(s.T(), "ccloud")
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
 
@@ -40,10 +38,9 @@ func (s *CLITestSuite) TestConfluentConfig() {
 	}
 
 	resetConfiguration(s.T(), "confluent")
-	loginURL := serveMds(s.T()).URL
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }

@@ -1,0 +1,34 @@
+Delete a Kafka ACL.
+
+Usage:
+  confluent iam acl delete [flags]
+
+Examples:
+Delete an ACL that granted the specified user access to the Test topic in the specified cluster:
+
+::
+
+  confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test
+
+
+
+Flags:
+      --kafka-cluster-id string   Kafka cluster ID for scope of ACL commands.
+      --allow                     ACL permission to allow access.
+      --deny                      ACL permission to restrict access to resource.
+      --principal string          Principal for this operation with User: or Group: prefix.
+      --host string               Set host for access. (default "*")
+      --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --cluster-scope             Set the cluster resource. With this option the ACL grants
+                                  access to the provided operations on the Kafka cluster itself.
+      --consumer-group string     Set the Consumer Group resource.
+      --transactional-id string   Set the TransactionalID resource.
+      --topic string              Set the topic resource. With this option the ACL grants the provided
+                                  operations on the topics that start with that prefix, depending on whether
+                                  the --prefix option was also passed.
+      --prefix                    Set to match all resource names prefixed with this value.
+      --context string            CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

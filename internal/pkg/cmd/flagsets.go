@@ -18,7 +18,7 @@ func ClusterSet() *pflag.FlagSet {
 
 func ContextSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("context state", pflag.ExitOnError)
-	set.String("context", "", "Context name.")
+	set.String("context", "", "CLI Context name.")
 	set.SortFlags = false
 	return set
 }

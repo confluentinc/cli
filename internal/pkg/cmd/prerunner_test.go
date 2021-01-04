@@ -651,6 +651,50 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	}
 }
 
+func TestStateFlagCommand_AddCommand(t *testing.T) {
+	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
+
+	subcommandFlags := map[string]*pflag.FlagSet{
+		"root": pcmd.ContextSet(),
+		"one":  pcmd.EnvironmentContextSet(),
+		"two":  pcmd.KeySecretSet(),
+	}
+	// checked against to ensure that ONLY the intended flags are added
+	shouldNotHaveFlags := map[string]*pflag.FlagSet{
+		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
+		"one":  pcmd.KeySecretSet(),
+		"two":  pcmd.EnvironmentSet(),
+	}
+
+	r := getPreRunBase()
+	r.Config = userNameConfigLoggedIn
+
+	cmdRoot := &cobra.Command{Use: "root"}
+	root := pcmd.NewAnonymousStateFlagCommand(cmdRoot, r, subcommandFlags)
+
+	for subcommand, _ := range subcommandFlags {
+		t.Run(subcommand, func(t *testing.T) {
+			cmd := &cobra.Command{Use: subcommand}
+			//flags should be added in AddCommand()
+			root.AddCommand(cmd)
+			//create flagset of all flags that should be included
+			shouldHaveFlags := pflag.NewFlagSet("shouldHaveFlags", pflag.ExitOnError)
+			shouldHaveFlags.AddFlagSet(subcommandFlags["root"])
+			shouldHaveFlags.AddFlagSet(subcommandFlags[subcommand])
+			//iterate through shouldHaveFlags and make sure they are all attached to cmd
+			shouldHaveFlags.VisitAll(func(flag *pflag.Flag) {
+				f := cmd.Flag(flag.Name)
+				require.NotNil(t, f)
+			})
+			shouldNotHaveFlags[subcommand].VisitAll(func(flag *pflag.Flag) {
+				f := cmd.Flag(flag.Name)
+				require.Nil(t, f)
+			})
+		})
+	}
+}
+
 func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken

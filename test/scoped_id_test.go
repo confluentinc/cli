@@ -68,7 +68,7 @@ func (s *CLITestSuite) TestClusterScopedId() {
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "scoped_id4.golden", wantErrCode: 1},
 	}
 	for _, tt := range tests {
-		s.runConfluentTest(tt, "")
+		s.runConfluentTest(tt)
 	}
 }
 

@@ -22,15 +22,27 @@ const (
 	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
+	includeTopicsFlagName              = "include-topics"
 )
 
 var (
 	keyValueFields = []string{"Key", "Value"}
+	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
+	linkFields = []string{"LinkName"}
 )
 
 type keyValueDisplay struct {
 	Key   string
 	Value string
+}
+
+type LinkWriter struct {
+	LinkName string
+}
+
+type LinkTopicWriter struct {
+	LinkName  string
+	TopicName string
 }
 
 type linkCommand struct {
@@ -67,6 +79,7 @@ func (c *linkCommand) init() {
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -144,22 +157,49 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster)
+
+	includeTopics, err := cmd.Flags().GetBool(includeTopicsFlagName)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"LinkName"}, []string{"LinkName"}, []string{"LinkName"})
+	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster, includeTopics)
 	if err != nil {
 		return err
 	}
-	type LinkWriter struct {
-		LinkName string
+
+	if includeTopics {
+		outputWriter, err := output.NewListOutputWriter(
+			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range resp.Links {
+			if len(link.Topics) > 0 {
+				for topic, _ := range link.Topics {
+					outputWriter.AddElement(
+						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
+				}
+			} else {
+				outputWriter.AddElement(
+					&LinkTopicWriter{LinkName: link.LinkName, TopicName: ""})
+			}
+		}
+
+		return outputWriter.Out()
+	} else {
+		outputWriter, err := output.NewListOutputWriter(cmd, linkFields, linkFields, linkFields)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range resp.Links {
+			outputWriter.AddElement(&LinkWriter{LinkName: link.LinkName})
+		}
+
+		return outputWriter.Out()
 	}
-	for _, link := range resp {
-		outputWriter.AddElement(&LinkWriter{LinkName: link})
-	}
-	return outputWriter.Out()
 }
 
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
