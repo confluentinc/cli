@@ -1,6 +1,6 @@
---- cli/Makefile	2020-12-24 12:07:10.000000000 -0800
+--- cli/Makefile	2021-01-03 22:24:42.000000000 -0800
 +++ debian/Makefile	2020-11-18 20:14:22.000000000 -0800
-@@ -1,258 +1,130 @@
+@@ -1,259 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -9,6 +9,7 @@
 -
 -DOCS_BRANCH     ?= 6.0.0-post
 -
+-include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
 -include ./mk-files/release.mk
 -include ./mk-files/release-test.mk
