@@ -317,10 +317,9 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."
-	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %s"
+	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
+	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
+	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
 	CCloudBackendErrorPrefix           = "CCloud backend error"
@@ -355,6 +354,7 @@ const (
 	InvalidBootstrapServerErrorMsg = "Invalid bootstrap server"
 	EmptyResponseMsg               = "Empty server response"
 	KafkaRestErrorMsg              = "Kafka REST request failed: %s %s: %s"
+	KafkaRestConnectionMsg         = "Unable to establish Kafka REST connection: %s: %s"
 	UnexpectedStatusMsg            = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
 
 	// Special error handling

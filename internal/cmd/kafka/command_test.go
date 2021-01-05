@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -298,6 +299,11 @@ func TestCreateACLs(t *testing.T) {
 	}
 }
 
+func TestCreateACLs1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestCreateACLs(t)
+}
+
 func TestDeleteACLs(t *testing.T) {
 	for i := range resourcePatterns {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
@@ -322,6 +328,11 @@ func TestDeleteACLs(t *testing.T) {
 	}
 }
 
+func TestDeleteACLs1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestDeleteACLs(t)
+}
+
 func TestListResourceACL(t *testing.T) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
@@ -336,6 +347,11 @@ func TestListResourceACL(t *testing.T) {
 			t.Errorf("error: %s", err)
 		}
 	}
+}
+
+func TestListResourceACL1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestListResourceACL(t)
 }
 
 func TestListPrincipalACL(t *testing.T) {
@@ -356,6 +372,11 @@ func TestListPrincipalACL(t *testing.T) {
 			t.Errorf("error: %s", err)
 		}
 	}
+}
+
+func TestListPrincipalACL1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestListPrincipalACL(t)
 }
 
 func TestListResourcePrincipalFilterACL(t *testing.T) {
@@ -381,6 +402,11 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	}
 }
 
+func TestListResourcePrincipalFilterACL1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestListResourcePrincipalFilterACL(t)
+}
+
 func TestMultipleResourceACL(t *testing.T) {
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
@@ -393,6 +419,11 @@ func TestMultipleResourceACL(t *testing.T) {
 	if !strings.Contains(err.Error(), expect) {
 		t.Errorf("expected: %s got: %s", expect, err.Error())
 	}
+}
+
+func TestMultipleResourceACL1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestMultipleResourceACL(t)
 }
 
 /*************** TEST command_topic ***************/
@@ -423,6 +454,11 @@ func TestListTopics(t *testing.T) {
 	}
 }
 
+func TestListTopics1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestListTopics(t)
+}
+
 func TestCreateTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
@@ -439,6 +475,11 @@ func TestCreateTopic(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestCreateTopic1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestCreateTopic(t)
 }
 
 func TestDescribeTopic(t *testing.T) {
@@ -459,6 +500,11 @@ func TestDescribeTopic(t *testing.T) {
 	}
 }
 
+func TestDescribeTopic1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestDescribeTopic(t)
+}
+
 func TestDeleteTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
@@ -477,6 +523,11 @@ func TestDeleteTopic(t *testing.T) {
 	}
 }
 
+func TestDeleteTopic1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestDeleteTopic(t)
+}
+
 func TestUpdateTopic(t *testing.T) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
@@ -492,6 +543,11 @@ func TestUpdateTopic(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestUpdateTopic1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestUpdateTopic(t)
 }
 
 func TestDefaults(t *testing.T) {
@@ -532,6 +588,11 @@ func TestDefaults(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 	}
+}
+
+func TestDefaults1(t *testing.T) {
+	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	TestDefaults(t)
 }
 
 /*************** TEST command_cluster ***************/
