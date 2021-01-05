@@ -35,17 +35,41 @@ func (s *CLITestSuite) TestSecretMasterKeyGenerate() {
 	}
 }
 
+func checkMasterKeySecretsFile(file *os.File, keys []string) func(t *testing.T){
+	return func(t *testing.T) {
+		file, err := os.Open(file.Name())
+		require.NoError(t, err)
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if equal := strings.Index(line, "="); equal >= 0 {
+				require.Contains(t, keys, line[0:equal-1])
+			}
+		}
+	}
+}
+
+
+var (
+	testPropertyEntry = []string{"testProperty = test"}
+)
+
 func (s *CLITestSuite) TestSecretFile() {
 	config, err := ioutil.TempFile("", "config.*.properties")
 	require.NoError(s.T(), err)
-	err = ioutil.WriteFile(config.Name(), []byte("testProperty=test"), 0644)
+	err = ioutil.WriteFile(config.Name(), []byte(testPropertyEntry[0]), 0644)
 	require.NoError(s.T(), err)
 
 	secrets, err := ioutil.TempFile("", "secrets.*.properties")
 	require.NoError(s.T(), err)
 
+	output, err := ioutil.TempFile("", "output.*.properties")
+	require.NoError(s.T(), err)
+
 	defer os.Remove(config.Name())
 	defer os.Remove(secrets.Name())
+	defer os.Remove(output.Name())
 
 	expectedPropertiesForConfig := map[string]string {
 		"testProperty" : `${securepass:`+secrets.Name()+`:`+filepath.Base(config.Name())+`/testProperty}`,
@@ -69,6 +93,12 @@ func (s *CLITestSuite) TestSecretFile() {
 			args: "secret file encrypt --config-file="+config.Name()+" --local-secrets-file="+ secrets.Name()+" --remote-secrets-file="+ secrets.Name()+" --config testProperty",
 			wantFunc: checkEncryptedPropertyValues(config, expectedPropertiesForConfig, secrets, expectedPropertiesForSecrets),
 		},
+		{
+			name:	"secret file decrypt",
+			env:	[]string{fmt.Sprintf("%s=H0TKtEk7kxBHqxyXtQx0WJaiqsOlaQ89yXZLguEa2yI=", secret.ConfluentKeyEnvVar)},
+			args: "secret file decrypt --config-file="+config.Name()+" --local-secrets-file="+ secrets.Name()+" --output-file="+ output.Name()+" --config testProperty",
+			wantFunc: checkDecryptedPropertyValues(output, testPropertyEntry),
+		},
 	}
 	for _, test := range tests {
 		test.login = "default"
@@ -76,17 +106,18 @@ func (s *CLITestSuite) TestSecretFile() {
 	}
 }
 
-func checkMasterKeySecretsFile(file *os.File, keys []string) func(t *testing.T){
+func checkDecryptedPropertyValues(output *os.File, entry []string) func(t *testing.T) {
 	return func(t *testing.T) {
-		file, err := os.Open(file.Name())
+		outputFile, err := os.Open(output.Name())
 		require.NoError(t, err)
-		defer file.Close()
-		scanner := bufio.NewScanner(file)
+		defer outputFile.Close()
+		scanner := bufio.NewScanner(outputFile)
+		index := 0
 		for scanner.Scan() {
-			line := scanner.Text()
-			if equal := strings.Index(line, "="); equal >= 0 {
-				require.Contains(t, keys, line[0:equal-1])
+			if index >= len(entry) {
+				t.Fatal("index out of bounds; too many entries in decrypted file")
 			}
+			require.Equal(t, entry[index], scanner.Text())
 		}
 	}
 }
