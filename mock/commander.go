@@ -14,29 +14,34 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 type Commander struct {
-	FlagResolver pcmd.FlagResolver
-	Client       *ccloud.Client
-	MDSClient    *mds.APIClient
-	MDSv2Client  *mdsv2alpha1.APIClient
-	Version      *version.Version
-	Config       *v3.Config
+	FlagResolver    pcmd.FlagResolver
+	Client          *ccloud.Client
+	MDSClient       *mds.APIClient
+	MDSv2Client     *mdsv2alpha1.APIClient
+	Version         *version.Version
+	Config          *v3.Config
+	KafkaRESTClient *kafkarestv3.APIClient
+	AccessToken     string
 }
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, restClient *kafkarestv3.APIClient, accessToken string, cfg *v3.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
 	}
 	return &Commander{
-		FlagResolver: flagResolverMock,
-		Client:       client,
-		MDSClient:    mdsClient,
-		Config:       cfg,
+		FlagResolver:    flagResolverMock,
+		Client:          client,
+		MDSClient:       mdsClient,
+		Config:          cfg,
+		KafkaRESTClient: restClient,
+		AccessToken:     accessToken,
 	}
 }
 
@@ -133,4 +138,6 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
+	command.KafkaRESTClient = c.KafkaRESTClient
+	command.AccessToken = c.AccessToken
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/hashicorp/go-multierror"
@@ -104,25 +103,13 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if c.KafkaRESTClient == nil || c.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := c.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, c.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
-		aclGetResp, httpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsGet(ctx, lkc, &opts)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.AccessToken)
+		aclGetResp, httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsGet(ctx, lkc, &opts)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -178,29 +165,17 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if c.KafkaRESTClient == nil || c.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := c.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, c.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.AccessToken)
 
 		kafkaRestExists := true
 		for i, binding := range bindings {
 			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
-			httpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsPost(ctx, lkc, &opts)
+			httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsPost(ctx, lkc, &opts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {
@@ -275,30 +250,18 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if c.KafkaRESTClient == nil || c.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := c.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, c.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.AccessToken)
 
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
 			deleteOpts := aclFilterToClustersClusterIdAclsDeleteOpts(filter)
-			deleteResp, httpResp, err := kafkaRestClient.ACLApi.ClustersClusterIdAclsDelete(ctx, lkc, &deleteOpts)
+			deleteResp, httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsDelete(ctx, lkc, &deleteOpts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {

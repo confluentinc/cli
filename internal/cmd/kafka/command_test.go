@@ -14,6 +14,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -604,7 +605,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, "", conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -739,7 +740,15 @@ func newCmd(expect chan interface{}) *cobra.Command {
 			},
 		},
 	}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+
+	config := krsdk.Configuration{
+		BasePath: "/dummy-base-path",
+	}
+	restMock := krsdk.NewAPIClient(&config)
+	restMock.ACLApi = cliMock.NewACLMock(expect)
+	restMock.TopicApi = cliMock.NewTopicMock(expect)
+
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, restMock, "dummy-access-token", conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

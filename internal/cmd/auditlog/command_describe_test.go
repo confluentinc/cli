@@ -1,8 +1,9 @@
 package auditlog
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
@@ -40,5 +41,5 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 			TopicName:        "confluent-audit-log-events",
 		}
 	}
-	return New("ccloud", climock.NewPreRunnerMock(client, nil, cfg))
+	return New("ccloud", climock.NewPreRunnerMock(client, nil, nil, "", cfg))
 }

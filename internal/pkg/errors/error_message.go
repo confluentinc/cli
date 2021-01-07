@@ -355,6 +355,7 @@ const (
 	EmptyResponseMsg               = "Empty server response"
 	KafkaRestErrorMsg              = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionMsg         = "Unable to establish Kafka REST connection: %s: %s"
+	KafkaRestNotAvailableMsg       = "Kafka REST connection not available"
 	UnexpectedStatusMsg            = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
 
 	// Special error handling

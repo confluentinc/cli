@@ -120,23 +120,6 @@ func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts(
 	req.Equal(r.PatternType, optional.NewInterface(kafkarestv3.AclPatternType("LITERAL")))
 }
 
-func (suite *KafkaRestTestSuite) TestBootstrapServersToRestURL() {
-	req := suite.Require()
-
-	r, err := bootstrapServersToRestURL("localhost:9092")
-	req.Nil(err)
-	req.Equal(r, "https://localhost:8090/kafka/v3")
-
-	_, err = bootstrapServersToRestURL("loc")
-	req.NotNil(err)
-
-	_, err = bootstrapServersToRestURL("localhost9092")
-	req.NotNil(err)
-
-	_, err = bootstrapServersToRestURL("localhost:344")
-	req.NotNil(err)
-}
-
 func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	req := suite.Require()
 	url := "http://my-url"
@@ -178,7 +161,6 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	req.Contains(r.Error(), "myhost")
 	req.Contains(r.Error(), "my-path")
 }
-
 func TestKafkaRestTestSuite(t *testing.T) {
 	suite.Run(t, new(KafkaRestTestSuite))
 }

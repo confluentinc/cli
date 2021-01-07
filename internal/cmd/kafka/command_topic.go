@@ -307,31 +307,18 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 
 	if useRest {
 		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
-
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
-		topicGetResp, httpResp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsGet(ctx, lkc)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		topicGetResp, httpResp, err := a.KafkaRESTClient.TopicApi.ClustersClusterIdTopicsGet(ctx, lkc)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -429,25 +416,13 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
-		_, httpResp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsPost(ctx, lkc, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		_, httpResp, err := a.KafkaRESTClient.TopicApi.ClustersClusterIdTopicsPost(ctx, lkc, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
 			CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 				TopicName:         topicName,
 				PartitionsCount:   numPartitions,
@@ -541,25 +516,13 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
-		partitionsResp, httpResp, err := kafkaRestClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(ctx, lkc, topicName)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		partitionsResp, httpResp, err := a.KafkaRESTClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(ctx, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -593,7 +556,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 					PartitionId: partitionResp.PartitionId,
 				}
 
-				replicasResp, httpResp, err := kafkaRestClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(ctx, lkc, topicName, partitionResp.PartitionId)
+				replicasResp, httpResp, err := a.KafkaRESTClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(ctx, lkc, topicName, partitionResp.PartitionId)
 				if err != nil {
 					return kafkaRestError(kafkaRestURL, err, httpResp)
 				} else if replicasResp.Data == nil {
@@ -619,7 +582,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Get topic config
-			configsResp, httpResp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(ctx, lkc, topicName)
+			configsResp, httpResp, err := a.KafkaRESTClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(ctx, lkc, topicName)
 			if err != nil {
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			} else if configsResp.Data == nil {
@@ -696,25 +659,13 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
-		httpResp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(ctx, lkc, topicName,
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		httpResp, err := a.KafkaRESTClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(ctx, lkc, topicName,
 			&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
 			})
@@ -856,25 +807,13 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-		if err != nil {
-			return err
+		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestClient := kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-			BasePath: kafkaRestURL,
-		})
+		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		state, err := a.AuthenticatedCLICommand.Context.AuthenticatedState(cmd)
-		if err != nil {
-			return err
-		}
-		accessToken, err := getAccessToken(state, a.Context.Platform.Server)
-		if err != nil {
-			return err
-		}
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, accessToken)
-		httpResp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(ctx, lkc, topicName)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		httpResp, err := a.KafkaRESTClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(ctx, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred

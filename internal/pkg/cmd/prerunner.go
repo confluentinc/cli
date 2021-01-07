@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -61,11 +62,13 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client      *ccloud.Client
-	MDSClient   *mds.APIClient
-	MDSv2Client *mdsv2alpha1.APIClient
-	Context     *DynamicContext
-	State       *v2.ContextState
+	Client          *ccloud.Client
+	MDSClient       *mds.APIClient
+	MDSv2Client     *mdsv2alpha1.APIClient
+	KafkaRESTClient *kafkarestv3.APIClient
+	AccessToken     string
+	Context         *DynamicContext
+	State           *v2.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -86,14 +89,18 @@ type HasAPIKeyCLICommand struct {
 
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-		Context:    nil,
-		State:      nil,
+		CLICommand:      NewCLICommand(command, prerunner),
+		Context:         nil,
+		State:           nil,
+		KafkaRESTClient: nil,
+		AccessToken:     "",
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
+
 	return cmd
 }
+
 // Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
 	cmd := &AuthenticatedStateFlagCommand{
@@ -102,6 +109,7 @@ func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunne
 	}
 	return cmd
 }
+
 // Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
 func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
 	cmd := &AuthenticatedStateFlagCommand{
@@ -110,6 +118,7 @@ func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner P
 	}
 	return cmd
 }
+
 // Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
 	cmd := &StateFlagCommand{
@@ -398,6 +407,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Context.client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
+	cliCmd.KafkaRESTClient = r.createKafkaRESTClient(ctx, cliCmd)
+	if cliCmd.KafkaRESTClient != nil {
+		cliCmd.AccessToken = r.getAccessToken(ctx, cliCmd)
+	}
 	return nil
 }
 
@@ -700,4 +713,32 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 
 	}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
+}
+
+func (r *PreRun) createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand) *kafkarestv3.APIClient {
+	kafkaClusterConfig, err := ctx.GetKafkaClusterForCommand(cliCmd.Command)
+	if err != nil {
+		// cluster is probably not available
+		// TODO: test with cluster specified on command line, not set.
+		return nil
+	}
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
+	if err != nil {
+		return nil
+	}
+	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
+		BasePath: kafkaRestURL,
+	})
+}
+
+func (r *PreRun) getAccessToken(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand) string {
+	state, err := ctx.AuthenticatedState(cliCmd.Command)
+	if err != nil {
+		return ""
+	}
+	accessToken, err := getAccessToken(state, ctx.Platform.Server)
+	if err != nil {
+		return ""
+	}
+	return accessToken
 }
