@@ -87,7 +87,7 @@ func (c *aclCommand) init() {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	acl, err := parse(cmd)
 	if err != nil {
@@ -142,7 +142,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	acls, err := parse(cmd)
 	if err != nil {
@@ -227,7 +227,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	acls, err := parse(cmd)
 	if err != nil {

@@ -303,7 +303,7 @@ type kafkaRestV3Error struct {
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	if useRest {
 		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
@@ -360,7 +360,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	topicName := args[0]
 
@@ -496,7 +496,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	topicName := args[0]
 
@@ -622,7 +622,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 }
 
 func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	topicName := args[0]
 
@@ -796,7 +796,7 @@ func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) er
 }
 
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_REST") != ""
+	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
 
 	topicName := args[0]
 

@@ -301,7 +301,7 @@ func TestCreateACLs(t *testing.T) {
 }
 
 func TestCreateACLs1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestCreateACLs(t)
 }
 
@@ -330,7 +330,7 @@ func TestDeleteACLs(t *testing.T) {
 }
 
 func TestDeleteACLs1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestDeleteACLs(t)
 }
 
@@ -351,7 +351,7 @@ func TestListResourceACL(t *testing.T) {
 }
 
 func TestListResourceACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestListResourceACL(t)
 }
 
@@ -376,7 +376,7 @@ func TestListPrincipalACL(t *testing.T) {
 }
 
 func TestListPrincipalACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestListPrincipalACL(t)
 }
 
@@ -404,7 +404,7 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 }
 
 func TestListResourcePrincipalFilterACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestListResourcePrincipalFilterACL(t)
 }
 
@@ -423,7 +423,7 @@ func TestMultipleResourceACL(t *testing.T) {
 }
 
 func TestMultipleResourceACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestMultipleResourceACL(t)
 }
 
@@ -456,7 +456,7 @@ func TestListTopics(t *testing.T) {
 }
 
 func TestListTopics1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestListTopics(t)
 }
 
@@ -479,7 +479,7 @@ func TestCreateTopic(t *testing.T) {
 }
 
 func TestCreateTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestCreateTopic(t)
 }
 
@@ -502,7 +502,7 @@ func TestDescribeTopic(t *testing.T) {
 }
 
 func TestDescribeTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestDescribeTopic(t)
 }
 
@@ -525,7 +525,7 @@ func TestDeleteTopic(t *testing.T) {
 }
 
 func TestDeleteTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestDeleteTopic(t)
 }
 
@@ -547,7 +547,7 @@ func TestUpdateTopic(t *testing.T) {
 }
 
 func TestUpdateTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestUpdateTopic(t)
 }
 
@@ -592,7 +592,7 @@ func TestDefaults(t *testing.T) {
 }
 
 func TestDefaults1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_REST", "true")
+	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
 	TestDefaults(t)
 }
 

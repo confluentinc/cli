@@ -28,10 +28,10 @@ func (suite *KafkaRestTestSuite) TestBootstrapServersToRestURL() {
 	req.NotNil(err)
 }
 
-func (suite *KafkaRestTestSuite) TestInvalidGetAccessToken() {
+func (suite *KafkaRestTestSuite) TestInvalidGetBearerToken() {
 	req := suite.Require()
 	emptyState := v2.ContextState{}
-	_, err := getAccessToken(&emptyState, "invalidhost")
+	_, err := getBearerToken(&emptyState, "invalidhost")
 	req.NotNil(err)
 }
 

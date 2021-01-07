@@ -33,7 +33,7 @@ type response struct {
 	Token string `json:"token"`
 }
 
-func getAccessToken(authenticatedState *v2.ContextState, server string) (string, error) {
+func getBearerToken(authenticatedState *v2.ContextState, server string) (string, error) {
 	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
 	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
