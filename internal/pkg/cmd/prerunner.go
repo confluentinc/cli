@@ -62,13 +62,13 @@ type CLICommand struct {
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client          *ccloud.Client
-	MDSClient       *mds.APIClient
-	MDSv2Client     *mdsv2alpha1.APIClient
-	KafkaRESTClient *kafkarestv3.APIClient
-	AccessToken     string
-	Context         *DynamicContext
-	State           *v2.ContextState
+	Client               *ccloud.Client
+	MDSClient            *mds.APIClient
+	MDSv2Client          *mdsv2alpha1.APIClient
+	KafkaRESTClient      *kafkarestv3.APIClient
+	KafkaRESTBearerToken string
+	Context              *DynamicContext
+	State                *v2.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -89,11 +89,11 @@ type HasAPIKeyCLICommand struct {
 
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand:      NewCLICommand(command, prerunner),
-		Context:         nil,
-		State:           nil,
-		KafkaRESTClient: nil,
-		AccessToken:     "",
+		CLICommand:           NewCLICommand(command, prerunner),
+		Context:              nil,
+		State:                nil,
+		KafkaRESTClient:      nil,
+		KafkaRESTBearerToken: "",
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
@@ -409,7 +409,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	cliCmd.KafkaRESTClient = r.createKafkaRESTClient(ctx, cliCmd)
 	if cliCmd.KafkaRESTClient != nil {
-		cliCmd.AccessToken = r.getAccessToken(ctx, cliCmd)
+		cliCmd.KafkaRESTBearerToken = r.getAccessToken(ctx, cliCmd)
 	}
 	return nil
 }

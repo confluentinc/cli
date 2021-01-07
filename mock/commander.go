@@ -18,14 +18,14 @@ import (
 )
 
 type Commander struct {
-	FlagResolver    pcmd.FlagResolver
-	Client          *ccloud.Client
-	MDSClient       *mds.APIClient
-	MDSv2Client     *mdsv2alpha1.APIClient
-	Version         *version.Version
-	Config          *v3.Config
-	KafkaRESTClient *kafkarestv3.APIClient
-	AccessToken     string
+	FlagResolver         pcmd.FlagResolver
+	Client               *ccloud.Client
+	MDSClient            *mds.APIClient
+	MDSv2Client          *mdsv2alpha1.APIClient
+	KafkaRESTClient      *kafkarestv3.APIClient
+	KafkaRESTBearerToken string
+	Version              *version.Version
+	Config               *v3.Config
 }
 
 var _ pcmd.PreRunner = (*Commander)(nil)
@@ -36,12 +36,12 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, restClien
 		Out:    os.Stdout,
 	}
 	return &Commander{
-		FlagResolver:    flagResolverMock,
-		Client:          client,
-		MDSClient:       mdsClient,
-		Config:          cfg,
-		KafkaRESTClient: restClient,
-		AccessToken:     accessToken,
+		FlagResolver:         flagResolverMock,
+		Client:               client,
+		MDSClient:            mdsClient,
+		KafkaRESTClient:      restClient,
+		KafkaRESTBearerToken: accessToken,
+		Config:               cfg,
 	}
 }
 
@@ -139,5 +139,5 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 	command.KafkaRESTClient = c.KafkaRESTClient
-	command.AccessToken = c.AccessToken
+	command.KafkaRESTBearerToken = c.KafkaRESTBearerToken
 }

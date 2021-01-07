@@ -103,12 +103,12 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaRESTClient == nil || c.AccessToken == "" {
+		if c.KafkaRESTClient == nil || c.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaRESTBearerToken)
 		aclGetResp, httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsGet(ctx, lkc, &opts)
 
 		if err != nil && httpResp != nil {
@@ -165,12 +165,12 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaRESTClient == nil || c.AccessToken == "" {
+		if c.KafkaRESTClient == nil || c.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaRESTBearerToken)
 
 		kafkaRestExists := true
 		for i, binding := range bindings {
@@ -250,12 +250,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaRESTClient == nil || c.AccessToken == "" {
+		if c.KafkaRESTClient == nil || c.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaRESTBearerToken)
 
 		kafkaRestExists := true
 		matchingBindingCount := 0

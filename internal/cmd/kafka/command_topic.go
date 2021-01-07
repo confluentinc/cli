@@ -312,12 +312,12 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+		if a.KafkaRESTClient == nil || a.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaRESTBearerToken)
 		topicGetResp, httpResp, err := a.KafkaRESTClient.TopicApi.ClustersClusterIdTopicsGet(ctx, lkc)
 
 		if err != nil && httpResp != nil {
@@ -416,12 +416,12 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+		if a.KafkaRESTClient == nil || a.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaRESTBearerToken)
 		_, httpResp, err := a.KafkaRESTClient.TopicApi.ClustersClusterIdTopicsPost(ctx, lkc, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
 			CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 				TopicName:         topicName,
@@ -516,12 +516,12 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+		if a.KafkaRESTClient == nil || a.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaRESTBearerToken)
 		partitionsResp, httpResp, err := a.KafkaRESTClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(ctx, lkc, topicName)
 
 		if err != nil && httpResp != nil {
@@ -659,12 +659,12 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+		if a.KafkaRESTClient == nil || a.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaRESTBearerToken)
 		httpResp, err := a.KafkaRESTClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(ctx, lkc, topicName,
 			&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
@@ -807,12 +807,12 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaRESTClient == nil || a.AccessToken == "" {
+		if a.KafkaRESTClient == nil || a.KafkaRESTBearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
 		kafkaRestURL := a.KafkaRESTClient.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.AccessToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaRESTBearerToken)
 		httpResp, err := a.KafkaRESTClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(ctx, lkc, topicName)
 
 		if err != nil && httpResp != nil {
