@@ -12,11 +12,10 @@ import (
 var _ krsdk.TopicApi = (*Topic)(nil)
 
 type Topic struct {
-	Expect chan interface{} // TODO: analogous testing to that in kafka.go
 }
 
-func NewTopicMock(expect chan interface{}) *Topic {
-	return &Topic{expect}
+func NewTopicMock() *Topic {
+	return &Topic{}
 }
 
 func (m *Topic) ClustersClusterIdTopicsGet(_ctx context.Context, _clusterId string) (krsdk.TopicDataList, *nethttp.Response, error) {
@@ -64,11 +63,10 @@ func (m *Topic) ClustersClusterIdTopicsTopicNameGet(_ctx context.Context, _clust
 var _ krsdk.ACLApi = (*ACL)(nil)
 
 type ACL struct {
-	Expect chan interface{} // TODO: analogous testing to that in kafka.go
 }
 
-func NewACLMock(expect chan interface{}) *ACL {
-	return &ACL{expect}
+func NewACLMock() *ACL {
+	return &ACL{}
 }
 
 func (m *ACL) ClustersClusterIdAclsDelete(_ctx context.Context, _clusterId string, _localVarOptionals *krsdk.ClustersClusterIdAclsDeleteOpts) (krsdk.InlineResponse200, *nethttp.Response, error) {
@@ -117,11 +115,10 @@ func (m *ACL) ClustersClusterIdAclsPost(_ctx context.Context, _clusterId string,
 var _ krsdk.PartitionApi = (*Partition)(nil)
 
 type Partition struct {
-	Expect chan interface{} // TODO: analogous testing to that in kafka.go
 }
 
-func NewPartitionMock(expect chan interface{}) *Partition {
-	return &Partition{expect}
+func NewPartitionMock() *Partition {
+	return &Partition{}
 }
 
 func (m *Partition) ClustersClusterIdTopicsPartitionsReassignmentGet(_ctx context.Context, _clusterId string) (krsdk.ReassignmentDataList, *nethttp.Response, error) {
@@ -166,11 +163,10 @@ func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(_c
 var _ krsdk.ReplicaApi = (*Replica)(nil)
 
 type Replica struct {
-	Expect chan interface{} // TODO: analogous testing to that in kafka.go
 }
 
-func NewReplicaMock(expect chan interface{}) *Replica {
-	return &Replica{expect}
+func NewReplicaMock() *Replica {
+	return &Replica{}
 }
 
 func (m *Replica) ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(_ctx context.Context, _clusterId string, _brokerId int32) (krsdk.ReplicaDataList, *nethttp.Response, error) {
@@ -205,11 +201,10 @@ func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasG
 var _ krsdk.ConfigsApi = (*Configs)(nil)
 
 type Configs struct {
-	Expect chan interface{} // TODO: analogous testing to that in kafka.go
 }
 
-func NewConfigsMock(expect chan interface{}) *Configs {
-	return &Configs{expect}
+func NewConfigsMock() *Configs {
+	return &Configs{}
 }
 
 func (m *Configs) ClustersClusterIdBrokerConfigsGet(_ctx context.Context, _clusterId string) (krsdk.ClusterConfigDataList, *nethttp.Response, error) {
