@@ -140,15 +140,15 @@ func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster, in
 
 		return &linkv1.ListLinksResponse{
 			Links: []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName: "link-1", Topics: topics},
-				&linkv1.ListLinksResponseItem{LinkName: "link-2"},
+				{LinkName: "link-1", Topics: topics},
+				{LinkName: "link-2"},
 			},
 		}, nil
 	} else {
 		return &linkv1.ListLinksResponse{
 			Links: []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName: "link-1"},
-				&linkv1.ListLinksResponseItem{LinkName: "link-2"},
+				{LinkName: "link-1"},
+				{LinkName: "link-2"},
 			},
 		}, nil
 	}

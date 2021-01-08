@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -277,12 +277,12 @@ var aclEntries = []struct {
 	},
 }
 
-func TestCreateACLs(t *testing.T) {
+func CreateACLsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "create"}, resource.args...)
 		for _, aclEntry := range aclEntries {
-			cmd := newCmd(expect)
+			cmd := newCmd(expect, enableREST)
 			cmd.SetArgs(append(args, aclEntry.args...))
 
 			go func() {
@@ -301,16 +301,19 @@ func TestCreateACLs(t *testing.T) {
 }
 
 func TestCreateACLs1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestCreateACLs(t)
+	CreateACLsTest(t, true)
 }
 
-func TestDeleteACLs(t *testing.T) {
+func TestCreateACLs2(t *testing.T) {
+	CreateACLsTest(t, false)
+}
+
+func DeleteACLsTest(t *testing.T, enableREST bool) {
 	for i := range resourcePatterns {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
 		for j := range aclEntries {
 			expect := make(chan interface{})
-			cmd := newCmd(expect)
+			cmd := newCmd(expect, enableREST)
 			cmd.SetArgs(append(args, aclEntries[j].args...))
 
 			var filters []*schedv1.ACLFilter
@@ -330,14 +333,17 @@ func TestDeleteACLs(t *testing.T) {
 }
 
 func TestDeleteACLs1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestDeleteACLs(t)
+	DeleteACLsTest(t, true)
 }
 
-func TestListResourceACL(t *testing.T) {
+func TestDeleteACLs2(t *testing.T) {
+	DeleteACLsTest(t, false)
+}
+
+func ListResourceACLTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"acl", "list"}, resource.args...))
 
 		go func() {
@@ -351,18 +357,21 @@ func TestListResourceACL(t *testing.T) {
 }
 
 func TestListResourceACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestListResourceACL(t)
+	ListResourceACLTest(t, true)
 }
 
-func TestListPrincipalACL(t *testing.T) {
+func TestListResourceACL2(t *testing.T) {
+	ListResourceACLTest(t, false)
+}
+
+func ListPrincipalACLTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, aclEntry := range aclEntries {
 		if len(aclEntry.entries) != 1 {
 			continue
 		}
 		entry := aclEntry.entries[0]
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
@@ -376,11 +385,14 @@ func TestListPrincipalACL(t *testing.T) {
 }
 
 func TestListPrincipalACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestListPrincipalACL(t)
+	ListPrincipalACLTest(t, true)
 }
 
-func TestListResourcePrincipalFilterACL(t *testing.T) {
+func TestListPrincipalACL2(t *testing.T) {
+	ListPrincipalACLTest(t, false)
+}
+
+func ListResourcePrincipalFilterACLTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "list"}, resource.args...)
@@ -389,7 +401,7 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 				continue
 			}
 			entry := aclEntry.entries[0]
-			cmd := newCmd(expect)
+			cmd := newCmd(expect, enableREST)
 			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
 
 			go func() {
@@ -404,15 +416,18 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 }
 
 func TestListResourcePrincipalFilterACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestListResourcePrincipalFilterACL(t)
+	ListResourcePrincipalFilterACLTest(t, true)
 }
 
-func TestMultipleResourceACL(t *testing.T) {
+func TestListResourcePrincipalFilterACL2(t *testing.T) {
+	ListResourcePrincipalFilterACLTest(t, false)
+}
+
+func MultipleResourceACLTest(t *testing.T, enableREST bool) {
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
-	cmd := newCmd(nil)
+	cmd := newCmd(nil, enableREST)
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
@@ -423,8 +438,11 @@ func TestMultipleResourceACL(t *testing.T) {
 }
 
 func TestMultipleResourceACL1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestMultipleResourceACL(t)
+	MultipleResourceACLTest(t, true)
+}
+
+func TestMultipleResourceACL2(t *testing.T) {
+	MultipleResourceACLTest(t, false)
 }
 
 /*************** TEST command_topic ***************/
@@ -438,10 +456,10 @@ var Topics = []struct {
 	},
 }
 
-func TestListTopics(t *testing.T) {
+func ListTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs([]string{"topic", "list"})
 		go func() {
 			expect <- &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.spec.Name}}
@@ -456,14 +474,17 @@ func TestListTopics(t *testing.T) {
 }
 
 func TestListTopics1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestListTopics(t)
+	ListTopicTest(t, true)
 }
 
-func TestCreateTopic(t *testing.T) {
+func TestListTopics2(t *testing.T) {
+	ListTopicTest(t, false)
+}
+
+func CreateTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "create"}, topic.args...))
 
 		go func() {
@@ -479,14 +500,17 @@ func TestCreateTopic(t *testing.T) {
 }
 
 func TestCreateTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestCreateTopic(t)
+	CreateTopicTest(t, true)
 }
 
-func TestDescribeTopic(t *testing.T) {
+func TestCreateTopic2(t *testing.T) {
+	CreateTopicTest(t, false)
+}
+
+func DescribeTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "describe"}, topic.args[0]))
 
 		go func() {
@@ -502,14 +526,17 @@ func TestDescribeTopic(t *testing.T) {
 }
 
 func TestDescribeTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestDescribeTopic(t)
+	DescribeTopicTest(t, true)
 }
 
-func TestDeleteTopic(t *testing.T) {
+func TestDescribeTopic2(t *testing.T) {
+	DescribeTopicTest(t, false)
+}
+
+func DeleteTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "delete"}, topic.args[0]))
 
 		go func() {
@@ -525,14 +552,17 @@ func TestDeleteTopic(t *testing.T) {
 }
 
 func TestDeleteTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestDeleteTopic(t)
+	DeleteTopicTest(t, true)
 }
 
-func TestUpdateTopic(t *testing.T) {
+func TestDeleteTopic2(t *testing.T) {
+	DeleteTopicTest(t, false)
+}
+
+func UpdateTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "update"}, topic.args[0:3]...))
 		go func() {
 			expect <- &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.spec.Name, Configs: topic.spec.Configs}}
@@ -547,13 +577,16 @@ func TestUpdateTopic(t *testing.T) {
 }
 
 func TestUpdateTopic1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestUpdateTopic(t)
+	UpdateTopicTest(t, true)
 }
 
-func TestDefaults(t *testing.T) {
+func TestUpdateTopic2(t *testing.T) {
+	UpdateTopicTest(t, false)
+}
+
+func DefaultsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
-	cmd := newCmd(expect)
+	cmd := newCmd(expect, enableREST)
 	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
@@ -571,7 +604,7 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 
-	cmd = newCmd(expect)
+	cmd = newCmd(expect, enableREST)
 	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
 		"--operation", "read"})
 
@@ -592,8 +625,11 @@ func TestDefaults(t *testing.T) {
 }
 
 func TestDefaults1(t *testing.T) {
-	os.Setenv("XX_CCLOUD_USE_KAFKA_API", "true")
-	TestDefaults(t)
+	DefaultsTest(t, true)
+}
+
+func TestDefaults2(t *testing.T) {
+	DefaultsTest(t, false)
 }
 
 /*************** TEST command_cluster ***************/
@@ -605,7 +641,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, "", conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -638,7 +674,7 @@ var Links = []testLink{
 func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
 	expect := make(chan interface{})
 	for _, link := range Links {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, false)
 		cmd.SetArgs(argmaker(link))
 
 		go expector(expect, link)
@@ -727,7 +763,7 @@ func TestCreateLink(t *testing.T) {
 }
 
 /*************** TEST setup/helpers ***************/
-func newCmd(expect chan interface{}) *cobra.Command {
+func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(expect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
@@ -741,17 +777,18 @@ func newCmd(expect chan interface{}) *cobra.Command {
 		},
 	}
 
-	config := krsdk.Configuration{
-		BasePath: "/dummy-base-path",
-	}
-	restMock := krsdk.NewAPIClient(&config)
+	restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
 	restMock.ACLApi = cliMock.NewACLMock(expect)
 	restMock.TopicApi = cliMock.NewTopicMock(expect)
 	restMock.PartitionApi = cliMock.NewPartitionMock(expect)
 	restMock.ReplicaApi = cliMock.NewReplicaMock(expect)
 	restMock.ConfigsApi = cliMock.NewConfigsMock(expect)
+	kafkaREST := pcmd.NewKafkaREST(restMock, "dummy-bearer-token")
+	if !enableREST {
+		kafkaREST = nil
+	}
 
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, restMock, "dummy-bearer-token", conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, kafkaREST, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

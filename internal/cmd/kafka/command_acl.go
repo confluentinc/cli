@@ -87,14 +87,12 @@ func (c *aclCommand) init() {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
-
 	acl, err := parse(cmd)
 	if err != nil {
 		return err
 	}
 
-	if useRest {
+	if c.KafkaREST != nil {
 		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
 
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
@@ -103,13 +101,13 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaRESTClient == nil || c.KafkaRESTBearerToken == "" {
+		if c.KafkaREST.Client == nil || c.KafkaREST.BearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
+		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaRESTBearerToken)
-		aclGetResp, httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsGet(ctx, lkc, &opts)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
+		aclGetResp, httpResp, err := c.KafkaREST.Client.ACLApi.ClustersClusterIdAclsGet(ctx, lkc, &opts)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -142,8 +140,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
-
 	acls, err := parse(cmd)
 	if err != nil {
 		return err
@@ -158,24 +154,24 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		bindings = append(bindings, acl.ACLBinding)
 	}
 
-	if useRest {
+	if c.KafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaRESTClient == nil || c.KafkaRESTBearerToken == "" {
+		if c.KafkaREST.Client == nil || c.KafkaREST.BearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
+		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaRESTBearerToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
 
 		kafkaRestExists := true
 		for i, binding := range bindings {
 			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
-			httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsPost(ctx, lkc, &opts)
+			httpResp, err := c.KafkaREST.Client.ACLApi.ClustersClusterIdAclsPost(ctx, lkc, &opts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {
@@ -227,8 +223,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
-	useRest := os.Getenv("XX_CCLOUD_USE_KAFKA_API") == ""
-
 	acls, err := parse(cmd)
 	if err != nil {
 		return err
@@ -243,25 +237,25 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	if useRest {
+	if c.KafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaRESTClient == nil || c.KafkaRESTBearerToken == "" {
+		if c.KafkaREST.Client == nil || c.KafkaREST.BearerToken == "" {
 			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
 		}
-		kafkaRestURL := c.KafkaRESTClient.GetConfig().BasePath
+		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
 
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaRESTBearerToken)
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
 
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
 			deleteOpts := aclFilterToClustersClusterIdAclsDeleteOpts(filter)
-			deleteResp, httpResp, err := c.KafkaRESTClient.ACLApi.ClustersClusterIdAclsDelete(ctx, lkc, &deleteOpts)
+			deleteResp, httpResp, err := c.KafkaREST.Client.ACLApi.ClustersClusterIdAclsDelete(ctx, lkc, &deleteOpts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {

@@ -6,8 +6,21 @@ import (
 
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/dghubble/sling"
 )
+
+type KafkaREST struct {
+	Client      *kafkarestv3.APIClient
+	BearerToken string
+}
+
+func NewKafkaREST(client *kafkarestv3.APIClient, bearerToken string) *KafkaREST {
+	return &KafkaREST{
+		Client:      client,
+		BearerToken: bearerToken,
+	}
+}
 
 const kafkaRestPort = "8090"
 
