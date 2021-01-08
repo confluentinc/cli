@@ -590,12 +590,20 @@ func (c *Command) isRunning(service string) (bool, error) {
 }
 
 func isPortOpen(service string) (bool, error) {
-	addr := fmt.Sprintf(":%d", services[service].port)
-	out, err := exec.Command("lsof", "-i", addr).Output()
-	if err != nil {
-		return false, nil
+	if _, err := os.Stat("/etc/redhat-release"); err == nil { // check to see if it's a RedHat OS (i.e. CentOS) which doesn't have `lsof`
+		out, err := exec.Command("ss", "-lptn", fmt.Sprintf("( sport = :%d )", services[service].port)).Output()
+		if err != nil {
+			return false, nil
+		}
+		return strings.Contains(string(out), "LISTEN"), nil // LISTEN is the state of the process; can't just check if len > 0 bc headers are always printed
+	} else {
+		addr := fmt.Sprintf(":%d", services[service].port)
+		out, err := exec.Command("lsof", "-i", addr).Output()
+		if err != nil {
+			return false, nil
+		}
+		return len(out) > 0, nil
 	}
-	return len(out) > 0, nil
 }
 
 func setServiceEnvs(service string) error {
