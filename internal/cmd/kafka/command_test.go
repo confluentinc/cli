@@ -747,8 +747,11 @@ func newCmd(expect chan interface{}) *cobra.Command {
 	restMock := krsdk.NewAPIClient(&config)
 	restMock.ACLApi = cliMock.NewACLMock(expect)
 	restMock.TopicApi = cliMock.NewTopicMock(expect)
+	restMock.PartitionApi = cliMock.NewPartitionMock(expect)
+	restMock.ReplicaApi = cliMock.NewReplicaMock(expect)
+	restMock.ConfigsApi = cliMock.NewConfigsMock(expect)
 
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, restMock, "dummy-access-token", conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, restMock, "dummy-bearer-token", conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
