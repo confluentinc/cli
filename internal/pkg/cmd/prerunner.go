@@ -407,6 +407,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") == "" {
 		cliCmd.KafkaREST = &KafkaREST{}
+		// TODO: This is ugly - the client instance created above is required
+		// in the createKafkaRESTClient call for case where the cluster info
+		// is not cached. However it's not yet set in the DynamicContext.
+		ctx.client = ccloudClient
 		cliCmd.KafkaREST.Client = r.createKafkaRESTClient(ctx, cliCmd)
 		if cliCmd.KafkaREST.Client != nil {
 			// This is set here to allow it to be mocked. In the KafkaAPI case, these
