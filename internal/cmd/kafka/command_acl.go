@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -92,7 +91,8 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if c.KafkaREST != nil {
+	kafkaREST, _ := c.ConstructKafkaREST()
+	if kafkaREST != nil {
 		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
 
 		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand(cmd)
@@ -101,14 +101,11 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
-		aclGetResp, httpResp, err := c.KafkaREST.Client.ACLApi.ClustersClusterIdAclsGet(ctx, lkc, &opts)
+		aclGetResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsGet(kafkaREST.Context, lkc, &opts)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			return kafkaRestError(kafkaRestURL, err, httpResp)
+			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -151,21 +148,18 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		bindings = append(bindings, acl.ACLBinding)
 	}
 
-	if c.KafkaREST != nil {
+	kafkaREST, _ := c.ConstructKafkaREST()
+	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
-
 		kafkaRestExists := true
 		for i, binding := range bindings {
 			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
-			httpResp, err := c.KafkaREST.Client.ACLApi.ClustersClusterIdAclsPost(ctx, lkc, &opts)
+			httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsPost(kafkaREST.Context, lkc, &opts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {
@@ -175,7 +169,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 				}
 				// i > 0: unlikely
 				_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
-				return kafkaRestError(kafkaRestURL, err, httpResp)
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if err != nil {
@@ -183,7 +177,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					// unlikely
 					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
-				return kafkaRestError(kafkaRestURL, err, httpResp)
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != 201 {
@@ -231,22 +225,21 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	if c.KafkaREST != nil {
+	kafkaREST, _ := c.ConstructKafkaREST()
+	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
 
-		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
-
-		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
+		kafkaRestURL := kafkaREST.Client.GetConfig().BasePath
 
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
 			deleteOpts := aclFilterToClustersClusterIdAclsDeleteOpts(filter)
-			deleteResp, httpResp, err := c.KafkaREST.Client.ACLApi.ClustersClusterIdAclsDelete(ctx, lkc, &deleteOpts)
+			deleteResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsDelete(kafkaREST.Context, lkc, &deleteOpts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {

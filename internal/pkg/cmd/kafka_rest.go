@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
@@ -11,14 +12,14 @@ import (
 )
 
 type KafkaREST struct {
-	Client      *kafkarestv3.APIClient
-	BearerToken string
+	Client  *kafkarestv3.APIClient
+	Context context.Context
 }
 
-func NewKafkaREST(client *kafkarestv3.APIClient, bearerToken string) *KafkaREST {
+func NewKafkaREST(client *kafkarestv3.APIClient, context context.Context) *KafkaREST {
 	return &KafkaREST{
-		Client:      client,
-		BearerToken: bearerToken,
+		Client:  client,
+		Context: context,
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 var conf *v3.Config
@@ -786,18 +786,22 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 		},
 	}
 
-	restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
-	restMock.ACLApi = cliMock.NewACLMock()
-	restMock.TopicApi = cliMock.NewTopicMock()
-	restMock.PartitionApi = cliMock.NewPartitionMock()
-	restMock.ReplicaApi = cliMock.NewReplicaMock()
-	restMock.ConfigsApi = cliMock.NewConfigsMock()
-	kafkaREST := pcmd.NewKafkaREST(restMock, "dummy-bearer-token")
-	if !enableREST {
-		kafkaREST = nil
-	}
+	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
+		if enableREST {
+			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
+			restMock.ACLApi = cliMock.NewACLMock()
+			restMock.TopicApi = cliMock.NewTopicMock()
+			restMock.PartitionApi = cliMock.NewPartitionMock()
+			restMock.ReplicaApi = cliMock.NewReplicaMock()
+			restMock.ConfigsApi = cliMock.NewConfigsMock()
+			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
+			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
+			return kafkaREST, nil
+		}
+		return nil, nil
+	})
 
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, kafkaREST, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
