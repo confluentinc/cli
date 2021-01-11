@@ -51,30 +51,30 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsGetOpts
 func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsGetOpts {
-	var kafkaRestConfig kafkarestv3.ClustersClusterIdAclsGetOpts
+	var opts kafkarestv3.ClustersClusterIdAclsGetOpts
 
 	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		kafkaRestConfig.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
+		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
 	}
 
-	kafkaRestConfig.ResourceName = optional.NewString(acl.Pattern.Name)
+	opts.ResourceName = optional.NewString(acl.Pattern.Name)
 
 	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		kafkaRestConfig.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.Pattern.PatternType.String()))
+		opts.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.Pattern.PatternType.String()))
 	}
 
-	kafkaRestConfig.Principal = optional.NewString(acl.Entry.Principal)
-	kafkaRestConfig.Host = optional.NewString(acl.Entry.Host)
+	opts.Principal = optional.NewString(acl.Entry.Principal)
+	opts.Host = optional.NewString(acl.Entry.Host)
 
 	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		kafkaRestConfig.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.Entry.Operation.String()))
+		opts.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.Entry.Operation.String()))
 	}
 
 	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		kafkaRestConfig.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.Entry.PermissionType.String()))
+		opts.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.Entry.PermissionType.String()))
 	}
 
-	return kafkaRestConfig
+	return opts
 }
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsPostOpts
@@ -101,36 +101,36 @@ func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkares
 		aclRequestData.Permission = kafkarestv3.AclPermission(acl.Entry.PermissionType.String())
 	}
 
-	var kafkaRestConfig kafkarestv3.ClustersClusterIdAclsPostOpts
-	kafkaRestConfig.CreateAclRequestData = optional.NewInterface(aclRequestData)
+	var opts kafkarestv3.ClustersClusterIdAclsPostOpts
+	opts.CreateAclRequestData = optional.NewInterface(aclRequestData)
 
-	return kafkaRestConfig
+	return opts
 }
 
 // Converts ACLFilter to Kafka REST ClustersClusterIdAclsDeleteOpts
 func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.ClustersClusterIdAclsDeleteOpts {
-	var kafkaRestConfig kafkarestv3.ClustersClusterIdAclsDeleteOpts
+	var opts kafkarestv3.ClustersClusterIdAclsDeleteOpts
 
 	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		kafkaRestConfig.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
+		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
 	}
 
-	kafkaRestConfig.ResourceName = optional.NewString(acl.PatternFilter.Name)
+	opts.ResourceName = optional.NewString(acl.PatternFilter.Name)
 
 	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
-		kafkaRestConfig.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.PatternFilter.PatternType.String()))
+		opts.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.PatternFilter.PatternType.String()))
 	}
 
-	kafkaRestConfig.Principal = optional.NewString(acl.EntryFilter.Principal)
-	kafkaRestConfig.Host = optional.NewString(acl.EntryFilter.Host)
+	opts.Principal = optional.NewString(acl.EntryFilter.Principal)
+	opts.Host = optional.NewString(acl.EntryFilter.Host)
 
 	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
-		kafkaRestConfig.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.EntryFilter.Operation.String()))
+		opts.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.EntryFilter.Operation.String()))
 	}
 
 	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		kafkaRestConfig.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.EntryFilter.PermissionType.String()))
+		opts.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.EntryFilter.PermissionType.String()))
 	}
 
-	return kafkaRestConfig
+	return opts
 }
