@@ -17,9 +17,9 @@ const (
 	link            = "/2.0/kafka/{cluster}/links/{link}"
 	links           = "/2.0/kafka/{cluster}/links"
 	topicMirrorStop = "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
-	topics			= "/2.0/kafka/{cluster}/topics"
-	topic			= "/2.0/kafka/{cluster}/topics/{topic}"
-	topicConfig		= "/2.0/kafka/{cluster}/topics/{topic}/config"
+	topics          = "/2.0/kafka/{cluster}/topics"
+	topic           = "/2.0/kafka/{cluster}/topics/{topic}"
+	topicConfig     = "/2.0/kafka/{cluster}/topics/{topic}/config"
 )
 
 type KafkaRouter struct {

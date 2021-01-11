@@ -172,6 +172,7 @@ func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testi
 		require.NoError(t, err)
 	}
 }
+
 // Handler for GET "/api/clusters/lkc-describe-infinite
 func (c *CloudRouter) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

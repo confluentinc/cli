@@ -2,10 +2,11 @@ package test_server
 
 import (
 	"encoding/json"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	"io"
 	"net/http"
 	"testing"
+
+	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -123,6 +124,7 @@ func (k *KafkaRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.Respo
 		}
 	}
 }
+
 // Handler for: "/2.0/kafka/{cluster}/topics"
 func (k *KafkaRouter) HandleKafkaListCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +136,7 @@ func (k *KafkaRouter) HandleKafkaListCreateTopic(t *testing.T) func(http.Respons
 		}
 	}
 }
+
 // Handler for: GET "/2.0/kafka/{cluster}/topics"
 func (k *KafkaRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -169,12 +172,13 @@ func (k *KafkaRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWrite
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: POST "/2.0/kafka/{cluster}/topics"
 func (k *KafkaRouter) HandleKafkaCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
-		spec := &schedv1.TopicSpecification{}//CreateTopicRequest{}
+		spec := &schedv1.TopicSpecification{} //CreateTopicRequest{}
 		err := utilv1.UnmarshalJSON(r.Body, spec)
 		require.NoError(t, err)
 		topicName := spec.Name
@@ -192,6 +196,7 @@ func (k *KafkaRouter) HandleKafkaCreateTopic(t *testing.T) func(http.ResponseWri
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/2.0/kafka/{cluster}/topics/{topic}"
 func (k *KafkaRouter) HandleKafkaDescribeDeleteTopic(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -203,6 +208,7 @@ func (k *KafkaRouter) HandleKafkaDescribeDeleteTopic(t *testing.T) func(w http.R
 		}
 	}
 }
+
 // Handler for: GET "/2.0/kafka/{cluster}/topics/{topic}"
 func (k *KafkaRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +219,7 @@ func (k *KafkaRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.ResponseW
 		switch {
 		case cluster == "lkc-describe-topic" && topic == "topic1":
 			describeTopicReply = &schedv1.DescribeTopicReply{Topic: &schedv1.TopicDescription{
-				Name: "topic1",
+				Name:       "topic1",
 				Partitions: []*schedv1.TopicPartitionInfo{{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1}, Replicas: []*schedv1.KafkaNode{{Id: 1}}}},
 			}}
 		default:
@@ -232,6 +238,7 @@ func (k *KafkaRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.ResponseW
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: DELETE "/2.0/kafka/{cluster}/topics/{topic}"
 func (k *KafkaRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -252,6 +259,7 @@ func (k *KafkaRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.ResponseWri
 		require.NoError(t, err)
 	}
 }
+
 //Handler for: "/2.0/kafka/{cluster}/topics/{topic}/config"
 func (k *KafkaRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -267,4 +275,3 @@ func (k *KafkaRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.Respo
 		// nothing to validate
 	}
 }
-
