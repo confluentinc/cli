@@ -185,7 +185,7 @@ func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
 	s.Command.AddCommand(command)
 }
 
-func (a *AuthenticatedCLICommand) ConstructKafkaREST() (*KafkaREST, error) {
+func (a *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 	return (*a.KafkaRESTProvider)()
 }
 

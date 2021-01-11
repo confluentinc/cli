@@ -302,7 +302,7 @@ type kafkaRestV3Error struct {
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, _ := a.ConstructKafkaREST()
+	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
@@ -388,7 +388,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := a.ConstructKafkaREST()
+	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil && (!dryRun && mirrorTopic == "" && linkName == "") {
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 		i := 0
@@ -492,7 +492,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return output.NewInvalidOutputFormatFlagError(outputOption)
 	}
 
-	kafkaREST, _ := a.ConstructKafkaREST()
+	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
@@ -616,7 +616,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := a.ConstructKafkaREST()
+	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
 		kafkaRestConfigs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 		i := 0
@@ -769,7 +769,7 @@ func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) er
 func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaREST, _ := a.ConstructKafkaREST()
+	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
