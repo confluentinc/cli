@@ -50,7 +50,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources:",
+				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
 				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
 			},
 		),
@@ -95,15 +95,12 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if c.KafkaREST != nil {
 		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
 
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaREST.Client == nil || c.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
@@ -161,9 +158,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaREST.Client == nil || c.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)
@@ -244,9 +238,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if c.KafkaREST.Client == nil || c.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := c.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, c.KafkaREST.BearerToken)

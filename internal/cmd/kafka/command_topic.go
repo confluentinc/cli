@@ -310,9 +310,6 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaREST.Client == nil || a.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := a.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaREST.BearerToken)
@@ -412,9 +409,6 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaREST.Client == nil || a.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := a.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaREST.BearerToken)
@@ -510,9 +504,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaREST.Client == nil || a.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := a.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaREST.BearerToken)
@@ -651,9 +642,6 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaREST.Client == nil || a.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := a.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaREST.BearerToken)
@@ -797,9 +785,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		if a.KafkaREST.Client == nil || a.KafkaREST.BearerToken == "" {
-			return errors.Errorf(errors.KafkaRestNotAvailableMsg)
-		}
 		kafkaRestURL := a.KafkaREST.Client.GetConfig().BasePath
 
 		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, a.KafkaREST.BearerToken)
