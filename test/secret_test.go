@@ -170,7 +170,11 @@ func checkEncryptedPropertyValues(config *os.File, configPropertyKeys []string, 
 			line := configScanner.Text()
 			equal := strings.Index(line, "=")
 			require.Equal(t, entry, line[0:equal-1])
-			require.Equal(t, expectedConfigPropertyValues[entry], line[equal+2:])
+			if entry == "testProperty" || entry == "addProperty" { // to compensate for OS-specific paths
+				require.Equal(t, expectedConfigPropertyValues[entry], filepath.ToSlash(line[equal+2:]))
+			} else {
+				require.Equal(t, expectedConfigPropertyValues[entry], line[equal+2:])
+			}
 		}
 
 		secretsFile, err := os.Open(secrets.Name())
