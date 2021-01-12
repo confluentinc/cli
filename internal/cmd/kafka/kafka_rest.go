@@ -12,6 +12,9 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
+const KafkaRestBadRequestErrorCode = 40002
+const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
+
 func kafkaRestHttpError(httpResp *http.Response) error {
 	return errors.NewErrorWithSuggestions(
 		fmt.Sprintf(errors.KafkaRestErrorMsg, httpResp.Request.Method, httpResp.Request.URL, httpResp.Status),

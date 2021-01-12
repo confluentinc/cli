@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -318,9 +319,9 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != 200 {
+			if httpResp.StatusCode != http.StatusOK {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
@@ -420,7 +421,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			// Kafka REST is available, but there was an error
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == 40002 {
+				if restErr.Code == KafkaRestBadRequestErrorCode {
 					// Ignore or pretty print topic exists error
 					if !ifNotExistsFlag {
 						return errors.NewErrorWithSuggestions(
@@ -434,9 +435,9 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != 201 {
+			if httpResp.StatusCode != http.StatusCreated {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
@@ -506,7 +507,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			// Kafka REST is available, but there was an error
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == 40403 {
+				if restErr.Code == KafkaRestUnknownTopicOrPartition {
 					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
 				}
 			}
@@ -514,9 +515,9 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != 200 {
+			if httpResp.StatusCode != http.StatusOK {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 
@@ -645,7 +646,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == 40403 {
+				if restErr.Code == KafkaRestUnknownTopicOrPartition {
 					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
 				}
 			}
@@ -653,9 +654,9 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != 204 {
+			if httpResp.StatusCode != http.StatusNoContent {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
@@ -783,7 +784,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == 40403 {
+				if restErr.Code == KafkaRestUnknownTopicOrPartition {
 					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
 				}
 			}
@@ -791,9 +792,9 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		}
 
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != 204 {
+			if httpResp.StatusCode != http.StatusNoContent {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Topic succesfully deleted

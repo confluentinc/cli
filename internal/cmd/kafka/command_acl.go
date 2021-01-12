@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -109,9 +110,9 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != 200 {
+			if httpResp.StatusCode != http.StatusOK {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
@@ -180,12 +181,12 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
-			if httpResp != nil && httpResp.StatusCode != 201 {
+			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
 					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 		}
@@ -260,12 +261,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 				return kafkaRestError(kafkaRestURL, err, httpResp)
 			}
 
-			if httpResp.StatusCode == 200 {
+			if httpResp.StatusCode == http.StatusOK {
 				matchingBindingCount += len(deleteResp.Data)
 			} else {
 				printAclsDeleted(cmd, matchingBindingCount)
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.UnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 		}

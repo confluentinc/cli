@@ -355,7 +355,7 @@ const (
 	EmptyResponseMsg               = "Empty server response"
 	KafkaRestErrorMsg              = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionMsg         = "Unable to establish Kafka REST connection: %s: %s"
-	UnexpectedStatusMsg            = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
+	KafkaRestUnexpectedStatusMsg   = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."

@@ -31,12 +31,16 @@ func bootstrapServersToRestURL(bootstrap string) (string, error) {
 	server := bootstrapServers[0]
 	serverLength := len(server)
 
-	if serverLength <= 5 {
+	if serverLength <= 6 {
 		return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
 	}
 
-	if _, err := strconv.Atoi(server[serverLength-4:]); err == nil && serverLength > 5 && server[serverLength-5] == ':' {
+	if _, err := strconv.Atoi(server[serverLength-4:]); err == nil && server[serverLength-5] == ':' {
 		return "https://" + server[:serverLength-4] + kafkaRestPort + "/kafka/v3", nil
+	}
+
+	if _, err := strconv.Atoi(server[serverLength-5:]); err == nil && server[serverLength-6] == ':' {
+		return "https://" + server[:serverLength-5] + kafkaRestPort + "/kafka/v3", nil
 	}
 
 	return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
