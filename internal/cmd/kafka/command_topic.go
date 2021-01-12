@@ -507,7 +507,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			// Kafka REST is available, but there was an error
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartition {
+				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
 				}
 			}
@@ -646,7 +646,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartition {
+				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
 				}
 			}
@@ -784,7 +784,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartition {
+				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
 				}
 			}
