@@ -11,12 +11,15 @@ import (
 
 // kafka urls
 const (
-	aclsCreate      = "/2.0/kafka/{id}/acls"
+	aclsCreate      = "/2.0/kafka/{cluster}/acls"
 	aclsList        = "/2.0/kafka/{cluster}/acls:search"
 	aclsDelete      = "/2.0/kafka/{cluster}/acls/delete"
 	link            = "/2.0/kafka/{cluster}/links/{link}"
 	links           = "/2.0/kafka/{cluster}/links"
 	topicMirrorStop = "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
+	topics          = "/2.0/kafka/{cluster}/topics"
+	topic           = "/2.0/kafka/{cluster}/topics/{topic}"
+	topicConfig     = "/2.0/kafka/{cluster}/topics/{topic}/config"
 )
 
 type KafkaRouter struct {
@@ -35,14 +38,17 @@ func NewEmptyKafkaRouter() *KafkaRouter {
 	}
 }
 
-func (c *KafkaRouter) buildKafkaHandler(t *testing.T) {
-	c.HandleFunc(aclsCreate, c.HandleKafkaACLsCreate(t))
-	c.HandleFunc(aclsList, c.HandleKafkaACLsList(t))
-	c.HandleFunc(aclsDelete, c.HandleKafkaACLsDelete(t))
-	c.HandleFunc(link, c.HandleKafkaLink(t))
-	c.HandleFunc(links, c.HandleKafkaLinks(t))
-	c.HandleFunc(topicMirrorStop, c.HandleKafkaTopicMirrorStop(t))
-	c.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) buildKafkaHandler(t *testing.T) {
+	k.HandleFunc(aclsCreate, k.HandleKafkaACLsCreate(t))
+	k.HandleFunc(aclsList, k.HandleKafkaACLsList(t))
+	k.HandleFunc(aclsDelete, k.HandleKafkaACLsDelete(t))
+	k.HandleFunc(link, k.HandleKafkaLink(t))
+	k.HandleFunc(links, k.HandleKafkaLinks(t))
+	k.HandleFunc(topicMirrorStop, k.HandleKafkaTopicMirrorStop(t))
+	k.HandleFunc(topics, k.HandleKafkaListCreateTopic(t))
+	k.HandleFunc(topic, k.HandleKafkaDescribeDeleteTopic(t))
+	k.HandleFunc(topicConfig, k.HandleKafkaTopicListConfig(t))
+	k.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)
 		require.NoError(t, err)

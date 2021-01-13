@@ -68,6 +68,8 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		switch clusterId {
 		case "lkc-describe":
 			c.HandleKafkaClusterDescribe(t)(w, r)
+		case "lkc-topics", "lkc-no-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic":
+			c.HandleKafkaTopicClusters(t)(w, r)
 		case "lkc-describe-dedicated":
 			c.HandleKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
@@ -83,7 +85,6 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 			require.NoError(t, err)
 		case "lkc-describe-infinite":
 			c.HandleKafkaClusterDescribeInfinite(t)(w, r)
-
 		default:
 			c.HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
@@ -95,6 +96,21 @@ func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.Respo
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: cluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "api/clusters/
+func (c *CloudRouter) HandleKafkaTopicClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		cluster := getBaseDescribeCluster(id, "kafka-cluster")
+		cluster.ApiEndpoint = c.kafkaApiUrl
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: cluster,
 		})
@@ -156,6 +172,7 @@ func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testi
 		require.NoError(t, err)
 	}
 }
+
 // Handler for GET "/api/clusters/lkc-describe-infinite
 func (c *CloudRouter) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

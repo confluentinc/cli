@@ -76,6 +76,28 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic mirror stop test-topic", login: "default", useKafka: "lkc-topics", authKafka: "true"},
 		{args: "kafka topic mirror stop not-found", login: "default", useKafka: "lkc-topics", authKafka: "true", fixture: "kafka/mirror-topic-not-found.golden", wantErrCode: 1},
 		{args: "kafka topic mirror bad test-topic", login: "default", useKafka: "lkc-topics", authKafka: "true", fixture: "kafka/mirror-invalid.golden", wantErrCode: 1},
+
+		{args: "kafka topic list", login: "default", useKafka: "lkc-topics", fixture: "kafka/topic-list.golden"},
+		{args: "kafka topic list --cluster lkc-topics", login: "default", fixture: "kafka/topic-list.golden"},
+		{args: "kafka topic list", login: "default", useKafka: "lkc-no-topics", fixture: "kafka/topic-list-empty.golden"},
+		{args: "kafka topic list", login: "default", useKafka: "lkc-not-ready", fixture: "kafka/cluster-not-ready.golden", wantErrCode: 1},
+
+		{args: "kafka topic create", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create.golden", wantErrCode: 1},
+		{args: "kafka topic create topic1", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-success.golden"},
+		{args: "kafka topic create dupTopic", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-dup-topic.golden", wantErrCode: 1},
+
+		{args: "kafka topic describe", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe.golden", wantErrCode: 1},
+		{args: "kafka topic describe topic1", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-success.golden"},
+		{args: "kafka topic describe topic1 --output json", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-json-success.golden"},
+		{args: "kafka topic describe topic1 --cluster lkc-create-topic", login: "default", fixture: "kafka/topic-describe-not-found.golden", wantErrCode: 1},
+		{args: "kafka topic describe topic2", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic2-describe-not-found.golden", wantErrCode: 1},
+
+		{args: "kafka topic delete", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete.golden", wantErrCode: 1},
+		{args: "kafka topic delete topic1", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete-success.golden"},
+		{args: "kafka topic delete topic1 --cluster lkc-create-topic", login: "default", fixture: "kafka/topic-delete-not-found.golden", wantErrCode: 1},
+		{args: "kafka topic delete topic2", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1},
+
+		{args: "kafka topic update topic1 --config=\"testConfig=valueUpdate\"", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
 	}
 
 	resetConfiguration(s.T(), "ccloud")
