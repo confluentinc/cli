@@ -25,3 +25,7 @@ var LinkSubcommandFlags = map[string]*pflag.FlagSet{
 var ProduceAndConsumeFlags = map[string]*pflag.FlagSet{
 	"topic": cmd.CombineFlagSet(cmd.ClusterEnvironmentContextSet(), cmd.KeySecretSet()),
 }
+
+var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
+	"cluster" : cmd.ContextSet(),
+}

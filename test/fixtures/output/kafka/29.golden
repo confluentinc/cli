@@ -8,5 +8,5 @@ name: lkc-update-name
 provider: aws
 region: us-west-2
 status: UP
-storage: 500
+storage: "500"
 type: BASIC

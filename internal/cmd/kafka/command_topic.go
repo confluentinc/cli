@@ -659,6 +659,12 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
+			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
+			if isProduceToCompactedTopicError {
+				scanErr = err
+				close(input)
+				break
+			}
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
 		}
 

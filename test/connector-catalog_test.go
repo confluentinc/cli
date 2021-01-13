@@ -12,11 +12,8 @@ func (s *CLITestSuite) TestConnectorCatalog() {
 		{args: "connector-catalog list --cluster lkc-123", fixture: "connector-catalog/connector-catalog-list.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

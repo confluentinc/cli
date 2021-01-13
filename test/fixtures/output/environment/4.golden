@@ -1,5 +1,6 @@
-     Id     |      Name       
-+-----------+----------------+
-    a-595   | default         
-  * not-595 | new-other-name  
-    env-123 | env123          
+        Id       |      Name       
++----------------+----------------+
+    a-595        | default         
+  * not-595      | new-other-name  
+    env-123      | env123          
+    env-srUpdate | srUpdate        

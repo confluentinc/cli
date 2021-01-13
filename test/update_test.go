@@ -43,8 +43,6 @@ func (s *CLITestSuite) TestUpdate() {
 		{args: "--help", notContains: "Update the confluent CLI."},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.workflow = true
 		switch tt.name {
@@ -55,7 +53,7 @@ func (s *CLITestSuite) TestUpdate() {
 			err = ioutil.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
-			s.runConfluentTest(tt, loginURL)
+			s.runConfluentTest(tt)
 			if tt.fixture == "update1.golden" {
 				// Remove the cache file so it _would_ prompt again (if not disabled)
 				err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist

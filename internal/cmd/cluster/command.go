@@ -7,7 +7,7 @@ import (
 )
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.StateFlagCommand
 	prerunner  pcmd.PreRunner
 	metaClient Metadata
 }
@@ -15,10 +15,10 @@ type command struct {
 // New returns the Cobra command for `cluster`.
 func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
 	cmd := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
+		StateFlagCommand: pcmd.NewAnonymousStateFlagCommand(&cobra.Command{
 			Use:   "cluster",
 			Short: "Retrieve metadata about Confluent Platform clusters.",
-		}, prerunner),
+		}, prerunner, SubcommandFlags),
 		prerunner:  prerunner,
 		metaClient: metaClient,
 	}

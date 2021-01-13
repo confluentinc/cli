@@ -1,0 +1,23 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  ccloud kafka topic describe <topic> [flags]
+
+Examples:
+Describe the ``my_topic`` topic.
+
+::
+
+  ccloud kafka topic describe my_topic
+
+
+
+Flags:
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

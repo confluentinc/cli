@@ -1,0 +1,6 @@
++-----------------+----------------------------+
+| Cluster         | lkc-ab123                  |
+| Environment     | env-987zy                  |
+| Service Account |                       1337 |
+| Topic Name      | confluent-audit-log-events |
++-----------------+----------------------------+
