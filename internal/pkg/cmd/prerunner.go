@@ -413,7 +413,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		if os.Getenv("XX_CCLOUD_DO_NOT_USE_KAFKA_REST") == "" {
+		if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") != "" {
 			result := &KafkaREST{}
 			result.Client, err = createKafkaRESTClient(ctx, cliCmd)
 			if err != nil {
