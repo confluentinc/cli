@@ -1,9 +1,7 @@
 package test_server
 
 import (
-	"log"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 )
 
@@ -33,18 +31,14 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	}
 	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
+	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
 	return backend
 }
 
-var KafkaRestPort = "" // another test uses port 8090
+//var kafkaRestPort *string // another test uses port 8090
 func configureKafkaRestServer(router KafkaRestProxyRouter) *httptest.Server {
 	kafkaRPServer := httptest.NewUnstartedServer(router)
 	kafkaRPServer.StartTLS()
-	u, err := url.Parse(kafkaRPServer.URL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	KafkaRestPort = u.Port()
 	return kafkaRPServer
 }
 
@@ -87,6 +81,7 @@ func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *Kafka
 		kafkaRestProxy: configureKafkaRestServer(kafkaRouter.KafkaRP),
 	}
 	cloudRouter.kafkaApiUrl = ccloud.kafkaApi.URL
+	cloudRouter.kafkaRPUrl = ccloud.kafkaRestProxy.URL
 	return ccloud
 }
 // Creates and returns new TestBackend struct with passed MdsRouter

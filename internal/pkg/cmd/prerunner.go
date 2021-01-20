@@ -27,7 +27,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	test_server "github.com/confluentinc/cli/test/test-server"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -755,20 +754,24 @@ func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand,
 		return nil, err
 	}
 	if isTest {
-		return getTestRestClient(kafkaRestURL), nil
+		return getTestRestClient(kafkaRestURL, kafkaClusterConfig.Bootstrap)
 	}
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath: kafkaRestURL,
 	}), nil
 }
 
-func getTestRestClient(url string) *krsdk.APIClient {
+// TODO: once rest url is included in cluster config, we should be able to get rid of this (return a http endpoint and we won't have to parse together the port)
+// This function is used for integration testing
+func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, error) {
 	testClient := http.DefaultClient
 	testClient.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // required for https mocking
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // HACK required for https mocking (when Rest URL is in cluster config we can use http)
 	}
+	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
+	testBaseUrl := strings.Replace(baseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath:   url[:len(url)-4] + test_server.KafkaRestPort,	// HACK until we can get Rest URL from cluster config
+		BasePath:   testBaseUrl,
 		HTTPClient: testClient,
-	})
+	}), nil
 }

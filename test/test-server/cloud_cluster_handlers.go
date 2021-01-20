@@ -2,7 +2,9 @@ package test_server
 
 import (
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"testing"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -111,7 +113,11 @@ func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) func(w http.Res
 		id := r.URL.Query().Get("id")
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
 		cluster.ApiEndpoint = c.kafkaApiUrl
-		cluster.Endpoint = "SASL_SSL://127.0.0.1:1234"
+		u, err := url.Parse(c.kafkaRPUrl)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cluster.Endpoint = "SASL_SSL://127.0.0.1:" + u.Port()
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 			Cluster: cluster,
 		})
