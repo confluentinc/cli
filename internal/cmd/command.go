@@ -119,6 +119,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		LoginCredentialsManager: loginCredentialsManager,
 		AuthTokenHandler:        authTokenHandler,
 		JWTValidator:            jwtValidator,
+		IsTest:					 isTest,
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
 	shellCompleter := completer.NewShellCompleter(cli)

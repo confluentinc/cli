@@ -1,6 +1,8 @@
 package test_server
 
 import (
+	"log"
+	"net"
 	"net/http/httptest"
 	"testing"
 )
@@ -8,10 +10,11 @@ import (
 // TestBackend consists of the servers for necessary mocked backend services
 // Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined
 type TestBackend struct {
-	cloud       *httptest.Server
-	kafka       *httptest.Server
-	mds         *httptest.Server
-	sr			*httptest.Server
+	cloud       	*httptest.Server
+	kafkaApi       	*httptest.Server
+	kafkaRestProxy	*httptest.Server
+	mds         	*httptest.Server
+	sr				*httptest.Server
 }
 
 func StartTestBackend(t *testing.T) *TestBackend {
@@ -19,23 +22,42 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
 	srRouter := NewSRRouter(t)
+	kafkaRPServer := configureKafkaRestServer(kafkaRouter.KafkaRP)
+
 	backend := &TestBackend{
-		cloud:       httptest.NewServer(cloudRouter),
-		kafka:       httptest.NewServer(kafkaRouter),
-		mds:         httptest.NewServer(mdsRouter),
-		sr: 		 httptest.NewServer(srRouter),
+		cloud:      	httptest.NewServer(cloudRouter),
+		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
+		kafkaRestProxy: kafkaRPServer,
+		mds:         	httptest.NewServer(mdsRouter),
+		sr: 		 	httptest.NewServer(srRouter),
 	}
-	cloudRouter.kafkaApiUrl = backend.kafka.URL
+	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
 	return backend
+}
+
+func configureKafkaRestServer(router KafkaRestProxyRouter) *httptest.Server {
+	l, err := net.Listen("tcp", "127.0.0.1:8090")
+	if err != nil {
+		log.Fatal(err)
+	}
+	kafkaRPServer := httptest.NewUnstartedServer(router)
+	kafkaRPServer.Listener.Close()
+	kafkaRPServer.Listener = l
+	kafkaRPServer.StartTLS()
+
+	return kafkaRPServer
 }
 
 func (b *TestBackend) Close() {
 	if b.cloud != nil {
 		b.cloud.Close()
 	}
-	if b.kafka != nil {
-		b.kafka.Close()
+	if b.kafkaApi != nil {
+		b.kafkaApi.Close()
+	}
+	if b.kafkaRestProxy != nil {
+		b.kafkaRestProxy.Close()
 	}
 	if b.mds != nil {
 		b.mds.Close()
@@ -49,8 +71,8 @@ func (b *TestBackend) GetCloudUrl() string {
 	return b.cloud.URL
 }
 
-func (b *TestBackend) GetKafkaUrl() string {
-	return b.kafka.URL
+func (b *TestBackend) GetKafkaApiUrl() string {
+	return b.kafkaApi.URL
 }
 
 func (b *TestBackend) GetMdsUrl() string {
@@ -61,10 +83,11 @@ func (b *TestBackend) GetMdsUrl() string {
 // Define/override the endpoints on the corresponding routers
 func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *KafkaRouter) *TestBackend {
 	ccloud := &TestBackend{
-		cloud:       httptest.NewServer(cloudRouter),
-		kafka:       httptest.NewServer(kafkaRouter),
+		cloud:       	httptest.NewServer(cloudRouter),
+		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
+		kafkaRestProxy: configureKafkaRestServer(kafkaRouter.KafkaRP),
 	}
-	cloudRouter.kafkaApiUrl = ccloud.kafka.URL
+	cloudRouter.kafkaApiUrl = ccloud.kafkaApi.URL
 	return ccloud
 }
 // Creates and returns new TestBackend struct with passed MdsRouter

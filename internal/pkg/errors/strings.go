@@ -67,7 +67,7 @@ const (
 
 	// kafka acl commands
 	DeletedACLsMsg      = "Deleted ACLs.\n"
-	DeletedACLsCountMsg = "Deleted %d ACLs\n"
+	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
 	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands

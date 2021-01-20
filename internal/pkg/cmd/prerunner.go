@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
+	"net/http"
 	"os"
 	"strings"
 
@@ -52,6 +54,7 @@ type PreRun struct {
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
 	JWTValidator            JWTValidator
+	IsTest					bool
 }
 
 type CLICommand struct {
@@ -415,7 +418,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") != "" {
 			result := &KafkaREST{}
-			result.Client, err = createKafkaRESTClient(ctx, cliCmd)
+			result.Client, err = createKafkaRESTClient(cliCmd.Context, cliCmd, r.IsTest)
 			if err != nil {
 				return nil, err
 			}
@@ -740,7 +743,7 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand) (*kafkarestv3.APIClient, error) {
+func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand, isTest bool) (*kafkarestv3.APIClient, error) {
 	kafkaClusterConfig, err := ctx.GetKafkaClusterForCommand(cliCmd.Command)
 	if err != nil {
 		// cluster is probably not available
@@ -750,7 +753,21 @@ func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand)
 	if err != nil {
 		return nil, err
 	}
+	if isTest {
+		return getTestRestClient(kafkaRestURL), nil
+	}
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath: kafkaRestURL,
 	}), nil
+}
+
+func getTestRestClient(url string) *krsdk.APIClient {
+	testClient := http.DefaultClient
+	testClient.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // required for https mocking
+	}
+	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
+		BasePath:   url,
+		HTTPClient: testClient,
+	})
 }

@@ -13,7 +13,7 @@ Create a topic named ``my_topic`` with default options.
 
 Flags:
       --partitions int32      Number of topic partitions. (default 6)
-      --config strings        A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.
+      --config strings        A comma-separated list of topic config overrides ('key=value') for the topic being created.
       --link string           The name of the cluster link the topic is associated with, if mirrored.
       --mirror-topic string   The name of the topic over the cluster link to mirror.
       --dry-run               Run the command without committing changes to Kafka.

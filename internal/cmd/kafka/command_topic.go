@@ -798,7 +798,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 					errors.InternalServerErrorSuggestions)
 			}
 			// Topic succesfully deleted
-			utils.Println(cmd, errors.DeletedTopicMsg, topicName)
+			utils.Printf(cmd, errors.DeletedTopicMsg, topicName)
 			return nil
 		}
 	}
