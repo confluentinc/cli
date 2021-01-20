@@ -27,6 +27,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	test_server "github.com/confluentinc/cli/test/test-server"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -767,7 +768,7 @@ func getTestRestClient(url string) *krsdk.APIClient {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // required for https mocking
 	}
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath:   url,
+		BasePath:   url[:len(url)-4] + test_server.KafkaRestPort,	// HACK until we can get Rest URL from cluster config
 		HTTPClient: testClient,
 	})
 }

@@ -2,8 +2,8 @@ package test_server
 
 import (
 	"log"
-	"net"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -36,16 +36,15 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	return backend
 }
 
+var KafkaRestPort = "" // another test uses port 8090
 func configureKafkaRestServer(router KafkaRestProxyRouter) *httptest.Server {
-	l, err := net.Listen("tcp", "127.0.0.1:8090")
+	kafkaRPServer := httptest.NewUnstartedServer(router)
+	kafkaRPServer.StartTLS()
+	u, err := url.Parse(kafkaRPServer.URL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	kafkaRPServer := httptest.NewUnstartedServer(router)
-	kafkaRPServer.Listener.Close()
-	kafkaRPServer.Listener = l
-	kafkaRPServer.StartTLS()
-
+	KafkaRestPort = u.Port()
 	return kafkaRPServer
 }
 
