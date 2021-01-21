@@ -523,7 +523,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -801,14 +801,14 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, cfg)
 	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), ccloudClientFactory, mdsClientManager,
 		cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler)
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cliName string, cfg *v3.Config) (*logoutCommand, *v3.Config) {
-	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
+	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
 	return logoutCmd, cfg
 }
 

@@ -1,3 +1,0 @@
-  ServiceAccountId | Permission | Operation | Resource |         Name          | Type  
-+------------------+------------+-----------+----------+-----------------------+------+
-                   | ALLOW      | READ      | TOPIC    | test-rest-proxy-topic |       

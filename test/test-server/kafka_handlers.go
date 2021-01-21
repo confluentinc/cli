@@ -15,7 +15,7 @@ import (
 )
 
 // Handler for: "/2.0/kafka/{cluster}/acls:search"
-func (k *KafkaApiRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		results := []*schedv1.ACLBinding{
 			{
@@ -38,7 +38,7 @@ func (k *KafkaApiRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseW
 }
 
 // Handler for: "/2.0/kafka/{cluster}/acls"
-func (k *KafkaApiRouter) HandleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			var bindings []*schedv1.ACLBinding
@@ -54,7 +54,7 @@ func (k *KafkaApiRouter) HandleKafkaACLsCreate(t *testing.T) func(w http.Respons
 }
 
 // Handler for: "/2.0/kafka/{cluster}/acls/delete"
-func (k *KafkaApiRouter) HandleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaACLsDelete(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var filters []*schedv1.ACLFilter
 		err := json.NewDecoder(r.Body).Decode(&filters)
@@ -68,7 +68,7 @@ func (k *KafkaApiRouter) HandleKafkaACLsDelete(t *testing.T) func(w http.Respons
 }
 
 // Handler for: "/2.0/kafka/{cluster}/links"
-func (k *KafkaApiRouter) HandleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaLinks(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		listResponsePayload := []*linkv1.ListLinksResponseItem{
 			&linkv1.ListLinksResponseItem{LinkName: "link-1", LinkId: "1234", ClusterId: "Blah"},
@@ -83,7 +83,7 @@ func (k *KafkaApiRouter) HandleKafkaLinks(t *testing.T) func(w http.ResponseWrit
 }
 
 // Handler for: "/2.0/kafka/{cluster}/links/{link}"
-func (k *KafkaApiRouter) HandleKafkaLink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaLink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		link := vars["link"]
@@ -108,7 +108,7 @@ func (k *KafkaApiRouter) HandleKafkaLink(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for: "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
-func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topic := vars["topic"]
@@ -126,7 +126,7 @@ func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.Re
 }
 
 // Handler for: "/2.0/kafka/{cluster}/topics"
-func (k *KafkaApiRouter) HandleKafkaListCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (k *KafkaRouter) HandleKafkaListCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET": //list call
@@ -138,7 +138,7 @@ func (k *KafkaApiRouter) HandleKafkaListCreateTopic(t *testing.T) func(http.Resp
 }
 
 // Handler for: GET "/2.0/kafka/{cluster}/topics"
-func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (k *KafkaRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
@@ -174,7 +174,7 @@ func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWr
 }
 
 // Handler for: POST "/2.0/kafka/{cluster}/topics"
-func (k *KafkaApiRouter) HandleKafkaCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (k *KafkaRouter) HandleKafkaCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
@@ -198,7 +198,7 @@ func (k *KafkaApiRouter) HandleKafkaCreateTopic(t *testing.T) func(http.Response
 }
 
 // Handler for: "/2.0/kafka/{cluster}/topics/{topic}"
-func (k *KafkaApiRouter) HandleKafkaDescribeDeleteTopic(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaDescribeDeleteTopic(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET": //describe call
@@ -210,7 +210,7 @@ func (k *KafkaApiRouter) HandleKafkaDescribeDeleteTopic(t *testing.T) func(w htt
 }
 
 // Handler for: GET "/2.0/kafka/{cluster}/topics/{topic}"
-func (k *KafkaApiRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (k *KafkaRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
@@ -240,7 +240,7 @@ func (k *KafkaApiRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.Respon
 }
 
 // Handler for: DELETE "/2.0/kafka/{cluster}/topics/{topic}"
-func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (k *KafkaRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
@@ -261,7 +261,7 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.Response
 }
 
 //Handler for: "/2.0/kafka/{cluster}/topics/{topic}/config"
-func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var listTopicConfigReply *schedv1.ListTopicConfigReply
 		if r.Method == "GET" { //part of describe call

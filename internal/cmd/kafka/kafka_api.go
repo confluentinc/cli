@@ -44,15 +44,12 @@ func aclConfigFlags() *pflag.FlagSet {
 func aclEntryFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	//flgSet.String("cluster", "", "Confluent Cloud cluster ID.")
-	flgSet.Bool("allow", false, "Access to the resource is allowed.") // permission
-	flgSet.Bool("deny", false, "Access to the resource is denied.")
+	flgSet.Bool("allow", false, "Set the ACL to grant access.")
+	flgSet.Bool("deny", false, "Set the ACL to restrict access to resource.")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
 	flgSet.Int("service-account", 0, "The service account ID.")
-	operationHelpOneLine := fmt.Sprintf("The ACL Operation: (%s).\nNote: This flag may be specified more than once.",
-		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"}))
-	operationHelpParts := strings.SplitAfter(operationHelpOneLine, "delete, ")
-	operationHelp := operationHelpParts[0] + "\n" + operationHelpParts[1]
-	flgSet.StringArray("operation", []string{""}, operationHelp)
+	flgSet.StringArray("operation", []string{""}, fmt.Sprintf("Set ACL Operations to: (%s).",
+		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	// An error is only returned if the flag name is not present.
 	// We know the flag name is present so its safe to ignore this.
 	_ = cobra.MarkFlagRequired(flgSet, "service-account")
@@ -64,12 +61,14 @@ func aclEntryFlags() *pflag.FlagSet {
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
 	//flgSet.String("cluster", "", "The Confluent Cloud cluster ID.")
-	flgSet.Bool("cluster-scope", false, `Modify ACLs for the cluster.`)
-	flgSet.String("topic", "", `Modify ACLs for the specified topic resource.`)
-	flgSet.String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
-	flgSet.String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
-	flgSet.Bool("prefix", false, `When this flag is set, the specified resource name is interpreted as
-a prefix.`)
+	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
+access to the provided operations on the Kafka cluster itself.`)
+	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
+operations on the topics that start with that prefix, depending on whether
+the --prefix option was also passed.`)
+	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
+	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
+	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
 
 	return flgSet
 }

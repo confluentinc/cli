@@ -121,7 +121,7 @@ func mockPriceCommand(prices map[string]float64) *cobra.Command {
 
 	cfg := v3.AuthenticatedCloudConfigMock()
 
-	return New(mock.NewPreRunnerMock(client, nil, nil, cfg))
+	return New(mock.NewPreRunnerMock(client, nil, cfg))
 }
 
 func TestFormatPrice(t *testing.T) {

@@ -34,15 +34,13 @@ require (
 	github.com/confluentinc/ccloud-sdk-go v0.0.61
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.3
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
 	github.com/csreesan/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/davecgh/go-spew v1.1.1
-	github.com/denis-tingajkin/go-header v0.3.1 // indirect
-	github.com/dghubble/sling v1.3.0
+	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
 	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
@@ -50,8 +48,6 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.3.0 // indirect
-	github.com/go-critic/go-critic v0.5.0 // indirect
-	github.com/go-delve/delve v1.5.0 // indirect
 	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -89,7 +85,6 @@ require (
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
-	github.com/ramya-rao-a/go-outline v0.0.0-20200117021646-2a048b4510eb // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
 	github.com/securego/gosec v0.0.0-20191002120514-e680875ea14d // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible
@@ -97,8 +92,6 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
-	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 // indirect
-	github.com/ssgreg/nlreturn/v2 v2.0.1 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.6.0
@@ -118,7 +111,6 @@ require (
 	golang.org/x/tools v0.0.0-20200929223013-bf155c11ec6f // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.25.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect

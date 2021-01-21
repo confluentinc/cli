@@ -47,7 +47,6 @@ type CloudRouter struct {
 	*mux.Router
 	kafkaApiUrl string
 	srApiUrl	string
-	kafkaRPUrl	string
 }
 
 // New CloudRouter with all cloud handlers

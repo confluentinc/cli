@@ -201,14 +201,14 @@ func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, 
 
 func (s *CLITestSuite) TestUserAgent() {
 	checkUserAgent := func(t *testing.T, expected string) *test_server.TestBackend {
-		kafkaRouter := test_server.NewEmptyKafkaRouter()
-		kafkaRouter.KafkaApi.PathPrefix("/").HandlerFunc(assertUserAgent(t, expected))
+		kafkaApiRouter := test_server.NewEmptyKafkaRouter()
+		kafkaApiRouter.PathPrefix("/").HandlerFunc(assertUserAgent(t, expected))
 		cloudRouter := test_server.NewCloudRouter(t)
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), cloudRouter.HandleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), cloudRouter.HandleMe(t)))
 		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), cloudRouter.HandleCheckEmail(t)))
 		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), cloudRouter.HandleKafkaClusterGetListDeleteDescribe(t)))
-		return test_server.NewCloudTestBackendFromRouters(cloudRouter, kafkaRouter)
+		return test_server.NewCloudTestBackendFromRouters(cloudRouter, kafkaApiRouter)
 	}
 	backend := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
 		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))

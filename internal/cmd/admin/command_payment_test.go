@@ -155,7 +155,7 @@ func getCommand() (c *command) {
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
 	cfg := v3.AuthenticatedCloudConfigMock()
-	return New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
+	return New(climock.NewPreRunnerMock(client, nil, cfg), true)
 }
 
 func mockClient() (client *ccloud.Client) {

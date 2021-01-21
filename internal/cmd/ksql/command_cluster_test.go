@@ -38,7 +38,7 @@ func (suite *KsqlClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 			},
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, conf)
 	cmd := NewClusterCommand(prerunner)
 	return cmd
 }

@@ -194,7 +194,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New("confluent", mock2.NewPreRunnerMock(nil, mdsClient, nil, suite.conf))
+	return New("confluent", mock2.NewPreRunnerMock(nil, mdsClient, suite.conf))
 }
 
 func TestAclTestSuite(t *testing.T) {

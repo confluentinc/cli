@@ -17,28 +17,26 @@ import (
 )
 
 type Commander struct {
-	FlagResolver      pcmd.FlagResolver
-	Client            *ccloud.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
-	KafkaRESTProvider *pcmd.KafkaRESTProvider
-	Version           *version.Version
-	Config            *v3.Config
+	FlagResolver pcmd.FlagResolver
+	Client       *ccloud.Client
+	MDSClient    *mds.APIClient
+	MDSv2Client  *mdsv2alpha1.APIClient
+	Version      *version.Version
+	Config       *v3.Config
 }
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v3.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, cfg *v3.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
 	}
 	return &Commander{
-		FlagResolver:      flagResolverMock,
-		Client:            client,
-		MDSClient:         mdsClient,
-		KafkaRESTProvider: kafkaRESTProvider,
-		Config:            cfg,
+		FlagResolver: flagResolverMock,
+		Client:       client,
+		MDSClient:    mdsClient,
+		Config:       cfg,
 	}
 }
 
@@ -135,5 +133,4 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
-	command.KafkaRESTProvider = c.KafkaRESTProvider
 }
