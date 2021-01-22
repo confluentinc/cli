@@ -2,7 +2,7 @@ SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 MASTER_BRANCH   ?= master
-RELEASE_BRANCH  ?= master
+RELEASE_BRANCH  ?= 1.16.x
 
 DOCS_BRANCH     ?= 5.5.1-post
 
