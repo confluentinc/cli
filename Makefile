@@ -265,12 +265,10 @@ dist: download-licenses
 					suffix=tar.gz ; \
 					tar -czf dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} -C /tmp $${binary} ; \
 				fi ; \
-				cp dist/$${binary}/$${binary}_$(VERSION)_$${os}_$${arch}.$${suffix} dist/$${binary}/$${binary}_latest_$${os}_$${arch}.$${suffix} ; \
 			done ; \
 		done ; \
 		cd dist/$${binary}/ ; \
 		  $(SHASUM) $${binary}_$(VERSION)_* > $${binary}_$(VERSION)_checksums.txt ; \
-		  $(SHASUM) $${binary}_latest_* > $${binary}_latest_checksums.txt ; \
 		  cd ../.. ; \
 	done
 
@@ -281,7 +279,6 @@ publish: sign dist
 	for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/darwin_amd64/$${binary} s3://confluent.cloud/$${binary}-cli/binaries/$(VERSION:v%=%)/$${binary}_$(VERSION:v%=%)_darwin_amd64 --acl public-read ; \
 		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/$(VERSION:v%=%)/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_latest_*" --acl public-read ; \
-		aws s3 cp dist/$${binary}/ s3://confluent.cloud/$${binary}-cli/archives/latest/ --recursive --exclude "*" --include "*.tar.gz" --include "*.zip" --include "*_checksums.txt" --exclude "*_$(VERSION)_*" --acl public-read ; \
 	done
 
 .PHONY: publish-installers
