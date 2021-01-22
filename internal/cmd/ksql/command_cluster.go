@@ -96,8 +96,8 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().String("apikey", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
-	createCmd.Flags().String("apikey-secret", "", "Secret for the Kafka API key (recommended).")
+	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
+	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key (recommended).")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -166,11 +166,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		KafkaClusterId: kafkaCluster.ID,
 	}
 
-	kafkaApiKey, err := cmd.Flags().GetString("apikey")
+	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return err
 	}
-	kafkaApiKeySecret, err := cmd.Flags().GetString("apikey-secret")
+	kafkaApiKeySecret, err := cmd.Flags().GetString("api-secret")
 	if err != nil {
 		return err
 	}

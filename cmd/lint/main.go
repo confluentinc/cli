@@ -189,12 +189,7 @@ var flagRules = []linter.FlagRule{
 			"skip-message-on-error", "socket-buffer-size",
 		),
 	),
-	linter.FlagFilter(
-		linter.RequireFlagRealWords('-'),
-		linter.ExcludeFlag(
-			"apikey", "apikey-secret",
-		),
-	),
+	linter.RequireFlagRealWords('-'),
 	linter.RequireFlagUsageRealWords,
 }
 

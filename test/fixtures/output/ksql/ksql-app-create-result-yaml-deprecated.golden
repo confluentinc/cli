@@ -1,4 +1,4 @@
-(DEPRECATED) In a future release, apikey and apikey-secret will be required flags when creating a ksql cluster.
+(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster.
 endpoint: SASL_SSL://ksql-endpoint
 id: lksqlc-ksql5
 kafka: lkc-qwert

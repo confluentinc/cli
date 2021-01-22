@@ -15,7 +15,7 @@ const (
 	UsingLoginURLDefaults = "Assuming %s.\n"
 
 	// ksql create warning
-	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, apikey and apikey-secret will be required flags when creating a ksql cluster."
+	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."
 
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +

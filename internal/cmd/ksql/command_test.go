@@ -192,7 +192,7 @@ func (suite *KSQLTestSuite) TestCreateKSQL() {
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString, "--apikey-secret", keySecretString}))
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -207,24 +207,24 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey-secret", keySecretString}))
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--api-secret", keySecretString}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both --apikey and --apikey-secret must be provided", err.Error())
+	req.Equal("both --api-key and --api-secret must be provided", err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString}))
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--api-key", keyString}))
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both --apikey and --apikey-secret must be provided", err.Error())
+	req.Equal("both --api-key and --api-secret must be provided", err.Error())
 }
 
 
