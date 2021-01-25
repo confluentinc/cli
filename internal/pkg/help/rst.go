@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -34,7 +34,7 @@ func ResolveReST(template string, cmd *cobra.Command) error {
 	}
 	err = tmpl(cmd.OutOrStderr(), template, cmd)
 	if err != nil {
-		pcmd.Println(cmd, err)
+		utils.Println(cmd, err)
 	}
 	return err
 }

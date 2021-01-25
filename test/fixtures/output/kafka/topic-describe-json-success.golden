@@ -1,0 +1,17 @@
+{
+  "topic_name": "topic1",
+  "partition_count": 1,
+  "replication_factor": 1,
+  "partitions": [
+    {
+      "topic": "topic1",
+      "partition": 1,
+      "leader": 1,
+      "replicas": [1],
+      "isr": null
+    }
+  ],
+  "config": {
+    "testConfig": "testValue"
+  }
+}

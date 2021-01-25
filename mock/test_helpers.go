@@ -17,11 +17,3 @@ func NewDummyAnalyticsMock() *AnalyticsClient {
 		SetSpecialPropertyFunc:   func(propertiesKey string, value interface{}) {},
 	}
 }
-
-func NewPromptMock(msg string) *Prompt {
-	return &Prompt{
-		ReadLineFunc: func() (string, error) {
-			return msg, nil
-		},
-	}
-}

@@ -87,12 +87,12 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 
 		// create api-key for a service account
-		{args: "api-key create --resource lkc-cool1 --service-account 99", fixture: "apikey/24.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account 12345", fixture: "apikey/24.golden"},
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 		{args: "api-key list", fixture: "apikey/25.golden"},
-		{args: "api-key list --service-account 99", fixture: "apikey/26.golden"},
+		{args: "api-key list --service-account 12345", fixture: "apikey/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey/27.golden"},
-		{args: "api-key list --resource lkc-cool1 --service-account 99", fixture: "apikey/26.golden"},
+		{args: "api-key list --resource lkc-cool1 --service-account 12345", fixture: "apikey/50.golden"},
 
 		// create json yaml output
 		{args: "api-key create --description human-output --resource lkc-other1", fixture: "apikey/31.golden"},
@@ -133,11 +133,9 @@ func (s *CLITestSuite) TestAPIKey() {
 	}
 
 	resetConfiguration(s.T(), "ccloud")
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

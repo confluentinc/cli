@@ -1,0 +1,12 @@
+Unregister cluster from the MDS cluster registry.
+
+Usage:
+  confluent cluster unregister [flags]
+
+Flags:
+      --cluster-name string   Cluster Name.
+      --context string        CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

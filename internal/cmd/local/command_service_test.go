@@ -26,6 +26,24 @@ func TestInjectConfigs(t *testing.T) {
 	req.Contains(string(data), "append=new")
 }
 
+func TestInjectConfigsNoNewline(t *testing.T) {
+	req := require.New(t)
+
+	data := []byte("replace=old\n# replace=commented-duplicate\n# comment=old")
+
+	config := map[string]string{
+		"replace": "new",
+		"append":  "new",
+	}
+
+	data = injectConfig(data, config)
+
+	req.Contains(string(data), "replace=new")
+	req.Contains(string(data), "# replace=commented-duplicate")
+	req.Contains(string(data), "comment=old\n")
+	req.Contains(string(data), "append=new")
+}
+
 func TestSetServiceEnvs(t *testing.T) {
 	req := require.New(t)
 
@@ -59,11 +77,4 @@ func TestIsValidJavaVersion(t *testing.T) {
 	isValid, err = isValidJavaVersion("", "13")
 	req.NoError(err)
 	req.False(isValid)
-}
-
-func TestWriteServiceName(t *testing.T) {
-	req := require.New(t)
-
-	req.Equal("Kafka", writeServiceName("kafka"))
-	req.Equal("Schema Registry", writeServiceName("schema-registry"))
 }

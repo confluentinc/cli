@@ -2,8 +2,9 @@ package release_notes
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func readTestFile(filePath string) (string, error) {

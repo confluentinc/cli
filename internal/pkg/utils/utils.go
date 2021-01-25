@@ -2,10 +2,13 @@ package utils
 
 import (
 	"bytes"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/properties"
 	"io/ioutil"
 	"os"
+	"regexp"
+
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func Max(x, y int64) int64 {
@@ -94,4 +97,10 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 	normalized := bytes.Replace(raw, []byte{13, 10}, []byte{10}, -1)
 	normalized = bytes.Replace(normalized, []byte{13}, []byte{10}, -1)
 	return normalized
+}
+
+func ValidateEmail(email string) bool {
+	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	matched := rgxEmail.MatchString(email)
+	return matched
 }

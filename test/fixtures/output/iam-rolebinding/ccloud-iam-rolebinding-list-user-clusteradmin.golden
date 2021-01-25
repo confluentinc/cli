@@ -1,4 +1,4 @@
-   Principal    
-+--------------+
-  User:u-33ccc  
-  User:u-44ddd  
+   Principal   |        Email          
++--------------+----------------------+
+  User:u-33ccc | u-33ccc@confluent.io  
+  User:u-44ddd |                       

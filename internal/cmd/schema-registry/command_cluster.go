@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type describeDisplay struct {
@@ -39,21 +40,21 @@ var (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	logger   *log.Logger
 	srClient *srsdk.APIClient
 }
 
 func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Schema Registry cluster.",
-		}, prerunner)
+		}, prerunner, ClusterSubcommandFlags)
 	clusterCmd := &clusterCommand{
-		AuthenticatedCLICommand: cliCmd,
-		srClient:                srClient,
-		logger:                  logger,
+		AuthenticatedStateFlagCommand: cliCmd,
+		srClient:                      srClient,
+		logger:                        logger,
 	}
 	clusterCmd.init(cliName)
 	return clusterCmd.Command
@@ -256,7 +257,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	utils.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -273,6 +274,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	utils.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

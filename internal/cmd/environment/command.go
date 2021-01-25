@@ -4,16 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/c-bata/go-prompt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
+	completableChildren []*cobra.Command
 }
 
 var (
@@ -26,15 +29,15 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func New(cliName string, prerunner pcmd.PreRunner) *command {
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "environment",
 			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
-		}, prerunner)
-	cmd := &command{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, SubcommandFlags)
+	cmd := &command{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init() {
@@ -48,12 +51,13 @@ func (c *command) init() {
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
-	c.AddCommand(&cobra.Command{
+	useCmd := &cobra.Command{
 		Use:   "use <environment-id>",
 		Short: "Switch to the specified Confluent Cloud environment.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
-	})
+	}
+	c.AddCommand(useCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
@@ -76,12 +80,14 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <environment-id>",
 		Short: "Delete a Confluent Cloud environment and all its resources.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
+	c.AddCommand(deleteCmd)
+	c.completableChildren = []*cobra.Command{deleteCmd, updateCmd, useCmd}
 }
 
 func (c *command) refreshEnvList() error {
@@ -149,7 +155,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
-	pcmd.Printf(cmd, errors.UsingEnvMsg, id)
+	utils.Printf(cmd, errors.UsingEnvMsg, id)
 	return nil
 }
 
@@ -176,7 +182,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
+	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
 	return nil
 }
 
@@ -187,8 +193,34 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
+	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
 	return nil
+}
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return suggestions
+	}
+	for _, env := range environments {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        env.Id,
+			Description: env.Name,
+		})
+	}
+	return suggestions
 }
 
 func check(err error) {

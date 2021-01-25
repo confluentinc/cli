@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/c-bata/go-prompt"
+
 	"github.com/confluentinc/cli/internal/pkg/examples"
 
 	"github.com/confluentinc/go-printer"
@@ -16,10 +18,12 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
+	completableChildren []*cobra.Command
 }
 
 type connectorDescribeDisplay struct {
@@ -52,20 +56,20 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *command {
 	cmd := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use:   "connector",
 				Short: "Manage Kafka Connect.",
-			}, prerunner),
+			}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init(cliName string) {
-	cmd := &cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -77,12 +81,11 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 
-	cmd = &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List connectors.",
 		Args:  cobra.NoArgs,
@@ -94,12 +97,11 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
 
-	cmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a connector.",
 		Args:  cobra.NoArgs,
@@ -111,14 +113,13 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("config", "", "JSON connector config file.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	panicOnError(cmd.MarkFlagRequired("config"))
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	createCmd.Flags().String("config", "", "JSON connector config file.")
+	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	panicOnError(createCmd.MarkFlagRequired("config"))
+	createCmd.Flags().SortFlags = false
+	c.AddCommand(createCmd)
 
-	cmd = &cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -130,23 +131,20 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.AddCommand(deleteCmd)
 
-	cmd = &cobra.Command{
+	updateCmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a connector configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
 	}
-	cmd.Flags().String("config", "", "JSON connector config file.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	panicOnError(cmd.MarkFlagRequired("config"))
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	updateCmd.Flags().String("config", "", "JSON connector config file.")
+	panicOnError(updateCmd.MarkFlagRequired("config"))
+	updateCmd.Flags().SortFlags = false
+	c.AddCommand(updateCmd)
 
-	cmd = &cobra.Command{
+	pauseCmd := &cobra.Command{
 		Use:   "pause <id>",
 		Short: "Pause a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -158,11 +156,9 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.AddCommand(pauseCmd)
 
-	cmd = &cobra.Command{
+	resumeCmd := &cobra.Command{
 		Use:   "resume <id>",
 		Short: "Resume a connector.",
 		Args:  cobra.ExactArgs(1),
@@ -174,9 +170,8 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	c.AddCommand(resumeCmd)
+	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -250,9 +245,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	trace := connectorExpansion.Status.Connector.Trace
 	if outputFormat == output.Human.String() {
-		pcmd.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
+		utils.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
 		if trace != "" {
-			pcmd.Printf(cmd, "Error Trace: %s\n", trace)
+			utils.Printf(cmd, "Error Trace: %s\n", trace)
 		}
 	} else {
 		return output.StructuredOutput(outputFormat, &struct {
@@ -286,7 +281,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
 	return nil
 }
 
@@ -303,7 +298,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.DeletedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.DeletedConnectorMsg, args[0])
 	return nil
 }
 
@@ -320,7 +315,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.PausedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.PausedConnectorMsg, args[0])
 	return nil
 }
 
@@ -337,7 +332,7 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.ResumedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.ResumedConnectorMsg, args[0])
 	return nil
 }
 
@@ -348,7 +343,7 @@ func panicOnError(err error) {
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) error {
-	pcmd.Println(cmd, "Connector Details")
+	utils.Println(cmd, "Connector Details")
 	data := &connectorDescribeDisplay{
 		Name:   connector.Status.Name,
 		ID:     connector.Id.Id,
@@ -357,7 +352,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 		Trace:  connector.Status.Connector.Trace,
 	}
 	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
-	pcmd.Println(cmd, "\n\nTask Level Details")
+	utils.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
 	titleRow := []string{"TaskId", "State"}
 	for _, task := range connector.Status.Tasks {
@@ -367,7 +362,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 		}, titleRow))
 	}
 	printer.RenderCollectionTable(tasks, titleRow)
-	pcmd.Println(cmd, "\n\nConfiguration Details")
+	utils.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
 	titleRow = []string{"Config", "Value"}
 	for name, value := range connector.Info.Config {
@@ -405,4 +400,43 @@ func printStructuredDescribe(connector *opv1.ConnectorExpansion, format string) 
 		})
 	}
 	return output.StructuredOutput(format, structuredDisplay)
+}
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+	connectors, err := c.fetchConnectors()
+	if err != nil {
+		return suggestions
+	}
+	for _, conn := range connectors {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        conn.Id.Id,
+			Description: conn.Info.Name,
+		})
+	}
+	return suggestions
+}
+
+func (c *command) fetchConnectors() (map[string]*opv1.ConnectorExpansion, error) {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.Command)
+	if err != nil {
+		return nil, err
+	}
+	connectors, err := c.Client.Connect.ListWithExpansions(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "status,info,id")
+	if err != nil {
+		return nil, err
+	}
+	return connectors, nil
+
 }

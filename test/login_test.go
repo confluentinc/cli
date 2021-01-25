@@ -4,10 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,11 +14,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	test_server "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/chromedp/chromedp"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -48,11 +48,11 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 		{
 			name:        "error if topic already exists",
-			args:        "kafka topic create integ",
+			args:        "kafka topic create dupTopic",
 			fixture:     "topic-exists.golden",
 			wantErrCode: 1,
 			login:       "default",
-			useKafka:    "lkc-abc123",
+			useKafka:    "lkc-create-topic",
 			authKafka:   "true",
 		},
 		{
@@ -81,20 +81,19 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
 
-func serveLogin(t *testing.T) *httptest.Server {
-	router := http.NewServeMux()
-	router.HandleFunc("/api/sessions", handleLogin(t))
-	router.HandleFunc("/api/check_email/", handleCheckEmail(t))
-	router.HandleFunc("/api/me", handleMe(t))
-	return httptest.NewServer(router)
+func serveCloudBackend(t *testing.T) *test_server.TestBackend {
+	router := test_server.NewCloudRouter(t)
+	return test_server.NewCloudTestBackendFromRouters(router, test_server.NewEmptyKafkaRouter())
+}
+
+func serveMDSBackend(t *testing.T) *test_server.TestBackend {
+	router := test_server.NewMdsRouter(t)
+	return test_server.NewConfluentTestBackendFromRouter(router)
 }
 
 func (s *CLITestSuite) TestSaveUsernamePassword() {
@@ -104,17 +103,21 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		loginURL string
 		bin      string
 	}
+	cloudBackend := serveCloudBackend(s.T())
+	defer cloudBackend.Close()
+	mdsServer := serveMDSBackend(s.T())
+	defer mdsServer.Close()
 	tests := []saveTest{
 		{
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).URL,
+			cloudBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(s.T()).URL,
+			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
@@ -127,11 +130,17 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		// store existing credentials in netrc to check that they are not corrupted
 		originalNetrc, err := ioutil.ReadFile(netrcInput)
 		s.NoError(err)
-		err = ioutil.WriteFile(auth.NetrcIntegrationTestFile, originalNetrc, 0600)
+		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
-		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		var env []string
+		if tt.cliName == "ccloud" {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+		} else {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+		}
+		//TODO add save test using stdin input
 		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
@@ -140,7 +149,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
+		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
@@ -149,7 +158,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
 	}
-	_ = os.Remove(auth.NetrcIntegrationTestFile)
+	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
 func (s *CLITestSuite) TestUpdateNetrcPassword() {
@@ -164,19 +173,23 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
 	}
+	cloudServer := serveCloudBackend(s.T())
+	defer cloudServer.Close()
+	mdsServer := serveMDSBackend(s.T())
+	defer mdsServer.Close()
 	tests := []updateTest{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			serveLogin(s.T()).URL,
+			cloudServer.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			serveMds(s.T()).URL,
+			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
@@ -185,11 +198,16 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)
 		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(auth.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
+		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
-		env := []string{"XX_CCLOUD_EMAIL=good@user.com", "XX_CCLOUD_PASSWORD=pass1"}
+		var env []string
+		if tt.cliName == "ccloud" {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+		} else {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+		}
 		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
@@ -198,7 +216,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
+		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
@@ -207,7 +225,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
 	}
-	_ = os.Remove(auth.NetrcIntegrationTestFile)
+	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
 func (s *CLITestSuite) TestSSOLoginAndSave() {
@@ -217,7 +235,12 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 
 	resetConfiguration(s.T(), "ccloud")
 
-	env := []string{"XX_CCLOUD_EMAIL=" + ssoTestEmail}
+	err := ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte{}, 0600)
+	if err != nil {
+		s.Fail("Failed to create netrc file")
+	}
+
+	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
 	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
@@ -271,7 +294,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	}
 
 	// Verifying login --save functionality by checking netrc file
-	got, err := ioutil.ReadFile(auth.NetrcIntegrationTestFile)
+	got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
 	s.NoError(err)
 	pattern := `machine\sconfluent-cli:ccloud-sso-refresh-token:login-ziru\+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\r?\n\s+login\sziru\+paas-integ-sso@confluent.io\r?\n\s+password\s[\w-]+`
 	match, err := regexp.Match(pattern, got)
@@ -282,7 +305,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 		msg := fmt.Sprintf("expected: %s\nactual: %s\n", want, got)
 		s.Fail("sso login command with --save flag failed to properly write refresh token credential.\n" + msg)
 	}
-	_ = os.Remove(auth.NetrcIntegrationTestFile)
+	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
 func parseSsoAuthUrlFromOutput(output []byte) string {
@@ -349,4 +372,22 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	s.NoError(err)
 	fmt.Println("Successfully logged in and retrieved auth token")
 	return token
+}
+
+func (s *CLITestSuite) TestMDSLoginURL() {
+	tests := []CLITest{
+		{
+			name:        "invalid URL provided",
+			args:        "login --url http:///test",
+			fixture:     "invalid-login-url.golden",
+			wantErrCode: 1,
+		},
+	}
+	mdsServer := serveMDSBackend(s.T())
+	defer mdsServer.Close()
+
+	for _, tt := range tests {
+		tt.loginURL = mdsServer.GetMdsUrl()
+		s.runConfluentTest(tt)
+	}
 }

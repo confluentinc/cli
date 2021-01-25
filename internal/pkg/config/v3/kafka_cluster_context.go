@@ -201,7 +201,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 		for env, kafkaEnvContext := range k.KafkaEnvContexts {
 			if _, ok := kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]; kafkaEnvContext.ActiveKafkaCluster != "" && !ok {
 				_, _ = fmt.Fprintf(os.Stderr, errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
-				k.ActiveKafkaCluster = ""
+				kafkaEnvContext.ActiveKafkaCluster = ""
 				err := k.Context.Save()
 				if err != nil {
 					panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s', environment '%s'.", k.Context.Name, env))

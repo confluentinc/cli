@@ -3,56 +3,52 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
+	"regexp"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type loginCommand struct {
 	*pcmd.CLICommand
+	cliName         string
 	Logger          *log.Logger
 	analyticsClient analytics.Client
 	// for testing
-	MDSClientManager      pauth.MDSClientManager
-	prompt                pcmd.Prompt
-	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client
-	jwtHTTPClientFactory  func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client
-	netrcHandler          *pauth.NetrcHandler
+	ccloudClientFactory     pauth.CCloudClientFactory
+	MDSClientManager        pauth.MDSClientManager
+	netrcHandler            netrc.NetrcHandler
+	loginCredentialsManager pauth.LoginCredentialsManager
+	authTokenHandler        pauth.AuthTokenHandler
 }
 
-func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, prompt pcmd.Prompt,
-	anonHTTPClientFactory func(baseURL string, logger *log.Logger) *ccloud.Client,
-	jwtHTTPClientFactory func(ctx context.Context, authToken string, baseURL string, logger *log.Logger) *ccloud.Client,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler *pauth.NetrcHandler) *loginCommand {
+func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
+	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
+	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) *loginCommand {
 	cmd := &loginCommand{
-		Logger:                log,
-		prompt:                prompt,
-		analyticsClient:       analyticsClient,
-		anonHTTPClientFactory: anonHTTPClientFactory,
-		jwtHTTPClientFactory:  jwtHTTPClientFactory,
-		MDSClientManager:      mdsClientManager,
-		netrcHandler:          netrcHandler,
+		cliName:                 cliName,
+		Logger:                  log,
+		analyticsClient:         analyticsClient,
+		MDSClientManager:        mdsClientManager,
+		ccloudClientFactory:     ccloudClientFactory,
+		netrcHandler:            netrcHandler,
+		loginCredentialsManager: loginCredentialsManager,
+		authTokenHandler:        authTokenHandler,
 	}
-	cmd.init(cliName, prerunner)
+	cmd.init(prerunner)
 	return cmd
 }
 
-func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := getRemoteAPIName(cliName)
+func (a *loginCommand) init(prerunner pcmd.PreRunner) {
+	remoteAPIName := getRemoteAPIName(a.cliName)
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
@@ -62,9 +58,9 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 			return a.CLICommand.PersistentPreRunE(cmd, args)
 		}),
 	}
-	if cliName == "ccloud" {
+	if a.cliName == "ccloud" {
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
-		loginCmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
+		loginCmd.Flags().String("url", pauth.CCloudURL, "Confluent Cloud service URL.")
 	} else {
 		loginCmd.RunE = pcmd.NewCLIRunE(a.loginMDS)
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
@@ -74,6 +70,7 @@ func (a *loginCommand) init(cliName string, prerunner pcmd.PreRunner) {
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
+	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or refresh token (in the case of SSO) to local netrc file.")
 	loginCmd.Flags().SortFlags = false
 	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
@@ -88,7 +85,12 @@ func getRemoteAPIName(cliName string) string {
 }
 
 func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
-	url, err := cmd.Flags().GetString("url")
+	url, err := a.getURL(cmd)
+	if err != nil {
+		return err
+	}
+
+	credentials, err := a.getCCloudCredentials(cmd, url)
 	if err != nil {
 		return err
 	}
@@ -97,255 +99,203 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	a.Config.NoBrowser = noBrowser
 
-	client := a.anonHTTPClientFactory(url, a.Config.Logger)
-	email, password, err := a.credentials(cmd, "Email", client)
+	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
+	token, refreshToken, err := a.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser)
 	if err != nil {
 		return err
 	}
 
-	token, refreshToken, err := pauth.GetCCloudAuthToken(client, url, email, password, noBrowser, a.Logger)
-	if err != nil {
-		err = errors.CatchEmailNotFoundError(err, email)
-		return err
-	}
-
-	client = a.jwtHTTPClientFactory(context.Background(), token, url, a.Config.Logger)
-	user, err := client.Auth.User(context.Background())
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token,
+		a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url))
 	if err != nil {
 		return err
 	}
 
-	if len(user.Accounts) == 0 {
-		return errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
+	// If refresh token is available, we want to save that in the place of password
+	if refreshToken != "" {
+		credentials.Password = refreshToken
 	}
-	username := user.User.Email
-	name := generateContextName(username, url)
-	var state *v2.ContextState
-	ctx, err := a.Config.FindContext(name)
-	if err == nil {
-		state = ctx.State
-	} else {
-		state = new(v2.ContextState)
-	}
-	state.AuthToken = token
-
-	if state.Auth == nil {
-		state.Auth = &v1.AuthConfig{}
-	}
-
-	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
-	// overwrite `Account` (current/active environment) since we want that to be remembered
-	// between CLI sessions.
-	state.Auth.User = user.User
-	state.Auth.Accounts = user.Accounts
-	state.Auth.Organization = user.Organization
-
-	// Default to 0th environment if no suitable environment is already configured
-	hasGoodEnv := false
-	if state.Auth.Account != nil {
-		for _, acc := range state.Auth.Accounts {
-			if acc.Id == state.Auth.Account.Id {
-				hasGoodEnv = true
-			}
-		}
-	}
-	if !hasGoodEnv {
-		state.Auth.Account = state.Auth.Accounts[0]
-	}
-
-	err = a.addOrUpdateContext(state.Auth.User.Email, url, state, "")
+	err = a.saveLoginToNetrc(cmd, credentials)
 	if err != nil {
 		return err
 	}
-	err = a.Config.Save()
-	if err != nil {
-		return errors.Wrap(err, errors.UnableToSaveUserAuthErrorMsg)
-	}
 
-	saveToNetrc, err := cmd.Flags().GetBool("save")
-	if err != nil {
-		return err
-	}
-	if saveToNetrc {
-		err = a.saveToNetrc(cmd, email, password, refreshToken)
-		if err != nil {
-			return err
-		}
-	}
-
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
-	pcmd.Printf(cmd, errors.LoggedInUsingEnvMsg, state.Auth.Account.Id, state.Auth.Account.Name)
+	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
+	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return err
 }
 
+// Order of precedence: env vars > netrc > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
+	promptOnly, err := cmd.Flags().GetBool("prompt")
+	if err != nil {
+		return nil, err
+	}
+
+	if promptOnly {
+		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client))
+	}
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: a.cliName,
+		URL:     url,
+	}
+	return pauth.GetLoginCredentials(
+		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client),
+	)
+}
+
 func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
-	url, err := cmd.Flags().GetString("url")
+	url, err := a.getURL(cmd)
 	if err != nil {
 		return err
 	}
-	email, password, err := a.credentials(cmd, "Username", nil)
+
+	credentials, err := a.getConfluentCredentials(cmd, url)
 	if err != nil {
 		return err
 	}
-	dynamicContext, err := a.Config.Context(cmd)
+
+	caCertPath, err := a.getCaCertPath(cmd, pauth.GenerateContextName(credentials.Username, url))
 	if err != nil {
 		return err
 	}
-	var ctx *v3.Context
-	if dynamicContext != nil {
-		ctx = dynamicContext.Context
+
+	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
+	if err != nil {
+		return err
 	}
-	flagChanged := cmd.Flags().Changed("ca-cert-path")
+
+	token, err := a.authTokenHandler.GetConfluentToken(client, credentials)
+	if err != nil {
+		return err
+	}
+
+	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath)
+	if err != nil {
+		return err
+	}
+
+	err = a.saveLoginToNetrc(cmd, credentials)
+	if err != nil {
+		return err
+	}
+
+	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
+	return nil
+}
+
+// Order of precedence: env vars > netrc > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+	promptOnly, err := cmd.Flags().GetBool("prompt")
+	if err != nil {
+		return nil, err
+	}
+
+	if promptOnly {
+		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
+	}
+	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: a.cliName,
+		URL:     url,
+	}
+	return pauth.GetLoginCredentials(
+		a.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd),
+	)
+}
+
+// if ca-cert-path flag is not used, returns caCertPath value from config
+// if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
+func (a *loginCommand) getCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
-		return err
+		return "", err
 	}
-	mdsClient, err := a.MDSClientManager.GetMDSClient(ctx, caCertPath, flagChanged, url, a.Logger)
+	if caCertPath == "" {
+		changed := cmd.Flags().Changed("ca-cert-path")
+		if changed {
+			return "", nil
+		}
+		return a.getCaCertPathFromConfig(cmd, contextName)
+	}
+	return caCertPath, nil
+}
+
+func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command, contextName string) (string, error) {
+	ctx, ok := a.Config.Contexts[contextName]
+	if !ok {
+		return "", nil
+	}
+	return ctx.Platform.CaCertPath, nil
+}
+
+func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
+	url, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return err
+		return "", err
 	}
-	authToken, err := pauth.GetConfluentAuthToken(mdsClient, email, password)
-	if err != nil {
-		return err
+	url, valid, errMsg := validateURL(url, a.cliName)
+	if !valid {
+		return "", errors.Errorf(errors.InvalidLoginURLMsg)
 	}
-	basicContext := context.WithValue(context.Background(), mds.ContextBasicAuth, mds.BasicAuth{UserName: email, Password: password})
-	_, _, err = mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
-	if err != nil {
-		return err
+	if errMsg != "" {
+		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
-	state := &v2.ContextState{
-		Auth:      nil,
-		AuthToken: authToken,
-	}
-	err = a.addOrUpdateContext(email, url, state, caCertPath)
-	if err != nil {
-		return err
-	}
+	return url, nil
+}
+
+func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, credentials *pauth.Credentials) error {
 	saveToNetrc, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 	if saveToNetrc {
-		err = a.saveToNetrc(cmd, email, password, "")
+		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, credentials.IsSSO, a.Config.Config.Context().Name, credentials.Username, credentials.Password)
 		if err != nil {
 			return err
 		}
+		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.GetFileName())
 	}
-	pcmd.Printf(cmd, errors.LoggedInAsMsg, email)
 	return nil
 }
 
-func (a *loginCommand) credentials(cmd *cobra.Command, userField string, cloudClient *ccloud.Client) (string, string, error) {
-	email := os.Getenv("XX_CCLOUD_EMAIL")
-	if len(email) == 0 {
-		email = os.Getenv("XX_CONFLUENT_USERNAME")
-	}
+func validateURL(url string, cli string) (string, bool, string) {
+	protocol_rgx, _ := regexp.Compile(`(\w+)://`)
+	port_rgx, _ := regexp.Compile(`:(\d+\/?)`)
 
-	password := os.Getenv("XX_CCLOUD_PASSWORD")
-	if len(password) == 0 {
-		password = os.Getenv("XX_CONFLUENT_PASSWORD")
-	}
+	protocol_match := protocol_rgx.MatchString(url)
+	port_match := port_rgx.MatchString(url)
 
-	if len(email) == 0 || len(password) == 0 {
-		pcmd.Println(cmd, "Enter your Confluent credentials:")
-	}
-
-	if len(email) == 0 {
-		f := form.New(form.Field{ID: "email", Prompt: userField})
-		if err := f.Prompt(cmd, a.prompt); err != nil {
-			return "", "", err
-		}
-		email = f.Responses["email"].(string)
-	}
-	a.Logger.Trace("Successfully obtained email")
-
-	// In the case of MDS login (`confluent`) or in the case of some of the mocks,
-	// cloudClient will be nll, so we need this check
-	if cloudClient != nil {
-		// If SSO user, don't prompt for password
-		userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
-		// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
-		// email, we want to silently continue and give the illusion of password prompt.
-		// If Auth0ConnectionName is blank ("local" user) still prompt for password
-		if err == nil && userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-			a.Logger.Trace("User is SSO-enabled so won't prompt for password")
-			return email, password, nil
+	var msg []string
+	if !protocol_match {
+		if cli == "ccloud" {
+			url = "https://" + url
+			msg = append(msg, "https protocol")
+		} else {
+			url = "http://" + url
+			msg = append(msg, "http protocol")
 		}
 	}
-
-	if len(password) == 0 {
-		f := form.New(form.Field{ID: "password", Prompt: "Password", IsHidden: true})
-		if err := f.Prompt(cmd, a.prompt); err != nil {
-			return "", "", err
-		}
-		password = f.Responses["password"].(string)
+	if !port_match && cli == "confluent" {
+		url = url + ":8090"
+		msg = append(msg, "default MDS port 8090")
 	}
-	a.Logger.Trace("Successfully obtained password")
-
-	return email, password, nil
-}
-
-func (a *loginCommand) addOrUpdateContext(username string, url string, state *v2.ContextState, caCertPath string) error {
-	ctxName := generateContextName(username, url)
-	credName := generateCredentialName(username)
-	platform := &v2.Platform{
-		Name:       strings.TrimPrefix(url, "https://"),
-		Server:     url,
-		CaCertPath: caCertPath,
-	}
-	credential := &v2.Credential{
-		Name:     credName,
-		Username: username,
-		// don't save password if they entered it interactively.
-	}
-	err := a.Config.SavePlatform(platform)
-	if err != nil {
-		return err
-	}
-	err = a.Config.SaveCredential(credential)
-	if err != nil {
-		return err
-	}
-	if ctx, ok := a.Config.Contexts[ctxName]; ok {
-		a.Config.ContextStates[ctxName] = state
-		ctx.State = state
+	var pattern string
+	if cli == "confluent" {
+		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
 	} else {
-		err = a.Config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-			"", nil, state)
+		pattern = `^\w+://[^/ ]+`
 	}
-	if err != nil {
-		return err
-	}
-	err = a.Config.SetContext(ctxName)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+	matched, _ := regexp.Match(pattern, []byte(url))
 
-func (a *loginCommand) saveToNetrc(cmd *cobra.Command, email, password, refreshToken string) error {
-	// sso if refresh token is empty
-	var err error
-	if refreshToken == "" {
-		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, false, a.Config.Config.Context().Name, email, password)
-	} else {
-		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, true, a.Config.Config.Context().Name, email, refreshToken)
-	}
-	if err != nil {
-		return err
-	}
-	pcmd.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.FileName)
-	return nil
-}
-
-func generateContextName(username string, url string) string {
-	return fmt.Sprintf("login-%s-%s", username, url)
-}
-
-func generateCredentialName(username string) string {
-	return fmt.Sprintf("username-%s", username)
+	return url, matched, strings.Join(msg, " and ")
 }
 
 func check(err error) {

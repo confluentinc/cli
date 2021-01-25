@@ -15,20 +15,20 @@ import (
 var clusterType = "ksql-cluster"
 
 type clusterCommandOnPrem struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
 }
 
 // NewClusterCommand returns the Cobra command for Kafka cluster.
 func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedWithMDSCLICommand(
+	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage ksqlDB clusters.",
 		},
-		prerunner)
+		prerunner, OnPremClusterSubcommandFlags)
 	cmd := &clusterCommandOnPrem{
-		AuthenticatedCLICommand: cliCmd,
+		AuthenticatedStateFlagCommand: cliCmd,
 		prerunner:               prerunner,
 	}
 	cmd.init()

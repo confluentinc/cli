@@ -4,10 +4,10 @@
   "type": "BASIC",
   "ingress": 100,
   "egress": 100,
-  "storage": 500,
+  "storage": "500",
   "provider": "aws",
   "region": "us-west-2",
-  "availability": "LOW",
+  "availability": "single-zone",
   "status": "UP",
   "endpoint": "SASL_SSL://kafka-endpoint",
   "api_endpoint": "http://kafka-api-url"

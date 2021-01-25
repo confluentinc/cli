@@ -8,7 +8,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type logoutCommand struct {
@@ -41,18 +43,10 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 }
 
 func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
-	ctx := a.Config.Config.Context()
-	if ctx == nil {
-		return nil
-	}
-	err := ctx.DeleteUserAuth()
+	err := pauth.PersistLogoutToConfig(a.Config.Config)
 	if err != nil {
 		return err
 	}
-	err = a.Config.Save()
-	if err != nil {
-		return err
-	}
-	pcmd.Println(cmd, errors.LoggedOutMsg)
+	utils.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

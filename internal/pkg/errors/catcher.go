@@ -49,9 +49,6 @@ func catchCoreV1Errors(err error) error {
 	if ok {
 		var result error
 		result = multierror.Append(result, e)
-		for name, msg := range e.GetNestedErrors() {
-			result = multierror.Append(result, fmt.Errorf("%s: %s", name, msg))
-		}
 		return Wrap(result, CCloudBackendErrorPrefix)
 	}
 	return err
@@ -187,6 +184,21 @@ func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotE
 		return NewErrorWithSuggestions(errorMsg, suggestions)
 	}
 	return err
+}
+
+/*
+failed to produce offset -1: Unknown error, how did this happen? Error code = 87
+*/
+func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error) {
+	if err == nil {
+		return false, nil
+	}
+	compiledRegex := regexp.MustCompile(`Unknown error, how did this happen\? Error code = 87`)
+	if compiledRegex.MatchString(err.Error()) {
+		errorMsg := fmt.Sprintf(ProducingToCompactedTopicErrorMsg, topicName)
+		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
+	}
+	return false, err
 }
 
 /*

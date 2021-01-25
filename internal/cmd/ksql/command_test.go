@@ -23,6 +23,8 @@ const (
 	ksqlClusterID     = "lksqlc-12345"
 	physicalClusterID = "pksqlc-zxcvb"
 	outputTopicPrefix = "pksqlc-abcde"
+	keyString         = "key"
+	keySecretString   = "secret"
 	serviceAcctID     = int32(123)
 	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
 +------------------+------------+------------------+------------------+------------------------------+----------+
@@ -123,7 +125,11 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
+<<<<<<< HEAD
 	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf))
+=======
+	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), &cliMock.ServerSideCompleter{})
+>>>>>>> 56230853c89292540be311d472a28c603b88205b
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -187,6 +193,44 @@ func (suite *KSQLTestSuite) TestCreateKSQL() {
 	req.Equal("", cfg.Image)
 	req.Equal(uint32(4), cfg.TotalNumCsu)
 }
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString, "--apikey-secret", keySecretString}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.CreateCalled())
+	cfg := suite.ksqlc.CreateCalls()[0].Arg1
+	req.Equal("", cfg.Image)
+	req.Equal(uint32(4), cfg.TotalNumCsu)
+	req.Equal(keyString, cfg.KafkaApiKey.Key)
+	req.Equal(keySecretString, cfg.KafkaApiKey.Secret)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey-secret", keySecretString}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err)
+	req.False(suite.ksqlc.CreateCalled())
+	req.Equal("both --apikey and --apikey-secret must be provided", err.Error())
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
+	cmd := suite.newCMD()
+	cmd.SetArgs(append([]string{"app", "create", ksqlClusterID, "--apikey", keyString}))
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err)
+	req.False(suite.ksqlc.CreateCalled())
+	req.Equal("both --apikey and --apikey-secret must be provided", err.Error())
+}
+
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()

@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -186,7 +187,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	// Wait for parse results, error, or timeout
 	select {
 	case prompt := <-retCh:
-		pcmd.Println(cmd, prompt)
+		utils.Println(cmd, prompt)
 	case err := <-errCh:
 		c.Command.SilenceUsage = true
 		return errors.Wrapf(err, errors.ParsePromptFormatErrorMsg, format)

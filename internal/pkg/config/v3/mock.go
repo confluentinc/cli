@@ -14,12 +14,15 @@ import (
 
 var (
 	mockUserId             = int32(123)
+	MockUserResourceId     = "u-123"
 	mockOrganizationId     = int32(123)
-	mockEnvironmentId      = "testAccount"
+	MockOrgResourceId      = "org-resource-id"
+	MockEnvironmentId      = "testAccount"
 	mockEmail              = "cli-mock-email@confluent.io"
 	mockURL                = "http://test"
 	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
 	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
+	mockContextName        = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 	mockAuthToken          = "some.token.here"
 
 	// kafka cluster
@@ -27,8 +30,8 @@ var (
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
-	bootstrapServer    = "http://toby-cluster"
-	kafkaApiEndpoint   = "http://is-the-worst"
+	bootstrapServer    = "https://toby-cluster:9092"
+	kafkaApiEndpoint   = "https://is-the-worst:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 
@@ -37,8 +40,6 @@ var (
 	srEndpoint  = "https://sr-test"
 	srAPIKey    = "michael"
 	srAPISecret = "scott"
-
-	MockContextName = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 )
 
 func AuthenticatedCloudConfigMock() *Config {
@@ -68,7 +69,7 @@ func APICredentialConfigMock() *Config {
 		Logger:     log.New(),
 	})
 
-	ctx, err := newContext(MockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf)
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -76,8 +77,14 @@ func APICredentialConfigMock() *Config {
 	return conf
 }
 
+func UnauthenticatedCloudConfigMock() *Config {
+	c := AuthenticatedCloudConfigMock()
+	c.Contexts = nil
+	return c
+}
+
 func AuthenticatedConfigMock(cliName string) *Config {
-	authConfig := createAuthConfig(mockUserId, mockEmail, mockEnvironmentId, mockOrganizationId)
+	authConfig := createAuthConfig(mockUserId, mockEmail, MockUserResourceId, MockEnvironmentId, mockOrganizationId, MockOrgResourceId)
 	credential := createUsernameCredential(usernameCredentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
@@ -92,7 +99,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
 	srCluster := createSRCluster(srAPIKeyPair)
 	srClusters := map[string]*v2.SchemaRegistryCluster{
-		mockEnvironmentId: srCluster,
+		MockEnvironmentId: srCluster,
 	}
 
 	conf := New(&config.Params{
@@ -101,7 +108,7 @@ func AuthenticatedConfigMock(cliName string) *Config {
 		Logger:     log.New(),
 	})
 
-	ctx, err := newContext(MockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -134,14 +141,22 @@ func createPlatform(name, server string) *v2.Platform {
 	return platform
 }
 
-func createAuthConfig(userId int32, email string, envId string, organizationId int32) *v1.AuthConfig {
+func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *v1.AuthConfig {
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
 			Id:             userId,
 			Email:          email,
 			OrganizationId: organizationId,
+			ResourceId:     userResourceId,
 		},
 		Account: &orgv1.Account{Id: envId},
+		Organization: &orgv1.Organization{
+			Id:         organizationId,
+			ResourceId: orgResourceId,
+		},
+		Accounts: []*orgv1.Account{
+			{Id: envId},
+		},
 	}
 	return auth
 }
@@ -195,4 +210,12 @@ func setUpConfig(conf *Config, ctx *Context, platform *v2.Platform, credential *
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
+}
+
+func AddEnvironmentToConfigMock(config *Config, envId string, envName string) {
+	accounts := config.Context().State.Auth.Accounts
+	config.Context().State.Auth.Accounts = append(accounts, &orgv1.Account{
+		Id:   envId,
+		Name: envName,
+	})
 }

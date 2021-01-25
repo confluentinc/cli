@@ -3,7 +3,10 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
+
+	"github.com/c-bata/go-prompt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -12,6 +15,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -25,21 +29,52 @@ var (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
+	*pcmd.AuthenticatedStateFlagCommand
+	prerunner           pcmd.PreRunner
+	completableChildren []*cobra.Command
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "app",
 			Short: "Manage ksqlDB apps.",
-		}, prerunner)
-	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, SubcommandFlags)
+	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.prerunner = prerunner
 	cmd.init()
-	return cmd.Command
+	return cmd
+}
+
+func (c *clusterCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *clusterCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.KSQL.List(context.Background(), req)
+	if err != nil {
+		return suggestions
+	}
+
+	for _, cluster := range clusters {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        cluster.Id,
+			Description: cluster.Name,
+		})
+	}
+
+	return suggestions
+}
+
+func (c *clusterCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }
 
 func (c *clusterCommand) init() {
@@ -59,9 +94,10 @@ func (c *clusterCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd.Flags().String("apikey", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
+	createCmd.Flags().String("apikey-secret", "", "Secret for the Kafka API key (recommended).")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -77,12 +113,13 @@ func (c *clusterCommand) init() {
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a ksqlDB app.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
+	c.AddCommand(deleteCmd)
 
 	aclsCmd := &cobra.Command{
 		Use:   "configure-acls <id> TOPICS...",
@@ -90,10 +127,11 @@ func (c *clusterCommand) init() {
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.configureACLs),
 	}
-	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
 	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)
+
+	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, aclsCmd}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
@@ -127,6 +165,27 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	kafkaApiKey, err := cmd.Flags().GetString("apikey")
+	if err != nil {
+		return err
+	}
+	kafkaApiKeySecret, err := cmd.Flags().GetString("apikey-secret")
+	if err != nil {
+		return err
+	}
+
+	if kafkaApiKey != "" && kafkaApiKeySecret != "" {
+		cfg.KafkaApiKey = &schedv1.ApiKey{
+			Key:    kafkaApiKey,
+			Secret: kafkaApiKeySecret,
+		}
+	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
+		return fmt.Errorf(errors.APIKeyAndSecretBothRequired)
+	} else {
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
+	}
+
 	image, err := cmd.Flags().GetString("image")
 	if err == nil && len(image) > 0 {
 		cfg.Image = image
@@ -147,7 +206,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		count += 1
 	}
 	if cluster.Endpoint == "" {
-		pcmd.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -168,7 +227,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
+	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
 
@@ -257,8 +316,9 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 	if err != nil {
 		return "", err
 	}
+
 	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) || (cluster.KafkaApiKey != nil && user.Id == cluster.KafkaApiKey.UserId) {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
@@ -281,7 +341,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	if cluster.KafkaClusterId != kafkaCluster.Id {
-		pcmd.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
+		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

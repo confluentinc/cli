@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
+	"github.com/c-bata/go-prompt"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -17,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -45,6 +48,10 @@ var (
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
 		"EncryptionKeyId":    "encryption_key_id"}
+	durabilityToAvaiablityNameMap = map[string]string{
+		"LOW":  singleZone,
+		"HIGH": multiZone,
+	}
 )
 
 const (
@@ -56,8 +63,9 @@ const (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
+	*pcmd.AuthenticatedStateFlagCommand
+	prerunner           pcmd.PreRunner
+	completableChildren []*cobra.Command
 }
 
 type describeStruct struct {
@@ -68,7 +76,7 @@ type describeStruct struct {
 	PendingClusterSize int32
 	NetworkIngress     int32
 	NetworkEgress      int32
-	Storage            int32
+	Storage            string
 	ServiceProvider    string
 	Region             string
 	Availability       string
@@ -78,19 +86,19 @@ type describeStruct struct {
 	EncryptionKeyId    string
 }
 
-// NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+// NewClusterCommand returns the command for Kafka cluster.
+func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters.",
-		}, prerunner)
+		}, prerunner, ClusterSubcommandFlags)
 	cmd := &clusterCommand{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
+		AuthenticatedStateFlagCommand: cliCmd,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *clusterCommand) init() {
@@ -161,12 +169,14 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
-	c.AddCommand(&cobra.Command{
+	useCmd := &cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
-	})
+	}
+	c.AddCommand(useCmd)
+	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
@@ -258,7 +268,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		cfg.Cku = int32(cku)
 	}
-
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
@@ -269,7 +278,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if outputFormat == output.Human.String() {
-		pcmd.ErrPrintln(cmd, errors.KafkaClusterTime)
+		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
 }
@@ -302,7 +311,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	buf.WriteString("\n\n")
-	pcmd.Println(cmd, buf.String())
+	utils.Println(cmd, buf.String())
 
 	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
 	if len(accounts) == 1 {
@@ -311,8 +320,8 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 
 	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
 	for {
-		if err := f.Prompt(cmd, pcmd.NewPrompt(os.Stdin)); err != nil {
-			pcmd.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
+		if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {
@@ -404,7 +413,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
 	return nil
 }
 
@@ -420,7 +429,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
 	return nil
 }
 
@@ -468,6 +477,11 @@ func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaClu
 }
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
+	clusterStorage := strconv.Itoa(int(cluster.Storage))
+	if clusterStorage == "-1" || cluster.InfiniteStorage {
+		clusterStorage = "Infinite"
+	}
+
 	return &describeStruct{
 		Id:                 cluster.Id,
 		Name:               cluster.Name,
@@ -476,10 +490,10 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		PendingClusterSize: cluster.PendingCku,
 		NetworkIngress:     cluster.NetworkIngress,
 		NetworkEgress:      cluster.NetworkEgress,
-		Storage:            cluster.Storage,
+		Storage:            clusterStorage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
-		Availability:       cluster.Durability.String(),
+		Availability:       durabilityToAvaiablityNameMap[cluster.Durability.String()],
 		Status:             cluster.Status.String(),
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
@@ -507,4 +521,31 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func (c *clusterCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *clusterCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	if err != nil {
+		return suggestions
+	}
+	for _, cluster := range clusters {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        cluster.Id,
+			Description: cluster.Name,
+		})
+	}
+	return suggestions
+}
+
+func (c *clusterCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

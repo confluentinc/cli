@@ -4,15 +4,20 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -35,15 +40,16 @@ There are five ways to pass the secret:
 `
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
-	flagResolver pcmd.FlagResolver
+	*pcmd.AuthenticatedStateFlagCommand
+	keystore            keystore.KeyStore
+	flagResolver        pcmd.FlagResolver
+	completableChildren []*cobra.Command
 }
 
 var (
-	listFields              = []string{"Key", "UserId", "Description", "ResourceType", "ResourceId"}
-	listHumanLabels         = []string{"Key", "Owner", "Description", "Resource Type", "Resource ID"}
-	listStructuredLabels    = []string{"key", "owner", "description", "resource_type", "resource_id"}
+	listFields              = []string{"Key", "Description", "UserId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
@@ -51,19 +57,19 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *command {
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "api-key",
 			Short: "Manage the API keys.",
-		}, prerunner)
+		}, prerunner, SubcommandFlags)
 	cmd := &command{
-		AuthenticatedCLICommand: cliCmd,
-		keystore:                keystore,
-		flagResolver:            resolver,
+		AuthenticatedStateFlagCommand: cliCmd,
+		keystore:                      keystore,
+		flagResolver:                  resolver,
 	}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init() {
@@ -106,12 +112,13 @@ func (c *command) init() {
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
-	c.AddCommand(&cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete <apikey>",
 		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
-	})
+	}
+	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
 		Use:   "store <apikey> <secret>",
@@ -140,6 +147,7 @@ func (c *command) init() {
 		panic(err)
 	}
 	c.AddCommand(useCmd)
+	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -148,8 +156,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		Key          string
 		Description  string
 		UserId       int32
+		UserEmail    string
 		ResourceType string
 		ResourceId   string
+		Created      string
 	}
 	var apiKeys []*schedv1.ApiKey
 
@@ -188,30 +198,62 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	users := map[int32]*orgv1.User{}
+	serviceAccounts, err := getServiceAccountsMap(c.Client)
+	if err != nil {
+		return err
+	}
+
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if apiKey.UserId == 0 {
 			continue
 		}
 		// Add '*' only in the case where we are printing out tables
+		outputKey := apiKey.Key
 		if outputWriter.GetOutputFormat() == output.Human {
 			if resourceId != "" && apiKey.Key == currentKey {
-				apiKey.Key = fmt.Sprintf("* %s", apiKey.Key)
+				outputKey = fmt.Sprintf("* %s", apiKey.Key)
 			} else {
-				apiKey.Key = fmt.Sprintf("  %s", apiKey.Key)
+				outputKey = fmt.Sprintf("  %s", apiKey.Key)
 			}
 		}
 
+		var email string
+		if _, ok := serviceAccounts[apiKey.UserId]; ok {
+			email = "<service account>"
+		} else {
+			if user, ok := users[apiKey.UserId]; ok {
+				if user != nil {
+					email = user.Email
+				} else {
+					email = "<deactivated user>"
+				}
+			} else {
+				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
+				if err != nil {
+					email = "<deactivated user>"
+					users[apiKey.UserId] = nil
+				} else {
+					email = user.Email
+					users[user.Id] = user
+				}
+			}
+		}
+
+		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
 		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
 			// Cloud key.
 			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
+				Key:          outputKey,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
+				UserEmail:    email,
 				ResourceType: pcmd.CloudResourceType,
+				Created:      created,
 			})
 		}
 
@@ -221,15 +263,30 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		for _, lc := range apiKey.LogicalClusters {
 			outputWriter.AddElement(&keyDisplay{
-				Key:          apiKey.Key,
+				Key:          outputKey,
 				Description:  apiKey.Description,
 				UserId:       apiKey.UserId,
+				UserEmail:    email,
 				ResourceType: lc.Type,
 				ResourceId:   lc.Id,
+				Created:      created,
 			})
 		}
 	}
+
 	return outputWriter.Out()
+}
+
+func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[int32]bool)
+	for _, sa := range serviceAccounts {
+		saMap[sa.Id] = true
+	}
+	return saMap, nil
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
@@ -254,7 +311,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if cmd.Flags().Changed("description") {
-		pcmd.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 	return nil
 }
@@ -294,8 +351,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if outputFormat == output.Human.String() {
-		pcmd.ErrPrintln(cmd, errors.APIKeyTime)
-		pcmd.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
+		utils.ErrPrintln(cmd, errors.APIKeyTime)
+		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
 	}
 
 	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
@@ -323,13 +380,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		Id:        userKey.Id,
 		Key:       apiKey,
 		AccountId: c.EnvironmentId(),
+		UserId:    userKey.UserId,
 	}
 
 	err = c.Client.APIKey.Delete(context.Background(), key)
 	if err != nil {
 		return err
 	}
-	pcmd.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
+	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
 	return c.keystore.DeleteAPIKey(apiKey, cmd)
 }
 
@@ -392,7 +450,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	pcmd.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
+	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
 	return nil
 }
 
@@ -414,7 +472,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.APIKeyUseFailedErrorMsg)
 	}
-	pcmd.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
+	utils.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }
 
@@ -430,4 +488,47 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 		return "", err
 	}
 	return strings.TrimSpace(val), nil
+}
+
+// Completable implementation
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggests []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggests
+	}
+	apiKeys, err := c.fetchAPIKeys()
+	if err != nil {
+		return suggests
+	}
+	for _, key := range apiKeys {
+		suggests = append(suggests, prompt.Suggest{
+			Text:        key.Key,
+			Description: key.Description,
+		})
+	}
+	return suggests
+}
+
+func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
+	if err != nil {
+		return nil, errors.HandleCommon(err, c.Command)
+	}
+
+	var userApiKeys []*schedv1.ApiKey
+	for _, key := range apiKeys {
+		if key.UserId != 0 {
+			userApiKeys = append(userApiKeys, key)
+		}
+	}
+	return userApiKeys, nil
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

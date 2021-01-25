@@ -4,7 +4,9 @@ Usage:
   ccloud [command]
 
 Available Commands:
+  admin             Perform administrative tasks for the current organization.
   api-key           Manage the API keys.
+  audit-log         Manage audit log configuration.
   completion        Print shell completion code.
   config            Modify the CLI configuration.
   connector         Manage Kafka Connect.
@@ -22,6 +24,8 @@ Available Commands:
   prompt            Print Confluent Cloud CLI context for your terminal prompt.
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
+  shell             Run the ccloud shell.
+  signup            Sign up for Confluent Cloud.
   update            Update the Confluent Cloud CLI.
   version           Show version of the Confluent Cloud CLI.
 

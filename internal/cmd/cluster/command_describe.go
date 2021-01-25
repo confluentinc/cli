@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -16,10 +15,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type Metadata interface {
-	DescribeCluster(ctx context.Context, url string) (*ScopedId, error)
+	DescribeCluster(url string, caCertPath string) (*ScopedId, error)
 }
 
 type ScopedId struct {
@@ -43,14 +43,12 @@ type Element struct {
 // ScopedIdService allows introspecting details from a Confluent cluster.
 // This is for querying the endpoint each CP service exposes at /v1/metadata/id.
 type ScopedIdService struct {
-	client    *http.Client
 	userAgent string
 	logger    *log.Logger
 }
 
-func NewScopedIdService(client *http.Client, userAgent string, logger *log.Logger) *ScopedIdService {
+func NewScopedIdService(userAgent string, logger *log.Logger) *ScopedIdService {
 	return &ScopedIdService{
-		client:    client,
 		userAgent: userAgent,
 		logger:    logger,
 	}
@@ -83,6 +81,7 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 		client: client,
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
+	describeCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	check(describeCmd.MarkFlagRequired("url"))
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -91,14 +90,25 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	return describeCmd.Command
 }
 
-func (s *ScopedIdService) DescribeCluster(_ context.Context, url string) (*ScopedId, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v1/metadata/id", url), nil)
+func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*ScopedId, error) {
+	var httpClient *http.Client
+	if caCertPath != "" {
+		var err error
+		httpClient, err = utils.SelfSignedCertClientFromPath(caCertPath, s.logger)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		httpClient = utils.DefaultClient()
+	}
+	ctx := utils.GetContext(s.logger)
+	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v1/metadata/id", url), nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", s.userAgent)
 	req.Header.Set("Accept", "application/json")
-	resp, err := s.client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +131,12 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	meta, err := c.client.DescribeCluster(context.Background(), url)
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return err
+	}
+
+	meta, err := c.client.DescribeCluster(url, caCertPath)
 	if err != nil {
 		return err
 	}
@@ -142,7 +157,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 	structuredDisplay := &StructuredDisplay{}
 	if meta.ID != "" {
 		if format == output.Human.String() {
-			pcmd.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
+			utils.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 		} else {
 			structuredDisplay.Crn = meta.ID
 		}
@@ -164,7 +179,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
 
 	}
 	if format == output.Human.String() {
-		pcmd.Println(cmd, "Scope:")
+		utils.Println(cmd, "Scope:")
 		printer.RenderCollectionTable(data, describeLabels)
 	} else {
 		return output.StructuredOutput(format, structuredDisplay)

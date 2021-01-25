@@ -7,9 +7,12 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql app --help", fixture: "ksql/ksql-app-help.golden"},
 		{args: "ksql app configure-acls --help", fixture: "ksql/ksql-app-configure-acls-help.golden"},
 		{args: "ksql app create --help", fixture: "ksql/ksql-app-create-help.golden"},
-		{args: "ksql app create test_ksql --cluster lkc-12345", fixture: "ksql/ksql-app-create-result.golden"},
-		{args: "ksql app create test_ksql_json --cluster lkc-12345 -o json", fixture: "ksql/ksql-app-create-result-json.golden"},
-		{args: "ksql app create test_ksql_yaml --cluster lkc-12345 -o yaml", fixture: "ksql/ksql-app-create-result-yaml.golden"},
+		{args: "ksql app create test_ksql --cluster lkc-12345", fixture: "ksql/ksql-app-create-result-deprecated.golden"},
+		{args: "ksql app create test_ksql_json --cluster lkc-12345 -o json", fixture: "ksql/ksql-app-create-result-json-deprecated.golden"},
+		{args: "ksql app create test_ksql_yaml --cluster lkc-12345 -o yaml", fixture: "ksql/ksql-app-create-result-yaml-deprecated.golden"},
+		{args: "ksql app create test_ksql --cluster lkc-12345 --apikey key --apikey-secret secret", fixture: "ksql/ksql-app-create-result.golden"},
+		{args: "ksql app create test_ksql_json --cluster lkc-12345 --apikey key --apikey-secret secret -o json", fixture: "ksql/ksql-app-create-result-json.golden"},
+		{args: "ksql app create test_ksql_yaml --cluster lkc-12345 --apikey key --apikey-secret secret -o yaml", fixture: "ksql/ksql-app-create-result-yaml.golden"},
 		{args: "ksql app delete --help", fixture: "ksql/ksql-app-delete-help.golden"},
 		{args: "ksql app delete lksqlc-12345", fixture: "ksql/ksql-app-delete-result.golden"},
 		{args: "ksql app describe --help", fixture: "ksql/ksql-app-describe-help.golden"},
@@ -22,11 +25,8 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql app list", fixture: "ksql/ksql-app-list-result.golden"},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

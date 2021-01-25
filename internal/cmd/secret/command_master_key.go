@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	secureplugin "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type masterKeyCommand struct {
@@ -75,7 +76,7 @@ func (c *masterKeyCommand) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pcmd.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
+	utils.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
 	err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 	if err != nil {
 		return err

@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var (
@@ -46,7 +46,7 @@ var (
 	}
 )
 
-func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
+func NewSchemaRegistryACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "acl",
@@ -54,7 +54,7 @@ func NewSchemaRegistryACLCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runSchemaRegistryACLCommand)
+	c.Command.RunE = pcmd.NewCLIRunE(c.runSchemaRegistryACLCommand)
 	for flag, val := range defaultValues {
 		switch val.(type) {
 		case bool:

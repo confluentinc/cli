@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auditlog"
 	"github.com/confluentinc/cli/internal/cmd/auth"
@@ -30,6 +30,8 @@ import (
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/shell"
+	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -41,16 +43,18 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pps1 "github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
+	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
 )
-
-var segmentKey = "KDsYPLPBNVB1IPJIN5oqrXnxQT9iKezo"
 
 type Command struct {
 	*cobra.Command
@@ -59,7 +63,7 @@ type Command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler *pauth.NetrcHandler) (*Command, error) {
+func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler netrc.NetrcHandler) (*Command, error) {
 	logger := log.New()
 	cfg, configLoadingErr := loadConfig(cliName, logger)
 	if cfg != nil {
@@ -95,20 +99,31 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		return nil, err
 	}
 
-	resolver := &pcmd.FlagResolverImpl{Prompt: pcmd.NewPrompt(os.Stdin), Out: os.Stdout}
+	authTokenHandler := pauth.NewAuthTokenHandler(logger)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger)
+	resolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
+	jwtValidator := pcmd.NewJWTValidator(logger)
+	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
+	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	prerunner := &pcmd.PreRun{
-		Config:             cfg,
-		ConfigLoadingError: configLoadingErr,
-		UpdateClient:       updateClient,
-		CLIName:            cliName,
-		Logger:             logger,
-		Clock:              clockwork.NewRealClock(),
-		FlagResolver:       resolver,
-		Version:            ver,
-		Analytics:          analyticsClient,
-		UpdateTokenHandler: pauth.NewUpdateTokenHandler(netrcHandler),
+		Config:                  cfg,
+		ConfigLoadingError:      configLoadingErr,
+		UpdateClient:            updateClient,
+		CLIName:                 cliName,
+		Logger:                  logger,
+		FlagResolver:            resolver,
+		Version:                 ver,
+		Analytics:               analyticsClient,
+		CCloudClientFactory:     ccloudClientFactory,
+		MDSClientManager:        mdsClientManager,
+		LoginCredentialsManager: loginCredentialsManager,
+		AuthTokenHandler:        authTokenHandler,
+		JWTValidator:            jwtValidator,
+		IsTest:					 isTest,
 	}
 	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
+	shellCompleter := completer.NewShellCompleter(cli)
+	serverCompleter := shellCompleter.ServerSideCompleter
 
 	cli.Version = ver.Version
 	cli.AddCommand(version.New(cliName, prerunner, ver))
@@ -119,35 +134,51 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ver.UserAgent, analyticsClient, netrcHandler)...)
+	cli.AddCommand(auth.New(cliName, prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler)...)
 	isAPILogin := isAPIKeyCredential(cfg)
+	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	if cliName == "ccloud" {
-		cli.AddCommand(config.New(prerunner, analyticsClient))
+		cli.AddCommand(admin.New(prerunner, isTest))
+		cli.AddCommand(auditlog.New(cliName, prerunner))
 		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
-		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID))
+		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter))
 		if isAPIKeyCredential(cfg) {
 			return command, nil
 		}
-		cli.AddCommand(apikey.New(prerunner, nil, resolver)) // Exposed for testing
-		cli.AddCommand(connector.New(cliName, prerunner))
-		cli.AddCommand(connectorcatalog.New(cliName, prerunner))
-		cli.AddCommand(environment.New(cliName, prerunner))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		apiKeyCmd := apikey.New(prerunner, nil, resolver)
+		serverCompleter.AddCommand(apiKeyCmd)
+		cli.AddCommand(apiKeyCmd.Command)
+
+		connectorCmd := connector.New(cliName, prerunner)
+		serverCompleter.AddCommand(connectorCmd)
+		cli.AddCommand(connectorCmd.Command)
+		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
+		serverCompleter.AddCommand(connectorCatalogCmd)
+		cli.AddCommand(connectorCatalogCmd.Command)
+		envCmd := environment.New(cliName, prerunner)
+		serverCompleter.AddCommand(envCmd)
+		cli.AddCommand(envCmd.Command)
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(ps1.New(cliName, prerunner, &pps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger)) // Exposed for testing
-		cli.AddCommand(serviceaccount.New(prerunner))
+		serviceAccountCmd := serviceaccount.New(prerunner)
+		serverCompleter.AddCommand(serviceAccountCmd)
+		cli.AddCommand(serviceAccountCmd.Command)
+		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, logger, analyticsClient, jwtValidator))
+		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent))
 		if os.Getenv("XX_CCLOUD_RBAC") != "" {
 			cli.AddCommand(iam.New(cliName, prerunner))
 		}
 	} else if cliName == "confluent" {
-		cli.AddCommand(auditlog.New(prerunner))
-		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(&http.Client{}, ver.UserAgent, logger)))
+		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(iam.New(cliName, prerunner))
-		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID))
-		cli.AddCommand(ksql.New(cliName, prerunner))
+		// Never uses it under "confluent", so a nil ServerCompleter is fine.
+		cli.AddCommand(kafka.New(isAPIKeyCredential(cfg), cliName, prerunner, logger.Named("kafka"), ver.ClientID, nil))
+		cli.AddCommand(ksql.New(cliName, prerunner, nil))
 		cli.AddCommand(local.New(prerunner))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger))
 		cli.AddCommand(secret.New(resolver, secrets.NewPasswordProtectionPlugin(logger)))
@@ -159,7 +190,7 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 	if cliName == "confluent" || isTest {
 		return mock.NewDummyAnalyticsMock()
 	}
-	segmentClient, _ := segment.NewWithConfig(segmentKey, segment.Config{
+	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
 		Logger: analytics.NewLogger(logger),
 	})
 	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())

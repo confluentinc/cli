@@ -1,0 +1,10 @@
++----------------------+-------------------------+
+| Name                 | account schema-registry |
+| Cluster ID           | lsrc-1234               |
+| Endpoint URL         | SASL_SSL://sr-endpoint  |
+| Used Schemas         |                         |
+| Available Schemas    |                         |
+| Global Compatibility | <Requires API Key>      |
+| Mode                 | <Requires API Key>      |
+| Service Provider     |                         |
++----------------------+-------------------------+

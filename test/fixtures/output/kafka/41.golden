@@ -1,0 +1,14 @@
++--------------+---------------------------+
+| Id           | lkc-describe-infinite     |
+| Name         | kafka-cluster             |
+| Type         | BASIC                     |
+| Ingress      |                       100 |
+| Egress       |                       100 |
+| Storage      | Infinite                  |
+| Provider     | aws                       |
+| Availability | single-zone               |
+| Region       | us-west-2                 |
+| Status       | PROVISIONING              |
+| Endpoint     | SASL_SSL://kafka-endpoint |
+| ApiEndpoint  | http://kafka-api-url      |
++--------------+---------------------------+

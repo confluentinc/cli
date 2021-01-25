@@ -174,7 +174,7 @@ func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) err
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	cmd.Printf(command, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	utils.Printf(command, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -471,6 +471,6 @@ func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
 		return err
 	}
 
-	cmd.Printf(command, errors.UsingConfluentCurrentMsg, dir)
+	utils.Printf(command, errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

@@ -6,7 +6,7 @@
 | Egress             |                            100 |
 | Storage            |                            500 |
 | Provider           | aws                            |
-| Availability       | LOW                            |
+| Availability       | single-zone                    |
 | Region             | us-west-2                      |
 | Status             | PROVISIONING                   |
 | Endpoint           | SASL_SSL://kafka-endpoint      |

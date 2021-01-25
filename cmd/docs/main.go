@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/doc"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -25,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	confluent, err := cmd.NewConfluentCommand(cliName, true, &version.Version{}, auth.NewNetrcHandler(""))
+	confluent, err := cmd.NewConfluentCommand(cliName, true, &version.Version{}, netrc.NewNetrcHandler(""))
 	if err != nil {
 		panic(err)
 	}

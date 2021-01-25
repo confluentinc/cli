@@ -1,6 +1,9 @@
 package errors
 
 const (
+	//admin commands
+	DeletedUserMsg     = "Successfully deleted user %s."
+	EmailInviteSentMsg = "An email invitation has been sent to %s"
 	// api-key command
 	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
 	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\".\n"
@@ -12,6 +15,14 @@ const (
 	LoggedOutMsg               = "You are now logged out."
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
+	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
+	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s " +
+		StopNonInteractiveMsg + ".\n"
+	EnvLoginFailedMsg = "Non-interactive login with environment variables failed: %s\n"
+	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s " +
+		StopNonInteractiveMsg + ".\n"
+	NetrcLoginFailedMsg = "Non-interactive login with netrc failed: %s\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -43,12 +54,21 @@ const (
 	StartingConsumerMsg    = "Starting Kafka Consumer. ^C or ^D to exit"
 	CreatedTopicMsg        = "Created topic \"%s\".\n"
 	DeletedTopicMsg        = "Deleted topic \"%s\".\n"
+	UnknownTopicMsg        = "Unknown topic: \"%s\".\n"
 	UpdateTopicConfigMsg   = "Updated the following configs for topic \"%s\":\n"
 	InvalidMirrorActionMsg = "Invalid mirror action \"%s\" provided.\n"
 	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
 
+	// kafka link commands
+	DryRunPrefix   = "[DRY RUN] "
+	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
+	CreatedLinkMsg = "Created cluster link \"%s\".\n"
+	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
+
 	// kafka acl commands
-	DeletedACLsMsg = "Deleted ACLs."
+	DeletedACLsMsg      = "Deleted ACLs.\n"
+	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
+	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
@@ -67,7 +87,7 @@ const (
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
-	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v"
+	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"
 	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject \"%s\"\n"
 	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
@@ -88,6 +108,7 @@ const (
 	NotifyUpdateMsg        = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
 		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
+	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"
@@ -121,4 +142,10 @@ const (
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+
+	// shell package
+	AlreadyAuthenticatedMsg      = "You are already authenticated."
+	CurrentlyNotAuthenticatedMsg = "You are currently not authenticated."
+	ShellWelcomeMsg              = "Welcome to the %s shell! %s\n"
+	ShellExitInstructionsMsg     = "Please press `Ctrl-D` or type `quit` to exit."
 )

@@ -2,9 +2,10 @@ package connector
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/c-bata/go-prompt"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -107,14 +108,18 @@ func (suite *ConnectTestSuite) SetupTest() {
 
 }
 
+<<<<<<< HEAD
 func (suite *ConnectTestSuite) newCMD() *cobra.Command {
+=======
+func (suite *ConnectTestSuite) newCmd() *command {
+>>>>>>> 56230853c89292540be311d472a28c603b88205b
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
 	cmd := New("ccloud", prerunner)
 	return cmd
 }
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"pause", connectorID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -125,7 +130,7 @@ func (suite *ConnectTestSuite) TestPauseConnector() {
 }
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"resume", connectorID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -136,7 +141,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 }
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"delete", connectorID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -146,7 +151,7 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 }
 
 func (suite *ConnectTestSuite) TestListConnectors() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"list"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -157,7 +162,7 @@ func (suite *ConnectTestSuite) TestListConnectors() {
 }
 
 func (suite *ConnectTestSuite) TestDescribeConnector() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"describe", connectorID}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -168,7 +173,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 }
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -179,7 +184,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 }
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
-	cmd := suite.newCMD()
+	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connector-config.yaml"}))
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -187,6 +192,62 @@ func (suite *ConnectTestSuite) TestUpdateConnector() {
 	req.True(suite.connectMock.UpdateCalled())
 	retVal := suite.connectMock.UpdateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+}
+
+func (suite *ConnectTestSuite) TestServerComplete() {
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for authenticated user",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        connectorID,
+					Description: connectorName,
+				},
+			},
+		},
+		{
+			name: "don't suggest for unauthenticated user",
+			fields: fields{
+				Command: func() *command {
+					oldConf := suite.conf
+					suite.conf = v3.UnauthenticatedCloudConfigMock()
+					c := suite.newCmd()
+					suite.conf = oldConf
+					return c
+				}(),
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *ConnectTestSuite) TestServerCompletableChildren() {
+	req := require.New(suite.T())
+	cmd := suite.newCmd()
+	completableChildren := cmd.ServerCompletableChildren()
+	expectedChildren := []string{"connector delete", "connector describe", "connector pause", "connector resume", "connector update"}
+	req.Len(completableChildren, len(expectedChildren))
+	for i, expectedChild := range expectedChildren {
+		req.Contains(completableChildren[i].CommandPath(), expectedChild)
+	}
 }
 
 func TestConnectTestSuite(t *testing.T) {

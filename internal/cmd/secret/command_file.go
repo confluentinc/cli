@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type secureFileCommand struct {
@@ -240,7 +241,7 @@ func (c *secureFileCommand) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintln(cmd, errors.UpdateSecretFileMsg)
+	utils.ErrPrintln(cmd, errors.UpdateSecretFileMsg)
 	return nil
 }
 
@@ -288,7 +289,7 @@ func (c *secureFileCommand) remove(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintln(cmd, "Deleted configuration values.")
+	utils.ErrPrintln(cmd, "Deleted configuration values.")
 	return nil
 }
 
@@ -329,7 +330,7 @@ func (c *secureFileCommand) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		pcmd.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
+		utils.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
 		err = printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
 		if err != nil {
 			return err

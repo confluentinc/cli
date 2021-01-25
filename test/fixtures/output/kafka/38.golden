@@ -1,5 +1,5 @@
 api_endpoint: http://kafka-api-url
-availability: LOW
+availability: single-zone
 cluster_size: 1
 egress: 100
 encryption_key_id: abc123
@@ -10,5 +10,5 @@ name: kafka-cluster
 provider: aws
 region: us-west-2
 status: PROVISIONING
-storage: 500
+storage: "500"
 type: DEDICATED

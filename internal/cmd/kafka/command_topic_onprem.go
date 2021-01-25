@@ -16,7 +16,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -24,21 +23,21 @@ import (
 
 // Info needed to complete kafka topic ...
 type topicCommand struct {
-	*pcmd.UseKafkaRestCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
 }
 
 // Return the command to be registered to the kafka topic slot
 func NewTopicCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	topicCmd := &topicCommand{
-		UseKafkaRestCLICommand: pcmd.NewUseKafkaRestCLICommand(
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use:   "topic",
 				Short: "Manage Kafka topics.",
-			}, prerunner),
+			}, prerunner, nil),
 		prerunner: prerunner,
 	}
-
+	topicCmd.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(topicCmd.AuthenticatedCLICommand))
 	topicCmd.init()
 	return topicCmd.Command
 }
@@ -180,7 +179,7 @@ func (topicCmd *topicCommand) init() {
 	describeCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(describeCmd)
 }
-
+// TODO what if url already includes "v3"
 func setServerURL(client *kafkarestv3.APIClient, url string) {
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
@@ -219,9 +218,13 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 	if err != nil { // require the flag
 		return err
 	}
-
-	setServerURL(topicCmd.KafkaRestClient, url)
-	kafkaRestClient := topicCmd.KafkaRestClient
+	// TODO refactor this stuff out to common function
+	kafkaRest, err := topicCmd.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+	kafkaRestClient := kafkaRest.Client
+	setServerURL(kafkaRestClient, url)
 
 	// Get Cluster Id
 	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
@@ -269,8 +272,13 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	}
 
 	// Setup APIClient
-	setServerURL(topicCmd.KafkaRestClient, url)
-	kafkaRestClient := topicCmd.KafkaRestClient
+	// TODO refactor this stuff out to common function
+	kafkaRest, err := topicCmd.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+	kafkaRestClient := kafkaRest.Client
+	setServerURL(kafkaRestClient, url)
 
 	// Get Cluster Id
 	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
@@ -358,10 +366,14 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return err
 	}
-
+	// TODO refactor this stuff out to common function
+	kafkaRest, err := topicCmd.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+	kafkaRestClient := kafkaRest.Client
+	setServerURL(kafkaRestClient, url)
 	// Get ClusterId
-	setServerURL(topicCmd.KafkaRestClient, url)
-	kafkaRestClient := topicCmd.KafkaRestClient
 	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // checks for error in URL
@@ -386,10 +398,14 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	if err != nil {
 		return err
 	}
-
+	// TODO refactor this stuff out to common function
+	kafkaRest, err := topicCmd.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+	kafkaRestClient := kafkaRest.Client
+	setServerURL(kafkaRestClient, url)
 	// Get Cluster Id
-	setServerURL(topicCmd.KafkaRestClient, url)
-	kafkaRestClient := topicCmd.KafkaRestClient
 	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle URL error
@@ -473,13 +489,17 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	} else if output.IsValidFormat(format) == false { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
-
-	// Get clusterId
-	setServerURL(topicCmd.KafkaRestClient, url)
-	client := topicCmd.KafkaRestClient
-	clustersData, resp, err := client.ClusterApi.ClustersGet(context.Background())
+	// TODO refactor this stuff out to common function
+	kafkaRest, err := topicCmd.GetKafkaREST()
 	if err != nil {
-		return handleCommonKafkaRestClientErrors(url, client, resp, err) // catch url incorrect error
+		return err
+	}
+	kafkaRestClient := kafkaRest.Client
+	setServerURL(kafkaRestClient, url)
+	// Get clusterId
+	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	if err != nil {
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch url incorrect error
 	} else if clustersData.Data == nil || len(clustersData.Data) == 0 {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
@@ -488,9 +508,9 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	// Get partitions
 	topicData := &TopicData{}
 	// TODO: partitions reassignment?
-	partitionsResp, resp, err := client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), clusterId, topicName)
+	partitionsResp, resp, err := kafkaRestClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), clusterId, topicName)
 	if err != nil {
-		return handleCommonKafkaRestClientErrors(url, client, resp, err) // catch topic not exist error
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch topic not exist error
 	} else if partitionsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
@@ -505,9 +525,9 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 		}
 
 		// For each partition, get replicas
-		replicasResp, resp, err := client.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(context.Background(), clusterId, topicName, partitionId)
+		replicasResp, resp, err := kafkaRestClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(context.Background(), clusterId, topicName, partitionId)
 		if err != nil {
-			return handleCommonKafkaRestClientErrors(url, client, resp, err)
+			return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 		} else if replicasResp.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
@@ -529,9 +549,9 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	}
 
 	// Get configs
-	configsResp, resp, err := client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), clusterId, topicName)
+	configsResp, resp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), clusterId, topicName)
 	if err != nil {
-		return handleCommonKafkaRestClientErrors(url, client, resp, err)
+		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	} else if configsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}

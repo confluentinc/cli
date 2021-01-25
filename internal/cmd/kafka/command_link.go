@@ -2,23 +2,33 @@ package kafka
 
 import (
 	"context"
+	"io/ioutil"
+	"strings"
+
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
 	sourceBootstrapServersFlagName     = "source_cluster"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
 	configFlagName                     = "config"
+	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
-	validateFlagName                   = "validate"
+	noValidateFlagName                 = "no-validate"
+	includeTopicsFlagName              = "include-topics"
 )
 
 var (
-	keyValueFields = []string{"Key", "Value"}
+	keyValueFields      = []string{"Key", "Value"}
+	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
+	linkFields          = []string{"LinkName"}
 )
 
 type keyValueDisplay struct {
@@ -26,30 +36,37 @@ type keyValueDisplay struct {
 	Value string
 }
 
+type LinkWriter struct {
+	LinkName string
+}
+
+type LinkTopicWriter struct {
+	LinkName  string
+	TopicName string
+}
+
 type linkCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
 }
 
 func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:    "link",
 			Hidden: true,
 			Short:  "Manages inter-cluster links.",
 		},
-		prerunner)
+		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
+		AuthenticatedStateFlagCommand: cliCmd,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *linkCommand) init() {
-	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
-
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List previously created cluster links.",
@@ -62,6 +79,7 @@ func (c *linkCommand) init() {
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -73,16 +91,16 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka link create my_link --source_cluster myhost:1234\nccloud kafka link create my_link --source_cluster myhost:1234 --config \"key1=val1,key2=val2\"",
+				Code: "ccloud kafka link create my_link --source_cluster myhost:1234\nccloud kafka link create my_link --source_cluster myhost:1234 --config-file ~/myfile.txt",
 			},
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
-	createCmd.Flags().StringSlice(configFlagName, nil, "Additional comma-separated properties for source cluster.")
+	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for source cluster.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(validateFlagName, false, "If set, will validate the link to the source cluster before creation.")
+	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -123,7 +141,7 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Updates a property for a cluster link.",
-				Code: "ccloud kafka link update my_link --key retention.ms --value 123456890",
+				Code: "ccloud kafka link update my_link --config \"retention.ms=123456890\"",
 			},
 		),
 		RunE: c.update,
@@ -139,22 +157,49 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster)
+
+	includeTopics, err := cmd.Flags().GetBool(includeTopicsFlagName)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"LinkName"}, []string{"LinkName"}, []string{"LinkName"})
+	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster, includeTopics)
 	if err != nil {
 		return err
 	}
-	type LinkWriter struct {
-		LinkName string
+
+	if includeTopics {
+		outputWriter, err := output.NewListOutputWriter(
+			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range resp.Links {
+			if len(link.Topics) > 0 {
+				for topic := range link.Topics {
+					outputWriter.AddElement(
+						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
+				}
+			} else {
+				outputWriter.AddElement(
+					&LinkTopicWriter{LinkName: link.LinkName, TopicName: ""})
+			}
+		}
+
+		return outputWriter.Out()
+	} else {
+		outputWriter, err := output.NewListOutputWriter(cmd, linkFields, linkFields, linkFields)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range resp.Links {
+			outputWriter.AddElement(&LinkWriter{LinkName: link.LinkName})
+		}
+
+		return outputWriter.Out()
 	}
-	for _, link := range resp {
-		outputWriter.AddElement(&LinkWriter{LinkName: link})
-	}
-	return outputWriter.Out()
 }
 
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
@@ -175,17 +220,39 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validateLink, err := cmd.Flags().GetBool(validateFlagName)
+	skipValidatingLink, err := cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
 
-	linkConfigs, err := cmd.Flags().GetStringSlice(configFlagName)
+	// Read in extra configs if applicable.
+	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
 	}
-	// Create config map from the argument.
-	configMap, err := toMap(linkConfigs)
+
+	var configMap map[string]string
+	if configFile != "" {
+		configContents, err := ioutil.ReadFile(configFile)
+		if err != nil {
+			return err
+		}
+
+		// Create config map from the argument.
+		var linkConfigs []string
+		for _, s := range strings.Split(string(configContents), "\n") {
+			// Filter out blank lines
+			if s != "" {
+				linkConfigs = append(linkConfigs, s)
+			}
+		}
+		configMap, err = toMap(linkConfigs)
+		if err != nil {
+			return err
+		}
+	} else {
+		configMap = make(map[string]string)
+	}
 
 	// The `source` argument is a convenience; we package everything into properties for the source cluster.
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
@@ -198,8 +265,17 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		ClusterId: "",
 		Configs:   configMap,
 	}
-	createOptions := &linkv1.CreateLinkOptions{ValidateLink: validateLink, ValidateOnly: validateOnly}
+	createOptions := &linkv1.CreateLinkOptions{ValidateLink: !skipValidatingLink, ValidateOnly: validateOnly}
 	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
+
+	if err == nil {
+		msg := errors.CreatedLinkMsg
+		if validateOnly {
+			msg = errors.DryRunPrefix + msg
+		}
+		utils.Printf(cmd, msg, linkName)
+	}
+
 	return err
 }
 
@@ -212,6 +288,11 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	link := args[0]
 	deletionOptions := &linkv1.DeleteLinkOptions{}
 	err = c.Client.Kafka.DeleteLink(context.Background(), cluster, link, deletionOptions)
+
+	if err == nil {
+		utils.Printf(cmd, errors.DeletedLinkMsg, link)
+	}
+
 	return err
 }
 
@@ -262,6 +343,10 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	alterOptions := &linkv1.AlterLinkOptions{}
 	err = c.Client.Kafka.AlterLink(context.Background(), cluster, link, config, alterOptions)
+
+	if err == nil {
+		utils.Printf(cmd, errors.UpdatedLinkMsg, link)
+	}
 
 	return err
 }

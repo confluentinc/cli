@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -11,10 +12,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
+	completableChildren []*cobra.Command
 }
 
 type catalogDisplay struct {
@@ -28,19 +31,19 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *command {
 	cmd := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cobra.Command{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
 			Use:   "connector-catalog",
 			Short: "Catalog of connectors and their configurations.",
-		}, prerunner),
+		}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
-	return cmd.Command
+	return cmd
 }
 
 func (c *command) init(cliName string) {
-	cmd := &cobra.Command{
+	describeCmd := &cobra.Command{
 		Use:   "describe <connector-type>",
 		Short: "Describe a connector plugin type.",
 		Args:  cobra.ExactArgs(1),
@@ -56,12 +59,11 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().SortFlags = false
+	c.AddCommand(describeCmd)
 
-	cmd = &cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List connector plugin types.",
 		Args:  cobra.NoArgs,
@@ -73,33 +75,44 @@ func (c *command) init(cliName string) {
 			},
 		),
 	}
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
-	c.AddCommand(cmd)
+	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listCmd.Flags().SortFlags = false
+	c.AddCommand(listCmd)
+	c.completableChildren = []*cobra.Command{describeCmd}
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	connectorInfo, err := c.Client.Connect.GetPlugins(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "")
-	if err != nil {
-		return err
-	}
 	outputWriter, err := output.NewListOutputWriter(cmd, catalogFields, catalogFields, catalogStructureLabels)
 	if err != nil {
 		return err
 	}
-	for _, conn := range connectorInfo {
-		connector := &catalogDisplay{
-			PluginName: conn.Class,
-			Type:       conn.Type,
-		}
-		outputWriter.AddElement(connector)
+	catalog, err := c.getCatalog(cmd)
+	if err != nil {
+		return err
+	}
+	for _, conn := range catalog {
+		outputWriter.AddElement(conn)
 	}
 	return outputWriter.Out()
+}
+
+func (c *command) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, error) {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return nil, err
+	}
+	connectorInfo, err := c.Client.Connect.GetPlugins(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "")
+	if err != nil {
+		return nil, err
+	}
+	var plugins []*catalogDisplay
+	for _, conn := range connectorInfo {
+		plugins = append(plugins, &catalogDisplay{
+			PluginName: conn.Class,
+			Type:       conn.Type,
+		})
+	}
+	return plugins, nil
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
@@ -124,7 +137,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			return flagErr
 		}
 		if outputFormat == output.Human.String() {
-			pcmd.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
+			utils.Println(cmd, "Following are the required configs: \nconnector.class: "+args[0]+"\n"+err.Error())
 		} else {
 
 			for _, c := range reply.Configs {
@@ -137,4 +150,30 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	return errors.Errorf(errors.InvalidCloudErrorMsg)
+}
+
+func (c *command) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *command) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	if !pcmd.CanCompleteCommand(c.Command) {
+		return suggestions
+	}
+	catalog, err := c.getCatalog(c.Command)
+	if err != nil {
+		return suggestions
+	}
+	for _, conn := range catalog {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        conn.PluginName,
+			Description: conn.Type,
+		})
+	}
+	return suggestions
+}
+
+func (c *command) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

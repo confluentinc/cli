@@ -1,0 +1,14 @@
+{
+  "id": "lkc-describe-infinite",
+  "name": "kafka-cluster",
+  "type": "BASIC",
+  "ingress": 100,
+  "egress": 100,
+  "storage": "Infinite",
+  "provider": "aws",
+  "region": "us-west-2",
+  "availability": "single-zone",
+  "status": "PROVISIONING",
+  "endpoint": "SASL_SSL://kafka-endpoint",
+  "api_endpoint": "http://kafka-api-url"
+}

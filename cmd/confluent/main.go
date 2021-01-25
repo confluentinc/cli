@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -33,12 +33,12 @@ func main() {
 
 	version := pversion.NewVersion(cliName, version, commit, date, host)
 
-	cli, err := cmd.NewConfluentCommand(cliName, isTest, version, pauth.NewNetrcHandler(pauth.GetNetrcFilePath(isTest)))
+	cli, err := cmd.NewConfluentCommand(cliName, isTest, version, netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest)))
 	if err != nil {
 		if cli == nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			pcmd.ErrPrintln(cli.Command, err)
+			utils.ErrPrintln(cli.Command, err)
 		}
 		if isTest {
 			bincover.ExitCode = 1

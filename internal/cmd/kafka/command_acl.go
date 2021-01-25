@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -16,6 +17,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -25,24 +27,22 @@ var (
 )
 
 type aclCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
 func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "acl",
 			Short: "Manage Kafka ACLs.",
-		}, prerunner)
-	cmd := &aclCommand{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, AclSubcommandFlags)
+	cmd := &aclCommand{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *aclCommand) init() {
-	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
-
 	createCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
@@ -50,7 +50,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can only specify one of these flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, if you want to specify both ``consumer-group`` and ``topic``, you must specify this as two separate commands:",
+				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
 				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
 			},
 		),
@@ -92,6 +92,36 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	kafkaREST, _ := c.GetKafkaREST()
+	if kafkaREST != nil {
+		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
+
+		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand(cmd)
+		if err != nil {
+			return err
+		}
+		lkc := kafkaClusterConfig.ID
+
+		aclGetResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsGet(kafkaREST.Context, lkc, &opts)
+
+		if err != nil && httpResp != nil {
+			// Kafka REST is available, but an error occurred
+			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		}
+
+		if err == nil && httpResp != nil {
+			if httpResp.StatusCode != http.StatusOK {
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+			// Kafka REST is available and there was no error
+			return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp, os.Stdout)
+		}
+	}
+
+	// Kafka REST is not available, fallback to KafkaAPI
+
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return err
@@ -109,14 +139,64 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	var bindings []*schedv1.ACLBinding
 	for _, acl := range acls {
-		validateAddDelete(acl)
+		validateAddAndDelete(acl)
 		if acl.errors != nil {
 			return acl.errors
 		}
 		bindings = append(bindings, acl.ACLBinding)
 	}
+
+	kafkaREST, _ := c.GetKafkaREST()
+	if kafkaREST != nil {
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		if err != nil {
+			return err
+		}
+		lkc := kafkaClusterConfig.ID
+
+		kafkaRestExists := true
+		for i, binding := range bindings {
+			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
+			httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsPost(kafkaREST.Context, lkc, &opts)
+
+			if err != nil && httpResp == nil {
+				if i == 0 {
+					// assume Kafka REST is not available, fallback to KafkaAPI
+					kafkaRestExists = false
+					break
+				}
+				// i > 0: unlikely
+				_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			}
+
+			if err != nil {
+				if i > 0 {
+					// unlikely
+					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				}
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			}
+
+			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
+				if i > 0 {
+					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				}
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+		}
+
+		if kafkaRestExists {
+			return aclutil.PrintACLs(cmd, bindings, os.Stdout)
+		}
+	}
+
+	// Kafka REST is not available, fallback to KafkaAPI
 
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
@@ -127,6 +207,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	return aclutil.PrintACLs(cmd, bindings, os.Stdout)
 }
 
@@ -135,29 +216,100 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	var filters []*schedv1.ACLFilter
 	for _, acl := range acls {
-		validateAddDelete(acl)
+		validateAddAndDelete(acl)
 		if acl.errors != nil {
 			return acl.errors
 		}
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
+	kafkaREST, _ := c.GetKafkaREST()
+	if kafkaREST != nil {
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		if err != nil {
+			return err
+		}
+		lkc := kafkaClusterConfig.ID
+
+		kafkaRestURL := kafkaREST.Client.GetConfig().BasePath
+
+		kafkaRestExists := true
+		matchingBindingCount := 0
+		for i, filter := range filters {
+			deleteOpts := aclFilterToClustersClusterIdAclsDeleteOpts(filter)
+			deleteResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsDelete(kafkaREST.Context, lkc, &deleteOpts)
+
+			if err != nil && httpResp == nil {
+				if i == 0 {
+					// Kafka REST is not available, fallback to KafkaAPI
+					kafkaRestExists = false
+					break
+				}
+				// i > 0: unlikely
+				printAclsDeleted(cmd, matchingBindingCount)
+				return kafkaRestError(kafkaRestURL, err, httpResp)
+			}
+
+			if err != nil {
+				if i > 0 {
+					// unlikely
+					printAclsDeleted(cmd, matchingBindingCount)
+				}
+				return kafkaRestError(kafkaRestURL, err, httpResp)
+			}
+
+			if httpResp.StatusCode == http.StatusOK {
+				matchingBindingCount += len(deleteResp.Data)
+			} else {
+				printAclsDeleted(cmd, matchingBindingCount)
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+		}
+
+		if kafkaRestExists {
+			// Kafka REST is available and at least one ACL was deleted
+			printAclsDeleted(cmd, matchingBindingCount)
+			return nil
+		}
+	}
+
+	// Kafka REST is not available, fallback to KafkaAPI
+
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return err
 	}
+
+	matchingBindingCount := 0
+	for _, acl := range acls {
+		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
+		resp, err := c.Client.Kafka.ListACLs(context.WithValue(context.Background(), "requestor", "delete"), cluster, convertToFilter(acl.ACLBinding))
+		if err != nil {
+			return err
+		}
+		matchingBindingCount += len(resp)
+	}
+	if matchingBindingCount == 0 {
+		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
+		return nil
+	}
+
 	err = c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters)
 	if err != nil {
 		return err
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedACLsMsg)
+
+	utils.ErrPrintf(cmd, errors.DeletedACLsMsg)
 	return nil
 }
 
-// validateAddDelete ensures the minimum requirements for acl add and delete are met
-func validateAddDelete(binding *ACLConfiguration) {
+// validateAddAndDelete ensures the minimum requirements for acl add and delete are met
+func validateAddAndDelete(binding *ACLConfiguration) {
 	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
@@ -207,5 +359,13 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 	return &schedv1.ACLFilter{
 		EntryFilter:   binding.Entry,
 		PatternFilter: binding.Pattern,
+	}
+}
+
+func printAclsDeleted(cmd *cobra.Command, count int) {
+	if count == 0 {
+		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
+	} else {
+		utils.ErrPrintf(cmd, fmt.Sprintf(errors.DeletedACLsCountMsg, count))
 	}
 }

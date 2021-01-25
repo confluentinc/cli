@@ -12,6 +12,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -20,7 +21,7 @@ func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, er
 		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
 		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret", IsHidden: true},
 	)
-	if err := f.Prompt(command, pcmd.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(command, form.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
 	}
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil
@@ -63,6 +64,20 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			return nil, nil, err
 		}
 	}
+	// Check if --api-key and --api-secret flags were set, if so, insert them as the credentials for the sr cluster
+	key, secret, err := currCtx.KeyAndSecretFlags(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+	if key != "" {
+		if srCluster.SrCredentials == nil {
+			srCluster.SrCredentials = &v0.APIKeyPair{}
+		}
+		srCluster.SrCredentials.Key = key
+		if secret != "" {
+			srCluster.SrCredentials.Secret = secret
+		}
+	}
 
 	// First examine existing credentials. If check fails(saved credentials no longer works or user enters
 	//incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.
@@ -100,7 +115,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		// Test credentials
 		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			pcmd.ErrPrintln(cmd, errors.SRCredsValidationFailedMsg)
+			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue
