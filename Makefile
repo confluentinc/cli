@@ -227,11 +227,11 @@ coverage-unit:
 coverage-integ:
       ifdef CI
 	@# Run integration tests with coverage.
-	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m -ldflags '-buildmode=exe'
+	@GO111MODULE=on INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 20m -ldflags '-buildmode=exe'
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 15m -ldflags '-buildmode=exe'
+	@GO111MODULE=on GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 20m -ldflags '-buildmode=exe'
       endif
 
 
