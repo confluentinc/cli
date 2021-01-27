@@ -38,6 +38,9 @@ var (
 	malformedCmdEventName = "Malformed Command Error"
 	nonUser               = "no-user-info"
 
+	//
+	ResourceIDPropertiesKey = "resource_id"
+
 	// these are exported to avoid import cycle with test (test is in package analytics_test)
 	// @VisibleForTesting
 	FlagsPropertiesKey              = "flags"
