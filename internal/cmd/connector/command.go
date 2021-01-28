@@ -263,7 +263,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			Trace:         trace,
 		})
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, connectorExpansion.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, connectorExpansion.Id.Id)
 	return nil
 }
 
