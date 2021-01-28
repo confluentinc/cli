@@ -370,7 +370,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.Id)
-	c.analyticsClient.SetSpecialProperty("key", userKey.Key)
+	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
 	return nil
 }
 
@@ -394,7 +394,13 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
-	return c.keystore.DeleteAPIKey(apiKey, cmd)
+	err = c.keystore.DeleteAPIKey(apiKey, cmd)
+	if err != nil {
+		return err
+	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
+	return nil
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {
