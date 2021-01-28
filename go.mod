@@ -11,7 +11,6 @@ require (
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.31.13
-	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bombsimon/wsl v1.2.5 // indirect
@@ -33,13 +32,13 @@ require (
 	github.com/confluentinc/cc-utils-public v0.1.0
 	github.com/confluentinc/ccloud-sdk-go v0.0.61
 	github.com/confluentinc/go-editor v0.4.0
+	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.3
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
-	github.com/csreesan/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/davecgh/go-spew v1.1.1
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
 	github.com/dghubble/sling v1.3.0
