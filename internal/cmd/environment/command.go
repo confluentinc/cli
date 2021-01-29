@@ -197,6 +197,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 	return nil
 }
 

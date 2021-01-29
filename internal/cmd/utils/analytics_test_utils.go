@@ -8,6 +8,7 @@ import (
 
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -46,4 +47,10 @@ func ExecuteCommandWithAnalytics(cmd *cobra.Command, args []string, analyticsCli
 		return err
 	}
 	return analyticsClient.SendCommandAnalytics(cmd, args, err)
+}
+
+func CheckTrackedResourceID(segmentMsg segment.Message, expectedId string, req *require.Assertions) {
+	resourceID, err := GetPagePropertyValue(segmentMsg, analytics.ResourceIDPropertiesKey)
+	req.NoError(err)
+	req.Equal(expectedId, resourceID.(string))
 }

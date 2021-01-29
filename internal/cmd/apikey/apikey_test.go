@@ -181,10 +181,10 @@ func (suite *APITestSuite) newCmd() *command {
 }
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
-	req := require.New(suite.T())
 	cmd := suite.newCmd()
 	args := append([]string{"create", "--resource", srClusterID})
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
@@ -202,10 +202,10 @@ func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Asserti
 }
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
-	req := require.New(suite.T())
 	cmd := suite.newCmd()
 	args := append([]string{"create", "--resource", suite.kafkaCluster.Id})
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
