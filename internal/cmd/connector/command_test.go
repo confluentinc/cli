@@ -3,6 +3,7 @@ package connector
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/c-bata/go-prompt"
@@ -177,6 +178,38 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 	req.True(suite.connectMock.CreateCalled())
 	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+}
+
+
+func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
+	cmd := suite.newCmd()
+	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.connectMock.CreateCalled())
+	retVal := suite.connectMock.CreateCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+}
+
+func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
+	cmd := suite.newCmd()
+	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
+	fmt.Printf("error-- %s", err.Error())
+	assert.Contains(suite.T(), err.Error(), "unable to parse config")
+}
+
+func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
+	cmd := suite.newCmd()
+	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
+	fmt.Printf("error-- %s", err.Error())
+	assert.Contains(suite.T(), err.Error(), "unable to parse config")
 }
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
