@@ -418,6 +418,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, args[0])
 	return nil
 }
 

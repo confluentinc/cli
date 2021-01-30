@@ -7,13 +7,14 @@ import (
 	"testing"
 
 	"github.com/c-bata/go-prompt"
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/ccloud-sdk-go"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
