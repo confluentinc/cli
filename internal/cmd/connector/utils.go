@@ -9,10 +9,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-const CONFIG = "config"
+const (
+	CONFIG = "config"
+	NAME = "name"
+	CONNECTOR_CLASS = "connector.class"
+)
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
-	fileName, err := cmd.Flags().GetString("config")
+	fileName, err := cmd.Flags().GetString(CONFIG)
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading --config as string")
 	}
@@ -21,8 +25,8 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to parse config %s", fileName)
 	}
-	_, nameExists := options["name"]
-	_, classExists := options["connector.class"]
+	_, nameExists := options[NAME]
+	_, classExists := options[CONNECTOR_CLASS]
 	if !nameExists || !classExists {
 		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, fileName)
 	}
