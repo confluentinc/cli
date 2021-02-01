@@ -92,7 +92,7 @@ func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Comma
 	}
 	roleBindingCmd := &rolebindingCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		cliName:                 cliName,
+		cliName:                       cliName,
 	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command

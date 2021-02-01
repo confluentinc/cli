@@ -29,7 +29,7 @@ func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner, OnPremClusterSubcommandFlags)
 	cmd := &clusterCommandOnPrem{
 		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:               prerunner,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
 	return cmd.Command

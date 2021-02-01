@@ -3,8 +3,9 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"regexp"
+
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 func (s *CLITestSuite) TestAuditLogConfig() {
@@ -73,11 +74,11 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 }
 
 func (s *CLITestSuite) TestAuditConfigMigrate() {
-	migration1 := GetInputFixturePath(s.T(), "auditlog","config-migration-server1.golden")
-	migration2 := GetInputFixturePath(s.T(), "auditlog","config-migration-server2.golden")
+	migration1 := GetInputFixturePath(s.T(), "auditlog", "config-migration-server1.golden")
+	migration2 := GetInputFixturePath(s.T(), "auditlog", "config-migration-server2.golden")
 
-	malformed := GetInputFixturePath(s.T(), "auditlog","malformed-migration.golden")
-	nullFields := GetInputFixturePath(s.T(), "auditlog","null-fields-migration.golden")
+	malformed := GetInputFixturePath(s.T(), "auditlog", "malformed-migration.golden")
+	nullFields := GetInputFixturePath(s.T(), "auditlog", "null-fields-migration.golden")
 
 	tests := []CLITest{
 		{

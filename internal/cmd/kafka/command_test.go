@@ -16,12 +16,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 var conf *v3.Config

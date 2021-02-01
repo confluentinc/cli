@@ -51,7 +51,7 @@ func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
 	}
 	roleCmd := &roleCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		cliName:                 cliName,
+		cliName:                       cliName,
 	}
 	roleCmd.init()
 	return roleCmd.Command

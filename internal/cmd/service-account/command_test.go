@@ -22,7 +22,7 @@ import (
 const (
 	serviceAccountId   = int32(123)
 	serviceDescription = "testing"
-	serviceName = "demo"
+	serviceName        = "demo"
 )
 
 type ServiceAccountTestSuite struct {
@@ -38,10 +38,10 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 	suite.userMock = &ccsdkmock.User{
 		CreateServiceAccountFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
 			return &orgv1.User{
-				Id:                   serviceAccountId,
-				ServiceName:          serviceName,
-				ServiceDescription:   serviceDescription,
-				ServiceAccount:       true,
+				Id:                 serviceAccountId,
+				ServiceName:        serviceName,
+				ServiceDescription: serviceDescription,
+				ServiceAccount:     true,
 			}, nil
 		},
 		DeleteServiceAccountFunc: func(arg0 context.Context, arg1 *orgv1.User) error {
@@ -54,7 +54,7 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 
 func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *command {
 	client := &ccloud.Client{
-		User:               suite.userMock,
+		User: suite.userMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
 	cmd := New(prerunner, suite.analyticsClient)

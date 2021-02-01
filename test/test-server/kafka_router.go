@@ -23,18 +23,18 @@ const (
 	topicConfig     = "/2.0/kafka/{cluster}/topics/{topic}/config"
 
 	//kafka rest urls
-	rpAcls				= "/kafka/v3/clusters/{cluster}/acls"
-	rpTopics			= "/kafka/v3/clusters/{cluster}/topics"
-	rpPartitions		= "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
-	rpPartitionReplicas	= "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-	rpTopicConfigs		= "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
-	rpConfigsAlter		= "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/configs:alter"
-	rpTopic				= "/kafka/v3/clusters/{cluster}/topics/{topic}"
+	rpAcls              = "/kafka/v3/clusters/{cluster}/acls"
+	rpTopics            = "/kafka/v3/clusters/{cluster}/topics"
+	rpPartitions        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
+	rpPartitionReplicas = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
+	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
+	rpConfigsAlter      = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/configs:alter"
+	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
 )
 
 type KafkaRouter struct {
 	KafkaApi KafkaApiRouter
-	KafkaRP	 KafkaRestProxyRouter
+	KafkaRP  KafkaRestProxyRouter
 }
 
 type KafkaApiRouter struct {
@@ -55,7 +55,7 @@ func NewKafkaRouter(t *testing.T) *KafkaRouter {
 func NewEmptyKafkaRouter() *KafkaRouter {
 	return &KafkaRouter{
 		KafkaApi: KafkaApiRouter{mux.NewRouter()},
-		KafkaRP: KafkaRestProxyRouter{mux.NewRouter()},
+		KafkaRP:  KafkaRestProxyRouter{mux.NewRouter()},
 	}
 }
 

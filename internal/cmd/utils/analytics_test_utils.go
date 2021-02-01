@@ -3,8 +3,9 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"

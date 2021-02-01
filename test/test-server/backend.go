@@ -8,11 +8,11 @@ import (
 // TestBackend consists of the servers for necessary mocked backend services
 // Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined
 type TestBackend struct {
-	cloud       	*httptest.Server
-	kafkaApi       	*httptest.Server
-	kafkaRestProxy	*httptest.Server
-	mds         	*httptest.Server
-	sr				*httptest.Server
+	cloud          *httptest.Server
+	kafkaApi       *httptest.Server
+	kafkaRestProxy *httptest.Server
+	mds            *httptest.Server
+	sr             *httptest.Server
 }
 
 func StartTestBackend(t *testing.T) *TestBackend {
@@ -23,11 +23,11 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	kafkaRPServer := configureKafkaRestServer(kafkaRouter.KafkaRP)
 
 	backend := &TestBackend{
-		cloud:      	httptest.NewServer(cloudRouter),
+		cloud:          httptest.NewServer(cloudRouter),
 		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
 		kafkaRestProxy: kafkaRPServer,
-		mds:         	httptest.NewServer(mdsRouter),
-		sr: 		 	httptest.NewServer(srRouter),
+		mds:            httptest.NewServer(mdsRouter),
+		sr:             httptest.NewServer(srRouter),
 	}
 	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
@@ -71,12 +71,13 @@ func (b *TestBackend) GetKafkaApiUrl() string {
 func (b *TestBackend) GetMdsUrl() string {
 	return b.mds.URL
 }
+
 // Creates and returns new TestBackend struct with passed CloudRouter and KafkaRouter
 // Use this to spin up a backend for a ccloud cli test that requires non-default endpoint behavior or needs additional endpoints
 // Define/override the endpoints on the corresponding routers
 func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *KafkaRouter) *TestBackend {
 	ccloud := &TestBackend{
-		cloud:       	httptest.NewServer(cloudRouter),
+		cloud:          httptest.NewServer(cloudRouter),
 		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
 		kafkaRestProxy: configureKafkaRestServer(kafkaRouter.KafkaRP),
 	}
@@ -84,12 +85,13 @@ func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *Kafka
 	cloudRouter.kafkaRPUrl = ccloud.kafkaRestProxy.URL
 	return ccloud
 }
+
 // Creates and returns new TestBackend struct with passed MdsRouter
 // Use this to spin up a backend for a confluent cli test that requires non-default endpoint behavior or needs additional endpoints
 // Define/override the endpoints on the mdsRouter
 func NewConfluentTestBackendFromRouter(mdsRouter *MdsRouter) *TestBackend {
 	confluent := &TestBackend{
-		mds:       httptest.NewServer(mdsRouter),
+		mds: httptest.NewServer(mdsRouter),
 	}
 	return confluent
 }

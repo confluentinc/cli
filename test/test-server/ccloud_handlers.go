@@ -3,7 +3,6 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
-	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -804,6 +805,7 @@ func (c CloudRouter) HandleV2Authenticate(t *testing.T) func(http.ResponseWriter
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/api/signup"
 func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -820,6 +822,7 @@ func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/api/email_verifications"
 func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

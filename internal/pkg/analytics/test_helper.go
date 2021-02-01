@@ -17,7 +17,6 @@ type SegmentClient interface {
 	Close() error
 }
 
-
 //func NewTestAnalyticsClient(config *v3.Config, out *[]segment.Message) analytics.Client {
 //	testTime := time.Date(1999, time.December, 31, 23, 59, 59, 0, time.UTC)
 //	mockSegmentClient := &mock.SegmentClient{
@@ -29,4 +28,3 @@ type SegmentClient interface {
 //	}
 //	return NewAnalyticsClient(config.CLIName, config, "1.1.1.1.1", mockSegmentClient, clockwork.NewFakeClockAt(testTime))
 //}
-

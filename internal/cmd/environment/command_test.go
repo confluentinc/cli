@@ -15,6 +15,7 @@ import (
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
 
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

@@ -5,11 +5,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"

@@ -26,7 +26,7 @@ func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner, RouteSubcommandFlags)
 	command := &routeCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:               prerunner,
+		prerunner:                     prerunner,
 	}
 	command.init()
 	return command.Command
