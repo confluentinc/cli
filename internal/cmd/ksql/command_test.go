@@ -194,7 +194,7 @@ func (suite *KSQLTestSuite) TestCreateKSQL() {
 	cfg := suite.ksqlc.CreateCalls()[0].Arg1
 	req.Equal("", cfg.Image)
 	req.Equal(uint32(4), cfg.TotalNumCsu)
-	test_utils.CheckTrackedResourceID(suite.analyticsOutput[0], ksqlClusterID, req)
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {

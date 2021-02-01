@@ -49,8 +49,14 @@ func ExecuteCommandWithAnalytics(cmd *cobra.Command, args []string, analyticsCli
 	return analyticsClient.SendCommandAnalytics(cmd, args, err)
 }
 
-func CheckTrackedResourceID(segmentMsg segment.Message, expectedId string, req *require.Assertions) {
+func CheckTrackedResourceIDString(segmentMsg segment.Message, expectedId string, req *require.Assertions) {
 	resourceID, err := GetPagePropertyValue(segmentMsg, analytics.ResourceIDPropertiesKey)
 	req.NoError(err)
 	req.Equal(expectedId, resourceID.(string))
+}
+
+func CheckTrackedResourceIDInt32(segmentMsg segment.Message, expectedId int32, req *require.Assertions) {
+	resourceID, err := GetPagePropertyValue(segmentMsg, analytics.ResourceIDPropertiesKey)
+	req.NoError(err)
+	req.Equal(expectedId, resourceID.(int32))
 }

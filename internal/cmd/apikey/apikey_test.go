@@ -193,9 +193,8 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 }
 
 func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
-	resourceID, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ResourceIDPropertiesKey)
-	req.NoError(err)
-	req.Equal(apiKeyResourceId, resourceID.(int32))
+	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
+
 	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
 	req.NoError(err)
 	req.Equal(apiKeyVal, key.(string))

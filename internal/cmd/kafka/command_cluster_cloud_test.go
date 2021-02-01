@@ -42,8 +42,8 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.kafkaMock = &ccsdkmock.Kafka{
 		CreateFunc: func(ctx context.Context, config *v1.KafkaClusterConfig) (cluster *v1.KafkaCluster, e error) {
 			return &v1.KafkaCluster{
-				Id: clusterId,
-				Name: clusterName,
+				Id:         clusterId,
+				Name:       clusterName,
 				Deployment: &v1.Deployment{Sku: prodv1.Sku_BASIC},
 			}, nil
 		},
@@ -62,10 +62,10 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.envMetadataMock = &ccsdkmock.EnvironmentMetadata{
 		GetFunc: func(arg0 context.Context) (metadata []*v1.CloudMetadata, e error) {
 			cloudMeta := &v1.CloudMetadata{
-				Id:                   cloudId,
-				Regions:    []*v1.Region{
+				Id: cloudId,
+				Regions: []*v1.Region{
 					{
-						Id:regionId,
+						Id:            regionId,
 						IsSchedulable: true,
 					},
 				},
@@ -81,7 +81,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 	client := &ccloud.Client{
-		Kafka: suite.kafkaMock,
+		Kafka:               suite.kafkaMock,
 		EnvironmentMetadata: suite.envMetadataMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
@@ -147,7 +147,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	req.Nil(err)
 	req.True(suite.envMetadataMock.GetCalled())
 	req.True(suite.kafkaMock.CreateCalled())
-	test_utils.CheckTrackedResourceID(suite.analyticsOutput[0], clusterId, req)
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
@@ -157,7 +157,7 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.kafkaMock.DeleteCalled())
-	test_utils.CheckTrackedResourceID(suite.analyticsOutput[0], clusterId, req)
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
 func TestKafkaClusterTestSuite(t *testing.T) {

@@ -150,7 +150,7 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceID(suite.analyticsOutput[0], connectorID, req)
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestListConnectors() {

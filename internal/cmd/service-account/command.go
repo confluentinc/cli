@@ -222,6 +222,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return nil
 }
 
