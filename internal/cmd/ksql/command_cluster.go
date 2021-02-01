@@ -225,11 +225,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	id := args[0]
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: id}
 	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
