@@ -55,7 +55,12 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 			}, nil
 		},
 		ListFunc: func(arg0 context.Context, arg1 *v1.Account) (accounts []*v1.Account, e error) {
-			return []*v1.Account{}, nil
+			return []*v1.Account{
+				{
+					Id:   environmentID,
+					Name: environmentName,
+				},
+			}, nil
 		},
 		UpdateFunc: func(arg0 context.Context, arg1 *v1.Account) error {
 			return nil
@@ -132,8 +137,8 @@ func (suite *EnvironmentTestSuite) TestServerComplete() {
 			},
 			want: []prompt.Suggest{
 				{
-					Text:        "123",
-					Description: "456",
+					Text:        environmentID,
+					Description: environmentName,
 				},
 			},
 		},
