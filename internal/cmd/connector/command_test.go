@@ -184,7 +184,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 	req.True(suite.connectMock.CreateCalled())
 	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceID(suite.analyticsOutput[0], connectorID, req)
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
