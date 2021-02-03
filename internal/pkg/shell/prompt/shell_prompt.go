@@ -2,7 +2,6 @@ package prompt
 
 import (
 	"os"
-	"strings"
 
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
@@ -13,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -55,7 +55,7 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 	}
 	prompt := goprompt.New(
 		func(in string) {
-			promptArgs := strings.Fields(in)
+			promptArgs := utils.SplitArgs(in)
 			_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
 		},
 		shell.Complete,
