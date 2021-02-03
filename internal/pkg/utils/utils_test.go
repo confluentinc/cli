@@ -71,3 +71,35 @@ func TestUserInviteEmailRegex(t *testing.T) {
 		require.Equal(t, test.matched, ValidateEmail(test.email))
 	}
 }
+
+func TestSplitArgs(t *testing.T) {
+	tests := []struct {
+		name       string
+		argsString string
+		want       []string
+	}{
+		{
+			name:       "basic string",
+			argsString: `ccloud api-key create --resource lkc-123 --description hello`,
+			want:       []string{"ccloud", "api-key", "create", "--resource", "lkc-123", "--description", "hello"},
+		},
+		{
+			name:       "string arg with space at the end",
+			argsString: `ccloud api-key create --resource lkc-123 --description "hello world"`,
+			want:       []string{"ccloud", "api-key", "create", "--resource", "lkc-123", "--description", "hello world"},
+		},
+		{
+			name:       "string arg with space at in between",
+			argsString: `ccloud api-key create --description "hello world" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", "hello world", "--resource", "lkc-123"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SplitArgs(tt.argsString)
+			if !TestEq(tt.want, got) {
+				t.Errorf("SplitArgs got = %s, want %s", got, tt.want)
+			}
+		})
+	}
+}
