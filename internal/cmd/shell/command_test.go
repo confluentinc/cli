@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"fmt"
 	"testing"
 
 	goprompt "github.com/c-bata/go-prompt"
@@ -78,7 +79,9 @@ func TestArgumentParsing(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			commandCalled := false
 			shellCmd := newTestShellCommandWithExpectedFlag(t, tt.flagValue, &commandCalled)
-			shellCmd.SetArgs([]string{"ccloud", "api", "--descripton", tt.flagValue})
+			shellCmd.SetArgs([]string{"ccloud", "api", "--description", tt.flagValue})
+			err := shellCmd.Execute()
+			require.NoError(t, err)
 			require.True(t, commandCalled)
 		})
 	}
@@ -95,6 +98,7 @@ func newTestShellCommandWithExpectedFlag(t *testing.T, expectedFlag string, comm
 			require.NoError(t, err)
 			require.Equal(t, expectedFlag, description)
 			*commandCalled = true
+			fmt.Println("CALLED")
 		},
 	}
 	apiCommand.Flags().String("description", "", "Description of API key.")

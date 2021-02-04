@@ -53,17 +53,17 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 		},
 		Config: cfg,
 	}
-	prompt := goprompt.New(
-		func(in string) {
-			promptArgs := utils.SplitArgs(in)
-			_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
-		},
-		shell.Complete,
-		opts...,
-	)
+	prompt := goprompt.New(promptExecutorFunc(cfg, shell), shell.Complete, opts...)
 	shell.Prompt = prompt
 
 	return shell
+}
+
+func promptExecutorFunc(cfg *v3.Config, shell *ShellPrompt) func(string) {
+	return func(in string) {
+		promptArgs := utils.SplitArgs(in)
+		_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
+	}
 }
 
 func (p *ShellPrompt) Run() {
