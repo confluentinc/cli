@@ -2,7 +2,6 @@ package kafka
 
 // confluent kafka topic <commands>
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,7 +15,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
@@ -60,6 +61,7 @@ func (topicCmd *topicCommand) init() {
 	}
 	listCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
 	check(listCmd.MarkFlagRequired("url")) // TODO: unset url as required
+	listCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(listCmd)
@@ -91,7 +93,8 @@ func (topicCmd *topicCommand) init() {
 			}),
 	}
 	createCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
-	check(listCmd.MarkFlagRequired("url"))
+	check(createCmd.MarkFlagRequired("url"))
+	createCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -122,6 +125,7 @@ func (topicCmd *topicCommand) init() {
 	}
 	deleteCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
 	check(deleteCmd.MarkFlagRequired("url"))
+	deleteCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	deleteCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(deleteCmd)
 
@@ -148,6 +152,7 @@ func (topicCmd *topicCommand) init() {
 	}
 	updateCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
 	check(updateCmd.MarkFlagRequired("url"))
+	updateCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(updateCmd)
@@ -175,21 +180,19 @@ func (topicCmd *topicCommand) init() {
 		),
 	}
 	describeCmd.Flags().String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster.")
+	check(describeCmd.MarkFlagRequired("url"))
+	describeCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(describeCmd)
 }
 // TODO what if url already includes "v3"
+// TODO should these be hitting /v3 or /kafka/v3
 func setServerURL(client *kafkarestv3.APIClient, url string) {
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
-type kafkaRestV3Error struct {
-	Code    int    `json:"error_code"`
-	Message string `json:"message"`
-}
-
-func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.APIClient, resp *http.Response, err error) error {
+func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.APIClient, resp *http.Response, err error) error { //TODO move this into catcher.go
 	switch err.(type) {
 	case *purl.Error: // Handle errors with request url
 		if e, ok := err.(*purl.Error); ok {
@@ -204,7 +207,7 @@ func handleCommonKafkaRestClientErrors(url string, kafkaRestClient *kafkarestv3.
 			if err != nil {
 				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 			}
-			return fmt.Errorf("Kafka REST Proxy backend error:\n\t%v", decodedError.Message)
+			return fmt.Errorf("Kafka REST Proxy backend error:\n\t%v", decodedError.Message) //TODO move this into errors.go
 		}
 	}
 	return err
@@ -227,15 +230,19 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 	setServerURL(kafkaRestClient, url)
 
 	// Get Cluster Id
-	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
+	fmt.Println("PRINTING CLUSTERS")
+	fmt.Println(clusters)
 	if err != nil {
+		fmt.Println("CLUSTERS GET ERROR")
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	}
 	clusterId := clusters.Data[0].ClusterId
-
+	fmt.Println("CLUSTERS GET SUCCESS " + clusterId)
 	// Get Topics
-	topicGetResp, resp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsGet(context.Background(), clusterId)
+	topicGetResp, resp, err := kafkaRestClient.TopicApi.ClustersClusterIdTopicsGet(kafkaRest.Context, clusterId)
 	if err != nil {
+		fmt.Println("TOPICS GET ERROR " + clusterId)
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	}
 	topicDatas := topicGetResp.Data
@@ -281,7 +288,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	setServerURL(kafkaRestClient, url)
 
 	// Get Cluster Id
-	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle url errors
 	} else if clusters.Data == nil || len(clusters.Data) == 0 {
@@ -323,7 +330,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	}
 
 	// Create new topic
-	_, resp, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsPost(context.Background(), clusterId, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+	_, resp, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsPost(kafkaRest.Context, clusterId, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
 		CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 			TopicName:         topicName,
 			PartitionsCount:   numPartitions,
@@ -349,7 +356,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch all other errors
 	}
 	// no error if topic is created successfully.
-	pcmd.ErrPrintf(cmd, errors.CreatedTopicMsg, topicName) // TODO: why print to StdErr
+	utils.Printf(cmd, errors.CreatedTopicMsg, topicName) // TODO: why print to StdErr
 	return nil
 }
 
@@ -374,7 +381,7 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 	kafkaRestClient := kafkaRest.Client
 	setServerURL(kafkaRestClient, url)
 	// Get ClusterId
-	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // checks for error in URL
 	} else if clustersData.Data == nil || len(clustersData.Data) == 0 {
@@ -383,11 +390,11 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 	clusterId := clustersData.Data[0].ClusterId
 
 	// Delete Topic
-	resp, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(context.Background(), clusterId, topicName)
+	resp, err = kafkaRestClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(kafkaRest.Context, clusterId, topicName)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catches topic name not found (backend error)
 	}
-	pcmd.ErrPrintf(cmd, errors.DeletedTopicMsg, topicName) // topic successfully created
+	utils.Printf(cmd, errors.DeletedTopicMsg, topicName) // topic successfully created
 	return nil
 }
 
@@ -406,7 +413,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	kafkaRestClient := kafkaRest.Client
 	setServerURL(kafkaRestClient, url)
 	// Get Cluster Id
-	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle URL error
 	} else if clustersData.Data == nil || len(clustersData.Data) == 0 {
@@ -434,7 +441,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 		}
 		i++
 	}
-	resp, err = kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(context.Background(), clusterId, topicName,
+	resp, err = kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(kafkaRest.Context, clusterId, topicName,
 		&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
 			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 		})
@@ -442,7 +449,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // handle config key/value invalid errors
 	}
 	// no errors (config update successful)
-	pcmd.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
+	utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
 	// Print Updated Configs
 	tableLabels := []string{"Name", "Value"}
 	tableEntries := make([][]string, len(configs))
@@ -486,7 +493,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if output.IsValidFormat(format) == false { // catch format flag
+	} else if output.IsValidFormatString(format) == false { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	// TODO refactor this stuff out to common function
@@ -497,7 +504,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	kafkaRestClient := kafkaRest.Client
 	setServerURL(kafkaRestClient, url)
 	// Get clusterId
-	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(context.Background())
+	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch url incorrect error
 	} else if clustersData.Data == nil || len(clustersData.Data) == 0 {
@@ -508,7 +515,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	// Get partitions
 	topicData := &TopicData{}
 	// TODO: partitions reassignment?
-	partitionsResp, resp, err := kafkaRestClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(context.Background(), clusterId, topicName)
+	partitionsResp, resp, err := kafkaRestClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaRest.Context, clusterId, topicName)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err) // catch topic not exist error
 	} else if partitionsResp.Data == nil {
@@ -525,7 +532,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 		}
 
 		// For each partition, get replicas
-		replicasResp, resp, err := kafkaRestClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(context.Background(), clusterId, topicName, partitionId)
+		replicasResp, resp, err := kafkaRestClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(kafkaRest.Context, clusterId, topicName, partitionId)
 		if err != nil {
 			return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 		} else if replicasResp.Data == nil {
@@ -549,7 +556,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	}
 
 	// Get configs
-	configsResp, resp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(context.Background(), clusterId, topicName)
+	configsResp, resp, err := kafkaRestClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(kafkaRest.Context, clusterId, topicName)
 	if err != nil {
 		return handleCommonKafkaRestClientErrors(url, kafkaRestClient, resp, err)
 	} else if configsResp.Data == nil {
@@ -557,13 +564,19 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	}
 	topicData.Configs = make(map[string]string)
 	for _, config := range configsResp.Data {
-		topicData.Configs[config.Name] = *config.Value
+		fmt.Println("printing config")
+		fmt.Println(config)
+		if config.Value != nil {
+			topicData.Configs[config.Name] = *config.Value
+		} else {
+			topicData.Configs[config.Name] = ""
+		}
 	}
 
 	// Print topic info
 	if format == output.Human.String() { // human output
 		// Output partitions info
-		pcmd.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
+		utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
 		partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
 		partitionsTableEntries := make([][]string, topicData.PartitionCount)
 		for i, partition := range topicData.Partitions {
@@ -571,7 +584,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 		}
 		printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
 		// Output config info
-		pcmd.Print(cmd, "\nConfiguration\n\n")
+		utils.Print(cmd, "\nConfiguration\n\n")
 		configsTableLabels := []string{"Name", "Value"}
 		configsTableEntries := make([][]string, len(topicData.Configs))
 		i := 0

@@ -26,6 +26,7 @@ type FlagResolver interface {
 	ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error)
 	ResolveApiKeyFlag(cmd *cobra.Command) (string, error)
 	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
+	ResolveCaCertPathFlag(cmd *cobra.Command) (string, error)
 }
 
 type FlagResolverImpl struct {
@@ -183,6 +184,18 @@ func (r *FlagResolverImpl) ResolveApiKeySecretFlag(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		return secret, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveCaCertPathFlag(cmd *cobra.Command) (string, error) {
+	const certPathFlag = "ca-cert-path"
+	if cmd.Flags().Changed(certPathFlag) {
+		path, err := cmd.Flags().GetString(certPathFlag)
+		if err != nil {
+			return "", err
+		}
+		return path, nil
 	}
 	return "", nil
 }

@@ -29,6 +29,7 @@ import (
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -297,11 +298,6 @@ func (a *authenticatedTopicCommand) init() {
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
-type kafkaRestV3Error struct {
-	Code    int    `json:"error_code"`
-	Message string `json:"message"`
-}
-
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
@@ -364,7 +360,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	topicConfigsMap, err := toMap(configs)
+	topicConfigsMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -607,7 +603,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	configsMap, err := toMap(configStrings)
+	configsMap, err := kafka.ToMap(configStrings)
 	if err != nil {
 		return err
 	}
@@ -692,7 +688,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	configMap, err := toMap(configs)
+	configMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -1103,18 +1099,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	err = os.RemoveAll(dir)
 	return err
-}
-
-func toMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
-		}
-		configMap[pair[0]] = pair[1]
-	}
-	return configMap, nil
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {

@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"net/http"
 	"os"
 	"strings"
@@ -563,12 +565,32 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		var useMdsToken bool // pass mds token as bearer token otherwise use http basic auth
 		useMdsToken = err == nil // no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-			client := krsdk.NewAPIClient(krsdk.NewConfiguration())
+			cfg := krsdk.NewConfiguration()
+			certPath, err := r.FlagResolver.ResolveCaCertPathFlag(cmd)
+			if err != nil {
+				return nil, err
+			}
+			if certPath != "" { // TODO should I initialize it with the cert path from config if flag is not included? Why does it after I login with cert path even thought rest proxy client then just defailt Http Client? (ask Arvind)
+				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(certPath, r.Logger)
+				if err != nil {
+					return nil, err
+				}
+			}
+			client := krsdk.NewAPIClient(cfg)
 			var restContext context.Context
 			if useMdsToken {
+				fmt.Println("found mds token " + command.AuthToken())
 				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
 			} else {
-				restContext = context.WithValue(context.Background(), krsdk.ContextBasicAuth, krsdk.BasicAuth{UserName: "test", Password: "test"})
+				fmt.Println("no auth token")
+				f := form.New(
+					form.Field{ID: "username", Prompt: "Username"},
+					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
+					)
+				if err := f.Prompt(command.Command, form.NewPrompt(os.Stdin)); err != nil {
+					return nil, err
+				}
+				restContext = context.WithValue(context.Background(), krsdk.ContextBasicAuth, krsdk.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
 			}
 			return &KafkaREST{
 				Client:  client,
@@ -659,6 +681,7 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	if err == nil {
 		return nil
 	}
+	fmt.Println("THE ERROR IS " + err.Error())
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
 		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
@@ -668,6 +691,7 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
 		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
 	} else {
+		fmt.Println("else")
 		return r.updateToken(err, cmd, ctx)
 	}
 }
@@ -688,6 +712,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 	if err != nil {
 		return tokenError
 	}
+	fmt.Println("updated token")
 	return nil
 }
 

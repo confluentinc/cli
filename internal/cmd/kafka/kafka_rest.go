@@ -15,6 +15,11 @@ import (
 const KafkaRestBadRequestErrorCode = 40002
 const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
 
+type kafkaRestV3Error struct {
+	Code    int    `json:"error_code"`
+	Message string `json:"message"`
+}
+
 func kafkaRestHttpError(httpResp *http.Response) error {
 	return errors.NewErrorWithSuggestions(
 		fmt.Sprintf(errors.KafkaRestErrorMsg, httpResp.Request.Method, httpResp.Request.URL, httpResp.Status),

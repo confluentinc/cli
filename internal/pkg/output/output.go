@@ -136,7 +136,7 @@ func NewInvalidOutputFormatFlagError(format string) error {
 	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-// IsValidFormat - returns whether a format string is a valid format (human, json, yaml)
+// IsValidFormatString - returns whether a format string is a valid format (human, json, yaml)
 func IsValidFormatString(format string) bool {
 	for _, formatString := range allFormatStrings {
 		if format == formatString {
