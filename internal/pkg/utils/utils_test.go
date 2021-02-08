@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -89,9 +90,74 @@ func TestSplitArgs(t *testing.T) {
 			want:       []string{"ccloud", "api-key", "create", "--resource", "lkc-123", "--description", "hello world"},
 		},
 		{
-			name:       "string arg with space at in between",
+			name:       "space in between double quotes",
 			argsString: `ccloud api-key create --description "hello world" --resource lkc-123`,
 			want:       []string{"ccloud", "api-key", "create", "--description", "hello world", "--resource", "lkc-123"},
+		},
+		{
+			name:       "space in between single quotes",
+			argsString: `ccloud api-key create --description 'hello world' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", "hello world", "--resource", "lkc-123"},
+		},
+		{
+			name:       "escape double quotes pair inside of double quotes",
+			argsString: `ccloud api-key create --description "escape \"quotes\" string" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \"quotes\" string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "escape double quotes pair inside of single quotes",
+			argsString: `ccloud api-key create --description 'escape \"quotes\" string' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \"quotes\" string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "escape single quotes pair inside of double quotes",
+			argsString: `ccloud api-key create --description "escape \'quotes\' string" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \'quotes\' string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "escape single quotes pair inside of single quotes",
+			argsString: `ccloud api-key create --description 'escape \'quotes\' string' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \'quotes\' string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "one escape double quotes inside of double quotes",
+			argsString: `ccloud api-key create --description "escape \"quotes string" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \"quotes string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "one escape double quotes inside of single quotes",
+			argsString: `ccloud api-key create --description 'escape \"quotes string' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \"quotes string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "one escape single quotes inside of double quotes",
+			argsString: `ccloud api-key create --description "escape \'quotes string" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \'quotes string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "one escape single quotes inside of single quotes",
+			argsString: `ccloud api-key create --description 'escape \'quotes string' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape \'quotes string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "single quotes pair inside of double quotes",
+			argsString: `ccloud api-key create --description "escape 'quotes' string" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape 'quotes' string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "one single quotes inside of double quotes",
+			argsString: `ccloud api-key create --description "escape 'quotes string" --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", `escape 'quotes string`, "--resource", "lkc-123"},
+		},
+		{
+			name:       "double quotes pair inside of single quotes",
+			argsString: `ccloud api-key create --description 'escape "quotes" string' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", "escape \"quotes\" string", "--resource", "lkc-123"},
+		},
+		{
+			name:       "one double quotes inside of single quotes",
+			argsString: `ccloud api-key create --description 'escape "quotes string' --resource lkc-123`,
+			want:       []string{"ccloud", "api-key", "create", "--description", "escape \"quotes string", "--resource", "lkc-123"},
 		},
 	}
 	for _, tt := range tests {
@@ -99,6 +165,9 @@ func TestSplitArgs(t *testing.T) {
 			got := SplitArgs(tt.argsString)
 			if !TestEq(tt.want, got) {
 				t.Errorf("SplitArgs got = %s, want %s", got, tt.want)
+				for _, s := range got {
+					fmt.Println(s)
+				}
 			}
 		})
 	}
