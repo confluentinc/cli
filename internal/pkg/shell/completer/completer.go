@@ -15,7 +15,9 @@ type Completer interface {
 type ServerCompletableCommand interface {
 	Cmd() *cobra.Command
 	ServerComplete() []prompt.Suggest
+	ServerFlagComplete() map[string]func() []prompt.Suggest
 	ServerCompletableChildren() []*cobra.Command
+	ServerCompletebleFlagChildren() map[string][]*cobra.Command
 }
 
 type ServerSideCompleter interface {

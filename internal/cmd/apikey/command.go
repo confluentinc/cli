@@ -15,6 +15,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -41,9 +42,10 @@ There are five ways to pass the secret:
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	keystore            keystore.KeyStore
-	flagResolver        pcmd.FlagResolver
-	completableChildren []*cobra.Command
+	keystore                keystore.KeyStore
+	flagResolver            pcmd.FlagResolver
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
 }
 
 var (
@@ -148,6 +150,9 @@ func (c *command) init() {
 	}
 	c.AddCommand(useCmd)
 	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		"resource": {createCmd, useCmd},
+	}
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -531,4 +536,34 @@ func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
 
 func (c *command) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
+}
+
+func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"resource": c.resourceFlagServerCompleterFunc(),
+	}
+}
+
+func (c *command) resourceFlagServerCompleterFunc() func() []prompt.Suggest {
+	return func() []prompt.Suggest {
+		var suggestions []prompt.Suggest
+		if !pcmd.CanCompleteCommand(c.Command) {
+			return suggestions
+		}
+		clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+		if err != nil {
+			return suggestions
+		}
+		for _, cluster := range clusters {
+			suggestions = append(suggestions, prompt.Suggest{
+				Text:        cluster.Id,
+				Description: cluster.Name,
+			})
+		}
+		return suggestions
+	}
 }

@@ -12,6 +12,8 @@ import (
 type ServerSideCompleterImpl struct {
 	// map[string]ServerCompletableCommand
 	commandsByPath *sync.Map
+	// map[string]ServerCompletableFlag
+	flagsByPath *sync.Map
 	// map[string][]prompt.Suggest
 	cachedSuggestionsByPath *sync.Map
 
@@ -47,6 +49,12 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 		args = foundArgs
 	}
 
+	// Check for flag suggestions and if found return it
+	flagSuggestions := c.getFlagSuggestions(d, cmd)
+	if len(flagSuggestions) > 0 {
+		return flagSuggestions
+	}
+
 	if !c.inCompletableState(d, cmd, args) {
 		return []prompt.Suggest{}
 	}
@@ -60,6 +68,9 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	if cc = c.getCompletableParent(cmd); cc == nil {
 		return []prompt.Suggest{}
 	}
+	//TODO if is flag we get cahced suggestions flag way instead
+	// need some way to find if we in flag state
+
 	suggestions, ok := c.getCachedSuggestions(cc)
 	if !ok {
 		// Shouldn't happen, but just in case.
@@ -69,13 +80,57 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	return filterSuggestions(d, suggestions)
 }
 
+// Check for flag suggestions, return empty list if not found or not in the state for flag suggestions
+func (c *ServerSideCompleterImpl) getFlagSuggestions(d prompt.Document, matchedCmd *cobra.Command) []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	addFlags := func(flag *pflag.Flag) {
+		if flag.Changed {
+			_ = flag.Value.Set(flag.DefValue)
+		}
+		if flag.Hidden {
+			return
+		}
+		longName := "--" + flag.Name
+		shortName := "-" + flag.Shorthand
+		endsWithFlag := strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), shortName+" ") ||
+			strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), longName+" ")
+		if endsWithFlag {
+			// should suggest an argument if flag is not completed with a value but expects one
+			if flag.DefValue == "" || flag.DefValue == "0" {
+				cachedSuggestions, ok := c.getCachedFlagSuggestions(matchedCmd, longName)
+				if ok {
+					suggestions = cachedSuggestions
+				}
+			}
+		}
+	}
+
+	matchedCmd.LocalFlags().VisitAll(addFlags)
+	matchedCmd.InheritedFlags().VisitAll(addFlags)
+	return suggestions
+}
+
 func (c *ServerSideCompleterImpl) updateCachedSuggestions(cc ServerCompletableCommand) {
-	key := c.commandKey(cc.Cmd())
+	cmd := cc.Cmd()
+	key := c.commandKey(cmd)
 	c.cachedSuggestionsByPath.Store(key, cc.ServerComplete())
+
+	for flagName, completeFunc := range cc.ServerFlagComplete() {
+		c.cachedSuggestionsByPath.Store(c.flagKey(cmd, flagName), completeFunc())
+	}
 }
 
 func (c *ServerSideCompleterImpl) getCachedSuggestions(cc ServerCompletableCommand) ([]prompt.Suggest, bool) {
 	key := c.commandKey(cc.Cmd())
+	v, ok := c.cachedSuggestionsByPath.Load(key)
+	if !ok {
+		return nil, false
+	}
+	return v.([]prompt.Suggest), true
+}
+
+func (c *ServerSideCompleterImpl) getCachedFlagSuggestions(cmd *cobra.Command, flagName string) ([]prompt.Suggest, bool) {
+	key := c.flagKey(cmd, flagName)
 	v, ok := c.cachedSuggestionsByPath.Load(key)
 	if !ok {
 		return nil, false
@@ -139,6 +194,11 @@ func (c *ServerSideCompleterImpl) AddCommand(cmd ServerCompletableCommand) {
 func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {
 	// trim CLI name
 	return strings.TrimPrefix(cmd.CommandPath(), c.Root.Name()+" ")
+}
+
+func (c *ServerSideCompleterImpl) flagKey(cmd *cobra.Command, flagName string) string {
+	commandName := strings.TrimPrefix(cmd.CommandPath(), c.Root.Name()+" ")
+	return commandName + " " + flagName
 }
 
 // inCompletableState checks whether the specified command is in a state where it should be considered for completion,
