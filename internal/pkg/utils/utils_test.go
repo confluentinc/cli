@@ -71,4 +71,3 @@ func TestUserInviteEmailRegex(t *testing.T) {
 		require.Equal(t, test.matched, ValidateEmail(test.email))
 	}
 }
-
