@@ -11,24 +11,92 @@ import (
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
+type Quotation int
+const (
+	NO_QUOTES Quotation = iota
+	SINGLE_QUOTES
+	DOUBLE_QUOTES
+)
+
 func TestPromptExecutorFunc(t *testing.T) {
 	tests := []struct {
 		name      string
 		flagValue string
+		expectedFlag string
+		quoteType Quotation
 	}{
 		{
-			name:      "basic flag value",
-			flagValue: "hi",
+			name:      "no quotes basic flag value",
+			flagValue: `describing`,
+			expectedFlag: `describing`,
+			quoteType: NO_QUOTES,
 		},
 		{
-			name:      "flag value with space in between",
-			flagValue: "hi hi",
+			name:      "single quotes basic flag value",
+			flagValue: `describing`,
+			expectedFlag: `describing`,
+			quoteType: SINGLE_QUOTES,
+		},
+		{
+			name:      "double quotes basic flag value",
+			flagValue: `describing`,
+			expectedFlag: `describing`,
+			quoteType: DOUBLE_QUOTES,
+		},
+		{
+			name:      "no quotes with escaped quotes",
+			flagValue: `\"describing\'`,
+			expectedFlag: `"describing'`,
+			quoteType: NO_QUOTES,
+		},
+		{
+			name:      "no quotes value with space in between splits flag value",
+			flagValue: `describing stuff`,
+			expectedFlag: `describing`,
+			quoteType: NO_QUOTES,
+		},
+		{
+			name:      "double quotes flag value with space in between",
+			flagValue: `describing stuff`,
+			expectedFlag: `describing stuff`,
+			quoteType: DOUBLE_QUOTES,
+		},
+		{
+			name:      "single quotes flag value with space in between",
+			flagValue: `describing stuff`,
+			expectedFlag: `describing stuff`,
+			quoteType: SINGLE_QUOTES,
+		},
+
+		{
+			name:      "single quotes nested in double quotes",
+			flagValue: `describing 'complex' stuff`,
+			expectedFlag: `describing 'complex' stuff`,
+			quoteType: DOUBLE_QUOTES,
+		},
+		{
+			name:      "escaped double quotes nested in double quotes",
+			flagValue: `describing \"complex\" stuff`,
+			expectedFlag: `describing "complex" stuff`,
+			quoteType: DOUBLE_QUOTES,
+		},
+		{
+			name:      "single quotes including escape character",
+			flagValue: `describing \"complex\" stuff`,
+			expectedFlag: `describing \"complex\" stuff`,
+			quoteType: SINGLE_QUOTES,
+		},
+		{
+			name:      "double quotes nested in single quotes",
+			flagValue: `describing "complex" stuff`,
+			expectedFlag: `describing "complex" stuff`,
+			quoteType: SINGLE_QUOTES,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			commandCalled := false
-			cli := newTestCommandWithExpectedFlag(t, tt.flagValue, &commandCalled)
+			cli := newTestCommandWithExpectedFlag(t, tt.expectedFlag, &commandCalled)
 			config := v3.AuthenticatedCloudConfigMock()
 			command := &instrumentedCommand{
 				Command:   cli,
@@ -36,7 +104,16 @@ func TestPromptExecutorFunc(t *testing.T) {
 			}
 			shellPrompt := &ShellPrompt{RootCmd: command}
 			executorFunc := promptExecutorFunc(config, shellPrompt)
-			executorFunc(fmt.Sprintf(`api --description "%s"`, tt.flagValue))
+			var format string
+			switch tt.quoteType {
+			case NO_QUOTES:
+				format = `api --description %s`
+			case SINGLE_QUOTES:
+				format = `api --description '%s'`
+			case DOUBLE_QUOTES:
+				format = `api --description "%s"`
+			}
+			executorFunc(fmt.Sprintf(format, tt.flagValue))
 			require.True(t, commandCalled)
 		})
 	}

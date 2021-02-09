@@ -5,6 +5,7 @@ import (
 
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
+	shellparser "mvdan.cc/sh/v3/shell"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -12,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -61,7 +61,7 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 
 func promptExecutorFunc(cfg *v3.Config, shell *ShellPrompt) func(string) {
 	return func(in string) {
-		promptArgs := utils.SplitArgs(in)
+		promptArgs, _ := shellparser.Fields(in, func(string)string {return ""})
 		_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
 	}
 }
