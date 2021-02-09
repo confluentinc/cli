@@ -180,7 +180,6 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
 }
 
-
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}))
