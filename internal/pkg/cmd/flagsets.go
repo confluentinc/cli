@@ -48,6 +48,14 @@ func KeySecretSet() *pflag.FlagSet {
 	return set
 }
 
+func OnPremKafkaRestSet() *pflag.FlagSet {
+	set := pflag.NewFlagSet("onprem-kafkarest", pflag.ExitOnError)
+	set.String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy).")
+	set.String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	set.SortFlags = false
+	return set
+}
+
 func CombineFlagSet(flagSet *pflag.FlagSet, toAdd ...*pflag.FlagSet) *pflag.FlagSet {
 	for _, set := range toAdd {
 		flagSet.AddFlagSet(set)

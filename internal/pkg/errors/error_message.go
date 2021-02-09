@@ -359,6 +359,7 @@ const (
 	KafkaRestErrorMsg              = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionMsg         = "Unable to establish Kafka REST connection: %s: %s"
 	KafkaRestUnexpectedStatusMsg   = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
+	KafkaRestCertErrorSuggestions  = "To specify a CA certificate, please use the \"ca-cert-path\" flag"
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."

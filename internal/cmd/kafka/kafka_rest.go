@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	neturl "net/url"
+	"strings"
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -38,10 +39,15 @@ func parseOpenAPIError(err error) (*kafkaRestV3Error, error) {
 	return nil, fmt.Errorf("unexpected type")
 }
 
+const SelfSignedCertError = "x509: certificate is not authorized to sign other certificates"
+
 func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	switch err.(type) {
 	case *neturl.Error:
 		if e, ok := err.(*neturl.Error); ok {
+			if strings.Contains(e.Error(), SelfSignedCertError) {
+				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
+			}
 			return errors.Errorf(errors.KafkaRestConnectionMsg, url, e.Err)
 		}
 	case kafkarestv3.GenericOpenAPIError:

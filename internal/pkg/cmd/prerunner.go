@@ -570,7 +570,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
-			if certPath != "" { // TODO should I initialize it with the cert path from config if flag is not included? Why does it after I login with cert path even thought rest proxy client then just defailt Http Client? (ask Arvind)
+			if certPath != "" { // TODO should I initialize the http client with the cert path from config if flag is not included?
 				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(certPath, r.Logger)
 				if err != nil {
 					return nil, err
@@ -579,10 +579,8 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			client := krsdk.NewAPIClient(cfg)
 			var restContext context.Context
 			if useMdsToken {
-				fmt.Println("found mds token " + command.AuthToken())
 				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
 			} else {
-				fmt.Println("no auth token")
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
