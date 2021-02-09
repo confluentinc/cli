@@ -68,8 +68,13 @@ func SelfSignedCertClient(certReader io.Reader, logger *log.Logger) (*http.Clien
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig = &tls.Config{RootCAs: certPool}
 	logger.Tracef("Successfully created TLS config using certificate pool")
-	client := DefaultClient()
-	client.Transport = transport
+	defaultClient := DefaultClient()
+	client := &http.Client{
+		Transport:     transport,
+		CheckRedirect: defaultClient.CheckRedirect,
+		Jar:           defaultClient.Jar,
+		Timeout:       defaultClient.Timeout,
+	}
 	logger.Tracef("Successfully set client properties")
 
 	return client, nil

@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"net/http"
 	"os"
@@ -570,8 +569,13 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
-			if certPath != "" { // TODO should I initialize the http client with the cert path from config if flag is not included?
+			if certPath != "" {
 				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(certPath, r.Logger)
+				if err != nil {
+					return nil, err
+				}
+			} else if command.Context != nil && command.Context.Platform != nil && command.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(command.Context.Platform.CaCertPath, r.Logger)
 				if err != nil {
 					return nil, err
 				}
@@ -679,7 +683,6 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	if err == nil {
 		return nil
 	}
-	fmt.Println("THE ERROR IS " + err.Error())
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
 		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
@@ -689,7 +692,6 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
 		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
 	} else {
-		fmt.Println("else")
 		return r.updateToken(err, cmd, ctx)
 	}
 }
@@ -710,7 +712,6 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 	if err != nil {
 		return tokenError
 	}
-	fmt.Println("updated token")
 	return nil
 }
 
