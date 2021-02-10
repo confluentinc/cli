@@ -3,8 +3,9 @@ package cmd
 import (
 	"testing"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/stretchr/testify/suite"
+
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 type KafkaRestTestSuite struct {

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -17,6 +18,8 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
+	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -28,13 +31,15 @@ const (
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf         *v3.Config
-	kafkaCluster *schedv1.KafkaCluster
-	srCluster    *schedv1.SchemaRegistryCluster
-	srMock       *mock.SchemaRegistry
-	srClientMock *srsdk.APIClient
-	metrics      *ccsdkmock.Metrics
-	logger       *log.Logger
+	conf            *v3.Config
+	kafkaCluster    *schedv1.KafkaCluster
+	srCluster       *schedv1.SchemaRegistryCluster
+	srMock          *mock.SchemaRegistry
+	srClientMock    *srsdk.APIClient
+	metrics         *ccsdkmock.Metrics
+	logger          *log.Logger
+	analyticsClient analytics.Client
+	analyticsOutput []segment.Message
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
@@ -84,6 +89,8 @@ func (suite *ClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
+	suite.analyticsOutput = make([]segment.Message, 0)
+	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
@@ -91,18 +98,19 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		SchemaRegistry: suite.srMock,
 		Metrics:        suite.metrics,
 	}
-	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.logger)
+	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.logger, suite.analyticsClient)
 	return cmd
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"}))
+	args := append([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"})
 
-	err := cmd.Execute()
+	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], srClusterID, req)
 }
 
 func (suite *ClusterTestSuite) TestDescribeSR() {

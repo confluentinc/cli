@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -32,16 +33,17 @@ type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "app",
 			Short: "Manage ksqlDB apps.",
 		}, prerunner, SubcommandFlags)
-	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd}
+	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.prerunner = prerunner
 	cmd.init()
 	return cmd
@@ -208,6 +210,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if cluster.Endpoint == "" {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -222,11 +225,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	id := args[0]
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: id}
 	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }

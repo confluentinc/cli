@@ -2,12 +2,13 @@ package test_server
 
 import (
 	"encoding/json"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"strconv"
 	"testing"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 // Handler for: "/"
@@ -18,6 +19,7 @@ func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Req
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/config"
 func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +31,7 @@ func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.Response
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/mode"
 func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -40,6 +43,7 @@ func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) func(http.ResponseWr
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/subjects/{subject}/versions"
 func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -62,6 +66,7 @@ func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) func(http.ResponseWrite
 
 	}
 }
+
 // Handler for: "/subjects/{subject}"
 func (s *SRRouter) HandleSRSubject(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +75,7 @@ func (s *SRRouter) HandleSRSubject(t *testing.T) func(http.ResponseWriter, *http
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/subjects/{subject}/versions/{version}"
 func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +97,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 					Subject: "payment",
 					Version: 1,
 				}},
-				Schema:     "schema",
+				Schema: "schema",
 			})
 			require.NoError(t, err)
 		case "DELETE":
@@ -100,6 +106,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 		}
 	}
 }
+
 // Handler for: "/schemas/ids/{id}"
 func (s *SRRouter) HandleSRById(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -118,11 +125,12 @@ func (s *SRRouter) HandleSRById(t *testing.T) func(w http.ResponseWriter, r *htt
 				Subject: "payment",
 				Version: 1,
 			}},
-			Schema:     "schema",
+			Schema: "schema",
 		})
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/subjects"
 func (s *SRRouter) HandleSRSubjects(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +140,7 @@ func (s *SRRouter) HandleSRSubjects(t *testing.T) func(http.ResponseWriter, *htt
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/config/{subject}"
 func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -143,6 +152,7 @@ func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter,
 		require.NoError(t, err)
 	}
 }
+
 // Handler for: "/mode/{subject}"
 func (s *SRRouter) HandleSRSubjectMode(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
