@@ -190,13 +190,14 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
 	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
