@@ -190,8 +190,8 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -201,8 +201,8 @@ func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
 	fmt.Printf("error-- %s", err.Error())
@@ -211,8 +211,8 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
 	fmt.Printf("error-- %s", err.Error())
