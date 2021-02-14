@@ -15,14 +15,19 @@ type Completer interface {
 type ServerCompletableCommand interface {
 	Cmd() *cobra.Command
 	ServerComplete() []prompt.Suggest
-	ServerFlagComplete() map[string]func() []prompt.Suggest
 	ServerCompletableChildren() []*cobra.Command
-	ServerCompletebleFlagChildren() map[string][]*cobra.Command
+}
+
+type ServerCompletableFlag interface {
+	Cmd() *cobra.Command
+	ServerFlagComplete() map[string]func() []prompt.Suggest
+	ServerCompletableFlagChildren() map[string][]*cobra.Command
 }
 
 type ServerSideCompleter interface {
 	Completer
 	AddCommand(cmd ServerCompletableCommand)
+	AddFlag(cmd ServerCompletableFlag, flagName string)
 }
 
 func (f CompleterFunc) Complete(doc prompt.Document) []prompt.Suggest {
