@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -30,8 +31,9 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner           pcmd.PreRunner
-	completableChildren []*cobra.Command
+	prerunner               pcmd.PreRunner
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
@@ -132,6 +134,9 @@ func (c *clusterCommand) init() {
 	c.AddCommand(aclsCmd)
 
 	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, aclsCmd}
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		"cluster": {createCmd},
+	}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
@@ -359,4 +364,14 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	return nil
+}
+
+func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"cluster": pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
+	}
 }

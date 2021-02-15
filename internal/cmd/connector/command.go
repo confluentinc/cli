@@ -17,13 +17,15 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren []*cobra.Command
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
 }
 
 type connectorDescribeDisplay struct {
@@ -172,6 +174,9 @@ func (c *command) init(cliName string) {
 	}
 	c.AddCommand(resumeCmd)
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		"cluster": {createCmd},
+	}
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -439,4 +444,14 @@ func (c *command) fetchConnectors() (map[string]*opv1.ConnectorExpansion, error)
 	}
 	return connectors, nil
 
+}
+
+func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"cluster": pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
+	}
 }

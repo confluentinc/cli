@@ -151,7 +151,7 @@ func (c *command) init() {
 	c.AddCommand(useCmd)
 	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 	c.completableFlagChildren = map[string][]*cobra.Command{
-		"resource": {createCmd, useCmd},
+		"resource": {createCmd, listCmd, storeCmd, useCmd},
 	}
 }
 
@@ -544,26 +544,6 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"resource": c.resourceFlagServerCompleterFunc(),
-	}
-}
-
-func (c *command) resourceFlagServerCompleterFunc() func() []prompt.Suggest {
-	return func() []prompt.Suggest {
-		var suggestions []prompt.Suggest
-		if !pcmd.CanCompleteCommand(c.Command) {
-			return suggestions
-		}
-		clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
-		if err != nil {
-			return suggestions
-		}
-		for _, cluster := range clusters {
-			suggestions = append(suggestions, prompt.Suggest{
-				Text:        cluster.Id,
-				Description: cluster.Name,
-			})
-		}
-		return suggestions
+		"resource": pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
 	}
 }
