@@ -522,16 +522,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config) *loginCommand {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
-<<<<<<< HEAD
-	cfg := v3.New(&config.Params{
-		CLIName:    "confluent",
-		MetricSink: nil,
-		Logger:     log.New(),
-	})
-	prompt := prompt()
-=======
 
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
@@ -810,15 +801,9 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 			return mdsClient, nil
 		},
 	}
-<<<<<<< HEAD
-	prerunner := cliMock.NewPreRunnerMock(mockAnonHTTPClientFactory("https://confluent.cloud", nil), mdsClient, nil, cfg)
-	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), prompt, mockAnonHTTPClientFactory, mockJwtHTTPClientFactory, mdsClientManager,
-		cliMock.NewDummyAnalyticsMock(), nil)
-=======
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
 	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), ccloudClientFactory, mdsClientManager,
 		cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler)
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 	return loginCmd, cfg
 }
 

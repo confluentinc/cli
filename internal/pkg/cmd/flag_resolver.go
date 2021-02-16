@@ -27,6 +27,7 @@ type FlagResolver interface {
 	ResolveApiKeyFlag(cmd *cobra.Command) (string, error)
 	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
 	ResolveCaCertPathFlag(cmd *cobra.Command) (string, error)
+	ResolveNoAuthFlag(cmd *cobra.Command) (bool, error)
 }
 
 type FlagResolverImpl struct {
@@ -198,4 +199,16 @@ func (r *FlagResolverImpl) ResolveCaCertPathFlag(cmd *cobra.Command) (string, er
 		return path, nil
 	}
 	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveNoAuthFlag(cmd *cobra.Command) (bool, error) {
+	const noAuthFlag = "no-auth"
+	if cmd.Flags().Changed(noAuthFlag) {
+		noAuth, err := cmd.Flags().GetBool(noAuthFlag)
+		if err != nil {
+			return false, err
+		}
+		return noAuth, nil
+	}
+	return false, nil
 }

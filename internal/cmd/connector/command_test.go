@@ -108,11 +108,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 
 }
 
-<<<<<<< HEAD
-func (suite *ConnectTestSuite) newCMD() *cobra.Command {
-=======
 func (suite *ConnectTestSuite) newCmd() *command {
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
 	cmd := New("ccloud", prerunner)
 	return cmd

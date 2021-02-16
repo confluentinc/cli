@@ -650,11 +650,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-<<<<<<< HEAD
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf), log.New(), "test-client")
-=======
 	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -789,9 +785,6 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 			},
 		},
 	}
-<<<<<<< HEAD
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf), log.New(), "test-client")
-=======
 
 	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
 		if enableREST {
@@ -809,7 +802,6 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 	})
 
 	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

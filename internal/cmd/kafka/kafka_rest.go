@@ -63,6 +63,15 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	return err
 }
 
+// Used for on-prem KafkaRest commands
+// Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
+// Relying on users to include the /kafka in the url for embedded instances
+func setServerURL(client *kafkarestv3.APIClient, url string) {
+	url = strings.Trim(url, "/") // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
+	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
+	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
+}
+
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsGetOpts
 func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsGetOpts {
 	var opts kafkarestv3.ClustersClusterIdAclsGetOpts

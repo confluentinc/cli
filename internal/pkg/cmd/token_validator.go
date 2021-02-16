@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/jonboulle/clockwork"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -45,10 +44,6 @@ func (v *JWTValidatorImpl) Validate(context *v3.Context) error {
 		return err
 	}
 	exp, ok := claims["exp"].(float64)
-	fmt.Println("EXPIRATION DATE")
-	fmt.Println(exp)
-	fmt.Println(float64(v.Clock.Now().Unix()))
-	fmt.Println(float64(v.Clock.Now().Unix()) > exp)
 	if !ok {
 		return errors.New(errors.MalformedJWTNoExprErrorMsg)
 	}

@@ -581,10 +581,21 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				}
 			}
 			client := krsdk.NewAPIClient(cfg)
+			noAuth, err := r.FlagResolver.ResolveNoAuthFlag(cmd)
+			if err != nil {
+				return nil, err
+			}
+			if noAuth {
+				return &KafkaREST{
+					Client:  client,
+					Context: context.Background(),
+				}, nil
+			}
 			var restContext context.Context
 			if useMdsToken {
 				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
 			} else {
+				utils.Println(cmd, errors.MDSTokenNotFoundMsg)
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},

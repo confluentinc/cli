@@ -379,12 +379,9 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "confluent")
 		}
-<<<<<<< HEAD
 
 		// Executes login command if test specifies
-=======
 		loginURL := getLoginURL("confluent", tt)
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
 			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)

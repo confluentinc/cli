@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -177,11 +176,6 @@ func (topicCmd *topicCommand) init() {
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(describeCmd)
-}
-// Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
-// Relying on users to include the /kafka in the url for embedded instances
-func setServerURL(client *kafkarestv3.APIClient, url string) {
-	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
 // listTopics - Registered as RunE of kafka topic list

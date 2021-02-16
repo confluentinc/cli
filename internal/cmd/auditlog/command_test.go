@@ -198,11 +198,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.AuditLogConfigurationApi = suite.mockApi
-<<<<<<< HEAD
-	return New(cliMock.NewPreRunnerMock(nil, mdsClient, nil, suite.conf))
-=======
 	return New("confluent", cliMock.NewPreRunnerMock(nil, mdsClient, nil, suite.conf))
->>>>>>> 56230853c89292540be311d472a28c603b88205b
 }
 
 func TestAuditConfigTestSuite(t *testing.T) {
