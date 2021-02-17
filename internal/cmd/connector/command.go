@@ -17,8 +17,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -452,6 +452,6 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"cluster": pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
+		"cluster": completer.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
 	}
 }

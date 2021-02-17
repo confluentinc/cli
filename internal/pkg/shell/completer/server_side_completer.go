@@ -139,8 +139,9 @@ func (c *ServerSideCompleterImpl) getFlagWithArg(d prompt.Document, cmd *cobra.C
 		endsWithFlag := strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), shortName+" ") ||
 			strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), longName+" ")
 		if endsWithFlag {
-			// should suggest an argument if flag is not completed with a value but expects one
-			if flag.DefValue == "" || flag.DefValue == "0" {
+			flagType := flag.Value.Type()
+			// skip if flag expects no argument
+			if flagType != "bool" && flagType != "count" {
 				flagWithArg = flag.Name
 			}
 		}

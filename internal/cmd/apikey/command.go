@@ -15,9 +15,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -151,8 +151,9 @@ func (c *command) init() {
 	c.AddCommand(useCmd)
 	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 	c.completableFlagChildren = map[string][]*cobra.Command{
-		"resource":        {createCmd, listCmd, storeCmd, useCmd},
+		resourceFlagName:  {createCmd, listCmd, storeCmd, useCmd},
 		"service-account": {createCmd},
+		"output":          {createCmd, listCmd},
 	}
 }
 
@@ -545,8 +546,9 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"resource":        c.resourceFlagCompleterFunc,
+		resourceFlagName:  c.resourceFlagCompleterFunc,
 		"service-account": c.serviceAccountFlagCompleterFunc,
+		"output":          completer.OutputFlagServerCompleterFunc(),
 	}
 }
 
@@ -566,7 +568,7 @@ func (c *command) serviceAccountFlagCompleterFunc() []prompt.Suggest {
 }
 
 func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
-	suggestions := pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId())()
+	suggestions := completer.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId())()
 
 	ctx := context.Background()
 	ctxClient := pcmd.NewContextClient(c.Context)
