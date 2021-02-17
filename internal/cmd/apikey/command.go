@@ -544,6 +544,31 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"resource": pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
+		"resource": c.resourceFlagCompleterFunc,
 	}
+}
+
+func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
+	suggestions := pkafka.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId())()
+
+	ctx := context.Background()
+	ctxClient := pcmd.NewContextClient(c.Context)
+	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	if err == nil {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        cluster.Id,
+			Description: cluster.Name,
+		})
+	}
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.KSQL.List(context.Background(), req)
+	if err == nil {
+		for _, cluster := range clusters {
+			suggestions = append(suggestions, prompt.Suggest{
+				Text:        cluster.Id,
+				Description: cluster.Name,
+			})
+		}
+	}
+	return suggestions
 }
