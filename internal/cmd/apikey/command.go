@@ -151,7 +151,8 @@ func (c *command) init() {
 	c.AddCommand(useCmd)
 	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
 	c.completableFlagChildren = map[string][]*cobra.Command{
-		"resource": {createCmd, listCmd, storeCmd, useCmd},
+		"resource":        {createCmd, listCmd, storeCmd, useCmd},
+		"service-account": {createCmd},
 	}
 }
 
@@ -544,8 +545,24 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"resource": c.resourceFlagCompleterFunc,
+		"resource":        c.resourceFlagCompleterFunc,
+		"service-account": c.serviceAccountFlagCompleterFunc,
 	}
+}
+
+func (c *command) serviceAccountFlagCompleterFunc() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return suggestions
+	}
+	for _, user := range users {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        fmt.Sprintf("%d", user.Id),
+			Description: user.ServiceName,
+		})
+	}
+	return suggestions
 }
 
 func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
