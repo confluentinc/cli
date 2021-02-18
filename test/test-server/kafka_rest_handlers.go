@@ -325,18 +325,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
-			w.Header().Set("Content-Type", "application/json")
-			vars := mux.Vars(r)
-			configVal := "config-value"
-			err := json.NewEncoder(w).Encode(kafkarestv3.TopicConfigDataList{Data: []kafkarestv3.TopicConfigData{{
-				Kind:      "",
-				Metadata:  kafkarestv3.ResourceMetadata{},
-				ClusterId: vars["cluster"],
-				TopicName: vars["topic"],
-				Name:      "test-config",
-				Value:     &configVal,
-			}}})
-			require.NoError(t, err)
 		}
 	}
 }
