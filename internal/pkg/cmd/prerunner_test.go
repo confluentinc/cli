@@ -1,8 +1,10 @@
+
 package cmd_test
 
 import (
 	"context"
 	"fmt"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"os"
 	"reflect"
 	"strings"
@@ -781,4 +783,22 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestInitializeOnPremKafkaRest(t *testing.T) {
+	cfg := v3.AuthenticatedConfluentConfigMock()
+	cfg.Context().State.AuthToken = validAuthToken
+	r := getPreRunBase()
+	r.Config = cfg
+	cobraCmd := &cobra.Command{Use: "test"}
+	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
+	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
+	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
+		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		require.NoError(t, err)
+		kafkaRest, err := cmd.GetKafkaREST()
+		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
+		require.True(t, ok)
+		require.Equal(t, validAuthToken, auth)
+	})
 }

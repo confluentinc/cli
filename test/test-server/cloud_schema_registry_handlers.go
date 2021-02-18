@@ -1,7 +1,6 @@
 package test_server
 
 import (
-	"fmt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	"github.com/stretchr/testify/require"
@@ -56,7 +55,6 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWri
 // Handler for: "/api/schema_registries/{id}"
 func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("sr handler")
 		q := r.URL.Query()
 		id := q.Get("id")
 		accountId := q.Get("account_id")
@@ -66,7 +64,6 @@ func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) func(http.ResponseWrite
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
-		fmt.Println(srCluster)
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetSchemaRegistryClusterReply{Cluster: srCluster})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))

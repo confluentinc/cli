@@ -402,7 +402,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 		})
 	if err != nil {
-		kafkaRestError(url, err, resp)
+		return kafkaRestError(url, err, resp)
 	}
 	// no errors (config update successful)
 	utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)

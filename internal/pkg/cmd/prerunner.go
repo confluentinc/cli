@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"net/http"
 	"os"
@@ -569,11 +568,13 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
+			// check if cert path flag was passed
 			if certPath != "" {
 				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(certPath, r.Logger)
 				if err != nil {
 					return nil, err
 				}
+				// check if cert path is in config
 			} else if command.Context != nil && command.Context.Platform != nil && command.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
 				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(command.Context.Platform.CaCertPath, r.Logger)
 				if err != nil {
@@ -848,11 +849,9 @@ func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand,
 // This function is used for integration testing
 func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, error) {
 	testClient := http.DefaultClient
-	testClient.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // HACK required for https mocking (when Rest URL is in cluster config we can use http)
-	}
 	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
-	testBaseUrl := strings.Replace(baseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
+	testBaseUrl := strings.Replace(baseUrl, "https", "http", 1) // HACK so we don't have to mock https
+	testBaseUrl = strings.Replace(testBaseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath:   testBaseUrl,
 		HTTPClient: testClient,

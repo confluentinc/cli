@@ -37,9 +37,7 @@ func StartTestBackend(t *testing.T) *TestBackend {
 
 //var kafkaRestPort *string // another test uses port 8090
 func configureKafkaRestServer(router KafkaRestProxyRouter) *httptest.Server {
-	kafkaRPServer := httptest.NewUnstartedServer(router)
-	kafkaRPServer.StartTLS()
-	return kafkaRPServer
+	return httptest.NewServer(router)
 }
 
 func (b *TestBackend) Close() {
@@ -66,6 +64,10 @@ func (b *TestBackend) GetCloudUrl() string {
 
 func (b *TestBackend) GetKafkaApiUrl() string {
 	return b.kafkaApi.URL
+}
+
+func (b *TestBackend) GetKafkaRestUrl() string {
+	return b.kafkaRestProxy.URL + "/kafka"
 }
 
 func (b *TestBackend) GetMdsUrl() string {

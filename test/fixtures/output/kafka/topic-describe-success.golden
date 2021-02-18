@@ -5,6 +5,7 @@ Topic: topic1 PartitionCount: 1 ReplicationFactor: 1
 
 Configuration
  
-     Name    |   Value    
-+------------+-----------+
-  testConfig | testValue  
+        Name       | Value  
++------------------+-------+
+  compression.type | zip    
+  retention.ms     |  1000  

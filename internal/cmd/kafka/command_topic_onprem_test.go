@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"net/http"
 	purl "net/url"
 	"strings"
@@ -19,11 +20,11 @@ import (
 
 const (
 	// Expected output of tests
-	ExpectedListTopicsOutput = `   Name    
+	ExpectedListTopicsOutput = `   Name
 +---------+
-  topic-1  
-  topic-2  
-  topic-3  
+  topic-1
+  topic-2
+  topic-3
 `
 	ExpectedListTopicsYamlOutput = `- name: topic-1
 - name: topic-2
@@ -32,7 +33,7 @@ const (
 	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  }, \n  {\n    \"name\": \"topic-2\"\n  }, \n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
 )
 
-type KafkaTopicTestSuite struct {
+type KafkaTopicOnPremTestSuite struct {
 	suite.Suite
 	testClient *kafkarestv3.APIClient
 	// Data returned by APIClient
@@ -40,7 +41,7 @@ type KafkaTopicTestSuite struct {
 	topicList   *kafkarestv3.TopicDataList
 }
 
-func (suite *KafkaTopicTestSuite) SetupSuite() {
+func (suite *KafkaTopicOnPremTestSuite) SetupSuite() {
 	// Define canned test server response data
 	suite.clusterList = &kafkarestv3.ClusterDataList{
 		Data: []kafkarestv3.ClusterData{
@@ -83,7 +84,7 @@ func checkURL(url string) error {
 }
 
 // Create a new topicCommand. Should be called before each test case.
-func (suite *KafkaTopicTestSuite) createCommand() *cobra.Command {
+func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	// Define testAPIClient
 	suite.testClient = kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
 	suite.testClient.ClusterApi = &kafkarestv3mock.ClusterApi{
@@ -108,7 +109,8 @@ func (suite *KafkaTopicTestSuite) createCommand() *cobra.Command {
 			return *suite.topicList, nil, nil
 		},
 	}
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, suite.testClient, nil)
+	provider := suite.getRestProvider()
+	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, nil)
 	return NewTopicCommandOnPrem(testPrerunner)
 }
 
@@ -123,7 +125,7 @@ func executeCommand(command *cobra.Command, args []string) (*cobra.Command, stri
 	return c, buf.String(), err
 }
 
-func (suite *KafkaTopicTestSuite) TestConfluentListTopics() {
+func (suite *KafkaTopicOnPremTestSuite) TestConfluentListTopics() {
 	// Define test cases
 	cases := []struct {
 		input               string
@@ -161,6 +163,12 @@ func (suite *KafkaTopicTestSuite) TestConfluentListTopics() {
 				require.Contains(suite.T(), err.Error(), errorMsgContains, testCase.message)
 			}
 		}
+	}
+}
+
+func (suite *KafkaTopicOnPremTestSuite) getRestProvider() cmd.KafkaRESTProvider {
+	return  func() (*cmd.KafkaREST, error) {
+		return &cmd.KafkaREST{Client: suite.testClient, Context: context.Background()}, nil
 	}
 }
 

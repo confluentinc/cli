@@ -1,2 +1,1 @@
-Error: Kafka REST Proxy backend error:
-	This server does not host this topic-partition.
+Error: REST request failed: This server does not host this topic-partition. (40403)

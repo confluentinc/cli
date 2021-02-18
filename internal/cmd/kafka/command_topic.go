@@ -775,7 +775,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		lkc := kafkaClusterConfig.ID
 
 		httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsTopicNameDelete(kafkaREST.Context, lkc, topicName)
-
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
@@ -800,7 +799,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err
