@@ -16,12 +16,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 var conf *v3.Config
@@ -650,7 +651,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf),
+		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -801,7 +803,8 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 		return nil, nil
 	})
 
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
+		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd

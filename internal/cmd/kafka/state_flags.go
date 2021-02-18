@@ -27,7 +27,7 @@ var ProduceAndConsumeFlags = map[string]*pflag.FlagSet{
 }
 
 var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"cluster" : cmd.ContextSet(),
+	"cluster": cmd.ContextSet(),
 }
 
 var OnPremTopicSubcommandFlags = map[string]*pflag.FlagSet{

@@ -50,11 +50,10 @@ func (s *CLITestSuite) TestUserDelete() {
 			fixture:     "admin/user-bad-resource-id.golden",
 		},
 		{
-			args:		 "admin user delete u-1",
+			args:        "admin user delete u-1",
 			wantErrCode: 1,
-			fixture: 	 "admin/user-delete-dne.golden",
+			fixture:     "admin/user-delete-dne.golden",
 		},
-
 	}
 
 	for _, test := range tests {

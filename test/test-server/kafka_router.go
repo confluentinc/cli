@@ -35,7 +35,7 @@ const (
 
 type KafkaRouter struct {
 	KafkaApi KafkaApiRouter
-	KafkaRP	 KafkaRestProxyRouter
+	KafkaRP  KafkaRestProxyRouter
 }
 
 type KafkaApiRouter struct {
@@ -56,7 +56,7 @@ func NewKafkaRouter(t *testing.T) *KafkaRouter {
 func NewEmptyKafkaRouter() *KafkaRouter {
 	return &KafkaRouter{
 		KafkaApi: KafkaApiRouter{mux.NewRouter()},
-		KafkaRP: KafkaRestProxyRouter{mux.NewRouter()},
+		KafkaRP:  KafkaRestProxyRouter{mux.NewRouter()},
 	}
 }
 

@@ -797,6 +797,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
 		require.NoError(t, err)
 		kafkaRest, err := cmd.GetKafkaREST()
+		require.NoError(t, err)
 		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
 		require.True(t, ok)
 		require.Equal(t, validAuthToken, auth)

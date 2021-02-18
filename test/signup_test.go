@@ -10,17 +10,17 @@ func (s *CLITestSuite) TestSignup() {
 		{
 			args:    "signup --url="+s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("already-exists@confluent.io\nMiles\nTodzo\nConfluent\nPa$$word12\ny\ny\ny\n"))},
-			fixture: "signup/signup-email-exists.golden",
+			fixture:     "signup/signup-email-exists.golden",
 		},
 		{
 			args:    "signup --url="+s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nConfluent\nPa$$word12\nn\ny\nN\nY\nn\ny\n"))},
-			fixture: "signup/signup-reprompt-on-no-success.golden",
+			fixture:     "signup/signup-reprompt-on-no-success.golden",
 		},
 		{
 			args:    "signup --url="+s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nConfluent\nPa$$word12\ny\ny\ny\n"))},
-			fixture: "signup/signup-success.golden",
+			fixture:     "signup/signup-success.golden",
 		},
 	}
 

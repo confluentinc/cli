@@ -16,8 +16,8 @@ const (
 	subjectVersion       = "/subjects/{subject}/versions/{version}"
 	schemaById           = "/schemas/ids/{id}"
 	subjects             = "/subjects"
-	subjectLevelConfig	 = "/config/{subject}"
-	modeSubject			 = "/mode/{subject}"
+	subjectLevelConfig   = "/config/{subject}"
+	modeSubject          = "/mode/{subject}"
 )
 
 type SRRouter struct {

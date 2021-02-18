@@ -30,7 +30,7 @@ func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner, ConfigSubcommandFlags)
 	command := &configCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:               prerunner,
+		prerunner:                     prerunner,
 	}
 	command.init()
 	return command.Command

@@ -15,6 +15,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -24,6 +25,7 @@ import (
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 type connectorDescribeDisplay struct {
@@ -56,13 +58,14 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner) *command {
+func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cmd := &command{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use:   "connector",
 				Short: "Manage Kafka Connect.",
 			}, prerunner, SubcommandFlags),
+		analyticsClient: analyticsClient,
 	}
 	cmd.init(cliName)
 	return cmd
@@ -260,6 +263,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			Trace:         trace,
 		})
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, connectorExpansion.Id.Id)
 	return nil
 }
 
@@ -299,6 +303,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedConnectorMsg, args[0])
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, connector.Id.Id)
 	return nil
 }
 

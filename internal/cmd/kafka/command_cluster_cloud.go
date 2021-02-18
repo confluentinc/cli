@@ -14,6 +14,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -66,6 +67,7 @@ type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 type describeStruct struct {
@@ -87,7 +89,7 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
@@ -96,6 +98,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
 	cmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		prerunner:                     prerunner,
+		analyticsClient:               analyticsClient,
 	}
 	cmd.init()
 	return cmd
@@ -280,6 +283,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if outputFormat == output.Human.String() {
 		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
@@ -414,6 +418,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, args[0])
 	return nil
 }
 
