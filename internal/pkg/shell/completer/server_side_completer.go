@@ -17,15 +17,69 @@ type ServerSideCompleterImpl struct {
 	// map[string][]prompt.Suggest
 	cachedSuggestionsByPath *sync.Map
 
+	// map[string][]prompt.Suggest
+	staticFlagSuggestions *sync.Map
+
+	// map[string]map[string]bool: key=flag value=command path set
+	staticFlagSuggestionsCommandMap *sync.Map
+
 	Root *cobra.Command
 }
 
 func NewServerSideCompleter(root *cobra.Command) *ServerSideCompleterImpl {
-	return &ServerSideCompleterImpl{
+	serverSideCompleterImpl := &ServerSideCompleterImpl{
 		Root:                    root,
 		commandsByPath:          new(sync.Map),
 		cachedSuggestionsByPath: new(sync.Map),
 	}
+	serverSideCompleterImpl.initializeStaticFlagSuggestions()
+	return serverSideCompleterImpl
+}
+
+func (c *ServerSideCompleterImpl) initializeStaticFlagSuggestions() {
+	c.staticFlagSuggestions = new(sync.Map)
+	c.staticFlagSuggestions.Store("output", []prompt.Suggest{
+		{
+			Text:        "human",
+			Description: "human",
+		},
+		{
+			Text:        "json",
+			Description: "JSON",
+		},
+		{
+			Text:        "yaml",
+			Description: "YAML",
+		},
+	})
+	c.staticFlagSuggestionsCommandMap = new(sync.Map)
+	c.staticFlagSuggestionsCommandMap.Store("output", map[string]bool{
+		"ccloud api-key create":                   true,
+		"ccloud api-key list":                     true,
+		"ccloud connector create":                 true,
+		"ccloud connector describe":               true,
+		"ccloud connector list":                   true,
+		"ccloud connector-catalog describe":       true,
+		"ccloud connector-catalog list":           true,
+		"ccloud environment list":                 true,
+		"ccloud environment create":               true,
+		"ccloud kafka cluster list":               true,
+		"ccloud kafka topic describe":             true,
+		"ccloud kafka acl create":                 true,
+		"ccloud kafka acl list":                   true,
+		"ccloud kafka region list":                true,
+		"ccloud ksql app create":                  true,
+		"ccloud ksql app describe":                true,
+		"ccloud ksql app list":                    true,
+		"ccloud price list":                       true,
+		"ccloud schema-registry cluster describe": true,
+		"ccloud schema-registry cluster enable":   true,
+		"ccloud schema-registry schema create":    true,
+		"ccloud schema-registry subject list":     true,
+		"ccloud schema-registry subject describe": true,
+		"ccloud service-account list":             true,
+		"ccloud service-account create":           true,
+	})
 }
 
 // Complete
@@ -154,12 +208,26 @@ func (c *ServerSideCompleterImpl) getFlagWithArg(d prompt.Document, cmd *cobra.C
 
 // Check for flag suggestions, return empty list if not found or not in the state for flag suggestions
 func (c *ServerSideCompleterImpl) getSuggestionsForFlag(cmd *cobra.Command, flagName string) []prompt.Suggest {
+
+	// check static flag
+	v, ok := c.staticFlagSuggestionsCommandMap.Load(flagName)
+	if ok {
+		commandSet := v.(map[string]bool)
+		if _, ok = commandSet[cmd.CommandPath()]; ok {
+			v, ok := c.staticFlagSuggestions.Load(flagName)
+			if !ok {
+				return []prompt.Suggest{}
+			}
+			return v.([]prompt.Suggest)
+		}
+	}
+
 	parent := c.getParentServerCompletableFlag(cmd, flagName)
 	if parent == nil {
 		return []prompt.Suggest{}
 	}
 
-	v, ok := c.cachedSuggestionsByPath.Load(c.flagKey(parent.Cmd(), flagName))
+	v, ok = c.cachedSuggestionsByPath.Load(c.flagKey(parent.Cmd(), flagName))
 	if !ok {
 		// in case cahcing didn't finish
 		return parent.ServerFlagComplete()[flagName]()

@@ -153,7 +153,6 @@ func (c *command) init() {
 	c.completableFlagChildren = map[string][]*cobra.Command{
 		resourceFlagName:  {createCmd, listCmd, storeCmd, useCmd},
 		"service-account": {createCmd},
-		"output":          {createCmd, listCmd},
 	}
 }
 
@@ -548,7 +547,6 @@ func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
 		resourceFlagName:  c.resourceFlagCompleterFunc,
 		"service-account": c.serviceAccountFlagCompleterFunc,
-		"output":          completer.OutputFlagServerCompleterFunc(),
 	}
 }
 
