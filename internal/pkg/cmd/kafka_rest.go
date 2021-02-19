@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/dghubble/sling"
+
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KafkaREST struct {

@@ -39,15 +39,15 @@ const (
 	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
 	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
-	signup				= "/api/signup"
-	verifyEmail			= "/api/email_verifications"
+	signup              = "/api/signup"
+	verifyEmail         = "/api/email_verifications"
 )
 
 type CloudRouter struct {
 	*mux.Router
 	kafkaApiUrl string
-	srApiUrl	string
-	kafkaRPUrl	string
+	srApiUrl    string
+	kafkaRPUrl  string
 }
 
 // New CloudRouter with all cloud handlers

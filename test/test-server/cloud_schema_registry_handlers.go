@@ -2,12 +2,13 @@ package test_server
 
 import (
 	"fmt"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
+	"github.com/stretchr/testify/require"
 )
 
 const (

@@ -13,6 +13,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -46,6 +47,7 @@ type command struct {
 	flagResolver            pcmd.FlagResolver
 	completableChildren     []*cobra.Command
 	completableFlagChildren map[string][]*cobra.Command
+	analyticsClient         analytics.Client
 }
 
 var (
@@ -59,7 +61,7 @@ var (
 )
 
 // New returns the Cobra command for API Key.
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "api-key",
@@ -69,6 +71,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		AuthenticatedStateFlagCommand: cliCmd,
 		keystore:                      keystore,
 		flagResolver:                  resolver,
+		analyticsClient:               analyticsClient,
 	}
 	cmd.init()
 	return cmd
@@ -371,6 +374,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}
 	}
+
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
 	return nil
 }
 
@@ -394,7 +400,13 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
-	return c.keystore.DeleteAPIKey(apiKey, cmd)
+	err = c.keystore.DeleteAPIKey(apiKey, cmd)
+	if err != nil {
+		return err
+	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
+	return nil
 }
 
 func (c *command) store(cmd *cobra.Command, args []string) error {

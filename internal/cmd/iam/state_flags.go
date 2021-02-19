@@ -1,8 +1,9 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/pflag"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var AclSubcommandFlags = map[string]*pflag.FlagSet{

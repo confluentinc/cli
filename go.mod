@@ -117,11 +117,12 @@ require (
 	golang.org/x/tools v0.0.0-20200929223013-bf155c11ec6f // indirect
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
+	mvdan.cc/sh/v3 v3.2.2
 	pack.ag/amqp v0.11.0 // indirect
 )
 

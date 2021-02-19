@@ -7,14 +7,17 @@ import (
 	"os"
 	"strings"
 
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 
 	"github.com/confluentinc/ccloud-sdk-go"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -26,7 +29,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -54,7 +56,7 @@ type PreRun struct {
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
 	JWTValidator            JWTValidator
-	IsTest					bool
+	IsTest                  bool
 }
 
 type CLICommand struct {

@@ -2,11 +2,12 @@ package test_server
 
 import (
 	"encoding/json"
+	"net/http"
+	"testing"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
 )
 
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
@@ -41,6 +42,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -49,12 +51,12 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 			w.Header().Set("Content-Type", "application/json")
 			vars := mux.Vars(r)
 			err := json.NewEncoder(w).Encode(kafkarestv3.TopicDataList{Data: []kafkarestv3.TopicData{{
-				Kind:         		"",
-				Metadata:     		kafkarestv3.ResourceMetadata{},
-				ClusterId:    		vars["cluster"],
-				TopicName: 	  		"rest-proxy-topic",
-				ReplicationFactor: 	int32(1),
-				Partitions: 		kafkarestv3.Relationship{Related: "relationship"},
+				Kind:              "",
+				Metadata:          kafkarestv3.ResourceMetadata{},
+				ClusterId:         vars["cluster"],
+				TopicName:         "rest-proxy-topic",
+				ReplicationFactor: int32(1),
+				Partitions:        kafkarestv3.Relationship{Related: "relationship"},
 			}}})
 			require.NoError(t, err)
 		case "POST":
@@ -66,6 +68,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
 func (r KafkaRestProxyRouter) HandleKafkaRPPartitions(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -74,18 +77,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitions(t *testing.T) func(http.Re
 			w.Header().Set("Content-Type", "application/json")
 			vars := mux.Vars(r)
 			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionDataList{Data: []kafkarestv3.PartitionData{{
-				Kind:         "",
-				Metadata:     kafkarestv3.ResourceMetadata{},
-				ClusterId:    vars["cluster"],
-				TopicName: 	  vars["topic"],
-				PartitionId:  int32(2),
-				Leader: 	  kafkarestv3.Relationship{Related: "leader"},
-				Replicas: 	  kafkarestv3.Relationship{Related: "replica"},
+				Kind:        "",
+				Metadata:    kafkarestv3.ResourceMetadata{},
+				ClusterId:   vars["cluster"],
+				TopicName:   vars["topic"],
+				PartitionId: int32(2),
+				Leader:      kafkarestv3.Relationship{Related: "leader"},
+				Replicas:    kafkarestv3.Relationship{Related: "replica"},
 			}}})
 			require.NoError(t, err)
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -95,17 +99,18 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 			vars := mux.Vars(r)
 			configVal := "config-value"
 			err := json.NewEncoder(w).Encode(kafkarestv3.TopicConfigDataList{Data: []kafkarestv3.TopicConfigData{{
-				Kind:         "",
-				Metadata:     kafkarestv3.ResourceMetadata{},
-				ClusterId:    vars["cluster"],
-				TopicName: 	  vars["topic"],
-				Name: 		  "test-config",
-				Value: 		  &configVal,
+				Kind:      "",
+				Metadata:  kafkarestv3.ResourceMetadata{},
+				ClusterId: vars["cluster"],
+				TopicName: vars["topic"],
+				Name:      "test-config",
+				Value:     &configVal,
 			}}})
 			require.NoError(t, err)
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
 func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -114,16 +119,17 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(
 			w.Header().Set("Content-Type", "application/json")
 			vars := mux.Vars(r)
 			err := json.NewEncoder(w).Encode(kafkarestv3.ReplicaDataList{Data: []kafkarestv3.ReplicaData{{
-				Kind:         "",
-				Metadata:     kafkarestv3.ResourceMetadata{},
-				ClusterId:    vars["cluster"],
-				TopicName: 	  vars["topic"],
-				IsLeader: 	  true,
+				Kind:      "",
+				Metadata:  kafkarestv3.ResourceMetadata{},
+				ClusterId: vars["cluster"],
+				TopicName: vars["topic"],
+				IsLeader:  true,
 			}}})
 			require.NoError(t, err)
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/configs:alter"
 func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +143,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) func(http.
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}"
 func (r KafkaRestProxyRouter) HandlKafkaRPTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -147,4 +154,3 @@ func (r KafkaRestProxyRouter) HandlKafkaRPTopic(t *testing.T) func(http.Response
 		}
 	}
 }
-

@@ -8,8 +8,9 @@ import (
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const KafkaRestBadRequestErrorCode = 40002
