@@ -139,6 +139,7 @@ const (
 	InvalidConnectorErrorMsg  = "invalid connector: %s"
 	FailedToStartErrorMsg     = "%s failed to start"
 	FailedToStopErrorMsg      = "%s failed to stop"
+	FailedToDownloadErrorMsg  = "%s failed to download"
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."

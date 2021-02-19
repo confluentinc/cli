@@ -267,6 +267,22 @@ func (c *Command) startService(command *cobra.Command, service string, configFil
 	return c.printStatus(command, service)
 }
 
+func (c *Command) startDatagenService(command *cobra.Command, service string) error {
+	utils.Printf(command, errors.DownloadingServiceMsg, service)
+
+	spin := spinner.New()
+	spin.Start()
+	err := c.startDatagenProcess(service)
+	spin.Stop()
+	status := color.GreenString("DOWNLOADED")
+	if err != nil {
+		status = color.RedString("FAILED")
+	}
+
+	utils.Printf(command, errors.ServiceStatusMsg, service, status)
+	return err
+}
+
 func (c *Command) checkService(service string) error {
 	if err := c.checkOSVersion(); err != nil {
 		return err
@@ -431,6 +447,55 @@ func (c *Command) startProcess(service string) error {
 		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
+	return nil
+}
+
+func (c *Command) startDatagenProcess(service string) error {
+	file, err := c.ch.GetFile("bin", "confluent-hub")
+	if err != nil {
+		return err
+	}
+
+	args := []string{"install", "confluentinc/kafka-connect-datagen:latest", "--no-prompt"}
+
+	download := exec.Command(file, args...)
+	download.Stderr = os.Stderr
+
+	if err := download.Start(); err != nil {
+		return err
+	}
+
+	if err := c.cc.WritePid(service, download.Process.Pid); err != nil {
+		return err
+	}
+
+	errorsChan := make(chan error)
+
+	up := make(chan bool)
+	go func() {
+		for {
+			isUp, err := c.isRunning(service)
+			if err != nil {
+				errorsChan <- err
+			}
+			if isUp {
+				up <- isUp
+			}
+		}
+	}()
+	select {
+	case <-up:
+		break
+	case err := <-errorsChan:
+		return err
+	case <-time.After(time.Second):
+		return errors.Errorf(errors.FailedToDownloadErrorMsg, writeServiceName(service))
+	}
+
+	if err := download.Wait(); err != nil {
+		return errors.Errorf(errors.FailedToDownloadErrorMsg, writeServiceName(service))
+	}
+	
 	return nil
 }
 

@@ -81,6 +81,7 @@ const (
 	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
 	StartingServiceMsg         = "Starting %s\n"
 	StoppingServiceMsg         = "Stopping %s\n"
+	DownloadingServiceMsg      = "Downloading %s\n"
 	ServiceStatusMsg           = "%s is [%s]\n"
 	DestroyDeletingMsg         = "Deleting: %s\n"
 

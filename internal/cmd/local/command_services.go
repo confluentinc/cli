@@ -197,11 +197,17 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStartCommand)
+	c.Command.Flags().BoolP("datagen", "d", false, "Install Kafka Connect Datagen before starting local services. Mainly used for quick start.")
 
 	return c.Command
 }
 
 func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
+	datagen, err := command.Flags().GetBool("datagen")
+	if err != nil {
+		return err
+	}
+
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -209,6 +215,11 @@ func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) er
 
 	if err := c.notifyConfluentCurrent(command); err != nil {
 		return err
+	}
+	
+	// Download datagen
+	if datagen {
+		c.startDatagenService(command, "Datagen")
 	}
 
 	// Topological order
