@@ -174,7 +174,7 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		include := strings.Repeat("../", depth+1) + "includes/cli.rst"
+		include := strings.Repeat("../", depth) + "includes/cli.rst"
 		args := map[string]string{
 			"start-after": "cli_limitations_start",
 			"end-before":  "cli_limitations_end",
@@ -185,7 +185,7 @@ func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 
 func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		include := strings.Repeat("../", depth+1) + "includes/path-set-cli.rst"
+		include := strings.Repeat("../", depth) + "includes/path-set-cli.rst"
 		buf.WriteString(sphinxBlock("include", include, nil))
 	}
 
