@@ -1,6 +1,6 @@
-DOCS_REPOS=docs-ccloud-cli docs-confluent-cli
-
 DOCS_BASE_BRANCH=unset
+MINOR_BRANCH=$(shell echo $(CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
+BUMPED_MINOR_BRANCH=$(shell echo $(BUMPED_CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
 ifeq ($(BUMP),auto)
 DOCS_BASE_BRANCH=master
 else ifeq ($(BUMP), major)
@@ -8,12 +8,13 @@ DOCS_BASE_BRANCH=master
 else ifeq ($(BUMP), minor)
 DOCS_BASE_BRANCH=master
 else ifeq ($(BUMP), patch)
-DOCS_BASE_BRANCH=$(shell echo $(BUMPED_CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
+DOCS_BASE_BRANCH=$(BUMPED_MINOR_BRANCH)
 endif
 
-.PHONY: cut-docs-branches
-cut-docs-branches:
-	echo "DOCS_BASE_BRANCH = $(DOCS_BASE_BRANCH)"
+NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1).0
+SHORT_NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1)
+CURRENT_SHORT_MINOR_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version))
+NEXT_PATCH_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version)).$(shell expr $(word 3,$(split_version)) + 1)
 
 .PHONY: clone-docs-repos
 clone-docs-repos:
@@ -57,3 +58,69 @@ publish-docs-internal:
 .PHONY: clean-docs
 clean-docs:
 	@rm -rf docs/
+
+# NB: This should be getting run after a version release has happened.
+# So $(VERSION) is the version that was just released, and $(BUMPED_VERSION)
+# would be the next minor release (something in the future that doesn't exist yet).
+# NB2: If a patch release just happened, $(DOCS_BASE_BRANCH) will still be accurate.
+# Warning: BUMP must be set to patch if you are releasing docs for a patch release that was just done
+.PHONY: release-docs
+release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf
+
+.PHONY: cut-docs-branches
+cut-docs-branches:
+	if [[ "$(BUMP)" == "patch" ]]; then \
+		for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+			cd $${repo} && \
+			git fetch && \
+			git checkout $(MINOR_BRANCH) && \
+			git checkout -b $(CLEAN_VERSION)-post && \
+			git push -u origin $(CLEAN_VERSION)-post && \
+			cd .. ; \
+		done ; \
+	else \
+		for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+			cd $${repo} && \
+			git fetch && \
+			git checkout $(DOCS_BASE_BRANCH) && \
+			git checkout -b $(MINOR_BRANCH) && \
+			git push -u origin $(MINOR_BRANCH) && \
+			git checkout -b $(CLEAN_VERSION)-post && \
+			git push -u origin $(CLEAN_VERSION)-post && \
+			cd .. ; \
+		done; \
+	fi
+
+# NB: If BUMP is patch, we don't have to update master
+.PHONY: update-settings-and-conf
+update-settings-and-conf:
+	if [[ "$(BUMP)" != "patch" ]]; then \
+		for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+			cd $${repo} && \
+			git fetch && \
+			git checkout master && \
+			sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
+			sed -i '' "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
+			sed -i '' "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
+			git commit -am "chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
+			git push && \
+			cd .. ; \
+		done ; \
+	fi
+	for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+		cd $${repo} && \
+		git fetch && \
+		git checkout $(MINOR_BRANCH) && \
+		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
+		sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
+		sed -i '' "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
+		git commit -am "chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
+		git push && \
+		git checkout $(CLEAN_VERSION)-post && \
+		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
+		sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
+		sed -i '' "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
+		git commit -am "chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
+		git push && \
+		cd .. ; \
+	done
