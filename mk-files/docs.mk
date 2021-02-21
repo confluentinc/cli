@@ -65,7 +65,7 @@ clean-docs:
 # NB2: If a patch release just happened, $(DOCS_BASE_BRANCH) will still be accurate.
 # Warning: BUMP must be set to patch if you are releasing docs for a patch release that was just done
 .PHONY: release-docs
-release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf
+release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf update-common-tools
 
 .PHONY: cut-docs-branches
 cut-docs-branches:
@@ -124,3 +124,9 @@ update-settings-and-conf:
 		git push && \
 		cd .. ; \
 	done
+
+.PHONY: update-common-tools
+update-common-tools:
+	$(eval COMMON_TOOLS_DIR=$(TMP_BASE)/common-tools)
+	git clone git@github.com:confluentinc/common-tools.git $(COMMON_TOOLS_DIR)
+	
