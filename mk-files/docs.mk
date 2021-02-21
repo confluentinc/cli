@@ -128,8 +128,30 @@ update-settings-and-conf:
 		cd .. ; \
 	done
 
+.PHONY: update-tools-autotasks
+update-tools-autotasks:
+	$(eval TOOLS_AUTOTASKS_DIR=$(TMP_BASE)/tools-autotasks)
+	git clone git@github.com:confluentinc/tools-autotasks.git $(TOOLS_AUTOTASKS_DIR)
+	if [[ "$(BUMP)" != "patch" ]]; then \
+		cd $(TOOLS_AUTOTASKS_DIR) && \
+		git checkout monitor-docs-pipeline-dev && \
+		sed -i '' "$$(sed -n  '\|docs-ccloud-cli|=' Jenkinsfile) s/.$$/, \"$(MINOR_BRANCH)\"\]/" Jenkinsfile && \
+		sed -i '' "$$(sed -n  '\|docs-confluent-cli|=' Jenkinsfile) s/.$$/, \"$(MINOR_BRANCH)\"\]/" Jenkinsfile && \
+		git checkout -b cli-update-$(MINOR_BRANCH) && \
+		git commit -am "chore: update Jenkinsfile for CLI branch $(MINOR_BRANCH)" && \
+		git push -u origin cli-update-$(MINOR_BRANCH) && \
+		hub pull-request -b monitor-docs-pipeline-dev -m "chore: update Jenkinsfile for CLI branch $(MINOR_BRANCH)" ; \
+	fi
+	cd $(TOOLS_AUTOTASKS_DIR) && \
+	git checkout monitor-docs-pipeline-pre-prod && \
+	sed -i '' "$$(sed -n  '\|docs-ccloud-cli|=' Jenkinsfile) s/.$$/, \"$(CLEAN_VERSION)-post\"\]/" Jenkinsfile && \
+	sed -i '' "$$(sed -n  '\|docs-confluent-cli|=' Jenkinsfile) s/.$$/, \"$(CLEAN_VERSION)-post\"\]/" Jenkinsfile && \
+	git checkout -b cli-update-$(CLEAN_VERSION)-post && \
+	git commit -am "chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post" && \
+	git push -u origin cli-update-$(CLEAN_VERSION)-post && \
+	hub pull-request -b monitor-docs-pipeline-pre-prod -m "chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post"
+
 .PHONY: update-common-tools
 update-common-tools:
 	$(eval COMMON_TOOLS_DIR=$(TMP_BASE)/common-tools)
 	git clone git@github.com:confluentinc/common-tools.git $(COMMON_TOOLS_DIR)
-	
