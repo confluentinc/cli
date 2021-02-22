@@ -534,9 +534,6 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
 	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return suggestions

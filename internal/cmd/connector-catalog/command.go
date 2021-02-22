@@ -158,9 +158,6 @@ func (c *command) Cmd() *cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
 	catalog, err := c.getCatalog(c.Command)
 	if err != nil {
 		return suggestions

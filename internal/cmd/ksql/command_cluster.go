@@ -57,10 +57,6 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {

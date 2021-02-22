@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/c-bata/go-prompt"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -303,15 +304,24 @@ func (c *ServerSideCompleterImpl) getParentServerCompletableFlag(cmd *cobra.Comm
 }
 
 func (c *ServerSideCompleterImpl) updateCachedSuggestions(cc ServerCompletableCommand, cf ServerCompletableFlag) {
+	canComplete := pcmd.CanCompleteCommand(cc.Cmd())
 	if cc != nil {
 		cmd := cc.Cmd()
 		key := c.commandKey(cmd)
-		c.cachedSuggestionsByPath.Store(key, cc.ServerComplete())
+		var suggestions []prompt.Suggest
+		if canComplete {
+			suggestions = cc.ServerComplete()
+		}
+		c.cachedSuggestionsByPath.Store(key, suggestions)
 	}
 
 	if cf != nil {
 		for flagName, completeFunc := range cf.ServerFlagComplete() {
-			c.cachedSuggestionsByPath.Store(c.flagKey(cf.Cmd(), flagName), completeFunc())
+			var suggestions []prompt.Suggest
+			if canComplete {
+				suggestions = completeFunc()
+			}
+			c.cachedSuggestionsByPath.Store(c.flagKey(cf.Cmd(), flagName), suggestions)
 		}
 	}
 }

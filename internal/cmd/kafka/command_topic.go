@@ -124,13 +124,9 @@ func (k *kafkaTopicCommand) Cmd() *cobra.Command {
 }
 
 func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
-
 	var suggestions []prompt.Suggest
 	cmd := k.authenticatedTopicCommand
 	if cmd == nil {
-		return suggestions
-	}
-	if !pcmd.CanCompleteCommand(cmd.Command) {
 		return suggestions
 	}
 	topics, err := cmd.getTopics(cmd.Command)

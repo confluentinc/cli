@@ -397,6 +397,53 @@ func (suite *APITestSuite) TestServerComplete() {
 		})
 	}
 }
+
+func (suite *APITestSuite) TestServerResourceFlagComplete() {
+	flagName := resourceFlagName
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for authenticated user",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        suite.kafkaCluster.Id,
+					Description: suite.kafkaCluster.Name,
+				},
+			},
+		},
+		{
+			name: "don't suggest for unauthenticated user",
+			fields: fields{
+				Command: func() *command {
+					oldConf := suite.conf
+					suite.conf = v3.UnauthenticatedCloudConfigMock()
+					c := suite.newCmd()
+					suite.conf = oldConf
+					return c
+				}(),
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
 func TestApiTestSuite(t *testing.T) {
 	suite.Run(t, new(APITestSuite))
 }

@@ -422,9 +422,6 @@ func (c *command) ServerCompletableChildren() []*cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
 	connectors, err := c.fetchConnectors()
 	if err != nil {
 		return suggestions

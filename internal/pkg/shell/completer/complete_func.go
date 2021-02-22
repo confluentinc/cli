@@ -12,9 +12,6 @@ import (
 func ClusterFlagServerCompleterFunc(cmd *cobra.Command, client *ccloud.Client, environmentId string) func() []prompt.Suggest {
 	return func() []prompt.Suggest {
 		var suggestions []prompt.Suggest
-		if !pcmd.CanCompleteCommand(cmd) {
-			return suggestions
-		}
 		clusters, err := pkafka.ListKafkaClusters(client, environmentId)
 		if err != nil {
 			return suggestions
