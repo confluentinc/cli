@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 )
 
