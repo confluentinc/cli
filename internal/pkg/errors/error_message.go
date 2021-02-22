@@ -23,6 +23,7 @@ const (
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
+	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization."
 
 	// login command
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
@@ -118,6 +119,9 @@ const (
 	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `ccloud api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
 	PassedSecretButNotKeySuggestions     = "Use the \"api-key\" flag to specify an API key."
+	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
+	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
+		"If your topic is compacted, ensure you are producing a record with a key."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
@@ -126,7 +130,8 @@ const (
 	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
-	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
+	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
+	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -341,6 +346,16 @@ const (
 		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
+
+	// Kafka REST Proxy errors
+	InternalServerErrorMsg         = "Internal server error"
+	UnknownErrorMsg                = "Unknown error"
+	InternalServerErrorSuggestions = "Please check the status of your Kafka cluster or submit a support ticket"
+	InvalidBootstrapServerErrorMsg = "Invalid bootstrap server"
+	EmptyResponseMsg               = "Empty server response"
+	KafkaRestErrorMsg              = "Kafka REST request failed: %s %s: %s"
+	KafkaRestConnectionMsg         = "Unable to establish Kafka REST connection: %s: %s"
+	KafkaRestUnexpectedStatusMsg   = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."

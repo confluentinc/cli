@@ -39,7 +39,7 @@ func (suite *KafkaTopicTestSuite) newCmd(conf *v3.Config) *kafkaTopicCommand {
 			},
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
 	cmd := NewTopicCommand(false, prerunner, nil, "id")
 	return cmd
 }

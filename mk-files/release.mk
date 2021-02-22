@@ -6,8 +6,11 @@ release: get-release-image commit-release tag-release
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
+	$(call print-boxed-message,"PUBLISHING DOCS")
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
+	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
+	make publish-dockerhub
 
 .PHONY: release-to-stag
 release-to-stag:
@@ -138,7 +141,6 @@ download-licenses:
 	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
 	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/licenses -n legal/notices ; \
 	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
-	[ -z "$$(ls -A legal/notices)" ] && { echo "ERROR: notices folder not populated" && exit 1; }; \
 	echo Successfully downloaded licenses
 
 .PHONY: publish-installers

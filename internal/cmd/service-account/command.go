@@ -10,6 +10,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -20,6 +21,7 @@ import (
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 var (
@@ -35,7 +37,7 @@ const nameLength = 64
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner) *command {
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "service-account",
@@ -43,6 +45,7 @@ func New(prerunner pcmd.PreRunner) *command {
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
+		analyticsClient:         analyticsClient,
 	}
 	cmd.init()
 	return cmd
@@ -173,6 +176,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -218,6 +222,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return nil
 }
 

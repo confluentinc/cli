@@ -18,7 +18,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with audit logs.
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "audit-log",
@@ -29,14 +29,18 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
 	}
-	cmd.init()
+	cmd.init(cliName)
 	return cmd.Command
 }
 
-func (c *command) init() {
-	c.AddCommand(NewMigrateCommand(c.prerunner))
-	c.AddCommand(NewConfigCommand(c.prerunner))
-	c.AddCommand(NewRouteCommand(c.prerunner))
+func (c *command) init(cliName string) {
+	if cliName == "ccloud" {
+		c.AddCommand(NewDescribeCommand(c.prerunner))
+	} else if cliName == "confluent" {
+		c.AddCommand(NewMigrateCommand(c.prerunner))
+		c.AddCommand(NewConfigCommand(c.prerunner))
+		c.AddCommand(NewRouteCommand(c.prerunner))
+	}
 }
 
 type errorMessage struct {

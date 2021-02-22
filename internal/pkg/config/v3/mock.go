@@ -30,8 +30,8 @@ var (
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
-	bootstrapServer    = "http://toby-cluster"
-	kafkaApiEndpoint   = "http://is-the-worst"
+	bootstrapServer    = "https://toby-cluster:9092"
+	kafkaApiEndpoint   = "https://is-the-worst:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 

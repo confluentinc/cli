@@ -2,12 +2,50 @@ package acl
 
 import (
 	"io"
+	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp krsdk.AclDataList, writer io.Writer) error {
+	// non list commands which do not have -o flags also uses this function, need to set default
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, os.Stdout)
+	if err != nil {
+		return err
+	}
+
+	for _, aclData := range aclGetResp.Data {
+		record := &struct {
+			ServiceAccountId string
+			Permission       string
+			Operation        string
+			Resource         string
+			Name             string
+			Type             string
+		}{
+			aclData.Principal,
+			string(aclData.Permission),
+			string(aclData.Operation),
+			string(aclData.ResourceType),
+			string(aclData.ResourceName),
+			string(aclData.PatternType),
+		}
+		outputWriter.AddElement(record)
+	}
+
+	return outputWriter.Out()
+}
 
 func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
@@ -41,5 +79,6 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 		}
 		outputWriter.AddElement(record)
 	}
+
 	return outputWriter.Out()
 }

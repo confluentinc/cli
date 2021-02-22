@@ -2,8 +2,12 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
+	"net/http"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 
@@ -12,6 +16,8 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -50,6 +56,7 @@ type PreRun struct {
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
 	JWTValidator            JWTValidator
+	IsTest                  bool
 }
 
 type CLICommand struct {
@@ -59,17 +66,25 @@ type CLICommand struct {
 	prerunner PreRunner
 }
 
+type KafkaRESTProvider func() (*KafkaREST, error)
+
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client      *ccloud.Client
-	MDSClient   *mds.APIClient
-	MDSv2Client *mdsv2alpha1.APIClient
-	Context     *DynamicContext
-	State       *v2.ContextState
+	Client            *ccloud.Client
+	MDSClient         *mds.APIClient
+	MDSv2Client       *mdsv2alpha1.APIClient
+	KafkaRESTProvider *KafkaRESTProvider
+	Context           *DynamicContext
+	State             *v2.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
 	*AuthenticatedCLICommand
+	subcommandFlags map[string]*pflag.FlagSet
+}
+
+type StateFlagCommand struct {
+	*CLICommand
 	subcommandFlags map[string]*pflag.FlagSet
 }
 
@@ -81,18 +96,39 @@ type HasAPIKeyCLICommand struct {
 
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-		Context:    nil,
-		State:      nil,
+		CLICommand:        NewCLICommand(command, prerunner),
+		Context:           nil,
+		State:             nil,
+		KafkaRESTProvider: nil,
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
+
 	return cmd
 }
 
+// Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
 	cmd := &AuthenticatedStateFlagCommand{
 		NewAuthenticatedCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+
+// Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
+func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
+	cmd := &AuthenticatedStateFlagCommand{
+		NewAuthenticatedWithMDSCLICommand(command, prerunner),
+		flagMap,
+	}
+	return cmd
+}
+
+// Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
+func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
+	cmd := &StateFlagCommand{
+		NewAnonymousCLICommand(command, prerunner),
 		flagMap,
 	}
 	return cmd
@@ -136,8 +172,8 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 }
 
 func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(s.Use)[0]])
-	command.Flags().AddFlagSet(s.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
+	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
 	command.Flags().SortFlags = false
 	s.AuthenticatedCLICommand.AddCommand(command)
 }
@@ -145,6 +181,17 @@ func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
+}
+
+func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
+	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
+	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
+	command.Flags().SortFlags = false
+	s.Command.AddCommand(command)
+}
+
+func (a *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
+	return (*a.KafkaRESTProvider)()
 }
 
 func (a *AuthenticatedCLICommand) AuthToken() string {
@@ -156,8 +203,8 @@ func (a *AuthenticatedCLICommand) EnvironmentId() string {
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(h.Use)[0]])
-	command.Flags().AddFlagSet(h.subcommandFlags[strings.Fields(command.Use)[0]])
+	command.Flags().AddFlagSet(h.subcommandFlags[h.Name()])
+	command.Flags().AddFlagSet(h.subcommandFlags[command.Name()])
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }
@@ -370,6 +417,30 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Context.client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
+	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
+		if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") != "" {
+			result := &KafkaREST{}
+			result.Client, err = createKafkaRESTClient(cliCmd.Context, cliCmd, r.IsTest)
+			if err != nil {
+				return nil, err
+			}
+			state, err := ctx.AuthenticatedState(cliCmd.Command)
+			if err != nil {
+				return nil, err
+			}
+			bearerToken, err := getBearerToken(state, ctx.Platform.Server)
+			if err != nil {
+				return nil, err
+			}
+			if err != nil {
+				return nil, err
+			}
+			result.Context = context.WithValue(context.Background(), krsdk.ContextAccessToken, bearerToken)
+			return result, nil
+		}
+		return nil, nil
+	})
+	cliCmd.KafkaRESTProvider = &provider
 	return nil
 }
 
@@ -672,4 +743,37 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 
 	}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
+}
+
+func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand, isTest bool) (*kafkarestv3.APIClient, error) {
+	kafkaClusterConfig, err := ctx.GetKafkaClusterForCommand(cliCmd.Command)
+	if err != nil {
+		// cluster is probably not available
+		return nil, err
+	}
+	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
+	if err != nil {
+		return nil, err
+	}
+	if isTest {
+		return getTestRestClient(kafkaRestURL, kafkaClusterConfig.Bootstrap)
+	}
+	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
+		BasePath: kafkaRestURL,
+	}), nil
+}
+
+// TODO: once rest url is included in cluster config, we should be able to get rid of this (return a http endpoint and we won't have to parse together the port)
+// This function is used for integration testing
+func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, error) {
+	testClient := http.DefaultClient
+	testClient.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // HACK required for https mocking (when Rest URL is in cluster config we can use http)
+	}
+	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
+	testBaseUrl := strings.Replace(baseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
+	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
+		BasePath:   testBaseUrl,
+		HTTPClient: testClient,
+	}), nil
 }

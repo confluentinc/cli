@@ -1,0 +1,10 @@
+Topic: topic1 PartitionCount: 1 ReplicationFactor: 1
+  Topic  | Partition | Leader | Replicas | ISR  
++--------+-----------+--------+----------+-----+
+  topic1 |         1 |      1 | [1]      | []   
+
+Configuration
+ 
+     Name    |   Value    
++------------+-----------+
+  testConfig | testValue  

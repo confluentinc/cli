@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/c-bata/go-prompt"
@@ -11,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -31,16 +33,17 @@ type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "app",
 			Short: "Manage ksqlDB apps.",
 		}, prerunner, SubcommandFlags)
-	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd}
+	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.prerunner = prerunner
 	cmd.init()
 	return cmd
@@ -95,6 +98,8 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
+	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key (recommended).")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -162,6 +167,27 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	kafkaApiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return err
+	}
+	kafkaApiKeySecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return err
+	}
+
+	if kafkaApiKey != "" && kafkaApiKeySecret != "" {
+		cfg.KafkaApiKey = &schedv1.ApiKey{
+			Key:    kafkaApiKey,
+			Secret: kafkaApiKeySecret,
+		}
+	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
+		return fmt.Errorf(errors.APIKeyAndSecretBothRequired)
+	} else {
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
+	}
+
 	image, err := cmd.Flags().GetString("image")
 	if err == nil && len(image) > 0 {
 		cfg.Image = image
@@ -184,6 +210,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if cluster.Endpoint == "" {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -198,11 +225,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	id := args[0]
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: id}
 	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
@@ -292,8 +321,9 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 	if err != nil {
 		return "", err
 	}
+
 	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) || (cluster.KafkaApiKey != nil && user.Id == cluster.KafkaApiKey.UserId) {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}

@@ -80,7 +80,7 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 			writer:       writer,
 		}, nil
 	default:
-		return nil, newInvalidOutputFormatFlagError(format)
+		return nil, NewInvalidOutputFormatFlagError(format)
 	}
 }
 
@@ -90,7 +90,7 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 		return err
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		return newInvalidOutputFormatFlagError(format)
+		return NewInvalidOutputFormatFlagError(format)
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
@@ -103,14 +103,26 @@ func StructuredOutput(format string, obj interface{}) error {
 	} else if format == YAML.String() {
 		b, _ = yaml.Marshal(obj)
 	} else {
-		return newInvalidOutputFormatFlagError(format)
+		return NewInvalidOutputFormatFlagError(format)
 	}
 	_, err := fmt.Fprintf(os.Stdout, string(b))
 	return err
 }
 
-func newInvalidOutputFormatFlagError(format string) error {
+func NewInvalidOutputFormatFlagError(format string) error {
 	errorMsg := fmt.Sprintf(errors.InvalidFlagValueErrorMsg, format, FlagName)
 	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(allFormatStrings, ", "))
 	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
+}
+
+// IsValidFormat - returns whether a format string is a valid format (human, json, yaml)
+func IsValidFormatString(format string) bool {
+	isValid := false
+
+	for _, formatString := range allFormatStrings {
+		if format == formatString {
+			isValid = true
+		}
+	}
+	return isValid
 }

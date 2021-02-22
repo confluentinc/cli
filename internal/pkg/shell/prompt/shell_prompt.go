@@ -2,10 +2,10 @@ package prompt
 
 import (
 	"os"
-	"strings"
 
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
+	shellparser "mvdan.cc/sh/v3/shell"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -53,17 +53,17 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 		},
 		Config: cfg,
 	}
-	prompt := goprompt.New(
-		func(in string) {
-			promptArgs := strings.Fields(in)
-			_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
-		},
-		shell.Complete,
-		opts...,
-	)
+	prompt := goprompt.New(promptExecutorFunc(cfg, shell), shell.Complete, opts...)
 	shell.Prompt = prompt
 
 	return shell
+}
+
+func promptExecutorFunc(cfg *v3.Config, shell *ShellPrompt) func(string) {
+	return func(in string) {
+		promptArgs, _ := shellparser.Fields(in, func(string)string {return ""})
+		_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
+	}
 }
 
 func (p *ShellPrompt) Run() {

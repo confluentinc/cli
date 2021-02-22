@@ -1,0 +1,11 @@
+Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).
+
+Usage:
+  confluent audit-log config edit [flags]
+
+Flags:
+      --context string   CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

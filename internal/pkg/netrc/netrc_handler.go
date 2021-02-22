@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/atrox/homedir"
-	gonetrc "github.com/csreesan/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	gonetrc "github.com/confluentinc/go-netrc/netrc"
 )
 
 const (
