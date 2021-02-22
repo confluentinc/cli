@@ -5,8 +5,10 @@ import (
 	"sync"
 
 	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	shellparser "mvdan.cc/sh/v3/shell"
 )
 
 type ServerSideCompleterImpl struct {
@@ -180,7 +182,18 @@ func (c *ServerSideCompleterImpl) updatedCacheForCompletableCommandOrFlag(cmd *c
 }
 
 func (c *ServerSideCompleterImpl) getFlagWithArg(d prompt.Document, cmd *cobra.Command) string {
-	var flagWithArg string
+	promptArgs, _ := shellparser.Fields(d.TextBeforeCursor(), func(string) string { return "" })
+	lastArg := promptArgs[len(promptArgs)-1]
+	if !utils.IsFlagArg(lastArg) {
+		return ""
+	}
+
+	flagList := c.getFlagList(cmd, promptArgs)
+	return c.getFlagWithArgFromFlagList(flagList)
+}
+
+func (c *ServerSideCompleterImpl) getFlagList(cmd *cobra.Command, promptArgs []string) []*pflag.Flag {
+	flagList := make([]*pflag.Flag, len(promptArgs))
 	checkFlag := func(flag *pflag.Flag) {
 		if flag.Changed {
 			_ = flag.Value.Set(flag.DefValue)
@@ -190,20 +203,43 @@ func (c *ServerSideCompleterImpl) getFlagWithArg(d prompt.Document, cmd *cobra.C
 		}
 		longName := "--" + flag.Name
 		shortName := "-" + flag.Shorthand
-		endsWithFlag := strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), shortName+" ") ||
-			strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), longName+" ")
-		if endsWithFlag {
-			flagType := flag.Value.Type()
-			// skip if flag expects no argument
-			if flagType != "bool" && flagType != "count" {
-				flagWithArg = flag.Name
+		for i, arg := range promptArgs {
+			if longName == arg || shortName == arg {
+				flagList[i] = flag
 			}
 		}
 	}
 
 	cmd.LocalFlags().VisitAll(checkFlag)
 	cmd.InheritedFlags().VisitAll(checkFlag)
-	return flagWithArg
+	return flagList
+}
+
+func (c *ServerSideCompleterImpl) getFlagWithArgFromFlagList(flagList []*pflag.Flag) string {
+	lastIndex := len(flagList) - 1
+	if !isFlagWithArg(flagList[lastIndex]) {
+		return ""
+	}
+	i := 0
+	for ; i <= lastIndex; i += 1 {
+		curFlag := flagList[i]
+		if i == lastIndex && isFlagWithArg(curFlag) {
+			return curFlag.Name
+		}
+		if isFlagWithArg(flagList[i]) {
+			i += 1
+		}
+	}
+	return ""
+}
+
+// is flag with arg
+func isFlagWithArg(flag *pflag.Flag) bool {
+	if flag == nil {
+		return false
+	}
+	flagType := flag.Value.Type()
+	return flagType != "bool" && flagType != "count"
 }
 
 // Check for flag suggestions, return empty list if not found or not in the state for flag suggestions

@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
+	"unicode"
 
 	"github.com/confluentinc/properties"
 
@@ -103,4 +105,17 @@ func ValidateEmail(email string) bool {
 	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	matched := rgxEmail.MatchString(email)
 	return matched
+}
+
+func IsFlagArg(arg string) bool {
+	if len(arg) <= 1 {
+		return false
+	}
+	if strings.HasPrefix(arg, "-") && unicode.IsLetter(rune(arg[1])) {
+		return true
+	}
+	if len(arg) > 2 && strings.HasPrefix(arg, "--") && unicode.IsLetter(rune(arg[2])) {
+		return true
+	}
+	return false
 }

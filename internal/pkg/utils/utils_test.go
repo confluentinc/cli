@@ -71,3 +71,36 @@ func TestUserInviteEmailRegex(t *testing.T) {
 		require.Equal(t, test.matched, ValidateEmail(test.email))
 	}
 }
+
+func TestIsFlagArg(t *testing.T) {
+	type testCase struct {
+		arg    string
+		isFlag bool
+	}
+
+	tests := []*testCase{
+		{
+			arg:    "--resource",
+			isFlag: true,
+		},
+		{
+			arg:    "-o",
+			isFlag: true,
+		},
+		{
+			arg:    "-vvv",
+			isFlag: true,
+		},
+		{
+			arg:    "bob",
+			isFlag: false,
+		},
+	}
+
+	for _, test := range tests {
+		got := IsFlagArg(test.arg)
+		if test.isFlag != got {
+			t.Errorf("Arg: %s, Expected: %t, Got: %t", test.arg, test.isFlag, got)
+		}
+	}
+}
