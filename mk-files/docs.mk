@@ -65,7 +65,7 @@ clean-docs:
 # NB2: If a patch release just happened, $(DOCS_BASE_BRANCH) will still be accurate.
 # Warning: BUMP must be set to patch if you are releasing docs for a patch release that was just done
 .PHONY: release-docs
-release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf update-common-tools
+release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf update-tools-autotasks
 
 .PHONY: cut-docs-branches
 cut-docs-branches:
@@ -150,8 +150,3 @@ update-tools-autotasks:
 	git commit -am "chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post" && \
 	git push -u origin cli-update-$(CLEAN_VERSION)-post && \
 	hub pull-request -b monitor-docs-pipeline-pre-prod -m "chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post"
-
-.PHONY: update-common-tools
-update-common-tools:
-	$(eval COMMON_TOOLS_DIR=$(TMP_BASE)/common-tools)
-	git clone git@github.com:confluentinc/common-tools.git $(COMMON_TOOLS_DIR)
