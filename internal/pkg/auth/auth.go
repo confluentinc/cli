@@ -48,9 +48,10 @@ func PersistConfluentLoginToConfig(config *v3.Config, username string, url strin
 		AuthToken: token,
 	}
 	var ctxName string
-	ctxName = GenerateContextName(username, url, caCertPath)
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
+	} else {
+		ctxName = GenerateContextName(username, url, caCertPath)
 	}
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath)
 }
