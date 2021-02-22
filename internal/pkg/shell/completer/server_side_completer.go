@@ -150,14 +150,18 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 }
 
 func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cmd *cobra.Command) []prompt.Suggest {
+	var suggestions []prompt.Suggest
 	var cc ServerCompletableCommand
 	if cc = c.getCompletableParent(cmd); cc == nil {
-		return []prompt.Suggest{}
+		return suggestions
 	}
 	suggestions, ok := c.getCachedSuggestions(d, cc)
 	if !ok {
 		// Shouldn't happen, but just in case.
 		// If this does happen then cache should be in the process of updating.
+		if !pcmd.CanCompleteCommand(cmd) {
+			return suggestions
+		}
 		suggestions = cc.ServerComplete()
 	}
 	// if no suggestiosn just return empty list
