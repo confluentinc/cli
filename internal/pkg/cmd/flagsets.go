@@ -51,7 +51,7 @@ func KeySecretSet() *pflag.FlagSet {
 func OnPremKafkaRestSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-kafkarest", pflag.ExitOnError)
 	set.String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy).")
-	set.String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	set.String("ca-cert-path", "", "Path to a PEM-encoded CA to verify the Confluent REST Proxy.")
 	set.Bool("no-auth", false, "Include if requests should be made without authentication headers, and user will not be prompted for credentials.")
 	set.SortFlags = false
 	return set

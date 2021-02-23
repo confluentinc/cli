@@ -186,7 +186,7 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 		return err
 	}
 	kafkaRestClient := kafkaRest.Client
-	setServerURL(kafkaRestClient, url)
+	setServerURL(cmd, kafkaRestClient, url)
 
 	// Get Cluster Id
 	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
@@ -238,7 +238,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 		return err
 	}
 	kafkaRestClient := kafkaRest.Client
-	setServerURL(kafkaRestClient, url)
+	setServerURL(cmd, kafkaRestClient, url)
 
 	// Get Cluster Id
 	clusters, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
@@ -331,7 +331,7 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 		return err
 	}
 	kafkaRestClient := kafkaRest.Client
-	setServerURL(kafkaRestClient, url)
+	setServerURL(cmd, kafkaRestClient, url)
 	// Get ClusterId
 	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {
@@ -362,7 +362,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 		return err
 	}
 	kafkaRestClient := kafkaRest.Client
-	setServerURL(kafkaRestClient, url)
+	setServerURL(cmd, kafkaRestClient, url)
 	// Get Cluster Id
 	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {
@@ -452,7 +452,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 		return err
 	}
 	kafkaRestClient := kafkaRest.Client
-	setServerURL(kafkaRestClient, url)
+	setServerURL(cmd, kafkaRestClient, url)
 	// Get clusterId
 	clustersData, resp, err := kafkaRestClient.ClusterApi.ClustersGet(kafkaRest.Context)
 	if err != nil {

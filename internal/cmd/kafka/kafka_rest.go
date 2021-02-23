@@ -3,10 +3,12 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 	"net/http"
 	neturl "net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -70,9 +72,15 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 // Used for on-prem KafkaRest commands
 // Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
 // Relying on users to include the /kafka in the url for embedded instances
-func setServerURL(client *kafkarestv3.APIClient, url string) {
+func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
 	url = strings.Trim(url, "/") // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
 	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
+	protocolRgx, _ := regexp.Compile(`(\w+)://`)
+	protocolMatch := protocolRgx.MatchString(url)
+	if !protocolMatch {
+		url = "http://" + url
+		utils.ErrPrintf(cmd, errors.AssumingHttpProtocol)
+	}
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
