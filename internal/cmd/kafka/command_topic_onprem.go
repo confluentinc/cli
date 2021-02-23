@@ -57,7 +57,6 @@ func (topicCmd *topicCommand) init() {
 		),
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
-	check(listCmd.MarkFlagRequired("url"))
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(listCmd)
@@ -88,7 +87,6 @@ func (topicCmd *topicCommand) init() {
 			}),
 	}
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
-	check(createCmd.MarkFlagRequired("url"))
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -118,7 +116,6 @@ func (topicCmd *topicCommand) init() {
 			}),
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
-	check(deleteCmd.MarkFlagRequired("url"))
 	deleteCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(deleteCmd)
 
@@ -144,7 +141,6 @@ func (topicCmd *topicCommand) init() {
 			}),
 	}
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
-	check(updateCmd.MarkFlagRequired("url"))
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(updateCmd)
@@ -172,7 +168,6 @@ func (topicCmd *topicCommand) init() {
 		),
 	}
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
-	check(describeCmd.MarkFlagRequired("url"))
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(describeCmd)
@@ -182,7 +177,7 @@ func (topicCmd *topicCommand) init() {
 // * @param cmd: cobra.Command matched by command line arguments
 // * @param args: The rest of command line arguments (os.args[1:]
 func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) error {
-	url, err := cmd.Flags().GetString("url")
+	url, err := getKafkaRestUrl(cmd)
 	if err != nil { // require the flag
 		return err
 	}
@@ -232,7 +227,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	// Parse arguments
 	topicName := args[0]
 	// check required argument
-	url, err := cmd.Flags().GetString("url")
+	url, err := getKafkaRestUrl(cmd)
 	if err != nil {
 		return err
 	}
@@ -327,7 +322,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
-	url, err := cmd.Flags().GetString("url")
+	url, err := getKafkaRestUrl(cmd)
 	if err != nil {
 		return err
 	}
@@ -358,7 +353,7 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []string) error {
 	// Parse Argument
 	topicName := args[0]
-	url, err := cmd.Flags().GetString("url")
+	url, err := getKafkaRestUrl(cmd)
 	if err != nil {
 		return err
 	}
@@ -442,7 +437,7 @@ type TopicData struct {
 func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]
-	url, err := cmd.Flags().GetString("url")
+	url, err := getKafkaRestUrl(cmd)
 	if err != nil {
 		return err
 	}

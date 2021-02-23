@@ -130,6 +130,8 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
 		// Test with basic auth input
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/topic/list-with-auth.golden"},
+		// Test with CONFLUENT_REST_URL env var
+		{args: "kafka topic list --no-auth", fixture: "kafka/confluent/topic/list.golden", env: []string{"CONFLUENT_REST_URL="+kafkaRestURL}},
 		// Output should format correctly depending on format argument.
 		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list-yaml.golden"},

@@ -3,8 +3,10 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cobra"
 	"net/http"
 	neturl "net/url"
+	"os"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -16,6 +18,7 @@ import (
 
 const KafkaRestBadRequestErrorCode = 40002
 const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
+const CONFLUENT_REST_URL = "CONFLUENT_REST_URL"
 
 type kafkaRestV3Error struct {
 	Code    int    `json:"error_code"`
@@ -71,6 +74,22 @@ func setServerURL(client *kafkarestv3.APIClient, url string) {
 	url = strings.Trim(url, "/") // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
 	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
+}
+
+// Used for on-prem KafkaRest commands
+// Fetch rest url from flag, otherwise from CONFLUENT_REST_URL
+func getKafkaRestUrl(cmd *cobra.Command) (string, error) {
+	if cmd.Flags().Changed("url") {
+		url, err := cmd.Flags().GetString("url")
+		if err != nil {
+			return "", err
+		}
+		return url, nil
+	}
+	if restUrl := os.Getenv(CONFLUENT_REST_URL); restUrl != "" {
+		return restUrl, nil
+	}
+	return "", errors.NewErrorWithSuggestions(errors.KafkaRestUrlNotFoundErrorMsg, errors.KafkaRestUrlNotFoundSuggestions)
 }
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsGetOpts

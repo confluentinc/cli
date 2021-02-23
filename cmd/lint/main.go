@@ -116,9 +116,9 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlagType("cluster", "string"), ccloudClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), ccloudClusterScopedCommands...),
 	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
-	linter.Filter(linter.RequireFlag("url", false), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlag("url", true), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("url", "REQUIRED: Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy)."), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy)."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),

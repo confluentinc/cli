@@ -390,7 +390,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 			}
 		}
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode, covCollectorOptions...)
+		output := runCommand(t, confluentTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 
 		if strings.HasPrefix(tt.args, "config context list") ||
 			strings.HasPrefix(tt.args, "config context current") {
