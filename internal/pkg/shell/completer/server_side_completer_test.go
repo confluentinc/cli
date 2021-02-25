@@ -9,7 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestServerSideCompleter_Complete(t *testing.T) {
+
+
+// ccloud api-key delete --output json
+
+func TestServerSideCommandCompleter_Complete(t *testing.T) {
 	type fields struct {
 		RootCmd *cobra.Command
 	}
