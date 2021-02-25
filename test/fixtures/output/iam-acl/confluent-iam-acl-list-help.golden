@@ -23,7 +23,7 @@ Flags:
       --allow                     ACL permission to allow access.
       --deny                      ACL permission to restrict access to resource.
       --principal string          Principal for this operation with User: or Group: prefix.
-      --host string               Set host for access. (default "*")
+      --host string               Set host for access. Only IP addresses are supported. (default "*")
       --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --cluster-scope             Set the cluster resource. With this option the ACL grants
                                   access to the provided operations on the Kafka cluster itself.
