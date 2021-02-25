@@ -118,7 +118,7 @@ var rules = []linter.Rule{
 	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
 	linter.Filter(linter.RequireFlag("url", true), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy)."), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
@@ -194,7 +194,7 @@ var flagRules = []linter.FlagRule{
 			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
-			"skip-message-on-error", "socket-buffer-size",
+			"skip-message-on-error", "socket-buffer-size", "client-cert-path",
 		),
 	),
 	linter.RequireFlagRealWords('-'),
