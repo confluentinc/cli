@@ -56,7 +56,7 @@ func (topicCmd *topicCommand) init() {
 			},
 		),
 	}
-	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
+	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, and client-cert-path flags
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(listCmd)
@@ -86,7 +86,7 @@ func (topicCmd *topicCommand) init() {
 				Code: "confluent kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip",
 			}),
 	}
-	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
+	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, and client-cert-path flags
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
@@ -115,7 +115,7 @@ func (topicCmd *topicCommand) init() {
 				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
 			}),
 	}
-	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
+	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, and client-cert-path flags
 	deleteCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(deleteCmd)
 
@@ -140,7 +140,7 @@ func (topicCmd *topicCommand) init() {
 				Code: "confluent kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
 			}),
 	}
-	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
+	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, and client-cert-path flags
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(updateCmd)
@@ -167,7 +167,7 @@ func (topicCmd *topicCommand) init() {
 			},
 		),
 	}
-	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url and ca-cert-path flags
+	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, and client-cert-path flags
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(describeCmd)

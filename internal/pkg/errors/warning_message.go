@@ -16,6 +16,7 @@ const (
 
 	//kafka rest
 	AssumingHttpProtocol = "Assuming http protocol.\n"
+	AssumingHttpsProtocol = "Assuming https protocol.\n"
 
 	// ksql create warning
 	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."

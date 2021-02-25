@@ -28,6 +28,7 @@ type FlagResolver interface {
 	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
 	ResolveCaCertPathFlag(cmd *cobra.Command) (string, error)
 	ResolveNoAuthFlag(cmd *cobra.Command) (bool, error)
+	ResolveClientCertPathFlag(cmd *cobra.Command) (string, error)
 }
 
 type FlagResolverImpl struct {
@@ -193,6 +194,18 @@ func (r *FlagResolverImpl) ResolveCaCertPathFlag(cmd *cobra.Command) (string, er
 	const certPathFlag = "ca-cert-path"
 	if cmd.Flags().Changed(certPathFlag) {
 		path, err := cmd.Flags().GetString(certPathFlag)
+		if err != nil {
+			return "", err
+		}
+		return path, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveClientCertPathFlag(cmd *cobra.Command) (string, error) {
+	const clientCertPathFlag = "client-cert-path"
+	if cmd.Flags().Changed(clientCertPathFlag) {
+		path, err := cmd.Flags().GetString(clientCertPathFlag)
 		if err != nil {
 			return "", err
 		}

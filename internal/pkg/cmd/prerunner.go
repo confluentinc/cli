@@ -541,19 +541,27 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	caCertFile, err := os.Open(caCertPath)
-	if err == nil {
-		defer caCertFile.Close()
-		mdsConfig.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
-		if err != nil {
-			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = utils.DefaultClient()
-		}
-	} else {
+	client, err := utils.SelfSignedCertClientFromPath(caCertPath, r.Logger)
+	if err != nil {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsConfig.HTTPClient = utils.DefaultClient()
-
+	} else {
+		mdsConfig.HTTPClient = client
 	}
+
+	//caCertFile, err := os.Open(caCertPath)
+	//if err == nil {
+	//	defer caCertFile.Close()
+	//	mdsConfig.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, nil, r.Logger)
+	//	if err != nil {
+	//		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+	//		mdsConfig.HTTPClient = utils.DefaultClient()
+	//	}
+	//} else {
+	//	r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+	//	mdsConfig.HTTPClient = utils.DefaultClient()
+	//
+	//}
 	return mds.NewAPIClient(mdsConfig)
 }
 
@@ -566,29 +574,25 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		useMdsToken = err == nil // no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := krsdk.NewConfiguration()
-			certPath, err := r.FlagResolver.ResolveCaCertPathFlag(cmd)
+			caCertPath, err := r.FlagResolver.ResolveCaCertPathFlag(cmd)
 			if err != nil {
 				return nil, err
 			}
-			// check if cert path flag was passed
-			if certPath != "" {
-				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(certPath, r.Logger)
-				if err != nil {
-					return nil, err
-				}
-				// check if cert path is in config
-			} else if command.Context != nil && command.Context.Platform != nil && command.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
-				cfg.HTTPClient, err = utils.SelfSignedCertClientFromPath(command.Context.Platform.CaCertPath, r.Logger)
-				if err != nil {
-					return nil, err
-				}
+			clientCertPath, err := r.FlagResolver.ResolveClientCertPathFlag(cmd)
+			if err != nil {
+				return nil, err
+			}
+			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, caCertPath, clientCertPath, r.Logger)
+			if err != nil {
+				return nil, err
 			}
 			client := krsdk.NewAPIClient(cfg)
+
 			noAuth, err := r.FlagResolver.ResolveNoAuthFlag(cmd)
 			if err != nil {
 				return nil, err
 			}
-			if noAuth {
+			if noAuth || clientCertPath != "" { // credentials not needed for mTLS auth
 				return &KafkaREST{
 					Client:  client,
 					Context: context.Background(),
@@ -616,6 +620,25 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		command.KafkaRESTProvider = &provider
 		return nil
 	}
+}
+
+func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, logger *log.Logger) (*http.Client, error) {
+	// use cert path flag if it was passed
+	if caCertPath != "" {
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, logger)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+		// use cert path from config if available
+	} else if ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, logger)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+	}
+	return http.DefaultClient, nil
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
@@ -812,19 +835,27 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	caCertFile, err := os.Open(caCertPath)
-	if err == nil {
-		defer caCertFile.Close()
-		mdsv2Config.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
-		if err != nil {
-			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsv2Config.HTTPClient = utils.DefaultClient()
-		}
-	} else {
+	client, err := utils.SelfSignedCertClientFromPath(caCertPath, r.Logger)
+	if err != nil {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsv2Config.HTTPClient = utils.DefaultClient()
-
+	} else {
+		mdsv2Config.HTTPClient = client
 	}
+
+	//caCertFile, err := os.Open(caCertPath)
+	//if err == nil {
+	//	defer caCertFile.Close()
+	//	mdsv2Config.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
+	//	if err != nil {
+	//		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+	//		mdsv2Config.HTTPClient = utils.DefaultClient()
+	//	}
+	//} else {
+	//	r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+	//	mdsv2Config.HTTPClient = utils.DefaultClient()
+	//
+	//}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
