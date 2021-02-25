@@ -563,7 +563,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
 		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
-			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, logger)
+			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, nil, logger)
 			if err != nil {
 				return nil, err
 			}

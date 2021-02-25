@@ -631,7 +631,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 		}
 		return client, nil
 		// use cert path from config if available
-	} else if ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+	} else if ctx!= nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
 		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, logger)
 		if err != nil {
 			return nil, err
