@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	"github.com/confluentinc/ccloud-sdk-go/mock"
@@ -611,7 +609,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}()
 
 	if err := cmd.Execute(); err != nil {
-		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
+		t.Errorf("Topic PatternType was not set to default ConfigValue of PatternTypes_LITERAL")
 	}
 
 	cmd = newCmd(expect, enableREST)
@@ -630,7 +628,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}()
 
 	if err := cmd.Execute(); err != nil {
-		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
+		t.Errorf("Cluster PatternType was not set to default ConfigValue of PatternTypes_LITERAL")
 	}
 }
 
@@ -685,7 +683,7 @@ var Links = []testLink{
 func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
 	expect := make(chan interface{})
 	for _, link := range Links {
-		cmd := newCmd(expect, true)
+		cmd := newRestCmd(expect)
 		cmd.SetArgs(argmaker(link))
 
 		go expector(expect, link)
@@ -727,7 +725,9 @@ func TestDescribeLink(t *testing.T) {
 			return []string{"link", "describe", link.name}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
+			expect <- cliMock.DescribeLinkMatcher{
+				LinkName: link.name,
+			}
 		},
 	)
 }
@@ -739,20 +739,40 @@ func TestDeleteLink(t *testing.T) {
 			return []string{"link", "delete", link.name}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
+			expect <- cliMock.DeleteLinkMatcher{
+				LinkName: link.name,
+			}
 		},
 	)
 }
 
-func TestAlterLink(t *testing.T) {
+func TestBatchAlterLink(t *testing.T) {
+	configs := map[string]string{"config1": "val1", "config2": "val2"}
+
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s", link.alterKey, link.alterValue)}
+			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s,%s=%s", "config1", "val1", "config2", "val2")}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
-			expect <- &linkv1.LinkProperties{Properties: map[string]string{link.alterKey: link.alterValue}}
+			expect <-  cliMock.BatchUpdateLinkConfigMatcher{
+				LinkName: link.name,
+				Configs: configs,
+			}
+		},
+	)
+}
+
+func TestListLinkConfigs(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"link", "list-configs", link.name}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListLinkConfigMatcher{
+				LinkName:    link.name,
+			}
 		},
 	)
 }
@@ -761,106 +781,141 @@ func TestCreateLink(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "create", link.name, "--source_cluster", link.source}
+			return []string{"link", "create", link.name, "--source-cluster", link.source, "--source-cluster-id", "id1"}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- &linkv1.ClusterLink{
-				LinkName: link.name,
-				Configs: map[string]string{
-					"bootstrap.servers": link.source,
-				},
+			expect <- cliMock.CreateLinkMatcher{
+				LinkName:        link.name,
+				ValidateLink:    true,
+				ValidateOnly:    false,
+				SourceClusterId: "id1",
+				Configs:          map[string]string{"bootstrap.servers": link.source},
 			}
 		})
 }
 
 func TestCreateMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2", "--config", "a=b"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	configs := map[string]string{"a":"b", "c":"d"}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2", "--config", "a=b,c=d"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.CreateMirrorMatcher{
+				LinkName:        "link-1",
+				SourceTopicName: "src-topic-1",
+				Configs:         configs,
+			}
+		},
+	)
 }
 
 func TestListMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "list", "--link-name", "link-1", "--mirror-status", "active"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "list", "--link-name", "link-1", "--mirror-status", "active"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListMirrorMatcher{
+				LinkName:    "link-1",
+				Status: "active",
+			}
+		},
+	)
 }
 
 func TestDescribeMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "describe", "dest-topic-1", "--link-name", "link-1"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "describe", "dest-topic-1", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.DescribeMirrorMatcher{
+				LinkName:             "link-1",
+				DestinationTopicName: "dest-topic-1",
+			}
+		})
 }
 
 func TestPromoteMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "promote", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "promote", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				DestinationTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
 }
 
 func TestFailoverMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "failover", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "failover", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				DestinationTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
 }
 
 func TestPauseMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "pause", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "pause", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				DestinationTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
 }
 
 func TestResumeMirror(t *testing.T) {
-	expect := make(chan interface{})
-	cmd := newCmd(expect, true)
-	cmd.SetArgs([]string{"mirror", "resume", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Errorf("error: %s", err)
-		t.Fail()
-		return
-	}
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "resume", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				DestinationTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
 }
 
 /*************** TEST setup/helpers ***************/
-func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
+func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
-		Kafka: cliMock.NewKafkaMock(expect),
+		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
@@ -880,7 +935,7 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 			restMock.PartitionApi = cliMock.NewPartitionMock()
 			restMock.ReplicaApi = cliMock.NewReplicaMock()
 			restMock.ConfigsApi = cliMock.NewConfigsMock()
-			restMock.ClusterLinkingApi = cliMock.NewClusterLinkingMock()
+			restMock.ClusterLinkingApi = cliMock.NewClusterLinkingMock(kafkaRestExpect)
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
 			return kafkaREST, nil
@@ -893,6 +948,14 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return cmd
+}
+
+func newCmd(kafkaExpect chan interface{}, enableREST bool) *cobra.Command {
+	return newMockCmd(kafkaExpect, make(chan interface{}), enableREST)
+}
+
+func newRestCmd(restExpect chan interface{}) *cobra.Command {
+	return newMockCmd(make(chan interface{}), restExpect, true)
 }
 
 func init() {

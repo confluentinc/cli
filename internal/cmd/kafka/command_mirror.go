@@ -66,37 +66,36 @@ func (c *mirrorCommand) init() {
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().String(linkFlagName, "", "Cluster link name")
+	listCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName")
 	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of " +
 		"[active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <destination-topic-name>",
+		Use:   "describe <destination-topic-ConfigName>",
 		Short: "Describes a mirror topic",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describes a mirror topic under the link.",
-				Code: "ccloud kafka mirror describe <destination-topic-name> --link-name <link-name>",
+				Code: "ccloud kafka mirror describe <destination-topic-ConfigName> --link-ConfigName <link-ConfigName>",
 			},
 		),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().String(linkFlagName, "", "Cluster link name")
-	describeCmd.Flags().String(destinationTopicFlagName, "", "Destination topic name")
+	describeCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	createCmd := &cobra.Command{
-		Use:   "create <mirror-name>",
-		Short: "Create a mirror topic under the link. Currently, destination topic name is required to be the same as the source topic name.",
+		Use:   "create <mirror-ConfigName>",
+		Short: "Create a mirror topic under the link. Currently, destination topic ConfigName is required to be the same as the Source topic ConfigName.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka mirror create <source-topic-name> --link-name <link-name> " +
+				Text: "Create a cluster link, using supplied Source URL and properties.",
+				Code: "ccloud kafka mirror create <Source-topic-ConfigName> --link-ConfigName <link-ConfigName> " +
 					"--replication-factor <replication-factor> --config=\"unclean.leader.election.enable=true\"",
 			},
 		),
@@ -104,59 +103,59 @@ func (c *mirrorCommand) init() {
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
-	createCmd.Flags().StringSlice(configFlagName, nil, "A comma-separated list of topic config overrides ('key=value') for the topic being created.")
-	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	createCmd.Flags().StringSlice(configFlagName, nil, "A comma-separated list of topic config overrides ('key=ConfigValue') for the topic being created.")
+	createCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	promoteCmd := &cobra.Command{
-		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-ConfigName <link-ConfigName>",
 		Short: "Promote the mirror topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Promote the mirror topics.",
-				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-ConfigName <link-ConfigName>",
 			},
 		),
 		RunE: c.promote,
 		Args: cobra.MinimumNArgs(1),
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	promoteCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
 	promoteCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(promoteCmd)
 
 	failoverCmd := &cobra.Command{
-		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-ConfigName <link-ConfigName>",
 		Short: "Failover the mirror topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Failover the mirror topics.",
-				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-ConfigName <link-ConfigName>",
 			},
 		),
 		RunE: c.failover,
 		Args: cobra.MinimumNArgs(1),
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	failoverCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
 	failoverCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(failoverCmd)
 
 	pauseCmd := &cobra.Command{
-	Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+	Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-ConfigName <link-ConfigName>",
 	Short: "Pause the mirror topics.",
 	Example: examples.BuildExampleString(
 		examples.Example{
 			Text: "Pause the mirror topics.",
-			Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+			Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-ConfigName <link-ConfigName>",
 		},
 	),
 	RunE: c.pause,
 	Args: cobra.MinimumNArgs(1),
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	pauseCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
 	pauseCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(pauseCmd)
 
@@ -173,7 +172,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.MinimumNArgs(1),
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	resumeCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
 	resumeCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(resumeCmd)
 }
@@ -236,7 +235,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	destinationTopicName, err := cmd.Flags().GetString(destinationTopicFlagName)
+	destinationTopicName := args[0]
 	if err != nil {
 		return err
 	}
@@ -351,7 +350,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 	promoteMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPromotePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				DestinationTopics: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
@@ -390,7 +389,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 	failoverMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsFailoverPostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				DestinationTopics: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
@@ -429,7 +428,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 	pauseMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPausePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				DestinationTopics: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
@@ -468,7 +467,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 	resumeMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsResumePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				DestinationTopics: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),

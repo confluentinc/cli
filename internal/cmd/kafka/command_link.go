@@ -18,6 +18,7 @@ var (
 	keyValueFields      = []string{"Key", "Value"}
 	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
 	linkFields          = []string{"LinkName"}
+	linkConfigFields     = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
 )
 
 type keyValueDisplay struct {
@@ -32,6 +33,15 @@ type LinkWriter struct {
 type LinkTopicWriter struct {
 	LinkName  string
 	TopicName string
+}
+
+type LinkConfigWriter struct {
+	ConfigName  string
+	ConfigValue string
+	ReadOnly    bool
+	Sensitive   bool
+	Source      string
+	Synonyms    []string
 }
 
 type linkCommand struct {
@@ -73,29 +83,29 @@ func (c *linkCommand) init() {
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
-	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
+	// Note: this is subject to change as we iterate on options for how to specify a Source cluster.
 	createCmd := &cobra.Command{
-		Use:   "create <link-name>",
+		Use:   "create <link-ConfigName>",
 		Short: "Create a new cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a cluster link, using supplied source URL and properties.",
+				Text: "Create a cluster link, using supplied Source URL and properties.",
 				Code: "ccloud kafka link create my_link --source_cluster myhost:1234\nccloud kafka link create my_link --source_cluster myhost:1234 --config-file ~/myfile.txt",
 			},
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
+	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for Source cluster.")
 	createCmd.Flags().String(sourceClusterIdName, "", "Source cluster Id.")
-	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for source cluster.")
+	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for Source cluster.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
+	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the Source cluster before creation.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <link-name>",
+		Use:   "delete <link-ConfigName>",
 		Short: "Delete a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -109,7 +119,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <link-name>",
+		Use:   "describe <link-ConfigName>",
 		Short: "Describes a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -126,7 +136,7 @@ func (c *linkCommand) init() {
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	updateCmd := &cobra.Command{
-		Use:   "update <link-name>",
+		Use:   "update <link-ConfigName>",
 		Short: "Updates a property for a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -137,9 +147,62 @@ func (c *linkCommand) init() {
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=ConfigValue') overrides for the topic being created.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
+
+	listConfigCmd := &cobra.Command{
+		Use:   "list-configs <link-ConfigName>",
+		Short: "List all configs of the link.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all configs of the link",
+				Code: "ccloud kafka link list-configs",
+			},
+		),
+		RunE: c.listConfigs,
+		Args: cobra.ExactArgs(1),
+	}
+	listConfigCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	listConfigCmd.Flags().SortFlags = false
+	c.AddCommand(listConfigCmd)
+}
+
+func (c *linkCommand) listConfigs(cmd *cobra.Command, args []string) error {
+	linkName := args[0]
+	kafkaREST, _ := c.GetKafkaREST()
+	if kafkaREST == nil {
+		return errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	if err != nil {
+		return err
+	}
+
+	listLinkConfigsResponseDataList, _, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(
+		kafkaREST.Context, lkc, linkName)
+	if err != nil {
+		return err
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, linkConfigFields, linkConfigFields, linkConfigFields)
+	if err != nil {
+		return err
+	}
+
+	for _, config := range listLinkConfigsResponseDataList.Data {
+		outputWriter.AddElement(&LinkConfigWriter{
+			ConfigName:  config.Name,
+			ConfigValue: config.Value,
+			ReadOnly:    config.ReadOnly,
+			Sensitive:   config.Sensitive,
+			Source:      config.Source,
+			Synonyms:    config.Synonyms,
+		})
+	}
+
+	return outputWriter.Out()
 }
 
 func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
@@ -279,7 +342,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// The `source` argument is a convenience; we package everything into properties for the source cluster.
+	// The `Source` argument is a convenience; we package everything into properties for the Source cluster.
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
 	kafkaREST, _ := c.GetKafkaREST()

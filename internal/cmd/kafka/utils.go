@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	sourceBootstrapServersFlagName     = "source_cluster"
-	sourceClusterIdName                = "source_cluster_id"
+	sourceBootstrapServersFlagName     = "source-cluster"
+	sourceClusterIdName                = "source-cluster-id"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
 	configFlagName                      = "config"
 	configFileFlagName                  = "config-file"
