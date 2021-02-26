@@ -11,21 +11,7 @@ import (
 	"strings"
 )
 
-const (
-	sourceBootstrapServersFlagName     = "source-cluster"
-	sourceClusterIdName                = "source-cluster-id"
-	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	configFlagName                      = "config"
-	configFileFlagName                  = "config-file"
-	dryrunFlagName                     = "dry-run"
-	noValidateFlagName                 = "no-validate"
-	includeTopicsFlagName              = "include-topics"
-	linkFlagName                       = "link-name"
-	destinationTopicFlagName           = "dest-topic"
-	sourceTopicFlagName                = "src-topic"
-	replicationFactorFlagName          = "replication-factor"
-	mirrorStatusFlagName               = "mirror-status"
-)
+
 
 func copyMap(inputMap map[string]string) map[string]string {
 	newMap := make(map[string]string)

@@ -13,6 +13,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+const (
+	replicationFactorFlagName          = "replication-factor"
+	mirrorStatusFlagName               = "mirror-status"
+)
+
+
 var (
 	listMirrorOutputFields = []string{"DestinationTopicName", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
 	AlterMirrorOutputFields = []string{"DestinationTopicName", "ErrorMessage", "ErrorCode"}
@@ -40,8 +46,7 @@ func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:    "mirror",
-			Hidden: true,
-			Short:  "Manages cluster linking mirror topics",
+			Short:  "Manages cluster linking mirror topics.",
 		},
 		prerunner, MirrorSubcommandFlags)
 	cmd := &mirrorCommand{
@@ -55,10 +60,10 @@ func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *mirrorCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all mirror topics under the cluster link",
+		Short: "List all mirror topics under the cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all mirrors under the link",
+				Text: "List all mirrors under the link.",
 				Code: "ccloud kafka mirror list --link-name <link-name> --mirror-status <mirror-status>",
 			},
 		),
@@ -66,7 +71,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName")
+	listCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName.")
 	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of " +
 		"[active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	listCmd.Flags().SortFlags = false
@@ -74,7 +79,7 @@ func (c *mirrorCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <destination-topic-ConfigName>",
-		Short: "Describes a mirror topic",
+		Short: "Describes a mirror topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describes a mirror topic under the link.",
@@ -85,7 +90,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName")
+	describeCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName.")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
@@ -490,8 +495,8 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 	}
 
 	for _, result := range results.Data {
-		var msg = "Null"
-		var code = "Null"
+		var msg = ""
+		var code = ""
 
 		if result.ErrorMessage != nil {
 			msg = *result.ErrorMessage

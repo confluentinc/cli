@@ -14,6 +14,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+const (
+	sourceBootstrapServersFlagName     = "source-cluster"
+	sourceClusterIdName                = "source-cluster-id"
+	sourceBootstrapServersPropertyName = "bootstrap.servers"
+	configFlagName                      = "config"
+	configFileFlagName                  = "config-file"
+	dryrunFlagName                     = "dry-run"
+	noValidateFlagName                 = "no-validate"
+	includeTopicsFlagName              = "include-topics"
+	linkFlagName                       = "link-name"
+)
+
 var (
 	keyValueFields      = []string{"Key", "Value"}
 	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
@@ -53,7 +65,6 @@ func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:    "link",
-			Hidden: true,
 			Short:  "Manages inter-cluster links.",
 		},
 		prerunner, LinkSubcommandFlags)
@@ -71,7 +82,7 @@ func (c *linkCommand) init() {
 		Short: "List previously created cluster links.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List every link",
+				Text: "List every link.",
 				Code: "ccloud kafka link list",
 			},
 		),
@@ -97,7 +108,7 @@ func (c *linkCommand) init() {
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for Source cluster.")
-	createCmd.Flags().String(sourceClusterIdName, "", "Source cluster Id.")
+	createCmd.Flags().String(sourceClusterIdName, "", "Source cluster ID.")
 	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for Source cluster.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the Source cluster before creation.")
@@ -156,7 +167,7 @@ func (c *linkCommand) init() {
 		Short: "List all configs of the link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all configs of the link",
+				Text: "List all configs of the link.",
 				Code: "ccloud kafka link list-configs",
 			},
 		),
