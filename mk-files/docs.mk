@@ -32,8 +32,8 @@ clone-docs-repos:
 
 .PHONY: docs
 docs: clean-docs
-	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
-	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
+	@go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
+	@go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
 
 .PHONY: publish-docs
 publish-docs: docs clone-docs-repos
