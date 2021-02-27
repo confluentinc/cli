@@ -142,7 +142,7 @@ func (suite *ServerSideCompleterTestSuite) initializeCommands() {
 }
 
 // only completeChild has completion
-// only completeFlag and staticFlag with completeCmd has completion
+// only completeFlag and staticFlag with completeChild has completion
 // noCompleteChild does not have completion for the command itself nor any of its flags
 func (suite *ServerSideCompleterTestSuite) addCompletableCommands() {
 	cc := &parentCompletableCommand{}
