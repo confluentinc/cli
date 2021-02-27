@@ -13,7 +13,7 @@ import (
 )
 
 type ServerSideCompleterImpl struct {
-	// map[string]ServerCompletableCommand
+	// map[string]interface{} (value must be either ServerCompletableCommand or ServerCompletableFlag or both)
 	commandsByPath *sync.Map
 	// map[string][]prompt.Suggest
 	cachedSuggestionsByPath *sync.Map
@@ -95,37 +95,6 @@ func (c *ServerSideCompleterImpl) AddStaticFlagCompletion(flagName string, sugge
 	c.staticFlagSuggestionsCommandsMap.Store(flagName, commandSet)
 }
 
-// Complete
-// if NOT in a completable state (spaces, not accepted, etc)
-// 		RETURN
-// if command is completable
-// 		fetch and cache results
-//		RETURN
-// else if command is NOT a child of a completable command
-// 		RETURN no results
-// else
-// 		if cached results are NOT available
-// 			fetch and cache results
-//		RETURN results
-
-// if in completeable state then return empty
-// getCompletableCommand
-//   - found then add to cache
-// getCompleteFlag
-//   - found then add to cache
-// return empty suggestions if found either one
-
-// First check in completeable state
-// check if in flag that accepts arg state
-// if flag accept arg
-//   - check if parent is server completable flag
-//   - check if that parent has this as child
-//   - if yes then go ahead and look up the chached suggestions of the parent
-// else
-//   - find completable parent
-//   - if found then get cached suggestions
-
-// Afterwards look into the can accept more arg check thingy to see what they hell it is all about
 func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	// must be typing a new argument to get suggestions
 	if !strings.HasSuffix(d.CurrentLine(), " ") {
@@ -140,7 +109,7 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 		args = foundArgs
 	}
 
-	// If command is in commandsByPath map then it is a parent of completable commands
+	// If command is in commandsByPath map then it is a parent of commands with completion
 	// Update the cache in the background
 	// Return empty suggestions as the children of this command are the ones that need suggestions
 	v, ok := c.commandsByPath.Load(c.commandKey(cmd))
@@ -149,9 +118,9 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 		return []prompt.Suggest{}
 	}
 
-	// List of nil or *pflag.Flag, nil if the argument at that position is not a flag
+	// List where elements correspondes to the arg list, if the arg is a flag then flag in that position else nil
 	flagList := c.getFlagList(cmd, args)
-	// if flagName is not "" then we are in a flag completion state
+	// If flagName is not empty then we are in a flag completion state
 	flagName := c.getFlagWithArg(flagList)
 	if len(flagName) > 0 {
 		suggestions := c.getSuggestionsForFlag(cmd, flagName)
@@ -165,48 +134,33 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	return filterSuggestions(d, suggestions)
 }
 
-func (c *ServerSideCompleterImpl) canAcceptArgument(cmd *cobra.Command, flagList []*pflag.Flag) bool {
-	argNum := c.argCount(flagList)
-	tmpArgs := make([]string, argNum+1)
-	err := cmd.ValidateArgs(tmpArgs)
-	return err == nil
-}
+// Store suggestions in cache
+// Cache is updated for the children commands of the command the user is currently typing
+// e.g. ccloud api-key -> updates cache for ccloud api-key delete, or --resource flags for the various ccloud api-key command
+// If command cannot be completed, e.g. user not logged in, then add empty list to reset the cache
+func (c *ServerSideCompleterImpl) updateCachedSuggestions(cmd *cobra.Command, v interface{}) {
+	canComplete := pcmd.CanCompleteCommand(cmd)
+	cc, _ := v.(ServerCompletableCommand)
+	cf, _ := v.(ServerCompletableFlag)
+	if cc != nil {
+		cmd := cc.Cmd()
+		key := c.commandKey(cmd)
+		var suggestions []prompt.Suggest
+		if canComplete {
+			suggestions = cc.ServerComplete()
+		}
+		c.cachedSuggestionsByPath.Store(key, suggestions)
+	}
 
-// Count the number of arguments for the command
-// = (Number of arguments in total) - (Number of flags and flag values)
-func (c *ServerSideCompleterImpl) argCount(flagList []*pflag.Flag) int {
-	count := 0
-	for i := 0; i < len(flagList); i++ {
-		if flagList[i] == nil {
-			count += 1
-		} else {
-			if utils.IsFlagWithArg(flagList[i]) {
-				i += 1
+	if cf != nil {
+		for flagName, completeFunc := range cf.ServerFlagComplete() {
+			var suggestions []prompt.Suggest
+			if canComplete {
+				suggestions = completeFunc()
 			}
+			c.cachedSuggestionsByPath.Store(c.flagKey(cf.Cmd(), flagName), suggestions)
 		}
 	}
-	return count
-}
-
-// Check the cache for suggestions
-func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cmd *cobra.Command) []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	var cc ServerCompletableCommand
-	// Find the parent command that made the queries to update the cache
-	if cc = c.getCompletableParent(cmd); cc == nil {
-		return suggestions
-	}
-	// If found parent then we expect suggestions in the cache
-	// If not found in cache it is either not in a completable state or the cache is not yet updated which shouldn't really happen
-	suggestions, ok := c.getCachedSuggestions(d, cc)
-	if !ok {
-		if !pcmd.CanCompleteCommand(cmd) {
-			return suggestions
-		}
-		// Call the ServerComplete func directly in case the cache didn't update in time
-		suggestions = cc.ServerComplete()
-	}
-	return suggestions
 }
 
 // Return list of the same length as the args list
@@ -261,9 +215,53 @@ func (c *ServerSideCompleterImpl) getFlagWithArg(flagList []*pflag.Flag) string 
 	return ""
 }
 
+// Check if the command expects an argument
+func (c *ServerSideCompleterImpl) canAcceptArgument(cmd *cobra.Command, flagList []*pflag.Flag) bool {
+	argNum := c.argCount(flagList)
+	tmpArgs := make([]string, argNum+1)
+	err := cmd.ValidateArgs(tmpArgs)
+	return err == nil
+}
+
+// Count the number of arguments for the command
+// = (Number of arguments in total) - (Number of flags and flag values)
+func (c *ServerSideCompleterImpl) argCount(flagList []*pflag.Flag) int {
+	count := 0
+	for i := 0; i < len(flagList); i++ {
+		if flagList[i] == nil {
+			count += 1
+		} else {
+			if utils.IsFlagWithArg(flagList[i]) {
+				i += 1
+			}
+		}
+	}
+	return count
+}
+
+// Check the cache for suggestions
+func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cmd *cobra.Command) []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	var cc ServerCompletableCommand
+	// Find the parent command that made the queries to update the cache
+	if cc = c.getCompletableParent(cmd); cc == nil {
+		return suggestions
+	}
+	// If found parent then we expect suggestions in the cache
+	// If not found in cache it is either not in a completable state or the cache is not yet updated which shouldn't really happen
+	suggestions, ok := c.getCachedSuggestions(d, cc)
+	if !ok {
+		if !pcmd.CanCompleteCommand(cmd) {
+			return suggestions
+		}
+		// Call the ServerComplete func directly in case the cache didn't update in time
+		suggestions = cc.ServerComplete()
+	}
+	return suggestions
+}
+
 // Check for flag suggestions, return empty list if not found or not in the state for flag suggestions
 func (c *ServerSideCompleterImpl) getSuggestionsForFlag(cmd *cobra.Command, flagName string) []prompt.Suggest {
-
 	// check static flag
 	v, ok := c.staticFlagSuggestionsCommandsMap.Load(flagName)
 	if ok {
@@ -284,13 +282,14 @@ func (c *ServerSideCompleterImpl) getSuggestionsForFlag(cmd *cobra.Command, flag
 
 	v, ok = c.cachedSuggestionsByPath.Load(c.flagKey(parent.Cmd(), flagName))
 	if !ok {
-		// in case cahcing didn't finish
+		// in case caching didn't finish
 		return parent.ServerFlagComplete()[flagName]()
 	}
 	return v.([]prompt.Suggest)
 }
 
-// Check for flag suggestions, return empty list if not found or not in the state for flag suggestions
+// Check that parent of current command is ServerCompletableFlag
+// and that the current command is the completable child for the specific flag
 func (c *ServerSideCompleterImpl) getParentServerCompletableFlag(cmd *cobra.Command, flagName string) ServerCompletableFlag {
 	// check parent
 	parent := cmd.Parent()
@@ -321,41 +320,6 @@ func (c *ServerSideCompleterImpl) getParentServerCompletableFlag(cmd *cobra.Comm
 	return nil
 }
 
-// Store suggestions in cache
-// Cache is updated for the children commands of the command the user is currently typing
-// e.g. ccloud api-key -> updates cache for ccloud api-key delete, or --resource flags for the various ccloud api-key command
-// If command cannot be completed, e.g. user not logged in, then add empty list to reset the cache
-func (c *ServerSideCompleterImpl) updateCachedSuggestions(cmd *cobra.Command, v interface{}) {
-	canComplete := pcmd.CanCompleteCommand(cmd)
-	cc, _ := v.(ServerCompletableCommand)
-	cf, _ := v.(ServerCompletableFlag)
-	if cc != nil {
-		cmd := cc.Cmd()
-		key := c.commandKey(cmd)
-		var suggestions []prompt.Suggest
-		if canComplete {
-			suggestions = cc.ServerComplete()
-		}
-		c.cachedSuggestionsByPath.Store(key, suggestions)
-	}
-
-	if cf != nil {
-		for flagName, completeFunc := range cf.ServerFlagComplete() {
-			var suggestions []prompt.Suggest
-			if canComplete {
-				suggestions = completeFunc()
-			}
-			c.cachedSuggestionsByPath.Store(c.flagKey(cf.Cmd(), flagName), suggestions)
-		}
-	}
-}
-
-func (c *ServerSideCompleterImpl) updateCachedFlagSuggestions(cmd *cobra.Command, fc ServerCompletableFlag, wg *sync.WaitGroup) {
-	for flagName, completeFunc := range fc.ServerFlagComplete() {
-		c.cachedSuggestionsByPath.Store(c.flagKey(cmd, flagName), completeFunc())
-	}
-}
-
 func (c *ServerSideCompleterImpl) getCachedSuggestions(d prompt.Document, cc ServerCompletableCommand) ([]prompt.Suggest, bool) {
 	key := c.commandKey(cc.Cmd())
 	v, ok := c.cachedSuggestionsByPath.Load(key)
@@ -365,78 +329,8 @@ func (c *ServerSideCompleterImpl) getCachedSuggestions(d prompt.Document, cc Ser
 	return v.([]prompt.Suggest), true
 }
 
-func (c *ServerSideCompleterImpl) getFlagCachedSuggestions(fc ServerCompletableFlag) []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	addFlags := func(flag *pflag.Flag) {
-		if flag.Changed {
-			_ = flag.Value.Set(flag.DefValue)
-		}
-		if flag.Hidden {
-			return
-		}
-		longName := "--" + flag.Name
-		if flag.DefValue == "" || flag.DefValue == "0" {
-			key := c.flagKey(fc.Cmd(), flag.Name)
-			v, ok := c.cachedSuggestionsByPath.Load(key)
-			if !ok {
-				// in case cache didn't finish...
-				f, ok := fc.ServerFlagComplete()[longName]
-				if ok {
-					suggestions = f()
-				}
-			}
-			suggestions = v.([]prompt.Suggest)
-		}
-	}
-	cmd := fc.Cmd()
-	cmd.LocalFlags().VisitAll(addFlags)
-	cmd.InheritedFlags().VisitAll(addFlags)
-	return suggestions
-}
-
-func (c *ServerSideCompleterImpl) getCachedFlagSuggestions(cmd *cobra.Command, flagName string) ([]prompt.Suggest, bool) {
-	key := c.flagKey(cmd, flagName)
-	v, ok := c.cachedSuggestionsByPath.Load(key)
-	if !ok {
-		return nil, false
-	}
-	return v.([]prompt.Suggest), true
-}
-
-// getCompletableCommand returns a matching ServerCompletableCommand, or nil if one is not found.
-func (c *ServerSideCompleterImpl) getCompletableCommand(cmd *cobra.Command) ServerCompletableCommand {
-	v, ok := c.commandsByPath.Load(c.commandKey(cmd))
-	if !ok {
-		return nil
-	}
-	return v.(ServerCompletableCommand)
-}
-
-// getCompletableFlag returns a matching ServerCompletableFlag, or nil if one is not found.
-func (c *ServerSideCompleterImpl) getCompletableFlags(cmd *cobra.Command) map[string]ServerCompletableFlag {
-	var completableFlagMap map[string]ServerCompletableFlag
-	addFlags := func(flag *pflag.Flag) {
-		if flag.Changed {
-			_ = flag.Value.Set(flag.DefValue)
-		}
-		if flag.Hidden {
-			return
-		}
-		longName := "--" + flag.Name
-		if flag.DefValue == "" || flag.DefValue == "0" {
-			v, ok := c.commandsByPath.Load(c.flagKey(cmd, flag.Name))
-			if ok {
-				completableFlagMap[longName] = v.(ServerCompletableFlag)
-			}
-		}
-	}
-	cmd.LocalFlags().VisitAll(addFlags)
-	cmd.InheritedFlags().VisitAll(addFlags)
-	return completableFlagMap
-}
-
-// getCompletableParent return the completable parent if the specified command is a completable child,
-// and false otherwise.
+// Checks that the parent of the current command is a ServerCompletableCommand
+// and that the current command is the child of that ServerCompletableCommand
 func (c *ServerSideCompleterImpl) getCompletableParent(cmd *cobra.Command) ServerCompletableCommand {
 	parent := cmd.Parent()
 	if parent == nil {
@@ -456,39 +350,14 @@ func (c *ServerSideCompleterImpl) getCompletableParent(cmd *cobra.Command) Serve
 	return nil
 }
 
-// getCompletableFlagParent return the ServerCompletableFlag parent if the specified command is a completable child,
-// and false otherwise.
-//func (c *ServerSideCompleterImpl) getCompletableFlagParent(d prompt.Document, cmd *cobra.Command) ServerCompletableFlag {
-//	parent := cmd.Parent()
-//	if parent == nil {
-//		return nil
-//	}
-//	var completableFlag ServerCompletableFlag
-//	findCompletableFlag := func(flag *pflag.Flag) {
-//		if flag.Changed {
-//			_ = flag.Value.Set(flag.DefValue)
-//		}
-//		if flag.Hidden {
-//			return
-//		}
-//		longName := "--" + flag.Name
-//		shortName := "-" + flag.Shorthand
-//		endsWithFlag := strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), shortName+" ") ||
-//			strings.HasSuffix(d.GetWordBeforeCursorWithSpace(), longName+" ")
-//		if endsWithFlag {
-//			// should not suggest an argument if flag is not completed with a value but expects one
-//			if flag.DefValue == "" || flag.DefValue == "0" {
-//				if v, ok := fcs[longName]; ok {
-//					completableFlag = v
-//				}
-//			}
-//		}
-//	}
-//
-//	cmd.LocalFlags().VisitAll(findCompletableFlag)
-//	cmd.InheritedFlags().VisitAll(findCompletableFlag)
-//	return completableFlag
-//}
+// Returns a matching ServerCompletableCommand, or nil if one is not found.
+func (c *ServerSideCompleterImpl) getCompletableCommand(cmd *cobra.Command) ServerCompletableCommand {
+	v, ok := c.commandsByPath.Load(c.commandKey(cmd))
+	if !ok {
+		return nil
+	}
+	return v.(ServerCompletableCommand)
+}
 
 func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt.Suggest {
 	filtered := []prompt.Suggest{}
