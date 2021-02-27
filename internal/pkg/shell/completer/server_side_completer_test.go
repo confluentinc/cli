@@ -22,7 +22,7 @@ const (
 	completeFlag            = "completeflag"
 	completeFlagShorthand   = "c"
 	noCompleteFlag          = "nocompleteflag"
-	noCompleteFlagShorthand = "n"
+	noCompleteFlagShorthand = "m"
 	countFlag               = "count"
 	countFlagShorthand      = "t"
 	boolFlag                = "bool"

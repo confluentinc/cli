@@ -28,18 +28,20 @@ import (
 )
 
 const (
-	kafkaClusterID    = "lkc-12345"
-	srClusterID       = "lsrc-12345"
-	apiKeyVal         = "abracadabra"
-	apiKeyResourceId  = int32(9999)
-	anotherApiKeyVal  = "abba"
-	apiSecretVal      = "opensesame"
-	promptReadString  = "readstring"
-	promptReadPass    = "readpassword"
-	environment       = "testAccount"
-	apiSecretFile     = "./api_secret_test.txt"
-	apiSecretFromFile = "api_secret_test"
-	apiKeyDescription = "Mock Apis"
+	kafkaClusterID     = "lkc-12345"
+	srClusterID        = "lsrc-12345"
+	apiKeyVal          = "abracadabra"
+	apiKeyResourceId   = int32(9999)
+	anotherApiKeyVal   = "abba"
+	apiSecretVal       = "opensesame"
+	promptReadString   = "readstring"
+	promptReadPass     = "readpassword"
+	environment        = "testAccount"
+	apiSecretFile      = "./api_secret_test.txt"
+	apiSecretFromFile  = "api_secret_test"
+	apiKeyDescription  = "Mock Apis"
+	serviceAccountId   = int32(123)
+	serviceAccountName = "service-account"
 )
 
 var (
@@ -150,7 +152,12 @@ func (suite *APITestSuite) SetupTest() {
 			}, nil
 		},
 		GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
-			return []*v1.User{}, nil
+			return []*v1.User{
+				{
+					Id:          serviceAccountId,
+					ServiceName: serviceAccountName,
+				},
+			}, nil
 		},
 		CheckEmailFunc: nil,
 	}
@@ -428,6 +435,40 @@ func (suite *APITestSuite) TestServerResourceFlagComplete() {
 				{
 					Text:        suite.ksqlCluster.Id,
 					Description: suite.ksqlCluster.Name,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *APITestSuite) TestServerServiceAccountFlagComplete() {
+	flagName := "service-account"
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for flag",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        fmt.Sprintf("%d", serviceAccountId),
+					Description: serviceAccountName,
 				},
 			},
 		},

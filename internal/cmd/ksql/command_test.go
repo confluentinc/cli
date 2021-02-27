@@ -3,14 +3,14 @@ package ksql
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/c-bata/go-prompt"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -19,6 +19,7 @@ import (
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -82,6 +83,10 @@ type KSQLTestSuite struct {
 
 func (suite *KSQLTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.kafkaCluster = &schedv1.KafkaCluster{
+		Id:   "lkc-123",
+		Name: "kafka",
+	}
 	suite.ksqlCluster = &schedv1.KSQLCluster{
 		Id:                ksqlClusterID,
 		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
@@ -102,6 +107,9 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 		CreateACLsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, binding []*schedv1.ACLBinding) error {
 			return nil
+		},
+		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
 	suite.ksqlc = &mock.KSQL{
@@ -135,6 +143,16 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	}
 	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), &cliMock.ServerSideCompleter{}, suite.analyticsClient)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
+	return cmd
+}
+
+func (suite *KSQLTestSuite) newClusterCMD() *clusterCommand {
+	client := &ccloud.Client{
+		Kafka: suite.kafkac,
+		User:  suite.userc,
+		KSQL:  suite.ksqlc,
+	}
+	cmd := NewClusterCommand(cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.analyticsClient)
 	return cmd
 }
 
@@ -276,6 +294,40 @@ func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	req.Nil(err)
 	req.True(suite.ksqlc.DeleteCalled())
 	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
+}
+
+func (suite *KSQLTestSuite) TestServerClusterFlagComplete() {
+	flagName := "cluster"
+	req := suite.Require()
+	type fields struct {
+		Command *clusterCommand
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for flag",
+			fields: fields{
+				Command: suite.newClusterCMD(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        suite.kafkaCluster.Id,
+					Description: suite.kafkaCluster.Name,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
 }
 
 func TestKsqlTestSuite(t *testing.T) {
