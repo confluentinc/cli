@@ -83,10 +83,10 @@ func (c *ServerSideCompleterImpl) initializeStaticFlagSuggestions() {
 		"ccloud service-account list",
 		"ccloud service-account create",
 	}
-	c.addStaticFlagCompletion(outputFlagName, outputSuggestions, outputCommandPaths)
+	c.AddStaticFlagCompletion(outputFlagName, outputSuggestions, outputCommandPaths)
 }
 
-func (c *ServerSideCompleterImpl) addStaticFlagCompletion(flagName string, suggestions []prompt.Suggest, commandPaths []string) {
+func (c *ServerSideCompleterImpl) AddStaticFlagCompletion(flagName string, suggestions []prompt.Suggest, commandPaths []string) {
 	c.staticFlagSuggestions.Store(flagName, suggestions)
 	commandSet := make(map[string]bool)
 	for _, commandPath := range commandPaths {
@@ -509,56 +509,25 @@ func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt
 	return filtered
 }
 
-func (c *ServerSideCompleterImpl) AddCommand(cmd ServerCompletableCommand) {
-	c.commandsByPath.Store(c.commandKey(cmd.Cmd()), cmd)
-}
-
-func (c *ServerSideCompleterImpl) AddFlag(cmd ServerCompletableFlag, flagName string) {
-	c.commandsByPath.Store(c.flagKey(cmd.Cmd(), flagName), cmd)
+func (c *ServerSideCompleterImpl) AddCommand(cmd interface{}) {
+	cc, ok := cmd.(ServerCompletableCommand)
+	if ok {
+		c.commandsByPath.Store(c.commandKey(cc.Cmd()), cc)
+		return
+	}
+	cf, ok := cmd.(ServerCompletableFlag)
+	if ok {
+		c.commandsByPath.Store(c.commandKey(cf.Cmd()), cf)
+		return
+	}
+	panic("Command added must be either ServerCompletableCommand or ServerCompletableFlag or both.")
 }
 
 func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {
-	// trim CLI name
 	return strings.TrimPrefix(cmd.CommandPath(), c.Root.Name()+" ")
 }
 
 func (c *ServerSideCompleterImpl) flagKey(cmd *cobra.Command, flagName string) string {
 	commandName := strings.TrimPrefix(cmd.CommandPath(), c.Root.Name()+" ")
 	return commandName + " --" + flagName
-}
-
-// inCompletableState checks whether the specified command is in a state where it should be considered for completion,
-// which is:
-// 1. when not after an uncompleted flag (api-key update --description)
-// 2. when a command is not accepted (ending with a space)
-// 3. when a command with a positional arg doesn't already have that arg provided
-func (c *ServerSideCompleterImpl) inCompletableState(d prompt.Document, matchedCmd *cobra.Command, args []string) bool {
-	var shouldSuggest = true
-
-	// must be typing a new argument
-	if !strings.HasSuffix(d.CurrentLine(), " ") {
-		return false
-	}
-
-	// This is a heuristic to see if more args can be accepted. If no validation error occurs
-	// for a number of args larger than the current number up to the chosen max, we say that more
-	// args can be accepted. Cases where args only in some valid set (i.e: strings containing
-	// the letter 'a') are accepted aren't considered for now.
-	//	const maxReasonableArgs = 20
-	//	canAcceptMoreArgs := false
-	//	for i := len(args) + 1; i <= maxReasonableArgs; i++ {
-	//		tmpArgs := make([]string, i)
-	//		if err := matchedCmd.ValidateArgs(tmpArgs); err == nil {
-	//			canAcceptMoreArgs = true
-	//			break
-	//		}
-	//	}
-	//	if !canAcceptMoreArgs {
-	//		fmt.Println("CNT ACCEPT MORE ARGS")
-	//		return false
-	//	}
-
-	_ = matchedCmd.ParseFlags(strings.Fields(d.CurrentLine()))
-
-	return shouldSuggest
 }

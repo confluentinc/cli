@@ -26,8 +26,8 @@ type ServerCompletableFlag interface {
 
 type ServerSideCompleter interface {
 	Completer
-	AddCommand(cmd ServerCompletableCommand)
-	AddFlag(cmd ServerCompletableFlag, flagName string)
+	AddCommand(cmd interface{})
+	AddStaticFlagCompletion(flagName string, suggestions []prompt.Suggest, commandPaths []string) // expose for testing
 }
 
 func (f CompleterFunc) Complete(doc prompt.Document) []prompt.Suggest {
