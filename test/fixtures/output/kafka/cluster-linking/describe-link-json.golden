@@ -1,0 +1,22 @@
+[
+  {
+    "Key": "ClusterId",
+    "Value": "cluster-1"
+  }, 
+  {
+    "Key": "LinkName",
+    "Value": "link-1"
+  }, 
+  {
+    "Key": "LinkId",
+    "Value": "LINKID1"
+  }, 
+  {
+    "Key": "replica.fetch.max.bytes",
+    "Value": "1048576"
+  }, 
+  {
+    "Key": "bootstrap.servers",
+    "Value": "bitcoin.com:8888"
+  }
+]

@@ -2,6 +2,7 @@ package test_server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -151,6 +152,184 @@ func (r KafkaRestProxyRouter) HandlKafkaRPTopic(t *testing.T) func(http.Response
 		case "DELETE":
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links"
+func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdLinksPostOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseDataList{Data: []kafkarestv3.ListLinksResponseData{
+				{
+					Kind:        "",
+					Metadata:    kafkarestv3.ResourceMetadata{},
+					ClusterId:   "cluster-1",
+					LinkName:    "link-1",
+					LinkId:      "LINKID1",
+					TopicsNames: []string{"link-1-topic-1", "link-1-topic-2"},
+				},
+				{
+					Kind:        "",
+					Metadata:    kafkarestv3.ResourceMetadata{},
+					ClusterId:   "cluster-1",
+					LinkName:    "link-2",
+					LinkId:      "LINKID2",
+					TopicsNames: []string{"link-2-topic-1", "link-2-topic-2"},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}"
+func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseData{
+				Kind:        "",
+				Metadata:    kafkarestv3.ResourceMetadata{},
+				ClusterId:   "cluster-1",
+				LinkName:    "link-1",
+				LinkId:      "LINKID1",
+				TopicsNames: []string{"link-1-topic-1", "link-1-topic-2"},
+			})
+			require.NoError(t, err)
+		case "DELETE":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors"
+func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					DestinationTopicName: "dest-topic-1",
+					SourceTopicName:      "src-topic-1",
+					MirrorTopicStatus:    "active",
+					StateTimeMs:          111111111,
+				},
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					DestinationTopicName: "dest-topic-2",
+					SourceTopicName:      "src-topic-2",
+					MirrorTopicStatus:    "stopped",
+					StateTimeMs:          222222222,
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors/promote"
+func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			fmt.Print("asdfgh")
+			errorMsg := "Not authorized"
+			var errorCode int32 = 401
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.AlterMirrorStatusResponseDataList{Data: []kafkarestv3.AlterMirrorStatusResponseData{
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					DestinationTopicName: "dest-topic-1",
+					ErrorMessage:         nil,
+					ErrorCode:            nil,
+				},
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					DestinationTopicName: "dest-topic-1",
+					ErrorMessage:         &errorMsg,
+					ErrorCode:            &errorCode,
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs"
+func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinkConfigsResponseDataList{Data: []kafkarestv3.ListLinkConfigsResponseData{
+				{
+					Kind:      "",
+					Metadata:  kafkarestv3.ResourceMetadata{},
+					ClusterId: "cluster-1",
+					Name:      "replica.fetch.max.bytes",
+					Value:     "1048576",
+					ReadOnly:  false,
+					Sensitive: false,
+					Source:    "source-1",
+					Synonyms:  []string{"rfmb", "bmfr"},
+					LinkName:  "link-1",
+				},
+				{
+					Kind:      "",
+					Metadata:  kafkarestv3.ResourceMetadata{},
+					ClusterId: "cluster-1",
+					Name:      "bootstrap.servers",
+					Value:     "bitcoin.com:8888",
+					ReadOnly:  false,
+					Sensitive: false,
+					Source:    "source-2",
+					Synonyms:  nil,
+					LinkName:  "link-1",
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors/{mirror_name}"
+func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseData{
+				Kind:                 "",
+				Metadata:             kafkarestv3.ResourceMetadata{},
+				DestinationTopicName: "dest-topic-1",
+				SourceTopicName:      "src-topic-1",
+				MirrorTopicStatus:    "active",
+				StateTimeMs:          111111111,
+			})
+			require.NoError(t, err)
 		}
 	}
 }

@@ -1,0 +1,6 @@
+- DestinationTopicName: dest-topic-1
+  ErrorCode: ""
+  ErrorMessage: ""
+- DestinationTopicName: dest-topic-1
+  ErrorCode: "401"
+  ErrorMessage: Not authorized

@@ -1,0 +1,8 @@
+- DestinationTopicName: dest-topic-1
+  MirrorStatus: active
+  SourceTopicName: src-topic-1
+  StatusTimeMs: "111111111"
+- DestinationTopicName: dest-topic-2
+  MirrorStatus: stopped
+  SourceTopicName: src-topic-2
+  StatusTimeMs: "222222222"

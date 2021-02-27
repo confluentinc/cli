@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"github.com/antihax/optional"
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -458,6 +459,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
+		fmt.Println("rest proxy not available")
 		// Fall back to use kafka-api if the cluster doesn't support rest proxy
 		return c.describeWithKafkaApi(cmd, linkName)
 	}
@@ -493,24 +495,21 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		Value: listLinksResponseData.LinkId,
 	})
 
-	utils.Print(cmd, "\nLink Configuration\n\n")
-	err = outputWriter.Out()
+
+	listLinkConfigsRespData, _, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(
+		kafkaREST.Context, lkc, linkName)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err = output.NewListOutputWriter(
-		cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
-	if err != nil {
-		return err
-	}
-
-	for _, topic := range listLinksResponseData.TopicsNames {
+	for _, config := range listLinkConfigsRespData.Data {
 		outputWriter.AddElement(
-			&LinkTopicWriter{LinkName: listLinksResponseData.LinkName, TopicName: topic})
+			&keyValueDisplay{
+				Key:   config.Name,
+				Value: config.Value,
+			})
 	}
 
-	utils.Print(cmd, "\nMirror Topics\n\n")
 	return outputWriter.Out()
 }
 

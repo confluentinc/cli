@@ -69,6 +69,10 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
+		{args: "kafka cluster describe lkc-describe-dedicated-pending", fixture: "kafka/33.golden"},
+		{args: "kafka cluster describe lkc-describe-dedicated-pending -o json", fixture: "kafka/34.golden"},
+		{args: "kafka cluster describe lkc-describe-dedicated-pending -o yaml", fixture: "kafka/35.golden"},
+
 		{args: "kafka link list --cluster lkc-links", fixture: "kafka/kafka20.golden", wantErrCode: 0},
 		{args: "kafka link list --cluster lkc-links -o json", fixture: "kafka/kafka21.golden", wantErrCode: 0},
 		{args: "kafka link list --cluster lkc-links -o yaml", fixture: "kafka/kafka22.golden", wantErrCode: 0},
@@ -76,36 +80,19 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link describe --cluster lkc-links my-link -o json", fixture: "kafka/kafka24.golden", wantErrCode: 0},
 		{args: "kafka link describe --cluster lkc-links my-link -o yaml", fixture: "kafka/kafka25.golden", wantErrCode: 0},
 
-		{args: "kafka topic mirror stop test-topic", login: "default", useKafka: "lkc-topics", authKafka: "true"},
-		{args: "kafka topic mirror stop not-found", login: "default", useKafka: "lkc-topics", authKafka: "true", fixture: "kafka/mirror-topic-not-found.golden", wantErrCode: 1},
-		{args: "kafka topic mirror bad test-topic", login: "default", useKafka: "lkc-topics", authKafka: "true", fixture: "kafka/mirror-invalid.golden", wantErrCode: 1},
+		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/cluster-linking/list-link-plain.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/cluster-linking/list-link-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/cluster-linking/list-link-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link describe --cluster lkc-describe-topic link-1", fixture: "kafka/cluster-linking/describe-link-plain.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/cluster-linking/describe-link-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/cluster-linking/describe-link-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link list-configs --cluster lkc-describe-topic link-1", fixture: "kafka/cluster-linking/list-link-configs-plain.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link list-configs --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/cluster-linking/list-link-configs-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka link list-configs --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/cluster-linking/list-link-configs-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
-		{args: "kafka topic list", login: "default", useKafka: "lkc-topics", fixture: "kafka/topic-list.golden"},
-		{args: "kafka topic list --cluster lkc-topics", login: "default", fixture: "kafka/topic-list.golden"},
-		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/rp-topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic list", login: "default", useKafka: "lkc-no-topics", fixture: "kafka/topic-list-empty.golden"},
-		{args: "kafka topic list", login: "default", useKafka: "lkc-not-ready", fixture: "kafka/cluster-not-ready.golden", wantErrCode: 1},
-
-		{args: "kafka topic create", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create.golden", wantErrCode: 1},
-		{args: "kafka topic create topic1", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-success.golden"},
-		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic create dupTopic", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-dup-topic.golden", wantErrCode: 1},
-
-		{args: "kafka topic describe", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe.golden", wantErrCode: 1},
-		{args: "kafka topic describe topic1", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-success.golden"},
-		{args: "kafka topic describe topic1", useKafka: "lkc-describe-topic", fixture: "kafka/rp-topic-describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic describe topic1 --output json", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-json-success.golden"},
-		{args: "kafka topic describe topic1 --cluster lkc-create-topic", login: "default", fixture: "kafka/topic-describe-not-found.golden", wantErrCode: 1},
-		{args: "kafka topic describe topic2", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic2-describe-not-found.golden", wantErrCode: 1},
-
-		{args: "kafka topic delete", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete.golden", wantErrCode: 1},
-		{args: "kafka topic delete topic1", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete-success.golden"},
-		{args: "kafka topic delete topic1", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic delete topic1 --cluster lkc-create-topic", login: "default", fixture: "kafka/topic-delete-not-found.golden", wantErrCode: 1},
-		{args: "kafka topic delete topic2", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1},
-
-		{args: "kafka topic update topic1 --config=\"testConfig=valueUpdate\"", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
-		{args: "kafka topic update topic1 --config=\"testConfig=valueUpdate\"", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link-name link-1", fixture: "kafka/cluster-linking/promote-mirror.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link-name link-1 -o json", fixture: "kafka/cluster-linking/promote-mirror-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link-name link-1 -o yaml", fixture: "kafka/cluster-linking/promote-mirror-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 	}
 
 	resetConfiguration(s.T(), "ccloud")

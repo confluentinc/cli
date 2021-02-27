@@ -1,0 +1,4 @@
+  DestinationTopicName |  ErrorMessage  | ErrorCode  
++----------------------+----------------+-----------+
+  dest-topic-1         |                |            
+  dest-topic-1         | Not authorized |       401  

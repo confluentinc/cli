@@ -1,0 +1,7 @@
+            Key           |      Value        
++-------------------------+------------------+
+  ClusterId               | cluster-1         
+  LinkName                | link-1            
+  LinkId                  | LINKID1           
+  replica.fetch.max.bytes |          1048576  
+  bootstrap.servers       | bitcoin.com:8888  

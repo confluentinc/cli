@@ -1,0 +1,4 @@
+  DestinationTopicName | SourceTopicName | MirrorStatus | StatusTimeMs  
++----------------------+-----------------+--------------+--------------+
+  dest-topic-1         | src-topic-1     | active       |    111111111  
+  dest-topic-2         | src-topic-2     | stopped      |    222222222  
