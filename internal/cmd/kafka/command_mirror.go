@@ -71,36 +71,36 @@ func (c *mirrorCommand) init() {
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName.")
+	listCmd.Flags().String(linkFlagName, "", "Cluster link name.")
 	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of " +
 		"[active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <destination-topic-ConfigName>",
+		Use:   "describe <destination-topic-name>",
 		Short: "Describes a mirror topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describes a mirror topic under the link.",
-				Code: "ccloud kafka mirror describe <destination-topic-ConfigName> --link-name <link-name>",
+				Code: "ccloud kafka mirror describe <destination-topic-name> --link-name <link-name>",
 			},
 		),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().String(linkFlagName, "", "Cluster link ConfigName.")
+	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	createCmd := &cobra.Command{
-		Use:   "create <mirror-ConfigName>",
-		Short: "Create a mirror topic under the link. Currently, destination topic ConfigName is required to be the same as the Source topic ConfigName.",
+		Use:   "create <mirror-name>",
+		Short: "Create a mirror topic under the link. Currently, destination topic name is required to be the same as the Source topic name.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied Source URL and properties.",
-				Code: "ccloud kafka mirror create <Source-topic-ConfigName> --link-name <link-name> " +
+				Code: "ccloud kafka mirror create <Source-topic-name> --link-name <link-name> " +
 					"--replication-factor <replication-factor> --config=\"unclean.leader.election.enable=true\"",
 			},
 		),
@@ -109,7 +109,7 @@ func (c *mirrorCommand) init() {
 	}
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
 	createCmd.Flags().StringSlice(configFlagName, nil, "A comma-separated list of topic config overrides ('key=ConfigValue') for the topic being created.")
-	createCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
+	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -126,7 +126,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.MinimumNArgs(1),
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	promoteCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
+	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	promoteCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(promoteCmd)
 
@@ -143,7 +143,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.MinimumNArgs(1),
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	failoverCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
+	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	failoverCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(failoverCmd)
 
@@ -160,7 +160,7 @@ func (c *mirrorCommand) init() {
 	Args: cobra.MinimumNArgs(1),
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	pauseCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
+	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	pauseCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(pauseCmd)
 
@@ -177,7 +177,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.MinimumNArgs(1),
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	resumeCmd.Flags().String(linkFlagName, "", "The ConfigName of the cluster link.")
+	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	resumeCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	c.AddCommand(resumeCmd)
 }

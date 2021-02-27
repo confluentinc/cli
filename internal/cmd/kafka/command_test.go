@@ -728,6 +728,9 @@ func TestDescribeLink(t *testing.T) {
 			expect <- cliMock.DescribeLinkMatcher{
 				LinkName: link.name,
 			}
+			expect <- cliMock.ListLinkConfigMatcher{
+				LinkName:    link.name,
+			}
 		},
 	)
 }

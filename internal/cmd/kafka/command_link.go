@@ -97,7 +97,7 @@ func (c *linkCommand) init() {
 
 	// Note: this is subject to change as we iterate on options for how to specify a Source cluster.
 	createCmd := &cobra.Command{
-		Use:   "create <link-ConfigName>",
+		Use:   "create <link-name>",
 		Short: "Create a new cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -117,7 +117,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <link-ConfigName>",
+		Use:   "delete <link-name>",
 		Short: "Delete a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -131,7 +131,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <link-ConfigName>",
+		Use:   "describe <link-name>",
 		Short: "Describes a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -148,7 +148,7 @@ func (c *linkCommand) init() {
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	updateCmd := &cobra.Command{
-		Use:   "update <link-ConfigName>",
+		Use:   "update <link-name>",
 		Short: "Updates a property for a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -164,7 +164,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(updateCmd)
 
 	listConfigCmd := &cobra.Command{
-		Use:   "list-configs <link-ConfigName>",
+		Use:   "list-configs <link-name>",
 		Short: "List all configs of the link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
