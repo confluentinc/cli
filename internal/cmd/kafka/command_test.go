@@ -609,7 +609,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}()
 
 	if err := cmd.Execute(); err != nil {
-		t.Errorf("Topic PatternType was not set to default ConfigValue of PatternTypes_LITERAL")
+		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 
 	cmd = newCmd(expect, enableREST)
@@ -628,7 +628,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}()
 
 	if err := cmd.Execute(); err != nil {
-		t.Errorf("Cluster PatternType was not set to default ConfigValue of PatternTypes_LITERAL")
+		t.Errorf("Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 }
 

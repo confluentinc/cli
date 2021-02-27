@@ -108,7 +108,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
-	createCmd.Flags().StringSlice(configFlagName, nil, "A comma-separated list of topic config overrides ('key=ConfigValue') for the topic being created.")
+	createCmd.Flags().StringSlice(configFlagName, nil, "A comma-separated list of topic config overrides ('key=value') for the topic being created.")
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)

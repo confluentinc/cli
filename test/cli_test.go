@@ -427,8 +427,8 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
 		if tt.regex {
 			require.Regexp(t, expected, actual)
-		} else if !reflect.DeepEqual(utils.RemoveSpace(actual), utils.RemoveSpace(expected)) {
-			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", utils.RemoveSpace(actual), utils.RemoveSpace(expected))
+		} else if !reflect.DeepEqual(actual, expected) {
+			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
 		}
 	}
 	if tt.wantFunc != nil {

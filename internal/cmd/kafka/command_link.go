@@ -95,24 +95,24 @@ func (c *linkCommand) init() {
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
-	// Note: this is subject to change as we iterate on options for how to specify a Source cluster.
+	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
 	createCmd := &cobra.Command{
 		Use:   "create <link-name>",
 		Short: "Create a new cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a cluster link, using supplied Source URL and properties.",
+				Text: "Create a cluster link, using supplied source URL and properties.",
 				Code: "ccloud kafka link create my_link --source_cluster myhost:1234\nccloud kafka link create my_link --source_cluster myhost:1234 --config-file ~/myfile.txt",
 			},
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for Source cluster.")
+	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
 	createCmd.Flags().String(sourceClusterIdName, "", "Source cluster ID.")
-	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for Source cluster.")
+	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for source cluster.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the Source cluster before creation.")
+	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -159,7 +159,7 @@ func (c *linkCommand) init() {
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=ConfigValue') overrides for the topic being created.")
+	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
@@ -354,7 +354,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// The `Source` argument is a convenience; we package everything into properties for the Source cluster.
+	// The `source` argument is a convenience; we package everything into properties for the Source cluster.
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
 	kafkaREST, _ := c.GetKafkaREST()
