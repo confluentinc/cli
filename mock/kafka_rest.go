@@ -2,7 +2,6 @@ package mock
 
 import (
 	"context"
-	"fmt"
 	nethttp "net/http"
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -522,10 +521,6 @@ type AlterMirrorMatcher struct {
 }
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsFailoverPost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsFailoverPostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
-	// TODO: Remove std output before merging
-	fmt.Println(localVarOptionals.ValidateOnly.Value())
-	fmt.Println(localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics)
-
 	expect := <- m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics {
@@ -543,9 +538,6 @@ type ListMirrorMatcher struct {
 }
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsGetOpts) (krsdk.ListMirrorTopicsResponseDataList, *nethttp.Response, error) {
-	// TODO: Remove std output before merging
-	fmt.Println(localVarOptionals.MirrorStatus.Value().(krsdk.MirrorTopicStatus))
-
 	expect := <- m.Expect
 	matcher := expect.(ListMirrorMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -583,10 +575,6 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Co
 }
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPausePost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsPausePostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
-	// TODO: Remove std output before merging
-	fmt.Println(localVarOptionals.ValidateOnly.Value())
-	fmt.Println(localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics)
-
 	expect := <- m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics {
@@ -605,12 +593,6 @@ type CreateMirrorMatcher struct {
 }
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsPostOpts) (*nethttp.Response, error) {
-	// TODO: Remove std output before merging
-	fmt.Println(localVarOptionals.CreateMirrorTopicRequestData.Value().(krsdk.CreateMirrorTopicRequestData).SourceTopicName)
-	fmt.Println(localVarOptionals.CreateMirrorTopicRequestData.Value().(krsdk.CreateMirrorTopicRequestData).ReplicationFactor)
-	fmt.Println(localVarOptionals.CreateMirrorTopicRequestData.Value().(krsdk.CreateMirrorTopicRequestData).Configs[0].Name)
-	fmt.Println(localVarOptionals.CreateMirrorTopicRequestData.Value().(krsdk.CreateMirrorTopicRequestData).Configs[0].Value)
-
 	data := localVarOptionals.CreateMirrorTopicRequestData.Value().(krsdk.CreateMirrorTopicRequestData)
 	expect := <- m.Expect
 	matcher := expect.(CreateMirrorMatcher)
@@ -634,10 +616,6 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPost(ctx context.C
 }
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPromotePost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsPromotePostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
-	// TODO: Remove std output before merging
-	fmt.Println(localVarOptionals.ValidateOnly.Value())
-	fmt.Println(localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics)
-
 	expect := <- m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics {
@@ -650,10 +628,6 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPromotePost(ctx co
 }
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsResumePost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsResumePostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
-	// TODO: Remove std output before merging
-	fmt.Println(localVarOptionals.ValidateOnly.Value())
-	fmt.Println(localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics)
-
 	expect := <- m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).DestinationTopics {
