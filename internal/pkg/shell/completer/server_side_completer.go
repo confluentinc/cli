@@ -389,7 +389,7 @@ func (c *ServerSideCompleterImpl) AddCommand(cmd interface{}) {
 		c.commandsByPath.Store(c.commandKey(cf.Cmd()), cf)
 		return
 	}
-	panic("Command added must be either ServerCompletableCommand or ServerCompletableFlag or both.")
+	panic("Command added must implement either ServerCompletableCommand or ServerCompletableFlag or both.")
 }
 
 func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {

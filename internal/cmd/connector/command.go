@@ -454,6 +454,6 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"cluster": completer.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
+		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
 	}
 }

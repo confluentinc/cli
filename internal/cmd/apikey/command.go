@@ -555,27 +555,12 @@ func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
 func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
 		resourceFlagName:  c.resourceFlagCompleterFunc,
-		"service-account": c.serviceAccountFlagCompleterFunc,
+		"service-account": completer.ServiceAccountFlagCompleterFunc(c.Client),
 	}
-}
-
-func (c *command) serviceAccountFlagCompleterFunc() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return suggestions
-	}
-	for _, user := range users {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        fmt.Sprintf("%d", user.Id),
-			Description: user.ServiceName,
-		})
-	}
-	return suggestions
 }
 
 func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
-	suggestions := completer.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId())()
+	suggestions := completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId())()
 
 	ctx := context.Background()
 	ctxClient := pcmd.NewContextClient(c.Context)

@@ -7,9 +7,9 @@ import (
 	"strconv"
 
 	"github.com/c-bata/go-prompt"
+	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -373,6 +373,6 @@ func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Com
 
 func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
-		"cluster": completer.ClusterFlagServerCompleterFunc(c.Command, c.Client, c.EnvironmentId()),
+		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
 	}
 }
