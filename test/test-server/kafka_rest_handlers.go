@@ -213,6 +213,43 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/-/mirrors"
+func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-1",
+					DestinationTopicName: "dest-topic-1",
+					SourceTopicName:      "src-topic-1",
+					MirrorTopicStatus:    "active",
+					StateTimeMs:          111111111,
+				},
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-2",
+					DestinationTopicName: "dest-topic-2",
+					SourceTopicName:      "src-topic-2",
+					MirrorTopicStatus:    "stopped",
+					StateTimeMs:          222222222,
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors"
 func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -229,6 +266,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 				{
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-1",
 					DestinationTopicName: "dest-topic-1",
 					SourceTopicName:      "src-topic-1",
 					MirrorTopicStatus:    "active",
@@ -237,6 +275,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 				{
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-1",
 					DestinationTopicName: "dest-topic-2",
 					SourceTopicName:      "src-topic-2",
 					MirrorTopicStatus:    "stopped",

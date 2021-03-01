@@ -4,7 +4,7 @@
   SourceTopicName: src-topic-1
   StatusTimeMs: "111111111"
 - DestinationTopicName: dest-topic-2
-  LinkName: link-1
+  LinkName: link-2
   MirrorStatus: stopped
   SourceTopicName: src-topic-2
   StatusTimeMs: "222222222"

@@ -34,6 +34,7 @@ const (
 	rpLinks             = "/kafka/v3/clusters/{cluster}/links"
 	rpLinkConfigs       = "/kafka/v3/clusters/{cluster}/links/{link}/configs"
 	rpMirror            = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{destination_topic_name}"
+	rpAllMirrors           = "/kafka/v3/clusters/{cluster}/links/-/mirrors"
 	rpMirrors           = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
 	rpMirrorPromote     = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/promote"
 )
@@ -95,6 +96,7 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpLinkConfigs, r.HandleKafkaRPLinkConfigs(t))
 	r.HandleFunc(rpMirrorPromote, r.HandleKafkaRPMirrorsPromote(t))
 	r.HandleFunc(rpMirror, r.HandleKafkaRPMirror(t))
+	r.HandleFunc(rpAllMirrors, r.HandleKafkaRPAllMirrors(t))
 	r.HandleFunc(rpMirrors, r.HandleKafkaRPMirrors(t))
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)

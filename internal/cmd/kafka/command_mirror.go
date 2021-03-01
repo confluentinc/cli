@@ -5,6 +5,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+	"net/http"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -20,11 +21,12 @@ const (
 
 
 var (
-	listMirrorOutputFields = []string{"DestinationTopicName", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	listMirrorOutputFields = []string{"LinkName", "DestinationTopicName", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
 	AlterMirrorOutputFields = []string{"DestinationTopicName", "ErrorMessage", "ErrorCode"}
 )
 
 type listMirrorWrite struct {
+	LinkName string
 	DestinationTopicName  string
 	SourceTopicName string
 	MirrorStatus string
@@ -71,7 +73,7 @@ func (c *mirrorCommand) init() {
 		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().String(linkFlagName, "", "Cluster link name.")
+	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
 	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of " +
 		"[active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	listCmd.Flags().SortFlags = false
@@ -208,10 +210,21 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 		mirrorStatusOpt = optional.NewInterface(kafkarestv3.MirrorTopicStatus(mirrorStatus))
 	}
 
-	listMirrorTopicsResponseDataList, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsGet(
-			kafkaREST.Context, lkc, linkName,
-			&kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsGetOpts{MirrorStatus: mirrorStatusOpt})
+	var listMirrorTopicsResponseDataList kafkarestv3.ListMirrorTopicsResponseDataList
+	var httpResp *http.Response
+
+	if linkName == "" {
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingApi.
+			ClustersClusterIdLinksMirrorsGet(
+				kafkaREST.Context, lkc,
+				&kafkarestv3.ClustersClusterIdLinksMirrorsGetOpts{MirrorStatus: mirrorStatusOpt})
+	} else {
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingApi.
+			ClustersClusterIdLinksLinkNameMirrorsGet(
+				kafkaREST.Context, lkc, linkName,
+				&kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsGetOpts{MirrorStatus: mirrorStatusOpt})
+	}
+
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -224,6 +237,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
 		outputWriter.AddElement(&listMirrorWrite{
+			LinkName:             mirror.LinkName,
 			DestinationTopicName: mirror.DestinationTopicName,
 			SourceTopicName:      mirror.SourceTopicName,
 			MirrorStatus:         string(mirror.MirrorTopicStatus),
@@ -355,7 +369,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 	promoteMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPromotePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopics: args,
+				DestinationTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
@@ -394,7 +408,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 	failoverMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsFailoverPostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopics: args,
+				DestinationTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
@@ -433,7 +447,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 	pauseMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPausePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopics: args,
+				DestinationTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
@@ -472,7 +486,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 	resumeMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsResumePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopics: args,
+				DestinationTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),

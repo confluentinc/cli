@@ -814,6 +814,20 @@ func TestCreateMirror(t *testing.T) {
 	)
 }
 
+func TestListAllMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "list", "--mirror-status", "active"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListMirrorMatcher{
+				Status: "active",
+			}
+		},
+	)
+}
+
 func TestListMirror(t *testing.T) {
 	linkTestHelper(
 		t,
