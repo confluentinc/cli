@@ -22,27 +22,31 @@ const (
 )
 
 type command struct {
-	Command      *cobra.Command
-	RootCmd      *cobra.Command
-	config       *v3.Config
-	prerunner    pcmd.PreRunner
-	completer    *completer.ShellCompleter
-	analytics    analytics.Client
-	logger       *log.Logger
-	jwtValidator pcmd.JWTValidator
+	Command          *cobra.Command
+	RootCmd          *cobra.Command
+	cliName          string
+	config           *v3.Config
+	configLoadingErr error
+	prerunner        pcmd.PreRunner
+	completer        *completer.ShellCompleter
+	analytics        analytics.Client
+	logger           *log.Logger
+	jwtValidator     pcmd.JWTValidator
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, prerunner pcmd.PreRunner,
+func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config, configLoadingErr error,
 	completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
-		RootCmd:      rootCmd,
-		config:       config,
-		prerunner:    prerunner,
-		completer:    completer,
-		logger:       logger,
-		analytics:    analytics,
-		jwtValidator: jwtValidator,
+		RootCmd:          rootCmd,
+		config:           config,
+		configLoadingErr: configLoadingErr,
+		cliName:          cliName,
+		prerunner:        prerunner,
+		completer:        completer,
+		logger:           logger,
+		analytics:        analytics,
+		jwtValidator:     jwtValidator,
 	}
 
 	cliCmd.init()
@@ -52,14 +56,16 @@ func NewShellCmd(rootCmd *cobra.Command, config *v3.Config, prerunner pcmd.PreRu
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "shell",
-		Short: fmt.Sprintf("Run the %s shell.", c.config.CLIName),
-		Run:   c.shell,
+		Short: fmt.Sprintf("Run the %s shell.", c.cliName),
+		RunE:  pcmd.NewCLIRunE(c.shell),
 		Args:  cobra.NoArgs,
 	}
 }
 
-func (c *command) shell(cmd *cobra.Command, args []string) {
-	cliName := c.config.CLIName
+func (c *command) shell(cmd *cobra.Command, args []string) error {
+	if c.config == nil {
+		return c.configLoadingErr
+	}
 
 	// remove shell command from the shell
 	c.RootCmd.RemoveCommand(c.Command)
@@ -81,7 +87,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 	}
 
 	// run the shell
-	fmt.Printf(errors.ShellWelcomeMsg, cliName, msg)
+	fmt.Printf(errors.ShellWelcomeMsg, c.cliName, msg)
 	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
@@ -93,6 +99,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	cliPrompt.Run()
+	return nil
 }
 
 func livePrefixFunc(prompt *goprompt.Prompt, config *v3.Config, jwtValidator pcmd.JWTValidator) func() (prefix string, useLivePrefix bool) {

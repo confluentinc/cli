@@ -54,6 +54,7 @@ const (
 	StartingConsumerMsg    = "Starting Kafka Consumer. ^C or ^D to exit"
 	CreatedTopicMsg        = "Created topic \"%s\".\n"
 	DeletedTopicMsg        = "Deleted topic \"%s\".\n"
+	UnknownTopicMsg        = "Unknown topic: \"%s\".\n"
 	UpdateTopicConfigMsg   = "Updated the following configs for topic \"%s\":\n"
 	InvalidMirrorActionMsg = "Invalid mirror action \"%s\" provided.\n"
 	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
@@ -65,8 +66,9 @@ const (
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
 	// kafka acl commands
-	DeletedACLsMsg  = "Deleted ACLs.\n"
-	ACLsNotFoundMsg = "ACL not found; ACL may have been misspelled or already deleted.\n"
+	DeletedACLsMsg      = "Deleted ACLs.\n"
+	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
+	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."

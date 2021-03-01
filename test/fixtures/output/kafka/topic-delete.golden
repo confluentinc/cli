@@ -1,0 +1,23 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  ccloud kafka topic delete <topic> [flags]
+
+Examples:
+Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.
+
+::
+
+  ccloud kafka topic delete my_topic
+  ccloud kafka topic delete my_topic_avro
+
+
+
+Flags:
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

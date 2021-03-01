@@ -1,0 +1,12 @@
+List the routes that match either the queried resource or its sub-resources.
+
+Usage:
+  confluent audit-log route list [flags]
+
+Flags:
+  -r, --resource string   The Confluent resource name (CRN) that is the subject of the query.
+      --context string    CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -40,3 +40,8 @@ unit_coverage.txt
 *.sw*
 .vscode
 **/*.DS_Store
+release-notes/prep
+release-notes/ccloud/latest-release.rst
+release-notes/confluent/latest-release.rst
+release-notes/ccloud/release-notes.rst
+release-notes/confluent/release-notes.rst

@@ -6,7 +6,7 @@ Usage:
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
       --environment string   Environment ID.
-      --context string       Context name.
+      --context string       CLI Context name.
 
 Global Flags:
   -h, --help            Show help for this command.
