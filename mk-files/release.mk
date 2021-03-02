@@ -7,14 +7,14 @@ release: get-release-image commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
-	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	@VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
 
 .PHONY: release-to-stag
 release-to-stag:
-	@GO111MODULE=on make gorelease
+	@make gorelease
 	git checkout go.sum
 	make goreleaser-patches
 	make copy-stag-archives-to-latest
@@ -44,8 +44,8 @@ endef
 .PHONY: gorelease-alpine
 gorelease-alpine:
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
 
 # This builds the Darwin, Linux (non-Alpine), and Windows binaries using goreleaser on the host computer.  goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.  However, we then have to separately build the Alpine binaries/archives in a Docker container (since we need to use an OS which has the Alpine C runtimes instead of the C runtimes on macOS).  We then also have to manually upload the Alpine build artifacts to S3 since the goreleaser inside the Docker container doesn't have the S3 credentials from the host.
 .PHONY: gorelease
@@ -53,8 +53,8 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
 	./build_alpine.sh && \
 	for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_alpine_amd64.tar.gz; \

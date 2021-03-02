@@ -51,8 +51,6 @@ builds:
             - LICENSE_BIN=confluent
             - LICENSE_BIN_PATH=./dist/confluent/signed_darwin_amd64/confluent
         - cmd: gon gon_confluent.hcl
-          env:
-            - GO111MODULE=on
 
 release:
   disable: true
