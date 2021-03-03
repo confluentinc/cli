@@ -105,14 +105,11 @@ func (c *ServerSideCompleterImpl) AddStaticFlagCompletion(flagName string, sugge
 
 func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	currentLine := d.CurrentLine()
-
-	// '=' must be followed by argument right away so if user accdientally add space we should not add suggestions after it
-	if strings.HasSuffix(currentLine, "= ") {
-		return []prompt.Suggest{}
-	}
-
 	// must be typing a new argument to get suggestions
-	if !strings.HasSuffix(currentLine, " ") && !strings.HasSuffix(currentLine, "=") {
+	// we will not support suggestions for flag when user types '=' e.g. --resource=
+	// right now without space goprompt is going to replace the whole argument so it will override the flag name instead of appending
+	// need to figure out a way around that before we can support '=' suggestion
+	if !strings.HasSuffix(currentLine, " ") {
 		return []prompt.Suggest{}
 	}
 
@@ -124,20 +121,6 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 		args = foundArgs
 	}
 
-	// List where elements correspondes to the arg list, if the arg is a flag then flag in that position else nil
-	argTypeList, lastFlagName := c.getArgTypeListAndLastFlagWithArgName(cmd, args)
-	// If flagName is not empty then we are in a flag completion state
-	if len(lastFlagName) > 0 {
-		suggestions := c.getSuggestionsForFlag(cmd, lastFlagName)
-		return filterSuggestions(d, suggestions)
-	}
-
-	// if the last character is "=" then it can only expect flag completion
-	// Because last argument is not flag with suggestions we can just return empty list
-	if strings.HasSuffix(currentLine, "=") {
-		return []prompt.Suggest{}
-	}
-
 	// If command is in commandsByPath map then it is a parent of commands with completion
 	// Update the cache in the background
 	// Return empty suggestions as the children of this command are the ones that need suggestions
@@ -145,6 +128,15 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	if ok {
 		go c.updateCachedSuggestions(cmd, v)
 		return []prompt.Suggest{}
+	}
+
+	// List of argType corresponding to the arg position in the argument list
+	// lastFlagWithArg is the flag name if last argument is flag that expects argument else ""
+	argTypeList, lastFlagWithArg := c.getArgTypeListAndLastFlagWithArgName(cmd, args)
+	// If flagName is not empty then we are in a flag completion state
+	if len(lastFlagWithArg) > 0 {
+		suggestions := c.getSuggestionsForFlag(cmd, lastFlagWithArg)
+		return filterSuggestions(d, suggestions)
 	}
 
 	if !c.canAcceptArgument(cmd, argTypeList) {

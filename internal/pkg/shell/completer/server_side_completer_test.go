@@ -221,11 +221,6 @@ func (suite *ServerSideCompleterTestSuite) TestFlagArgValidation() {
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
-			name:                "suggestions for flag ending with '='",
-			inputString:         strings.Join([]string{completeChildInputString, "--" + completeFlag + "="}, " "),
-			expectedSuggestions: expectedFlagSuggestions,
-		},
-		{
 			name:                "suggestions for flag after arg",
 			inputString:         strings.Join([]string{completeChildInputString, "arg", "--" + completeFlag, ""}, " "),
 			expectedSuggestions: expectedFlagSuggestions,
@@ -236,18 +231,13 @@ func (suite *ServerSideCompleterTestSuite) TestFlagArgValidation() {
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
-			name:                "suggestions for flag after another flag with '='",
-			inputString:         strings.Join([]string{completeChildInputString, "--" + noCompleteFlag + "=flagarg", "--" + completeFlag + "="}, " "),
+			name:                "suggestions for flag after another flag that uses '='",
+			inputString:         strings.Join([]string{completeChildInputString, "--" + noCompleteFlag + "=flagarg", "--" + completeFlag, ""}, " "),
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
 			name:                "suggestions for shorthand flag",
 			inputString:         strings.Join([]string{completeChildInputString, "-" + completeFlagShorthand, ""}, " "),
-			expectedSuggestions: expectedFlagSuggestions,
-		},
-		{
-			name:                "suggestions for shorthand flag ending with '='",
-			inputString:         strings.Join([]string{completeChildInputString, "-" + completeFlagShorthand + "="}, " "),
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
