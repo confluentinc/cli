@@ -12,6 +12,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+type argType int
+
+const (
+	argValue argType = iota
+	flagNeedArg
+	flagNoArg
+)
+
 type ServerSideCompleterImpl struct {
 	// map[string]interface{} (value must be either ServerCompletableCommand or ServerCompletableFlag or both)
 	commandsByPath *sync.Map
@@ -97,16 +105,31 @@ func (c *ServerSideCompleterImpl) AddStaticFlagCompletion(flagName string, sugge
 
 func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	// must be typing a new argument to get suggestions
-	if !strings.HasSuffix(d.CurrentLine(), " ") {
+	currentLine := d.CurrentLine()
+	if !strings.HasSuffix(currentLine, " ") && !strings.HasSuffix(currentLine, "=") {
 		return []prompt.Suggest{}
 	}
 
 	cmd := c.Root
-	args := strings.Fields(d.CurrentLine())
+	args := strings.Fields(currentLine)
 
 	if found, foundArgs, err := cmd.Find(args); err == nil {
 		cmd = found
 		args = foundArgs
+	}
+
+	// List where elements correspondes to the arg list, if the arg is a flag then flag in that position else nil
+	argTypeList, lastFlagName := c.getArgTypeListAndLastFlagWithArgName(cmd, args)
+	// If flagName is not empty then we are in a flag completion state
+	if len(lastFlagName) > 0 {
+		suggestions := c.getSuggestionsForFlag(cmd, lastFlagName)
+		return filterSuggestions(d, suggestions)
+	}
+
+	// if the last character is "=" then it can only expect flag completion
+	// Because last argument is not flag with suggestions we can just return empty list
+	if strings.HasSuffix(currentLine, "=") {
+		return []prompt.Suggest{}
 	}
 
 	// If command is in commandsByPath map then it is a parent of commands with completion
@@ -118,16 +141,7 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 		return []prompt.Suggest{}
 	}
 
-	// List where elements correspondes to the arg list, if the arg is a flag then flag in that position else nil
-	flagList := c.getFlagList(cmd, args)
-	// If flagName is not empty then we are in a flag completion state
-	flagName := c.getFlagWithArg(flagList)
-	if len(flagName) > 0 {
-		suggestions := c.getSuggestionsForFlag(cmd, flagName)
-		return filterSuggestions(d, suggestions)
-	}
-
-	if !c.canAcceptArgument(cmd, flagList) {
+	if !c.canAcceptArgument(cmd, argTypeList) {
 		return []prompt.Suggest{}
 	}
 	suggestions := c.getSuggestionsForCommand(d, cmd)
@@ -166,8 +180,10 @@ func (c *ServerSideCompleterImpl) updateCachedSuggestions(cmd *cobra.Command, v 
 // Return list of the same length as the args list
 // Each element in the list corresponds to the arg of the same position
 // If the arg is a flag then the value is *pflag.Flag, else nil
-func (c *ServerSideCompleterImpl) getFlagList(cmd *cobra.Command, args []string) []*pflag.Flag {
-	flagList := make([]*pflag.Flag, len(args))
+func (c *ServerSideCompleterImpl) getArgTypeListAndLastFlagWithArgName(cmd *cobra.Command, args []string) ([]argType, string) {
+	lastFlagWithArgName := ""
+	// initialized with all values as the default one which is 0 => argValue
+	argTypeList := make([]argType, len(args))
 	checkFlag := func(flag *pflag.Flag) {
 		if flag.Changed {
 			_ = flag.Value.Set(flag.DefValue)
@@ -178,46 +194,69 @@ func (c *ServerSideCompleterImpl) getFlagList(cmd *cobra.Command, args []string)
 		longName := "--" + flag.Name
 		shortName := "-" + flag.Shorthand
 		for i, arg := range args {
-			if utils.IsShorthandCountFlag(flag, arg) || longName == arg || shortName == arg {
-				flagList[i] = flag
+			if utils.IsShorthandCountFlag(flag, arg) {
+				argTypeList[i] = flagNoArg
+				continue
 			}
+			candidate := arg
+			if strings.Contains(arg, "=") {
+				splitArgs := strings.Split(arg, "=")
+				candidate = splitArgs[0]
+			}
+			if longName == candidate || shortName == candidate {
+				if !utils.IsFlagWithArg(flag) {
+					argTypeList[i] = flagNoArg
+				} else if !strings.Contains(arg, "=") {
+					argTypeList[i] = flagNeedArg
+					if i == len(args)-1 {
+						lastFlagWithArgName = flag.Name
+					}
+				} else if i == len(args)-1 && string(arg[len(arg)-1]) == "=" {
+					argTypeList[i] = flagNeedArg
+					lastFlagWithArgName = flag.Name
+
+				} else {
+					argTypeList[i] = flagNoArg
+				}
+			}
+
 		}
 	}
 
 	cmd.LocalFlags().VisitAll(checkFlag)
 	cmd.InheritedFlags().VisitAll(checkFlag)
-	return flagList
+
+	if lastFlagWithArgName != "" {
+		if !c.checkFlagUse(argTypeList) {
+			lastFlagWithArgName = ""
+		}
+	}
+	return argTypeList, lastFlagWithArgName
 }
 
-// Return flag name if the last argument is a flag that accepts argument, else return ""
-func (c *ServerSideCompleterImpl) getFlagWithArg(flagList []*pflag.Flag) string {
-	if len(flagList) == 0 {
-		return ""
+// Check to prevent suggestions when the flag is passed as other flag values
+// e.g. --resource --resource the suggestions should only show when the user types --resource the first time
+// the second --resource would be a mistake and we do not want to show suggestions for that
+func (c *ServerSideCompleterImpl) checkFlagUse(argTypeList []argType) bool {
+	if len(argTypeList) == 0 {
+		return false
 	}
-	lastIndex := len(flagList) - 1
-	lastFlag := flagList[lastIndex]
-	if lastFlag == nil || !utils.IsFlagWithArg(lastFlag) {
-		return ""
-	}
-	// Check to prevent suggestions when the flag is passed as other flag values
-	// e.g. --resource --resource the suggestions should only show when the user types --resource the first time
-	// the second --resource would be a mistake and we do not want to show suggestions for that
 	i := 0
-	for ; i <= lastIndex; i += 1 {
-		curFlag := flagList[i]
-		if i == lastIndex && utils.IsFlagWithArg(curFlag) {
-			return curFlag.Name
-		}
-		if utils.IsFlagWithArg(flagList[i]) {
+	for ; i < len(argTypeList); i += 1 {
+		curArgType := argTypeList[i]
+		if curArgType == flagNeedArg {
+			if i == len(argTypeList)-1 {
+				return true
+			}
 			i += 1
 		}
 	}
-	return ""
+	return false
 }
 
 // Check if the command expects an argument
-func (c *ServerSideCompleterImpl) canAcceptArgument(cmd *cobra.Command, flagList []*pflag.Flag) bool {
-	argNum := c.argCount(flagList)
+func (c *ServerSideCompleterImpl) canAcceptArgument(cmd *cobra.Command, argTypeList []argType) bool {
+	argNum := c.argCount(argTypeList)
 	tmpArgs := make([]string, argNum+1)
 	err := cmd.ValidateArgs(tmpArgs)
 	return err == nil
@@ -225,13 +264,13 @@ func (c *ServerSideCompleterImpl) canAcceptArgument(cmd *cobra.Command, flagList
 
 // Count the number of arguments for the command
 // = (Number of arguments in total) - (Number of flags and flag values)
-func (c *ServerSideCompleterImpl) argCount(flagList []*pflag.Flag) int {
+func (c *ServerSideCompleterImpl) argCount(argTypeList []argType) int {
 	count := 0
-	for i := 0; i < len(flagList); i++ {
-		if flagList[i] == nil {
+	for i := 0; i < len(argTypeList); i++ {
+		if argTypeList[i] == argValue {
 			count += 1
 		} else {
-			if utils.IsFlagWithArg(flagList[i]) {
+			if argTypeList[i] == flagNeedArg {
 				i += 1
 			}
 		}
@@ -249,14 +288,8 @@ func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cm
 	}
 	// If found parent then we expect suggestions in the cache
 	// If not found in cache it is either not in a completable state or the cache is not yet updated which shouldn't really happen
-	suggestions, ok := c.getCachedSuggestions(d, cc)
-	if !ok {
-		if !pcmd.CanCompleteCommand(cmd) {
-			return suggestions
-		}
-		// Call the ServerComplete func directly in case the cache didn't update in time
-		suggestions = cc.ServerComplete()
-	}
+	// If it is the case that the cache is not yet updated, an empty suggestions is returned as querying now would hang for the user
+	suggestions, _ = c.getCachedSuggestions(d, cc)
 	return suggestions
 }
 
@@ -282,8 +315,9 @@ func (c *ServerSideCompleterImpl) getSuggestionsForFlag(cmd *cobra.Command, flag
 
 	v, ok = c.cachedSuggestionsByPath.Load(c.flagKey(parent.Cmd(), flagName))
 	if !ok {
-		// in case caching didn't finish
-		return parent.ServerFlagComplete()[flagName]()
+		// If not in cache just return emtpy list
+		// It could either be because it is not in completable state or the cache udpate just didin't happen soon enough
+		return []prompt.Suggest{}
 	}
 	return v.([]prompt.Suggest)
 }

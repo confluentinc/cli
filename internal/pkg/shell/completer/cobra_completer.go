@@ -19,6 +19,11 @@ func NewCobraCompleter(rootCmd *cobra.Command) *CobraCompleter {
 }
 
 func (c *CobraCompleter) Complete(d prompt.Document) []prompt.Suggest {
+	// Preventing flag name suggestions from being shown when user expects flag value suggestions after "="
+	if strings.HasSuffix(d.CurrentLine(), "=") {
+		return []prompt.Suggest{}
+	}
+
 	matchedCmd := c.RootCmd
 	filter := ""
 	args := strings.Fields(d.CurrentLine())
