@@ -466,6 +466,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
 					return err
 				}
+				err = r.setConfluentClient(command)
+				if err != nil {
+					return err
+				}
 				err = r.setAuthenticatedWithMDSContext(cmd, command)
 				if err != nil {
 					return err
