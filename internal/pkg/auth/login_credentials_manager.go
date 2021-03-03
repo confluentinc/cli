@@ -219,7 +219,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
 		}
 		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
-		if err != nil {
+		if err != nil || creds == nil {
 			return nil, err
 		}
 		creds.PrerunLoginURL = url
@@ -230,7 +230,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
-// URL and ca-cert-path (if exists) are returned in addtion to username and passowrd
+// URL and ca-cert-path (if exists) are returned in addition to username and passowrd
 func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
 	filterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: "confluent",
