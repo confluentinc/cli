@@ -104,8 +104,14 @@ func (c *ServerSideCompleterImpl) AddStaticFlagCompletion(flagName string, sugge
 }
 
 func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
-	// must be typing a new argument to get suggestions
 	currentLine := d.CurrentLine()
+
+	// '=' must be followed by argument right away so if user accdientally add space we should not add suggestions after it
+	if strings.HasSuffix(currentLine, "= ") {
+		return []prompt.Suggest{}
+	}
+
+	// must be typing a new argument to get suggestions
 	if !strings.HasSuffix(currentLine, " ") && !strings.HasSuffix(currentLine, "=") {
 		return []prompt.Suggest{}
 	}

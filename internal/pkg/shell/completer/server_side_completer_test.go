@@ -184,6 +184,11 @@ func (suite *ServerSideCompleterTestSuite) TestCommandSuggestions() {
 			expectedSuggestions: expectedCommandSuggestions,
 		},
 		{
+			name:                "suggestions after flag using '='",
+			inputString:         strings.Join([]string{completeChildInputString, "--" + noCompleteFlag + "=flagVal", ""}, " "),
+			expectedSuggestions: expectedCommandSuggestions,
+		},
+		{
 			name:                "suggestions after flag with no value",
 			inputString:         strings.Join([]string{completeChildInputString, "-" + boolFlagShorthand, ""}, " "),
 			expectedSuggestions: expectedCommandSuggestions,
@@ -216,6 +221,11 @@ func (suite *ServerSideCompleterTestSuite) TestFlagArgValidation() {
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
+			name:                "suggestions for flag ending with '='",
+			inputString:         strings.Join([]string{completeChildInputString, "--" + completeFlag + "="}, " "),
+			expectedSuggestions: expectedFlagSuggestions,
+		},
+		{
 			name:                "suggestions for flag after arg",
 			inputString:         strings.Join([]string{completeChildInputString, "arg", "--" + completeFlag, ""}, " "),
 			expectedSuggestions: expectedFlagSuggestions,
@@ -226,8 +236,18 @@ func (suite *ServerSideCompleterTestSuite) TestFlagArgValidation() {
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
+			name:                "suggestions for flag after another flag with '='",
+			inputString:         strings.Join([]string{completeChildInputString, "--" + noCompleteFlag + "=flagarg", "--" + completeFlag + "="}, " "),
+			expectedSuggestions: expectedFlagSuggestions,
+		},
+		{
 			name:                "suggestions for shorthand flag",
 			inputString:         strings.Join([]string{completeChildInputString, "-" + completeFlagShorthand, ""}, " "),
+			expectedSuggestions: expectedFlagSuggestions,
+		},
+		{
+			name:                "suggestions for shorthand flag ending with '='",
+			inputString:         strings.Join([]string{completeChildInputString, "-" + completeFlagShorthand + "="}, " "),
 			expectedSuggestions: expectedFlagSuggestions,
 		},
 		{
