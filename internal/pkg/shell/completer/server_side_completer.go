@@ -15,8 +15,12 @@ import (
 type argType int
 
 const (
+	// non flag arguments
 	argValue argType = iota
+	// flag that still needs argument
 	flagNeedArg
+	// flag that doesn't expect an argument
+	// either flag that takes no argument, e.g. -v, or flag that already has argument appended to it, e.g. --resource=lkc-123
 	flagNoArg
 )
 
@@ -132,7 +136,7 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 
 	// List of argType corresponding to the arg position in the argument list
 	// lastFlagWithArg is the flag name if last argument is flag that expects argument else ""
-	argTypeList, lastFlagWithArg := c.getArgTypeListAndLastFlagWithArgName(cmd, args)
+	argTypeList, lastFlagWithArg := c.getArgTypeListAndLastFlagWithArg(cmd, args)
 	// If flagName is not empty then we are in a flag completion state
 	if len(lastFlagWithArg) > 0 {
 		suggestions := c.getSuggestionsForFlag(cmd, lastFlagWithArg)
@@ -175,12 +179,11 @@ func (c *ServerSideCompleterImpl) updateCachedSuggestions(cmd *cobra.Command, v 
 	}
 }
 
-// Return list of the same length as the args list
-// Each element in the list corresponds to the arg of the same position
-// If the arg is a flag then the value is *pflag.Flag, else nil
-func (c *ServerSideCompleterImpl) getArgTypeListAndLastFlagWithArgName(cmd *cobra.Command, args []string) ([]argType, string) {
+// Return list of argType where each element is the argument type of the corresponding arg in the arg list
+// Also returns flag name if the last argument is a flag that expects argument, else just returns ""
+func (c *ServerSideCompleterImpl) getArgTypeListAndLastFlagWithArg(cmd *cobra.Command, args []string) ([]argType, string) {
 	lastFlagWithArgName := ""
-	// initialized with all values as the default one which is 0 => argValue
+	// initialized with all values as the default value of 0 which is argValue argType
 	argTypeList := make([]argType, len(args))
 	checkFlag := func(flag *pflag.Flag) {
 		if flag.Changed {
