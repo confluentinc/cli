@@ -401,7 +401,6 @@ func (suite *APITestSuite) TestServerComplete() {
 		suite.Run(tt.name, func() {
 			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
@@ -443,7 +442,6 @@ func (suite *APITestSuite) TestServerResourceFlagComplete() {
 		suite.Run(tt.name, func() {
 			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
@@ -477,7 +475,6 @@ func (suite *APITestSuite) TestServerServiceAccountFlagComplete() {
 		suite.Run(tt.name, func() {
 			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
