@@ -451,10 +451,6 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		err = r.setConfluentClient(command)
-		if err != nil {
-			return err
-		}
 		err = r.setAuthenticatedWithMDSContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
@@ -464,10 +460,6 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 				autoLoginErr := r.confluentAutoLogin(cmd)
 				if autoLoginErr != nil {
 					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
-					return err
-				}
-				err = r.setConfluentClient(command)
-				if err != nil {
 					return err
 				}
 				err = r.setAuthenticatedWithMDSContext(cmd, command)
@@ -495,7 +487,7 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cobraCommand *cobra.Command, cli
 	}
 	cliCommand.Context = ctx
 	cliCommand.State = ctx.State
-	return nil
+	return r.setConfluentClient(cliCommand)
 }
 
 func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
