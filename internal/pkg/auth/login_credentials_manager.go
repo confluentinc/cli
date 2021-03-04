@@ -204,8 +204,8 @@ func isSSOUser(email string, cloudClient *ccloud.Client) bool {
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_URL (required), CONFLUNET_CA_CERT_PATH (optional)
-// Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables
-// URL and ca-cert-path (if exists) are returned in addtion to username and passowrd
+// Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables.
+// URL and ca-cert-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		url := os.Getenv(ConfluentURLEnvVar)
@@ -219,8 +219,11 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
 		}
 		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
-		if err != nil || creds == nil {
+		if err != nil {
 			return nil, err
+		}
+		if creds == nil {
+			return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
 		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCaCertPathEnvVar)
@@ -230,7 +233,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
-// URL and ca-cert-path (if exists) are returned in addition to username and passowrd
+// URL and ca-cert-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
 	filterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: "confluent",
