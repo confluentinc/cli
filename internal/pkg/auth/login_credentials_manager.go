@@ -131,6 +131,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
+		// TODO: change to verbosity level logging
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
@@ -248,6 +249,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd
 		if err != nil {
 			return nil, err
 		}
+		// TODO: change to verbosity level logging
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO, PrerunLoginURL: machineContextInfo.URL, PrerunLoginCaCertPath: machineContextInfo.CaCertPath}, nil
 	}

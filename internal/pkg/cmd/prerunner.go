@@ -503,6 +503,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	// TODO: change to verbosity level logging
 	utils.ErrPrint(cmd, errors.AutoLoginMsg)
 	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
 	return nil
