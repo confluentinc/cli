@@ -21,6 +21,7 @@ import (
 const KafkaRestBadRequestErrorCode = 40002
 const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
 const CONFLUENT_REST_URL = "CONFLUENT_REST_URL"
+const SelfSignedCertError = "x509: certificate is not authorized to sign other certificates"
 
 type kafkaRestV3Error struct {
 	Code    int    `json:"error_code"`
@@ -44,8 +45,6 @@ func parseOpenAPIError(err error) (*kafkaRestV3Error, error) {
 	}
 	return nil, fmt.Errorf("unexpected type")
 }
-
-const SelfSignedCertError = "x509: certificate is not authorized to sign other certificates"
 
 func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	switch err.(type) {

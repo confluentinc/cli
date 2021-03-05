@@ -361,8 +361,10 @@ const (
 	KafkaRestUnexpectedStatusMsg    = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
 	KafkaRestCertErrorSuggestions   = "To specify a CA certificate, please use the \"ca-cert-path\" flag"
 	MDSTokenNotFoundMsg			    = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
-	KafkaRestUrlNotFoundErrorMsg    = "Kafka Rest Url not found"
+	KafkaRestUrlNotFoundErrorMsg    = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
+	NoClustersFoundErrorMsg			= "No clusters found"
+	NoClustersFoundSuggestions		= "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration"
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."

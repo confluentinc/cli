@@ -2,6 +2,7 @@
 package cmd_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -801,5 +802,16 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
 		require.True(t, ok)
 		require.Equal(t, validAuthToken, auth)
+	})
+	r.Config.Context().State.AuthToken = ""
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
+		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		require.NoError(t, err)
+		kafkaRest, err := cmd.GetKafkaREST()
+		require.Error(t, err)
+		require.Nil(t, kafkaRest)
+		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
 	})
 }

@@ -112,23 +112,6 @@ func (cmd *AuthenticatedCLICommand) SetPersistentPreRunE(persistenPreRunE func(c
 	cmd.PersistentPreRunE = NewCLIPreRunnerE(persistenPreRunE)
 }
 
-//func NewCustomPrerunStateFlagCommand(command *cobra.Command,
-//	prerunner PreRunner,
-//	persistenPreRunE func(cmd *cobra.Command, args []string) error,
-//	flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
-//
-//	cmd := &AuthenticatedStateFlagCommand{
-//		AuthenticatedCLICommand: &AuthenticatedCLICommand{
-//			CLICommand:        NewCLICommand(command, prerunner),
-//		},
-//		subcommandFlags:         flagMap,
-//	}
-//	command.PersistentPreRunE = NewCLIPreRunnerE(persistenPreRunE)
-//	cmd.Command = command
-//
-//	return cmd
-//}
-
 // Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
 	cmd := &AuthenticatedStateFlagCommand{
@@ -548,20 +531,6 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	} else {
 		mdsConfig.HTTPClient = client
 	}
-
-	//caCertFile, err := os.Open(caCertPath)
-	//if err == nil {
-	//	defer caCertFile.Close()
-	//	mdsConfig.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, nil, r.Logger)
-	//	if err != nil {
-	//		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-	//		mdsConfig.HTTPClient = utils.DefaultClient()
-	//	}
-	//} else {
-	//	r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-	//	mdsConfig.HTTPClient = utils.DefaultClient()
-	//
-	//}
 	return mds.NewAPIClient(mdsConfig)
 }
 
@@ -842,20 +811,6 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	} else {
 		mdsv2Config.HTTPClient = client
 	}
-
-	//caCertFile, err := os.Open(caCertPath)
-	//if err == nil {
-	//	defer caCertFile.Close()
-	//	mdsv2Config.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
-	//	if err != nil {
-	//		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-	//		mdsv2Config.HTTPClient = utils.DefaultClient()
-	//	}
-	//} else {
-	//	r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-	//	mdsv2Config.HTTPClient = utils.DefaultClient()
-	//
-	//}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
