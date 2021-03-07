@@ -28,7 +28,7 @@ const (
 	CCloudPasswordDeprecatedEnvVar    = "XX_CCLOUD_PASSWORD"
 	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
 
-	ConfluentURLEnvVar        = "CONFLUENT_URL"
+	ConfluentURLEnvVar        = "CONFLUENT_MDS_URL"
 	ConfluentCaCertPathEnvVar = "CONFLUENT_CA_CERT_PATH"
 )
 

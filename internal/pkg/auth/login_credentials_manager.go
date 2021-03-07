@@ -203,7 +203,7 @@ func isSSOUser(email string, cloudClient *ccloud.Client) bool {
 	return false
 }
 
-// Prerun login for Confluent has two extra environment variables settings: CONFLUENT_URL (required), CONFLUNET_CA_CERT_PATH (optional)
+// Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
 // Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables
 // URL and ca-cert-path (if exists) are returned in addtion to username and passowrd
 func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
