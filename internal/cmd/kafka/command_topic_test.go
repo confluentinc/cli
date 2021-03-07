@@ -66,16 +66,10 @@ func (suite *KafkaTopicTestSuite) TestServerComplete() {
 				},
 			},
 		},
-		{
-			name: "don't suggest for unauthenticated user",
-			fields: fields{
-				suite.newCmd(v3.UnauthenticatedCloudConfigMock()),
-			},
-			want: nil,
-		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
 			fmt.Println(&got)
 			req.Equal(tt.want, got)

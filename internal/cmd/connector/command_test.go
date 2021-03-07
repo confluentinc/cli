@@ -81,6 +81,9 @@ func (suite *ConnectTestSuite) SetupTest() {
 		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
+		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
+		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
 		CreateFunc: func(arg0 context.Context, arg1 *schedv1.ConnectorConfig) (connector *opv1.ConnectorInfo, e error) {
@@ -253,23 +256,45 @@ func (suite *ConnectTestSuite) TestServerComplete() {
 				},
 			},
 		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *ConnectTestSuite) TestServerClusterFlagComplete() {
+	flagName := "cluster"
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
 		{
-			name: "don't suggest for unauthenticated user",
+			name: "suggest for flag",
 			fields: fields{
-				Command: func() *command {
-					oldConf := suite.conf
-					suite.conf = v3.UnauthenticatedCloudConfigMock()
-					c := suite.newCmd()
-					suite.conf = oldConf
-					return c
-				}(),
+				Command: suite.newCmd(),
 			},
-			want: nil,
+			want: []prompt.Suggest{
+				{
+					Text:        suite.kafkaCluster.Id,
+					Description: suite.kafkaCluster.Name,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := tt.fields.Command.ServerComplete()
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
 			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})

@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -183,8 +184,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -534,11 +534,7 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return suggestions
 	}

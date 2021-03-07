@@ -2,8 +2,6 @@ package mock
 
 import (
 	"github.com/c-bata/go-prompt"
-
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
 type ServerSideCompleter struct {
@@ -12,6 +10,11 @@ type ServerSideCompleter struct {
 func (*ServerSideCompleter) Complete(doc prompt.Document) []prompt.Suggest {
 	return []prompt.Suggest{}
 }
-func (*ServerSideCompleter) AddCommand(cmd completer.ServerCompletableCommand) {
+
+func (*ServerSideCompleter) AddCommand(cmd interface{}) {
+
+}
+
+func (*ServerSideCompleter) AddStaticFlagCompletion(flagName string, suggestions []prompt.Suggest, commandPaths []string) {
 
 }
