@@ -56,17 +56,19 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 		},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestConfluentIAMRoleBindingCRUD() {
 	tests := []CLITest{
+		{
+			name:    "confluent iam rolebinding create --help",
+			args:    "iam rolebinding create --help",
+			fixture: "iam-rolebinding/confluent-iam-rolebinding-create-help.golden",
+		},
 		{
 			name:    "confluent iam rolebinding create cluster-name",
 			args:    "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster",
@@ -106,6 +108,11 @@ func (s *CLITestSuite) TestConfluentIAMRoleBindingCRUD() {
 			args:        "iam rolebinding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --ksql-cluster-id ksqlName --connect-cluster-id connectID --kafka-cluster-id kafka-GUID",
 			fixture:     "iam-rolebinding/confluent-iam-rolebinding-multiple-non-kafka-id.golden",
 			wantErrCode: 1,
+		},
+		{
+			name:    "confluent iam rolebinding delete --help",
+			args:    "iam rolebinding delete --help",
+			fixture: "iam-rolebinding/confluent-iam-rolebinding-delete-help.golden",
 		},
 		{
 			name:    "confluent iam rolebinding delete cluster-name",
@@ -149,16 +156,19 @@ func (s *CLITestSuite) TestConfluentIAMRoleBindingCRUD() {
 		},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestConfluentIAMRolebindingList() {
 	tests := []CLITest{
+		{
+			name:    "confluent iam rolebinding list --help",
+			args:    "iam rolebinding list --help",
+			fixture: "iam-rolebinding/confluent-iam-rolebinding-list-help.golden",
+		},
 		{
 			name:        "confluent iam rolebinding list, no principal nor role",
 			args:        "iam rolebinding list --kafka-cluster-id CID",
@@ -265,11 +275,9 @@ func (s *CLITestSuite) TestConfluentIAMRolebindingList() {
 		},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -329,11 +337,8 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 		},
 	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
-
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }

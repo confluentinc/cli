@@ -6,8 +6,11 @@ release: get-release-image commit-release tag-release
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
+	$(call print-boxed-message,"PUBLISHING DOCS")
 	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
+	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
+	make publish-dockerhub
 
 .PHONY: release-to-stag
 release-to-stag:
@@ -138,7 +141,6 @@ download-licenses:
 	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
 	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/licenses -n legal/notices ; \
 	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
-	[ -z "$$(ls -A legal/notices)" ] && { echo "ERROR: notices folder not populated" && exit 1; }; \
 	echo Successfully downloaded licenses
 
 .PHONY: publish-installers
@@ -147,42 +149,3 @@ publish-installers:
 	$(caasenv-authenticate) && \
 	aws s3 cp install-ccloud.sh $(S3_BUCKET_PATH)/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
-
-.PHONY: docs
-docs: clean-docs
-	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
-	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
-
-.PHONY: publish-docs
-publish-docs: docs
-	@tmp=$$(mktemp -d); \
-	git clone git@github.com:confluentinc/docs.git $$tmp; \
-	echo -n "Publish ccloud docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=ccloud; fi; \
-	echo -n "Publish confluent docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=confluent; fi; \
-	rm -rf $$tmp
-
-.PHONY: publish-docs-internal
-publish-docs-internal:
-ifeq ($(CLI_NAME), ccloud)
-	$(eval DOCS_DIR := ccloud-cli/command-reference)
-else
-	$(eval DOCS_DIR := confluent-cli/command-reference)
-endif
-
-	@cd $(REPO_DIR); \
-	git checkout -b $(CLI_NAME)-cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
-	rm -rf $(DOCS_DIR); \
-	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME) $(DOCS_DIR); \
-	[ ! -f "$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
-	git add . || exit 1; \
-	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
-	git commit -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
-	git push origin $(CLI_NAME)-cli-$(VERSION) || exit 1; \
-	hub pull-request -b $(DOCS_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
-
-.PHONY: clean-docs
-clean-docs:
-	@rm -rf docs/
-

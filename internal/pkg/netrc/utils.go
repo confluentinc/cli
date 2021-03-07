@@ -17,19 +17,24 @@ func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
 	if !strings.HasPrefix(machineName, netrcCredentialsPrefix) {
 		return nil, errors.New("Incorrect machine name format")
 	}
-	// +1 to remove the character ":"
+
+	// example: machinename = confluent-cli:ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
 	credTypeAndContextNameString := suffixFromIndex(machineName, len(netrcCredentialsPrefix)+1)
 
+	// credTypeAndContextName = ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
 	credType, contextNameString, err := extractCredentialType(credTypeAndContextNameString)
 	if err != nil {
 		return nil, err
 	}
 
+	// contextNameString = login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
 	username, url, caCertPath, err := parseContextName(contextNameString)
 	if err != nil {
 		return nil, err
 	}
 
+	// username = caas-team+integ-cli@confluent.io
+	// url = https://devel.cpdev.cloud
 	return &MachineContextInfo{
 		CredentialType: credType,
 		Username:       username,

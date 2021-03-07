@@ -6,8 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -16,6 +14,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -291,9 +290,24 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromPr
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromEnvVar() {
-	// incomplete as this only sets username and password but not URL which is needed for Prerun login
-	suite.setConfluentEnvironmentVariables()
+	// incomplete and should, as there is no credentials set
+	suite.require.NoError(os.Setenv(ConfluentURLEnvVar, prerunURL))
 	creds, err := suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
+	suite.require.Error(err)
+	suite.require.Equal(errors.NoCredentialsFoundErrorMsg, err.Error())
+	suite.require.Nil(creds)
+
+	// incomplete and should return nil cred, as there is no password set even though username is set
+	suite.require.NoError(os.Setenv(ConfluentUsernameEnvVar, envUsername))
+	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
+	suite.require.Error(err)
+	suite.require.Equal(errors.NoCredentialsFoundErrorMsg, err.Error())
+	suite.require.Nil(creds)
+
+	// incomplete as this only sets username and password but not URL which is needed for Prerun login
+	suite.require.NoError(os.Setenv(ConfluentURLEnvVar, ""))
+	suite.setConfluentEnvironmentVariables()
+	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.Error(err)
 	suite.require.Equal(errors.NoURLEnvVarErrorMsg, err.Error())
 	suite.require.Nil(creds)

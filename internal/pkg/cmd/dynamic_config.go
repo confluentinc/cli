@@ -21,6 +21,8 @@ func NewDynamicConfig(config *v3.Config, resolver FlagResolver, client *ccloud.C
 	}
 }
 
+// Set DynamicConfig values for command with config and resolver from prerunner
+// Calls ParseFlagsIntoConfig so that state flags are parsed ino config struct
 func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, resolver FlagResolver) error {
 	d.Config = cfg
 	d.Resolver = resolver

@@ -3,6 +3,7 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
@@ -14,11 +15,12 @@ type command struct {
 	logger          *log.Logger
 	clientID        string
 	serverCompleter completer.ServerSideCompleter
+	analyticsClient analytics.Client
 }
 
 // New returns the default command object for interacting with Kafka.
 func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
-	serverCompleter completer.ServerSideCompleter) *cobra.Command {
+	serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "kafka",
@@ -30,6 +32,7 @@ func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *l
 		logger:          logger,
 		clientID:        clientID,
 		serverCompleter: serverCompleter,
+		analyticsClient: analyticsClient,
 	}
 	cmd.init(isAPIKeyLogin, cliName)
 	return cmd.Command
@@ -43,7 +46,7 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		if isAPIKeyLogin {
 			return
 		}
-		clusterCmd := NewClusterCommand(c.prerunner)
+		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
 		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
 		// and that doesn't trigger completion.
 		c.AddCommand(clusterCmd.Command)

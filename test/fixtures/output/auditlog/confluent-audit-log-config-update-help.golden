@@ -1,0 +1,13 @@
+Submits an audit-log configuration specification JSON object to the API.
+
+Usage:
+  confluent audit-log config update [flags]
+
+Flags:
+      --file string      A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.
+      --force            Updates the configuration, overwriting any concurrent modifications.
+      --context string   CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

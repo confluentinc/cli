@@ -1,0 +1,21 @@
+Create a role binding.
+
+Usage:
+  confluent iam rolebinding create [flags]
+
+Flags:
+      --role string                         Role name of the new role binding.
+      --principal string                    Qualified principal name for the role binding.
+      --prefix                              Whether the provided resource name is treated as a prefix pattern.
+      --resource string                     Qualified resource name for the role binding.
+      --kafka-cluster-id string             Kafka cluster ID for the role binding.
+      --schema-registry-cluster-id string   Schema Registry cluster ID for the role binding.
+      --ksql-cluster-id string              ksqlDB cluster ID for the role binding.
+      --connect-cluster-id string           Kafka Connect cluster ID for the role binding.
+      --cluster-name string                 Cluster name to uniquely identify the cluster for rolebinding listings.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string                      CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

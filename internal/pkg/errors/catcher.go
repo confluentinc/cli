@@ -186,6 +186,21 @@ func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotE
 }
 
 /*
+failed to produce offset -1: Unknown error, how did this happen? Error code = 87
+*/
+func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error) {
+	if err == nil {
+		return false, nil
+	}
+	compiledRegex := regexp.MustCompile(`Unknown error, how did this happen\? Error code = 87`)
+	if compiledRegex.MatchString(err.Error()) {
+		errorMsg := fmt.Sprintf(ProducingToCompactedTopicErrorMsg, topicName)
+		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
+	}
+	return false, err
+}
+
+/*
 Error: 1 error occurred:
 	* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
 Error: 1 error occurred:

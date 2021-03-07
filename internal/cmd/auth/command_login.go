@@ -52,6 +52,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
+		Long: fmt.Sprintf("Log in to %s.\n\n%s\n\n%s", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Cloud non-interactively using the CCLOUD_EMAIL and CCLOUD_PASSWORD environment variables.", "Even with the above environment variables set, you can force an interactive login using the --prompt flag."),
 		Args:  cobra.NoArgs,
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 			a.analyticsClient.SetCommandType(analytics.Login)
@@ -66,7 +67,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 		loginCmd.Flags().String("url", "", "Metadata service URL.")
 		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 		loginCmd.Short = strings.ReplaceAll(loginCmd.Short, ".", " (required for RBAC).")
-		loginCmd.Long = strings.ReplaceAll(loginCmd.Long, ".", " (required for RBAC).")
+		loginCmd.Long = fmt.Sprintf("%s \n\n%s", loginCmd.Long, "This command is required for RBAC.")
 		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")

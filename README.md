@@ -117,14 +117,19 @@ $ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
 $ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
+If `make deps` fails with an "unknown revision" error, you probably need to put your username and a
+[github personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
+in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/1072829). The access token needs to be
+[authorized](https://docs.github.com/en/github/authenticating-to-github/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on) for SSO.
+
 ## Developing
 
-This repo requires golang 1.14.7. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.15.5. We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.14.7 already. If your `goenv` does not list this as an option,
+Fortunately `goenv` supports 1.15.5 already. If your `goenv` does not list this as an option,
 you may have to build `goenv`'s `master` branch from source, which you can do with the
 following instructions:
 

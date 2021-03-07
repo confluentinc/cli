@@ -10,6 +10,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -41,11 +42,12 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	logger   *log.Logger
-	srClient *srsdk.APIClient
+	logger          *log.Logger
+	srClient        *srsdk.APIClient
+	analyticsClient analytics.Client
 }
 
-func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger) *cobra.Command {
+func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
@@ -55,6 +57,7 @@ func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 		AuthenticatedStateFlagCommand: cliCmd,
 		srClient:                      srClient,
 		logger:                        logger,
+		analyticsClient:               analyticsClient,
 	}
 	clusterCmd.init(cliName)
 	return clusterCmd.Command
@@ -149,6 +152,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 			SchemaRegistryEndpoint: newCluster.Endpoint,
 		}
 		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
+		c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, v2Cluster.Id)
 	}
 	return nil
 }
