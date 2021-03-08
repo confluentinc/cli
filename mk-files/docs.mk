@@ -11,6 +11,9 @@ else ifeq ($(BUMP), patch)
 DOCS_BASE_BRANCH=$(BUMPED_MINOR_BRANCH)
 endif
 
+OLDEST_BRANCH_CCLOUD=1.20.1-post
+OLDEST_BRANCH_CONFLUENT=1.16.3-post
+
 NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1).0
 SHORT_NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1)
 CURRENT_SHORT_MINOR_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version))
@@ -124,6 +127,19 @@ update-settings-and-conf:
 		sed -i '' "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
 		git commit -am "chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+		git push && \
+		cd .. ; \
+	done
+	for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+		oldest_branch=$(OLDEST_BRANCH_CONFLUENT) && \
+		if [[ "$(CCLOUD_DOCS_DIR)" == "$${repo}" ]]; then \
+			oldest_branch=$(OLDEST_BRANCH_CCLOUD); \
+		fi ; \
+		cd $${repo} && \
+		git fetch && \
+		git checkout $${oldest_branch} && \
+		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
+		git commit -am "chore: add new version $(CLEAN_VERSION) to all old branches' version pickers" && \
 		git push && \
 		cd .. ; \
 	done
