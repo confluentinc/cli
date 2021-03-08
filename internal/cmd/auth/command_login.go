@@ -66,7 +66,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
 		loginCmd.Flags().String("url", pauth.CCloudURL, "Confluent Cloud service URL.")
 	} else {
-		longDesc=fmt.Sprintf("Log in to %s.\n\n%s\n\n", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Platform non-interactively using the following environment variables:CONFLUENT_USERNAME, CONFLUENT_PASSWORD, CONFLUENT_MDS_URL, CONFLUENT_CA_CERT_PATH")
+		longDesc=fmt.Sprintf("Log in to %s.\n\n%s\n\n", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Platform non-interactively using the following environment variables: CONFLUENT_USERNAME, CONFLUENT_PASSWORD, CONFLUENT_MDS_URL, CONFLUENT_CA_CERT_PATH")
 		longDesc += "In a non-interactive login, CONFLUENT_MDS_URL replaces the ``--url`` flag, and CONFLUENT_CA_CERT_PATH replaces the ``--ca-cert-path`` flag.\n\n"
 		longDesc += "Even with the above environment variables set, you can force an interactive login using the --prompt flag."
 		loginCmd.Long = longDesc
