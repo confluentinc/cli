@@ -177,7 +177,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 		for _, link := range resp.Links {
 			if len(link.Topics) > 0 {
-				for topic := range link.Topics {
+				for _, topic := range link.Topics {
 					outputWriter.AddElement(
 						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
 				}

@@ -20,15 +20,16 @@ require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.584.0
-	github.com/confluentinc/cc-structs/kafka/core v0.601.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.593.0
-	github.com/confluentinc/cc-structs/kafka/metrics v0.419.0
-	github.com/confluentinc/cc-structs/kafka/org v0.419.0
-	github.com/confluentinc/cc-structs/kafka/product/core v0.419.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.649.0
-	github.com/confluentinc/cc-structs/kafka/util v0.419.0
-	github.com/confluentinc/cc-structs/operator v0.419.0
+	github.com/confluentinc/cc-structs/kafka/billing v0.731.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.731.0
+	github.com/confluentinc/cc-structs/kafka/core v0.731.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.731.0
+	github.com/confluentinc/cc-structs/kafka/metrics v0.731.0
+	github.com/confluentinc/cc-structs/kafka/org v0.731.0
+	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.731.0
+	github.com/confluentinc/cc-structs/kafka/util v0.731.0
+	github.com/confluentinc/cc-structs/operator v0.731.0
 	github.com/confluentinc/cc-utils-public v0.1.0
 	github.com/confluentinc/ccloud-sdk-go v0.0.61
 	github.com/confluentinc/go-editor v0.4.0
