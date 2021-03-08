@@ -207,8 +207,6 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 func (c *Command) Execute(cliName string, args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
-	fmt.Println("argsex2")
-	fmt.Println(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	c.sendAndFlushAnalytics(args, err)

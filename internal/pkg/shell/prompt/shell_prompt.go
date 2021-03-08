@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"fmt"
 	"os"
 
 	goprompt "github.com/c-bata/go-prompt"
@@ -35,29 +34,35 @@ type instrumentedCommand struct {
 	logger    *log.Logger
 }
 
-func rff(c *cobra.Command) {
+// Slice and array flags need to get reset;
+// Cobra/flags really weren't designed for this use case
+// where flags are getting set over and over on multiple
+// shell command runs, and array/slice flags seem especially
+// brittle.  Without resetting these flag values, the arrays
+// just get appended to ad infinitum.  Even with this fix,
+// it seems like the appending is still happening somewhere
+// in the internals of cobra/flags; however, this bandaid
+// still seems to be enough to counteract that behavior.
+//
+// NOTE: The flags for which we do this are hard-coded.
+// Persistent flags need to be visited, too, if the need arises.
+func resetArrayAndSliceFlags(c *cobra.Command) {
 	c.Flags().VisitAll(func(f *flag.Flag) {
 		if f.Name == "operation" {
-			fmt.Println("WOO HOO")
-			fmt.Println(f.Value)
 			f.Value.(flag.SliceValue).Replace([]string{})
-			fmt.Println(f.Value)
 		}
 	})
 	if c.HasSubCommands() {
 		for _, y := range c.Commands() {
-			rff(y)
+			resetArrayAndSliceFlags(y)
 		}
 	}
 }
 
 func (c *instrumentedCommand) Execute(cliName string, args []string) error {
 	c.analytics.SetStartTime()
-	fmt.Println("args: ")
-	fmt.Println(args)
 	if c.Command.HasFlags() {
-		rff(c.Command)
-
+		resetArrayAndSliceFlags(c.Command)
 	}
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
@@ -86,8 +91,6 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 func promptExecutorFunc(cfg *v3.Config, shell *ShellPrompt) func(string) {
 	return func(in string) {
 		promptArgs, _ := shellparser.Fields(in, func(string) string { return "" })
-		fmt.Println("Prompt args are:")
-		fmt.Printf("%#v\n", promptArgs)
 		_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
 	}
 }

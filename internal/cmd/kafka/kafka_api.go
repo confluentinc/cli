@@ -90,7 +90,6 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 		return nil, err
 	}
 	for _, operation := range operations {
-		fmt.Println("parsed operation:" + operation)
 		aclConfig := NewACLConfig()
 		op, err := getACLOperation(operation)
 		if err != nil {
@@ -182,11 +181,8 @@ OUTER:
 func getACLOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
 	op := strings.ToUpper(operation)
 	op = strings.ReplaceAll(op, "-", "_")
-	fmt.Println("gonna check:" + op)
 	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {
-		fmt.Println("ok")
 		return schedv1.ACLOperations_ACLOperation(operation), nil
 	}
-	fmt.Println("not ok")
 	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
 }
