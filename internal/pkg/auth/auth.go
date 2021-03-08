@@ -27,6 +27,9 @@ const (
 	ConfluentUsernameDeprecatedEnvVar = "XX_CONFLUENT_USERNAME"
 	CCloudPasswordDeprecatedEnvVar    = "XX_CCLOUD_PASSWORD"
 	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
+
+	ConfluentURLEnvVar        = "CONFLUENT_MDS_URL"
+	ConfluentCaCertPathEnvVar = "CONFLUENT_CA_CERT_PATH"
 )
 
 func PersistLogoutToConfig(config *v3.Config) error {

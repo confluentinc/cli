@@ -296,17 +296,25 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return r.ConfigLoadingError
 		}
 
-		ctx, err := r.getCommandContext(cmd, command)
+		err = r.setAuthenticatedContext(cmd, command)
 		if err != nil {
-			return err
+			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
+			_, isNoContextError := err.(*errors.NoContextError)
+			if isNotLoggedInError || isNoContextError {
+				// Attempt Prerun auto login
+				autoLoginErr := r.ccloudAutoLogin(cmd)
+				if autoLoginErr != nil {
+					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+					return err
+				}
+				err = r.setAuthenticatedContext(cmd, command)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
 		}
-		command.Context = ctx
-
-		state, err := r.getCommandState(cmd, ctx)
-		if err != nil {
-			return err
-		}
-		command.State = state
 
 		err = r.ValidateToken(cmd, command.Config)
 		if err != nil {
@@ -316,66 +324,35 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 	}
 }
 
-func (r *PreRun) getCommandContext(cmd *cobra.Command, command *AuthenticatedCLICommand) (*DynamicContext, error) {
-	ctx, err := command.Config.Context(cmd)
-	if err != nil {
-		return nil, err
-	}
-	if ctx == nil {
-		// attempt to log user in with non-interactive credentials
-		autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
-		if autoLoginErr != nil {
-			r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
-			return nil, &errors.NoContextError{CLIName: r.CLIName}
-		}
-		ctx, err = command.Config.Context(cmd)
-		if err != nil {
-			return nil, err
-		}
-		if ctx == nil {
-			return nil, &errors.NoContextError{CLIName: r.CLIName}
-		}
-	}
-	return ctx, nil
-}
-
-func (r *PreRun) getCommandState(cmd *cobra.Command, ctx *DynamicContext) (*v2.ContextState, error) {
-	state, err := ctx.AuthenticatedState(cmd)
-	if err != nil {
-		if _, ok := err.(*errors.NotLoggedInError); ok {
-			// attempt to log user in with non-interactive credentials
-			autoLoginErr := r.ccloudAutoLogin(cmd, ctx)
-			if autoLoginErr != nil {
-				r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
-				return nil, err
-			}
-			state, err = ctx.AuthenticatedState(cmd)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	}
-	return state, nil
-}
-
-func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, ctx *DynamicContext) error {
-	token, creds, err := r.getCCloudTokenAndCredentials(cmd)
+func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand *AuthenticatedCLICommand) error {
+	ctx, err := cliCommand.Config.Context(cobraCommand)
 	if err != nil {
 		return err
 	}
-	if token == "" || creds == nil {
+	if ctx == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	cliCommand.Context = ctx
+	cliCommand.State, err = ctx.AuthenticatedState(cobraCommand)
+	return err
+}
+
+func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
+	token, credentials, err := r.getCCloudTokenAndCredentials(cmd)
+	if err != nil {
+		return err
+	}
+	if token == "" || credentials == nil {
 		r.Logger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, creds.Username, pauth.CCloudURL, token, client)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
 	if err != nil {
 		return err
 	}
 	utils.ErrPrint(cmd, errors.AutoLoginMsg)
-	utils.Printf(cmd, errors.LoggedInAsMsg, creds.Username)
+	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
 	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return nil
 }
@@ -391,7 +368,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
-		r.Logger.Debug("Prerun env var login failed: ", err.Error())
+		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
 		return "", nil, err
 	}
 
@@ -474,24 +451,83 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-		err = r.setConfluentClient(command)
+		err = r.setAuthenticatedWithMDSContext(cmd, command)
 		if err != nil {
-			return err
+			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
+			_, isNoContextError := err.(*errors.NoContextError)
+			if isNotLoggedInError || isNoContextError {
+				// Attempt Prerun auto login
+				autoLoginErr := r.confluentAutoLogin(cmd)
+				if autoLoginErr != nil {
+					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+					return err
+				}
+				err = r.setAuthenticatedWithMDSContext(cmd, command)
+				if err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
 		}
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
-		if ctx == nil {
-			return &errors.NoContextError{CLIName: r.CLIName}
-		}
-		if !ctx.HasMDSLogin() {
-			return &errors.NotLoggedInError{CLIName: r.CLIName}
-		}
-		command.Context = ctx
-		command.State = ctx.State
 		return r.ValidateToken(cmd, command.Config)
 	}
+}
+
+func (r *PreRun) setAuthenticatedWithMDSContext(cobraCommand *cobra.Command, cliCommand *AuthenticatedCLICommand) error {
+	ctx, err := cliCommand.Config.Context(cobraCommand)
+	if err != nil {
+		return err
+	}
+	if ctx == nil {
+		return &errors.NoContextError{CLIName: r.CLIName}
+	}
+	if !ctx.HasMDSLogin() {
+		return &errors.NotLoggedInError{CLIName: r.CLIName}
+	}
+	cliCommand.Context = ctx
+	cliCommand.State = ctx.State
+	return r.setConfluentClient(cliCommand)
+}
+
+func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
+	token, credentials, err := r.getConfluentTokenAndCredentials(cmd)
+	if err != nil {
+		return err
+	}
+	if token == "" || credentials == nil {
+		r.Logger.Debug("Non-interactive login failed: no credentials")
+		return nil
+	}
+	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials.Username, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false)
+	if err != nil {
+		return err
+	}
+	// TODO: change to verbosity level logging
+	utils.ErrPrint(cmd, errors.AutoLoginMsg)
+	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
+	return nil
+}
+
+func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+	credentials, err := pauth.GetLoginCredentials(
+		r.LoginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetConfluentPrerunCredentialsFromNetrc(cmd),
+	)
+	if err != nil {
+		return "", nil, err
+	}
+
+	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, r.Logger)
+	if err != nil {
+		return "", nil, err
+	}
+	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return token, credentials, err
 }
 
 func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) error {
