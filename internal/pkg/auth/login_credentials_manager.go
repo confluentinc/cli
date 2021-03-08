@@ -102,7 +102,9 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(cmd *cobra.Command, u
 	if len(password) == 0 {
 		return "", ""
 	}
-	utils.ErrPrintf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
+	if h.logger.GetLevel() >= log.WARN {
+		utils.ErrPrintf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
+	}
 	return user, password
 }
 
@@ -127,7 +129,9 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 			}
 			return nil, err
 		}
-		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+		if h.logger.GetLevel() >= log.WARN {
+			utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+		}
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
 }
