@@ -141,7 +141,10 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	return aclutil.PrintACLs(cmd, resp, os.Stdout)
 }
 
-func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
+func (c *aclCommand) create(cmd *cobra.Command, args []string) error {
+	fmt.Println("createargs")
+	fmt.Println(args)
+	c.DebugFlags()
 	acls, err := parse(cmd)
 	if err != nil {
 		return err

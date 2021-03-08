@@ -93,7 +93,7 @@ require (
 	github.com/securego/gosec v0.0.0-20191002120514-e680875ea14d // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 // indirect

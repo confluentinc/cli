@@ -1,10 +1,12 @@
 package prompt
 
 import (
+	"fmt"
 	"os"
 
 	goprompt "github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	shellparser "mvdan.cc/sh/v3/shell"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -33,8 +35,30 @@ type instrumentedCommand struct {
 	logger    *log.Logger
 }
 
+func rff(c *cobra.Command) {
+	c.Flags().VisitAll(func(f *flag.Flag) {
+		if f.Name == "operation" {
+			fmt.Println("WOO HOO")
+			fmt.Println(f.Value)
+			f.Value.(flag.SliceValue).Replace([]string{})
+			fmt.Println(f.Value)
+		}
+	})
+	if c.HasSubCommands() {
+		for _, y := range c.Commands() {
+			rff(y)
+		}
+	}
+}
+
 func (c *instrumentedCommand) Execute(cliName string, args []string) error {
 	c.analytics.SetStartTime()
+	fmt.Println("args: ")
+	fmt.Println(args)
+	if c.Command.HasFlags() {
+		rff(c.Command)
+
+	}
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
@@ -61,7 +85,9 @@ func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.C
 
 func promptExecutorFunc(cfg *v3.Config, shell *ShellPrompt) func(string) {
 	return func(in string) {
-		promptArgs, _ := shellparser.Fields(in, func(string)string {return ""})
+		promptArgs, _ := shellparser.Fields(in, func(string) string { return "" })
+		fmt.Println("Prompt args are:")
+		fmt.Printf("%#v\n", promptArgs)
 		_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
 	}
 }
