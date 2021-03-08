@@ -54,7 +54,7 @@ publish-docs-internal:
 	[ ! -f "command-reference/kafka/topic/ccloud_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' command-reference/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
 	git add . || exit 1; \
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
-	git commit -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
+	git commit -m "[ci skip] chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
 	git push origin $(CLI_NAME)-cli-$(VERSION) || exit 1; \
 	hub pull-request -b $(DOCS_BASE_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
 
@@ -106,7 +106,7 @@ update-settings-and-conf:
 			sed -i '' "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 			sed -i '' "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 			sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-			git commit -am "chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+			git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
 			git push && \
 			cd .. ; \
 		done ; \
@@ -119,14 +119,14 @@ update-settings-and-conf:
 		sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 		sed -i '' "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
 		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-		git commit -am "chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+		git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
 		git push && \
 		git checkout $(CLEAN_VERSION)-post && \
 		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
 		sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 		sed -i '' "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-		git commit -am "chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+		git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
 		git push && \
 		cd .. ; \
 	done
@@ -154,7 +154,7 @@ update-tools-autotasks:
 		sed -i '' "$$(sed -n  '\|docs-ccloud-cli|=' Jenkinsfile) s/.$$/, \"$(MINOR_BRANCH)\"\]/" Jenkinsfile && \
 		sed -i '' "$$(sed -n  '\|docs-confluent-cli|=' Jenkinsfile) s/.$$/, \"$(MINOR_BRANCH)\"\]/" Jenkinsfile && \
 		git checkout -b cli-update-$(MINOR_BRANCH) && \
-		git commit -am "chore: update Jenkinsfile for CLI branch $(MINOR_BRANCH)" && \
+		git commit -am "[ci skip] chore: update Jenkinsfile for CLI branch $(MINOR_BRANCH)" && \
 		git push -u origin cli-update-$(MINOR_BRANCH) && \
 		hub pull-request -b monitor-docs-pipeline-dev -m "chore: update Jenkinsfile for CLI branch $(MINOR_BRANCH)" ; \
 	fi
@@ -163,6 +163,6 @@ update-tools-autotasks:
 	sed -i '' "$$(sed -n  '\|docs-ccloud-cli|=' Jenkinsfile) s/.$$/, \"$(CLEAN_VERSION)-post\"\]/" Jenkinsfile && \
 	sed -i '' "$$(sed -n  '\|docs-confluent-cli|=' Jenkinsfile) s/.$$/, \"$(CLEAN_VERSION)-post\"\]/" Jenkinsfile && \
 	git checkout -b cli-update-$(CLEAN_VERSION)-post && \
-	git commit -am "chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post" && \
+	git commit -am "[ci skip] chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post" && \
 	git push -u origin cli-update-$(CLEAN_VERSION)-post && \
 	hub pull-request -b monitor-docs-pipeline-pre-prod -m "chore: update Jenkinsfile for CLI branch $(CLEAN_VERSION)-post"
