@@ -21,6 +21,10 @@ type Credentials struct {
 	Username string
 	Password string
 	IsSSO    bool
+
+	// Only for Confluent Prerun login
+	PrerunLoginURL        string
+	PrerunLoginCaCertPath string
 }
 
 type environmentVariables struct {
@@ -53,6 +57,10 @@ type LoginCredentialsManager interface {
 	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
 	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
+
+	// Only for Confluent Prerun login
+	GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
+	GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error)
 }
 
 type LoginCredentialsManagerImpl struct {
@@ -118,18 +126,27 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cob
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
-		netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
-		if err != nil || netrcMachine == nil {
-			h.logger.Debug("Failed to get netrc machine for credentials")
-			if err != nil {
-				h.logger.Debugf("Get netrc machine error: %s", err.Error())
-			}
+		netrcMachine, err := h.getNetrcMachine(filterParams)
+		if err != nil {
+			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
+		// TODO: change to verbosity level logging
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
+}
+
+func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
+	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
+	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
+	if err != nil {
+		return nil, err
+	}
+	if netrcMachine == nil {
+		return nil, errors.Errorf("Found no netrc machine using the filter: %+v", filterParams)
+	}
+	return netrcMachine, err
 }
 
 func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error) {
@@ -185,4 +202,55 @@ func isSSOUser(email string, cloudClient *ccloud.Client) bool {
 		return true
 	}
 	return false
+}
+
+// Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
+// Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables.
+// URL and ca-cert-path (if exists) are returned in addition to username and password
+func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		url := os.Getenv(ConfluentURLEnvVar)
+		if url == "" {
+			return nil, errors.New(errors.NoURLEnvVarErrorMsg)
+		}
+		envVars := environmentVariables{
+			username:           ConfluentUsernameEnvVar,
+			password:           ConfluentPasswordEnvVar,
+			deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
+			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+		}
+		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
+		if err != nil {
+			return nil, err
+		}
+		if creds == nil {
+			return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
+		}
+		creds.PrerunLoginURL = url
+		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCaCertPathEnvVar)
+		return creds, nil
+	}
+}
+
+// Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
+// URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
+// URL and ca-cert-path (if exists) are returned in addition to username and password
+func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
+	filterParams := netrc.GetMatchingNetrcMachineParams{
+		CLIName: "confluent",
+	}
+	return func() (*Credentials, error) {
+		netrcMachine, err := h.getNetrcMachine(filterParams)
+		if err != nil {
+			h.logger.Debugf("Get netrc machine error: %s", err.Error())
+			return nil, err
+		}
+		machineContextInfo, err := netrc.ParseNetrcMachineName(netrcMachine.Name)
+		if err != nil {
+			return nil, err
+		}
+		// TODO: change to verbosity level logging
+		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO, PrerunLoginURL: machineContextInfo.URL, PrerunLoginCaCertPath: machineContextInfo.CaCertPath}, nil
+	}
 }
