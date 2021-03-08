@@ -48,6 +48,9 @@ const (
 	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
 	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
+	// kafka consumer-group commands
+	UnknownGroupMsg        = "Unknown Consumer Group: \"%s\".\n"
+
 	// kafka topic commands
 	StartingProducerMsg    = "Starting Kafka Producer. ^C or ^D to exit"
 	StoppingConsumer       = "Stopping Consumer."

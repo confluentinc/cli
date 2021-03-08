@@ -16,6 +16,13 @@ func ClusterSet() *pflag.FlagSet {
 	return set
 }
 
+func GroupSet() *pflag.FlagSet {
+	set := pflag.NewFlagSet("consumer-group state", pflag.ExistOnError)
+	set.String("id", "", "Kafka consumer-group ID.")
+	set.SortFlags = false
+	return set
+}
+
 func ContextSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("context state", pflag.ExitOnError)
 	set.String("context", "", "CLI Context name.")
@@ -35,6 +42,16 @@ func ClusterEnvironmentContextSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("cluster-env-context state", pflag.ExitOnError)
 	set.AddFlagSet(EnvironmentSet())
 	set.AddFlagSet(ClusterSet())
+	set.AddFlagSet(ContextSet())
+	set.SortFlags = false
+	return set
+}
+
+func GroupEnvironmentContextSet() *pflag.FlagSet {
+	set := pflag.NewFlagSet("consumer-group-env-context state", pflag.ExitOnError)
+	set.AddFlagSet(EnvironmentSet())
+	set.AddFlagSet(ClusterSet())
+	set.AddFlagSet(GroupSet())
 	set.AddFlagSet(ContextSet())
 	set.SortFlags = false
 	return set

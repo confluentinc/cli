@@ -6,12 +6,22 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+var AclSubcommandFlags = map[string]*pflag.FlagSet{
+	"acl": cmd.ClusterEnvironmentContextSet(),
+}
+
 var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
 	"cluster": cmd.EnvironmentContextSet(),
 }
 
-var AclSubcommandFlags = map[string]*pflag.FlagSet{
-	"acl": cmd.ClusterEnvironmentContextSet(),
+// if we have consumer-group id as a positional argument, think we can reduce this to
+// ClusterEnvironmentContextSet()
+// var GroupSubcommandFlags = map[string]*pflag.FlagSet{
+// 	"group": cmd.GroupEnvironmentContextSet(),
+// }
+
+var GroupSubcommandFlags = map[string]*pflag.FlagSet{
+	"group": cmd.ClusterEnvironmentContextSet(),
 }
 
 var TopicSubcommandFlags = map[string]*pflag.FlagSet{
