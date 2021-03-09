@@ -14,6 +14,7 @@ import (
 
 	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 
+	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
@@ -231,9 +232,9 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
 		}
 
-		res := &orgv1.GetPriceTableReply{
-			PriceTable: &orgv1.PriceTable{
-				PriceTable: map[string]*orgv1.UnitPrices{
+		res := &billingv1.GetPriceTableReply{
+			PriceTable: &billingv1.PriceTable{
+				PriceTable: map[string]*billingv1.UnitPrices{
 					exampleMetric: {Unit: exampleUnit, Prices: prices},
 				},
 			},
