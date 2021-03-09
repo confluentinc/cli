@@ -5,8 +5,6 @@ Usage:
 
 Available Commands:
   create      Create a Kafka cluster.
-
-Note: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.
   delete      Delete a Kafka cluster.
   describe    Describe a Kafka cluster.
   list        List Kafka clusters.
