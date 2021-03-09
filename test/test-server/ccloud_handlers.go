@@ -609,6 +609,23 @@ func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.R
 	}
 }
 
+// Handler for: "/api/user_profiles/{id}
+func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetUserProfileReply{
+			User: &flowv1.UserProfile{
+				Email:      "cody@confluent.io",
+				FirstName:  "Cody",
+				ResourceId: "u-11aaa",
+				UserStatus: flowv1.UserStatus_USER_STATUS_ACTIVE,
+			},
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/api/organizations/{id}/invites"
 func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

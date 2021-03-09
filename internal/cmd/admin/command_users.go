@@ -96,12 +96,19 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	// Avoid panics if new types of statuses are added in the future
+	userStatus := "Unknown"
+	if val, ok := statusMap[user.UserStatus]; ok {
+		userStatus = val
+	}
+
 	return output.DescribeObject(cmd, &userStruct{
 		ResourceId: user.ResourceId,
 		Email:      user.Email,
 		FirstName:  user.FirstName,
 		LastName:   user.LastName,
-		Status:     statusMap[user.UserStatus],
+		Status:     userStatus,
 	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
@@ -134,12 +141,19 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
+
+		// Avoid panics if new types of statuses are added in the future
+		userStatus := "Unknown"
+		if val, ok := statusMap[user.UserStatus]; ok {
+			userStatus = val
+		}
+
 		outputWriter.AddElement(&userStruct{
 			ResourceId: userProfile.ResourceId,
 			Email:      userProfile.Email,
 			FirstName:  userProfile.FirstName,
 			LastName:   userProfile.LastName,
-			Status:     statusMap[userProfile.UserStatus],
+			Status:     userStatus,
 		})
 	}
 	return outputWriter.Out()
