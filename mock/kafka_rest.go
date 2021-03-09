@@ -316,17 +316,42 @@ func (m *ClusterLinking) ClustersClusterIdLinksMirrorsGet(ctx context.Context, c
 				LinkName:             "link-1",
 				DestinationTopicName: "dest-topic-1",
 				SourceTopicName:      "src-topic-1",
+				NumPartitions:        3,
+				MirrorLags:           []krsdk.MirrorLag{
+					{
+						Partition: 0,
+						Lag:      142857,
+					},
+					{
+						Partition: 1,
+						Lag:      285714,
+					},
+					{
+						Partition: 2,
+						Lag:      571428,
+					},
+				},
 				MirrorTopicStatus:    "active",
 				StateTimeMs:          44444444,
 			},
 			{
 				Kind:                 "",
 				Metadata:             krsdk.ResourceMetadata{},
-				LinkName:             "link-2",
+				LinkName:             "link-1",
 				DestinationTopicName: "dest-topic-2",
 				SourceTopicName:      "src-topic-2",
 				MirrorTopicStatus:    "active",
 				StateTimeMs:          55555555,
+				MirrorLags:           []krsdk.MirrorLag{
+					{
+						Partition: 0,
+						Lag:      0,
+					},
+					{
+						Partition: 1,
+						Lag:      111111,
+					},
+				},
 			},
 		},
 	}, httpResp, nil
@@ -545,8 +570,24 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsDestinationTopicNa
 	return krsdk.ListMirrorTopicsResponseData{
 		Kind:                 "",
 		Metadata:             krsdk.ResourceMetadata{},
-		DestinationTopicName: "dest-topic-1",
-		SourceTopicName:      "src-topic-1",
+		LinkName:             "link-1",
+		DestinationTopicName: destinationTopicName,
+		SourceTopicName:      destinationTopicName,
+		NumPartitions:        3,
+		MirrorLags:           []krsdk.MirrorLag{
+			{
+				Partition: 0,
+				Lag:      142857,
+			},
+			{
+				Partition: 1,
+				Lag:      285714,
+			},
+			{
+				Partition: 2,
+				Lag:      571428,
+			},
+		},
 		MirrorTopicStatus:    "active",
 		StateTimeMs:          44444444,
 	}, httpResp, nil
@@ -597,6 +638,21 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Co
 				LinkName:             "link-1",
 				DestinationTopicName: "dest-topic-1",
 				SourceTopicName:      "src-topic-1",
+				NumPartitions:        3,
+				MirrorLags:           []krsdk.MirrorLag{
+					{
+						Partition: 0,
+						Lag:      142857,
+					},
+					{
+						Partition: 1,
+						Lag:      285714,
+					},
+					{
+						Partition: 2,
+						Lag:      571428,
+					},
+				},
 				MirrorTopicStatus:    "active",
 				StateTimeMs:          44444444,
 			},
@@ -608,6 +664,16 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Co
 				SourceTopicName:      "src-topic-2",
 				MirrorTopicStatus:    "active",
 				StateTimeMs:          55555555,
+				MirrorLags:           []krsdk.MirrorLag{
+					{
+						Partition: 0,
+						Lag:      0,
+					},
+					{
+						Partition: 1,
+						Lag:      111111,
+					},
+				},
 			},
 		},
 	}, httpResp, nil
@@ -728,6 +794,20 @@ func (m *ClusterLinking) AlterMirrorResultResponse() (krsdk.AlterMirrorStatusRes
 				DestinationTopicName: "dest-topic-1",
 				ErrorMessage:         nil,
 				ErrorCode:            nil,
+				MirrorLags:           []krsdk.MirrorLag{
+					{
+						Partition: 0,
+						Lag:      142857,
+					},
+					{
+						Partition: 1,
+						Lag:      285714,
+					},
+					{
+						Partition: 2,
+						Lag:      571428,
+					},
+				},
 			},
 			{
 				Kind:                 "",
@@ -735,6 +815,20 @@ func (m *ClusterLinking) AlterMirrorResultResponse() (krsdk.AlterMirrorStatusRes
 				DestinationTopicName: "dest-topic-2",
 				ErrorMessage:         &errorMsg,
 				ErrorCode:            &errorCode,
+				MirrorLags:           []krsdk.MirrorLag{
+					{
+						Partition: 0,
+						Lag:      142857,
+					},
+					{
+						Partition: 1,
+						Lag:      285714,
+					},
+					{
+						Partition: 2,
+						Lag:      571428,
+					},
+				},
 			},
 		},
 	}, httpResp, nil

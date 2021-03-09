@@ -232,6 +232,21 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 					LinkName:             "link-1",
 					DestinationTopicName: "dest-topic-1",
 					SourceTopicName:      "src-topic-1",
+					NumPartitions:        3,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      142857,
+						},
+						{
+							Partition: 1,
+							Lag:      285714,
+						},
+						{
+							Partition: 2,
+							Lag:      571428,
+						},
+					},
 					MirrorTopicStatus:    "active",
 					StateTimeMs:          111111111,
 				},
@@ -241,6 +256,17 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 					LinkName:             "link-2",
 					DestinationTopicName: "dest-topic-2",
 					SourceTopicName:      "src-topic-2",
+					NumPartitions:        2,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      0,
+						},
+						{
+							Partition: 1,
+							Lag:      0,
+						},
+					},
 					MirrorTopicStatus:    "stopped",
 					StateTimeMs:          222222222,
 				},
@@ -269,15 +295,41 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 					LinkName:             "link-1",
 					DestinationTopicName: "dest-topic-1",
 					SourceTopicName:      "src-topic-1",
+					NumPartitions:        3,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      142857,
+						},
+						{
+							Partition: 1,
+							Lag:      285714,
+						},
+						{
+							Partition: 2,
+							Lag:      571428,
+						},
+					},
 					MirrorTopicStatus:    "active",
 					StateTimeMs:          111111111,
 				},
 				{
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
-					LinkName:             "link-1",
+					LinkName:             "link-2",
 					DestinationTopicName: "dest-topic-2",
 					SourceTopicName:      "src-topic-2",
+					NumPartitions:        2,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      0,
+						},
+						{
+							Partition: 1,
+							Lag:      0,
+						},
+					},
 					MirrorTopicStatus:    "stopped",
 					StateTimeMs:          222222222,
 				},
@@ -303,6 +355,20 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 					DestinationTopicName: "dest-topic-1",
 					ErrorMessage:         nil,
 					ErrorCode:            nil,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      142857,
+						},
+						{
+							Partition: 1,
+							Lag:      285714,
+						},
+						{
+							Partition: 2,
+							Lag:      571428,
+						},
+					},
 				},
 				{
 					Kind:                 "",
@@ -310,6 +376,20 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 					DestinationTopicName: "dest-topic-1",
 					ErrorMessage:         &errorMsg,
 					ErrorCode:            &errorCode,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      142857,
+						},
+						{
+							Partition: 1,
+							Lag:      285714,
+						},
+						{
+							Partition: 2,
+							Lag:      571428,
+						},
+					},
 				},
 			}})
 			require.NoError(t, err)
@@ -363,10 +443,26 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.Respon
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseData{
 				Kind:                 "",
 				Metadata:             kafkarestv3.ResourceMetadata{},
+				LinkName:             "link-1",
 				DestinationTopicName: "dest-topic-1",
 				SourceTopicName:      "src-topic-1",
-				MirrorTopicStatus:    "active",
-				StateTimeMs:          111111111,
+				NumPartitions:        3,
+				MirrorLags: []kafkarestv3.MirrorLag{
+					{
+						Partition: 0,
+						Lag:       142857,
+					},
+					{
+						Partition: 1,
+						Lag:       285714,
+					},
+					{
+						Partition: 2,
+						Lag:       571428,
+					},
+				},
+				MirrorTopicStatus: "active",
+				StateTimeMs:       111111111,
 			})
 			require.NoError(t, err)
 		}

@@ -1,6 +1,30 @@
 - DestinationTopicName: dest-topic-1
   ErrorCode: ""
   ErrorMessage: ""
+  Partition: "0"
+  PartitionMirrorLag: "142857"
+- DestinationTopicName: dest-topic-1
+  ErrorCode: ""
+  ErrorMessage: ""
+  Partition: "1"
+  PartitionMirrorLag: "285714"
+- DestinationTopicName: dest-topic-1
+  ErrorCode: ""
+  ErrorMessage: ""
+  Partition: "2"
+  PartitionMirrorLag: "571428"
 - DestinationTopicName: dest-topic-1
   ErrorCode: "401"
   ErrorMessage: Not authorized
+  Partition: "0"
+  PartitionMirrorLag: "142857"
+- DestinationTopicName: dest-topic-1
+  ErrorCode: "401"
+  ErrorMessage: Not authorized
+  Partition: "1"
+  PartitionMirrorLag: "285714"
+- DestinationTopicName: dest-topic-1
+  ErrorCode: "401"
+  ErrorMessage: Not authorized
+  Partition: "2"
+  PartitionMirrorLag: "571428"

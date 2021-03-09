@@ -21,22 +21,37 @@ const (
 
 
 var (
-	listMirrorOutputFields = []string{"LinkName", "DestinationTopicName", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	AlterMirrorOutputFields = []string{"DestinationTopicName", "ErrorMessage", "ErrorCode"}
+	listMirrorOutputFields     = []string{"LinkName", "DestinationTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	describeMirrorOutputFields = []string{"LinkName", "DestinationTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	alterMirrorOutputFields    = []string{"DestinationTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
 )
 
 type listMirrorWrite struct {
+	LinkName                 string
+	DestinationTopicName     string
+	SourceTopicName          string
+	MirrorStatus             string
+	StatusTimeMs             int32
+	NumPartition             int32
+	MaxPerPartitionMirrorLag int32
+}
+
+type describeMirrorWrite struct {
 	LinkName string
 	DestinationTopicName  string
 	SourceTopicName string
 	MirrorStatus string
 	StatusTimeMs int32
+	Partition int32
+	PartitionMirrorLag int32
 }
 
 type alterMirrorWrite struct {
 	DestinationTopicName  string
+	Partition int32
 	ErrorMessage string
 	ErrorCode string
+	PartitionMirrorLag int32
 }
 
 type mirrorCommand struct {
@@ -236,12 +251,21 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
+		var maxLag int32 = 0
+		for _, mirrorLag := range mirror.MirrorLags {
+			if mirrorLag.Lag > maxLag {
+				maxLag = mirrorLag.Lag
+			}
+		}
+
 		outputWriter.AddElement(&listMirrorWrite{
-			LinkName:             mirror.LinkName,
-			DestinationTopicName: mirror.DestinationTopicName,
-			SourceTopicName:      mirror.SourceTopicName,
-			MirrorStatus:         string(mirror.MirrorTopicStatus),
-			StatusTimeMs:         mirror.StateTimeMs,
+			LinkName:                 mirror.LinkName,
+			DestinationTopicName:     mirror.DestinationTopicName,
+			SourceTopicName:          mirror.SourceTopicName,
+			MirrorStatus:             string(mirror.MirrorTopicStatus),
+			StatusTimeMs:             mirror.StateTimeMs,
+			NumPartition:             mirror.NumPartitions,
+			MaxPerPartitionMirrorLag: maxLag,
 		})
 	}
 
@@ -269,7 +293,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	listMirrorTopicsResponseData, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
+	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
 		ClustersClusterIdLinksLinkNameMirrorsDestinationTopicNameGet(
 			kafkaREST.Context, lkc, linkName, destinationTopicName)
 	if err != nil {
@@ -277,17 +301,22 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, listMirrorOutputFields, listMirrorOutputFields, listMirrorOutputFields)
+		cmd, describeMirrorOutputFields, describeMirrorOutputFields, describeMirrorOutputFields)
 	if err != nil {
 		return err
 	}
 
-	outputWriter.AddElement(&listMirrorWrite{
-		DestinationTopicName: listMirrorTopicsResponseData.DestinationTopicName,
-		SourceTopicName:      listMirrorTopicsResponseData.SourceTopicName,
-		MirrorStatus:         string(listMirrorTopicsResponseData.MirrorTopicStatus),
-		StatusTimeMs:         listMirrorTopicsResponseData.StateTimeMs,
-	})
+	for _, partitionLag := range mirror.MirrorLags {
+		outputWriter.AddElement(&describeMirrorWrite{
+			LinkName:             mirror.LinkName,
+			DestinationTopicName: mirror.DestinationTopicName,
+			SourceTopicName:      mirror.SourceTopicName,
+			MirrorStatus:         string(mirror.MirrorTopicStatus),
+			StatusTimeMs:         mirror.StateTimeMs,
+			Partition:            partitionLag.Partition,
+			PartitionMirrorLag:   partitionLag.Lag,
+		})
+	}
 
 	return outputWriter.Out()
 }
@@ -503,7 +532,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, AlterMirrorOutputFields, AlterMirrorOutputFields, AlterMirrorOutputFields)
+		cmd, alterMirrorOutputFields, alterMirrorOutputFields, alterMirrorOutputFields)
 	if err != nil {
 		return err
 	}
@@ -520,11 +549,15 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 			code = fmt.Sprint(*result.ErrorCode)
 		}
 
-		outputWriter.AddElement(&alterMirrorWrite{
-			DestinationTopicName: result.DestinationTopicName,
-			ErrorMessage: msg,
-			ErrorCode: code,
-		})
+		for _, partitionLag := range result.MirrorLags {
+			outputWriter.AddElement(&alterMirrorWrite{
+				DestinationTopicName: result.DestinationTopicName,
+				Partition:            partitionLag.Partition,
+				ErrorMessage:         msg,
+				ErrorCode:            code,
+				PartitionMirrorLag:   partitionLag.Lag,
+			})
+		}
 	}
 
 	return outputWriter.Out()
