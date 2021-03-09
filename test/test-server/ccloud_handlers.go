@@ -586,7 +586,7 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 	}
 }
 
-// Handler for: "/api/users/{id}
+// Handler for: "/api/users/{id}"
 func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -609,17 +609,28 @@ func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.R
 	}
 }
 
-// Handler for: "/api/user_profiles/{id}
+// Handler for: "/api/user_profiles/{id}"
 func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetUserProfileReply{
-			User: &flowv1.UserProfile{
-				Email:      "cody@confluent.io",
-				FirstName:  "Cody",
-				ResourceId: "u-11aaa",
-				UserStatus: flowv1.UserStatus_USER_STATUS_ACTIVE,
-			},
-		})
+		vars := mux.Vars(r)
+		userId := vars["id"]
+		var res flowv1.GetUserProfileReply
+		switch userId {
+		case "u-0":
+			res = flowv1.GetUserProfileReply{
+				Error: &v1.Error{Message: "user not found"},
+			}
+		default:
+			res = flowv1.GetUserProfileReply{
+				User: &flowv1.UserProfile{
+					Email:      "cody@confluent.io",
+					FirstName:  "Cody",
+					ResourceId: "u-11aaa",
+					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
+				},
+			}
+		}
+		b, err := utilv1.MarshalJSONToBytes(&res)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)

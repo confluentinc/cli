@@ -144,7 +144,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 
 		// Avoid panics if new types of statuses are added in the future
 		userStatus := "Unknown"
-		if val, ok := statusMap[user.UserStatus]; ok {
+		if val, ok := statusMap[userProfile.UserStatus]; ok {
 			userStatus = val
 		}
 
