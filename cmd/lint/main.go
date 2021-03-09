@@ -194,7 +194,7 @@ var flagRules = []linter.FlagRule{
 			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
-			"skip-message-on-error", "socket-buffer-size", "client-cert-path",
+			"skip-message-on-error", "socket-buffer-size", "client-cert-path", "client-key-path",
 		),
 	),
 	linter.RequireFlagRealWords('-'),
