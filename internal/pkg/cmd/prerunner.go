@@ -547,11 +547,11 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
-			clientCertPath, err := r.FlagResolver.ResolveClientCertPathFlag(cmd)
+			clientCertPath, clientKeyPath, err := r.FlagResolver.ResolveClientCertAndKeyPathsFlag(cmd)
 			if err != nil {
 				return nil, err
 			}
-			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, caCertPath, clientCertPath, r.Logger)
+			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, caCertPath, clientCertPath, clientKeyPath, r.Logger)
 			if err != nil {
 				return nil, err
 			}
@@ -591,17 +591,17 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 	}
 }
 
-func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, logger *log.Logger) (*http.Client, error) {
+func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	// use cert path flag if it was passed
 	if caCertPath != "" {
-		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, logger)
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath, logger)
 		if err != nil {
 			return nil, err
 		}
 		return client, nil
 		// use cert path from config if available
 	} else if ctx!= nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
-		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, logger)
+		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath, logger)
 		if err != nil {
 			return nil, err
 		}

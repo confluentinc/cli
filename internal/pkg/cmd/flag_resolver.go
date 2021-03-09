@@ -28,7 +28,7 @@ type FlagResolver interface {
 	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
 	ResolveCaCertPathFlag(cmd *cobra.Command) (string, error)
 	ResolveNoAuthFlag(cmd *cobra.Command) (bool, error)
-	ResolveClientCertPathFlag(cmd *cobra.Command) (string, error)
+	ResolveClientCertAndKeyPathsFlag(cmd *cobra.Command) (string, string, error)
 }
 
 type FlagResolverImpl struct {
@@ -202,16 +202,25 @@ func (r *FlagResolverImpl) ResolveCaCertPathFlag(cmd *cobra.Command) (string, er
 	return "", nil
 }
 
-func (r *FlagResolverImpl) ResolveClientCertPathFlag(cmd *cobra.Command) (string, error) {
+func (r *FlagResolverImpl) ResolveClientCertAndKeyPathsFlag(cmd *cobra.Command) (string, string, error) {
 	const clientCertPathFlag = "client-cert-path"
+	var clientCertPath string
+	var err error
 	if cmd.Flags().Changed(clientCertPathFlag) {
-		path, err := cmd.Flags().GetString(clientCertPathFlag)
+		clientCertPath, err = cmd.Flags().GetString(clientCertPathFlag)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
-		return path, nil
 	}
-	return "", nil
+	const clientKeyPathFlag = "client-key-path"
+	var clientKeyPath string
+	if cmd.Flags().Changed(clientKeyPathFlag) {
+		clientKeyPath, err = cmd.Flags().GetString(clientKeyPathFlag)
+		if err != nil {
+			return "", "", err
+		}
+	}
+	return clientCertPath, clientKeyPath, nil
 }
 
 func (r *FlagResolverImpl) ResolveNoAuthFlag(cmd *cobra.Command) (bool, error) {

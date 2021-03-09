@@ -15,10 +15,10 @@ import (
 )
 
 func SelfSignedCertClientFromPath(caCertPath string, logger *log.Logger) (*http.Client, error) {
-	return CustomCAAndClientCertClient(caCertPath, "", logger)
+	return CustomCAAndClientCertClient(caCertPath, "", "", logger)
 }
 
-func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, logger *log.Logger) (*http.Client, error) {
+func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	var caCertReader *os.File
 	if caCertPath != "" {
 		caCertPath, err := filepath.Abs(caCertPath)
@@ -33,23 +33,25 @@ func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, logge
 		defer caCertReader.Close()
 		logger.Tracef("Successfully read CA certificate.")
 	}
-	var clientCertReader *os.File
+	var cert tls.Certificate
 	if clientCertPath != "" {
 		clientCertPath, err := filepath.Abs(clientCertPath)
 		if err != nil {
 			return nil, err
 		}
-		logger.Debugf("Attempting to load certificate from absolute path %s", clientCertPath)
-		clientCertReader, err = os.Open(clientCertPath)
+		clientKeyPath, err = filepath.Abs(clientKeyPath)
 		if err != nil {
 			return nil, err
 		}
-		defer clientCertReader.Close()
-		logger.Tracef("Successfully read client certificate.")
+		logger.Debugf("Attempting to load client key pair from absolute client cert path %s and absolute client key path %s", clientCertPath, clientKeyPath)
+		cert, err = tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	logger.Tracef("Attempting to initialize HTTP client using certificates")
-	client, err := SelfSignedCertClient(caCertReader, clientCertReader, logger)
+	client, err := SelfSignedCertClient(caCertReader, cert, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +65,8 @@ func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, logge
 	return client, nil
 }
 
-func SelfSignedCertClient(caCertReader io.Reader, clientCertReader io.Reader, logger *log.Logger) (*http.Client, error) {
-	if caCertReader == nil && clientCertReader == nil {
+func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate, logger *log.Logger) (*http.Client, error) {
+	if caCertReader == nil && isEmptyClientCert(clientCert) {
 		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
 	}
 
@@ -94,26 +96,16 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCertReader io.Reader, lo
 		logger.Tracef("Successfully appended new certificate to the pool")
 	}
 
-	var clientCertPool *x509.CertPool
-	if clientCertReader != nil && clientCertReader != (*os.File)(nil) {
-		clientCerts, err := ioutil.ReadAll(clientCertReader)
-		if err != nil {
-			return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
-		}
-		logger.Tracef("Specified client certificate has been read")
-
-		// Only need custom certs in clientCertPool
-		clientCertPool = x509.NewCertPool()
-		if ok := clientCertPool.AppendCertsFromPEM(clientCerts); !ok {
-			return nil, errors.New(errors.NoCertsAppendedErrorMsg)
-		}
-		logger.Tracef("Successfully appended client certificate")
-	}
-
 	// Trust the updated cert pool in our client
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = &tls.Config{RootCAs: caCertPool, ClientCAs: clientCertPool}
+	transport.TLSClientConfig = &tls.Config{RootCAs: caCertPool}
 	logger.Tracef("Successfully created TLS config using certificate pool")
+
+	if !isEmptyClientCert(clientCert) {
+		transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}
+		logger.Tracef("Successfully added client cert to TLS config")
+	}
+
 	defaultClient := DefaultClient()
 	client := &http.Client{
 		Transport:     transport,
@@ -124,6 +116,10 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCertReader io.Reader, lo
 	logger.Tracef("Successfully set client properties")
 
 	return client, nil
+}
+
+func isEmptyClientCert(cert tls.Certificate) bool {
+	return cert.Certificate == nil && cert.Leaf == nil && cert.OCSPStaple == nil && cert.PrivateKey == nil && cert.SignedCertificateTimestamps == nil && cert.SupportedSignatureAlgorithms == nil
 }
 
 func DefaultClient() *http.Client {
