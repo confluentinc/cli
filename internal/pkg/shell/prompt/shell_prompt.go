@@ -44,12 +44,11 @@ type instrumentedCommand struct {
 // in the internals of cobra/flags; however, this bandaid
 // still seems to be enough to counteract that behavior.
 //
-// NOTE: The flags for which we do this are hard-coded.
-// Persistent flags need to be visited, too, if the need arises.
+// Note: Persistent flags need to be visited, too, if the need arises.
 func resetArrayAndSliceFlags(c *cobra.Command) {
 	c.Flags().VisitAll(func(f *flag.Flag) {
-		if f.Name == "operation" {
-			f.Value.(flag.SliceValue).Replace([]string{})
+		if sliceValue, ok := f.Value.(flag.SliceValue); ok {
+			sliceValue.Replace([]string{})
 		}
 	})
 	if c.HasSubCommands() {
