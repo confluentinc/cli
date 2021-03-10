@@ -48,7 +48,7 @@ type instrumentedCommand struct {
 func resetArrayAndSliceFlags(c *cobra.Command) {
 	c.Flags().VisitAll(func(f *flag.Flag) {
 		if sliceValue, ok := f.Value.(flag.SliceValue); ok {
-			sliceValue.Replace([]string{})
+			_ := sliceValue.Replace([]string{})
 		}
 	})
 	if c.HasSubCommands() {
