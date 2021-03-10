@@ -125,7 +125,8 @@ func (c *mirrorCommand) init() {
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
-	createCmd.Flags().StringSlice(configFlagName, nil, "A comma-separated list of topic config overrides ('key=value') for the topic being created.")
+	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing topic config overrides. " +
+		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
@@ -334,7 +335,12 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configs, err := cmd.Flags().GetStringSlice(configFlagName)
+	configs, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
+
+	configMap, err := readConfigsFromFile(configs)
 	if err != nil {
 		return err
 	}
@@ -345,11 +351,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	configMap, err := toMap(configs)
 	if err != nil {
 		return err
 	}

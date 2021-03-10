@@ -110,7 +110,7 @@ const (
 
 	// kafka topic commands
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg            = "configuration must be in the form of key=value"
+	ConfigurationFormErrorMsg             = "configuration must be in the form of key=value"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
@@ -122,6 +122,9 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
+
+	// Cluster Link commands
+	EmptyConfigErrorMsg           = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"

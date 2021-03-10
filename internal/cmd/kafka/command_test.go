@@ -3,7 +3,10 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	logger "log"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -749,21 +752,63 @@ func TestDeleteLink(t *testing.T) {
 	)
 }
 
+func configMapWithJsonConfigValues() map[string]string {
+	type child struct {
+		Name        string `json:"name"`
+		PatternType string `json:"patternType"`
+		FilterType  string `json:"filterType"`
+	}
+
+	type aJson struct {
+		Children []child `json:"children"`
+	}
+
+	jsonConfig, _ := json.Marshal(aJson{
+		Children: []child{
+			{
+				Name:        "*",
+				PatternType: "LITERAL",
+				FilterType:  "INCLUDE",
+			},
+			{
+				Name:        "*",
+				PatternType: "LITERAL",
+				FilterType:  "INCLUDE",
+			},
+		},
+	})
+
+	println(string(jsonConfig))
+
+	return map[string]string{
+		"key1":"val1",
+		"key2":"val2",
+		"key3":string(jsonConfig),
+	}
+}
+
 func TestBatchAlterLink(t *testing.T) {
-	configs := map[string]string{"config1": "val1", "config2": "val2"}
+	const configFileName = "link-config.in"
+	configs := configMapWithJsonConfigValues()
+	dir, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		logger.Fatal("Cannot create the test config file")
+	}
 
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s,%s=%s", "config1", "val1", "config2", "val2")}
+			return []string{"link", "update", link.name, "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <-  cliMock.BatchUpdateLinkConfigMatcher{
+			expect <- cliMock.BatchUpdateLinkConfigMatcher{
 				LinkName: link.name,
 				Configs: configs,
 			}
 		},
 	)
+
+	defer os.Remove(dir + "/" + configFileName)
 }
 
 func TestListLinkConfigs(t *testing.T) {
@@ -798,20 +843,27 @@ func TestCreateLink(t *testing.T) {
 }
 
 func TestCreateMirror(t *testing.T) {
-	configs := map[string]string{"a":"b", "c":"d"}
+	const configFileName = "mirror-topic-config.in"
+	configs := configMapWithJsonConfigValues()
+	dir, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		logger.Fatal("Cannot create the test config file")
+	}
+
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2", "--config", "a=b,c=d"}
+			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2",  "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.CreateMirrorMatcher{
 				LinkName:        "link-1",
 				SourceTopicName: "src-topic-1",
-				Configs:         configs,
+				Configs:          configs,
 			}
 		},
 	)
+	defer os.Remove(dir + "/" + configFileName)
 }
 
 func TestListAllMirror(t *testing.T) {

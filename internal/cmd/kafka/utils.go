@@ -1,12 +1,14 @@
 package kafka
 
 import (
+	"bufio"
 	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"io/ioutil"
+	logger "log"
 	"os"
 	"strings"
 )
@@ -100,4 +102,27 @@ func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Comm
 		return "", err
 	}
 	return kafkaClusterConfig.ID, nil
+}
+
+func createTestConfigFile(name string, configs map[string]string) (string, error) {
+	dir,_ := os.Getwd()
+	logger.Println("Test config file dir:",dir)
+	file, err := os.OpenFile(name, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+	if err != nil {
+		return dir, err
+	}
+
+	write := bufio.NewWriter(file)
+	for key, val := range configs {
+		if _, err = write.WriteString(key + "=" + val + "\n"); err != nil {
+			file.Close()
+			return dir, err
+		}
+	}
+
+	if err = write.Flush(); err != nil {
+		return dir, err
+	}
+
+	return dir, file.Close()
 }

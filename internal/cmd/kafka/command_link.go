@@ -19,7 +19,6 @@ const (
 	sourceBootstrapServersFlagName     = "source-cluster"
 	sourceClusterIdName                = "source-cluster-id"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	configFlagName                      = "config"
 	configFileFlagName                  = "config-file"
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
@@ -108,9 +107,10 @@ func (c *linkCommand) init() {
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address for source cluster.")
+	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
 	createCmd.Flags().String(sourceClusterIdName, "", "Source cluster ID.")
-	createCmd.Flags().String(configFileFlagName, "", "File containing additional comma-separated properties for source cluster.")
+	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
+		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
 	createCmd.Flags().SortFlags = false
@@ -149,17 +149,18 @@ func (c *linkCommand) init() {
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	updateCmd := &cobra.Command{
 		Use:   "update <link-name>",
-		Short: "Updates a property for a previously created cluster link.",
+		Short: "Update link configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Updates a property for a cluster link.",
+				Text: "Updates configs for the cluster link.",
 				Code: "ccloud kafka link update my_link --config \"retention.ms=123456890\"",
 			},
 		),
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
 	}
-	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
+		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
@@ -541,13 +542,18 @@ func (c *linkCommand) describeWithKafkaApi(cmd *cobra.Command, link string) erro
 
 func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
-	configs, err := cmd.Flags().GetStringSlice(configFlagName)
+	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
 	}
-	configsMap, err := toMap(configs)
+
+	configsMap, err := readConfigsFromFile(configFile)
 	if err != nil {
 		return err
+	}
+
+	if len(configsMap) == 0 {
+		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
 	kafkaREST, _ := c.GetKafkaREST()
