@@ -28,18 +28,20 @@ import (
 )
 
 const (
-	kafkaClusterID    = "lkc-12345"
-	srClusterID       = "lsrc-12345"
-	apiKeyVal         = "abracadabra"
-	apiKeyResourceId  = int32(9999)
-	anotherApiKeyVal  = "abba"
-	apiSecretVal      = "opensesame"
-	promptReadString  = "readstring"
-	promptReadPass    = "readpassword"
-	environment       = "testAccount"
-	apiSecretFile     = "./api_secret_test.txt"
-	apiSecretFromFile = "api_secret_test"
-	apiKeyDescription = "Mock Apis"
+	kafkaClusterID     = "lkc-12345"
+	srClusterID        = "lsrc-12345"
+	apiKeyVal          = "abracadabra"
+	apiKeyResourceId   = int32(9999)
+	anotherApiKeyVal   = "abba"
+	apiSecretVal       = "opensesame"
+	promptReadString   = "readstring"
+	promptReadPass     = "readpassword"
+	environment        = "testAccount"
+	apiSecretFile      = "./api_secret_test.txt"
+	apiSecretFromFile  = "api_secret_test"
+	apiKeyDescription  = "Mock Apis"
+	serviceAccountId   = int32(123)
+	serviceAccountName = "service-account"
 )
 
 var (
@@ -59,9 +61,11 @@ type APITestSuite struct {
 	apiMock          *ccsdkmock.APIKey
 	keystore         *mock.KeyStore
 	kafkaCluster     *schedv1.KafkaCluster
+	ksqlCluster      *schedv1.KSQLCluster
 	srCluster        *schedv1.SchemaRegistryCluster
 	srMothershipMock *ccsdkmock.SchemaRegistry
 	kafkaMock        *ccsdkmock.Kafka
+	ksqlMock         *ccsdkmock.KSQL
 	isPromptPipe     bool
 	userMock         *ccsdkmock.User
 	analyticsOutput  []segment.Message
@@ -82,12 +86,24 @@ func (suite *APITestSuite) SetupTest() {
 		Enterprise: true,
 		AccountId:  environment,
 	}
+	suite.ksqlCluster = &schedv1.KSQLCluster{
+		Id:   "ksql-123",
+		Name: "ksql",
+	}
 	suite.srCluster = &schedv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 	suite.kafkaMock = &ccsdkmock.Kafka{
 		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
+		},
+		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
+		},
+	}
+	suite.ksqlMock = &ccsdkmock.KSQL{
+		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, e error) {
+			return []*schedv1.KSQLCluster{suite.ksqlCluster}, nil
 		},
 	}
 	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
@@ -136,7 +152,12 @@ func (suite *APITestSuite) SetupTest() {
 			}, nil
 		},
 		GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
-			return []*v1.User{}, nil
+			return []*v1.User{
+				{
+					Id:          serviceAccountId,
+					ServiceName: serviceAccountName,
+				},
+			}, nil
 		},
 		CheckEmailFunc: nil,
 	}
@@ -153,7 +174,7 @@ func (suite *APITestSuite) newCmd() *command {
 		Connect:        &ccsdkmock.Connect{},
 		User:           suite.userMock,
 		APIKey:         suite.apiMock,
-		KSQL:           &ccsdkmock.KSQL{},
+		KSQL:           suite.ksqlMock,
 		Metrics:        &ccsdkmock.Metrics{},
 	}
 	prompt := &mock.Prompt{
@@ -364,7 +385,7 @@ func (suite *APITestSuite) TestServerComplete() {
 		want   []prompt.Suggest
 	}{
 		{
-			name: "suggest for authenticated user",
+			name: "suggest for command",
 			fields: fields{
 				Command: suite.newCmd(),
 			},
@@ -375,28 +396,90 @@ func (suite *APITestSuite) TestServerComplete() {
 				},
 			},
 		},
-		{
-			name: "don't suggest for unauthenticated user",
-			fields: fields{
-				Command: func() *command {
-					oldConf := suite.conf
-					suite.conf = v3.UnauthenticatedCloudConfigMock()
-					c := suite.newCmd()
-					suite.conf = oldConf
-					return c
-				}(),
-			},
-			want: nil,
-		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
 }
+
+func (suite *APITestSuite) TestServerResourceFlagComplete() {
+	flagName := resourceFlagName
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for flag",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        suite.kafkaCluster.Id,
+					Description: suite.kafkaCluster.Name,
+				},
+				{
+					Text:        suite.srCluster.Id,
+					Description: suite.srCluster.Name,
+				},
+				{
+					Text:        suite.ksqlCluster.Id,
+					Description: suite.ksqlCluster.Name,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *APITestSuite) TestServerServiceAccountFlagComplete() {
+	flagName := "service-account"
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for flag",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        fmt.Sprintf("%d", serviceAccountId),
+					Description: serviceAccountName,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
 func TestApiTestSuite(t *testing.T) {
 	suite.Run(t, new(APITestSuite))
 }

@@ -421,7 +421,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentDescribeTopic() {
 	}{
 		{
 			input: "describe topic --url http://localhost:8082",
-			expectedOutput: "Topic: topic PartitionCount: 3 ReplicationFactor: 1\n\nConfiguration\n\n",
+			expectedOutput: "Topic: topic\nPartitionCount: 3\nReplicationFactor: 1\n\n\nConfiguration\n\n",
 		},
 		{
 			input: "describe --topic --url http://localhost:8082",

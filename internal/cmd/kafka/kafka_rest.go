@@ -58,6 +58,9 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	case kafkarestv3.GenericOpenAPIError:
 		openAPIError, parseErr := parseOpenAPIError(err)
 		if parseErr == nil {
+			if strings.Contains(openAPIError.Message, "invalid_token") {
+				return errors.NewErrorWithSuggestions(errors.InvalidMDSToken, errors.InvalidMDSTokenSuggestions)
+			}
 			return fmt.Errorf("REST request failed: %v (%v)", openAPIError.Message, openAPIError.Code)
 		}
 		if httpResp != nil && httpResp.StatusCode >= 400 {

@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -118,6 +119,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
+		Long: "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
@@ -183,8 +185,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -534,11 +535,7 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return suggestions
 	}

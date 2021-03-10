@@ -191,6 +191,7 @@ const (
 	FailedToObtainedUserSSOErrorMsg     = "unable to obtain SSO info for user \"%s\""
 	NonSSOUserErrorMsg                  = "tried to obtain SSO token for non SSO user \"%s\""
 	NoCredentialsFoundErrorMsg          = "no credentials found"
+	NoURLEnvVarErrorMsg                 = "no URL env var"
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
@@ -366,6 +367,8 @@ const (
 	NoClustersFoundErrorMsg			= "No clusters found"
 	NoClustersFoundSuggestions		= "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration"
 	NeedClientCertAndKeyPathsErrorMsg = "Must set \"client-cert-path\" and \"client-key-path\" flags together"
+	InvalidMDSToken					  = "Invalid MDS token"
+	InvalidMDSTokenSuggestions		  = "Re-login with \"confluent login\"."
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."

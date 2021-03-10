@@ -69,6 +69,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate, lo
 	if caCertReader == nil && isEmptyClientCert(clientCert) {
 		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
 	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
 
 	var caCertPool *x509.CertPool
 	if caCertReader != nil && caCertReader != (*os.File)(nil) {
@@ -94,12 +95,10 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate, lo
 			return nil, errors.New(errors.NoCertsAppendedErrorMsg)
 		}
 		logger.Tracef("Successfully appended new certificate to the pool")
+		// Trust the updated cert pool in our client
+		transport.TLSClientConfig = &tls.Config{RootCAs: caCertPool}
+		logger.Tracef("Successfully created TLS config using certificate pool")
 	}
-
-	// Trust the updated cert pool in our client
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = &tls.Config{RootCAs: caCertPool}
-	logger.Tracef("Successfully created TLS config using certificate pool")
 
 	if !isEmptyClientCert(clientCert) {
 		transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}

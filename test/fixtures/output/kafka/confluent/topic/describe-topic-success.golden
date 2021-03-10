@@ -1,4 +1,7 @@
-Topic: topic-exist PartitionCount: 3 ReplicationFactor: 3
+Topic: topic-exist
+PartitionCount: 3
+ReplicationFactor: 3
+
      Topic    | Partition | Leader |     Replicas     |       ISR         
 +-------------+-----------+--------+------------------+------------------+
   topic-exist |         0 |   1001 | [1001 1002 1003] | [1001 1002 1003]  
