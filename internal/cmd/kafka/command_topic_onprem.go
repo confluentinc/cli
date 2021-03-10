@@ -466,7 +466,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	// Print topic info
 	if format == output.Human.String() { // human output
 		// Output partitions info
-		utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
+		utils.Printf(cmd, "Topic: %s\nPartitionCount: %d\nReplicationFactor: %d\n\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
 		partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
 		partitionsTableEntries := make([][]string, topicData.PartitionCount)
 		for i, partition := range topicData.Partitions {

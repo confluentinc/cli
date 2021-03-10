@@ -569,6 +569,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			}
 			var restContext context.Context
 			if useMdsToken {
+				r.Logger.Log("found mds token to use as bearer")
 				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
 			} else {
 				utils.Println(cmd, errors.MDSTokenNotFoundMsg)

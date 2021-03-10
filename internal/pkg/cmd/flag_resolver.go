@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -219,6 +220,9 @@ func (r *FlagResolverImpl) ResolveClientCertAndKeyPathsFlag(cmd *cobra.Command) 
 		if err != nil {
 			return "", "", err
 		}
+	}
+	if (clientCertPath != "" && clientKeyPath == "") || (clientCertPath == "" && clientKeyPath != "") {
+		return "", "", errors.New(errors.NeedClientCertAndKeyPathsErrorMsg)
 	}
 	return clientCertPath, clientKeyPath, nil
 }

@@ -37,6 +37,10 @@ type KafkaTopicOnPremTestSuite struct {
 	// Data returned by APIClient
 	clusterList 	*kafkarestv3.ClusterDataList
 	topicList   	*kafkarestv3.TopicDataList
+	partitionList	*kafkarestv3.PartitionDataList
+	configDataList  *kafkarestv3.TopicConfigDataList
+	replicaList     *kafkarestv3.ReplicaDataList
+
 	createTopicName	string
 	createTopicPartitionsCount int32
 	createTopicReplicationFactor	int32
@@ -64,6 +68,42 @@ func (suite *KafkaTopicOnPremTestSuite) SetupSuite() {
 			},
 			{
 				TopicName: "topic-3",
+			},
+		},
+	}
+
+	suite.partitionList = &kafkarestv3.PartitionDataList{
+		Data: []kafkarestv3.PartitionData{
+			{
+				TopicName: "topic-1",
+			},
+			{
+				TopicName: "topic-2",
+			},
+			{
+				TopicName: "topic-3",
+			},
+		},
+	}
+	value := "testValue"
+	suite.configDataList = &kafkarestv3.TopicConfigDataList{
+		Data: []kafkarestv3.TopicConfigData{
+			{
+				ClusterId: clusterId,
+				TopicName: topicName,
+				Value: &value,
+			},
+		},
+	}
+	suite.replicaList = &kafkarestv3.ReplicaDataList{
+		Data: []kafkarestv3.ReplicaData{
+			{
+				PartitionId: 1,
+				ClusterId: clusterId,
+				TopicName: topicName,
+				BrokerId: 50,
+				IsLeader: true,
+				IsInSync: true,
 			},
 		},
 	}
@@ -137,25 +177,60 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 				ReplicationFactor:      topicCreateData.ReplicationFactor,
 			}, nil, nil
 		},
+		ClustersClusterIdTopicsTopicNameDeleteFunc: func(ctx context.Context, clusterId string, topicName string) (*http.Response, error) {
+			// Check if URL is valid
+			err := checkURL(suite.testClient.GetConfig().BasePath)
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		},
 	}
-	suite.testClient.ConfigsApi = &kafkarestv3mock.ConfigsApi{ClustersClusterIdTopicsTopicNameConfigsalterPostFunc: func(ctx context.Context, clusterId string, topicName string, localVarOptionals *kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts) (*http.Response, error) {
-		err := checkURL(suite.testClient.GetConfig().BasePath)
-		if err != nil {
-			return nil, err
-		}
-		t := suite.T()
-		topicUpdateOpts := localVarOptionals.AlterConfigBatchRequestData.Value().(kafkarestv3.AlterConfigBatchRequestData)
-		require.Equal(t, suite.updateTopicName, topicName)
-		require.Equal(t, len(suite.updateTopicData), len(topicUpdateOpts.Data))
-		values := make(map[string]string)
-		for _, requestEntry := range topicUpdateOpts.Data {
-			values[requestEntry.Name] = *requestEntry.Value
-		}
-		for _, expectedEntry := range suite.updateTopicData {
-			require.Equal(t, values[expectedEntry.Name], *expectedEntry.Value)
-		}
-		return nil, nil
-	}}
+	suite.testClient.ConfigsApi = &kafkarestv3mock.ConfigsApi{
+		ClustersClusterIdTopicsTopicNameConfigsalterPostFunc: func(ctx context.Context, clusterId string, topicName string, localVarOptionals *kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts) (*http.Response, error) {
+			err := checkURL(suite.testClient.GetConfig().BasePath)
+			if err != nil {
+				return nil, err
+			}
+			t := suite.T()
+			topicUpdateOpts := localVarOptionals.AlterConfigBatchRequestData.Value().(kafkarestv3.AlterConfigBatchRequestData)
+			require.Equal(t, suite.updateTopicName, topicName)
+			require.Equal(t, len(suite.updateTopicData), len(topicUpdateOpts.Data))
+			values := make(map[string]string)
+			for _, requestEntry := range topicUpdateOpts.Data {
+				values[requestEntry.Name] = *requestEntry.Value
+			}
+			for _, expectedEntry := range suite.updateTopicData {
+				require.Equal(t, values[expectedEntry.Name], *expectedEntry.Value)
+			}
+			return nil, nil
+		},
+		ClustersClusterIdTopicsTopicNameConfigsGetFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+			err := checkURL(suite.testClient.GetConfig().BasePath)
+			if err != nil {
+				return kafkarestv3.TopicConfigDataList{}, nil, err
+			}
+			return *suite.configDataList, nil, nil
+		},
+	}
+	suite.testClient.PartitionApi = &kafkarestv3mock.PartitionApi{
+		ClustersClusterIdTopicsTopicNamePartitionsGetFunc:  func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
+			err := checkURL(suite.testClient.GetConfig().BasePath)
+			if err != nil {
+				return kafkarestv3.PartitionDataList{}, nil, err
+			}
+			return *suite.partitionList, nil, nil
+		},
+	}
+	suite.testClient.ReplicaApi = &kafkarestv3mock.ReplicaApi{
+		ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGetFunc:  func(ctx context.Context, clusterId string, topicName string, partitionId int32) (kafkarestv3.ReplicaDataList, *http.Response, error) {
+			err := checkURL(suite.testClient.GetConfig().BasePath)
+			if err != nil {
+				return kafkarestv3.ReplicaDataList{}, nil, err
+			}
+			return *suite.replicaList, nil, nil
+		},
+	}
 	provider := suite.getRestProvider()
 	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, v3.AuthenticatedConfluentConfigMock())
 	return NewTopicCommandOnPrem(testPrerunner)
@@ -213,7 +288,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentListTopics() {
 	}
 }
 
-func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopics() {
+func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 	retentionValue := "1"
 	compressionValue := "gzip"
 	// Define test cases
@@ -274,7 +349,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopics() {
 	}
 }
 
-func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopics() {
+func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopic() {
 	retentionValue := "1"
 	compressionValue := "gzip"
 	// Define test cases
@@ -335,6 +410,79 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopics() {
 	}
 }
 
+func (suite *KafkaTopicOnPremTestSuite) TestConfluentDescribeTopic() {
+	// Define test cases
+	cases := []struct {
+		input               string
+		expectedOutput      string
+		expectError         bool
+		errorMsgContainsAll []string
+		message             string
+	}{
+		{
+			input: "describe topic --url http://localhost:8082",
+			expectedOutput: "Topic: topic PartitionCount: 3 ReplicationFactor: 1\n\nConfiguration\n\n",
+		},
+		{
+			input: "describe --topic --url http://localhost:8082",
+			expectError: true,
+			errorMsgContainsAll: []string{"unknown flag: --topic"},
+		},
+	}
+
+	// Test test cases
+	for _, testCase := range cases {
+		topicCommand := suite.createCommand()
+		_, output, err := executeCommand(topicCommand, strings.Split(testCase.input, " "))
+
+		if testCase.expectError == false {
+			require.NoError(suite.T(), err, testCase.message)
+			require.Equal(suite.T(), testCase.expectedOutput, output, testCase.message)
+		} else {
+			require.Error(suite.T(), err, testCase.message)
+			for _, errorMsgContains := range testCase.errorMsgContainsAll {
+				require.Contains(suite.T(), err.Error(), errorMsgContains, testCase.message)
+			}
+		}
+	}
+}
+
+func (suite *KafkaTopicOnPremTestSuite) TestConfluentDeleteTopic() {
+	// Define test cases
+	cases := []struct {
+		input               string
+		expectedOutput      string
+		expectError         bool
+		errorMsgContainsAll []string
+		message             string
+	}{
+		{
+			input: "delete topicDelete --url http://localhost:8082",
+			expectedOutput: "Deleted topic \"topicDelete\".\n",
+		},
+		{
+			input: "delete --topic --url http://localhost:8082",
+			expectError: true,
+			errorMsgContainsAll: []string{"unknown flag: --topic"},
+		},
+	}
+
+	// Test test cases
+	for _, testCase := range cases {
+		topicCommand := suite.createCommand()
+		_, output, err := executeCommand(topicCommand, strings.Split(testCase.input, " "))
+
+		if testCase.expectError == false {
+			require.NoError(suite.T(), err, testCase.message)
+			require.Equal(suite.T(), testCase.expectedOutput, output, testCase.message)
+		} else {
+			require.Error(suite.T(), err, testCase.message)
+			for _, errorMsgContains := range testCase.errorMsgContainsAll {
+				require.Contains(suite.T(), err.Error(), errorMsgContains, testCase.message)
+			}
+		}
+	}
+}
 
 func (suite *KafkaTopicOnPremTestSuite) getRestProvider() cmd.KafkaRESTProvider {
 	return  func() (*cmd.KafkaREST, error) {

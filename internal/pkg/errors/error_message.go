@@ -365,6 +365,7 @@ const (
 	KafkaRestUrlNotFoundSuggestions = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
 	NoClustersFoundErrorMsg			= "No clusters found"
 	NoClustersFoundSuggestions		= "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration"
+	NeedClientCertAndKeyPathsErrorMsg = "Must set \"client-cert-path\" and \"client-key-path\" flags together"
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
