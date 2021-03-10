@@ -45,26 +45,41 @@ type instrumentedCommand struct {
 // still seems to be enough to counteract that behavior.
 //
 // Note: Persistent flags need to be visited, too, if the need arises.
-func resetArrayAndSliceFlags(c *cobra.Command) {
+func resetArrayAndSliceFlags(c *cobra.Command) error {
+	var err error
 	c.Flags().VisitAll(func(f *flag.Flag) {
 		if sliceValue, ok := f.Value.(flag.SliceValue); ok {
-			_ := sliceValue.Replace([]string{})
+			// Don't do more work if an error has already occurred
+			if err == nil {
+				err = sliceValue.Replace([]string{})
+			}
 		}
 	})
+	if err != nil {
+		return err
+	}
 	if c.HasSubCommands() {
 		for _, y := range c.Commands() {
-			resetArrayAndSliceFlags(y)
+			err := resetArrayAndSliceFlags(y)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func (c *instrumentedCommand) Execute(cliName string, args []string) error {
+	var err error
 	c.analytics.SetStartTime()
 	if c.Command.HasFlags() {
-		resetArrayAndSliceFlags(c.Command)
+		err = resetArrayAndSliceFlags(c.Command)
+		if err != nil {
+			return err
+		}
 	}
 	c.Command.SetArgs(args)
-	err := c.Command.Execute()
+	err = c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	analytics.SendAnalyticsAndLog(c.Command, args, err, c.analytics, c.logger)
 	feedback.HandleFeedbackNudge(cliName, args)
