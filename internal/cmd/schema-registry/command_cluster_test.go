@@ -110,7 +110,8 @@ func (suite *ClusterTestSuite) TestCreateSR() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], srClusterID, req)
+	// TODO add back when analytics are on
+	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], srClusterID, req)
 }
 
 func (suite *ClusterTestSuite) TestDescribeSR() {

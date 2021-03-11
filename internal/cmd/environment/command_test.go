@@ -97,7 +97,8 @@ func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.CreateCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
 }
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
@@ -107,7 +108,8 @@ func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.DeleteCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
 }
 
 func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
