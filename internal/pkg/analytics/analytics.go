@@ -440,16 +440,8 @@ func isHelpFlag(flag string) bool {
 }
 
 func apiKeyStoreSecretHandler(args []string) []string {
-	if len(args) < 2 {
-		return args
-	}
-	if !(args[1] == "-" || strings.HasPrefix(args[1], "@")) {
-		argsCopy := make([]string, len(args))
-		copy(argsCopy, args)
-		argsCopy[1] = SecretValueString
-		return argsCopy
-	}
-	return args
+	emptyArgs := []string{"<args>"}
+	return emptyArgs
 }
 
 func SendAnalyticsAndLog(cmd *cobra.Command, args []string, err error, client Client, logger *log.Logger) {
