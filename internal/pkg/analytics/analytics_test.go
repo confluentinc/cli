@@ -611,13 +611,7 @@ func (suite *AnalyticsTestSuite) TestApiKeyStoreSecretHandler() {
 
 		args, ok := (page.Properties[analytics.ArgsPropertiesKey]).([]string)
 		req.True(ok)
-		req.Equal(2, len(args))
-		req.Equal(apiKey, args[0])
-		if secondArg == apiSecret {
-			req.Equal(analytics.SecretValueString, args[1])
-		} else {
-			req.Equal(secondArg, args[1])
-		}
+		req.Equal([]string{"<args>"}, args)
 		suite.output = make([]segment.Message, 0)
 	}
 }
