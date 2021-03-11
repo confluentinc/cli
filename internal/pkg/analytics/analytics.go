@@ -27,16 +27,13 @@ const (
 )
 
 var (
-	secretCommandFlags = map[string][]string{
-		"ccloud init":                   {"api-secret"},
-		"confluent master-key generate": {"passphrase", "local-secrets-file"},
-		"confluent file rotate":         {"passphrase", "passphrase-new"},
-	}
 	// map command string to secret handler func
 	secretCommandArgs     = map[string]func([]string) []string{"ccloud api-key store": apiKeyStoreSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
 	nonUser               = "no-user-info"
+
+	secretFlags = []string{"api-secret", "passphrase", "local-secrets-file", "passphrase-new"}
 
 	// key used in tracking created and deleted resources
 	ResourceIDPropertiesKey = "resource_id"
@@ -301,12 +298,10 @@ func (a *ClientObj) resetAnonymousId() error {
 func (a *ClientObj) addFlagProperties(cmd *cobra.Command) {
 	flags := make(map[string]string)
 	cmd.Flags().Visit(func(f *pflag.Flag) {
-		if flagNames, ok := secretCommandFlags[cmd.CommandPath()]; ok {
-			for _, flagName := range flagNames {
-				if f.Name == flagName {
-					flags[f.Name] = SecretValueString
-					break
-				}
+		for _, secretFlag := range secretFlags {
+			if f.Name == secretFlag {
+				flags[f.Name] = SecretValueString
+				break
 			}
 		}
 		if _, ok := flags[f.Name]; !ok {
