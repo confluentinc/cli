@@ -214,13 +214,13 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
-func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
-	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
-
-	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
-	req.NoError(err)
-	req.Equal(apiKeyVal, key.(string))
-}
+//func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
+//	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
+//
+//	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
+//	req.NoError(err)
+//	req.Equal(apiKeyVal, key.(string))
+//}
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
