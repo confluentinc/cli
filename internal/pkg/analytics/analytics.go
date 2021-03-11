@@ -172,15 +172,16 @@ func (a *ClientObj) catchHelpCall(rootCmd *cobra.Command, args []string) {
 }
 
 func (a *ClientObj) SendCommandAnalytics(cmd *cobra.Command, args []string, cmdExecutionError error) error {
-	a.catchHelpCall(cmd, args)
-	if cmdExecutionError != nil {
-		err := a.sendCommandFailed(cmdExecutionError)
-		a.updateCmdPages()
-		return err
-	}
-	err := a.sendCommandSucceeded()
-	a.updateCmdPages()
-	return err
+	return nil
+	//a.catchHelpCall(cmd, args)
+	//if cmdExecutionError != nil {
+	//	err := a.sendCommandFailed(cmdExecutionError)
+	//	a.updateCmdPages()
+	//	return err
+	//}
+	//err := a.sendCommandSucceeded()
+	//a.updateCmdPages()
+	//return err
 }
 
 func (a *ClientObj) updateCmdPages() {

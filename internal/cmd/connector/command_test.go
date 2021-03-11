@@ -154,7 +154,8 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestListConnectors() {
@@ -188,7 +189,8 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 	req.True(suite.connectMock.CreateCalled())
 	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+	// TODO add back with analytics
+	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
@@ -200,7 +202,8 @@ func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	req.True(suite.connectMock.CreateCalled())
 	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
