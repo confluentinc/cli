@@ -773,10 +773,75 @@ func TestCreateLink(t *testing.T) {
 		})
 }
 
+/*************** TEST command_consumer-group_cloud ***************/
+type testConsumerGroup struct {
+	id       string
+}
+var ConsumerGroups = []testConsumerGroup{
+	{
+		id:       "consumer-group-1",
+	},
+}
+
+func TestSummarizeLag(t *testing.T) {
+	expect := make(chan interface{})
+	for _, consumerGroup := range ConsumerGroups {
+		cmd := newRestCmd(expect)
+		cmd.SetArgs([]string{"consumer-group", "lag", "summarize", consumerGroup.id})
+		go func() {
+			expect <- cliMock.SummarizeLagMatcher{
+				ConsumerGroupId: consumerGroup.id,
+			}
+		}()
+
+		if err := cmd.Execute(); err != nil {
+			t.Errorf("error: %s", err)
+			t.Fail()
+			return
+		}
+	}
+}
+
 /*************** TEST setup/helpers ***************/
-func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
+//func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
+//	client := &ccloud.Client{
+//		Kafka: cliMock.NewKafkaMock(expect),
+//		EnvironmentMetadata: &mock.EnvironmentMetadata{
+//			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
+//				return []*schedv1.CloudMetadata{{
+//					Id:       "aws",
+//					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
+//					Regions:  []*schedv1.Region{{IsSchedulable: true, Id: "us-west-2"}},
+//				}}, nil
+//			},
+//		},
+//	}
+//
+//	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
+//		if enableREST {
+//			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
+//			restMock.ACLApi = cliMock.NewACLMock()
+//			restMock.TopicApi = cliMock.NewTopicMock()
+//			restMock.PartitionApi = cliMock.NewPartitionMock()
+//			restMock.ReplicaApi = cliMock.NewReplicaMock()
+//			restMock.ConfigsApi = cliMock.NewConfigsMock()
+//			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
+//			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
+//			return kafkaREST, nil
+//		}
+//		return nil, nil
+//	})
+//
+//	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
+//		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
+//	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
+//
+//	return cmd
+//}
+
+func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
-		Kafka: cliMock.NewKafkaMock(expect),
+		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
@@ -787,7 +852,6 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 			},
 		},
 	}
-
 	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
 		if enableREST {
 			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
@@ -802,12 +866,18 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 		}
 		return nil, nil
 	})
-
 	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-
 	return cmd
+}
+
+func newCmd(kafkaExpect chan interface{}, enableREST bool) *cobra.Command {
+	return newMockCmd(kafkaExpect, make(chan interface{}), enableREST)
+}
+
+func newRestCmd(restExpect chan interface{}) *cobra.Command {
+	return newMockCmd(make(chan interface{}), restExpect, true)
 }
 
 func init() {

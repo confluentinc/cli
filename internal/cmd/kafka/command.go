@@ -41,14 +41,17 @@ func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *l
 func (c *command) init(isAPIKeyLogin bool, cliName string) {
 	if cliName == "ccloud" {
 		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
+		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
+		// and that doesn't trigger completion.
 		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 		c.serverCompleter.AddCommand(topicCmd)
 		if isAPIKeyLogin {
 			return
 		}
+		groupCmd := NewGroupCommand(c.prerunner)
+		c.AddCommand(groupCmd.Command)
+		c.serverCompleter.AddCommand(groupCmd)
 		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
-		// and that doesn't trigger completion.
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)
 		aclCmd := NewACLCommand(c.prerunner)

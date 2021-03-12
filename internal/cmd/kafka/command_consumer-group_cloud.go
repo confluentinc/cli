@@ -2,20 +2,17 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/c-bata/go-prompt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"net/http"
 )
 
 // ahu: description should state 'max lag consumer ID', 'max lag instance ID', etc
 var (
-	//lagSummaryHumanLabels = []string{"ClusterId", "ConsumerGroup", "TotalLag", "MaxLag", "MaxLagConsumer", "MaxLagInstance", "MaxLagClient", "MaxLagTopic", "MaxLagPartition"}
-	//lagSummaryLabels = []string{"cluster", "consumer_group", "total_lag", "max_lag", "max_lag_consumer", "max_lag_instance", "max_lag_client", "max_lag_topic", "max_lag_partition"}
 	lagSummaryFields = []string{"ClusterId", "ConsumerGroupId", "TotalLag", "MaxLag", "MaxLagConsumerId", "MaxLagInstanceId", "MaxLagClientId", "MaxLagTopicName", "MaxLagPartitionId"}
 	lagSummaryHumanRenames = map[string]string{
 		"ClusterId":		 "Cluster",
@@ -49,18 +46,6 @@ type lagCommand struct {
 	completableChildren	[]*cobra.Command
 }
 
-//type consumerGroupLagSummaryData struct {
-//	ClusterId		  string `json:"cluster" yaml:"cluster"`
-//	ConsumerGroupId   string `json:"consumer_group" yaml:"consumer_group"`
-//	TotalLag          int32  `json:"total_lag" yaml:"total_lag"`
-//	MaxLag            int32  `json:"max_lag" yaml:"max_lag"`
-//	MaxLagConsumerId  string `json:"max_lag_consumer" yaml:"max_lag_consumer"`
-//	MaxLagInstanceId  string `json:"max_lag_instance" yaml:"max_lag_instance"`
-//	MaxLagClientId    string `json:"max_lag_client" yaml:"max_lag_client"`
-//	MaxLagTopicName   string `json:"max_lag_topic" yaml:"max_lag_topic"`
-//	MaxLagPartitionId int32  `json:"max_lag_partition" yaml:"max_lag_partition"`
-//}
-
 type lagSummaryStruct struct {
 	ClusterId 		  string
 	ConsumerGroupId   string
@@ -88,8 +73,30 @@ func NewGroupCommand(prerunner pcmd.PreRunner) *groupCommand {
 }
 
 func (c *groupCommand) init() {
+	//listCmd := &cobra.Command{
+	//	Use:   "list",
+	//	Short: "List Kafka consumer groups.",
+	//	Args:  cobra.NoArgs,
+	//	RunE:  pcmd.NewCLIRunE(c.list),
+	//}
+	//listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	//listCmd.Flags().SortFlags = false
+	//c.AddCommand(listCmd)
+	//
+	//describeCmd := &cobra.Command{
+	//	Use:   "describe <consumer-group>",
+	//	Short: "Describe a Kafka consumer group.",
+	//	Args:  cobra.ExactArgs(1),
+	//	RunE:  pcmd.NewCLIRunE(c.describe),
+	//}
+	//describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	//describeCmd.Flags().SortFlags = false
+	//c.AddCommand(describeCmd)
+
 	lagCmd := NewLagCommand(c.prerunner)
 	c.AddCommand(lagCmd.Command)
+
+	//c.completableChildren = append(lagCmd.completableChildren, listCmd)
 	c.completableChildren = lagCmd.completableChildren
 }
 
@@ -98,7 +105,7 @@ func NewLagCommand(prerunner pcmd.PreRunner) *lagCommand {
 		&cobra.Command{
 			Use:   "lag",
 			Short: "View consumer lag.",
-		}, prerunner, make(map[string]*pflag.FlagSet))
+		}, prerunner, LagSubcommandFlags)
 	lagCmd := &lagCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		prerunner:                     prerunner,
@@ -121,185 +128,118 @@ func (lagCmd *lagCommand) init() {
     		},
     	),
     }
+    summarizeLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+    summarizeLagCmd.Flags().SortFlags = false
     lagCmd.AddCommand(summarizeLagCmd)
 
-    listLagCmd := &cobra.Command{
-    	Use:	"list <id>",
-       	Short:	"List consumer lags for a Kafka consumer-group.",
-      	Args:	cobra.ExactArgs(1),
-       	RunE:	pcmd.NewCLIRunE(lagCmd.listLag),
-       	Example: examples.BuildExampleString(
-       		examples.Example{
-       			Text: "List all consumer lags for consumers in consumer-group ``consumer-group-1``.",
-       			Code: "ccloud kafka consumer-group lag list consumer-group-1",
-       		},
-       	),
-    }
-    lagCmd.AddCommand(listLagCmd)
+    //listLagCmd := &cobra.Command{
+    //	Use:	"list <id>",
+    //   	Short:	"List consumer lags for a Kafka consumer-group.",
+    //  	Args:	cobra.ExactArgs(1),
+    //   	RunE:	pcmd.NewCLIRunE(lagCmd.listLag),
+    //   	Example: examples.BuildExampleString(
+    //   		examples.Example{
+    //   			Text: "List all consumer lags for consumers in consumer-group ``consumer-group-1``.",
+    //   			Code: "ccloud kafka consumer-group lag list consumer-group-1",
+    //   		},
+    //   	),
+    //}
+    //lagCmd.AddCommand(listLagCmd)
+	//
+   	//getLagCmd := &cobra.Command{
+    //	Use:	"get <id>",
+    //   	Short:	"Get consumer lag for a partition consumed by a Kafka consumer-group.",
+    //  	Args:	cobra.ExactArgs(1),
+    //   	RunE:	pcmd.NewCLIRunE(lagCmd.getLag),
+    //   	Example: examples.BuildExampleString(
+    //   		examples.Example{
+    //   			Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``consumer-group-1``.",
+    //   			Code: "ccloud kafka consumer-group lag get consumer-group-1 --topic my_topic --partition 0",
+    //   		},
+    //   	),
+   	//}
+   	//// ahu: handle defaults
+   	//getLagCmd.Flags().String("topic", "", "Topic name.")
+   	//getLagCmd.Flags().Int("partition", -1, "Partition ID.")
+   	//check(getLagCmd.MarkFlagRequired("topic"))
+   	//check(getLagCmd.MarkFlagRequired("partition"))
+   	//getLagCmd.Flags().SortFlags = false
+   	//lagCmd.AddCommand(getLagCmd)
 
-   	getLagCmd := &cobra.Command{
-    	Use:	"get <id>",
-       	Short:	"Get consumer lag for a partition consumed by a Kafka consumer-group.",
-      	Args:	cobra.ExactArgs(1),
-       	RunE:	pcmd.NewCLIRunE(lagCmd.getLag),
-       	Example: examples.BuildExampleString(
-       		examples.Example{
-       			Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``consumer-group-1``.",
-       			Code: "ccloud kafka consumer-group lag get consumer-group-1 --topic my_topic --partition 0",
-       		},
-       	),
-   	}
-   	// ahu: handle defaults
-   	getLagCmd.Flags().String("topic", "", "Topic name.")
-   	getLagCmd.Flags().Int("partition", -1, "Partition ID.")
-   	check(getLagCmd.MarkFlagRequired("topic"))
-   	check(getLagCmd.MarkFlagRequired("partition"))
-   	getLagCmd.Flags().SortFlags = false
-   	lagCmd.AddCommand(getLagCmd)
-
-   	lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd, listLagCmd, getLagCmd}
+   	//lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd, listLagCmd, getLagCmd}
+	lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd}
 }
 
 func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	outputOption, err := lagCmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if !output.IsValidFormatString(outputOption) {
-		return output.NewInvalidOutputFormatFlagError(outputOption)
-	}
-
 	kafkaREST, err := lagCmd.GetKafkaREST()
 	if err != nil {
 		return err
 	}
-	if kafkaREST != nil {
-		kafkaClusterConfig, err := lagCmd.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
-		if err != nil {
-			return err
-		}
-		lkc := kafkaClusterConfig.ID
-		lagSummaryResp, httpResp, err :=
-			kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
-				kafkaREST.Context,
-				lkc,
-				consumerGroupId)
-		if httpResp != nil {
-			// Kafka REST is available
-			if err != nil {
-				restErr, parseErr := parseOpenAPIError(err)
-				if parseErr == nil && restErr.Code == KafkaRestUnknownConsumerGroupErrorCode {
-					return fmt.Errorf(errors.UnknownGroupMsg, consumerGroupId)
-				}
-				// ahu: check if this will be descriptive enough to cover parse errors (if we can remove the preceding check)
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-			}
-			if httpResp.StatusCode != http.StatusOK {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Kafka REST returns StatusOK
-			//consumerGroupLagSummaryData := &consumerGroupLagSummaryData{}
-			//consumerGroupLagSummaryData.TotalLag = lagSummaryResp.TotalLag
-			//consumerGroupLagSummaryData.MaxLag = lagSummaryResp.MaxLag
-			//consumerGroupLagSummaryData.MaxLagConsumerId = lagSummaryResp.MaxLagConsumerId
-			//if lagSummaryResp.MaxLagInstanceId == nil {
-			//	consumerGroupLagSummaryData.MaxLagInstanceId = ""
-			//} else {
-			//	consumerGroupLagSummaryData.MaxLagInstanceId = *lagSummaryResp.MaxLagInstanceId
-			//}
-			//consumerGroupLagSummaryData.MaxLagClientId = lagSummaryResp.MaxLagClientId
-			//consumerGroupLagSummaryData.MaxLagTopicName = lagSummaryResp.MaxLagTopicName
-			//consumerGroupLagSummaryData.MaxLagPartitionId = lagSummaryResp.MaxLagPartitionId
-			//if outputOption == output.Human.String() {
-			//	return printHumanLagSummary(cmd, consumerGroupLagSummaryData)
-			//}
-			//return output.StructuredOutput(outputOption, consumerGroupLagSummaryData)
-			return output.DescribeObject(
-				cmd,
-				convertLagSummaryToStruct(lagSummaryResp),
-				lagSummaryFields,
-				lagSummaryHumanRenames,
-				lagSummaryStructuredRenames)
-		}
-	// Kafka REST is not available, return err
+	if kafkaREST == nil {
+		return errors.New(errors.RestProxyNotAvailable)
 	}
-	return err
-}
+	// Kafka REST is available
+	kafkaClusterConfig, err := lagCmd.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	if err != nil {
+		return err
+	}
+	lkc := kafkaClusterConfig.ID
+	fmt.Print("got the lkc ")
+	fmt.Println(lkc)
+	lagSummaryResp, _, err :=
+		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
+			kafkaREST.Context,
+			lkc,
+			consumerGroupId)
 
-func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error {
-	consumerGroupId := args[0]
-
-	outputOption, err := lagCmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
 	}
 
-	if !output.IsValidFormatString(outputOption) {
-		return output.NewInvalidOutputFormatFlagError(outputOption)
-	}
+	return output.DescribeObject(
+		cmd,
+		convertLagSummaryToStruct(lagSummaryResp),
+		lagSummaryFields,
+		lagSummaryHumanRenames,
+		lagSummaryStructuredRenames)
 
-	kafkaREST, err := lagCmd.GetKafkaREST()
-	if err != nil {
-		return err
-	}
-	if kafkaREST != nil {
-		kafkaClusterConfig, err := lagCmd.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
-		if err != nil {
-			return err
-		}
-		lkc := kafkaClusterConfig.ID
-		lagSummaryResp, httpResp, err :=
-			kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
-				kafkaREST.Context,
-				lkc,
-				consumerGroupId)
-		if httpResp != nil {
-			// Kafka REST is available
-			if err != nil {
-				restErr, parseErr := parseOpenAPIError(err)
-				if parseErr == nil && restErr.Code == KafkaRestUnknownConsumerGroupErrorCode {
-					return fmt.Errorf(errors.UnknownGroupMsg, consumerGroupId)
-				}
-				// ahu: check if this will be descriptive enough to cover parse errors (if we can remove the preceding check)
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-			}
-			if httpResp.StatusCode != http.StatusOK {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Kafka REST returns StatusOK
-			//consumerGroupLagSummaryData := &consumerGroupLagSummaryData{}
-			//consumerGroupLagSummaryData.TotalLag = lagSummaryResp.TotalLag
-			//consumerGroupLagSummaryData.MaxLag = lagSummaryResp.MaxLag
-			//consumerGroupLagSummaryData.MaxLagConsumerId = lagSummaryResp.MaxLagConsumerId
-			//if lagSummaryResp.MaxLagInstanceId == nil {
-			//	consumerGroupLagSummaryData.MaxLagInstanceId = ""
-			//} else {
-			//	consumerGroupLagSummaryData.MaxLagInstanceId = *lagSummaryResp.MaxLagInstanceId
-			//}
-			//consumerGroupLagSummaryData.MaxLagClientId = lagSummaryResp.MaxLagClientId
-			//consumerGroupLagSummaryData.MaxLagTopicName = lagSummaryResp.MaxLagTopicName
-			//consumerGroupLagSummaryData.MaxLagPartitionId = lagSummaryResp.MaxLagPartitionId
-			//if outputOption == output.Human.String() {
-			//	return printHumanLagSummary(cmd, consumerGroupLagSummaryData)
-			//}
-			//return output.StructuredOutput(outputOption, consumerGroupLagSummaryData)
-			return output.DescribeObject(
-				cmd,
-				convertLagSummaryToStruct(lagSummaryResp),
-				lagSummaryFields,
-				lagSummaryHumanRenames,
-				lagSummaryStructuredRenames)
-		}
-		// Kafka REST is not available, return err
-	}
-	return err
+	//lagSummaryResp, httpResp, err :=
+	//	kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
+	//		kafkaREST.Context,
+	//		lkc,
+	//		consumerGroupId)
+	//
+	//if httpResp != nil {
+	//	fmt.Print("httpResp received ")
+	//	if err != nil {
+	//		fmt.Print("error getting lag response ")
+	//		restErr, parseErr := parseOpenAPIError(err)
+	//		if parseErr == nil && restErr.Code == KafkaRestUnknownConsumerGroupErrorCode {
+	//			return fmt.Errorf(errors.UnknownGroupMsg, consumerGroupId)
+	//		}
+	//		// ahu: check if this will be descriptive enough to cover parse errors (if we can remove the preceding check)
+	//		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+	//	}
+	//	if httpResp.StatusCode != http.StatusOK {
+	//		fmt.Print("got a status code that wasn't OK ")
+	//		return errors.NewErrorWithSuggestions(
+	//			fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+	//			errors.InternalServerErrorSuggestions)
+	//	}
+	//	// Kafka REST returns StatusOK
+	//	fmt.Print("we got status OK ")
+	//	return output.DescribeObject(
+	//		cmd,
+	//		convertLagSummaryToStruct(lagSummaryResp),
+	//		lagSummaryFields,
+	//		lagSummaryHumanRenames,
+	//		lagSummaryStructuredRenames)
+	//}
+	//fmt.Print("no httpResp received ")
+	//return err
+
 }
 
 func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummaryData) *lagSummaryStruct {
@@ -318,4 +258,17 @@ func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummar
 		MaxLagTopicName:   lagSummaryData.MaxLagTopicName,
 		MaxLagPartitionId: lagSummaryData.MaxLagPartitionId,
 	}
+}
+
+func (c *groupCommand) Cmd() *cobra.Command {
+	return c.Command
+}
+
+func (c *groupCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	return suggestions
+}
+
+func (c *groupCommand) ServerCompletableChildren() []*cobra.Command {
+	return c.completableChildren
 }

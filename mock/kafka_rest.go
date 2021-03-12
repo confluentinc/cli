@@ -112,9 +112,83 @@ func (m *ACL) ClustersClusterIdAclsPost(_ctx context.Context, _clusterId string,
 }
 
 // Compile-time check interface adherence
+var _ krsdk.ConsumerGroupApi = (*ConsumerGroup)(nil)
+
+type ConsumerGroup struct {
+	Expect chan interface{}
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdAssignmentsGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string) (krsdk.ConsumerAssignmentDataList, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdAssignmentsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string, topicName string, partitionId int32) (krsdk.ConsumerAssignmentData, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string) (krsdk.ConsumerData, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerDataList, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupData, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+type SummarizeLagMatcher struct {
+	ConsumerGroupId string
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupLagSummaryData, *nethttp.Response, error) {
+	expect := <- c.Expect
+	matcher := expect.(SummarizeLagMatcher)
+	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
+		return krsdk.ConsumerGroupLagSummaryData{}, nil, err
+	}
+
+	httpResp := &nethttp.Response{
+		StatusCode: nethttp.StatusOK,
+	}
+
+	optionalInstanceId := "instance-1"
+
+	return krsdk.ConsumerGroupLagSummaryData{
+		Kind: "",
+		Metadata: krsdk.ResourceMetadata{},
+		ClusterId: clusterId,
+		ConsumerGroupId: consumerGroupId,
+		MaxLagConsumerId: "consumer-1",
+		MaxLagInstanceId: &optionalInstanceId,
+		MaxLagClientId: "client-1",
+		MaxLagTopicName: "topic-1",
+		MaxLagPartitionId: 0,
+		MaxLag: 100,
+		TotalLag: 110,
+		MaxLagConsumer: krsdk.Relationship{},
+		MaxLagPartition: krsdk.Relationship{},
+	}, httpResp, nil
+
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
+	panic("implement me")
+}
+
+// Compile-time check interface adherence
 var _ krsdk.PartitionApi = (*Partition)(nil)
 
 type Partition struct {
+}
+
+func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, topicName string, partitionId int32) (krsdk.ConsumerLagData, *nethttp.Response, error) {
+	panic("implement me")
 }
 
 func NewPartitionMock() *Partition {

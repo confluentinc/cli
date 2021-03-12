@@ -518,7 +518,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
-
+			fmt.Print("kafka rest is available and there was no error retrieving topic information ")
 			topicData := &topicData{}
 			topicData.TopicName = topicName
 			topicData.PartitionCount = len(partitionsResp.Data)

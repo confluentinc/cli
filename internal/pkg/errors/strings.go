@@ -50,6 +50,7 @@ const (
 
 	// kafka consumer-group commands
 	UnknownGroupMsg        = "Unknown Consumer Group: \"%s\".\n"
+	RestProxyNotAvailable  = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
 	StartingProducerMsg    = "Starting Kafka Producer. ^C or ^D to exit"
