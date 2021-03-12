@@ -14,12 +14,6 @@ var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
 	"cluster": cmd.EnvironmentContextSet(),
 }
 
-// if we have consumer-group id as a positional argument, think we can reduce this to
-// ClusterEnvironmentContextSet()
-// var GroupSubcommandFlags = map[string]*pflag.FlagSet{
-// 	"group": cmd.GroupEnvironmentContextSet(),
-// }
-
 var GroupSubcommandFlags = map[string]*pflag.FlagSet{
 	"group": cmd.ClusterEnvironmentContextSet(),
 }

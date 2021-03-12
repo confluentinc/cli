@@ -87,14 +87,11 @@ func NewListOutputCustomizableWriter(cmd *cobra.Command, listFields []string, hu
 func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
 	format, err := cmd.Flags().GetString(FlagName)
 	if err != nil {
-		fmt.Print("error in DescribeObject, err getting output FlagName ")
 		return err
 	}
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
-		fmt.Print("getting invalid output format flag error ")
 		return NewInvalidOutputFormatFlagError(format)
 	}
-	fmt.Print("calling printer.RenderOut ")
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
 }
 
