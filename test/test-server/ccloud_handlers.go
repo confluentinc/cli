@@ -653,6 +653,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 				User: &flowv1.UserProfile{
 					Email:      user.Email,
 					FirstName:  user.FirstName,
+					LastName:   user.LastName,
 					ResourceId: user.ResourceId,
 					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
 				},
