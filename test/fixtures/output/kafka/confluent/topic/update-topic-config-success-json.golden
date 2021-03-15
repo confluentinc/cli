@@ -1,0 +1,10 @@
+[
+  {
+    "name": "retention.ms",
+    "value": "1"
+  }, 
+  {
+    "name": "compression.type",
+    "value": "gzip"
+  }
+]

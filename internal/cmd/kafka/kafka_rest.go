@@ -82,12 +82,16 @@ func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 	protocolRgx, _ := regexp.Compile(`(\w+)://`)
 	protocolMatch := protocolRgx.MatchString(url)
 	if !protocolMatch {
+		var protocolMsg string
 		if cmd.Flags().Changed("client-cert-path") { // assume https if client-cert is set since this means we want to use mTLS auth
 			url = "https://" + url
-			utils.ErrPrintf(cmd, errors.AssumingHttpsProtocol)
+			protocolMsg = errors.AssumingHttpsProtocol
 		} else {
 			url = "http://" + url
-			utils.ErrPrintf(cmd, errors.AssumingHttpProtocol)
+			protocolMsg = errors.AssumingHttpProtocol
+		}
+		if i, _ := cmd.Flags().GetCount("verbose"); i > 0 {
+			utils.ErrPrintf(cmd, protocolMsg)
 		}
 	}
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")

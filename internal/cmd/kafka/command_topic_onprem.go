@@ -130,6 +130,7 @@ func (topicCmd *topicCommand) init() {
 	}
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
+	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	updateCmd.Flags().SortFlags = false
 	topicCmd.AddCommand(updateCmd)
 
