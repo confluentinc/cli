@@ -189,6 +189,7 @@ const (
 	FailedToObtainedUserSSOErrorMsg     = "unable to obtain SSO info for user \"%s\""
 	NonSSOUserErrorMsg                  = "tried to obtain SSO token for non SSO user \"%s\""
 	NoCredentialsFoundErrorMsg          = "no credentials found"
+	NoURLEnvVarErrorMsg                 = "no URL env var"
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
