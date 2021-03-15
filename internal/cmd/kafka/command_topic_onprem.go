@@ -390,6 +390,9 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 		})
 		printer.RenderCollectionTable(tableEntries, tableLabels)
 	} else { //json or yaml
+		sort.Slice(configs, func(i int, j int) bool {
+			return configs[i].Name < configs[j].Name
+		})
 		err = output.StructuredOutput(format, configs)
 		if err != nil {
 			return err
