@@ -131,6 +131,8 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
 		// Test with basic auth input
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/topic/list-with-auth.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "default", fixture: "kafka/confluent/topic/list-with-auth-from-login.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "default", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/topic/list-with-auth-prompt.golden"},
 		// Test with CONFLUENT_REST_URL env var
 		{args: "kafka topic list --no-auth", fixture: "kafka/confluent/topic/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Test failure when only one of client-cert-path or client-key-path are provided

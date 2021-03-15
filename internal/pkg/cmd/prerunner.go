@@ -581,36 +581,29 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		useMdsToken = err == nil // no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := krsdk.NewConfiguration()
-			caCertPath, err := r.FlagResolver.ResolveCaCertPathFlag(cmd)
+			restFlags, err := r.FlagResolver.ResolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
 			}
-			clientCertPath, clientKeyPath, err := r.FlagResolver.ResolveClientCertAndKeyPathsFlag(cmd)
-			if err != nil {
-				return nil, err
-			}
-			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, caCertPath, clientCertPath, clientKeyPath, r.Logger)
+			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, restFlags.caCertPath, restFlags.clientCertPath, restFlags.clientKeyPath, r.Logger)
 			if err != nil {
 				return nil, err
 			}
 			client := krsdk.NewAPIClient(cfg)
-
-			noAuth, err := r.FlagResolver.ResolveNoAuthFlag(cmd)
-			if err != nil {
-				return nil, err
-			}
-			if noAuth || clientCertPath != "" { // credentials not needed for mTLS auth
+			if restFlags.noAuth || restFlags.clientCertPath != "" { // credentials not needed for mTLS auth
 				return &KafkaREST{
 					Client:  client,
 					Context: context.Background(),
 				}, nil
 			}
 			var restContext context.Context
-			if useMdsToken {
+			if useMdsToken && !restFlags.prompt {
 				r.Logger.Log("found mds token to use as bearer")
 				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
-				utils.Println(cmd, errors.MDSTokenNotFoundMsg)
+				if !restFlags.prompt {
+					utils.Println(cmd, errors.MDSTokenNotFoundMsg)
+				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},

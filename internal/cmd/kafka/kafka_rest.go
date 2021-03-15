@@ -24,6 +24,7 @@ const KafkaRestBadRequestErrorCode = 40002
 const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
 const CONFLUENT_REST_URL = "CONFLUENT_REST_URL"
 const SelfSignedCertError = "x509: certificate is not authorized to sign other certificates"
+const UnauthorizedCertError = "x509: certificate signed by unknown authority"
 
 type kafkaRestV3Error struct {
 	Code    int    `json:"error_code"`
@@ -52,9 +53,12 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	switch err.(type) {
 	case *neturl.Error:
 		if e, ok := err.(*neturl.Error); ok {
-			if strings.Contains(e.Error(), SelfSignedCertError) {
+			fmt.Println("1")
+			if strings.Contains(e.Error(), SelfSignedCertError) || strings.Contains(e.Error(), UnauthorizedCertError) {
+				fmt.Println("2")
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
 			}
+			fmt.Println("3")
 			return errors.Errorf(errors.KafkaRestConnectionMsg, url, e.Err)
 		}
 	case kafkarestv3.GenericOpenAPIError:
@@ -83,7 +87,7 @@ func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 	protocolMatch := protocolRgx.MatchString(url)
 	if !protocolMatch {
 		var protocolMsg string
-		if cmd.Flags().Changed("client-cert-path") { // assume https if client-cert is set since this means we want to use mTLS auth
+		if cmd.Flags().Changed("client-cert-path") || cmd.Flags().Changed("ca-cert-path") { // assume https if client-cert is set since this means we want to use mTLS auth
 			url = "https://" + url
 			protocolMsg = errors.AssumingHttpsProtocol
 		} else {
