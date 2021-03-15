@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/spf13/cobra"
 

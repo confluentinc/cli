@@ -4,26 +4,29 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/http"
 	purl "net/url"
 	"strings"
 	"testing"
 
-	cliMock "github.com/confluentinc/cli/mock"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	kafkarestv3mock "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
 	// Expected output of tests
-	ExpectedListTopicsOutput = "   Name    \n+---------+\n  topic-1  \n  topic-2  \n  topic-3  \n"
+	ExpectedListTopicsOutput     = "   Name    \n+---------+\n  topic-1  \n  topic-2  \n  topic-3  \n"
 	ExpectedListTopicsYamlOutput = `- name: topic-1
 - name: topic-2
 - name: topic-3
@@ -33,20 +36,20 @@ const (
 
 type KafkaTopicOnPremTestSuite struct {
 	suite.Suite
-	testClient		*kafkarestv3.APIClient
+	testClient *kafkarestv3.APIClient
 	// Data returned by APIClient
-	clusterList 	*kafkarestv3.ClusterDataList
-	topicList   	*kafkarestv3.TopicDataList
-	partitionList	*kafkarestv3.PartitionDataList
-	configDataList  *kafkarestv3.TopicConfigDataList
-	replicaList     *kafkarestv3.ReplicaDataList
+	clusterList    *kafkarestv3.ClusterDataList
+	topicList      *kafkarestv3.TopicDataList
+	partitionList  *kafkarestv3.PartitionDataList
+	configDataList *kafkarestv3.TopicConfigDataList
+	replicaList    *kafkarestv3.ReplicaDataList
 
-	createTopicName	string
-	createTopicPartitionsCount int32
-	createTopicReplicationFactor	int32
-	createTopicConfigs []kafkarestv3.CreateTopicRequestDataConfigs
-	updateTopicName	string
-	updateTopicData []kafkarestv3.AlterConfigBatchRequestDataData
+	createTopicName              string
+	createTopicPartitionsCount   int32
+	createTopicReplicationFactor int32
+	createTopicConfigs           []kafkarestv3.CreateTopicRequestDataConfigs
+	updateTopicName              string
+	updateTopicData              []kafkarestv3.AlterConfigBatchRequestDataData
 }
 
 func (suite *KafkaTopicOnPremTestSuite) SetupSuite() {
@@ -91,7 +94,7 @@ func (suite *KafkaTopicOnPremTestSuite) SetupSuite() {
 			{
 				ClusterId: clusterId,
 				TopicName: topicName,
-				Value: &value,
+				Value:     &value,
 			},
 		},
 	}
@@ -99,11 +102,11 @@ func (suite *KafkaTopicOnPremTestSuite) SetupSuite() {
 		Data: []kafkarestv3.ReplicaData{
 			{
 				PartitionId: 1,
-				ClusterId: clusterId,
-				TopicName: topicName,
-				BrokerId: 50,
-				IsLeader: true,
-				IsInSync: true,
+				ClusterId:   clusterId,
+				TopicName:   topicName,
+				BrokerId:    50,
+				IsLeader:    true,
+				IsInSync:    true,
 			},
 		},
 	}
@@ -172,9 +175,9 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 				require.Equal(t, values[expectedEntry.Name], *expectedEntry.Value)
 			}
 			return kafkarestv3.TopicData{
-				ClusterId:              clusterId,
-				TopicName:              topicCreateData.TopicName,
-				ReplicationFactor:      topicCreateData.ReplicationFactor,
+				ClusterId:         clusterId,
+				TopicName:         topicCreateData.TopicName,
+				ReplicationFactor: topicCreateData.ReplicationFactor,
 			}, nil, nil
 		},
 		ClustersClusterIdTopicsTopicNameDeleteFunc: func(ctx context.Context, clusterId string, topicName string) (*http.Response, error) {
@@ -214,7 +217,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 		},
 	}
 	suite.testClient.PartitionApi = &kafkarestv3mock.PartitionApi{
-		ClustersClusterIdTopicsTopicNamePartitionsGetFunc:  func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
+		ClustersClusterIdTopicsTopicNamePartitionsGetFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
 				return kafkarestv3.PartitionDataList{}, nil, err
@@ -223,7 +226,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 		},
 	}
 	suite.testClient.ReplicaApi = &kafkarestv3mock.ReplicaApi{
-		ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGetFunc:  func(ctx context.Context, clusterId string, topicName string, partitionId int32) (kafkarestv3.ReplicaDataList, *http.Response, error) {
+		ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGetFunc: func(ctx context.Context, clusterId string, topicName string, partitionId int32) (kafkarestv3.ReplicaDataList, *http.Response, error) {
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
 				return kafkarestv3.ReplicaDataList{}, nil, err
@@ -293,35 +296,35 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 	compressionValue := "gzip"
 	// Define test cases
 	cases := []struct {
-		input               string
-		expectedOutput      string
-		expectError         bool
-		errorMsgContainsAll []string
-		message             string
-		createTopicName		string
+		input                        string
+		expectedOutput               string
+		expectError                  bool
+		errorMsgContainsAll          []string
+		message                      string
+		createTopicName              string
 		createTopicReplicationFactor int32
-		createTopicPartitionsCount int32
-		createTopicConfigs []kafkarestv3.CreateTopicRequestDataConfigs
+		createTopicPartitionsCount   int32
+		createTopicConfigs           []kafkarestv3.CreateTopicRequestDataConfigs
 	}{
 		{
-			input: "create topic-X --url http://localhost:8082 --config retention.ms=1,compression",
-			expectError: true,
+			input:               "create topic-X --url http://localhost:8082 --config retention.ms=1,compression",
+			expectError:         true,
 			errorMsgContainsAll: []string{"configuration must be in the form of key=value"},
-			createTopicName: "topic-X",
+			createTopicName:     "topic-X",
 		},
 		{
-			input: "create topic-X --url http://localhost:8082 --config retention.ms=1,compression.type=gzip --replication-factor 2 --partitions 4",
-			expectedOutput: fmt.Sprintf(errors.CreatedTopicMsg, "topic-X"),
-			createTopicName: "topic-X",
-			createTopicPartitionsCount: 4,
+			input:                        "create topic-X --url http://localhost:8082 --config retention.ms=1,compression.type=gzip --replication-factor 2 --partitions 4",
+			expectedOutput:               fmt.Sprintf(errors.CreatedTopicMsg, "topic-X"),
+			createTopicName:              "topic-X",
+			createTopicPartitionsCount:   4,
 			createTopicReplicationFactor: 2,
 			createTopicConfigs: []kafkarestv3.CreateTopicRequestDataConfigs{
 				{
-					Name: "retention.ms",
+					Name:  "retention.ms",
 					Value: &retentionValue,
 				},
 				{
-					Name: "compression.type",
+					Name:  "compression.type",
 					Value: &compressionValue,
 				},
 			},
@@ -359,32 +362,32 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopic() {
 		expectError         bool
 		errorMsgContainsAll []string
 		message             string
-		updateTopicName		string
-		updateTopicData []kafkarestv3.AlterConfigBatchRequestDataData
+		updateTopicName     string
+		updateTopicData     []kafkarestv3.AlterConfigBatchRequestDataData
 	}{
 		{
-			input: "update topic-X --url http://localhost:8082 --config retention.ms",
+			input:               "update topic-X --url http://localhost:8082 --config retention.ms",
 			errorMsgContainsAll: []string{"configuration must be in the form of key=value"},
-			expectError: true,
-			updateTopicName: "topic-X",
-			updateTopicData: []kafkarestv3.AlterConfigBatchRequestDataData{},
+			expectError:         true,
+			updateTopicName:     "topic-X",
+			updateTopicData:     []kafkarestv3.AlterConfigBatchRequestDataData{},
 		},
 		{
-			input: "update topic-X --url http://localhost:8082",
+			input:           "update topic-X --url http://localhost:8082",
 			updateTopicName: "topic-X",
-			expectedOutput: fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-X"),
+			expectedOutput:  fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-X"),
 		},
 		{
-			input: "update topic-Y --url http://localhost:8082 --config retention.ms=1,compression.type=gzip",
-			expectedOutput: fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-Y"), // update table gets printed to stdout so dont include in expect
+			input:           "update topic-Y --url http://localhost:8082 --config retention.ms=1,compression.type=gzip",
+			expectedOutput:  fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-Y"), // update table gets printed to stdout so dont include in expect
 			updateTopicName: "topic-Y",
 			updateTopicData: []kafkarestv3.AlterConfigBatchRequestDataData{
 				{
-					Name: "retention.ms",
+					Name:  "retention.ms",
 					Value: &retentionValue,
 				},
 				{
-					Name: "compression.type",
+					Name:  "compression.type",
 					Value: &compressionValue,
 				},
 			},
@@ -420,12 +423,12 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentDescribeTopic() {
 		message             string
 	}{
 		{
-			input: "describe topic --url http://localhost:8082",
+			input:          "describe topic --url http://localhost:8082",
 			expectedOutput: "Topic: topic\nPartitionCount: 3\nReplicationFactor: 1\n\n\nConfiguration\n\n",
 		},
 		{
-			input: "describe --topic --url http://localhost:8082",
-			expectError: true,
+			input:               "describe --topic --url http://localhost:8082",
+			expectError:         true,
 			errorMsgContainsAll: []string{"unknown flag: --topic"},
 		},
 	}
@@ -457,12 +460,12 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentDeleteTopic() {
 		message             string
 	}{
 		{
-			input: "delete topicDelete --url http://localhost:8082",
+			input:          "delete topicDelete --url http://localhost:8082",
 			expectedOutput: "Deleted topic \"topicDelete\".\n",
 		},
 		{
-			input: "delete --topic --url http://localhost:8082",
-			expectError: true,
+			input:               "delete --topic --url http://localhost:8082",
+			expectError:         true,
 			errorMsgContainsAll: []string{"unknown flag: --topic"},
 		},
 	}
@@ -485,7 +488,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentDeleteTopic() {
 }
 
 func (suite *KafkaTopicOnPremTestSuite) getRestProvider() cmd.KafkaRESTProvider {
-	return  func() (*cmd.KafkaREST, error) {
+	return func() (*cmd.KafkaREST, error) {
 		return &cmd.KafkaREST{Client: suite.testClient, Context: context.Background()}, nil
 	}
 }

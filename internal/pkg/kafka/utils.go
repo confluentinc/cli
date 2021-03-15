@@ -2,8 +2,9 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func ToMap(configs []string) (map[string]string, error) {

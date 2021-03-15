@@ -1,15 +1,15 @@
-
 package cmd_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 

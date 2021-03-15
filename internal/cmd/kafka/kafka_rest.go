@@ -3,13 +3,15 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 	"net/http"
 	neturl "net/url"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -75,7 +77,7 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 // Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
 // Relying on users to include the /kafka in the url for embedded instances
 func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
-	url = strings.Trim(url, "/") // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
+	url = strings.Trim(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
 	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
 	protocolRgx, _ := regexp.Compile(`(\w+)://`)
 	protocolMatch := protocolRgx.MatchString(url)

@@ -3,14 +3,15 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"testing"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 // Handler for: "/kafka/v3/clusters"
@@ -75,6 +76,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -174,6 +176,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
 func (r KafkaRestProxyRouter) HandleKafkaRPPartitions(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -239,6 +242,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitions(t *testing.T) func(http.Re
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -328,6 +332,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
 func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -347,17 +352,17 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(
 				partitionInfo := map[string]struct { // TODO: add test for different # of replicas for different partitions
 					replicas []replicaData
 				}{
-					"0" : {
+					"0": {
 						replicas: []replicaData{{brokerId: 1001, isLeader: true, isInSync: true},
 							{brokerId: 1002, isLeader: false, isInSync: true},
 							{brokerId: 1003, isLeader: false, isInSync: true}},
 					},
-					"1" : {
+					"1": {
 						replicas: []replicaData{{brokerId: 1001, isLeader: false, isInSync: false},
 							{brokerId: 1002, isLeader: true, isInSync: true},
 							{brokerId: 1003, isLeader: false, isInSync: true}},
 					},
-					"2" : {
+					"2": {
 						replicas: []replicaData{{brokerId: 1001, isLeader: false, isInSync: false},
 							{brokerId: 1002, isLeader: false, isInSync: false},
 							{brokerId: 1003, isLeader: true, isInSync: true}},
@@ -409,6 +414,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
 func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -449,6 +455,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) func(http.
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

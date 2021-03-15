@@ -15,7 +15,7 @@ const (
 	UsingLoginURLDefaults = "Assuming %s.\n"
 
 	//kafka rest
-	AssumingHttpProtocol = "Assuming http protocol.\n"
+	AssumingHttpProtocol  = "Assuming http protocol.\n"
 	AssumingHttpsProtocol = "Assuming https protocol.\n"
 
 	// ksql create warning

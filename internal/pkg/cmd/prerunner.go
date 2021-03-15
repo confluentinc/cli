@@ -3,10 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/form"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
@@ -576,7 +577,7 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
-		var useMdsToken bool // pass mds token as bearer token otherwise use http basic auth
+		var useMdsToken bool     // pass mds token as bearer token otherwise use http basic auth
 		useMdsToken = err == nil // no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := krsdk.NewConfiguration()
@@ -613,7 +614,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
-					)
+				)
 				if err := f.Prompt(command.Command, form.NewPrompt(os.Stdin)); err != nil {
 					return nil, err
 				}
@@ -642,7 +643,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 		}
 		return client, nil
 		// use cert path from config if available
-	} else if ctx!= nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
 		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath, logger)
 		if err != nil {
 			return nil, err
@@ -886,7 +887,7 @@ func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand,
 func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, error) {
 	testClient := http.DefaultClient
 	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
-	testBaseUrl := strings.Replace(baseUrl, "https", "http", 1) // HACK so we don't have to mock https
+	testBaseUrl := strings.Replace(baseUrl, "https", "http", 1)           // HACK so we don't have to mock https
 	testBaseUrl = strings.Replace(testBaseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath:   testBaseUrl,

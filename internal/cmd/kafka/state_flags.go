@@ -31,5 +31,5 @@ var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
 }
 
 var OnPremTopicSubcommandFlags = map[string]*pflag.FlagSet{
-	"topic" : cmd.ContextSet(),
+	"topic": cmd.ContextSet(),
 }

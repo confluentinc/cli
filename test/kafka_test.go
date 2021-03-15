@@ -2,8 +2,9 @@ package test
 
 import (
 	"fmt"
-	"github.com/confluentinc/bincover"
 	"strings"
+
+	"github.com/confluentinc/bincover"
 )
 
 func (s *CLITestSuite) TestKafka() {
@@ -131,10 +132,10 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 		// Test with basic auth input
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/topic/list-with-auth.golden"},
 		// Test with CONFLUENT_REST_URL env var
-		{args: "kafka topic list --no-auth", fixture: "kafka/confluent/topic/list.golden", env: []string{"CONFLUENT_REST_URL="+kafkaRestURL}},
+		{args: "kafka topic list --no-auth", fixture: "kafka/confluent/topic/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Test failure when only one of client-cert-path or client-key-path are provided
-		{args: "kafka topic list --client-cert-path cert.crt", wantErrCode: 1, fixture: "kafka/confluent/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL="+kafkaRestURL}},
-		{args: "kafka topic list --client-key-path cert.key", wantErrCode: 1, fixture: "kafka/confluent/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL="+kafkaRestURL}},
+		{args: "kafka topic list --client-cert-path cert.crt", wantErrCode: 1, fixture: "kafka/confluent/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		{args: "kafka topic list --client-key-path cert.key", wantErrCode: 1, fixture: "kafka/confluent/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Output should format correctly depending on format argument.
 		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list-yaml.golden"},
@@ -158,7 +159,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -2 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Number of partitions must be larger than 0. (40002)\n", wantErrCode: 1, name: "creating topic with negative partitions name should fail"},
 		// --replication-factor errors
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Replication factor: 4 larger than available brokers: 3. (40002)\n", wantErrCode: 1, name: "creating topic with larger replication factor than num. brokers should fail"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor -2 --no-auth", kafkaRestURL), contains:       	"Error: REST request failed: Replication factor must be larger than 0. (40002)\n", wantErrCode: 1, name: "creating topic with negative replication factor should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor -2 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Replication factor must be larger than 0. (40002)\n", wantErrCode: 1, name: "creating topic with negative replication factor should fail"},
 		// --config errors
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms --no-auth", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1, --no-auth", kafkaRestURL), contains: "Error: configuration must be in the form of key=value", wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},

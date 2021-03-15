@@ -23,14 +23,14 @@ const (
 	topicConfig     = "/2.0/kafka/{cluster}/topics/{topic}/config"
 
 	//kafka rest urls
-	rpAcls				= "/kafka/v3/clusters/{cluster}/acls"
-	rpTopics			= "/kafka/v3/clusters/{cluster}/topics"
-	rpPartitions		= "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
-	rpPartitionReplicas	= "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-	rpTopicConfigs		= "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
-	rpConfigsAlter		= "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
-	rpTopic				= "/kafka/v3/clusters/{cluster}/topics/{topic}"
-	rpClusters			= "/kafka/v3/clusters"
+	rpAcls              = "/kafka/v3/clusters/{cluster}/acls"
+	rpTopics            = "/kafka/v3/clusters/{cluster}/topics"
+	rpPartitions        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
+	rpPartitionReplicas = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
+	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
+	rpConfigsAlter      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
+	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
+	rpClusters          = "/kafka/v3/clusters"
 )
 
 type KafkaRouter struct {
