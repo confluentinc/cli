@@ -14,6 +14,7 @@ import (
 
 	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 
+	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
@@ -231,9 +232,9 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
 		}
 
-		res := &orgv1.GetPriceTableReply{
-			PriceTable: &orgv1.PriceTable{
-				PriceTable: map[string]*orgv1.UnitPrices{
+		res := &billingv1.GetPriceTableReply{
+			PriceTable: &billingv1.PriceTable{
+				PriceTable: map[string]*billingv1.UnitPrices{
 					exampleMetric: {Unit: exampleUnit, Prices: prices},
 				},
 			},
@@ -585,7 +586,7 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 	}
 }
 
-// Handler for: "/api/users/{id}
+// Handler for: "/api/users/{id}"
 func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -604,6 +605,63 @@ func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.R
 		data, err := json.Marshal(res)
 		require.NoError(t, err)
 		_, err = w.Write(data)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/api/user_profiles/{id}"
+func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		userId := vars["id"]
+		var res flowv1.GetUserProfileReply
+		users := []*orgv1.User{
+			buildUser(1, "bstrauch@confluent.io", "Brian", "Strauch", "u11"),
+			buildUser(2, "mtodzo@confluent.io", "Miles", "Todzo", "u-17"),
+			buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
+			buildUser(4, "u-22bbb@confluent.io", "22", "Bbb", "u-22bbb"),
+			buildUser(5, "u-33ccc@confluent.io", "33", "Ccc", "u-33ccc"),
+		}
+		var user *orgv1.User
+		switch userId {
+		case "u-0":
+			res = flowv1.GetUserProfileReply{
+				Error: &v1.Error{Message: "user not found"},
+			}
+		case "u11":
+			user = users[0]
+		case "u-17":
+			user = users[1]
+		case "u-11aaa":
+			user = users[2]
+		case "u-22bbb":
+			user = users[3]
+		case "u-33ccc":
+			user = users[4]
+		default:
+			res = flowv1.GetUserProfileReply{
+				User: &flowv1.UserProfile{
+					Email:      "cody@confluent.io",
+					FirstName:  "Cody",
+					ResourceId: "u-11aaa",
+					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
+				},
+			}
+		}
+		if userId != "u-0" {
+			res = flowv1.GetUserProfileReply{
+				User: &flowv1.UserProfile{
+					Email:      user.Email,
+					FirstName:  user.FirstName,
+					LastName:   user.LastName,
+					ResourceId: user.ResourceId,
+					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
+				},
+			}
+		}
+		b, err := utilv1.MarshalJSONToBytes(&res)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	}
 }

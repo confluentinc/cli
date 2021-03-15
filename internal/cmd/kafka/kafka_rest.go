@@ -53,12 +53,9 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	switch err.(type) {
 	case *neturl.Error:
 		if e, ok := err.(*neturl.Error); ok {
-			fmt.Println("1")
 			if strings.Contains(e.Error(), SelfSignedCertError) || strings.Contains(e.Error(), UnauthorizedCertError) {
-				fmt.Println("2")
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
 			}
-			fmt.Println("3")
 			return errors.Errorf(errors.KafkaRestConnectionMsg, url, e.Err)
 		}
 	case kafkarestv3.GenericOpenAPIError:

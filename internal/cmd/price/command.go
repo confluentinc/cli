@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
@@ -132,7 +133,7 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	}
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
-	res, err := c.Client.Organization.GetPriceTable(nil, org)
+	res, err := c.Client.Billing.GetPriceTable(nil, org)
 	if err != nil {
 		return err
 	}
@@ -183,7 +184,7 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	return w.Out()
 }
 
-func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (map[string]*orgv1.UnitPrices, error) {
+func filterTable(command *cobra.Command, table map[string]*billingv1.UnitPrices) (map[string]*billingv1.UnitPrices, error) {
 	metric, err := command.Flags().GetString("metric")
 	if err != nil {
 		return nil, err
@@ -205,7 +206,7 @@ func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (ma
 		return nil, err
 	}
 
-	filteredTable := make(map[string]*orgv1.UnitPrices)
+	filteredTable := make(map[string]*billingv1.UnitPrices)
 
 	for service, val := range table {
 		if metric != "" && service != metric {
@@ -235,7 +236,7 @@ func filterTable(command *cobra.Command, table map[string]*orgv1.UnitPrices) (ma
 			}
 
 			if _, ok := filteredTable[service]; !ok {
-				filteredTable[service] = &orgv1.UnitPrices{
+				filteredTable[service] = &billingv1.UnitPrices{
 					Prices: make(map[string]float64),
 					Unit:   val.Unit,
 				}

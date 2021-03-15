@@ -141,7 +141,8 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	req.Nil(err)
 	req.True(suite.envMetadataMock.GetCalled())
 	req.True(suite.kafkaMock.CreateCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
@@ -151,7 +152,8 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.kafkaMock.DeleteCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
+	// TODO add back with analytics
+	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
 func TestKafkaClusterTestSuite(t *testing.T) {
