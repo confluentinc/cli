@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go"
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go/mock"
@@ -107,10 +108,10 @@ func mockSingleRowCommand() *cobra.Command {
 
 func mockPriceCommand(prices map[string]float64) *cobra.Command {
 	client := &ccloud.Client{
-		Organization: &ccloudmock.Organization{
-			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization) (*orgv1.PriceTable, error) {
-				table := &orgv1.PriceTable{
-					PriceTable: map[string]*orgv1.UnitPrices{
+		Billing: &ccloudmock.Billing{
+			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization) (*billingv1.PriceTable, error) {
+				table := &billingv1.PriceTable{
+					PriceTable: map[string]*billingv1.UnitPrices{
 						exampleMetric: {Unit: exampleUnit, Prices: prices},
 					},
 				}

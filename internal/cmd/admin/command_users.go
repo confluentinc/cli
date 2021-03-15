@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
+
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -32,9 +34,11 @@ var (
 		"LastName":   "last_name",
 		"Status":     "status",
 	}
-	statusMap = map[bool]string{
-		true:  "Active",
-		false: "Pending",
+	statusMap = map[flowv1.UserStatus]string{
+		flowv1.UserStatus_USER_STATUS_UNKNOWN:     "Unknown",
+		flowv1.UserStatus_USER_STATUS_UNVERIFIED:  "Unverified",
+		flowv1.UserStatus_USER_STATUS_ACTIVE:      "Active",
+		flowv1.UserStatus_USER_STATUS_DEACTIVATED: "Deactivated",
 	}
 )
 
@@ -86,19 +90,25 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	if !validFormat {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{
-		ResourceId:     resourceId,
-		OrganizationId: c.State.Auth.User.OrganizationId,
+	user, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{
+		ResourceId: resourceId,
 	})
 	if err != nil {
 		return err
 	}
+
+	// Avoid panics if new types of statuses are added in the future
+	userStatus := "Unknown"
+	if val, ok := statusMap[user.UserStatus]; ok {
+		userStatus = val
+	}
+
 	return output.DescribeObject(cmd, &userStruct{
 		ResourceId: user.ResourceId,
 		Email:      user.Email,
 		FirstName:  user.FirstName,
 		LastName:   user.LastName,
-		Status:     statusMap[(user.Verified != nil && user.Verified.Seconds != 0)],
+		Status:     userStatus,
 	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
@@ -125,12 +135,25 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, user := range users {
-		outputWriter.AddElement(&userStruct{
+		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{
 			ResourceId: user.ResourceId,
-			Email:      user.Email,
-			FirstName:  user.FirstName,
-			LastName:   user.LastName,
-			Status:     statusMap[(user.Verified != nil && user.Verified.Seconds != 0)],
+		})
+		if err != nil {
+			return err
+		}
+
+		// Avoid panics if new types of statuses are added in the future
+		userStatus := "Unknown"
+		if val, ok := statusMap[userProfile.UserStatus]; ok {
+			userStatus = val
+		}
+
+		outputWriter.AddElement(&userStruct{
+			ResourceId: userProfile.ResourceId,
+			Email:      userProfile.Email,
+			FirstName:  userProfile.FirstName,
+			LastName:   userProfile.LastName,
+			Status:     userStatus,
 		})
 	}
 	return outputWriter.Out()
