@@ -53,9 +53,10 @@ func NewDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
-	if c.State.Auth == nil || c.State.Auth.Organization == nil || c.State.Auth.Organization.AuditLog == nil {
+	if _, enabled := pcmd.IsAuditLogsEnabled(c.State); !enabled {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
+
 	auditLog := c.State.Auth.Organization.AuditLog
 	return output.DescribeObject(cmd, &auditLogStruct{
 		ClusterId:        auditLog.ClusterId,
