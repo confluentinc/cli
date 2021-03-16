@@ -14,6 +14,7 @@ import (
 
 /*
 	HANDLECOMMON HELPERS
+	see: https://github.com/confluentinc/cli/blob/master/errors.md
 */
 
 func catchTypedErrors(err error) error {

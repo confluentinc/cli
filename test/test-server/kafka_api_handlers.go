@@ -247,7 +247,7 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.Response
 		topic := vars["topic"]
 		var deleteTopicReply *schedv1.DeleteTopicReply
 		switch {
-		case cluster == "lkc-delete-topic" && topic == "topic1":
+		case cluster == "lkc-delete-topic" && (topic == "topic1" || topic == "topic-exist"):
 			deleteTopicReply = &schedv1.DeleteTopicReply{}
 		default:
 			w.WriteHeader(http.StatusNotFound)
@@ -265,7 +265,7 @@ func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		var listTopicConfigReply *schedv1.ListTopicConfigReply
 		if r.Method == "GET" { //part of describe call
-			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "testConfig", Value: "testValue"}}}}
+			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "retention.ms", Value: "1000"}, {Name: "compression.type", Value: "zip"}}}}
 			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(topicReply))

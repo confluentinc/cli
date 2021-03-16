@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -620,7 +621,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 			// ensure the right caCertPath is used
 			req.Equal(expectedCaCertPath, caCertPath)
-			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, logger)
+			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{}, logger)
 			if err != nil {
 				return nil, err
 			}
