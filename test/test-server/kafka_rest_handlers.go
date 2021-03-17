@@ -154,3 +154,94 @@ func (r KafkaRestProxyRouter) HandlKafkaRPTopic(t *testing.T) func(http.Response
 		}
 	}
 }
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups"
+func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupDataList{
+				Kind: "",
+				Metadata: kafkarestv3.ResourceCollectionMetadata{},
+				Data: []kafkarestv3.ConsumerGroupData{
+					{
+						Kind:              "",
+						Metadata:          kafkarestv3.ResourceMetadata{},
+						ClusterId:         "cluster-1",
+						ConsumerGroupId:   "consumer-group-1",
+						IsSimple:          true,
+						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+						State:			   kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+						Coordinator:       kafkarestv3.Relationship{},
+						Consumer:		   kafkarestv3.Relationship{},
+						LagSummary:		   kafkarestv3.Relationship{},
+					},
+					{
+						Kind:              "",
+						Metadata:          kafkarestv3.ResourceMetadata{},
+						ClusterId:         "cluster-1",
+						ConsumerGroupId:   "consumer-group-2",
+						IsSimple:          true,
+						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+						State:			   kafkarestv3.CONSUMERGROUPSTATE_DEAD,
+						Coordinator:       kafkarestv3.Relationship{},
+						Consumer:		   kafkarestv3.Relationship{},
+						LagSummary:		   kafkarestv3.Relationship{},
+					},
+				},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
+func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupData{
+				Kind:              "",
+				Metadata:          kafkarestv3.ResourceMetadata{},
+				ClusterId:         "cluster-1",
+				ConsumerGroupId:   "consumer-group-1",
+				IsSimple:          true,
+				PartitionAssignor: "RoundRobin",
+				State:			   kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+				Coordinator:       kafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
+				Consumer:		   kafkarestv3.Relationship{},
+				LagSummary:		   kafkarestv3.Relationship{},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag"
+func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			instance := "instance-1"
+			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupLagSummaryData{
+				Kind: "",
+				Metadata: kafkarestv3.ResourceMetadata{},
+				ClusterId: "cluster-1",
+				ConsumerGroupId: "consumer-group-1",
+				MaxLagConsumerId: "consumer-1",
+				MaxLagInstanceId: &instance,
+				MaxLagClientId: "client-1",
+				MaxLagTopicName: "topic-1",
+				MaxLagPartitionId: 0,
+				MaxLag: 100,
+				TotalLag: 110,
+				MaxLagConsumer: kafkarestv3.Relationship{},
+				MaxLagPartition: kafkarestv3.Relationship{},
+			})
+			require.NoError(t, err)
+		}
+	}
+}

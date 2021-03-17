@@ -2,7 +2,6 @@ package mock
 
 import (
 	"context"
-
 	nethttp "net/http"
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -118,6 +117,10 @@ type ConsumerGroup struct {
 	Expect chan interface{}
 }
 
+func NewConsumerGroupMock(expect chan interface{}) *ConsumerGroup {
+	return &ConsumerGroup{expect}
+}
+
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdAssignmentsGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string) (krsdk.ConsumerAssignmentDataList, *nethttp.Response, error) {
 	panic("implement me")
 }
@@ -138,13 +141,13 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdGet(ctx con
 	panic("implement me")
 }
 
-type SummarizeLagMatcher struct {
+type GroupLagMatcher struct {
 	ConsumerGroupId string
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupLagSummaryData, *nethttp.Response, error) {
 	expect := <- c.Expect
-	matcher := expect.(SummarizeLagMatcher)
+	matcher := expect.(GroupLagMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
 		return krsdk.ConsumerGroupLagSummaryData{}, nil, err
 	}
@@ -174,7 +177,53 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryG
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {
-	panic("implement me")
+	expect := <- c.Expect
+	matcher := expect.(GroupLagMatcher)
+	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
+		return krsdk.ConsumerLagDataList{}, nil, err
+	}
+
+	httpResp := &nethttp.Response{
+		StatusCode: nethttp.StatusOK,
+	}
+
+	optionalInstanceIds := []string{"instance-1", "instance-2"}
+
+	return krsdk.ConsumerLagDataList{
+		Kind: "",
+		Metadata: krsdk.ResourceCollectionMetadata{},
+		Data: []krsdk.ConsumerLagData{
+			{
+				Kind: "",
+				Metadata: krsdk.ResourceMetadata{},
+				ClusterId: clusterId,
+				ConsumerGroupId: consumerGroupId,
+				TopicName: "topic-1",
+				PartitionId: 0,
+				CurrentOffset: 1,
+				LogEndOffset: 111,
+				Lag: 110,
+				ConsumerId: "consumer-1",
+				InstanceId: &optionalInstanceIds[0],
+				ClientId: "client-1",
+			},
+			{
+				Kind: "",
+				Metadata: krsdk.ResourceMetadata{},
+				ClusterId: clusterId,
+				ConsumerGroupId: consumerGroupId,
+				TopicName: "topic-2",
+				PartitionId: 1,
+				CurrentOffset: 1,
+				LogEndOffset: 101,
+				Lag: 100,
+				ConsumerId: "consumer-2",
+				InstanceId: &optionalInstanceIds[1],
+				ClientId: "client-2",
+			},
+
+		},
+	}, httpResp, nil
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
@@ -185,14 +234,52 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, c
 var _ krsdk.PartitionApi = (*Partition)(nil)
 
 type Partition struct {
+	Expect chan interface{}
+}
+
+func NewPartitionMock(expect chan interface{}) *Partition {
+	return &Partition{expect}
+}
+
+type PartitionLagMatcher struct {
+	ConsumerGroupId string
+	TopicName       string
+	PartitionId     int32
 }
 
 func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, topicName string, partitionId int32) (krsdk.ConsumerLagData, *nethttp.Response, error) {
-	panic("implement me")
-}
+	expect := <- m.Expect
+	matcher := expect.(PartitionLagMatcher)
+	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
+		return krsdk.ConsumerLagData{}, nil, err
+	}
+	if err := assertEqualValues(topicName, matcher.TopicName); err != nil {
+		return krsdk.ConsumerLagData{}, nil, err
+	}
+	if err := assertEqualValues(partitionId, matcher.PartitionId); err != nil {
+		return krsdk.ConsumerLagData{}, nil, err
+	}
 
-func NewPartitionMock() *Partition {
-	return &Partition{}
+	httpResp := &nethttp.Response{
+		StatusCode: nethttp.StatusOK,
+	}
+
+	optionalInstanceId := "instance-1"
+
+	return krsdk.ConsumerLagData{
+		Kind: "",
+		Metadata: krsdk.ResourceMetadata{},
+		ClusterId: clusterId,
+		ConsumerGroupId: consumerGroupId,
+		TopicName: "topic-1",
+		PartitionId: 0,
+		CurrentOffset: 1,
+		LogEndOffset: 111,
+		Lag: 110,
+		ConsumerId: "consumer-1",
+		InstanceId: &optionalInstanceId,
+		ClientId: "client-1",
+	}, httpResp, nil
 }
 
 func (m *Partition) ClustersClusterIdTopicsPartitionsReassignmentGet(_ctx context.Context, _clusterId string) (krsdk.ReassignmentDataList, *nethttp.Response, error) {

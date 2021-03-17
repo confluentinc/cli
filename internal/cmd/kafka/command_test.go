@@ -775,11 +775,11 @@ func TestCreateLink(t *testing.T) {
 
 /*************** TEST command_consumer-group_cloud ***************/
 type testConsumerGroup struct {
-	id       string
+	id string
 }
 var ConsumerGroups = []testConsumerGroup{
 	{
-		id:       "consumer-group-1",
+		id: "consumer-group-1",
 	},
 }
 
@@ -789,8 +789,62 @@ func TestSummarizeLag(t *testing.T) {
 		cmd := newRestCmd(expect)
 		cmd.SetArgs([]string{"consumer-group", "lag", "summarize", consumerGroup.id})
 		go func() {
-			expect <- cliMock.SummarizeLagMatcher{
+			expect <- cliMock.GroupLagMatcher{
 				ConsumerGroupId: consumerGroup.id,
+			}
+		}()
+
+		if err := cmd.Execute(); err != nil {
+			t.Errorf("error: %s", err)
+			t.Fail()
+			return
+		}
+	}
+}
+
+func TestListLag(t *testing.T) {
+	expect := make(chan interface{})
+	for _, consumerGroup := range ConsumerGroups {
+		cmd := newRestCmd(expect)
+		cmd.SetArgs([]string{"consumer-group", "lag", "list", consumerGroup.id})
+		go func() {
+			expect <- cliMock.GroupLagMatcher{
+				ConsumerGroupId: consumerGroup.id,
+			}
+		}()
+
+		if err := cmd.Execute(); err != nil {
+			t.Errorf("error: %s", err)
+			t.Fail()
+			return
+		}
+	}
+}
+
+type testPartitionLag struct {
+	consumerGroupId string
+	topicName	    string
+	partitionId	    int32
+}
+
+var PartitionLags = []testPartitionLag{
+	{
+		consumerGroupId: "consumer-group-1",
+		topicName:       "topic-1",
+		partitionId:     0,
+	},
+}
+
+func TestGetLag(t *testing.T) {
+	expect := make(chan interface{})
+	for _, lag := range PartitionLags {
+		cmd := newRestCmd(expect)
+		cmd.SetArgs([]string{"consumer-group", "lag", "get", lag.consumerGroupId, "--topic", "topic-1", "--partition", "0"})
+		go func() {
+			expect <- cliMock.PartitionLagMatcher{
+				ConsumerGroupId: lag.consumerGroupId,
+				TopicName: lag.topicName,
+				PartitionId: lag.partitionId,
 			}
 		}()
 
@@ -857,9 +911,10 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
 			restMock.ACLApi = cliMock.NewACLMock()
 			restMock.TopicApi = cliMock.NewTopicMock()
-			restMock.PartitionApi = cliMock.NewPartitionMock()
+			restMock.PartitionApi = cliMock.NewPartitionMock(kafkaRestExpect)
 			restMock.ReplicaApi = cliMock.NewReplicaMock()
 			restMock.ConfigsApi = cliMock.NewConfigsMock()
+			restMock.ConsumerGroupApi = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
 			return kafkaREST, nil

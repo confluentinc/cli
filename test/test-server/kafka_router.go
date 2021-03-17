@@ -30,6 +30,10 @@ const (
 	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 	rpConfigsAlter      = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/configs:alter"
 	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
+	rpConsumerGroups    = "/kafka/v3/clusters/{cluster_id}/consumer-groups"
+	rpLagSummary        = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag"
+	//rpLagList			= "/kafka/v3/clusters/{cluster}/consumer-groups/{consumer_group}/lags"
+	//rpLagGet			= "/kafka/v3/clusters/{cluster}/consumer-groups/{consumer_group}/lags/{topic_name}/partitions/{partition_id}"
 )
 
 type KafkaRouter struct {
@@ -84,6 +88,8 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpPartitionReplicas, r.HandleKafkaRPPartitionReplicas(t))
 	r.HandleFunc(rpConfigsAlter, r.HandleKafkaRPConfigsAlter(t))
 	r.HandleFunc(rpTopic, r.HandlKafkaRPTopic(t))
+	r.HandleFunc(rpConsumerGroups, r.HandleKafkaRPConsumerGroups(t))
+	r.HandleFunc(rpLagSummary, r.HandleKafkaRPLagSummary(t))
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)
