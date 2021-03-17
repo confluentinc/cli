@@ -42,6 +42,11 @@ const (
 	apiKeyDescription  = "Mock Apis"
 	serviceAccountId   = int32(123)
 	serviceAccountName = "service-account"
+
+	auditLogApiKeyResourceId   = int32(7753)
+	auditLogApiKeyVal   = "auditlog-apikey"
+	auditLogApiKeySecretVal       = "opensesameforauditlogs"
+	auditLogApiKeyDescription   = "Mock Apis for Audit Logs"
 	auditLogServiceAccountId   = int32(748)
 )
 
@@ -56,11 +61,11 @@ var (
 	}
 	auditLogApiValue = &schedv1.ApiKey{
 		UserId:      auditLogServiceAccountId,
-		Key:         apiKeyVal,
-		Secret:      apiSecretVal,
-		Description: apiKeyDescription,
+		Key:         auditLogApiKeyVal,
+		Secret:      auditLogApiKeySecretVal,
+		Description: auditLogApiKeyDescription,
 		Created:     types.TimestampNow(),
-		Id:          apiKeyResourceId,
+		Id:          auditLogApiKeyResourceId,
 	}
 )
 
@@ -129,14 +134,11 @@ func (suite *APITestSuite) SetupTest() {
 	}
 	suite.apiMock = &ccsdkmock.APIKey{
 		GetFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) (key *schedv1.ApiKey, e error) {
-			switch(key.Id) {
-			case apiValue.Id:
-				return apiValue, nil
-			case auditLogApiValue.Id:
+			switch apiKey.Key {
+			case auditLogApiValue.Key:
 				return auditLogApiValue, nil
 			default:
-				e = fmt.Errorf("no matching api key %v", key.Id)
-				return nil, e
+				return apiValue, nil
 			}
 		},
 		UpdateFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) error {
@@ -317,8 +319,7 @@ func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
 	req.Nil(err)
 	req.True(suite.apiMock.ListCalled())
 	inputKey := suite.apiMock.ListCalls()[0].Arg1
-	req.Equal(inputKey.LogicalClusters[1].Id, suite.kafkaCluster.Id)
-	req.Equal(inputKey.UserId, auditLogServiceAccountId)
+	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {
@@ -435,6 +436,10 @@ func (suite *APITestSuite) TestServerComplete() {
 				{
 					Text:        apiKeyVal,
 					Description: apiKeyDescription,
+				},
+				{
+					Text:        auditLogApiKeyVal,
+					Description: auditLogApiKeyDescription,
 				},
 			},
 		},
