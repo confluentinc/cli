@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 

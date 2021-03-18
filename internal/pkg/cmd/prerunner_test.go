@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -34,7 +34,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 
-	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )

@@ -8,7 +8,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"

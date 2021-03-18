@@ -8,8 +8,8 @@ import (
 	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

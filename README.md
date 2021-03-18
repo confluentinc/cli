@@ -172,14 +172,11 @@ Here's the basic file structure:
 * `cmd/confluent/main.go` - entrypoint for the CLI binary
 * `internal/cmd/command.go` - bootstraps the root `confluent` CLI command
 * `internal/cmd/<command>/<command>.go` - defines each command we support
-* `internal/pkg/sdk/<resource>/<resource>.go` - a thin wrapper around `ccloud-sdk-go` to add logging and typed errors
-   TODO: if we add logging and typed errors to the SDK, we might be able to drop the pkg/sdk stuff entirely.
 
 Things under `internal/cmd` are commands, things under `internal/pkg` are packages to be used by commands.
 
 When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
-* `internal/pkg/sdk/<resource>/<resource>.go` (and test)
 
 ### Build Other Platforms
 
