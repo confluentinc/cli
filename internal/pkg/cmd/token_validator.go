@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/jonboulle/clockwork"
 	"gopkg.in/square/go-jose.v2/jwt"
 
