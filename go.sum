@@ -258,6 +258,8 @@ github.com/confluentinc/ccloud-sdk-go v0.0.70 h1:5igl4sNXCnzRcaSumn5lqYgGIAGH3ob
 github.com/confluentinc/ccloud-sdk-go v0.0.70/go.mod h1:74IDFIbhltG8IWe3SSgyTQfNLhCee5LOVy8/ZXbTtiI=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72-0.20210318102506-a6a1cbe51465 h1:jc6lgUTgr9VpN0XH204k2vuctznEJSTPBeHBiHm8h10=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72-0.20210318102506-a6a1cbe51465/go.mod h1:ZGnUFD4XHwS4RAIe+ioBn6RgbSSL35ZNOG4FBXqmHPc=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72 h1:ztmJFYlXvWYAee2gO33yeW/LY5wOwgF39Rgez5w9Ua8=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72/go.mod h1:ZGnUFD4XHwS4RAIe+ioBn6RgbSSL35ZNOG4FBXqmHPc=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
