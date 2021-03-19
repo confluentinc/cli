@@ -34,8 +34,8 @@ const (
 	rpConsumerGroup     = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
 	rpConsumers         = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
 	rpLagSummary        = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
-	rpLags				= "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
-	rpLag     			= "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
+	rpLags              = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
+	rpLag               = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
 )
 
 type KafkaRouter struct {

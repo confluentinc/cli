@@ -146,7 +146,7 @@ type GroupLagMatcher struct {
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupLagSummaryData, *nethttp.Response, error) {
-	expect := <- c.Expect
+	expect := <-c.Expect
 	matcher := expect.(GroupLagMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
 		return krsdk.ConsumerGroupLagSummaryData{}, nil, err
@@ -159,25 +159,25 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryG
 	optionalInstanceId := "instance-1"
 
 	return krsdk.ConsumerGroupLagSummaryData{
-		Kind: "",
-		Metadata: krsdk.ResourceMetadata{},
-		ClusterId: clusterId,
-		ConsumerGroupId: consumerGroupId,
-		MaxLagConsumerId: "consumer-1",
-		MaxLagInstanceId: &optionalInstanceId,
-		MaxLagClientId: "client-1",
-		MaxLagTopicName: "topic-1",
+		Kind:              "",
+		Metadata:          krsdk.ResourceMetadata{},
+		ClusterId:         clusterId,
+		ConsumerGroupId:   consumerGroupId,
+		MaxLagConsumerId:  "consumer-1",
+		MaxLagInstanceId:  &optionalInstanceId,
+		MaxLagClientId:    "client-1",
+		MaxLagTopicName:   "topic-1",
 		MaxLagPartitionId: 0,
-		MaxLag: 100,
-		TotalLag: 110,
-		MaxLagConsumer: krsdk.Relationship{},
-		MaxLagPartition: krsdk.Relationship{},
+		MaxLag:            100,
+		TotalLag:          110,
+		MaxLagConsumer:    krsdk.Relationship{},
+		MaxLagPartition:   krsdk.Relationship{},
 	}, httpResp, nil
 
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {
-	expect := <- c.Expect
+	expect := <-c.Expect
 	matcher := expect.(GroupLagMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
 		return krsdk.ConsumerLagDataList{}, nil, err
@@ -190,38 +190,37 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx
 	optionalInstanceIds := []string{"instance-1", "instance-2"}
 
 	return krsdk.ConsumerLagDataList{
-		Kind: "",
+		Kind:     "",
 		Metadata: krsdk.ResourceCollectionMetadata{},
 		Data: []krsdk.ConsumerLagData{
 			{
-				Kind: "",
-				Metadata: krsdk.ResourceMetadata{},
-				ClusterId: clusterId,
+				Kind:            "",
+				Metadata:        krsdk.ResourceMetadata{},
+				ClusterId:       clusterId,
 				ConsumerGroupId: consumerGroupId,
-				TopicName: "topic-1",
-				PartitionId: 1,
-				CurrentOffset: 1,
-				LogEndOffset: 101,
-				Lag: 100,
-				ConsumerId: "consumer-1",
-				InstanceId: &optionalInstanceIds[0],
-				ClientId: "client-1",
+				TopicName:       "topic-1",
+				PartitionId:     1,
+				CurrentOffset:   1,
+				LogEndOffset:    101,
+				Lag:             100,
+				ConsumerId:      "consumer-1",
+				InstanceId:      &optionalInstanceIds[0],
+				ClientId:        "client-1",
 			},
 			{
-				Kind: "",
-				Metadata: krsdk.ResourceMetadata{},
-				ClusterId: clusterId,
+				Kind:            "",
+				Metadata:        krsdk.ResourceMetadata{},
+				ClusterId:       clusterId,
 				ConsumerGroupId: consumerGroupId,
-				TopicName: "topic-1",
-				PartitionId: 2,
-				CurrentOffset: 1,
-				LogEndOffset: 11,
-				Lag: 10,
-				ConsumerId: "consumer-2",
-				InstanceId: &optionalInstanceIds[1],
-				ClientId: "client-2",
+				TopicName:       "topic-1",
+				PartitionId:     2,
+				CurrentOffset:   1,
+				LogEndOffset:    11,
+				Lag:             10,
+				ConsumerId:      "consumer-2",
+				InstanceId:      &optionalInstanceIds[1],
+				ClientId:        "client-2",
 			},
-
 		},
 	}, httpResp, nil
 }
@@ -248,7 +247,7 @@ type PartitionLagMatcher struct {
 }
 
 func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, topicName string, partitionId int32) (krsdk.ConsumerLagData, *nethttp.Response, error) {
-	expect := <- m.Expect
+	expect := <-m.Expect
 	matcher := expect.(PartitionLagMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
 		return krsdk.ConsumerLagData{}, nil, err
@@ -267,18 +266,18 @@ func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNameP
 	optionalInstanceId := "instance-1"
 
 	return krsdk.ConsumerLagData{
-		Kind: "",
-		Metadata: krsdk.ResourceMetadata{},
-		ClusterId: clusterId,
+		Kind:            "",
+		Metadata:        krsdk.ResourceMetadata{},
+		ClusterId:       clusterId,
 		ConsumerGroupId: consumerGroupId,
-		TopicName: "topic-1",
-		PartitionId: 1,
-		CurrentOffset: 1,
-		LogEndOffset: 101,
-		Lag: 100,
-		ConsumerId: "consumer-1",
-		InstanceId: &optionalInstanceId,
-		ClientId: "client-1",
+		TopicName:       "topic-1",
+		PartitionId:     1,
+		CurrentOffset:   1,
+		LogEndOffset:    101,
+		Lag:             100,
+		ConsumerId:      "consumer-1",
+		InstanceId:      &optionalInstanceId,
+		ClientId:        "client-1",
 	}, httpResp, nil
 }
 

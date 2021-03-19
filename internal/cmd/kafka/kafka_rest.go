@@ -16,6 +16,7 @@ import (
 const KafkaRestBadRequestErrorCode = 40002
 const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
 const KafkaRestUnknownConsumerGroupErrorCode = 40403
+
 // ahu: guessing all unknown entities will return 40403
 
 func kafkaRestHttpError(httpResp *http.Response) error {

@@ -2,45 +2,46 @@ package kafka
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/go-printer/tables"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/go-printer/tables"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
-// ahu: description should state 'max lag consumer ID', 'max lag instance ID', etc
 var (
-	groupListFields  = []string{"ClusterId", "ConsumerGroupId", "IsSimple", "State"}
-	groupListHumanLabels = []string{"Cluster", "ConsumerGroup", "Simple", "State"}
+	groupListFields           = []string{"ClusterId", "ConsumerGroupId", "IsSimple", "State"}
+	groupListHumanLabels      = []string{"Cluster", "ConsumerGroup", "Simple", "State"}
 	groupListStructuredLabels = []string{"cluster", "consumer_group", "simple", "state"}
 	// groupDescribe vars and struct used for human output
-	groupDescribeFields = []string{"ClusterId", "ConsumerGroupId", "Coordinator", "IsSimple", "PartitionAssignor", "State"}
+	groupDescribeFields       = []string{"ClusterId", "ConsumerGroupId", "Coordinator", "IsSimple", "PartitionAssignor", "State"}
 	groupDescribeHumanRenames = map[string]string{
-		"ClusterId":	   "Cluster",
+		"ClusterId":       "Cluster",
 		"ConsumerGroupId": "ConsumerGroup",
 		"IsSimple":        "Simple"}
-	groupDescribeConsumersFields = []string{"ConsumerGroupId", "ConsumerId", "InstanceId", "ClientId"}
+	groupDescribeConsumersFields     = []string{"ConsumerGroupId", "ConsumerId", "InstanceId", "ClientId"}
 	groupDescribeConsumerTableLabels = []string{"Consumer Group", "Consumer", "Instance", "Client"}
-	lagSummaryFields = []string{"ClusterId", "ConsumerGroupId", "TotalLag", "MaxLag", "MaxLagConsumerId", "MaxLagInstanceId", "MaxLagClientId", "MaxLagTopicName", "MaxLagPartitionId"}
-	lagSummaryHumanRenames = map[string]string{
-		"ClusterId":		 "Cluster",
-		"ConsumerGroupId": 	 "ConsumerGroup",
+	lagSummaryFields                 = []string{"ClusterId", "ConsumerGroupId", "TotalLag", "MaxLag", "MaxLagConsumerId", "MaxLagInstanceId", "MaxLagClientId", "MaxLagTopicName", "MaxLagPartitionId"}
+	lagSummaryHumanRenames           = map[string]string{
+		"ClusterId":         "Cluster",
+		"ConsumerGroupId":   "ConsumerGroup",
 		"MaxLagConsumerId":  "MaxLagConsumer",
 		"MaxLagInstanceId":  "MaxLagInstance",
 		"MaxLagClientId":    "MaxLagClient",
 		"MaxLagTopicName":   "MaxLagTopic",
 		"MaxLagPartitionId": "MaxLagPartition"}
 	lagSummaryStructuredRenames = map[string]string{
-		"ClusterId":		 "cluster",
-		"ConsumerGroupId": 	 "consumer_group",
+		"ClusterId":         "cluster",
+		"ConsumerGroupId":   "consumer_group",
 		"TotalLag":          "total_lag",
 		"MaxLag":            "max_lag",
 		"MaxLagConsumerId":  "max_lag_consumer",
@@ -48,11 +49,11 @@ var (
 		"MaxLagClientId":    "max_lag_client",
 		"MaxLagTopicName":   "max_lag_topic",
 		"MaxLagPartitionId": "max_lag_partition"}
-	lagFields = []string{"ClusterId", "ConsumerGroupId", "Lag", "LogEndOffset", "CurrentOffset", "ConsumerId", "InstanceId", "ClientId", "TopicName", "PartitionId"}
-	lagListHumanLabels = []string{"Cluster", "ConsumerGroup", "Lag", "LogEndOffset", "CurrentOffset", "Consumer", "Instance", "Client", "Topic", "Partition"}
+	lagFields               = []string{"ClusterId", "ConsumerGroupId", "Lag", "LogEndOffset", "CurrentOffset", "ConsumerId", "InstanceId", "ClientId", "TopicName", "PartitionId"}
+	lagListHumanLabels      = []string{"Cluster", "ConsumerGroup", "Lag", "LogEndOffset", "CurrentOffset", "Consumer", "Instance", "Client", "Topic", "Partition"}
 	lagListStructuredLabels = []string{"cluster", "consumer_group", "lag", "log_end_offset", "current_offset", "consumer", "instance", "client", "topic", "partition"}
-	lagGetHumanRenames = map[string]string{
-		"ClusterId":	   "Cluster",
+	lagGetHumanRenames      = map[string]string{
+		"ClusterId":       "Cluster",
 		"ConsumerGroupId": "ConsumerGroup",
 		"ConsumerId":      "Consumer",
 		"InstanceId":      "Instance",
@@ -60,7 +61,7 @@ var (
 		"TopicName":       "Topic",
 		"PartitionId":     "Partition"}
 	lagGetStructuredRenames = map[string]string{
-		"ClusterId":	   "cluster",
+		"ClusterId":       "cluster",
 		"ConsumerGroupId": "consumer_group",
 		"Lag":             "lag",
 		"LogEndOffset":    "log_end_offset",
@@ -74,24 +75,24 @@ var (
 
 type groupCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner			pcmd.PreRunner
+	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 }
 
 type consumerData struct {
 	ConsumerGroupId string `json:"consumer_group" yaml:"consumer_group"`
-	ConsumerId	    string `json:"consumer" yaml:"consumer"`
+	ConsumerId      string `json:"consumer" yaml:"consumer"`
 	InstanceId      string `json:"instance" yaml:"instance"`
 	ClientId        string `json:"client" yaml:"client"`
 }
 
 type groupData struct {
-	ClusterId         string		 `json:"cluster" yaml:"cluster"`
-	ConsumerGroupId   string		 `json:"consumer_group" yaml:"consumer_group"`
-	Coordinator       string		 `json:"coordinator" yaml:"coordinator"`
-	IsSimple		  bool			 `json:"simple" yaml:"simple"`
-	PartitionAssignor string		 `json:"partition_assignor" yaml:"partition_assignor"`
-	State			  string		 `json:"state" yaml:"state"`
+	ClusterId         string         `json:"cluster" yaml:"cluster"`
+	ConsumerGroupId   string         `json:"consumer_group" yaml:"consumer_group"`
+	Coordinator       string         `json:"coordinator" yaml:"coordinator"`
+	IsSimple          bool           `json:"simple" yaml:"simple"`
+	PartitionAssignor string         `json:"partition_assignor" yaml:"partition_assignor"`
+	State             string         `json:"state" yaml:"state"`
 	Consumers         []consumerData `json:"consumers" yaml:"consumers"`
 }
 
@@ -99,19 +100,19 @@ type groupDescribeStruct struct {
 	ClusterId         string
 	ConsumerGroupId   string
 	Coordinator       string
-	IsSimple		  bool
+	IsSimple          bool
 	PartitionAssignor string
-	State			  string
+	State             string
 }
 
 type lagCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner			pcmd.PreRunner
-	completableChildren	[]*cobra.Command
+	prerunner           pcmd.PreRunner
+	completableChildren []*cobra.Command
 }
 
 type lagSummaryStruct struct {
-	ClusterId 		  string
+	ClusterId         string
 	ConsumerGroupId   string
 	TotalLag          int32
 	MaxLag            int32
@@ -270,9 +271,9 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 		}
 		consumerData := consumerData{
 			ConsumerGroupId: consumerGroupId,
-			ConsumerId: consumerResp.ConsumerId,
-			InstanceId: instanceId,
-			ClientId: consumerResp.ClientId,
+			ConsumerId:      consumerResp.ConsumerId,
+			InstanceId:      instanceId,
+			ClientId:        consumerResp.ClientId,
 		}
 		groupData.Consumers[i] = consumerData
 	}
@@ -342,61 +343,61 @@ func NewLagCommand(prerunner pcmd.PreRunner) *lagCommand {
 }
 
 func (lagCmd *lagCommand) init() {
-    summarizeLagCmd := &cobra.Command{
-    	Use:	"summarize <id>",
-    	Short:	"Summarize consumer lag for a Kafka consumer-group.",
-    	Args:	cobra.ExactArgs(1),
-    	RunE:	pcmd.NewCLIRunE(lagCmd.summarizeLag),
-    	Example: examples.BuildExampleString(
-    		examples.Example{
-    			Text: "Summarize the lag for the ``my_consumer_group`` consumer-group.",
-    			// ahu: should the examples include the other required flag(s)? --cluster
-    			Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
-    		},
-    	),
-    }
-    summarizeLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-    summarizeLagCmd.Flags().SortFlags = false
-    lagCmd.AddCommand(summarizeLagCmd)
+	summarizeLagCmd := &cobra.Command{
+		Use:   "summarize <id>",
+		Short: "Summarize consumer lag for a Kafka consumer-group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(lagCmd.summarizeLag),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Summarize the lag for the ``my_consumer_group`` consumer-group.",
+				// ahu: should the examples include the other required flag(s)? --cluster
+				Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
+			},
+		),
+	}
+	summarizeLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	summarizeLagCmd.Flags().SortFlags = false
+	lagCmd.AddCommand(summarizeLagCmd)
 
-    listLagCmd := &cobra.Command{
-    	Use:	"list <id>",
-      	Short:	"List consumer lags for a Kafka consumer-group.",
-     	Args:	cobra.ExactArgs(1),
-      	RunE:	pcmd.NewCLIRunE(lagCmd.listLag),
-      	Example: examples.BuildExampleString(
-      		examples.Example{
-      			Text: "List all consumer lags for consumers in the ``my_consumer_group`` consumer-group.",
-      			Code: "ccloud kafka consumer-group lag list my_consumer_group",
-      		},
-      	),
-    }
+	listLagCmd := &cobra.Command{
+		Use:   "list <id>",
+		Short: "List consumer lags for a Kafka consumer-group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(lagCmd.listLag),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all consumer lags for consumers in the ``my_consumer_group`` consumer-group.",
+				Code: "ccloud kafka consumer-group lag list my_consumer_group",
+			},
+		),
+	}
 	listLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listLagCmd.Flags().SortFlags = false
-    lagCmd.AddCommand(listLagCmd)
+	lagCmd.AddCommand(listLagCmd)
 
-   	getLagCmd := &cobra.Command{
-    	Use:	"get <id>",
-      	Short:	"Get consumer lag for a partition consumed by a Kafka consumer-group.",
-     	Args:	cobra.ExactArgs(1),
-      	RunE:	pcmd.NewCLIRunE(lagCmd.getLag),
-      	Example: examples.BuildExampleString(
-      		examples.Example{
-      			Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.",
-      			Code: "ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0",
-      		},
-      	),
-   	}
-   	// ahu: handle defaults
+	getLagCmd := &cobra.Command{
+		Use:   "get <id>",
+		Short: "Get consumer lag for a partition consumed by a Kafka consumer-group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.",
+				Code: "ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0",
+			},
+		),
+	}
+	// ahu: handle defaults
 	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-   	getLagCmd.Flags().String("topic", "", "Topic name.")
-   	getLagCmd.Flags().Int32("partition", -1, "Partition ID.")
-   	check(getLagCmd.MarkFlagRequired("topic"))
-   	check(getLagCmd.MarkFlagRequired("partition"))
-   	getLagCmd.Flags().SortFlags = false
-   	lagCmd.AddCommand(getLagCmd)
+	getLagCmd.Flags().String("topic", "", "Topic name.")
+	getLagCmd.Flags().Int32("partition", -1, "Partition ID.")
+	check(getLagCmd.MarkFlagRequired("topic"))
+	check(getLagCmd.MarkFlagRequired("partition"))
+	getLagCmd.Flags().SortFlags = false
+	lagCmd.AddCommand(getLagCmd)
 
-   	lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd, listLagCmd, getLagCmd}
+	lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd, listLagCmd, getLagCmd}
 	//lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd}
 }
 
@@ -476,7 +477,7 @@ func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummar
 		maxLagInstanceId = *lagSummaryData.MaxLagInstanceId
 	}
 	return &lagSummaryStruct{
-		ClusterId:		   lagSummaryData.ClusterId,
+		ClusterId:         lagSummaryData.ClusterId,
 		ConsumerGroupId:   lagSummaryData.ConsumerGroupId,
 		TotalLag:          lagSummaryData.TotalLag,
 		MaxLag:            lagSummaryData.MaxLag,

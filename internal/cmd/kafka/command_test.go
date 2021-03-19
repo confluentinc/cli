@@ -777,6 +777,7 @@ func TestCreateLink(t *testing.T) {
 type testConsumerGroup struct {
 	id string
 }
+
 var ConsumerGroups = []testConsumerGroup{
 	{
 		id: "consumer-group-1",
@@ -823,8 +824,8 @@ func TestListLag(t *testing.T) {
 
 type testPartitionLag struct {
 	consumerGroupId string
-	topicName	    string
-	partitionId	    int32
+	topicName       string
+	partitionId     int32
 }
 
 var PartitionLags = []testPartitionLag{
@@ -843,8 +844,8 @@ func TestGetLag(t *testing.T) {
 		go func() {
 			expect <- cliMock.PartitionLagMatcher{
 				ConsumerGroupId: lag.consumerGroupId,
-				TopicName: lag.topicName,
-				PartitionId: lag.partitionId,
+				TopicName:       lag.topicName,
+				PartitionId:     lag.partitionId,
 			}
 		}()
 
