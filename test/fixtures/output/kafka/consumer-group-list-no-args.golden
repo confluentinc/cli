@@ -1,0 +1,6 @@
+Error encountered when getting Kafka REST: 
+no Kafka cluster selected
+Error: no Kafka cluster selected
+
+Suggestions:
+    You must pass `--cluster` flag with the command or set an active kafka in your context with `ccloud kafka cluster use`.

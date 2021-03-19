@@ -1,0 +1,26 @@
+List Kafka consumer groups.
+
+Usage:
+  ccloud kafka consumer-group list [flags]
+
+Examples:
+List all consumer groups.
+
+::
+
+  ccloud kafka consumer-group list
+
+
+
+Flags:
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Did you know you can use the `ccloud feedback` command to send the team feedback?
+Let us know if the CLI is meeting your needs, or what we can do to improve it.

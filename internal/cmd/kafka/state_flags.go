@@ -15,7 +15,7 @@ var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
 }
 
 var GroupSubcommandFlags = map[string]*pflag.FlagSet{
-	"group": cmd.ClusterEnvironmentContextSet(),
+	"consumer-group": cmd.ClusterEnvironmentContextSet(),
 }
 
 var LagSubcommandFlags = map[string]*pflag.FlagSet{

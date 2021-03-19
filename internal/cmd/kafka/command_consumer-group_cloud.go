@@ -67,7 +67,9 @@ var (
 		"CurrentOffset":   "current_offset",
 		"ConsumerId":      "consumer",
 		"InstanceId":      "instance",
-		"ClientId":        "client"}
+		"ClientId":        "client",
+		"TopicName":       "topic",
+		"PartitionId":     "partition"}
 )
 
 type groupCommand struct {
@@ -133,20 +135,6 @@ type lagDataStruct struct {
 	PartitionId     int32
 }
 
-//func NewGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
-//	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-//		&cobra.Command{
-//			Use:	"consumer-group",
-//			Short:	"Manage Kafka consumer-groups.",
-//		}, prerunner, GroupSubcommandFlags)
-//	groupCommand := &groupCommand{
-//		AuthenticatedStateFlagCommand:	cliCmd,
-//		prerunner:						prerunner,
-//	}
-//	groupCommand.init()
-//	return groupCommand.Command
-//}
-
 func NewGroupCommand(prerunner pcmd.PreRunner) *groupCommand {
 	command := &cobra.Command{
 		Use:   "consumer-group",
@@ -166,7 +154,12 @@ func (g *groupCommand) init() {
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(g.list),
-		//RunE: g.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all consumer groups.",
+				Code: "ccloud kafka consumer-group list",
+			},
+		),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -177,6 +170,12 @@ func (g *groupCommand) init() {
 		Short: "Describe a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(g.describe),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe the ``my_consumer_group`` consumer group.",
+				Code: "ccloud kafka consumer-group describe my_consumer_group",
+			},
+		),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -192,6 +191,8 @@ func (g *groupCommand) init() {
 func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := g.GetKafkaREST()
 	if err != nil {
+		fmt.Println("Error encountered when getting Kafka REST: ")
+		fmt.Println(err)
 		return err
 	}
 	if kafkaREST == nil {
@@ -208,6 +209,8 @@ func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 			kafkaREST.Context,
 			lkc)
 	if err != nil {
+		fmt.Println("Error encountered when calling Consumer Groups Get: ")
+		fmt.Println(err)
 		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, groupListFields, groupListHumanLabels, groupListStructuredLabels)
@@ -346,9 +349,9 @@ func (lagCmd *lagCommand) init() {
     	RunE:	pcmd.NewCLIRunE(lagCmd.summarizeLag),
     	Example: examples.BuildExampleString(
     		examples.Example{
-    			Text: "Summarize the lag for consumer-group ``consumer-group-1``.",
+    			Text: "Summarize the lag for the ``my_consumer_group`` consumer-group.",
     			// ahu: should the examples include the other required flag(s)? --cluster
-    			Code: "ccloud kafka consumer-group lag summarize consumer-group-1",
+    			Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
     		},
     	),
     }
@@ -363,8 +366,8 @@ func (lagCmd *lagCommand) init() {
       	RunE:	pcmd.NewCLIRunE(lagCmd.listLag),
       	Example: examples.BuildExampleString(
       		examples.Example{
-      			Text: "List all consumer lags for consumers in consumer-group ``consumer-group-1``.",
-      			Code: "ccloud kafka consumer-group lag list consumer-group-1",
+      			Text: "List all consumer lags for consumers in the ``my_consumer_group`` consumer-group.",
+      			Code: "ccloud kafka consumer-group lag list my_consumer_group",
       		},
       	),
     }
@@ -379,8 +382,8 @@ func (lagCmd *lagCommand) init() {
       	RunE:	pcmd.NewCLIRunE(lagCmd.getLag),
       	Example: examples.BuildExampleString(
       		examples.Example{
-      			Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``consumer-group-1``.",
-      			Code: "ccloud kafka consumer-group lag get consumer-group-1 --topic my_topic --partition 0",
+      			Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.",
+      			Code: "ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0",
       		},
       	),
    	}
@@ -413,8 +416,6 @@ func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	lkc := kafkaClusterConfig.ID
-	fmt.Print("got the lkc ")
-	fmt.Println(lkc)
 	lagSummaryResp, _, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
 			kafkaREST.Context,

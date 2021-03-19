@@ -1,0 +1,28 @@
+Get consumer lag for a partition consumed by a Kafka consumer-group.
+
+Usage:
+  ccloud kafka consumer-group lag get <id> [flags]
+
+Examples:
+Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.
+
+::
+
+  ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0
+
+
+
+Flags:
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --topic string         Topic name.
+      --partition int32      Partition ID. (default -1)
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Did you know you can use the `ccloud feedback` command to send the team feedback?
+Let us know if the CLI is meeting your needs, or what we can do to improve it.

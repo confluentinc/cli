@@ -1,0 +1,15 @@
++-------------------+------------------+
+| Cluster           | cluster-1        |
+| ConsumerGroup     | consumer-group-1 |
+| Coordinator       | broker-1         |
+| Simple            | true             |
+| PartitionAssignor | RoundRobin       |
+| State             | STABLE           |
++-------------------+------------------+
+
+Consumers
+
+   Consumer Group  |  Consumer  |  Instance  |  Client   
++------------------+------------+------------+----------+
+  consumer-group-1 | consumer-1 | instance-1 | client-1  
+  consumer-group-1 | consumer-2 | instance-2 | client-2  
