@@ -12,7 +12,6 @@ Available Commands:
   connector         Manage Kafka Connect.
   connector-catalog Catalog of connectors and their configurations.
   environment       Manage and select ccloud environments.
-  feedback          Submit feedback about the Confluent Cloud CLI.
   help              Help about any command
   iam               Manage RBAC and IAM permissions.
   init              Initialize a context.

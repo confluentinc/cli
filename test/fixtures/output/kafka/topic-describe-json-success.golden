@@ -12,6 +12,7 @@
     }
   ],
   "config": {
-    "testConfig": "testValue"
+    "compression.type": "zip",
+    "retention.ms": "1000"
   }
 }

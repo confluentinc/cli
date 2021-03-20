@@ -8,7 +8,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -210,16 +210,17 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, srClusterID)
-	checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
-func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
-	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
-
-	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
-	req.NoError(err)
-	req.Equal(apiKeyVal, key.(string))
-}
+//func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
+//	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
+//
+//	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
+//	req.NoError(err)
+//	req.Equal(apiKeyVal, key.(string))
+//}
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
@@ -230,7 +231,8 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
-	checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
@@ -242,7 +244,8 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(0, len(inputKey.LogicalClusters))
-	checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
@@ -254,7 +257,8 @@ func (suite *APITestSuite) TestDeleteApiKey() {
 	req.True(suite.apiMock.DeleteCalled())
 	inputKey := suite.apiMock.DeleteCalls()[0].Arg1
 	req.Equal(inputKey.Key, apiKeyVal)
-	checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestListSrApiKey() {

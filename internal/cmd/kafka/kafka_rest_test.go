@@ -6,6 +6,11 @@ import (
 	neturl "net/url"
 	"testing"
 
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -137,6 +142,15 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	req.Contains(r.Error(), url)
 	req.Contains(r.Error(), neturlMsg)
 
+	neturlError.Err = fmt.Errorf(SelfSignedCertError)
+	r = kafkaRestError(url, &neturlError, nil)
+	req.NotNil(r)
+	req.Contains(r.Error(), "establish")
+	req.Contains(r.Error(), url)
+	e, ok := r.(errors.ErrorWithSuggestions)
+	req.True(ok)
+	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_CA_CERT_PATH")
+
 	openAPIError := kafkarestv3.GenericOpenAPIError{}
 
 	r = kafkaRestError(url, openAPIError, nil)
@@ -161,6 +175,33 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	req.Contains(r.Error(), "myhost")
 	req.Contains(r.Error(), "my-path")
 }
+
+func (suite *KafkaRestTestSuite) TestSetServerURL() {
+	req := suite.Require()
+	cmd := cobra.Command{Use: "command"}
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().CountP("verbose", "v", "verbosity")
+	client := kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
+
+	setServerURL(&cmd, client, "localhost:8090")
+	req.Equal("http://localhost:8090/v3", client.GetConfig().BasePath)
+
+	setServerURL(&cmd, client, "localhost:8090/kafka/v3/")
+	req.Equal("http://localhost:8090/kafka/v3", client.GetConfig().BasePath)
+
+	setServerURL(&cmd, client, "localhost:8090/")
+	req.Equal("http://localhost:8090/v3", client.GetConfig().BasePath)
+
+	_ = cmd.Flags().Set("client-cert-path", "path")
+	setServerURL(&cmd, client, "localhost:8090/kafka")
+	req.Equal("https://localhost:8090/kafka/v3", client.GetConfig().BasePath)
+
+	_ = cmd.Flags().Set("client-cert-path", "")
+	_ = cmd.Flags().Set("ca-cert-path", "path")
+	setServerURL(&cmd, client, "localhost:8090/kafka")
+	req.Equal("https://localhost:8090/kafka/v3", client.GetConfig().BasePath)
+}
+
 func TestKafkaRestTestSuite(t *testing.T) {
 	suite.Run(t, new(KafkaRestTestSuite))
 }

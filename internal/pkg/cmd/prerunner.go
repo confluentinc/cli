@@ -2,16 +2,18 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/form"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -37,6 +39,7 @@ type PreRunner interface {
 	Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
+	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 }
 
 const DoNotTrack = "do-not-track-analytics"
@@ -105,6 +108,10 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 	cmd.Command = command
 
 	return cmd
+}
+
+func (cmd *AuthenticatedCLICommand) SetPersistentPreRunE(persistenPreRunE func(cmd *cobra.Command, args []string) error) {
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(persistenPreRunE)
 }
 
 // Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
@@ -555,20 +562,94 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	caCertFile, err := os.Open(caCertPath)
-	if err == nil {
-		defer caCertFile.Close()
-		mdsConfig.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
-		if err != nil {
-			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsConfig.HTTPClient = utils.DefaultClient()
-		}
-	} else {
+	client, err := utils.SelfSignedCertClientFromPath(caCertPath, r.Logger)
+	if err != nil {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsConfig.HTTPClient = utils.DefaultClient()
-
+	} else {
+		mdsConfig.HTTPClient = client
 	}
 	return mds.NewAPIClient(mdsConfig)
+}
+
+// InitializeOnPremKafkaRest provides PreRun operations for on-prem commands that require a Kafka REST Proxy client. (ccloud RP commands use Authenticated prerun)
+// Initializes a default KafkaRestClient
+func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		err := r.AuthenticatedWithMDS(command)(cmd, args)
+		var useMdsToken bool     // pass mds token as bearer token otherwise use http basic auth
+		useMdsToken = err == nil // no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
+		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
+			cfg := krsdk.NewConfiguration()
+			restFlags, err := r.FlagResolver.ResolveOnPremKafkaRestFlags(cmd)
+			if err != nil {
+				return nil, err
+			}
+			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, restFlags.caCertPath, restFlags.clientCertPath, restFlags.clientKeyPath, r.Logger)
+			if err != nil {
+				return nil, err
+			}
+			client := krsdk.NewAPIClient(cfg)
+			if restFlags.noAuth || restFlags.clientCertPath != "" { // credentials not needed for mTLS auth
+				return &KafkaREST{
+					Client:  client,
+					Context: context.Background(),
+				}, nil
+			}
+			var restContext context.Context
+			if useMdsToken && !restFlags.prompt {
+				r.Logger.Log("found mds token to use as bearer")
+				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
+			} else { // no mds token, then prompt for basic auth creds
+				if !restFlags.prompt {
+					utils.Println(cmd, errors.MDSTokenNotFoundMsg)
+				}
+				f := form.New(
+					form.Field{ID: "username", Prompt: "Username"},
+					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
+				)
+				if err := f.Prompt(command.Command, form.NewPrompt(os.Stdin)); err != nil {
+					return nil, err
+				}
+				restContext = context.WithValue(context.Background(), krsdk.ContextBasicAuth, krsdk.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
+			}
+			return &KafkaREST{
+				Client:  client,
+				Context: restContext,
+			}, nil
+		})
+		command.KafkaRESTProvider = &provider
+		return nil
+	}
+}
+
+func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
+	if caCertPath == "" && os.Getenv(pauth.ConfluentCaCertPathEnvVar) != "" {
+		logger.Log(fmt.Sprintf("found ca cert path in %s", pauth.ConfluentCaCertPathEnvVar))
+		caCertPath = os.Getenv(pauth.ConfluentCaCertPathEnvVar)
+	}
+	// use cert path flag or env var if it was passed
+	if caCertPath != "" {
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath, logger)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+		// use cert path from config if available
+	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath, logger)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+	} else if clientCertPath != "" && clientKeyPath != "" {
+		client, err := utils.CustomCAAndClientCertClient("", clientCertPath, clientKeyPath, logger)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+	}
+	return http.DefaultClient, nil
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
@@ -765,18 +846,12 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	caCertFile, err := os.Open(caCertPath)
-	if err == nil {
-		defer caCertFile.Close()
-		mdsv2Config.HTTPClient, err = utils.SelfSignedCertClient(caCertFile, r.Logger)
-		if err != nil {
-			r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-			mdsv2Config.HTTPClient = utils.DefaultClient()
-		}
-	} else {
+	client, err := utils.SelfSignedCertClientFromPath(caCertPath, r.Logger)
+	if err != nil {
 		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsv2Config.HTTPClient = utils.DefaultClient()
-
+	} else {
+		mdsv2Config.HTTPClient = client
 	}
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
@@ -794,6 +869,7 @@ func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand,
 	if isTest {
 		return getTestRestClient(kafkaRestURL, kafkaClusterConfig.Bootstrap)
 	}
+	kafkarestv3.NewConfiguration()
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath: kafkaRestURL,
 	}), nil
@@ -803,11 +879,9 @@ func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand,
 // This function is used for integration testing
 func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, error) {
 	testClient := http.DefaultClient
-	testClient.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // HACK required for https mocking (when Rest URL is in cluster config we can use http)
-	}
 	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
-	testBaseUrl := strings.Replace(baseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
+	testBaseUrl := strings.Replace(baseUrl, "https", "http", 1)           // HACK so we don't have to mock https
+	testBaseUrl = strings.Replace(testBaseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath:   testBaseUrl,
 		HTTPClient: testClient,

@@ -14,8 +14,8 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
@@ -213,7 +213,8 @@ func (suite *KSQLTestSuite) TestCreateKSQL() {
 	cfg := suite.ksqlc.CreateCalls()[0].Arg1
 	req.Equal("", cfg.Image)
 	req.Equal(uint32(4), cfg.TotalNumCsu)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
@@ -229,7 +230,8 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	req.Equal(uint32(4), cfg.TotalNumCsu)
 	req.Equal(keyString, cfg.KafkaApiKey.Key)
 	req.Equal(keySecretString, cfg.KafkaApiKey.Secret)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
@@ -293,7 +295,8 @@ func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.DeleteCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
 func (suite *KSQLTestSuite) TestServerClusterFlagComplete() {

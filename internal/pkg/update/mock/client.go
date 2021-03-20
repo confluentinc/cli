@@ -11,34 +11,34 @@ import (
 // Client is a mock of Client interface
 type Client struct {
 	lockCheckForUpdates sync.Mutex
-	CheckForUpdatesFunc func(name, currentVersion string, forceCheck bool) (bool, string, error)
+	CheckForUpdatesFunc func(cliName, currentVersion string, forceCheck bool) (bool, string, error)
 
 	lockGetLatestReleaseNotes sync.Mutex
 	GetLatestReleaseNotesFunc func() (string, string, error)
 
 	lockPromptToDownload sync.Mutex
-	PromptToDownloadFunc func(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool
+	PromptToDownloadFunc func(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
 
 	lockUpdateBinary sync.Mutex
-	UpdateBinaryFunc func(name, version, path string) error
+	UpdateBinaryFunc func(cliName, version, path string) error
 
 	calls struct {
 		CheckForUpdates []struct {
-			Name           string
+			CliName        string
 			CurrentVersion string
 			ForceCheck     bool
 		}
 		GetLatestReleaseNotes []struct {
 		}
 		PromptToDownload []struct {
-			Name          string
+			CliName       string
 			CurrVersion   string
 			LatestVersion string
 			ReleaseNotes  string
 			Confirm       bool
 		}
 		UpdateBinary []struct {
-			Name    string
+			CliName string
 			Version string
 			Path    string
 		}
@@ -46,7 +46,7 @@ type Client struct {
 }
 
 // CheckForUpdates mocks base method by wrapping the associated func.
-func (m *Client) CheckForUpdates(name, currentVersion string, forceCheck bool) (bool, string, error) {
+func (m *Client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (bool, string, error) {
 	m.lockCheckForUpdates.Lock()
 	defer m.lockCheckForUpdates.Unlock()
 
@@ -55,18 +55,18 @@ func (m *Client) CheckForUpdates(name, currentVersion string, forceCheck bool) (
 	}
 
 	call := struct {
-		Name           string
+		CliName        string
 		CurrentVersion string
 		ForceCheck     bool
 	}{
-		Name:           name,
+		CliName:        cliName,
 		CurrentVersion: currentVersion,
 		ForceCheck:     forceCheck,
 	}
 
 	m.calls.CheckForUpdates = append(m.calls.CheckForUpdates, call)
 
-	return m.CheckForUpdatesFunc(name, currentVersion, forceCheck)
+	return m.CheckForUpdatesFunc(cliName, currentVersion, forceCheck)
 }
 
 // CheckForUpdatesCalled returns true if CheckForUpdates was called at least once.
@@ -79,7 +79,7 @@ func (m *Client) CheckForUpdatesCalled() bool {
 
 // CheckForUpdatesCalls returns the calls made to CheckForUpdates.
 func (m *Client) CheckForUpdatesCalls() []struct {
-	Name           string
+	CliName        string
 	CurrentVersion string
 	ForceCheck     bool
 } {
@@ -124,7 +124,7 @@ func (m *Client) GetLatestReleaseNotesCalls() []struct {
 }
 
 // PromptToDownload mocks base method by wrapping the associated func.
-func (m *Client) PromptToDownload(name, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
+func (m *Client) PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	m.lockPromptToDownload.Lock()
 	defer m.lockPromptToDownload.Unlock()
 
@@ -133,13 +133,13 @@ func (m *Client) PromptToDownload(name, currVersion, latestVersion, releaseNotes
 	}
 
 	call := struct {
-		Name          string
+		CliName       string
 		CurrVersion   string
 		LatestVersion string
 		ReleaseNotes  string
 		Confirm       bool
 	}{
-		Name:          name,
+		CliName:       cliName,
 		CurrVersion:   currVersion,
 		LatestVersion: latestVersion,
 		ReleaseNotes:  releaseNotes,
@@ -148,7 +148,7 @@ func (m *Client) PromptToDownload(name, currVersion, latestVersion, releaseNotes
 
 	m.calls.PromptToDownload = append(m.calls.PromptToDownload, call)
 
-	return m.PromptToDownloadFunc(name, currVersion, latestVersion, releaseNotes, confirm)
+	return m.PromptToDownloadFunc(cliName, currVersion, latestVersion, releaseNotes, confirm)
 }
 
 // PromptToDownloadCalled returns true if PromptToDownload was called at least once.
@@ -161,7 +161,7 @@ func (m *Client) PromptToDownloadCalled() bool {
 
 // PromptToDownloadCalls returns the calls made to PromptToDownload.
 func (m *Client) PromptToDownloadCalls() []struct {
-	Name          string
+	CliName       string
 	CurrVersion   string
 	LatestVersion string
 	ReleaseNotes  string
@@ -174,7 +174,7 @@ func (m *Client) PromptToDownloadCalls() []struct {
 }
 
 // UpdateBinary mocks base method by wrapping the associated func.
-func (m *Client) UpdateBinary(name, version, path string) error {
+func (m *Client) UpdateBinary(cliName, version, path string) error {
 	m.lockUpdateBinary.Lock()
 	defer m.lockUpdateBinary.Unlock()
 
@@ -183,18 +183,18 @@ func (m *Client) UpdateBinary(name, version, path string) error {
 	}
 
 	call := struct {
-		Name    string
+		CliName string
 		Version string
 		Path    string
 	}{
-		Name:    name,
+		CliName: cliName,
 		Version: version,
 		Path:    path,
 	}
 
 	m.calls.UpdateBinary = append(m.calls.UpdateBinary, call)
 
-	return m.UpdateBinaryFunc(name, version, path)
+	return m.UpdateBinaryFunc(cliName, version, path)
 }
 
 // UpdateBinaryCalled returns true if UpdateBinary was called at least once.
@@ -207,7 +207,7 @@ func (m *Client) UpdateBinaryCalled() bool {
 
 // UpdateBinaryCalls returns the calls made to UpdateBinary.
 func (m *Client) UpdateBinaryCalls() []struct {
-	Name    string
+	CliName string
 	Version string
 	Path    string
 } {

@@ -31,6 +31,7 @@ const (
 	invites             = "/api/organizations/{id}/invites"
 	user                = "/api/users/{id}"
 	users               = "/api/users"
+	user_profile        = "/api/user_profiles/{id}"
 	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
 	connectorPause      = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
 	connectorResume     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
@@ -109,6 +110,7 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
 	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
+	c.HandleFunc(user_profile, c.HandleUserProfiles(t))
 }
 
 func (c *CloudRouter) addOrgRoutes(t *testing.T) {
