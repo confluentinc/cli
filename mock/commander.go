@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -126,6 +126,18 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra
 			return &errors.NoContextError{CLIName: c.Config.CLIName}
 		}
 		command.Context = ctx
+		return nil
+	}
+}
+
+// UseKafkaRest - The PreRun function registered by the mock prerunner for UseKafkaRestCLICommand
+func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		err := c.AuthenticatedWithMDS(command)(cmd, args)
+		if err != nil {
+			return err
+		}
+		command.KafkaRESTProvider = c.KafkaRESTProvider
 		return nil
 	}
 }

@@ -58,5 +58,6 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		c.AddCommand(NewLinkCommand(c.prerunner))
 	} else {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+		c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
 	}
 }

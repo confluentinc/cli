@@ -42,12 +42,16 @@ var (
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",
 	}
-	clusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("kafka acl", "kafka topic"),
+	ccloudClusterScopedCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("ccloud kafka acl", "ccloud kafka topic"),
 		// only on children of kafka topic commands
 		linter.ExcludeCommand("kafka topic"),
 		//only on children of kafka acl commands
 		linter.ExcludeCommand("kafka acl"),
+	}
+	confluentClusterScopedCommands = []linter.RuleFilter{
+		linter.IncludeCommandContains("confluent kafka topic"),
+		linter.ExcludeCommand("kafka topic"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
@@ -108,9 +112,13 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("admin"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
-	linter.Filter(linter.RequireFlag("cluster", true), clusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("cluster", "string"), clusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), clusterScopedCommands...),
+	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagType("cluster", "string"), ccloudClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), ccloudClusterScopedCommands...),
+	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
+	linter.Filter(linter.RequireFlag("url", true), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
+	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
@@ -152,7 +160,7 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"compression-codec", "connect-cluster-id", "consumer-property", "enable-systest-events",
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
-			"producer-property", "remote-secrets-file", "request-required-acks", "request-timeout-ms",
+			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
 			"value-deserializer", "bootstrap-servers",
 		),
@@ -186,7 +194,7 @@ var flagRules = []linter.FlagRule{
 			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
-			"skip-message-on-error", "socket-buffer-size",
+			"skip-message-on-error", "socket-buffer-size", "client-cert-path", "client-key-path",
 		),
 	),
 	linter.RequireFlagRealWords('-'),

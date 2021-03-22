@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"

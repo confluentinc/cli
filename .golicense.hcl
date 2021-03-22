@@ -12,7 +12,7 @@ override = {
   "github.com/magiconair/properties" = "BSD-2-Clause",
 
   // These aren't true (yet) but they prevent us from erroring out on proprietary bits for now
-  "github.com/confluentinc/ccloud-sdk-go" = "Apache-2.0",
+  "github.com/confluentinc/ccloud-sdk-go-v1" = "Apache-2.0",
   "github.com/confluentinc/ccloudapis" = "Apache-2.0",
   "github.com/confluentinc/protoc-gen-ccloud" = "Apache-2.0",
   "github.com/confluentinc/go-printer" = "Apache-2.0",

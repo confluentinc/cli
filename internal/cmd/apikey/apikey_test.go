@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -52,6 +53,7 @@ const (
 
 var (
 	apiValue = &schedv1.ApiKey{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
 		UserId:      serviceAccountId,
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
@@ -60,6 +62,7 @@ var (
 		Id:          apiKeyResourceId,
 	}
 	auditLogApiValue = &schedv1.ApiKey{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
 		UserId:      auditLogServiceAccountId,
 		Key:         auditLogApiKeyVal,
 		Secret:      auditLogApiKeySecretVal,
@@ -94,6 +97,13 @@ func (suite *APITestSuite) SetupTest() {
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &v0.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	// Set up audit logs
+	ctx.State.Auth.Organization.AuditLog = &v1.AuditLog{
+		ClusterId:        cluster.ID,
+		AccountId:        "env-zy987",
+		ServiceAccountId: auditLogServiceAccountId,
+		TopicName:        "confluent-audit-log-events",
+	}
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
@@ -305,21 +315,19 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 
 // Audit Log Destination Clusters are kafka clusters, however their API keys are created by internal service accounts
 func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
-	// Set up audit logs
-	suite.conf.Context().State.Auth.Organization.AuditLog = &v1.AuditLog{
-		ClusterId:        suite.kafkaCluster.Id,
-		AccountId:        "env-zy987",
-		ServiceAccountId: auditLogServiceAccountId,
-		TopicName:        "confluent-audit-log-events",
-	}
 	cmd := suite.newCmd()
+	buf := new(bytes.Buffer)
 	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
+	cmd.SetOut(buf)
+
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.ListCalled())
 	inputKey := suite.apiMock.ListCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	req.Contains(buf.String(), "auditlog service account")
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {

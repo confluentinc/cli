@@ -19,7 +19,7 @@ import (
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -48,7 +48,6 @@ var (
 	ccloudTestBin    = ccloudTestBinNormal
 	confluentTestBin = confluentTestBinNormal
 	covCollector     *bincover.CoverageCollector
-	testBackend      *test_server.TestBackend
 )
 
 const (
@@ -98,6 +97,7 @@ type CLITest struct {
 // CLITestSuite is the CLI integration tests.
 type CLITestSuite struct {
 	suite.Suite
+	TestBackend *test_server.TestBackend
 }
 
 // TestCLI runs the CLI integration test suite.
@@ -125,7 +125,7 @@ func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 	err := covCollector.Setup()
 	req.NoError(err)
-	testBackend = test_server.StartTestBackend(s.T())
+	s.TestBackend = test_server.StartTestBackend(s.T())
 
 	// dumb but effective
 	err = os.Chdir("..")
@@ -154,7 +154,7 @@ func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
 	_ = os.Unsetenv("XX_CCLOUD_RBAC")
 	_ = covCollector.TearDown()
-	testBackend.Close()
+	s.TestBackend.Close()
 }
 
 func (s *CLITestSuite) TestConfluentHelp() {
@@ -211,7 +211,7 @@ func (s *CLITestSuite) TestUserAgent() {
 		return test_server.NewCloudTestBackendFromRouters(cloudRouter, kafkaRouter)
 	}
 	backend := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
-		"ccloud-sdk-go/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
+		"ccloud-sdk-go-v1/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
 	defer backend.Close()
 	serverURL := backend.GetCloudUrl()
 	env := []string{fmt.Sprintf("%s=valid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
@@ -320,7 +320,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "ccloud")
 		}
-		loginURL := getLoginURL("ccloud", tt)
+		loginURL := s.getLoginURL("ccloud", tt)
 		if tt.login == "default" {
 			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
@@ -379,7 +379,9 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t, "confluent")
 		}
-		loginURL := getLoginURL("confluent", tt)
+
+		// Executes login command if test specifies
+		loginURL := s.getLoginURL("confluent", tt)
 		if tt.login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
 			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
@@ -388,7 +390,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 			}
 		}
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, confluentTestBin, []string{}, tt.args, tt.wantErrCode, covCollectorOptions...)
+		output := runCommand(t, confluentTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 
 		if strings.HasPrefix(tt.args, "config context list") ||
 			strings.HasPrefix(tt.args, "config context current") {
@@ -400,15 +402,15 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 	})
 }
 
-func getLoginURL(cliName string, tt CLITest) string {
+func (s *CLITestSuite) getLoginURL(cliName string, tt CLITest) string {
 	if tt.loginURL != "" {
 		return tt.loginURL
 	}
 	switch cliName {
 	case "ccloud":
-		return testBackend.GetCloudUrl()
+		return s.TestBackend.GetCloudUrl()
 	case "confluent":
-		return testBackend.GetMdsUrl()
+		return s.TestBackend.GetMdsUrl()
 	default:
 		return ""
 	}

@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"io/ioutil"
 	"strings"
 
@@ -246,7 +247,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 				linkConfigs = append(linkConfigs, s)
 			}
 		}
-		configMap, err = toMap(linkConfigs)
+		configMap, err = kafka.ToMap(linkConfigs)
 		if err != nil {
 			return err
 		}
@@ -333,7 +334,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	configMap, err := toMap(configs)
+	configMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}

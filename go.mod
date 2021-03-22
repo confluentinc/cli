@@ -26,7 +26,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.731.0
 	github.com/confluentinc/cc-structs/operator v0.731.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go v0.0.70
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
@@ -60,7 +60,6 @@ require (
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.2.1
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/imdario/mergo v0.3.11

@@ -10,7 +10,7 @@ import (
 
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 // Compile-time check interface adherence

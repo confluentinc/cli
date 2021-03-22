@@ -1,12 +1,15 @@
 package cmd_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
@@ -17,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,7 +34,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 
-	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
@@ -848,4 +851,52 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestInitializeOnPremKafkaRest(t *testing.T) {
+	cfg := v3.AuthenticatedConfluentConfigMock()
+	cfg.Context().State.AuthToken = validAuthToken
+	r := getPreRunBase()
+	r.Config = cfg
+	cobraCmd := &cobra.Command{Use: "test"}
+	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
+	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
+	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
+		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		require.NoError(t, err)
+		kafkaRest, err := cmd.GetKafkaREST()
+		require.NoError(t, err)
+		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
+		require.True(t, ok)
+		require.Equal(t, validAuthToken, auth)
+	})
+	r.Config.Context().State.AuthToken = ""
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
+		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			GetConfluentPrerunCredentialsFromNetrcFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+			GetConfluentPrerunCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+			GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+		}
+		r.LoginCredentialsManager = mockLoginCredentialsManager
+		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		require.NoError(t, err)
+		kafkaRest, err := cmd.GetKafkaREST()
+		require.Error(t, err)
+		require.Nil(t, kafkaRest)
+		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
+	})
 }

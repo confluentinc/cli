@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -26,11 +28,24 @@ type FlagResolver interface {
 	ResolveResourceId(cmd *cobra.Command) (resourceType string, resourceId string, err error)
 	ResolveApiKeyFlag(cmd *cobra.Command) (string, error)
 	ResolveApiKeySecretFlag(cmd *cobra.Command) (string, error)
+	ResolveOnPremKafkaRestFlags(cmd *cobra.Command) (*OnPremKafkaRestFlagValues, error)
+	//ResolveCaCertPathFlag(cmd *cobra.Command) (string, error)
+	//ResolveNoAuthFlag(cmd *cobra.Command) (bool, error)
+	//ResolveClientCertAndKeyPathsFlag(cmd *cobra.Command) (string, string, error)
 }
 
 type FlagResolverImpl struct {
 	Prompt form.Prompt
 	Out    io.Writer
+}
+
+type OnPremKafkaRestFlagValues struct {
+	url            string
+	caCertPath     string
+	clientCertPath string
+	clientKeyPath  string
+	noAuth         bool
+	prompt         bool
 }
 
 // ValueFrom reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
@@ -185,4 +200,113 @@ func (r *FlagResolverImpl) ResolveApiKeySecretFlag(cmd *cobra.Command) (string, 
 		return secret, nil
 	}
 	return "", nil
+}
+
+func (r *FlagResolverImpl) ResolveOnPremKafkaRestFlags(cmd *cobra.Command) (*OnPremKafkaRestFlagValues, error) {
+	flagValues := new(OnPremKafkaRestFlagValues)
+
+	url, err := r.resolveURLFlag(cmd)
+	if err != nil {
+		return flagValues, err
+	}
+	flagValues.url = url
+
+	caCertPath, err := r.resolveCaCertPathFlag(cmd)
+	if err != nil {
+		return flagValues, err
+	}
+	flagValues.caCertPath = caCertPath
+
+	clientCertPath, clientKeyPath, err := r.resolveClientCertAndKeyPathsFlag(cmd)
+	if err != nil {
+		return flagValues, err
+	}
+	flagValues.clientCertPath = clientCertPath
+	flagValues.clientKeyPath = clientKeyPath
+
+	noAuth, err := r.resolveNoAuthFlag(cmd)
+	if err != nil {
+		return flagValues, err
+	}
+	flagValues.noAuth = noAuth
+
+	prompt, err := r.resolvePromptFlag(cmd)
+	if err != nil {
+		return flagValues, err
+	}
+	flagValues.prompt = prompt
+
+	return flagValues, nil
+}
+
+func (r *FlagResolverImpl) resolveURLFlag(cmd *cobra.Command) (string, error) {
+	const url = "url"
+	if cmd.Flags().Changed(url) {
+		url, err := cmd.Flags().GetString(url)
+		if err != nil {
+			return "", err
+		}
+		return url, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) resolveCaCertPathFlag(cmd *cobra.Command) (string, error) {
+	const certPathFlag = "ca-cert-path"
+	if cmd.Flags().Changed(certPathFlag) {
+		path, err := cmd.Flags().GetString(certPathFlag)
+		if err != nil {
+			return "", err
+		}
+		return path, nil
+	}
+	return "", nil
+}
+
+func (r *FlagResolverImpl) resolveClientCertAndKeyPathsFlag(cmd *cobra.Command) (string, string, error) {
+	const clientCertPathFlag = "client-cert-path"
+	var clientCertPath string
+	var err error
+	if cmd.Flags().Changed(clientCertPathFlag) {
+		clientCertPath, err = cmd.Flags().GetString(clientCertPathFlag)
+		if err != nil {
+			return "", "", err
+		}
+	}
+	const clientKeyPathFlag = "client-key-path"
+	var clientKeyPath string
+	if cmd.Flags().Changed(clientKeyPathFlag) {
+		clientKeyPath, err = cmd.Flags().GetString(clientKeyPathFlag)
+		if err != nil {
+			return "", "", err
+		}
+	}
+	if (clientCertPath != "" && clientKeyPath == "") || (clientCertPath == "" && clientKeyPath != "") {
+		return "", "", errors.New(errors.NeedClientCertAndKeyPathsErrorMsg)
+	}
+	return clientCertPath, clientKeyPath, nil
+}
+
+func (r *FlagResolverImpl) resolveNoAuthFlag(cmd *cobra.Command) (bool, error) {
+	const noAuthFlag = "no-auth"
+	if cmd.Flags().Changed(noAuthFlag) {
+		noAuth, err := cmd.Flags().GetBool(noAuthFlag)
+		if err != nil {
+			return false, err
+		}
+		return noAuth, nil
+	}
+	return false, nil
+}
+
+func (r *FlagResolverImpl) resolvePromptFlag(cmd *cobra.Command) (bool, error) {
+	const prompt = "prompt"
+	if cmd.Flags().Changed(prompt) {
+		prompt, err := cmd.Flags().GetBool(prompt)
+		if err != nil {
+			return false, err
+		}
+		return prompt, nil
+	}
+	return false, nil
 }
