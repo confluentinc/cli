@@ -1,8 +1,10 @@
 package kafka
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"net/http"
 	neturl "net/url"
 	"os"
@@ -96,6 +98,17 @@ func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 		}
 	}
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
+}
+
+// Used for on-prem KafkaRest commands
+func getKafkaRestClientAndContext(cmd *cobra.Command, kafkaRest *cmd.KafkaREST) (*kafkarestv3.APIClient, context.Context, error) {
+	url, err := getKafkaRestUrl(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+	kafkaRestClient := kafkaRest.Client
+	setServerURL(cmd, kafkaRestClient, url)
+	return kafkaRestClient, kafkaRest.Context, nil
 }
 
 // Used for on-prem KafkaRest commands

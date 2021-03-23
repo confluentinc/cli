@@ -180,6 +180,26 @@ func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {
 	}
 }
 
+func (s *CLITestSuite) TestConfluentKafkaConsumerGroupList() {
+
+}
+
+func (s *CLITestSuite) TestConfluentKafkaConsumerGroupDescribe() {
+
+}
+
+func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagSummarize() {
+
+}
+
+func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagList() {
+
+}
+
+func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagDescribe() {
+
+}
+
 func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{

@@ -38,6 +38,14 @@ var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
 	"cluster": cmd.ContextSet(),
 }
 
+var OnPremGroupSubcommandFlags = map[string]*pflag.FlagSet{
+	"consumer-group": cmd.ContextSet(),
+}
+
+var OnPremLagSubcommandFlags = map[string]*pflag.FlagSet{
+	"lag": cmd.ContextSet(),
+}
+
 var OnPremTopicSubcommandFlags = map[string]*pflag.FlagSet{
 	"topic": cmd.ContextSet(),
 }
