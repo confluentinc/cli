@@ -12,7 +12,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -208,6 +207,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	users := map[int32]*orgv1.User{}
+
 	serviceAccounts, err := getServiceAccountsMap(c.Client)
 	if err != nil {
 		return err
@@ -232,7 +232,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if _, ok := serviceAccounts[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
-			if user, ok := users[apiKey.UserId]; ok {
+			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
+			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
+				email = "<auditlog service account>"
+			} else if user, ok := users[apiKey.UserId]; ok {
 				if user != nil {
 					email = user.Email
 				} else {
