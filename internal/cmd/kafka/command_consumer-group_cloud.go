@@ -139,7 +139,7 @@ type lagDataStruct struct {
 func NewGroupCommand(prerunner pcmd.PreRunner) *groupCommand {
 	command := &cobra.Command{
 		Use:   "consumer-group",
-		Short: "Manage Kafka consumer-groups",
+		Short: "Manage Kafka consumer groups",
 	}
 	groupCmd := &groupCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, GroupSubcommandFlags),
@@ -210,8 +210,6 @@ func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 			kafkaREST.Context,
 			lkc)
 	if err != nil {
-		fmt.Println("Error encountered when calling Consumer Groups Get: ")
-		fmt.Println(err)
 		return err
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, groupListFields, groupListHumanLabels, groupListStructuredLabels)
@@ -256,6 +254,18 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	groupData := getGroupData(groupCmdResp, groupCmdConsumersResp)
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
+	if outputOption == output.Human.String() {
+		return printGroupHumanDescribe(cmd, groupData)
+	}
+	return output.StructuredOutput(outputOption, groupData)
+}
+
+func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
 	groupData := &groupData{}
 	groupData.ClusterId = groupCmdResp.ClusterId
 	groupData.ConsumerGroupId = groupCmdResp.ConsumerGroupId
@@ -270,21 +280,14 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 			instanceId = *consumerResp.InstanceId
 		}
 		consumerData := consumerData{
-			ConsumerGroupId: consumerGroupId,
+			ConsumerGroupId: groupCmdResp.ConsumerGroupId,
 			ConsumerId:      consumerResp.ConsumerId,
 			InstanceId:      instanceId,
 			ClientId:        consumerResp.ClientId,
 		}
 		groupData.Consumers[i] = consumerData
 	}
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-	if outputOption == output.Human.String() {
-		return printGroupHumanDescribe(cmd, groupData)
-	}
-	return output.StructuredOutput(outputOption, groupData)
+	return groupData
 }
 
 func getStringBroker(relationship kafkarestv3.Relationship) string {
@@ -345,7 +348,7 @@ func NewLagCommand(prerunner pcmd.PreRunner) *lagCommand {
 func (lagCmd *lagCommand) init() {
 	summarizeLagCmd := &cobra.Command{
 		Use:   "summarize <id>",
-		Short: "Summarize consumer lag for a Kafka consumer-group.",
+		Short: "Summarize consumer lag for a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.summarizeLag),
 		Example: examples.BuildExampleString(
@@ -362,7 +365,7 @@ func (lagCmd *lagCommand) init() {
 
 	listLagCmd := &cobra.Command{
 		Use:   "list <id>",
-		Short: "List consumer lags for a Kafka consumer-group.",
+		Short: "List consumer lags for a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.listLag),
 		Example: examples.BuildExampleString(
@@ -378,7 +381,7 @@ func (lagCmd *lagCommand) init() {
 
 	getLagCmd := &cobra.Command{
 		Use:   "get <id>",
-		Short: "Get consumer lag for a partition consumed by a Kafka consumer-group.",
+		Short: "Get consumer lag for a partition consumed by a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
 		Example: examples.BuildExampleString(
