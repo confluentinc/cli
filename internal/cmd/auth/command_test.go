@@ -208,6 +208,7 @@ func TestLoginSuccess(t *testing.T) {
 	suite := []struct {
 		cliName string
 		args    []string
+		setEnv  bool
 	}{
 		{
 			cliName: "ccloud",
@@ -219,15 +220,25 @@ func TestLoginSuccess(t *testing.T) {
 				"--url=http://localhost:8090",
 			},
 		},
+		{
+			cliName: "confluent",
+			setEnv: true,
+		},
 	}
 
 	for _, s := range suite {
 		// Login to the CLI control plane
+		if s.setEnv {
+			_ = os.Setenv(pauth.ConfluentURLEnvVar, "http://localhost:8090")
+		}
 		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
+		if s.setEnv {
+			_ = os.Unsetenv(pauth.ConfluentURLEnvVar)
+		}
 	}
 }
 
@@ -478,7 +489,7 @@ func TestURLRequiredWithMDS(t *testing.T) {
 	loginCmd, _ := newLoginCmd(auth, nil, "confluent", req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
-	req.Contains(err.Error(), "required flag(s) \"url\" not set")
+	req.Contains(err.Error(), errors.NoURLFlagOrMdsEnvVarErrorMsg)
 }
 
 func TestLogout(t *testing.T) {
@@ -499,6 +510,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 		name                string
 		caCertPathFlag      string
 		expectedContextName string
+		setEnv				bool
+		envCertPath			string
 	}{
 		{
 			name:                "specified ca-cert-path",
@@ -510,25 +523,47 @@ func Test_SelfSignedCerts(t *testing.T) {
 			caCertPathFlag:      "",
 			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090",
 		},
+		{
+			name:                "env var ca-cert-path flag",
+			setEnv: 			 true,
+			envCertPath: 		 "testcert.pem",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				os.Setenv(pauth.ConfluentCaCertPathEnvVar, "testcert.pem")
+			}
 			cfg := v3.New(&config.Params{
 				CLIName:    "confluent",
 				MetricSink: nil,
 				Logger:     log.New(),
 			})
-			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.caCertPathFlag)
+			var expectedCaCert string
+			if tt.setEnv {
+				expectedCaCert = tt.envCertPath
+			} else {
+				expectedCaCert = tt.caCertPathFlag
+			}
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
 			_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", tt.caCertPathFlag))
 			req.NoError(err)
 
 			ctx := cfg.Context()
 
-			// ensure the right CaCertPath is stored in Config
-			req.Equal(tt.caCertPathFlag, ctx.Platform.CaCertPath)
+			if tt.setEnv {
+				req.Equal(tt.envCertPath, ctx.Platform.CaCertPath)
+			} else {
+				// ensure the right CaCertPath is stored in Config
+				req.Equal(tt.caCertPathFlag, ctx.Platform.CaCertPath)
+			}
 
 			req.Equal(tt.expectedContextName, ctx.Name)
+			if tt.setEnv {
+				os.Unsetenv(pauth.ConfluentCaCertPathEnvVar)
+			}
 		})
 	}
 }
