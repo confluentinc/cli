@@ -113,7 +113,19 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
 		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+	}
 
+	resetConfiguration(s.T(), "ccloud")
+
+	for _, tt := range tests {
+		tt.login = "default"
+		tt.workflow = true
+		s.runCcloudTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {
+	tests := []CLITest{
 		{args: "kafka consumer-group --help", fixture: "kafka/consumer-group-help.golden"},
 
 		{args: "kafka consumer-group list --help", fixture: "kafka/consumer-group-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
@@ -150,9 +162,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer-group-lag-get-success-json.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1 -o yaml", fixture: "kafka/consumer-group-lag-get-success-yaml.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 	}
-
 	resetConfiguration(s.T(), "ccloud")
-
 	for _, tt := range tests {
 		tt.login = "default"
 		tt.workflow = true
