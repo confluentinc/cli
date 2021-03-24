@@ -1,0 +1,5 @@
+No session token found, please enter user credentials. To avoid being prompted, run "confluent login".
+Username: Password:    Cluster  |  ConsumerGroup   | Simple | State   
++-----------+------------------+--------+--------+
+  cluster-1 | consumer-group-1 | true   | STABLE  
+  cluster-1 | consumer-group-2 | true   | DEAD    

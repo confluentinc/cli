@@ -181,23 +181,101 @@ func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {
 }
 
 func (s *CLITestSuite) TestConfluentKafkaConsumerGroupList() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		// Test help
+		{args: fmt.Sprintf("kafka consumer-group --help"), fixture: "kafka/confluent/group/help.golden"},
+		{args: fmt.Sprintf("kafka consumer-group list --help"), fixture: "kafka/confluent/group/list-help.golden"},
+		// Test correct usage
+		{args: fmt.Sprintf("kafka consumer-group list --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/list.golden"},
+		// Test with basic auth input
+		{args: fmt.Sprintf("kafka consumer-group list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/group/list-with-auth.golden"},
+		{args: fmt.Sprintf("kafka consumer-group list --url %s", kafkaRestURL), login: "default", fixture: "kafka/confluent/group/list-with-auth-from-login.golden"},
+		{args: fmt.Sprintf("kafka consumer-group list --url %s --prompt", kafkaRestURL), login: "default", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/group/list-with-auth-prompt.golden"},
+		// Test with CONFLUENT_REST_URL env var
+		{args: "kafka consumer-group list --no-auth", fixture: "kafka/confluent/group/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		// Test failure when only one of client-cert-path or client-key-path are provided
+		{args: "kafka consumer-group list --client-cert-path cert.crt", wantErrCode: 1, fixture: "kafka/confluent/group/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		{args: "kafka consumer-group list --client-key-path cert.key", wantErrCode: 1, fixture: "kafka/confluent/group/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		// Output should format correctly depending on format argument.
+		{args: fmt.Sprintf("kafka consumer-group list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/list.golden"},
+		{args: fmt.Sprintf("kafka consumer-group list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/list-yaml.golden"},
+		{args: fmt.Sprintf("kafka consumer-group list --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/list-json.golden"},
+		// Invalid format string should throw error
+		{args: fmt.Sprintf("kafka consumer-group list --url %s -o invalid-output-format --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/list-output-error.golden", wantErrCode: 1},
+	}
 
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest)
+	}
 }
 
 func (s *CLITestSuite) TestConfluentKafkaConsumerGroupDescribe() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		// Test help
+		{args: fmt.Sprintf("kafka consumer-group describe --help"), fixture: "kafka/confluent/group/describe-help.golden"},
+		// Consumer group name errors
+		{args: fmt.Sprintf("kafka consumer-group describe --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group describe non-existent-consumer-group --url %s --no-auth", kafkaRestURL), contains: "Error: REST request failed: This server does not host this consumer group. (40403)\n", wantErrCode: 1},
+		// -o errors
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s -o invalid-output-format --no-auth", kafkaRestURL), contains: "Error: invalid value \"invalid-output-format\" for flag `--output`\n\nSuggestions:\n    The possible values for flag `output` are: human, json, yaml.", wantErrCode: 1},
+		// Success cases
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/describe.golden", wantErrCode: 0},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/describe.golden", wantErrCode: 0},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/describe-json.golden", wantErrCode: 0},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/describe-yaml.golden", wantErrCode: 0},
+	}
+
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest)
+	}
 
 }
 
 func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagSummarize() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka consumer-group lag --help"), fixture: "kafka/confluent/group/lag-help.golden"},
+		{args: fmt.Sprintf("kafka consumer-group lag summarize --help"), fixture: "kafka/confluent/group/lag-summarize-help.golden"},
+		{args: fmt.Sprintf("kafka consumer-group lag summarize --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag summarize consumer-group-1 --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/lag-summarize.golden", wantErrCode: 0},
+	}
 
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest)
+	}
 }
 
 func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagList() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka consumer-group lag list --help"), fixture: "kafka/confluent/group/lag-list-help.golden"},
+		{args: fmt.Sprintf("kafka consumer-group lag list --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag list consumer-group-1 --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/lag-list.golden", wantErrCode: 0},
+	}
 
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest)
+	}
 }
 
-func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagDescribe() {
+func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagGet() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka consumer-group lag get --help"), fixture: "kafka/confluent/group/lag-describe-help.golden"},
+		{args: fmt.Sprintf("kafka consumer-group lag get --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag get --topic topic-1 --partition 1 --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --url %s --no-auth", kafkaRestURL), contains: "Error: required flag(s) \\\"topic\\\", \\\"partition\\\" not set\n", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --topic topic-1 --partition 1 --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/lag-get.golden", wantErrCode: 0},
+		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --topic non-existent-topic --partition 0 --url %s --no-auth", kafkaRestURL), contains: "Error: 404 Not Found\n", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --topic topic-1 --partition 4 --url %s --no-auth", kafkaRestURL), contains: "Error: 404 Not Found\n", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag get non-existent-consumer-group --topic topic-1 --partition 1 --url %s --no-auth", kafkaRestURL), contains: "Error: 404 Not Found\n", wantErrCode: 1},
+	}
 
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest)
+	}
 }
 
 func (s *CLITestSuite) TestConfluentKafkaTopicList() {

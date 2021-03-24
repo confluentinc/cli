@@ -1,0 +1,29 @@
+Get consumer lag for a partition consumed by a Kafka consumer group.
+
+Usage:
+  confluent kafka consumer-group lag get <id> [flags]
+
+Examples:
+Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group`` of a specified cluster (providing Kafka REST Proxy endpoint).
+
+::
+
+  ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0 --url http://localhost:8082
+
+
+
+Flags:
+      --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
+      --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
+      --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+      --topic string              Topic name.
+      --partition int32           Partition ID. (default -1)
+      --context string            CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
