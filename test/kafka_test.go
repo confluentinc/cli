@@ -266,7 +266,7 @@ func (s *CLITestSuite) TestConfluentKafkaConsumerGroupLagGet() {
 		{args: fmt.Sprintf("kafka consumer-group lag get --help"), fixture: "kafka/confluent/group/lag-describe-help.golden"},
 		{args: fmt.Sprintf("kafka consumer-group lag get --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
 		{args: fmt.Sprintf("kafka consumer-group lag get --topic topic-1 --partition 1 --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1},
-		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --url %s --no-auth", kafkaRestURL), contains: "Error: required flag(s) \\\"topic\\\", \\\"partition\\\" not set\n", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --url %s --no-auth", kafkaRestURL), contains: "Error: required flag(s) \"topic\", \"partition\" not set\n", wantErrCode: 1},
 		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --topic topic-1 --partition 1 --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/group/lag-get.golden", wantErrCode: 0},
 		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --topic non-existent-topic --partition 0 --url %s --no-auth", kafkaRestURL), contains: "Error: 404 Not Found\n", wantErrCode: 1},
 		{args: fmt.Sprintf("kafka consumer-group lag get consumer-group-1 --topic topic-1 --partition 4 --url %s --no-auth", kafkaRestURL), contains: "Error: 404 Not Found\n", wantErrCode: 1},
