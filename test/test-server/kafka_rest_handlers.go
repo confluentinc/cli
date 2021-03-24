@@ -519,22 +519,28 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
 func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 		switch r.Method {
 		case "GET":
-			w.Header().Set("Content-Type", "application/json")
-			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupData{
-				Kind:              "",
-				Metadata:          kafkarestv3.ResourceMetadata{},
-				ClusterId:         "cluster-1",
-				ConsumerGroupId:   "consumer-group-1",
-				IsSimple:          true,
-				PartitionAssignor: "RoundRobin",
-				State:             kafkarestv3.CONSUMERGROUPSTATE_STABLE,
-				Coordinator:       kafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
-				Consumer:          kafkarestv3.Relationship{},
-				LagSummary:        kafkarestv3.Relationship{},
-			})
-			require.NoError(t, err)
+			if vars["consumer_group_id"] == "consumer-group-1" {
+				w.Header().Set("Content-Type", "application/json")
+				err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupData{
+					Kind:              "",
+					Metadata:          kafkarestv3.ResourceMetadata{},
+					ClusterId:         "cluster-1",
+					ConsumerGroupId:   "consumer-group-1",
+					IsSimple:          true,
+					PartitionAssignor: "RoundRobin",
+					State:             kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+					Coordinator:       kafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
+					Consumer:          kafkarestv3.Relationship{},
+					LagSummary:        kafkarestv3.Relationship{},
+				})
+				require.NoError(t, err)
+			} else {
+				// group not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
+			}
 		}
 	}
 }
@@ -581,26 +587,32 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumers(t *testing.T) func(http.Res
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
 func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 		switch r.Method {
 		case "GET":
-			w.Header().Set("Content-Type", "application/json")
-			instance := "instance-1"
-			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupLagSummaryData{
-				Kind:              "",
-				Metadata:          kafkarestv3.ResourceMetadata{},
-				ClusterId:         "cluster-1",
-				ConsumerGroupId:   "consumer-group-1",
-				MaxLagConsumerId:  "consumer-1",
-				MaxLagInstanceId:  &instance,
-				MaxLagClientId:    "client-1",
-				MaxLagTopicName:   "topic-1",
-				MaxLagPartitionId: 1,
-				MaxLag:            100,
-				TotalLag:          110,
-				MaxLagConsumer:    kafkarestv3.Relationship{},
-				MaxLagPartition:   kafkarestv3.Relationship{},
-			})
-			require.NoError(t, err)
+			if vars["consumer_group_id"] == "consumer-group-1" {
+				w.Header().Set("Content-Type", "application/json")
+				instance := "instance-1"
+				err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupLagSummaryData{
+					Kind:              "",
+					Metadata:          kafkarestv3.ResourceMetadata{},
+					ClusterId:         "cluster-1",
+					ConsumerGroupId:   "consumer-group-1",
+					MaxLagConsumerId:  "consumer-1",
+					MaxLagInstanceId:  &instance,
+					MaxLagClientId:    "client-1",
+					MaxLagTopicName:   "topic-1",
+					MaxLagPartitionId: 1,
+					MaxLag:            100,
+					TotalLag:          110,
+					MaxLagConsumer:    kafkarestv3.Relationship{},
+					MaxLagPartition:   kafkarestv3.Relationship{},
+				})
+				require.NoError(t, err)
+			} else {
+				// group not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
+			}
 		}
 	}
 }
@@ -608,72 +620,103 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.Re
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
 func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 		switch r.Method {
 		case "GET":
-			w.Header().Set("Content-Type", "application/json")
-			instance1 := "instance-1"
-			instance2 := "instance-2"
-			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerLagDataList{
-				Kind:     "",
-				Metadata: kafkarestv3.ResourceCollectionMetadata{},
-				Data: []kafkarestv3.ConsumerLagData{
-					{
-						Kind:            "",
-						Metadata:        kafkarestv3.ResourceMetadata{},
-						ClusterId:       "cluster-1",
-						ConsumerGroupId: "consumer-group-1",
-						TopicName:       "topic-1",
-						PartitionId:     1,
-						CurrentOffset:   1,
-						LogEndOffset:    101,
-						Lag:             100,
-						ConsumerId:      "consumer-1",
-						InstanceId:      &instance1,
-						ClientId:        "client-1",
+			if vars["consumer_group_id"] == "consumer-group-1" {
+				w.Header().Set("Content-Type", "application/json")
+				instance1 := "instance-1"
+				instance2 := "instance-2"
+				err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerLagDataList{
+					Kind:     "",
+					Metadata: kafkarestv3.ResourceCollectionMetadata{},
+					Data: []kafkarestv3.ConsumerLagData{
+						{
+							Kind:            "",
+							Metadata:        kafkarestv3.ResourceMetadata{},
+							ClusterId:       "cluster-1",
+							ConsumerGroupId: "consumer-group-1",
+							TopicName:       "topic-1",
+							PartitionId:     1,
+							CurrentOffset:   1,
+							LogEndOffset:    101,
+							Lag:             100,
+							ConsumerId:      "consumer-1",
+							InstanceId:      &instance1,
+							ClientId:        "client-1",
+						},
+						{
+							Kind:            "",
+							Metadata:        kafkarestv3.ResourceMetadata{},
+							ClusterId:       "cluster-1",
+							ConsumerGroupId: "consumer-group-1",
+							TopicName:       "topic-1",
+							PartitionId:     2,
+							CurrentOffset:   1,
+							LogEndOffset:    11,
+							Lag:             10,
+							ConsumerId:      "consumer-2",
+							InstanceId:      &instance2,
+							ClientId:        "client-2",
+						},
 					},
-					{
-						Kind:            "",
-						Metadata:        kafkarestv3.ResourceMetadata{},
-						ClusterId:       "cluster-1",
-						ConsumerGroupId: "consumer-group-1",
-						TopicName:       "topic-1",
-						PartitionId:     2,
-						CurrentOffset:   1,
-						LogEndOffset:    11,
-						Lag:             10,
-						ConsumerId:      "consumer-2",
-						InstanceId:      &instance2,
-						ClientId:        "client-2",
-					},
-				},
-			})
-			require.NoError(t, err)
+				})
+				require.NoError(t, err)
+			} else {
+				// group not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
+			}
 		}
 	}
+}
+
+type partitionOffsets struct {
+	currentOffset int32
+	logEndOffset int32
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
 func (r KafkaRestProxyRouter) HandleKafkaRPLag(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		fmt.Println(vars)
 		switch r.Method {
 		case "GET":
-			w.Header().Set("Content-Type", "application/json")
-			instance := "instance-1"
-			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerLagData{
-				Kind:            "",
-				Metadata:        kafkarestv3.ResourceMetadata{},
-				ClusterId:       "cluster-1",
-				ConsumerGroupId: "consumer-group-1",
-				TopicName:       "topic-1",
-				PartitionId:     1,
-				CurrentOffset:   1,
-				LogEndOffset:    101,
-				Lag:             100,
-				ConsumerId:      "consumer-1",
-				InstanceId:      &instance,
-				ClientId:        "client-1",
-			})
-			require.NoError(t, err)
+			if vars["consumer_group_id"] == "consumer-group-1" {
+				partitionOffsetsMap := map[string]partitionOffsets{
+					"0": {101, 101},
+					"1": {1, 101},
+					"2": {101, 101},
+				}
+				requestedPartition := vars["partition_id"]
+				offsets := partitionOffsetsMap[requestedPartition]
+				if vars["topic_name"] == "topic-1" && offsets != (partitionOffsets{}) {
+					w.Header().Set("Content-Type", "application/json")
+					instance := "instance-1"
+					partitionId, _ := strconv.Atoi(requestedPartition)
+					err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerLagData{
+						Kind:            "",
+						Metadata:        kafkarestv3.ResourceMetadata{},
+						ClusterId:       "cluster-1",
+						ConsumerGroupId: "consumer-group-1",
+						TopicName:       "topic-1",
+						PartitionId:     int32(partitionId),
+						CurrentOffset:   offsets.currentOffset,
+						LogEndOffset:    offsets.logEndOffset,
+						Lag:             offsets.logEndOffset - offsets.currentOffset,
+						ConsumerId:      "consumer-1",
+						InstanceId:      &instance,
+						ClientId:        "client-1",
+					})
+					require.NoError(t, err)
+				} else {
+					// topic and/or partition not found
+					require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+				}
+			} else {
+				// group not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
+			}
 		}
 	}
 }
