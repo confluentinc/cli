@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
 
 	"github.com/c-bata/go-prompt"
@@ -87,12 +88,6 @@ func (suite *KSQLTestSuite) SetupSuite() {
 		Id:   "lkc-123",
 		Name: "kafka",
 	}
-	suite.ksqlCluster = &schedv1.KSQLCluster{
-		Id:                ksqlClusterID,
-		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
-		PhysicalClusterId: physicalClusterID,
-		OutputTopicPrefix: outputTopicPrefix,
-	}
 	suite.serviceAcct = &orgv1.User{
 		ServiceAccount: true,
 		ServiceName:    "KSQL." + ksqlClusterID,
@@ -101,6 +96,13 @@ func (suite *KSQLTestSuite) SetupSuite() {
 }
 
 func (suite *KSQLTestSuite) SetupTest() {
+	suite.ksqlCluster = &schedv1.KSQLCluster{
+		Id:                ksqlClusterID,
+		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
+		PhysicalClusterId: physicalClusterID,
+		OutputTopicPrefix: outputTopicPrefix,
+		ServiceAccountId:  serviceAcctID,
+	}
 	suite.kafkac = &mock.Kafka{
 		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
@@ -169,6 +171,18 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 	buf := new(bytes.Buffer)
 	req.NoError(acl.PrintACLs(cmd, bindings, buf))
 	req.Equal(expectedACLs, buf.String())
+}
+
+func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
+	cmd := suite.newCMD()
+	suite.ksqlCluster.ServiceAccountId = 0
+	cmd.SetArgs(append([]string{"app", "configure-acls", ksqlClusterID}))
+
+	err := cmd.Execute()
+
+	req := require.New(suite.T())
+	req.EqualError(err, errors.KsqlDBNoServiceAccount)
+	req.Equal(0, len(suite.kafkac.CreateACLsCalls()))
 }
 
 func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
