@@ -216,6 +216,9 @@ func (lagCmd *lagCommandOnPrem) summarizeLag(cmd *cobra.Command, args []string) 
 		return err
 	}
 	restClient, restContext, err := getKafkaRestClientAndContext(cmd, kafkaRest)
+	if err != nil {
+		return err
+	}
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
@@ -243,6 +246,9 @@ func (lagCmd *lagCommandOnPrem) listLag(cmd *cobra.Command, args []string) error
 		return err
 	}
 	restClient, restContext, err := getKafkaRestClientAndContext(cmd, kafkaRest)
+	if err != nil {
+		return err
+	}
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
@@ -280,6 +286,9 @@ func (lagCmd *lagCommandOnPrem) getLag(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	restClient, restContext, err := getKafkaRestClientAndContext(cmd, kafkaRest)
+	if err != nil {
+		return err
+	}
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
