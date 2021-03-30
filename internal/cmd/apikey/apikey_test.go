@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -42,16 +43,32 @@ const (
 	apiKeyDescription  = "Mock Apis"
 	serviceAccountId   = int32(123)
 	serviceAccountName = "service-account"
+
+	auditLogApiKeyResourceId   = int32(7753)
+	auditLogApiKeyVal   = "auditlog-apikey"
+	auditLogApiKeySecretVal       = "opensesameforauditlogs"
+	auditLogApiKeyDescription   = "Mock Apis for Audit Logs"
+	auditLogServiceAccountId   = int32(748)
 )
 
 var (
 	apiValue = &schedv1.ApiKey{
-		UserId:      123,
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
+		UserId:      serviceAccountId,
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
 		Description: apiKeyDescription,
 		Created:     types.TimestampNow(),
 		Id:          apiKeyResourceId,
+	}
+	auditLogApiValue = &schedv1.ApiKey{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
+		UserId:      auditLogServiceAccountId,
+		Key:         auditLogApiKeyVal,
+		Secret:      auditLogApiKeySecretVal,
+		Description: auditLogApiKeyDescription,
+		Created:     types.TimestampNow(),
+		Id:          auditLogApiKeyResourceId,
 	}
 )
 
@@ -76,9 +93,17 @@ type APITestSuite struct {
 func (suite *APITestSuite) SetupTest() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
+
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &v0.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	// Set up audit logs
+	ctx.State.Auth.Organization.AuditLog = &v1.AuditLog{
+		ClusterId:        cluster.ID,
+		AccountId:        "env-zy987",
+		ServiceAccountId: auditLogServiceAccountId,
+		TopicName:        "confluent-audit-log-events",
+	}
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
@@ -119,7 +144,12 @@ func (suite *APITestSuite) SetupTest() {
 	}
 	suite.apiMock = &ccsdkmock.APIKey{
 		GetFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) (key *schedv1.ApiKey, e error) {
-			return apiValue, nil
+			switch apiKey.Key {
+			case auditLogApiValue.Key:
+				return auditLogApiValue, nil
+			default:
+				return apiValue, nil
+			}
 		},
 		UpdateFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) error {
 			return nil
@@ -131,7 +161,7 @@ func (suite *APITestSuite) SetupTest() {
 			return nil
 		},
 		ListFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) ([]*schedv1.ApiKey, error) {
-			return []*schedv1.ApiKey{apiValue}, nil
+			return []*schedv1.ApiKey{apiValue, auditLogApiValue}, nil
 		},
 	}
 	suite.keystore = &mock.KeyStore{
@@ -283,6 +313,23 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
 }
 
+// Audit Log Destination Clusters are kafka clusters, however their API keys are created by internal service accounts
+func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
+	cmd := suite.newCmd()
+	buf := new(bytes.Buffer)
+	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
+	cmd.SetOut(buf)
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+	inputKey := suite.apiMock.ListCalls()[0].Arg1
+	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	req.Contains(buf.String(), "auditlog service account")
+}
+
 func (suite *APITestSuite) TestListCloudAPIKey() {
 	cmd := suite.newCmd()
 	cmd.SetArgs(append([]string{"list", "--resource", "cloud"}))
@@ -397,6 +444,10 @@ func (suite *APITestSuite) TestServerComplete() {
 				{
 					Text:        apiKeyVal,
 					Description: apiKeyDescription,
+				},
+				{
+					Text:        auditLogApiKeyVal,
+					Description: auditLogApiKeyDescription,
 				},
 			},
 		},

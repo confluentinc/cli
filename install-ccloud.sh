@@ -104,7 +104,7 @@ tag_to_version() {
   fi
   REALTAG=$(s3_release "${TAG}") && true
   if test -z "$REALTAG"; then
-    log_crit "unable to find '${TAG}' - use 'latest' or see https://github.com/${PREFIX}/releases for details"
+    log_crit "unable to find '${TAG}' - use 'latest' or see https://docs.confluent.io/${PROJECT_NAME}/current/release-notes.html for avaialble versions."
     exit 1
   fi
   # if version starts with 'v', don't remove it

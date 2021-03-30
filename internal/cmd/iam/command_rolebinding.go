@@ -218,6 +218,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
+	check(deleteCmd.MarkFlagRequired("role"))
 	c.AddCommand(deleteCmd)
 }
 

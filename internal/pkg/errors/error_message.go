@@ -29,6 +29,8 @@ const (
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
 	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
 	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
+	NoURLFlagOrMdsEnvVarErrorMsg	 = "no mds url passed"
+	NoURLFlagOrMdsEnvVarSuggestions	 = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
