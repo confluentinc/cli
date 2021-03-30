@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -15,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -262,7 +260,7 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 	if outputOption == output.Human.String() {
 		return printGroupHumanDescribe(cmd, groupData)
 	}
-	return output.StructuredOutput(outputOption, groupData)
+	return output.StructuredOutputForCommand(cmd, outputOption, groupData)
 }
 
 func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
@@ -306,11 +304,11 @@ func getStringState(state kafkarestv3.ConsumerGroupState) string {
 
 func printGroupHumanDescribe(cmd *cobra.Command, groupData *groupData) error {
 	// printing non-consumer information in table format first
-	err := tables.RenderTableOut(convertGroupToDescribeStruct(groupData), groupDescribeFields, groupDescribeHumanRenames, os.Stdout)
+	err := tables.RenderTableOut(convertGroupToDescribeStruct(groupData), groupDescribeFields, groupDescribeHumanRenames, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
-	utils.Printf(cmd, "\nConsumers\n\n")
+	fmt.Fprint(cmd.OutOrStdout(), "\nConsumers\n\n")
 	// printing consumer information in list table format
 	consumerTableEntries := make([][]string, len(groupData.Consumers))
 	for i, consumer := range groupData.Consumers {

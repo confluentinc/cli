@@ -111,7 +111,7 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
 		return NewInvalidOutputFormatFlagError(format)
 	}
-	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, os.Stdout)
+	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, cmd.OutOrStdout())
 }
 
 // StructuredOutput - pretty prints an object in specified format (JSON or YAML) using tags specified in struct definition
@@ -126,6 +126,22 @@ func StructuredOutput(format string, obj interface{}) error {
 		return NewInvalidOutputFormatFlagError(format)
 	}
 	_, err := fmt.Fprintf(os.Stdout, string(b))
+	return err
+}
+
+// StructuredOutputForCommand - pretty prints an object in specified format (JSON or YAML) using tags specified in
+// struct definition using the command's outwriter (allows us to verify output in unit tests)
+func StructuredOutputForCommand(cmd *cobra.Command, format string, obj interface{}) error {
+	var b []byte
+	if format == JSON.String() {
+		j, _ := json.Marshal(obj)
+		b = pretty.Pretty(j)
+	} else if format == YAML.String() {
+		b, _ = yaml.Marshal(obj)
+	} else {
+		return NewInvalidOutputFormatFlagError(format)
+	}
+	_, err := fmt.Fprintf(cmd.OutOrStdout(), string(b))
 	return err
 }
 
