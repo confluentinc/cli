@@ -184,25 +184,21 @@ func (g *groupCommand) init() {
 	g.AddCommand(lagCmd.Command)
 
 	g.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
-	//g.completableChildren = lagCmd.completableChildren
 }
 
 func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := g.GetKafkaREST()
 	if err != nil {
-		fmt.Println("Error encountered when getting Kafka REST: ")
-		fmt.Println(err)
 		return err
 	}
 	if kafkaREST == nil {
 		return errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := g.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	lkc, err := getKafkaClusterLkcId(g.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
-	lkc := kafkaClusterConfig.ID
 	groupCmdResp, _, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
 			kafkaREST.Context,
@@ -231,11 +227,10 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := g.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	lkc, err := getKafkaClusterLkcId(g.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
-	lkc := kafkaClusterConfig.ID
 	groupCmdResp, _, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdGet(
 			kafkaREST.Context,
@@ -264,14 +259,16 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
-	groupData := &groupData{}
-	groupData.ClusterId = groupCmdResp.ClusterId
-	groupData.ConsumerGroupId = groupCmdResp.ConsumerGroupId
-	groupData.Coordinator = getStringBroker(groupCmdResp.Coordinator)
-	groupData.IsSimple = groupCmdResp.IsSimple
-	groupData.PartitionAssignor = groupCmdResp.PartitionAssignor
-	groupData.State = getStringState(groupCmdResp.State)
-	groupData.Consumers = make([]consumerData, len(groupCmdConsumersResp.Data))
+	groupData := &groupData{
+		ClusterId: groupCmdResp.ClusterId,
+		ConsumerGroupId: groupCmdResp.ConsumerGroupId,
+		Coordinator: getStringBroker(groupCmdResp.Coordinator),
+		IsSimple: groupCmdResp.IsSimple,
+		PartitionAssignor: groupCmdResp.PartitionAssignor,
+		State: getStringState(groupCmdResp.State),
+		Consumers: make([]consumerData, len(groupCmdConsumersResp.Data)),
+	}
+	// populate Consumers list
 	for i, consumerResp := range groupCmdConsumersResp.Data {
 		instanceId := ""
 		if consumerResp.InstanceId != nil {
@@ -289,6 +286,7 @@ func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersR
 }
 
 func getStringBroker(relationship kafkarestv3.Relationship) string {
+	// relationship.Related will look like ".../v3/clusters/{cluster_id}/brokers/{broker_id}
 	splitString := strings.SplitAfter(relationship.Related, "brokers/")
 	// if relationship was an empty string or did not contain "brokers/"
 	if len(splitString) < 2 {
@@ -413,11 +411,10 @@ func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error 
 		return errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := lagCmd.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	lkc, err := getKafkaClusterLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
-	lkc := kafkaClusterConfig.ID
 	lagSummaryResp, _, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
 			kafkaREST.Context,
@@ -501,11 +498,10 @@ func (lagCmd *lagCommand) listLag(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := lagCmd.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	lkc, err := getKafkaClusterLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
-	lkc := kafkaClusterConfig.ID
 	lagSummaryResp, _, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(
 			kafkaREST.Context,
@@ -542,11 +538,10 @@ func (lagCmd *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := lagCmd.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	lkc, err := getKafkaClusterLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
-	lkc := kafkaClusterConfig.ID
 	lagGetResp, _, err :=
 		kafkaREST.Client.PartitionApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(
 			kafkaREST.Context,
