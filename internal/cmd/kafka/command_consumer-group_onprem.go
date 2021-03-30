@@ -133,7 +133,7 @@ func (g *groupCommandOnPrem) describe(cmd *cobra.Command, args []string) error {
 	if outputOption == output.Human.String() {
 		return printGroupHumanDescribe(cmd, groupData)
 	}
-	return output.StructuredOutput(outputOption, groupData)
+	return output.StructuredOutputForCommand(cmd, outputOption, groupData)
 }
 
 func NewLagCommandOnPrem(prerunner pcmd.PreRunner) *lagCommandOnPrem {
