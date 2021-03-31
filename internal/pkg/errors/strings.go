@@ -74,7 +74,7 @@ const (
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
 	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `ccloud kafka cluster use %s`.\n"
-	KsqlDBNoServiceAccount    = "ACLs do not need to be set for the ksqlDB cluster, the ksqlDB cluster has the same permissions as the user who provisioned the cluster.\n"
+	KsqlDBNoServiceAccount    = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster.\n"
 
 	// local commands
 	AvailableServicesMsg       = "Available Services:\n%s\n"

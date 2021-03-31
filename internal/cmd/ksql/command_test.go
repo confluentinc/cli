@@ -181,7 +181,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
 	err := cmd.Execute()
 
 	req := require.New(suite.T())
-	req.EqualError(err, errors.KsqlDBNoServiceAccount)
+	req.EqualError(err, fmt.Sprintf(errors.KsqlDBNoServiceAccount, ksqlClusterID))
 	req.Equal(0, len(suite.kafkac.CreateACLsCalls()))
 }
 
