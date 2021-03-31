@@ -350,6 +350,11 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
 	}
 
+	if cluster.ServiceAccountId == 0 {
+		return fmt.Errorf(errors.KsqlDBNoServiceAccount, args[0])
+	}
+
+
 	serviceAccountId, err := c.getServiceAccount(cluster)
 	if err != nil {
 		return err
