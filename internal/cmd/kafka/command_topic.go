@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -859,6 +860,11 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	saramaClient, err := validateTopic(topic, cluster, h.clientID, false)
+	if err != nil {
+		return err
+	}
+	saramaClient.Close() //client is not resused for produce
 
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
@@ -1015,6 +1021,11 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	saramaClient, err := validateTopic(topic, cluster, h.clientID, beginning)
+	if err != nil {
+		return err
+	}
+
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
@@ -1048,7 +1059,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	InitSarama(h.logger)
-	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
+	consumer, err := NewSaramaConsumer(group, saramaClient)
 	if err != nil {
 		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
 		return err
@@ -1093,6 +1104,27 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	err = os.RemoveAll(dir)
 	return err
+}
+
+// validate that a topic exists before attempting to produce/consume messages
+func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error){
+	client, err := NewSaramaClient(cluster, clientID, beginning)
+	if err != nil {
+		return nil, err
+	}
+	topics, err := client.Topics()
+	var foundTopic bool
+	for _, t := range topics {
+		if topic == t {
+			foundTopic = true
+			break
+		}
+	}
+	if !foundTopic {
+		client.Close()
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
+	}
+	return client, nil
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {

@@ -24,16 +24,8 @@ func InitSarama(logger *log.Logger) {
 	sarama.Logger = newLogAdapter(logger)
 }
 
-// NewSaramaConsumer returns a sarama.ConsumerGroup configured for the CLI config
-func NewSaramaConsumer(group string, kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.ConsumerGroup, error) {
-	conf, err := saramaConf(kafka, clientID, beginning)
-	if err != nil {
-		return nil, err
-	}
-	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), conf)
-	if err != nil {
-		return nil, err
-	}
+// NewSaramaConsumer returns a sarama.ConsumerGroup from the sarama.Client
+func NewSaramaConsumer(group string, client sarama.Client) (sarama.ConsumerGroup, error) {
 	return sarama.NewConsumerGroupFromClient(group, client)
 }
 
@@ -44,6 +36,19 @@ func NewSaramaProducer(kafka *v1.KafkaClusterConfig, clientID string) (sarama.Sy
 		return nil, err
 	}
 	return sarama.NewSyncProducer(strings.Split(kafka.Bootstrap, ","), conf)
+}
+
+// NewSaramaClient returns a sarama.Client configured for the CLI config
+func NewSaramaClient(kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error){
+	conf, err := saramaConf(kafka, clientID, beginning)
+	if err != nil {
+		return nil, err
+	}
+	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), conf)
+	if err != nil {
+		return nil, err
+	}
+	return client, err
 }
 
 type ConsumerProperties struct {
