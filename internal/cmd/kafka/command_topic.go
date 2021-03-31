@@ -1113,6 +1113,9 @@ func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string
 		return nil, err
 	}
 	topics, err := client.Topics()
+	if err != nil {
+		return nil, err
+	}
 	var foundTopic bool
 	for _, t := range topics {
 		if topic == t {

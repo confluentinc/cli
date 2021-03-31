@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -46,7 +47,7 @@ func NewSaramaClient(kafka *v1.KafkaClusterConfig, clientID string, beginning bo
 	}
 	client, err := sarama.NewClient(strings.Split(kafka.Bootstrap, ","), conf)
 	if err != nil {
-		return nil, err
+		return nil, errors.CatchClusterUnreachableError(err, kafka.ID, kafka.APIKey)
 	}
 	return client, err
 }
