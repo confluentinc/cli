@@ -134,20 +134,61 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersCo
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerDataList, *nethttp.Response, error) {
-	panic("implement me")
+	httpResp := &nethttp.Response{
+		StatusCode: nethttp.StatusOK,
+	}
+
+	return krsdk.ConsumerDataList{
+		Kind: "",
+		Metadata: krsdk.ResourceCollectionMetadata{},
+		Data: []krsdk.ConsumerData{
+			{
+				Kind:            "",
+				Metadata:        krsdk.ResourceMetadata{},
+				ClusterId:       clusterId,
+				ConsumerGroupId: consumerGroupId,
+				ConsumerId:      "consumer-1",
+				InstanceId:      nil,
+				ClientId:        "client-1",
+				Assignments:     krsdk.Relationship{},
+			},
+		},
+	}, httpResp, nil
+
+}
+
+type GroupMatcher struct {
+	ConsumerGroupId string
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupData, *nethttp.Response, error) {
-	panic("implement me")
-}
+	expect := <-c.Expect
+	matcher := expect.(GroupMatcher)
+	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
+		return krsdk.ConsumerGroupData{}, nil, err
+	}
 
-type GroupLagMatcher struct {
-	ConsumerGroupId string
+	httpResp := &nethttp.Response{
+		StatusCode: nethttp.StatusOK,
+	}
+
+	return krsdk.ConsumerGroupData{
+		Kind:              "",
+		Metadata:          krsdk.ResourceMetadata{},
+		ClusterId:         clusterId,
+		ConsumerGroupId:   "consumer-group-1",
+		IsSimple:          true,
+		PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+		State:             "STABLE",
+		Coordinator:       krsdk.Relationship{},
+		Consumer:          krsdk.Relationship{},
+		LagSummary: 	   krsdk.Relationship{},
+	}, httpResp, nil
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupLagSummaryData, *nethttp.Response, error) {
 	expect := <-c.Expect
-	matcher := expect.(GroupLagMatcher)
+	matcher := expect.(GroupMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
 		return krsdk.ConsumerGroupLagSummaryData{}, nil, err
 	}
@@ -178,7 +219,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryG
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {
 	expect := <-c.Expect
-	matcher := expect.(GroupLagMatcher)
+	matcher := expect.(GroupMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
 		return krsdk.ConsumerLagDataList{}, nil, err
 	}
@@ -226,7 +267,33 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
-	panic("implement me")
+	// lkc-0000 is the id of the mock cluster set in v3/mock.go
+	if err := assertEqualValues(clusterId, "lkc-0000"); err != nil {
+		return krsdk.ConsumerGroupDataList{}, nil, err
+	}
+
+	httpResp := &nethttp.Response{
+		StatusCode: nethttp.StatusOK,
+	}
+
+	return krsdk.ConsumerGroupDataList{
+		Kind:     "",
+		Metadata: krsdk.ResourceCollectionMetadata{},
+		Data: []krsdk.ConsumerGroupData{
+			{
+				Kind:              "",
+				Metadata:          krsdk.ResourceMetadata{},
+				ClusterId:         clusterId,
+				ConsumerGroupId:   "consumer-group-1",
+				IsSimple:          true,
+				PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+				State:             "STABLE",
+				Coordinator:       krsdk.Relationship{},
+				Consumer:          krsdk.Relationship{},
+				LagSummary: 	   krsdk.Relationship{},
+			},
+		},
+	}, httpResp, nil
 }
 
 // Compile-time check interface adherence
@@ -270,8 +337,8 @@ func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNameP
 		Metadata:        krsdk.ResourceMetadata{},
 		ClusterId:       clusterId,
 		ConsumerGroupId: consumerGroupId,
-		TopicName:       "topic-1",
-		PartitionId:     1,
+		TopicName:       topicName,
+		PartitionId:     partitionId,
 		CurrentOffset:   1,
 		LogEndOffset:    101,
 		Lag:             100,

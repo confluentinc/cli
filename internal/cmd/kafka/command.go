@@ -51,6 +51,11 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		groupCmd := NewGroupCommand(c.prerunner)
 		c.AddCommand(groupCmd.Command)
 		c.serverCompleter.AddCommand(groupCmd)
+		// arg completion currently not working for lag resource
+		lagCmd := NewLagCommand(c.prerunner)
+		c.AddCommand(lagCmd.Command)
+		c.serverCompleter.AddCommand(lagCmd)
+		//
 		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)

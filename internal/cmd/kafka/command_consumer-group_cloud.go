@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -11,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -73,8 +74,9 @@ var (
 
 type groupCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner           pcmd.PreRunner
-	completableChildren []*cobra.Command
+	prerunner               pcmd.PreRunner
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
 }
 
 type consumerData struct {
@@ -184,21 +186,29 @@ func (g *groupCommand) init() {
 	g.AddCommand(lagCmd.Command)
 
 	g.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
+	// flag completion currently not working for lag resource
+	g.completableFlagChildren = map[string][]*cobra.Command{
+		"cluster": append(lagCmd.completableChildren, listCmd, describeCmd),
+	}
 }
 
 func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
-	kafkaREST, err := g.GetKafkaREST()
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
-	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	lkc, err := getKafkaClusterLkcId(g.AuthenticatedStateFlagCommand, cmd)
-	if err != nil {
-		return err
-	}
+	//kafkaREST, err := g.GetKafkaREST()
+	//if err != nil {
+	//	return err
+	//}
+	//if kafkaREST == nil {
+	//	return errors.New(errors.RestProxyNotAvailable)
+	//}
+	//// Kafka REST is available
+	//lkc, err := getKafkaClusterLkcId(g.AuthenticatedStateFlagCommand, cmd)
+	//if err != nil {
+	//	return err
+	//}
 	groupCmdResp, _, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
 			kafkaREST.Context,
@@ -219,15 +229,7 @@ func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, err := g.GetKafkaREST()
-	if err != nil {
-		return err
-	}
-	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	lkc, err := getKafkaClusterLkcId(g.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -260,13 +262,13 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 
 func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
 	groupData := &groupData{
-		ClusterId: groupCmdResp.ClusterId,
-		ConsumerGroupId: groupCmdResp.ConsumerGroupId,
-		Coordinator: getStringBroker(groupCmdResp.Coordinator),
-		IsSimple: groupCmdResp.IsSimple,
+		ClusterId: 		   groupCmdResp.ClusterId,
+		ConsumerGroupId:   groupCmdResp.ConsumerGroupId,
+		Coordinator: 	   getStringBroker(groupCmdResp.Coordinator),
+		IsSimple: 		   groupCmdResp.IsSimple,
 		PartitionAssignor: groupCmdResp.PartitionAssignor,
-		State: getStringState(groupCmdResp.State),
-		Consumers: make([]consumerData, len(groupCmdConsumersResp.Data)),
+		State:  		   getStringState(groupCmdResp.State),
+		Consumers: 		   make([]consumerData, len(groupCmdConsumersResp.Data)),
 	}
 	// populate Consumers list
 	for i, consumerResp := range groupCmdConsumersResp.Data {
@@ -306,7 +308,7 @@ func printGroupHumanDescribe(cmd *cobra.Command, groupData *groupData) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprint(cmd.OutOrStdout(), "\nConsumers\n\n")
+	utils.Print(cmd, "\nConsumers\n\n")
 	// printing consumer information in list table format
 	consumerTableEntries := make([][]string, len(groupData.Consumers))
 	for i, consumer := range groupData.Consumers {
@@ -343,14 +345,13 @@ func NewLagCommand(prerunner pcmd.PreRunner) *lagCommand {
 
 func (lagCmd *lagCommand) init() {
 	summarizeLagCmd := &cobra.Command{
-		Use:   "summarize <id>",
+		Use:   "summarize <consumer-group>",
 		Short: "Summarize consumer lag for a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.summarizeLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Summarize the lag for the ``my_consumer_group`` consumer-group.",
-				// ahu: should the examples include the other required flag(s)? --cluster
 				Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
 			},
 		),
@@ -360,7 +361,7 @@ func (lagCmd *lagCommand) init() {
 	lagCmd.AddCommand(summarizeLagCmd)
 
 	listLagCmd := &cobra.Command{
-		Use:   "list <id>",
+		Use:   "list <consumer-group>",
 		Short: "List consumer lags for a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.listLag),
@@ -376,7 +377,7 @@ func (lagCmd *lagCommand) init() {
 	lagCmd.AddCommand(listLagCmd)
 
 	getLagCmd := &cobra.Command{
-		Use:   "get <id>",
+		Use:   "get <consumer-group>",
 		Short: "Get consumer lag for a partition consumed by a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
@@ -390,28 +391,19 @@ func (lagCmd *lagCommand) init() {
 	// ahu: handle defaults
 	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	getLagCmd.Flags().String("topic", "", "Topic name.")
-	getLagCmd.Flags().Int32("partition", -1, "Partition ID.")
+	getLagCmd.Flags().Int32("partition", 0, "Partition ID.")
 	check(getLagCmd.MarkFlagRequired("topic"))
 	check(getLagCmd.MarkFlagRequired("partition"))
 	getLagCmd.Flags().SortFlags = false
 	lagCmd.AddCommand(getLagCmd)
 
 	lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd, listLagCmd, getLagCmd}
-	//lagCmd.completableChildren = []*cobra.Command{summarizeLagCmd}
 }
 
 func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, err := lagCmd.GetKafkaREST()
-	if err != nil {
-		return err
-	}
-	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	lkc, err := getKafkaClusterLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -431,42 +423,6 @@ func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error 
 		lagSummaryFields,
 		lagSummaryHumanRenames,
 		lagSummaryStructuredRenames)
-
-	//lagSummaryResp, httpResp, err :=
-	//	kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
-	//		kafkaREST.Context,
-	//		lkc,
-	//		consumerGroupId)
-	//
-	//if httpResp != nil {
-	//	fmt.Print("httpResp received ")
-	//	if err != nil {
-	//		fmt.Print("error getting lag response ")
-	//		restErr, parseErr := parseOpenAPIError(err)
-	//		if parseErr == nil && restErr.Code == KafkaRestUnknownConsumerGroupErrorCode {
-	//			return fmt.Errorf(errors.UnknownGroupMsg, consumerGroupId)
-	//		}
-	//		// ahu: check if this will be descriptive enough to cover parse errors (if we can remove the preceding check)
-	//		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-	//	}
-	//	if httpResp.StatusCode != http.StatusOK {
-	//		fmt.Print("got a status code that wasn't OK ")
-	//		return errors.NewErrorWithSuggestions(
-	//			fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
-	//			errors.InternalServerErrorSuggestions)
-	//	}
-	//	// Kafka REST returns StatusOK
-	//	fmt.Print("we got status OK ")
-	//	return output.DescribeObject(
-	//		cmd,
-	//		convertLagSummaryToStruct(lagSummaryResp),
-	//		lagSummaryFields,
-	//		lagSummaryHumanRenames,
-	//		lagSummaryStructuredRenames)
-	//}
-	//fmt.Print("no httpResp received ")
-	//return err
-
 }
 
 func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummaryData) *lagSummaryStruct {
@@ -490,15 +446,7 @@ func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummar
 func (lagCmd *lagCommand) listLag(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, err := lagCmd.GetKafkaREST()
-	if err != nil {
-		return err
-	}
-	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	lkc, err := getKafkaClusterLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -530,15 +478,8 @@ func (lagCmd *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	kafkaREST, err := lagCmd.GetKafkaREST()
-	if err != nil {
-		return err
-	}
-	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	lkc, err := getKafkaClusterLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
+
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -586,9 +527,69 @@ func (g *groupCommand) Cmd() *cobra.Command {
 
 func (g *groupCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
+	consumerGroupDataList, err := listConsumerGroups(g.AuthenticatedStateFlagCommand, g.Command)
+	if err != nil {
+		return suggestions
+	}
+	for _, groupData := range consumerGroupDataList.Data {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text: groupData.ConsumerGroupId,
+			Description: groupData.ConsumerGroupId,
+		})
+	}
 	return suggestions
+}
+
+func (g *groupCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return g.completableFlagChildren
+}
+
+func (g *groupCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"cluster": completer.ClusterFlagServerCompleterFunc(g.Client, g.EnvironmentId()),
+		// todo: add Topic and Partition flag completion
+	}
 }
 
 func (g *groupCommand) ServerCompletableChildren() []*cobra.Command {
 	return g.completableChildren
+}
+
+// arg completion currently not working for lag resource
+func (lagCmd *lagCommand) Cmd() *cobra.Command {
+	return lagCmd.Command
+}
+
+func (lagCmd *lagCommand) ServerComplete() []prompt.Suggest {
+	var suggestions []prompt.Suggest
+	consumerGroupDataList, err := listConsumerGroups(lagCmd.AuthenticatedStateFlagCommand, lagCmd.Command)
+	if err != nil {
+		return suggestions
+	}
+	for _, groupData := range consumerGroupDataList.Data {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text: groupData.ConsumerGroupId,
+			Description: groupData.ConsumerGroupId,
+		})
+	}
+	return suggestions
+}
+
+func (lagCmd *lagCommand) ServerCompletableChildren() []*cobra.Command {
+	return lagCmd.completableChildren
+}
+
+func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand, cobraCmd *cobra.Command) (*kafkarestv3.ConsumerGroupDataList, error) {
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd, cobraCmd)
+	if err != nil {
+		return nil, err
+	}
+	groupCmdResp, _, err :=
+		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
+			kafkaREST.Context,
+			lkc)
+	if err != nil {
+		return nil, err
+	}
+	return &groupCmdResp, nil
 }

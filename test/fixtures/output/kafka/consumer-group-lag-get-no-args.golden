@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  ccloud kafka consumer-group lag get <id> [flags]
+  ccloud kafka consumer-group lag get <consumer-group> [flags]
 
 Examples:
 Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.
@@ -14,7 +14,7 @@ Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
       --topic string         Topic name.
-      --partition int32      Partition ID. (default -1)
+      --partition int32      Partition ID.
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
       --context string       CLI Context name.

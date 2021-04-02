@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  ccloud kafka consumer-group lag summarize <id> [flags]
+  ccloud kafka consumer-group lag summarize <consumer-group> [flags]
 
 Examples:
 Summarize the lag for the ``my_consumer_group`` consumer-group.

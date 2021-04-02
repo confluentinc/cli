@@ -881,7 +881,7 @@ func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, erro
 	testClient := http.DefaultClient
 	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
 	testBaseUrl := strings.Replace(baseUrl, "https", "http", 1)           // HACK so we don't have to mock https
-	testBaseUrl = strings.Replace(testBaseUrl, "8090", testServerPort, 1) // HACK until we can get Rest URL from cluster config
+	testBaseUrl = strings.Replace(testBaseUrl, kafkaRestPort, testServerPort, 1) // HACK until we can get Rest URL from cluster config
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
 		BasePath:   testBaseUrl,
 		HTTPClient: testClient,

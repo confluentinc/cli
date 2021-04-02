@@ -775,50 +775,99 @@ func TestCreateLink(t *testing.T) {
 
 /*************** TEST command_consumer-group_cloud ***************/
 type testConsumerGroup struct {
-	id string
+	groupId string
 }
 
 var ConsumerGroups = []testConsumerGroup{
 	{
-		id: "consumer-group-1",
+		groupId: "consumer-group-1",
 	},
+}
+
+func TestListGroups(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	args := []string{"consumer-group", "list"}
+	cmd.SetArgs(args)
+
+	CheckIfCmdErrors(t, cmd, args, false)
+
+	for _, args := range [][]string{
+		{"consumer-group"},
+		{"consumer-group", "list", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestDescribeGroup(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "describe", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "describe"},
+		{"consumer-group", "describe", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
 }
 
 func TestSummarizeLag(t *testing.T) {
 	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
 	for _, consumerGroup := range ConsumerGroups {
-		cmd := newRestCmd(expect)
-		cmd.SetArgs([]string{"consumer-group", "lag", "summarize", consumerGroup.id})
+		args := []string{"consumer-group", "lag", "summarize", consumerGroup.groupId}
+		cmd.SetArgs(args)
 		go func() {
-			expect <- cliMock.GroupLagMatcher{
-				ConsumerGroupId: consumerGroup.id,
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
 			}
 		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
 
-		if err := cmd.Execute(); err != nil {
-			t.Errorf("error: %s", err)
-			t.Fail()
-			return
-		}
+	for _, args := range [][]string{
+		{"consumer-group", "lag"},
+		{"consumer-group", "lag", "summarize"},
+		{"consumer-group", "lag", "summarize", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
 	}
 }
 
 func TestListLag(t *testing.T) {
 	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
 	for _, consumerGroup := range ConsumerGroups {
-		cmd := newRestCmd(expect)
-		cmd.SetArgs([]string{"consumer-group", "lag", "list", consumerGroup.id})
+		args := []string{"consumer-group", "lag", "list", consumerGroup.groupId}
+		cmd.SetArgs(args)
 		go func() {
-			expect <- cliMock.GroupLagMatcher{
-				ConsumerGroupId: consumerGroup.id,
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
 			}
 		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
 
-		if err := cmd.Execute(); err != nil {
-			t.Errorf("error: %s", err)
-			t.Fail()
-			return
-		}
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "list"},
+		{"consumer-group", "lag", "list", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
 	}
 }
 
@@ -832,15 +881,18 @@ var PartitionLags = []testPartitionLag{
 	{
 		consumerGroupId: "consumer-group-1",
 		topicName:       "topic-1",
-		partitionId:     0,
+		partitionId:     1,
 	},
 }
 
 func TestGetLag(t *testing.T) {
 	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+
+	// testing that properly formatted commands don't return errors
 	for _, lag := range PartitionLags {
-		cmd := newRestCmd(expect)
-		cmd.SetArgs([]string{"consumer-group", "lag", "get", lag.consumerGroupId, "--topic", "topic-1", "--partition", "0"})
+		args := []string{"consumer-group", "lag", "get", lag.consumerGroupId, "--topic", lag.topicName, "--partition", strconv.Itoa(int(lag.partitionId))}
+		cmd.SetArgs(args)
 		go func() {
 			expect <- cliMock.PartitionLagMatcher{
 				ConsumerGroupId: lag.consumerGroupId,
@@ -848,12 +900,33 @@ func TestGetLag(t *testing.T) {
 				PartitionId:     lag.partitionId,
 			}
 		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
 
-		if err := cmd.Execute(); err != nil {
-			t.Errorf("error: %s", err)
-			t.Fail()
-			return
-		}
+	// testing that improperly formatted commands return errors
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "get"},
+		{"consumer-group", "lag", "get", "consumer-group-1", "egg"},
+		{"consumer-group", "lag", "get", "consumer-group-1", "consumer-group-1", "--topic", "topic-1"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+// Executes cmd, checks if there was an error. Test will fail if there was an error but expectErr was false,
+// or expectErr was true but no error was returned.
+func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr bool) {
+	err := cmd.Execute()
+	var errMsg string
+	if expectErr == true && err == nil {
+		errMsg = "expected error from executing " + strings.Join(args, " ") + " but received none"
+	} else if expectErr == false && err != nil {
+		errMsg = "error: " + err.Error()
+	}
+	if errMsg != "" {
+		t.Errorf(errMsg)
+		t.Fail()
 	}
 }
 
