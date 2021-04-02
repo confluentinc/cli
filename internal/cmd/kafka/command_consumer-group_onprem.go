@@ -152,7 +152,7 @@ func NewLagCommandOnPrem(prerunner pcmd.PreRunner) *lagCommandOnPrem {
 
 func (lagCmd *lagCommandOnPrem) init() {
 	summarizeLagCmd := &cobra.Command{
-		Use:   "summarize <id>",
+		Use:   "summarize <consumer-group>",
 		Short: "Summarize consumer lag for a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.summarizeLag),
@@ -170,7 +170,7 @@ func (lagCmd *lagCommandOnPrem) init() {
 	lagCmd.AddCommand(summarizeLagCmd)
 
 	listLagCmd := &cobra.Command{
-		Use:   "list <id>",
+		Use:   "list <consumer-group>",
 		Short: "List consumer lags for a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.listLag),
@@ -187,7 +187,7 @@ func (lagCmd *lagCommandOnPrem) init() {
 	lagCmd.AddCommand(listLagCmd)
 
 	getLagCmd := &cobra.Command{
-		Use:   "get <id>",
+		Use:   "get <consumer-group>",
 		Short: "Get consumer lag for a partition consumed by a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
@@ -202,7 +202,7 @@ func (lagCmd *lagCommandOnPrem) init() {
 	getLagCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	getLagCmd.Flags().String("topic", "", "Topic name.")
-	getLagCmd.Flags().Int32("partition", -1, "Partition ID.")
+	getLagCmd.Flags().Int32("partition", 0, "Partition ID.")
 	check(getLagCmd.MarkFlagRequired("topic"))
 	check(getLagCmd.MarkFlagRequired("partition"))
 	getLagCmd.Flags().SortFlags = false

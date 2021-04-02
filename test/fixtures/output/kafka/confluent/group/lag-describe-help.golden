@@ -1,7 +1,7 @@
 Get consumer lag for a partition consumed by a Kafka consumer group.
 
 Usage:
-  confluent kafka consumer-group lag get <id> [flags]
+  confluent kafka consumer-group lag get <consumer-group> [flags]
 
 Examples:
 Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group`` of a specified cluster (providing Kafka REST Proxy endpoint).
@@ -21,7 +21,7 @@ Flags:
       --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --topic string              Topic name.
-      --partition int32           Partition ID. (default -1)
+      --partition int32           Partition ID.
       --context string            CLI Context name.
 
 Global Flags:
