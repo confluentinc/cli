@@ -904,7 +904,7 @@ func TestDescribeMirror(t *testing.T) {
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.DescribeMirrorMatcher{
 				LinkName:             "link-1",
-				DestinationTopicName: "dest-topic-1",
+				MirrorTopicName: "dest-topic-1",
 			}
 		})
 }
@@ -918,7 +918,7 @@ func TestPromoteMirror(t *testing.T) {
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
 				LinkName:              "link-1",
-				DestinationTopicNames: map[string]bool{
+				MirrorTopicNames: map[string]bool{
 					"dest-topic-1" : true,
 					"dest-topic-2" : true,
 					"dest-topic-3" : true,
@@ -936,7 +936,7 @@ func TestFailoverMirror(t *testing.T) {
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
 				LinkName:              "link-1",
-				DestinationTopicNames: map[string]bool{
+				MirrorTopicNames: map[string]bool{
 					"dest-topic-1" : true,
 					"dest-topic-2" : true,
 					"dest-topic-3" : true,
@@ -954,7 +954,7 @@ func TestPauseMirror(t *testing.T) {
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
 				LinkName:              "link-1",
-				DestinationTopicNames: map[string]bool{
+				MirrorTopicNames: map[string]bool{
 					"dest-topic-1" : true,
 					"dest-topic-2" : true,
 					"dest-topic-3" : true,
@@ -972,7 +972,7 @@ func TestResumeMirror(t *testing.T) {
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
 				LinkName:              "link-1",
-				DestinationTopicNames: map[string]bool{
+				MirrorTopicNames: map[string]bool{
 					"dest-topic-1" : true,
 					"dest-topic-2" : true,
 					"dest-topic-3" : true,

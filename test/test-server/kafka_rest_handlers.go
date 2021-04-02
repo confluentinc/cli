@@ -172,7 +172,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 				{
 					Kind:        "",
 					Metadata:    kafkarestv3.ResourceMetadata{},
-					ClusterId:   "cluster-1",
+					SourceClusterId:   "cluster-1",
 					LinkName:    "link-1",
 					LinkId:      "LINKID1",
 					TopicsNames: []string{"link-1-topic-1", "link-1-topic-2"},
@@ -180,7 +180,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 				{
 					Kind:        "",
 					Metadata:    kafkarestv3.ResourceMetadata{},
-					ClusterId:   "cluster-1",
+					SourceClusterId:   "cluster-1",
 					LinkName:    "link-2",
 					LinkId:      "LINKID2",
 					TopicsNames: []string{"link-2-topic-1", "link-2-topic-2"},
@@ -200,7 +200,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseData{
 				Kind:        "",
 				Metadata:    kafkarestv3.ResourceMetadata{},
-				ClusterId:   "cluster-1",
+				SourceClusterId:   "cluster-1",
 				LinkName:    "link-1",
 				LinkId:      "LINKID1",
 				TopicsNames: []string{"link-1-topic-1", "link-1-topic-2"},
@@ -230,7 +230,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
 					LinkName:             "link-1",
-					DestinationTopicName: "dest-topic-1",
+					MirrorTopicName: "dest-topic-1",
 					SourceTopicName:      "src-topic-1",
 					NumPartitions:        3,
 					MirrorLags:           []kafkarestv3.MirrorLag{
@@ -254,7 +254,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
 					LinkName:             "link-2",
-					DestinationTopicName: "dest-topic-2",
+					MirrorTopicName: "dest-topic-2",
 					SourceTopicName:      "src-topic-2",
 					NumPartitions:        2,
 					MirrorLags:           []kafkarestv3.MirrorLag{
@@ -293,7 +293,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
 					LinkName:             "link-1",
-					DestinationTopicName: "dest-topic-1",
+					MirrorTopicName: "dest-topic-1",
 					SourceTopicName:      "src-topic-1",
 					NumPartitions:        3,
 					MirrorLags:           []kafkarestv3.MirrorLag{
@@ -317,7 +317,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
 					LinkName:             "link-2",
-					DestinationTopicName: "dest-topic-2",
+					MirrorTopicName: "dest-topic-2",
 					SourceTopicName:      "src-topic-2",
 					NumPartitions:        2,
 					MirrorLags:           []kafkarestv3.MirrorLag{
@@ -339,7 +339,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors/promote"
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:promote"
 func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -352,7 +352,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 				{
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
-					DestinationTopicName: "dest-topic-1",
+					MirrorTopicName: "dest-topic-1",
 					ErrorMessage:         nil,
 					ErrorCode:            nil,
 					MirrorLags:           []kafkarestv3.MirrorLag{
@@ -373,7 +373,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 				{
 					Kind:                 "",
 					Metadata:             kafkarestv3.ResourceMetadata{},
-					DestinationTopicName: "dest-topic-1",
+					MirrorTopicName: "dest-topic-1",
 					ErrorMessage:         &errorMsg,
 					ErrorCode:            &errorCode,
 					MirrorLags:           []kafkarestv3.MirrorLag{
@@ -444,7 +444,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.Respon
 				Kind:                 "",
 				Metadata:             kafkarestv3.ResourceMetadata{},
 				LinkName:             "link-1",
-				DestinationTopicName: "dest-topic-1",
+				MirrorTopicName: "dest-topic-1",
 				SourceTopicName:      "src-topic-1",
 				NumPartitions:        3,
 				MirrorLags: []kafkarestv3.MirrorLag{

@@ -1,43 +1,43 @@
 [
   {
-    "DestinationTopicName": "dest-topic-1",
     "ErrorCode": "",
     "ErrorMessage": "",
+    "MirrorTopicName": "dest-topic-1",
     "Partition": "0",
     "PartitionMirrorLag": "142857"
   }, 
   {
-    "DestinationTopicName": "dest-topic-1",
     "ErrorCode": "",
     "ErrorMessage": "",
+    "MirrorTopicName": "dest-topic-1",
     "Partition": "1",
     "PartitionMirrorLag": "285714"
   }, 
   {
-    "DestinationTopicName": "dest-topic-1",
     "ErrorCode": "",
     "ErrorMessage": "",
+    "MirrorTopicName": "dest-topic-1",
     "Partition": "2",
     "PartitionMirrorLag": "571428"
   }, 
   {
-    "DestinationTopicName": "dest-topic-1",
     "ErrorCode": "401",
     "ErrorMessage": "Not authorized",
+    "MirrorTopicName": "dest-topic-1",
     "Partition": "0",
     "PartitionMirrorLag": "142857"
   }, 
   {
-    "DestinationTopicName": "dest-topic-1",
     "ErrorCode": "401",
     "ErrorMessage": "Not authorized",
+    "MirrorTopicName": "dest-topic-1",
     "Partition": "1",
     "PartitionMirrorLag": "285714"
   }, 
   {
-    "DestinationTopicName": "dest-topic-1",
     "ErrorCode": "401",
     "ErrorMessage": "Not authorized",
+    "MirrorTopicName": "dest-topic-1",
     "Partition": "2",
     "PartitionMirrorLag": "571428"
   }

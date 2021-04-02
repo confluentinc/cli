@@ -483,7 +483,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 
 	outputWriter.AddElement(&keyValueDisplay{
 		Key: "ClusterId",
-		Value: listLinksResponseData.ClusterId,
+		Value: listLinksResponseData.SourceClusterId,
 	})
 
 	outputWriter.AddElement(&keyValueDisplay{

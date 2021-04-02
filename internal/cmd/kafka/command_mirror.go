@@ -21,14 +21,14 @@ const (
 
 
 var (
-	listMirrorOutputFields     = []string{"LinkName", "DestinationTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	describeMirrorOutputFields = []string{"LinkName", "DestinationTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	alterMirrorOutputFields    = []string{"DestinationTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	listMirrorOutputFields     = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	describeMirrorOutputFields = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	alterMirrorOutputFields    = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
 )
 
 type listMirrorWrite struct {
 	LinkName                 string
-	DestinationTopicName     string
+	MirrorTopicName     string
 	SourceTopicName          string
 	MirrorStatus             string
 	StatusTimeMs             int32
@@ -38,7 +38,7 @@ type listMirrorWrite struct {
 
 type describeMirrorWrite struct {
 	LinkName string
-	DestinationTopicName  string
+	MirrorTopicName  string
 	SourceTopicName string
 	MirrorStatus string
 	StatusTimeMs int32
@@ -47,10 +47,10 @@ type describeMirrorWrite struct {
 }
 
 type alterMirrorWrite struct {
-	DestinationTopicName  string
-	Partition int32
-	ErrorMessage string
-	ErrorCode string
+	MirrorTopicName    string
+	Partition          int32
+	ErrorMessage       string
+	ErrorCode          string
 	PartitionMirrorLag int32
 }
 
@@ -261,7 +261,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 
 		outputWriter.AddElement(&listMirrorWrite{
 			LinkName:                 mirror.LinkName,
-			DestinationTopicName:     mirror.DestinationTopicName,
+			MirrorTopicName:     mirror.MirrorTopicName,
 			SourceTopicName:          mirror.SourceTopicName,
 			MirrorStatus:             string(mirror.MirrorTopicStatus),
 			StatusTimeMs:             mirror.StateTimeMs,
@@ -279,7 +279,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	destinationTopicName := args[0]
+	mirrorTopicName := args[0]
 	if err != nil {
 		return err
 	}
@@ -295,8 +295,8 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsDestinationTopicNameGet(
-			kafkaREST.Context, lkc, linkName, destinationTopicName)
+		ClustersClusterIdLinksLinkNameMirrorsMirrorTopicNameGet(
+			kafkaREST.Context, lkc, linkName, mirrorTopicName)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -310,7 +310,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	for _, partitionLag := range mirror.MirrorLags {
 		outputWriter.AddElement(&describeMirrorWrite{
 			LinkName:             mirror.LinkName,
-			DestinationTopicName: mirror.DestinationTopicName,
+			MirrorTopicName: mirror.MirrorTopicName,
 			SourceTopicName:      mirror.SourceTopicName,
 			MirrorStatus:         string(mirror.MirrorTopicStatus),
 			StatusTimeMs:         mirror.StateTimeMs,
@@ -396,17 +396,17 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promoteMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPromotePostOpts{
+	promoteMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorspromotePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				MirrorTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsPromotePost(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
+		ClustersClusterIdLinksLinkNameMirrorspromotePost(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -435,17 +435,17 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	failoverMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsFailoverPostOpts{
+	failoverMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsfailoverPostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				MirrorTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsFailoverPost(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
+		ClustersClusterIdLinksLinkNameMirrorsfailoverPost(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -474,17 +474,17 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pauseMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPausePostOpts{
+	pauseMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorspausePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				MirrorTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsPausePost(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
+		ClustersClusterIdLinksLinkNameMirrorspausePost(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -513,17 +513,17 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resumeMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsResumePostOpts{
+	resumeMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsresumePostOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
-				DestinationTopicNames: args,
+				MirrorTopicNames: args,
 			},
 		),
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsResumePost(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
+		ClustersClusterIdLinksLinkNameMirrorsresumePost(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -552,11 +552,11 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 
 		for _, partitionLag := range result.MirrorLags {
 			outputWriter.AddElement(&alterMirrorWrite{
-				DestinationTopicName: result.DestinationTopicName,
-				Partition:            partitionLag.Partition,
-				ErrorMessage:         msg,
-				ErrorCode:            code,
-				PartitionMirrorLag:   partitionLag.Lag,
+				MirrorTopicName:    result.MirrorTopicName,
+				Partition:          partitionLag.Partition,
+				ErrorMessage:       msg,
+				ErrorCode:          code,
+				PartitionMirrorLag: partitionLag.Lag,
 			})
 		}
 	}

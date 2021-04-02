@@ -33,10 +33,10 @@ const (
 	rpLink              = "/kafka/v3/clusters/{cluster}/links/{link}"
 	rpLinks             = "/kafka/v3/clusters/{cluster}/links"
 	rpLinkConfigs       = "/kafka/v3/clusters/{cluster}/links/{link}/configs"
-	rpMirror            = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{destination_topic_name}"
+	rpMirror            = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}"
 	rpAllMirrors           = "/kafka/v3/clusters/{cluster}/links/-/mirrors"
 	rpMirrors           = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
-	rpMirrorPromote     = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/promote"
+	rpMirrorPromote     = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote"
 )
 
 type KafkaRouter struct {
