@@ -1,8 +1,10 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"github.com/antihax/optional"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -347,7 +349,8 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailableMsg)
+		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		return c.createWithKafkaApi(cmd, linkName, sourceTopicName, replicationFactor, configMap)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -529,6 +532,37 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 	}
 
 	return printAlterMirrorResult(cmd, results)
+}
+
+func (c *mirrorCommand) createWithKafkaApi(
+	cmd *cobra.Command, linkName string, sourceTopicName string, factor int32, configMap map[string]string) error {
+	// Kafka REST is not available, fall back to KafkaAPI
+
+	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	if err != nil {
+		return err
+	}
+
+	topic := &schedv1.Topic{
+		Spec: &schedv1.TopicSpecification{
+			Name:                 sourceTopicName,
+			NumPartitions:        unspecifiedPartitionCount,
+			ReplicationFactor:    uint32(factor),
+			Configs:               configMap,
+			Mirror:               &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: sourceTopicName},
+			XXX_NoUnkeyedLiteral: struct{}{},
+			XXX_unrecognized:     nil,
+			XXX_sizecache:        0,
+		},
+		Validate: false,
+	}
+
+	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+		return err
+	}
+	utils.Printf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+	return nil
 }
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
