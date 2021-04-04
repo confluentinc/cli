@@ -36,8 +36,8 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
                             export HASH=$(git rev-parse --short=7 HEAD)
-                            wget "https://golang.org/dl/go1.16.linux-amd64.tar.gz" --quiet --output-document go1.16.tar.gz
-                            tar -C $(pwd) -xzf go1.16.tar.gz
+                            wget "https://golang.org/dl/go1.16.3.linux-amd64.tar.gz" --quiet --output-document go1.16.3.tar.gz
+                            tar -C $(pwd) -xzf go1.16.3.tar.gz
                             export GOROOT=$(pwd)/go
                             export GOPATH=$(pwd)/go/path
                             export GOBIN=$(pwd)/go/bin
