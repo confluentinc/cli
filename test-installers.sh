@@ -17,7 +17,7 @@ uname() {
 TEST=true . install-ccloud.sh  # commands are identical for ccloud and confluent, enforced by linter
 
 # useful reference for valid uname system/machine pairs: https://en.wikipedia.org/wiki/Uname
-for pair in Darwin,x86_64,darwin,amd64 Linux,x86_64,linux,amd64 Linux,i686,linux,386 CYGWIN_NT-10.0,386,windows,386 CYGWIN_NT-10.0,x86_64,windows,amd64; do
+for pair in Darwin,x86_64,darwin,amd64 Darwin,arm64,darwin,arm64 Linux,x86_64,linux,amd64 Linux,i686,linux,386 CYGWIN_NT-10.0,386,windows,386 CYGWIN_NT-10.0,x86_64,windows,amd64; do
   # tip from https://stackoverflow.com/a/36393986/337735
   IFS=',' read TEST_OS TEST_ARCH EXPECT_OS EXPECT_ARCH <<< "${pair}"
 
