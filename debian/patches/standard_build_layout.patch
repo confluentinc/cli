@@ -1,5 +1,5 @@
---- cli/Makefile	2021-02-25 23:50:08.000000000 -0800
-+++ debian/Makefile	2021-02-20 16:04:19.000000000 -0800
+--- cli/Makefile	2021-03-16 11:28:05.000000000 -0700
++++ debian/Makefile	2021-04-03 22:51:23.000000000 -0700
 @@ -1,257 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -127,7 +127,7 @@
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
 +	cd $(DESTDIR)$(LIBPATH) ; \
-+	for dir in darwin_amd64 linux_386 linux_amd64 windows_386 windows_amd64; do \
++	for dir in darwin_amd64 darwin_arm64 linux_386 linux_amd64 windows_386 windows_amd64; do \
 +		mkdir -p $${dir} ; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
 +		filepath=$${dir}/confluent$${ext} ; \
