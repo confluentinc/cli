@@ -296,7 +296,8 @@ func LabelRequiredFlags(cmd *cobra.Command) {
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		fmt.Print("\n Authenticated called, note frequency\n")
+		fmt.Printf("\n Authenticated called on: %p, note frequency\n", command)
+		fmt.Printf("   command.Short: %v\n", command.Short)
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return err
@@ -432,7 +433,11 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		}
 		return nil, nil
 	})
+	fmt.Printf("provider: %p\n", &provider)
+	fmt.Printf("cliCmd: %p\n", cliCmd)
+	fmt.Printf("cliCmd.KafkaRESTProvider: %p\n", cliCmd.KafkaRESTProvider)
 	cliCmd.KafkaRESTProvider = &provider
+	fmt.Printf("cliCmd.KafkaRESTProvider after: %p\n", cliCmd.KafkaRESTProvider)
 	return nil
 }
 

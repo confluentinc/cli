@@ -560,20 +560,21 @@ func (lagCmd *lagCommand) Cmd() *cobra.Command {
 
 func (lagCmd *lagCommand) ServerComplete() []prompt.Suggest {
 	fmt.Print("\nlagCommand's ServerComplete called\n")
-	// // original
-	//var suggestions []prompt.Suggest
-	//consumerGroupDataList, err := listConsumerGroups(lagCmd.AuthenticatedStateFlagCommand, lagCmd.Command)
-	//if err != nil {
-	//	return suggestions
-	//}
-	//for _, groupData := range consumerGroupDataList.Data {
-	//	suggestions = append(suggestions, prompt.Suggest{
-	//		Text: groupData.ConsumerGroupId,
-	//		Description: groupData.ConsumerGroupId,
-	//	})
-	//}
-	//return suggestions
-	return lagCmd.groupCommand.ServerComplete()
+	fmt.Printf("this is what lagCmd.AuthenticatedCLICommand is: %p\n", lagCmd.AuthenticatedCLICommand)
+	// original
+	var suggestions []prompt.Suggest
+	consumerGroupDataList, err := listConsumerGroups(lagCmd.AuthenticatedStateFlagCommand, lagCmd.Command)
+	if err != nil {
+		return suggestions
+	}
+	for _, groupData := range consumerGroupDataList.Data {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text: groupData.ConsumerGroupId,
+			Description: groupData.ConsumerGroupId,
+		})
+	}
+	return suggestions
+	//return lagCmd.groupCommand.ServerComplete()
 }
 
 func (lagCmd *lagCommand) ServerCompletableChildren() []*cobra.Command {
