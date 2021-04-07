@@ -49,20 +49,8 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 			return
 		}
 		groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
-		////// tried moving this block down to after lagCmd is initialized, still had segfault
-		////c.AddCommand(groupCmd.Command)
-		////c.serverCompleter.AddCommand(groupCmd)
-		//
-		//lagCmd := NewLagCommand(c.prerunner, groupCmd)
-		//groupCmd.AddCommand(lagCmd.Command)
-		//groupCmd.serverCompleter.AddSubCommand(lagCmd)
-		//groupCmd.completableChildren = append(groupCmd.completableChildren, lagCmd.completableChildren...)
-		//groupCmd.completableFlagChildren["cluster"] = append(groupCmd.completableFlagChildren["cluster"], lagCmd.completableChildren...)
-		//
-		//// block moved down from before lagCmd was initialized
 		c.AddCommand(groupCmd.Command)
 		c.serverCompleter.AddCommand(groupCmd)
-
 		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)

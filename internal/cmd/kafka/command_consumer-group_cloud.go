@@ -185,7 +185,6 @@ func (g *groupCommand) init() {
 	describeCmd.Flags().SortFlags = false
 	g.AddCommand(describeCmd)
 
-	// commenting out to test in command.go instead
 	lagCmd := NewLagCommand(g.prerunner, g)
 	g.AddCommand(lagCmd.Command)
 	g.serverCompleter.AddSubCommand(lagCmd)
@@ -194,10 +193,6 @@ func (g *groupCommand) init() {
 	g.completableFlagChildren = map[string][]*cobra.Command{
 		"cluster": append(lagCmd.completableChildren, listCmd, describeCmd),
 	}
-	// g.completableChildren = []*cobra.Command{listCmd, describeCmd}
-	// g.completableFlagChildren = map[string][]*cobra.Command{
-	// 	"cluster": {listCmd, describeCmd},
-	// }
 }
 
 func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
@@ -325,6 +320,7 @@ func convertGroupToDescribeStruct(groupData *groupData) *groupDescribeStruct {
 	}
 }
 
+// todo: remove *groupCommand from params after fixing ServerComplete
 func NewLagCommand(prerunner pcmd.PreRunner, groupCmd *groupCommand) *lagCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
@@ -385,7 +381,6 @@ func (lagCmd *lagCommand) init() {
 			},
 		),
 	}
-	// ahu: handle defaults
 	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	getLagCmd.Flags().String("topic", "", "Topic name.")
 	getLagCmd.Flags().Int32("partition", 0, "Partition ID.")
@@ -552,25 +547,14 @@ func (g *groupCommand) ServerCompletableChildren() []*cobra.Command {
 	return g.completableChildren
 }
 
-// arg completion currently not working for lag resource
 func (lagCmd *lagCommand) Cmd() *cobra.Command {
 	return lagCmd.Command
 }
 
+// HACK: using groupCommand's ServerComplete until we can figure out why calling listConsumerGroups on lagCmd is
+// producing segfaults. I believe we just need to figure out why Authenticated (prerunner.go) is being called on
+// groupCommand.AuthenticatedCLICommand instead of lagCmd.AuthenticatedCLICommand
 func (lagCmd *lagCommand) ServerComplete() []prompt.Suggest {
-	//// original
-	//var suggestions []prompt.Suggest
-	//consumerGroupDataList, err := listConsumerGroups(lagCmd.AuthenticatedStateFlagCommand, lagCmd.Command)
-	//if err != nil {
-	//	return suggestions
-	//}
-	//for _, groupData := range consumerGroupDataList.Data {
-	//	suggestions = append(suggestions, prompt.Suggest{
-	//		Text: groupData.ConsumerGroupId,
-	//		Description: groupData.ConsumerGroupId,
-	//	})
-	//}
-	//return suggestions
 	return lagCmd.groupCommand.ServerComplete()
 }
 

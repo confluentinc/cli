@@ -329,7 +329,6 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka REST is not available, fall back to KafkaAPI
-
 	resp, err := a.getTopics(cmd)
 	if err != nil {
 		return err
@@ -439,7 +438,6 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fall back to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err
@@ -514,7 +512,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
-			//fmt.Print("kafka rest is available and there was no error retrieving topic information ")
 			topicData := &topicData{}
 			topicData.TopicName = topicName
 			topicData.PartitionCount = len(partitionsResp.Data)
