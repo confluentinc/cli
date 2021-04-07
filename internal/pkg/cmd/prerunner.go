@@ -404,7 +404,6 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") != "" {
 			result := &KafkaREST{}
-			// called after typing out 'consumer-group', after 'groupCommand's ServerComplete called'
 			result.Client, err = createKafkaRESTClient(cliCmd.Context, cliCmd, r.IsTest)
 			if err != nil {
 				return nil, err

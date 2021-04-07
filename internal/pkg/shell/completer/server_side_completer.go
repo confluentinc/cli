@@ -427,28 +427,26 @@ func (c *ServerSideCompleterImpl) AddCommand(cmd interface{}) {
 	panic("Command added must implement either ServerCompletableCommand or ServerCompletableFlag or both.")
 }
 
-func (c *ServerSideCompleterImpl) AddSubCommand(cmd interface{}) {
+func (c *ServerSideCompleterImpl) AddKafkaSubCommand(cmd interface{}) {
 	cc, ok := cmd.(ServerCompletableCommand)
 	if ok {
-		c.commandsByPath.Store(c.commandKeyForSubCommand(cc.Cmd()), cc)
+		c.commandsByPath.Store(c.commandKeyForKafkaSubCommand(cc.Cmd()), cc)
 		return
 	}
 	cf, ok := cmd.(ServerCompletableFlag)
 	if ok {
-		c.commandsByPath.Store(c.commandKeyForSubCommand(cf.Cmd()), cf)
+		c.commandsByPath.Store(c.commandKeyForKafkaSubCommand(cf.Cmd()), cf)
 		return
 	}
 	panic("Command added must implement either ServerCompletableCommand or ServerCompletableFlag or both.")
 }
 
 func (c *ServerSideCompleterImpl) commandKey(cmd *cobra.Command) string {
-	//fmt.Printf("\n%s trimmed off of %s\n", c.Root.Name(), cmd.CommandPath())
 	return strings.TrimPrefix(cmd.CommandPath(), c.Root.Name()+" ")
 }
 
-func (c *ServerSideCompleterImpl) commandKeyForSubCommand(cmd *cobra.Command) string {
+func (c *ServerSideCompleterImpl) commandKeyForKafkaSubCommand(cmd *cobra.Command) string {
 	return "kafka " + c.commandKey(cmd)
-	//return cmd.Parent().Parent().CommandPath() + " " + c.commandKey(cmd)
 }
 
 func (c *ServerSideCompleterImpl) flagKey(cmd *cobra.Command, flagName string) string {

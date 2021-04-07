@@ -27,7 +27,7 @@ type ServerCompletableFlag interface {
 type ServerSideCompleter interface {
 	Completer
 	AddCommand(cmd interface{})
-	AddSubCommand(cmd interface{})
+	AddKafkaSubCommand(cmd interface{})
 	AddStaticFlagCompletion(flagName string, suggestions []prompt.Suggest, commandPaths []string) // expose for testing
 }
 

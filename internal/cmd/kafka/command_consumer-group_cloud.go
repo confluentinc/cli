@@ -187,7 +187,7 @@ func (g *groupCommand) init() {
 
 	lagCmd := NewLagCommand(g.prerunner, g)
 	g.AddCommand(lagCmd.Command)
-	g.serverCompleter.AddSubCommand(lagCmd)
+	g.serverCompleter.AddKafkaSubCommand(lagCmd)
 
 	g.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
 	g.completableFlagChildren = map[string][]*cobra.Command{
@@ -253,13 +253,13 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 
 func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
 	groupData := &groupData{
-		ClusterId: 		   groupCmdResp.ClusterId,
+		ClusterId:         groupCmdResp.ClusterId,
 		ConsumerGroupId:   groupCmdResp.ConsumerGroupId,
-		Coordinator: 	   getStringBroker(groupCmdResp.Coordinator),
-		IsSimple: 		   groupCmdResp.IsSimple,
+		Coordinator:       getStringBroker(groupCmdResp.Coordinator),
+		IsSimple:          groupCmdResp.IsSimple,
 		PartitionAssignor: groupCmdResp.PartitionAssignor,
-		State:  		   getStringState(groupCmdResp.State),
-		Consumers: 		   make([]consumerData, len(groupCmdConsumersResp.Data)),
+		State:             getStringState(groupCmdResp.State),
+		Consumers:         make([]consumerData, len(groupCmdConsumersResp.Data)),
 	}
 	// populate Consumers list
 	for i, consumerResp := range groupCmdConsumersResp.Data {
