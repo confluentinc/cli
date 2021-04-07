@@ -573,7 +573,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	//fmt.Print("fallback to KafkaAPI ")
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err

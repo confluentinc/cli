@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -49,30 +48,21 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		if isAPIKeyLogin {
 			return
 		}
-		fmt.Print("\ncalling NewGroupCommand\n")
 		groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
-		// // tried moving this block down to after lagCmd is initialized, still had segfault
-		//c.AddCommand(groupCmd.Command)
-		//c.serverCompleter.AddCommand(groupCmd)
+		////// tried moving this block down to after lagCmd is initialized, still had segfault
+		////c.AddCommand(groupCmd.Command)
+		////c.serverCompleter.AddCommand(groupCmd)
 		//
-		fmt.Print("\ncalling NewLagCommand\n")
-		lagCmd := NewLagCommand(c.prerunner, groupCmd)
-		fmt.Printf("\n about to call groupCmd.AddCommand(lagCmd.Command), let's make sure group's PersistentPreRunE exists: %p\n", groupCmd.AuthenticatedCLICommand.PersistentPreRunE)
-		groupCmd.AddCommand(lagCmd.Command)
-		fmt.Print("\n CALLING g.serverCompleter.AddSubCommand(lagCmd)\n")
-		fmt.Printf("   lagCmd.Command is %p\n", lagCmd.Command)
-		groupCmd.serverCompleter.AddSubCommand(lagCmd)
-		fmt.Print("\n RETURNED\n")
-		groupCmd.completableChildren = append(groupCmd.completableChildren, lagCmd.completableChildren...)
-		groupCmd.completableFlagChildren["cluster"] = append(groupCmd.completableFlagChildren["cluster"], lagCmd.completableChildren...)
-
-		// block moved down from before lagCmd was initialized
+		//lagCmd := NewLagCommand(c.prerunner, groupCmd)
+		//groupCmd.AddCommand(lagCmd.Command)
+		//groupCmd.serverCompleter.AddSubCommand(lagCmd)
+		//groupCmd.completableChildren = append(groupCmd.completableChildren, lagCmd.completableChildren...)
+		//groupCmd.completableFlagChildren["cluster"] = append(groupCmd.completableFlagChildren["cluster"], lagCmd.completableChildren...)
+		//
+		//// block moved down from before lagCmd was initialized
 		c.AddCommand(groupCmd.Command)
-		fmt.Printf("    groupCmd.Command is %p\n", groupCmd.Command)
-		fmt.Print("\nabout to call c.serverCompleter.AddCommand(groupCmd)\n")
 		c.serverCompleter.AddCommand(groupCmd)
 
-		fmt.Printf("\ncalling NewClusterCommand\n")
 		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)

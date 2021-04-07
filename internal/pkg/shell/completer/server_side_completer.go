@@ -1,7 +1,6 @@
 package completer
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 
@@ -156,7 +155,6 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 // e.g. ccloud api-key -> updates cache for ccloud api-key delete, or --resource flags for the various ccloud api-key command
 // If command cannot be completed, e.g. user not logged in, then add empty list to reset the cache
 func (c *ServerSideCompleterImpl) updateCachedSuggestions(cmd *cobra.Command, v interface{}) {
-	fmt.Print("\nupdateCachedSuggestions called")
 	canComplete := pcmd.CanCompleteCommand(cmd)
 	cc, _ := v.(ServerCompletableCommand)
 	cf, _ := v.(ServerCompletableFlag)
@@ -167,7 +165,6 @@ func (c *ServerSideCompleterImpl) updateCachedSuggestions(cmd *cobra.Command, v 
 		if canComplete {
 			suggestions = cc.ServerComplete()
 		}
-		fmt.Printf("\nstoring %s under key %s\n", suggestions, key)
 		c.cachedSuggestionsByPath.Store(key, suggestions)
 	}
 
@@ -284,7 +281,6 @@ func (c *ServerSideCompleterImpl) argCount(argTypeList []argType) int {
 
 // Check the cache for suggestions
 func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cmd *cobra.Command) []prompt.Suggest {
-	fmt.Print("\nchecking cache for suggestions (getSuggetionsForCommand called)\n")
 	var suggestions []prompt.Suggest
 	var cc ServerCompletableCommand
 	// Find the parent command that made the queries to update the cache
@@ -361,7 +357,6 @@ func (c *ServerSideCompleterImpl) getParentServerCompletableFlag(cmd *cobra.Comm
 
 func (c *ServerSideCompleterImpl) getCachedSuggestions(d prompt.Document, cc ServerCompletableCommand) ([]prompt.Suggest, bool) {
 	key := c.commandKey(cc.Cmd())
-	fmt.Printf("\ngetCachedSuggestions is loading key %s\n", key)
 	v, ok := c.cachedSuggestionsByPath.Load(key)
 	if !ok {
 		return nil, false
@@ -421,7 +416,6 @@ func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt
 func (c *ServerSideCompleterImpl) AddCommand(cmd interface{}) {
 	cc, ok := cmd.(ServerCompletableCommand)
 	if ok {
-		fmt.Printf("\nstoring cmd under key `%s`\n", c.commandKey(cc.Cmd()))
 		c.commandsByPath.Store(c.commandKey(cc.Cmd()), cc)
 		return
 	}
@@ -436,7 +430,6 @@ func (c *ServerSideCompleterImpl) AddCommand(cmd interface{}) {
 func (c *ServerSideCompleterImpl) AddSubCommand(cmd interface{}) {
 	cc, ok := cmd.(ServerCompletableCommand)
 	if ok {
-		fmt.Printf("\nstoring cmd under key `%s`\n", c.commandKeyForSubCommand(cc.Cmd()))
 		c.commandsByPath.Store(c.commandKeyForSubCommand(cc.Cmd()), cc)
 		return
 	}

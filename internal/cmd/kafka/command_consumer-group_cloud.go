@@ -186,18 +186,18 @@ func (g *groupCommand) init() {
 	g.AddCommand(describeCmd)
 
 	// commenting out to test in command.go instead
-	//lagCmd := NewLagCommand(g.prerunner)
-	//g.AddCommand(lagCmd.Command)
-	//g.serverCompleter.AddSubCommand(lagCmd)
+	lagCmd := NewLagCommand(g.prerunner, g)
+	g.AddCommand(lagCmd.Command)
+	g.serverCompleter.AddSubCommand(lagCmd)
 
-	//g.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
-	//g.completableFlagChildren = map[string][]*cobra.Command{
-	//	"cluster": append(lagCmd.completableChildren, listCmd, describeCmd),
-	//}
-	g.completableChildren = []*cobra.Command{listCmd, describeCmd}
+	g.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
 	g.completableFlagChildren = map[string][]*cobra.Command{
-		"cluster": {listCmd, describeCmd},
+		"cluster": append(lagCmd.completableChildren, listCmd, describeCmd),
 	}
+	// g.completableChildren = []*cobra.Command{listCmd, describeCmd}
+	// g.completableFlagChildren = map[string][]*cobra.Command{
+	// 	"cluster": {listCmd, describeCmd},
+	// }
 }
 
 func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
@@ -523,7 +523,6 @@ func (g *groupCommand) Cmd() *cobra.Command {
 }
 
 func (g *groupCommand) ServerComplete() []prompt.Suggest {
-	fmt.Print("\ngroupCommand's ServerComplete called\n")
 	var suggestions []prompt.Suggest
 	consumerGroupDataList, err := listConsumerGroups(g.AuthenticatedStateFlagCommand, g.Command)
 	if err != nil {
@@ -559,22 +558,20 @@ func (lagCmd *lagCommand) Cmd() *cobra.Command {
 }
 
 func (lagCmd *lagCommand) ServerComplete() []prompt.Suggest {
-	fmt.Print("\nlagCommand's ServerComplete called\n")
-	fmt.Printf("this is what lagCmd.AuthenticatedCLICommand is: %p\n", lagCmd.AuthenticatedCLICommand)
-	// original
-	var suggestions []prompt.Suggest
-	consumerGroupDataList, err := listConsumerGroups(lagCmd.AuthenticatedStateFlagCommand, lagCmd.Command)
-	if err != nil {
-		return suggestions
-	}
-	for _, groupData := range consumerGroupDataList.Data {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text: groupData.ConsumerGroupId,
-			Description: groupData.ConsumerGroupId,
-		})
-	}
-	return suggestions
-	//return lagCmd.groupCommand.ServerComplete()
+	//// original
+	//var suggestions []prompt.Suggest
+	//consumerGroupDataList, err := listConsumerGroups(lagCmd.AuthenticatedStateFlagCommand, lagCmd.Command)
+	//if err != nil {
+	//	return suggestions
+	//}
+	//for _, groupData := range consumerGroupDataList.Data {
+	//	suggestions = append(suggestions, prompt.Suggest{
+	//		Text: groupData.ConsumerGroupId,
+	//		Description: groupData.ConsumerGroupId,
+	//	})
+	//}
+	//return suggestions
+	return lagCmd.groupCommand.ServerComplete()
 }
 
 func (lagCmd *lagCommand) ServerCompletableChildren() []*cobra.Command {
@@ -584,7 +581,6 @@ func (lagCmd *lagCommand) ServerCompletableChildren() []*cobra.Command {
 func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand, cobraCmd *cobra.Command) (*kafkarestv3.ConsumerGroupDataList, error) {
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd, cobraCmd)
 	if err != nil {
-		fmt.Printf("\nerror in listConsumerGroups: %s\n", err)
 		return nil, err
 	}
 	groupCmdResp, _, err :=

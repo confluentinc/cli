@@ -104,7 +104,6 @@ func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *Au
 		State:             nil,
 		KafkaRESTProvider: nil,
 	}
-	fmt.Printf("\nin NewAuthenticatedCLICommand and about to call command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd)) on cmd %p\n", command)
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
 
@@ -199,7 +198,6 @@ func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
 }
 
 func (a *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
-	fmt.Printf("In GetKafkaREST, here is *KafkaREST: %p\n", *a.KafkaRESTProvider)
 	return (*a.KafkaRESTProvider)()
 }
 
@@ -296,8 +294,6 @@ func LabelRequiredFlags(cmd *cobra.Command) {
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		fmt.Printf("\n Authenticated called on: %p, note frequency\n", command)
-		fmt.Printf("   command.Short: %v\n", command.Short)
 		err := r.Anonymous(command.CLICommand)(cmd, args)
 		if err != nil {
 			return err
@@ -336,7 +332,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 }
 
 func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand *AuthenticatedCLICommand) error {
-	fmt.Print("in setAuthenticatedContext\n")
 	ctx, err := cliCommand.Config.Context(cobraCommand)
 	if err != nil {
 		return err
@@ -350,7 +345,6 @@ func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
-	fmt.Print("in ccloudAutoLogin\n")
 	token, credentials, err := r.getCCloudTokenAndCredentials(cmd)
 	if err != nil {
 		return err
@@ -395,7 +389,6 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 }
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
-	fmt.Print("in setCCloudClient\n")
 	ctx, err := cliCmd.Config.Context(cliCmd.Command)
 	if err != nil {
 		return err
@@ -411,7 +404,6 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") != "" {
 			result := &KafkaREST{}
-			fmt.Print("\n calling createKafkaRESTClient, note frequency\n")
 			// called after typing out 'consumer-group', after 'groupCommand's ServerComplete called'
 			result.Client, err = createKafkaRESTClient(cliCmd.Context, cliCmd, r.IsTest)
 			if err != nil {
@@ -433,11 +425,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		}
 		return nil, nil
 	})
-	fmt.Printf("provider: %p\n", &provider)
-	fmt.Printf("cliCmd: %p\n", cliCmd)
-	fmt.Printf("cliCmd.KafkaRESTProvider: %p\n", cliCmd.KafkaRESTProvider)
 	cliCmd.KafkaRESTProvider = &provider
-	fmt.Printf("cliCmd.KafkaRESTProvider after: %p\n", cliCmd.KafkaRESTProvider)
 	return nil
 }
 
@@ -730,7 +718,6 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 }
 
 func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
-	fmt.Print("in ValidateToken\n")
 	if config == nil {
 		return &errors.NoContextError{CLIName: r.CLIName}
 	}
