@@ -200,12 +200,12 @@ func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	groupCmdResp, _, err :=
+	groupCmdResp, httpResp, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
 			kafkaREST.Context,
 			lkc)
 	if err != nil {
-		return err
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, groupListFields, groupListHumanLabels, groupListStructuredLabels)
 	if err != nil {
@@ -224,21 +224,21 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	groupCmdResp, _, err :=
+	groupCmdResp, httpResp, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdGet(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
 	if err != nil {
-		return err
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
-	groupCmdConsumersResp, _, err :=
+	groupCmdConsumersResp, httpResp, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
 	if err != nil {
-		return err
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 	groupData := getGroupData(groupCmdResp, groupCmdConsumersResp)
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
@@ -399,14 +399,14 @@ func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return err
 	}
-	lagSummaryResp, _, err :=
+	lagSummaryResp, httpResp, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
 
 	if err != nil {
-		return err
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return output.DescribeObject(
@@ -442,13 +442,13 @@ func (lagCmd *lagCommand) listLag(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	lagSummaryResp, _, err :=
+	lagSummaryResp, httpResp, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
 	if err != nil {
-		return err
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, lagFields, lagListHumanLabels, lagListStructuredLabels)
 	if err != nil {
@@ -475,7 +475,7 @@ func (lagCmd *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	lagGetResp, _, err :=
+	lagGetResp, httpResp, err :=
 		kafkaREST.Client.PartitionApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(
 			kafkaREST.Context,
 			lkc,
@@ -483,7 +483,7 @@ func (lagCmd *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 			topicName,
 			partitionId)
 	if err != nil {
-		return err
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 	return output.DescribeObject(
 		cmd,
@@ -567,12 +567,12 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand, cobraCmd *c
 	if err != nil {
 		return nil, err
 	}
-	groupCmdResp, _, err :=
+	groupCmdResp, httpResp, err :=
 		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
 			kafkaREST.Context,
 			lkc)
 	if err != nil {
-		return nil, err
+		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 	return &groupCmdResp, nil
 }
