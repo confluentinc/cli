@@ -51,6 +51,7 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
 		c.AddCommand(groupCmd.Command)
 		c.serverCompleter.AddCommand(groupCmd)
+		c.serverCompleter.AddCommand(groupCmd.lagCmd)
 		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)

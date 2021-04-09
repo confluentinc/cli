@@ -78,6 +78,7 @@ type groupCommand struct {
 	serverCompleter         completer.ServerSideCompleter
 	completableChildren     []*cobra.Command
 	completableFlagChildren map[string][]*cobra.Command
+	lagCmd                  *lagCommand
 }
 
 type consumerData struct {
@@ -187,7 +188,7 @@ func (g *groupCommand) init() {
 
 	lagCmd := NewLagCommand(g.prerunner, g)
 	g.AddCommand(lagCmd.Command)
-	g.serverCompleter.AddKafkaSubCommand(lagCmd)
+	g.lagCmd = lagCmd
 
 	g.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
 	g.completableFlagChildren = map[string][]*cobra.Command{
