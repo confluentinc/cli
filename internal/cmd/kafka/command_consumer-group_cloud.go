@@ -372,7 +372,8 @@ func (lagCmd *lagCommand) init() {
 
 	getLagCmd := &cobra.Command{
 		Use:   "get <consumer-group>",
-		Short: "Get consumer lag for a partition consumed by a Kafka consumer group.",
+		Short: "Get consumer lag for a Kafka topic partition.",
+		Long:  "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
 		Example: examples.BuildExampleString(

@@ -1,4 +1,4 @@
-Get consumer lag for a partition consumed by a Kafka consumer group.
+Get consumer lag for a Kafka topic partition consumed by a consumer group.
 
 Usage:
   ccloud kafka consumer-group lag get <consumer-group> [flags]

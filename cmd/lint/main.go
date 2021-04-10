@@ -63,10 +63,11 @@ var rules = []linter.Rule{
 		linter.RequireNamedArgument(
 			linter.NamedArgumentConfig{CreateCommandArg: "<name>", OtherCommandsArg: "<id>"},
 			map[string]linter.NamedArgumentConfig{
-				"environment": {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
-				"role":        {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
-				"topic":       {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
-				"api-key":     {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+				"environment":    {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
+				"role":           {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
+				"topic":          {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
+				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
 			},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
