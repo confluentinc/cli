@@ -2,39 +2,40 @@ package kafka
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	cliMock "github.com/confluentinc/cli/mock"
+	"net/http"
+	"strings"
+	"testing"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	kafkarestv3mock "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"net/http"
-	"strings"
-	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 type KafkaGroupOnPremTestSuite struct {
 	suite.Suite
 	testClient *kafkarestv3.APIClient
 	// Data returned by APIClient
-	clusterList *kafkarestv3.ClusterDataList
+	clusterList       *kafkarestv3.ClusterDataList
 	consumerGroupList *kafkarestv3.ConsumerGroupDataList
-	consumerGroup *kafkarestv3.ConsumerGroupData
-	consumerList *kafkarestv3.ConsumerDataList
-	lagList *kafkarestv3.ConsumerLagDataList
-	lag *kafkarestv3.ConsumerLagData
-	lagSummary *kafkarestv3.ConsumerGroupLagSummaryData
-
+	consumerGroup     *kafkarestv3.ConsumerGroupData
+	consumerList      *kafkarestv3.ConsumerDataList
+	lagList           *kafkarestv3.ConsumerLagDataList
+	lag               *kafkarestv3.ConsumerLagData
+	lagSummary        *kafkarestv3.ConsumerGroupLagSummaryData
 }
 
 type testCase struct {
-	input string
-	expectedOutput string
-	expectError bool
+	input               string
+	expectedOutput      string
+	expectError         bool
 	errorMsgContainsAll []string
-	message string
+	message             string
 }
 
 func (suite *KafkaGroupOnPremTestSuite) SetupSuite() {
@@ -56,10 +57,10 @@ func (suite *KafkaGroupOnPremTestSuite) SetupSuite() {
 				State:           "STABLE",
 			},
 			{
-				ClusterId: clusterId,
+				ClusterId:       clusterId,
 				ConsumerGroupId: "consumer-group-2",
-				IsSimple: false,
-				State: "DEAD",
+				IsSimple:        false,
+				State:           "DEAD",
 			},
 		},
 	}
@@ -74,7 +75,6 @@ func (suite *KafkaGroupOnPremTestSuite) SetupSuite() {
 			{
 				ConsumerId: "consumer-2",
 			},
-
 		},
 	}
 
@@ -82,29 +82,29 @@ func (suite *KafkaGroupOnPremTestSuite) SetupSuite() {
 		Data: []kafkarestv3.ConsumerLagData{
 			{
 				ConsumerGroupId: "consumer-group-1",
-				TopicName: "topic-1",
-				PartitionId: 1,
-				CurrentOffset: 1,
-				LogEndOffset: 101,
-				Lag: 100,
+				TopicName:       "topic-1",
+				PartitionId:     1,
+				CurrentOffset:   1,
+				LogEndOffset:    101,
+				Lag:             100,
 			},
 			{
 				ConsumerGroupId: "consumer-group-1",
-				TopicName: "topic-1",
-				PartitionId: 2,
-				CurrentOffset: 1,
-				LogEndOffset: 11,
-				Lag: 10,
+				TopicName:       "topic-1",
+				PartitionId:     2,
+				CurrentOffset:   1,
+				LogEndOffset:    11,
+				Lag:             10,
 			},
 		},
 	}
 	suite.lag = &suite.lagList.Data[0]
 
 	suite.lagSummary = &kafkarestv3.ConsumerGroupLagSummaryData{
-		ConsumerGroupId: "consumer-group-1",
-		MaxLag: 100,
-		TotalLag: 110,
-		MaxLagTopicName: "topic-1",
+		ConsumerGroupId:   "consumer-group-1",
+		MaxLag:            100,
+		TotalLag:          110,
+		MaxLagTopicName:   "topic-1",
 		MaxLagPartitionId: 1,
 	}
 }
@@ -181,7 +181,6 @@ func (suite *KafkaGroupOnPremTestSuite) createGroupCommand() *cobra.Command {
 			// Return canned data
 			return *suite.lag, nil, nil
 		},
-
 	}
 
 	provider := suite.getRestProvider()
@@ -191,94 +190,92 @@ func (suite *KafkaGroupOnPremTestSuite) createGroupCommand() *cobra.Command {
 
 func (suite *KafkaGroupOnPremTestSuite) TestConfluentListGroups() {
 	// Define test cases
-	testCases := []testCase {
+	testCases := []testCase{
 		// Correct input
 		{
-			input: "list --url http://localhost:8082",
-			expectedOutput:
-				"   Cluster  |  ConsumerGroup   | Simple | State   \n" +
-				"+-----------+------------------+--------+--------+\n" +
-				"  cluster-1 | consumer-group-1 | true   | STABLE  \n" +
-				"  cluster-1 | consumer-group-2 | false  | DEAD    \n",
-			expectError: false,
+			input:               "list --url http://localhost:8082",
+			expectedOutput:      "   Cluster  |  ConsumerGroup   | Simple | State   \n" +
+				                 "+-----------+------------------+--------+--------+\n" +
+				                 "  cluster-1 | consumer-group-1 | true   | STABLE  \n" +
+				                 "  cluster-1 | consumer-group-2 | false  | DEAD    \n",
+			expectError:         false,
 			errorMsgContainsAll: []string{},
-			message: "correct argument should match expected output",
+			message:             "correct argument should match expected output",
 		},
 		// Variable output format
 		{
-			input: "list --url http://localhost:8082 -o yaml",
-			expectedOutput:
-				"- cluster: cluster-1\n" +
-				"  consumer_group: consumer-group-1\n" +
-				"  simple: \"true\"\n" +
-				"  state: STABLE\n" +
-				"- cluster: cluster-1\n" +
-				"  consumer_group: consumer-group-2\n" +
-				"  simple: \"false\"\n" +
-				"  state: DEAD\n",
-			expectError: false,
+			input:               "list --url http://localhost:8082 -o yaml",
+			expectedOutput:      "- cluster: cluster-1\n" +
+				                 "  consumer_group: consumer-group-1\n" +
+				                 "  simple: \"true\"\n" +
+				                 "  state: STABLE\n" +
+				                 "- cluster: cluster-1\n" +
+				                 "  consumer_group: consumer-group-2\n" +
+				                 "  simple: \"false\"\n" +
+				                 "  state: DEAD\n",
+			expectError:         false,
 			errorMsgContainsAll: []string{},
-			message: "correct argument should match expected output",
+			message:             "correct argument should match expected output",
 		},
 		{
-			input: "list --url http://localhost:8082 -o json",
-			expectedOutput: "[\n  {\n" +
-				"    \"cluster\": \"cluster-1\",\n" +
-				"    \"consumer_group\": \"consumer-group-1\",\n" +
-				"    \"simple\": \"true\",\n" +
-				"    \"state\": \"STABLE\"\n" +
-				"  }, \n  {\n" +
-				"    \"cluster\": \"cluster-1\",\n" +
-				"    \"consumer_group\": \"consumer-group-2\",\n" +
-				"    \"simple\": \"false\",\n" +
-				"    \"state\": \"DEAD\"\n  }\n]\n",
-			expectError: false,
+			input:               "list --url http://localhost:8082 -o json",
+			expectedOutput:      "[\n  {\n" +
+				                 "    \"cluster\": \"cluster-1\",\n" +
+			                	 "    \"consumer_group\": \"consumer-group-1\",\n" +
+				                 "    \"simple\": \"true\",\n" +
+				                 "    \"state\": \"STABLE\"\n" +
+                 				 "  }, \n  {\n" +
+                 				 "    \"cluster\": \"cluster-1\",\n" +
+				                 "    \"consumer_group\": \"consumer-group-2\",\n" +
+                 				 "    \"simple\": \"false\",\n" +
+				                 "    \"state\": \"DEAD\"\n  }\n]\n",
+			expectError:         false,
 			errorMsgContainsAll: []string{},
-			message: "correct argument should match expected output",
+			message:             "correct argument should match expected output",
 		},
 		// Invalid url should throw error
 		{
-			input: "list --url https://localhost:8082",
-			expectedOutput: "",
-			expectError: true,
+			input:               "list --url https://localhost:8082",
+			expectedOutput:      "",
+			expectError:         true,
 			errorMsgContainsAll: []string{"http: server gave HTTP response to HTTPS client"},
-			message: "mismatching protocol in url should throw error",
+			message:             "mismatching protocol in url should throw error",
 		},
 		{
-			input: "list --url http:///localhost:8082",
-			expectedOutput: "",
-			expectError: true,
+			input:               "list --url http:///localhost:8082",
+			expectedOutput:      "",
+			expectError:         true,
 			errorMsgContainsAll: []string{"no Host"},
-			message: "invalid url should throw error",
+			message:             "invalid url should throw error",
 		},
 		{
-			input: "list --url http://localhos:8082",
-			expectedOutput: "",
-			expectError: true,
+			input:               "list --url http://localhos:8082",
+			expectedOutput:      "",
+			expectError:         true,
 			errorMsgContainsAll: []string{"no such host"},
-			message: "incorrect host in url should throw ierror",
+			message:             "incorrect host in url should throw ierror",
 		},
 		{
-			input: "list --url http://localhost:808",
-			expectedOutput: "",
-			expectError: true,
+			input:               "list --url http://localhost:808",
+			expectedOutput:      "",
+			expectError:         true,
 			errorMsgContainsAll: []string{"connection refused"},
-			message: "incorrect port in url should throw error",
+			message:             "incorrect port in url should throw error",
 		},
 		{
-			input: "list --url http://localhost:808a",
-			expectedOutput: "",
-			expectError: true,
+			input:               "list --url http://localhost:808a",
+			expectedOutput:      "",
+			expectError:         true,
 			errorMsgContainsAll: []string{"invalid port"},
-			message: "invalid url should throw error",
+			message:             "invalid url should throw error",
 		},
 		// Invalid format string should throw error
 		{
-			input: "list --url http://localhost:8082 -o hello --no-auth",
-			expectedOutput: "",
-			expectError: true,
+			input:               "list --url http://localhost:8082 -o hello --no-auth",
+			expectedOutput:      "",
+			expectError:         true,
 			errorMsgContainsAll: []string{"invalid value", "--output", "hello"},
-			message: "invalid format string should throw error",
+			message:             "invalid format string should throw error",
 		},
 	}
 
@@ -290,62 +287,60 @@ func (suite *KafkaGroupOnPremTestSuite) TestConfluentListGroups() {
 
 func (suite *KafkaGroupOnPremTestSuite) TestConfluentDescribeGroup() {
 	// Define test cases
-	testCases := []testCase {
+	testCases := []testCase{
 		{
 			// Consumers list is not in expectedOutput because it is generated with an external printer package function
 			// which hardcodes output to os.Stdout (rather than cobra.Command.outWriter). We can verify Consumers list
 			// data with the following two tests which output json/yaml, and Consumers list output format with the integ
 			// tests in kafka_test.go.
 			input:          "describe consumer-group-1 --url http://localhost:8082",
-			expectedOutput:
-				"+-------------------+------------------+\n" +
-				"| Cluster           | cluster-1        |\n" +
-				"| ConsumerGroup     | consumer-group-1 |\n" +
-				"| Coordinator       |                  |\n" +
-				"| Simple            | true             |\n" +
-				"| PartitionAssignor |                  |\n" +
-				"| State             | STABLE           |\n" +
-				"+-------------------+------------------+\n\n" +
-				"Consumers\n\n",
+			expectedOutput: "+-------------------+------------------+\n" +
+				            "| Cluster           | cluster-1        |\n" +
+				            "| ConsumerGroup     | consumer-group-1 |\n" +
+            				"| Coordinator       |                  |\n" +
+		            		"| Simple            | true             |\n" +
+            				"| PartitionAssignor |                  |\n" +
+            				"| State             | STABLE           |\n" +
+            				"+-------------------+------------------+\n\n" +
+            				"Consumers\n\n",
 		},
 		{
-			input:			"describe consumer-group-1 --url http://localhost:8082 -o json",
+			input:          "describe consumer-group-1 --url http://localhost:8082 -o json",
 			expectedOutput: "{\n" +
-				"  \"cluster\": \"cluster-1\",\n" +
-				"  \"consumer_group\": \"consumer-group-1\",\n" +
-				"  \"coordinator\": \"\",\n" +
-				"  \"simple\": true,\n" +
-				"  \"partition_assignor\": \"\",\n" +
-				"  \"state\": \"STABLE\",\n" +
-				"  \"consumers\": [\n    {\n" +
-				"      \"consumer_group\": \"consumer-group-1\",\n" +
-				"      \"consumer\": \"consumer-1\",\n" +
-				"      \"instance\": \"\",\n" +
-				"      \"client\": \"\"\n" +
-				"    }, \n    {\n" +
-				"      \"consumer_group\": \"consumer-group-1\",\n" +
-				"      \"consumer\": \"consumer-2\",\n" +
-				"      \"instance\": \"\",\n" +
-				"      \"client\": \"\"\n    }\n  ]\n}\n",
+			            	"  \"cluster\": \"cluster-1\",\n" +
+            				"  \"consumer_group\": \"consumer-group-1\",\n" +
+		            		"  \"coordinator\": \"\",\n" +
+            				"  \"simple\": true,\n" +
+		            		"  \"partition_assignor\": \"\",\n" +
+            				"  \"state\": \"STABLE\",\n" +
+		            		"  \"consumers\": [\n    {\n" +
+            				"      \"consumer_group\": \"consumer-group-1\",\n" +
+            				"      \"consumer\": \"consumer-1\",\n" +
+		            		"      \"instance\": \"\",\n" +
+            				"      \"client\": \"\"\n" +
+		            		"    }, \n    {\n" +
+            				"      \"consumer_group\": \"consumer-group-1\",\n" +
+		            		"      \"consumer\": \"consumer-2\",\n" +
+            				"      \"instance\": \"\",\n" +
+		            		"      \"client\": \"\"\n    }\n  ]\n}\n",
 		},
 		{
-			input:			"describe consumer-group-1 --url http://localhost:8082 -o yaml",
-			expectedOutput:
-				"cluster: cluster-1\n" +
-				"consumer_group: consumer-group-1\n" +
-				"coordinator: \"\"\n" +
-				"simple: true\n" +
-				"partition_assignor: \"\"\n" +
-				"state: STABLE\n" +
-				"consumers:\n" +
-				"- consumer_group: consumer-group-1\n" +
-				"  consumer: consumer-1\n" +
-				"  instance: \"\"\n" +
-				"  client: \"\"\n" +
-				"- consumer_group: consumer-group-1\n" +
-				"  consumer: consumer-2\n" +
-				"  instance: \"\"\n" +
-				"  client: \"\"\n",
+			input:          "describe consumer-group-1 --url http://localhost:8082 -o yaml",
+			expectedOutput: "cluster: cluster-1\n" +
+	            			"consumer_group: consumer-group-1\n" +
+		            		"coordinator: \"\"\n" +
+		            		"simple: true\n" +
+		            		"partition_assignor: \"\"\n" +
+			            	"state: STABLE\n" +
+			            	"consumers:\n" +
+	            			"- consumer_group: consumer-group-1\n" +
+	            			"  consumer: consumer-1\n" +
+	            			"  instance: \"\"\n" +
+            				"  client: \"\"\n" +
+		            		"- consumer_group: consumer-group-1\n" +
+		            		"  consumer: consumer-2\n" +
+			            	"  instance: \"\"\n" +
+			            	"  client: \"\"\n",
 		},
 		{
 			input:               "describe --url http://localhost:8082",
@@ -367,47 +362,45 @@ func (suite *KafkaGroupOnPremTestSuite) TestConfluentDescribeGroup() {
 
 func (suite *KafkaGroupOnPremTestSuite) TestConfluentSummarizeLag() {
 	// Define test cases
-	testCases := []testCase {
+	testCases := []testCase{
 		{
 			input:          "lag summarize consumer-group-1 --url http://localhost:8082",
-			expectedOutput:
-				"+-----------------+------------------+\n" +
-				"| Cluster         |                  |\n" +
-				"| ConsumerGroup   | consumer-group-1 |\n" +
-				"| TotalLag        |              110 |\n" +
-				"| MaxLag          |              100 |\n" +
-				"| MaxLagConsumer  |                  |\n" +
-				"| MaxLagInstance  |                  |\n" +
-				"| MaxLagClient    |                  |\n" +
-				"| MaxLagTopic     | topic-1          |\n" +
-				"| MaxLagPartition |                1 |\n" +
-				"+-----------------+------------------+\n",
+			expectedOutput: "+-----------------+------------------+\n" +
+	            			"| Cluster         |                  |\n" +
+		            		"| ConsumerGroup   | consumer-group-1 |\n" +
+	            			"| TotalLag        |              110 |\n" +
+		            		"| MaxLag          |              100 |\n" +
+		            		"| MaxLagConsumer  |                  |\n" +
+		            		"| MaxLagInstance  |                  |\n" +
+			            	"| MaxLagClient    |                  |\n" +
+			            	"| MaxLagTopic     | topic-1          |\n" +
+			            	"| MaxLagPartition |                1 |\n" +
+			            	"+-----------------+------------------+\n",
 		},
 		{
-			input:			"lag summarize consumer-group-1 --url http://localhost:8082 -o json",
+			input:          "lag summarize consumer-group-1 --url http://localhost:8082 -o json",
 			expectedOutput: "{\n" +
-				"  \"cluster\": \"\",\n" +
-				"  \"consumer_group\": \"consumer-group-1\",\n" +
-				"  \"total_lag\": 110,\n" +
-				"  \"max_lag\": 100,\n" +
-				"  \"max_lag_consumer\": \"\",\n" +
-				"  \"max_lag_instance\": \"\",\n" +
-				"  \"max_lag_client\": \"\",\n" +
-				"  \"max_lag_topic\": \"topic-1\",\n" +
-				"  \"max_lag_partition\": 1\n}\n",
+			            	"  \"cluster\": \"\",\n" +
+			            	"  \"consumer_group\": \"consumer-group-1\",\n" +
+			            	"  \"total_lag\": 110,\n" +
+			            	"  \"max_lag\": 100,\n" +
+			            	"  \"max_lag_consumer\": \"\",\n" +
+			            	"  \"max_lag_instance\": \"\",\n" +
+			            	"  \"max_lag_client\": \"\",\n" +
+			            	"  \"max_lag_topic\": \"topic-1\",\n" +
+			            	"  \"max_lag_partition\": 1\n}\n",
 		},
 		{
-			input:			"lag summarize consumer-group-1 --url http://localhost:8082 -o yaml",
-			expectedOutput:
-				"cluster: \"\"\n" +
-				"consumer_group: consumer-group-1\n" +
-				"max_lag: 100\n" +
-				"max_lag_client: \"\"\n" +
-				"max_lag_consumer: \"\"\n" +
-				"max_lag_instance: \"\"\n" +
-				"max_lag_partition: 1\n" +
-				"max_lag_topic: topic-1\n" +
-				"total_lag: 110\n",
+			input:          "lag summarize consumer-group-1 --url http://localhost:8082 -o yaml",
+			expectedOutput: "cluster: \"\"\n" +
+			            	"consumer_group: consumer-group-1\n" +
+			            	"max_lag: 100\n" +
+			            	"max_lag_client: \"\"\n" +
+			            	"max_lag_consumer: \"\"\n" +
+			            	"max_lag_instance: \"\"\n" +
+			            	"max_lag_partition: 1\n" +
+				            "max_lag_topic: topic-1\n" +
+				            "total_lag: 110\n",
 		},
 	}
 
@@ -419,63 +412,61 @@ func (suite *KafkaGroupOnPremTestSuite) TestConfluentSummarizeLag() {
 
 func (suite *KafkaGroupOnPremTestSuite) TestConfluentListLags() {
 	// Define test cases
-	testCases := []testCase {
+	testCases := []testCase{
 		{
 			input:          "lag list consumer-group-1 --url http://localhost:8082",
-			expectedOutput:
-				"  Cluster |  ConsumerGroup   | Lag | LogEndOffset | CurrentOffset | Consumer | Instance | Client |  Topic  | Partition  \n" +
-				"+---------+------------------+-----+--------------+---------------+----------+----------+--------+---------+-----------+\n" +
-				"          | consumer-group-1 | 100 |          101 |             1 |          |          |        | topic-1 |         1  \n" +
-				"          | consumer-group-1 |  10 |           11 |             1 |          |          |        | topic-1 |         2  \n",
+			expectedOutput: "  Cluster |  ConsumerGroup   | Lag | LogEndOffset | CurrentOffset | Consumer | Instance | Client |  Topic  | Partition  \n" +
+		            		"+---------+------------------+-----+--------------+---------------+----------+----------+--------+---------+-----------+\n" +
+			            	"          | consumer-group-1 | 100 |          101 |             1 |          |          |        | topic-1 |         1  \n" +
+			            	"          | consumer-group-1 |  10 |           11 |             1 |          |          |        | topic-1 |         2  \n",
 		},
 		{
-			input:			"lag list consumer-group-1 --url http://localhost:8082 -o json",
+			input:          "lag list consumer-group-1 --url http://localhost:8082 -o json",
 			expectedOutput: "[\n  {\n" +
-				"    \"client\": \"\",\n" +
-				"    \"cluster\": \"\",\n" +
-				"    \"consumer\": \"\",\n" +
-				"    \"consumer_group\": \"consumer-group-1\",\n" +
-				"    \"current_offset\": \"1\",\n" +
-				"    \"instance\": \"\",\n" +
-				"    \"lag\": \"100\",\n" +
-				"    \"log_end_offset\": \"101\",\n" +
-				"    \"partition\": \"1\",\n" +
-				"    \"topic\": \"topic-1\"\n" +
-				"  }, \n  {\n" +
-				"    \"client\": \"\",\n" +
-				"    \"cluster\": \"\",\n" +
-				"    \"consumer\": \"\",\n" +
-				"    \"consumer_group\": \"consumer-group-1\",\n" +
-				"    \"current_offset\": \"1\",\n" +
-				"    \"instance\": \"\",\n" +
-				"    \"lag\": \"10\",\n" +
-				"    \"log_end_offset\": \"11\",\n" +
-				"    \"partition\": \"2\",\n" +
-				"    \"topic\": \"topic-1\"\n  }\n]\n",
+				            "    \"client\": \"\",\n" +
+				            "    \"cluster\": \"\",\n" +
+			            	"    \"consumer\": \"\",\n" +
+			            	"    \"consumer_group\": \"consumer-group-1\",\n" +
+			            	"    \"current_offset\": \"1\",\n" +
+				            "    \"instance\": \"\",\n" +
+				            "    \"lag\": \"100\",\n" +
+		            		"    \"log_end_offset\": \"101\",\n" +
+			            	"    \"partition\": \"1\",\n" +
+			            	"    \"topic\": \"topic-1\"\n" +
+			            	"  }, \n  {\n" +
+			            	"    \"client\": \"\",\n" +
+			            	"    \"cluster\": \"\",\n" +
+			            	"    \"consumer\": \"\",\n" +
+			            	"    \"consumer_group\": \"consumer-group-1\",\n" +
+			            	"    \"current_offset\": \"1\",\n" +
+			            	"    \"instance\": \"\",\n" +
+			            	"    \"lag\": \"10\",\n" +
+				            "    \"log_end_offset\": \"11\",\n" +
+			            	"    \"partition\": \"2\",\n" +
+			            	"    \"topic\": \"topic-1\"\n  }\n]\n",
 		},
 		{
-			input:			"lag list consumer-group-1 --url http://localhost:8082 -o yaml",
-			expectedOutput:
-				"- client: \"\"\n" +
-				"  cluster: \"\"\n" +
-				"  consumer: \"\"\n" +
-				"  consumer_group: consumer-group-1\n" +
-				"  current_offset: \"1\"\n" +
-				"  instance: \"\"\n" +
-				"  lag: \"100\"\n" +
-				"  log_end_offset: \"101\"\n" +
-				"  partition: \"1\"\n" +
-				"  topic: topic-1\n" +
-				"- client: \"\"\n" +
-				"  cluster: \"\"\n" +
-				"  consumer: \"\"\n" +
-				"  consumer_group: consumer-group-1\n" +
-				"  current_offset: \"1\"\n" +
-				"  instance: \"\"\n" +
-				"  lag: \"10\"\n" +
-				"  log_end_offset: \"11\"\n" +
-				"  partition: \"2\"\n" +
-				"  topic: topic-1\n",
+			input:          "lag list consumer-group-1 --url http://localhost:8082 -o yaml",
+			expectedOutput: "- client: \"\"\n" +
+			            	"  cluster: \"\"\n" +
+			            	"  consumer: \"\"\n" +
+			            	"  consumer_group: consumer-group-1\n" +
+			            	"  current_offset: \"1\"\n" +
+			            	"  instance: \"\"\n" +
+			            	"  lag: \"100\"\n" +
+			            	"  log_end_offset: \"101\"\n" +
+			            	"  partition: \"1\"\n" +
+			            	"  topic: topic-1\n" +
+			            	"- client: \"\"\n" +
+			            	"  cluster: \"\"\n" +
+			            	"  consumer: \"\"\n" +
+			            	"  consumer_group: consumer-group-1\n" +
+			            	"  current_offset: \"1\"\n" +
+			            	"  instance: \"\"\n" +
+			            	"  lag: \"10\"\n" +
+			            	"  log_end_offset: \"11\"\n" +
+			            	"  partition: \"2\"\n" +
+			            	"  topic: topic-1\n",
 		},
 	}
 
@@ -487,50 +478,48 @@ func (suite *KafkaGroupOnPremTestSuite) TestConfluentListLags() {
 
 func (suite *KafkaGroupOnPremTestSuite) TestConfluentGetLag() {
 	// Define test cases
-	testCases := []testCase {
+	testCases := []testCase{
 		{
 			input:          "lag get consumer-group-1 --topic topic-1 --partition 1 --url http://localhost:8082",
-			expectedOutput:
-				"+---------------+------------------+\n" +
-				"| Cluster       |                  |\n" +
-				"| ConsumerGroup | consumer-group-1 |\n" +
-				"| Lag           |              100 |\n" +
-				"| LogEndOffset  |              101 |\n" +
-				"| CurrentOffset |                1 |\n" +
-				"| Consumer      |                  |\n" +
-				"| Instance      |                  |\n" +
-				"| Client        |                  |\n" +
-				"| Topic         | topic-1          |\n" +
-				"| Partition     |                1 |\n" +
-				"+---------------+------------------+\n",
+			expectedOutput: "+---------------+------------------+\n" +
+			            	"| Cluster       |                  |\n" +
+				            "| ConsumerGroup | consumer-group-1 |\n" +
+				            "| Lag           |              100 |\n" +
+				            "| LogEndOffset  |              101 |\n" +
+				            "| CurrentOffset |                1 |\n" +
+				            "| Consumer      |                  |\n" +
+				            "| Instance      |                  |\n" +
+				            "| Client        |                  |\n" +
+				            "| Topic         | topic-1          |\n" +
+				            "| Partition     |                1 |\n" +
+				            "+---------------+------------------+\n",
 		},
 		{
-			input:			"lag get consumer-group-1 --topic topic-1 --partition 1 --url http://localhost:8082 -o json",
+			input:          "lag get consumer-group-1 --topic topic-1 --partition 1 --url http://localhost:8082 -o json",
 			expectedOutput: "{\n" +
-				"  \"cluster\": \"\",\n" +
-				"  \"consumer_group\": \"consumer-group-1\",\n" +
-				"  \"lag\": 100,\n" +
-				"  \"log_end_offset\": 101,\n" +
-				"  \"current_offset\": 1,\n" +
-				"  \"consumer\": \"\",\n" +
-				"  \"instance\": \"\",\n" +
-				"  \"client\": \"\",\n" +
-				"  \"topic\": \"topic-1\",\n" +
-				"  \"partition\": 1\n}\n",
+		            		"  \"cluster\": \"\",\n" +
+		            		"  \"consumer_group\": \"consumer-group-1\",\n" +
+			            	"  \"lag\": 100,\n" +
+			            	"  \"log_end_offset\": 101,\n" +
+			            	"  \"current_offset\": 1,\n" +
+			            	"  \"consumer\": \"\",\n" +
+				            "  \"instance\": \"\",\n" +
+			            	"  \"client\": \"\",\n" +
+				            "  \"topic\": \"topic-1\",\n" +
+				            "  \"partition\": 1\n}\n",
 		},
 		{
-			input:			"lag get consumer-group-1 --topic topic-1 --partition 1 --url http://localhost:8082 -o yaml",
-			expectedOutput:
-				"client: \"\"\n" +
-				"cluster: \"\"\n" +
-				"consumer: \"\"\n" +
-				"consumer_group: consumer-group-1\n" +
-				"current_offset: 1\n" +
-				"instance: \"\"\n" +
-				"lag: 100\n" +
-				"log_end_offset: 101\n" +
-				"partition: 1\n" +
-				"topic: topic-1\n",
+			input:          "lag get consumer-group-1 --topic topic-1 --partition 1 --url http://localhost:8082 -o yaml",
+			expectedOutput: "client: \"\"\n" +
+		            		"cluster: \"\"\n" +
+			            	"consumer: \"\"\n" +
+				            "consumer_group: consumer-group-1\n" +
+			            	"current_offset: 1\n" +
+				            "instance: \"\"\n" +
+				            "lag: 100\n" +
+				            "log_end_offset: 101\n" +
+				            "partition: 1\n" +
+				            "topic: topic-1\n",
 		},
 	}
 

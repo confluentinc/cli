@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"net/http"
 	neturl "net/url"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 
 	"github.com/spf13/cobra"
 
