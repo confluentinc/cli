@@ -931,42 +931,6 @@ func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr
 }
 
 /*************** TEST setup/helpers ***************/
-//func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
-//	client := &ccloud.Client{
-//		Kafka: cliMock.NewKafkaMock(expect),
-//		EnvironmentMetadata: &mock.EnvironmentMetadata{
-//			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
-//				return []*schedv1.CloudMetadata{{
-//					Id:       "aws",
-//					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
-//					Regions:  []*schedv1.Region{{IsSchedulable: true, Id: "us-west-2"}},
-//				}}, nil
-//			},
-//		},
-//	}
-//
-//	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
-//		if enableREST {
-//			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
-//			restMock.ACLApi = cliMock.NewACLMock()
-//			restMock.TopicApi = cliMock.NewTopicMock()
-//			restMock.PartitionApi = cliMock.NewPartitionMock()
-//			restMock.ReplicaApi = cliMock.NewReplicaMock()
-//			restMock.ConfigsApi = cliMock.NewConfigsMock()
-//			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
-//			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
-//			return kafkaREST, nil
-//		}
-//		return nil, nil
-//	})
-//
-//	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
-//		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
-//	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-//
-//	return cmd
-//}
-
 func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),

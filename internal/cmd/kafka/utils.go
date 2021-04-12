@@ -32,17 +32,9 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 		return nil, "", errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	lkc, err := getKafkaClusterLkcId(c, cmd)
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return nil, "", err
 	}
-	return kafkaREST, lkc, nil
-}
-
-func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Command) (string, error) {
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return "", err
-	}
-	return kafkaClusterConfig.ID, nil
+	return kafkaREST, kafkaClusterConfig.ID, nil
 }

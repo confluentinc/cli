@@ -350,6 +350,7 @@ func (lagCmd *lagCommand) init() {
 				Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
 			},
 		),
+		Hidden: true,
 	}
 	summarizeLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	summarizeLagCmd.Flags().SortFlags = false
