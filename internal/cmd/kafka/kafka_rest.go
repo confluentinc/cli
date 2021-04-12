@@ -101,7 +101,11 @@ func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 }
 
 // Used for on-prem KafkaRest commands
-func getKafkaRestClientAndContext(cmd *cobra.Command, kafkaRest *cmd.KafkaREST) (*kafkarestv3.APIClient, context.Context, error) {
+func getKafkaRestClientAndContext(a *cmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, error) {
+	kafkaRest, err := a.GetKafkaREST()
+	if err != nil {
+		return nil, nil, err
+	}
 	url, err := getKafkaRestUrl(cmd)
 	if err != nil {
 		return nil, nil, err

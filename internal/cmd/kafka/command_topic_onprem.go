@@ -166,7 +166,7 @@ func (topicCmd *topicCommand) init() {
 //-o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 //--context string            CLI Context name.
 func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) error {
-	restClient, restContext, err := topicCmd.initKafkaRest(cmd)
+	restClient, restContext, err := getKafkaRestClientAndContext(topicCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
-	restClient, restContext, err := topicCmd.initKafkaRest(cmd)
+	restClient, restContext, err := getKafkaRestClientAndContext(topicCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
-	restClient, restContext, err := topicCmd.initKafkaRest(cmd)
+	restClient, restContext, err := getKafkaRestClientAndContext(topicCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -337,7 +337,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	} else if output.IsValidFormatString(format) == false { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
-	restClient, restContext, err := topicCmd.initKafkaRest(cmd)
+	restClient, restContext, err := getKafkaRestClientAndContext(topicCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -423,7 +423,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	} else if output.IsValidFormatString(format) == false { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
-	restClient, restContext, err := topicCmd.initKafkaRest(cmd)
+	restClient, restContext, err := getKafkaRestClientAndContext(topicCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -522,20 +522,6 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 		}
 	}
 	return nil
-}
-
-func (topicCmd *topicCommand) initKafkaRest(cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, error) {
-	url, err := getKafkaRestUrl(cmd)
-	if err != nil { // require the flag
-		return nil, nil, err
-	}
-	kafkaRest, err := topicCmd.GetKafkaREST()
-	if err != nil {
-		return nil, nil, err
-	}
-	kafkaRestClient := kafkaRest.Client
-	setServerURL(cmd, kafkaRestClient, url)
-	return kafkaRestClient, kafkaRest.Context, nil
 }
 
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {

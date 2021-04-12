@@ -1,4 +1,4 @@
-Manage Kafka consumer groups
+Manage Kafka consumer groups.
 
 Usage:
   confluent kafka consumer-group [command]
