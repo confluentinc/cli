@@ -139,7 +139,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGe
 	}
 
 	return krsdk.ConsumerDataList{
-		Kind: "",
+		Kind:     "",
 		Metadata: krsdk.ResourceCollectionMetadata{},
 		Data: []krsdk.ConsumerData{
 			{
@@ -182,7 +182,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdGet(ctx con
 		State:             "STABLE",
 		Coordinator:       krsdk.Relationship{},
 		Consumer:          krsdk.Relationship{},
-		LagSummary: 	   krsdk.Relationship{},
+		LagSummary:        krsdk.Relationship{},
 	}, httpResp, nil
 }
 
@@ -290,7 +290,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, c
 				State:             "STABLE",
 				Coordinator:       krsdk.Relationship{},
 				Consumer:          krsdk.Relationship{},
-				LagSummary: 	   krsdk.Relationship{},
+				LagSummary:        krsdk.Relationship{},
 			},
 		},
 	}, httpResp, nil

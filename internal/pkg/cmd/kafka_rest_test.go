@@ -17,7 +17,7 @@ func (suite *KafkaRestTestSuite) TestBootstrapServersToRestURL() {
 
 	r, err := bootstrapServersToRestURL("localhost:9092")
 	req.Nil(err)
-	req.Equal(r, "https://localhost:" + kafkaRestPort + "/kafka/v3")
+	req.Equal(r, "https://localhost:"+kafkaRestPort+"/kafka/v3")
 
 	_, err = bootstrapServersToRestURL("loc")
 	req.NotNil(err)

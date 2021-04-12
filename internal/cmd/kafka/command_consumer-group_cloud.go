@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"strings"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/go-printer"
@@ -527,7 +528,7 @@ func (g *groupCommand) ServerComplete() []prompt.Suggest {
 	}
 	for _, groupData := range consumerGroupDataList.Data {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text: groupData.ConsumerGroupId,
+			Text:        groupData.ConsumerGroupId,
 			Description: groupData.ConsumerGroupId,
 		})
 	}

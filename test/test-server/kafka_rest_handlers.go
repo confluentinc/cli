@@ -672,7 +672,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.Response
 
 type partitionOffsets struct {
 	currentOffset int32
-	logEndOffset int32
+	logEndOffset  int32
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"

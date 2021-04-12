@@ -22,8 +22,6 @@ import (
 
 const KafkaRestBadRequestErrorCode = 40002
 const KafkaRestUnknownTopicOrPartitionErrorCode = 40403
-// ahu: guessing all unknown entities will return 40403
-const KafkaRestUnknownConsumerGroupErrorCode = 40403
 const CONFLUENT_REST_URL = "CONFLUENT_REST_URL"
 const SelfSignedCertError = "x509: certificate is not authorized to sign other certificates"
 const UnauthorizedCertError = "x509: certificate signed by unknown authority"
