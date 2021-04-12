@@ -21,7 +21,7 @@ func NewGroupCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	groupCmd := &groupCommandOnPrem{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
-				Use: "consumer-group",
+				Use:   "consumer-group",
 				Short: "Manage Kafka consumer groups.",
 			}, prerunner, OnPremGroupSubcommandFlags),
 		prerunner: prerunner,
@@ -181,7 +181,7 @@ func (lagCmd *lagCommandOnPrem) init() {
 	getLagCmd := &cobra.Command{
 		Use:   "get <consumer-group>",
 		Short: "Get consumer lag for a Kafka topic partition.",
-		Long: "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
+		Long:  "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
 		Example: examples.BuildExampleString(
@@ -191,7 +191,6 @@ func (lagCmd *lagCommandOnPrem) init() {
 			},
 		),
 	}
-	// ahu: handle defaults
 	getLagCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	getLagCmd.Flags().String("topic", "", "Topic name.")
