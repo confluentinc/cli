@@ -142,7 +142,7 @@ type lagDataStruct struct {
 func NewGroupCommand(prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter) *groupCommand {
 	command := &cobra.Command{
 		Use:   "consumer-group",
-		Short: "Manage Kafka consumer groups",
+		Short: "Manage Kafka consumer groups.",
 	}
 	groupCmd := &groupCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, GroupSubcommandFlags),

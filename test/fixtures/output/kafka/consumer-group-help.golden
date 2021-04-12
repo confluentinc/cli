@@ -1,4 +1,4 @@
-Manage Kafka consumer groups
+Manage Kafka consumer groups.
 
 Usage:
   ccloud kafka consumer-group [command]

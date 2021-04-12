@@ -68,6 +68,7 @@ var rules = []linter.Rule{
 				"topic":          {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
 				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
 				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
+				"lag":            {CreateCommandArg: "N/A", OtherCommandsArg: "<consumer-group>"},
 			},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
