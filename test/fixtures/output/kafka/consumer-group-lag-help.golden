@@ -6,7 +6,6 @@ Usage:
 Available Commands:
   get         Get consumer lag for a Kafka topic partition.
   list        List consumer lags for a Kafka consumer group.
-  summarize   Summarize consumer lag for a Kafka consumer group.
 
 Flags:
       --environment string   Environment ID.
