@@ -16,10 +16,10 @@ import (
 )
 
 const (
-	sourceBootstrapServersFlagName     = "source-cluster"
-	sourceClusterIdName                = "source-cluster-id"
+	sourceBootstrapServersFlagName     = "source-bootstrap-server"
+	sourceClusterIdFlagName            = "source-cluster-id"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	configFileFlagName                  = "config-file"
+	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
 	includeTopicsFlagName              = "include-topics"
@@ -101,14 +101,17 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka link create my_link --source_cluster myhost:1234\nccloud kafka link create my_link --source_cluster myhost:1234 --config-file ~/myfile.txt",
+				Code: "ccloud kafka link create my_link --source-bootstrap-server myhost:1234\n" +
+					"ccloud kafka link create my_link --source-bootstrap-server myhost:1234 --config-file ~/myfile.txt",
 			},
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
-	createCmd.Flags().String(sourceClusterIdName, "", "Source cluster ID.")
+	createCmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+	check(createCmd.MarkFlagRequired(sourceBootstrapServersFlagName))
+	check(createCmd.MarkFlagRequired(sourceClusterIdFlagName))
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
@@ -329,7 +332,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdName)
+	sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
 	if err != nil {
 		return err
 	}
