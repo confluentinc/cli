@@ -81,7 +81,9 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		case "lkc-update":
 			c.HandleKafkaClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated":
-			c.HandleKafkaDedicatedClusterUpdate(t)(w, r)
+			c.HandleKafkaDedicatedClusterExpansion(t)(w, r)
+		case "lkc-update-dedicated-shrink":
+			c.HandleKafkaDedicatedClusterShrink(t)(w, r)
 		case "lkc-unknown":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -240,10 +242,14 @@ func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			if req.Cluster.Cku > 0 {
+				mesg := "cluster expansion is supported for dedicated clusters only"
+				if req.Cluster.Cku == 1 {
+					mesg = "cluster shrink is supported for dedicated clusters only"
+				}
 				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 					Cluster: nil,
 					Error: &corev1.Error{
-						Message: "cluster expansion is supported for dedicated clusters only",
+						Message: mesg,
 					},
 				})
 			} else {
@@ -261,7 +267,7 @@ func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.
 }
 
 // Handler for GET/PUT "api/clusters/lkc-update-dedicated"
-func (c *CloudRouter) HandleKafkaDedicatedClusterUpdate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == "GET" {
@@ -301,6 +307,60 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterUpdate(t *testing.T) func(w htt
 					NetworkEgress:   150 * req.Cluster.Cku,
 					Storage:         30000 * req.Cluster.Cku,
 					Status:          schedv1.ClusterStatus_EXPANDING,
+					ServiceProvider: "aws",
+					Region:          "us-west-2",
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     "http://kafka-api-url",
+				},
+			})
+			require.NoError(t, err)
+		}
+		_, err := io.WriteString(w, string(out))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET/PUT "api/clusters/lkc-update-dedicated-shrink"
+func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var out []byte
+		if r.Method == "GET" {
+			id := r.URL.Query().Get("id")
+			var err error
+			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              id,
+					Name:            "lkc-update-dedicated-shrink",
+					Cku:             2,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+					NetworkIngress:  50,
+					NetworkEgress:   150,
+					Storage:         30000,
+					Status:          schedv1.ClusterStatus_SHRINKING,
+					ServiceProvider: "aws",
+					Region:          "us-west-2",
+					Endpoint:        "SASL_SSL://kafka-endpoint",
+					ApiEndpoint:     "http://kafka-api-url",
+				},
+			})
+			require.NoError(t, err)
+		}
+		// Update client call
+		if r.Method == "PUT" {
+			req := &schedv1.UpdateKafkaClusterRequest{}
+			err := utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+				Cluster: &schedv1.KafkaCluster{
+					Id:              req.Cluster.Id,
+					Name:            req.Cluster.Name,
+					Cku:             2,
+					PendingCku:      req.Cluster.Cku,
+					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
+					NetworkIngress:  50 * req.Cluster.Cku,
+					NetworkEgress:   150 * req.Cluster.Cku,
+					Storage:         30000 * req.Cluster.Cku,
+					Status:          schedv1.ClusterStatus_SHRINKING,
 					ServiceProvider: "aws",
 					Region:          "us-west-2",
 					Endpoint:        "SASL_SSL://kafka-endpoint",

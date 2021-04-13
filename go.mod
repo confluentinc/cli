@@ -15,16 +15,16 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/billing v0.731.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.731.0
-	github.com/confluentinc/cc-structs/kafka/core v0.731.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.731.0
-	github.com/confluentinc/cc-structs/kafka/metrics v0.731.0
-	github.com/confluentinc/cc-structs/kafka/org v0.731.0
+	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
+	github.com/confluentinc/cc-structs/kafka/core v0.753.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.753.0
+	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0
+	github.com/confluentinc/cc-structs/kafka/org v0.753.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.731.0
-	github.com/confluentinc/cc-structs/kafka/util v0.731.0
-	github.com/confluentinc/cc-structs/operator v0.731.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
+	github.com/confluentinc/cc-structs/kafka/util v0.753.0
+	github.com/confluentinc/cc-structs/operator v0.753.0
 	github.com/confluentinc/cc-utils-public v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72
 	github.com/confluentinc/go-editor v0.4.0
@@ -42,10 +42,7 @@ require (
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.10.0
-	github.com/frankban/quicktest v1.7.2 // indirect
 	github.com/gliderlabs/ssh v0.3.0 // indirect
-	github.com/go-openapi/spec v0.19.2 // indirect
-	github.com/go-openapi/swag v0.19.4 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
@@ -58,10 +55,10 @@ require (
 	github.com/goreleaser/goreleaser v0.162.1
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
-	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-version v1.2.1
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
-	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.12
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.1.0
@@ -72,7 +69,6 @@ require (
 	github.com/mitchellh/golicense v0.1.1
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
-	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
@@ -94,7 +90,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20201203001011-0b49973bad19
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.3.1
+	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 	mvdan.cc/sh/v3 v3.2.2
@@ -104,6 +100,7 @@ replace (
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 	github.com/spf13/cobra => github.com/spf13/cobra v1.1.3-0.20210218152603-eb3b6397b1b5
 	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
+	k8s.io/api => k8s.io/api v0.0.0-20190126160459-e86510ea3fe7
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 )

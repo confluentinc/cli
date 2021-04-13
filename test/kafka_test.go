@@ -34,6 +34,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-dedicated --name lkc-update-dedicated-name --cku 2", fixture: "kafka/27.golden"},
 		{args: "kafka cluster update lkc-update-dedicated --cku 2", fixture: "kafka/39.golden"},
 		{args: "kafka cluster update lkc-update --cku 2", fixture: "kafka/kafka-cluster-expansion-error.golden", wantErrCode: 1},
+		{args: "kafka cluster update lkc-update-dedicated-shrink --name lkc-update-dedicated-name --cku 1", fixture: "kafka/44.golden"},
+		{args: "kafka cluster update lkc-update-dedicated-shrink --cku 1", fixture: "kafka/45.golden"},
+		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/kafka-cluster-shrink-error.golden", wantErrCode: 1},
 
 		{args: "kafka cluster delete", fixture: "kafka/3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka/kafka-delete-unknown-error.golden", wantErrCode: 1},
