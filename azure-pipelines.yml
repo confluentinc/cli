@@ -56,11 +56,6 @@ steps:
   displayName: 'make lint-licenses'
 
 - script: |
-    bash <(curl -s https://codecov.io/bash)
-  condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: 'Generate Codecov report (only run on Linux)'
-
-- script: |
     git checkout go.*
   displayName: 'Reset go.* just in case'
 
