@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -31,7 +32,7 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {//version *version.Version) error {
 	if d.resolver == nil {
 		return nil
 	}
@@ -43,17 +44,23 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		if d.Credential.CredentialType == v2.APIKey {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
 		}
-		envSet := false
-		for _, account := range d.State.Auth.Accounts {
-			if account.Id == envId {
-				d.Config.SetOverwrittenAccount(d.State.Auth.Account)
-				d.State.Auth.Account = account
-				envSet = true
-				break
-			}
-		}
+		envSet := d.verifyEnvironmentId(envId, d.State.Auth.Accounts)
+		// if environment ID is not found in config, make api call and check against those accounts
 		if !envSet {
-			return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+			if client == nil {
+				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+			}
+			accounts, err := client.Account.List(context.Background(), &orgv1.Account{})
+			if err != nil {
+				return err
+			}
+			envSet = d.verifyEnvironmentId(envId, accounts)
+			if envSet {
+				d.State.Auth.Accounts = accounts
+				d.Save()
+			} else {
+				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+			}
 		}
 	}
 	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
@@ -69,6 +76,17 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	}
 	return nil
+}
+
+func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
+	for _, env := range environments {
+		if env.Id == envId {
+			d.Config.SetOverwrittenAccount(d.State.Auth.Account)
+			d.State.Auth.Account = env
+			return true
+		}
+	}
+	return false
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
