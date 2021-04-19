@@ -32,7 +32,7 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {//version *version.Version) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {
 	if d.resolver == nil {
 		return nil
 	}
