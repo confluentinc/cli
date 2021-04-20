@@ -451,7 +451,7 @@ func kafkaRestIsEnabled(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (bool
 	// update config to have updated cluster if rest endpoint is no longer ""
 	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
 	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
-	err = ctx.Save()
+	err = ctx.Save() //should we fail on this error or log and continue?
 	if err != nil {
 		return false, "", err
 	}
@@ -890,6 +890,6 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	kafkarestv3.NewConfiguration()
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath: kafkaRestURL,
+		BasePath: kafkaRestURL+"/kafka/v3",
 	}), nil
 }
