@@ -57,7 +57,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 			envSet = d.verifyEnvironmentId(envId, accounts)
 			if envSet {
 				d.State.Auth.Accounts = accounts
-				d.Save()
+				_ = d.Save()
 			} else {
 				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
 			}
