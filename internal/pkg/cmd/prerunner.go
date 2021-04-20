@@ -402,6 +402,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
+		ctx, err := cliCmd.Config.Context(cliCmd.Command)
+		if err != nil {
+			return nil, err
+		}
 		enabled, restEndpoint, err := kafkaRestIsEnabled(ctx, cliCmd)
 		if err != nil {
 			return nil, err
