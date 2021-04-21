@@ -24,7 +24,7 @@ func NewKafkaREST(client *kafkarestv3.APIClient, context context.Context) *Kafka
 	}
 }
 
-const kafkaRestPort = "8090"
+const kafkaRestPort = "443"
 
 func bootstrapServersToRestURL(bootstrap string) (string, error) {
 	bootstrapServers := strings.Split(bootstrap, ",")

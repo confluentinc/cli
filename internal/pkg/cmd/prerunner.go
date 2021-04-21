@@ -432,9 +432,6 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			if err != nil {
-				return nil, err
-			}
 			result.Context = context.WithValue(context.Background(), krsdk.ContextAccessToken, bearerToken)
 			return result, nil
 		}

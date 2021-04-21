@@ -113,9 +113,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link describe --cluster lkc-describe-topic link-1", fixture: "kafka/cluster-linking/describe-link-plain.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/cluster-linking/describe-link-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/cluster-linking/describe-link-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka link list-configs --cluster lkc-describe-topic link-1", fixture: "kafka/cluster-linking/list-link-configs-plain.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka link list-configs --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/cluster-linking/list-link-configs-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka link list-configs --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/cluster-linking/list-link-configs-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link-name link-1", fixture: "kafka/cluster-linking/list-mirror.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link-name link-1 -o json", fixture: "kafka/cluster-linking/list-mirror-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},

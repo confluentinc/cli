@@ -175,7 +175,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 					SourceClusterId:   "cluster-1",
 					LinkName:    "link-1",
 					LinkId:      "LINKID1",
-					TopicsNames: []string{"link-1-topic-1", "link-1-topic-2"},
+					Topics: []string{"link-1-topic-1", "link-1-topic-2"},
 				},
 				{
 					Kind:        "",
@@ -183,7 +183,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 					SourceClusterId:   "cluster-1",
 					LinkName:    "link-2",
 					LinkId:      "LINKID2",
-					TopicsNames: []string{"link-2-topic-1", "link-2-topic-2"},
+					Topics: []string{"link-2-topic-1", "link-2-topic-2"},
 				},
 			}})
 			require.NoError(t, err)
@@ -203,7 +203,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 				SourceClusterId:   "cluster-1",
 				LinkName:    "link-1",
 				LinkId:      "LINKID1",
-				TopicsNames: []string{"link-1-topic-1", "link-1-topic-2"},
+				Topics: []string{"link-1-topic-1", "link-1-topic-2"},
 			})
 			require.NoError(t, err)
 		case "DELETE":
@@ -247,7 +247,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 							Lag:      571428,
 						},
 					},
-					MirrorTopicStatus:    "active",
+					MirrorStatus:    "active",
 					StateTimeMs:          111111111,
 				},
 				{
@@ -267,7 +267,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 							Lag:      0,
 						},
 					},
-					MirrorTopicStatus:    "stopped",
+					MirrorStatus:    "stopped",
 					StateTimeMs:          222222222,
 				},
 			}})
@@ -310,7 +310,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 							Lag:      571428,
 						},
 					},
-					MirrorTopicStatus:    "active",
+					MirrorStatus:    "active",
 					StateTimeMs:          111111111,
 				},
 				{
@@ -330,7 +330,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 							Lag:      0,
 						},
 					},
-					MirrorTopicStatus:    "stopped",
+					MirrorStatus:    "stopped",
 					StateTimeMs:          222222222,
 				},
 			}})
@@ -461,7 +461,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.Respon
 						Lag:       571428,
 					},
 				},
-				MirrorTopicStatus: "active",
+				MirrorStatus: "active",
 				StateTimeMs:       111111111,
 			})
 			require.NoError(t, err)

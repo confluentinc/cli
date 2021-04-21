@@ -66,7 +66,7 @@ const (
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
 	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Operation not supported: rest proxy is not available in the destination cluster."
+	RestProxyNotAvailableMsg = "Operation not supported: the operation is only support with kafka rest proxy."
 	CreatedMirrorMsg = "Created mirror topic \"%s\".\n"
 
 	// kafka acl commands

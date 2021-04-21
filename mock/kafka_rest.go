@@ -331,7 +331,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksMirrorsGet(ctx context.Context, c
 						Lag:      571428,
 					},
 				},
-				MirrorTopicStatus:    "active",
+				MirrorStatus:    "active",
 				StateTimeMs:          44444444,
 			},
 			{
@@ -340,7 +340,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksMirrorsGet(ctx context.Context, c
 				LinkName:             "link-1",
 				MirrorTopicName:      "mirror-topic-2",
 				SourceTopicName:      "src-topic-2",
-				MirrorTopicStatus:    "active",
+				MirrorStatus:    "active",
 				StateTimeMs:          55555555,
 				MirrorLags:           []krsdk.MirrorLag{
 					{
@@ -375,7 +375,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksGet(ctx context.Context, clusterI
 				SourceClusterId:   clusterId,
 				LinkName:    "link-1",
 				LinkId:      "LinkId",
-				TopicsNames: []string{"topic-1", "topic-2", "topic-3"},
+				TopicNames: []string{"topic-1", "topic-2", "topic-3"},
 			},
 		},
 	}, httpResp, nil
@@ -545,7 +545,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameGet(ctx context.Context, 
 		SourceClusterId:   clusterId,
 		LinkName:          linkName,
 		LinkId:            "link-1",
-		TopicsNames: []string{"topic-1", "topic-2", "topic-3"},
+		TopicNames: []string{"topic-1", "topic-2", "topic-3"},
 	}, httpResp, nil
 }
 
@@ -588,7 +588,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsMirrorTopicNameGet
 				Lag:      571428,
 			},
 		},
-		MirrorTopicStatus:    "active",
+		MirrorStatus:    "active",
 		StateTimeMs:          44444444,
 	}, httpResp, nil
 }
@@ -653,7 +653,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Co
 						Lag:      571428,
 					},
 				},
-				MirrorTopicStatus:    "active",
+				MirrorStatus:    "active",
 				StateTimeMs:          44444444,
 			},
 			{
@@ -662,7 +662,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Co
 				LinkName:             "link-1",
 				MirrorTopicName:      "mirror-topic-2",
 				SourceTopicName:      "src-topic-2",
-				MirrorTopicStatus:    "active",
+				MirrorStatus:    "active",
 				StateTimeMs:          55555555,
 				MirrorLags:           []krsdk.MirrorLag{
 					{

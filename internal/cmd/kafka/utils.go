@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	logger "log"
+	_nethttp "net/http"
 	"os"
 	"strings"
 )
@@ -125,4 +126,16 @@ func createTestConfigFile(name string, configs map[string]string) (string, error
 	}
 
 	return dir, file.Close()
+}
+
+func handleOpenApiError(httpResp *_nethttp.Response, err error, kafkaREST *pcmd.KafkaREST) error {
+	if err == nil {
+		return nil
+	}
+
+	if httpResp != nil{
+		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+	}
+
+	return err
 }

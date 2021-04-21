@@ -33,7 +33,7 @@ type listMirrorWrite struct {
 	MirrorTopicName     string
 	SourceTopicName          string
 	MirrorStatus             string
-	StatusTimeMs             int32
+	StatusTimeMs             int64
 	NumPartition             int32
 	MaxPerPartitionMirrorLag int32
 }
@@ -43,7 +43,7 @@ type describeMirrorWrite struct {
 	MirrorTopicName  string
 	SourceTopicName string
 	MirrorStatus string
-	StatusTimeMs int32
+	StatusTimeMs int64
 	Partition int32
 	PartitionMirrorLag int32
 }
@@ -79,10 +79,10 @@ func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *mirrorCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all mirror topics under the cluster link.",
+		Short: "List all mirror topics in the cluster or under the given cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all mirrors under the link.",
+				Text: "List all mirrors in the cluster or under the given cluster link.",
 				Code: "ccloud kafka mirror list --link-name <link-name> --mirror-status <mirror-status>",
 			},
 		),
@@ -98,10 +98,10 @@ func (c *mirrorCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <destination-topic-name>",
-		Short: "Describes a mirror topic.",
+		Short: "Describe a mirror topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describes a mirror topic under the link.",
+				Text: "Describe a mirror topic under the link.",
 				Code: "ccloud kafka mirror describe <destination-topic-name> --link-name <link-name>",
 			},
 		),
@@ -110,16 +110,17 @@ func (c *mirrorCommand) init() {
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
+	check(describeCmd.MarkFlagRequired(linkFlagName))
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	createCmd := &cobra.Command{
-		Use:   "create <mirror-name>",
+		Use:   "create <source-topic-name>",
 		Short: "Create a mirror topic under the link. Currently, destination topic name is required to be the same as the Source topic name.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied Source URL and properties.",
-				Code: "ccloud kafka mirror create <Source-topic-name> --link-name <link-name> " +
+				Code: "ccloud kafka mirror create <source-topic-name> --link-name <link-name> " +
 					"--replication-factor <replication-factor> --config=\"unclean.leader.election.enable=true\"",
 			},
 		),
@@ -130,6 +131,7 @@ func (c *mirrorCommand) init() {
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing topic config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	check(createCmd.MarkFlagRequired(linkFlagName))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
@@ -148,6 +150,7 @@ func (c *mirrorCommand) init() {
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	promoteCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	check(promoteCmd.MarkFlagRequired(linkFlagName))
 	c.AddCommand(promoteCmd)
 
 	failoverCmd := &cobra.Command{
@@ -165,6 +168,7 @@ func (c *mirrorCommand) init() {
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	failoverCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	check(failoverCmd.MarkFlagRequired(linkFlagName))
 	c.AddCommand(failoverCmd)
 
 	pauseCmd := &cobra.Command{
@@ -182,6 +186,7 @@ func (c *mirrorCommand) init() {
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	pauseCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	check(pauseCmd.MarkFlagRequired(linkFlagName))
 	c.AddCommand(pauseCmd)
 
 	resumeCmd := &cobra.Command{
@@ -199,6 +204,7 @@ func (c *mirrorCommand) init() {
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	resumeCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	check(resumeCmd.MarkFlagRequired(linkFlagName))
 	c.AddCommand(resumeCmd)
 }
 
@@ -244,7 +250,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return handleOpenApiError(httpResp, err, kafkaREST)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
@@ -263,9 +269,9 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 
 		outputWriter.AddElement(&listMirrorWrite{
 			LinkName:                 mirror.LinkName,
-			MirrorTopicName:     mirror.MirrorTopicName,
+			MirrorTopicName:          mirror.MirrorTopicName,
 			SourceTopicName:          mirror.SourceTopicName,
-			MirrorStatus:             string(mirror.MirrorTopicStatus),
+			MirrorStatus:             string(mirror.MirrorStatus),
 			StatusTimeMs:             mirror.StateTimeMs,
 			NumPartition:             mirror.NumPartitions,
 			MaxPerPartitionMirrorLag: maxLag,
@@ -314,7 +320,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			LinkName:             mirror.LinkName,
 			MirrorTopicName: mirror.MirrorTopicName,
 			SourceTopicName:      mirror.SourceTopicName,
-			MirrorStatus:         string(mirror.MirrorTopicStatus),
+			MirrorStatus:         string(mirror.MirrorStatus),
 			StatusTimeMs:         mirror.StateTimeMs,
 			Partition:            partitionLag.Partition,
 			PartitionMirrorLag:   partitionLag.Lag,
@@ -370,12 +376,11 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := kafkaREST.Client.ClusterLinkingApi.
 		ClustersClusterIdLinksLinkNameMirrorsPost(kafkaREST.Context, lkc, linkName, createMirrorOpt)
-	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+	if err == nil {
+		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
 	}
 
-	utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
-	return nil
+	return handleOpenApiError(httpResp, err, kafkaREST)
 }
 
 func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
@@ -573,22 +578,34 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 	}
 
 	for _, result := range results.Data {
-		var msg = ""
+		var errMsg = ""
 		var code = ""
 
 		if result.ErrorMessage != nil {
-			msg = *result.ErrorMessage
+			errMsg = *result.ErrorMessage
 		}
 
 		if result.ErrorCode != nil {
 			code = fmt.Sprint(*result.ErrorCode)
 		}
 
+		// fatal error
+		if errMsg != "" {
+			outputWriter.AddElement(&alterMirrorWrite{
+				MirrorTopicName:    result.MirrorTopicName,
+				Partition:          -1,
+				ErrorMessage:       errMsg,
+				ErrorCode:          code,
+				PartitionMirrorLag: -1,
+			})
+			continue
+		}
+
 		for _, partitionLag := range result.MirrorLags {
 			outputWriter.AddElement(&alterMirrorWrite{
 				MirrorTopicName:    result.MirrorTopicName,
 				Partition:          partitionLag.Partition,
-				ErrorMessage:       msg,
+				ErrorMessage:       errMsg,
 				ErrorCode:          code,
 				PartitionMirrorLag: partitionLag.Lag,
 			})

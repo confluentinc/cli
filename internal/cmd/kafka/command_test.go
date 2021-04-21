@@ -811,20 +811,6 @@ func TestBatchAlterLink(t *testing.T) {
 	defer os.Remove(dir + "/" + configFileName)
 }
 
-func TestListLinkConfigs(t *testing.T) {
-	linkTestHelper(
-		t,
-		func(link testLink) []string {
-			return []string{"link", "list-configs", link.name}
-		},
-		func(expect chan interface{}, link testLink) {
-			expect <- cliMock.ListLinkConfigMatcher{
-				LinkName:    link.name,
-			}
-		},
-	)
-}
-
 func TestCreateLink(t *testing.T) {
 	linkTestHelper(
 		t,

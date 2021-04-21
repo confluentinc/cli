@@ -1,5 +1,6 @@
 package kafka
 
+// TODO: wrap all link / mirror commands with kafka rest error
 import (
 	"context"
 	"fmt"
@@ -28,9 +29,10 @@ const (
 
 var (
 	keyValueFields      = []string{"Key", "Value"}
-	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
-	linkFields          = []string{"LinkName"}
-	linkConfigFields     = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
+	linkFieldsWithTopic = []string{"LinkName", "TopicName", "SourceClusterId"}
+	linkFields     = []string{"LinkName", "SourceClusterId"}
+	linkFieldsKafkaApi  = []string{"LinkName"}
+	linkConfigFields    = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
 )
 
 type keyValueDisplay struct {
@@ -38,13 +40,14 @@ type keyValueDisplay struct {
 	Value string
 }
 
-type LinkWriter struct {
+type LinkWriterKafkaApi struct {
 	LinkName string
 }
 
 type LinkTopicWriter struct {
 	LinkName  string
 	TopicName string
+	SourceClusterId string
 }
 
 type LinkConfigWriter struct {
@@ -101,8 +104,7 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka link create my_link --source-bootstrap-server myhost:1234\n" +
-					"ccloud kafka link create my_link --source-bootstrap-server myhost:1234 --config-file ~/myfile.txt",
+				Code: "ccloud kafka link create my_link --source-bootstrap-server myhost:1234 --config-file ~/myfile.txt",
 			},
 		),
 		RunE: c.create,
@@ -114,7 +116,7 @@ func (c *linkCommand) init() {
 	check(createCmd.MarkFlagRequired(sourceClusterIdFlagName))
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-	createCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
 	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
@@ -135,7 +137,7 @@ func (c *linkCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <link-name>",
-		Short: "Describes a previously created cluster link.",
+		Short: "Describe a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describes a cluster link.",
@@ -156,7 +158,7 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Updates configs for the cluster link.",
-				Code: "ccloud kafka link update my_link --config \"retention.ms=123456890\"",
+				Code: "ccloud kafka link update my_link --config-file ~/config.txt",
 			},
 		),
 		RunE: c.update,
@@ -164,61 +166,9 @@ func (c *linkCommand) init() {
 	}
 	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	check(updateCmd.MarkFlagRequired(configFileFlagName))
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
-
-	listConfigCmd := &cobra.Command{
-		Use:   "list-configs <link-name>",
-		Short: "List all configs of the link.",
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List all configs of the link.",
-				Code: "ccloud kafka link list-configs",
-			},
-		),
-		RunE: c.listConfigs,
-		Args: cobra.ExactArgs(1),
-	}
-	listConfigCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listConfigCmd.Flags().SortFlags = false
-	c.AddCommand(listConfigCmd)
-}
-
-func (c *linkCommand) listConfigs(cmd *cobra.Command, args []string) error {
-	linkName := args[0]
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST == nil {
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	listLinkConfigsResponseDataList, _, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(
-		kafkaREST.Context, lkc, linkName)
-	if err != nil {
-		return err
-	}
-
-	outputWriter, err := output.NewListOutputWriter(cmd, linkConfigFields, linkConfigFields, linkConfigFields)
-	if err != nil {
-		return err
-	}
-
-	for _, config := range listLinkConfigsResponseDataList.Data {
-		outputWriter.AddElement(&LinkConfigWriter{
-			ConfigName:  config.Name,
-			ConfigValue: config.Value,
-			ReadOnly:    config.ReadOnly,
-			Sensitive:   config.Sensitive,
-			Source:      config.Source,
-			Synonyms:    config.Synonyms,
-		})
-	}
-
-	return outputWriter.Out()
 }
 
 func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
@@ -241,25 +191,33 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksGet(
 		kafkaREST.Context, lkc)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return handleOpenApiError(httpResp, err, kafkaREST)
 	}
 
 	if includeTopics {
 		outputWriter, err := output.NewListOutputWriter(
-			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+			cmd	, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
 		if err != nil {
 			return err
 		}
 
 		for _, link := range listLinksRespDataList.Data {
-			if len(link.TopicsNames) > 0 {
-				for _, topic := range link.TopicsNames {
+			if len(link.TopicNames) > 0 {
+				for _, topic := range link.TopicNames {
 					outputWriter.AddElement(
-						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
+						&LinkTopicWriter{
+							LinkName:        link.LinkName,
+							TopicName:       topic,
+							SourceClusterId: link.SourceClusterId,
+						})
 				}
 			} else {
 				outputWriter.AddElement(
-					&LinkTopicWriter{LinkName: link.LinkName, TopicName: ""})
+					&LinkTopicWriter{
+						LinkName:        link.LinkName,
+						TopicName:       "",
+						SourceClusterId: link.SourceClusterId,
+					})
 			}
 		}
 
@@ -271,7 +229,10 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, link := range listLinksRespDataList.Data {
-			outputWriter.AddElement(&LinkWriter{LinkName: link.LinkName})
+			outputWriter.AddElement(&LinkTopicWriter{
+				LinkName:        link.LinkName,
+				SourceClusterId: link.SourceClusterId,
+			})
 		}
 
 		return outputWriter.Out()
@@ -311,13 +272,13 @@ func (c *linkCommand) listWithKafkaApi(cmd *cobra.Command, includeTopics bool) e
 
 		return outputWriter.Out()
 	} else {
-		outputWriter, err := output.NewListOutputWriter(cmd, linkFields, linkFields, linkFields)
+		outputWriter, err := output.NewListOutputWriter(cmd, linkFieldsKafkaApi, linkFieldsKafkaApi, linkFieldsKafkaApi)
 		if err != nil {
 			return err
 		}
 
 		for _, link := range resp.Links {
-			outputWriter.AddElement(&LinkWriter{LinkName: link.LinkName})
+			outputWriter.AddElement(&LinkWriterKafkaApi{LinkName: link.LinkName})
 		}
 
 		return outputWriter.Out()
@@ -375,13 +336,13 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	createLinkOpt := &kafkarestv3.ClustersClusterIdLinksPostOpts{
 		ValidateOnly: optional.NewBool(validateOnly),
 		ValidateLink: optional.NewBool(!skipValidatingLink),
-		CreateLinkRequestData: optional.NewInterface(&kafkarestv3.CreateLinkRequestData{
+		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
 			SourceClusterId: sourceClusterId,
 			Configs: toCreateTopicConfigs(configMap),
 		}),
 	}
 
-	_, err = kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksPost(
+	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksPost(
 		kafkaREST.Context, lkc, linkName, createLinkOpt)
 
 	if err == nil {
@@ -390,9 +351,10 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 			msg = errors.DryRunPrefix + msg
 		}
 		utils.Printf(cmd, msg, linkName)
+		return nil
 	}
 
-	return err
+	return handleOpenApiError(httpResp, err, kafkaREST)
 }
 
 // Will be deprecated soon
@@ -435,12 +397,12 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameDelete(kafkaREST.Context, lkc, linkName)
+	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameDelete(kafkaREST.Context, lkc, linkName)
 	if err == nil {
 		utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
 	}
 
-	return err
+	return handleOpenApiError(httpResp, err, kafkaREST)
 }
 
 // Will be deprecated soon
@@ -473,45 +435,39 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	listLinksResponseData, _, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameGet(
+	listLinkConfigsRespData, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(
 		kafkaREST.Context, lkc, linkName)
 	if err != nil {
-		return err
+		return handleOpenApiError(httpResp, err, kafkaREST)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, keyValueFields, keyValueFields, keyValueFields)
+	outputWriter, err := output.NewListOutputWriter(cmd, linkConfigFields, linkConfigFields, linkConfigFields)
 	if err != nil {
 		return err
 	}
 
-	outputWriter.AddElement(&keyValueDisplay{
-		Key: "ClusterId",
-		Value: listLinksResponseData.SourceClusterId,
-	})
-
-	outputWriter.AddElement(&keyValueDisplay{
-		Key: "LinkName",
-		Value: listLinksResponseData.LinkName,
-	})
-
-	outputWriter.AddElement(&keyValueDisplay{
-		Key: "LinkId",
-		Value: listLinksResponseData.LinkId,
-	})
-
-
-	listLinkConfigsRespData, _, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(
-		kafkaREST.Context, lkc, linkName)
-	if err != nil {
-		return err
+	if len(listLinkConfigsRespData.Data) < 1 {
+		return outputWriter.Out()
 	}
+
+	outputWriter.AddElement(&LinkConfigWriter{
+		ConfigName:  "dest.cluster.id",
+		ConfigValue: listLinkConfigsRespData.Data[0].ClusterId,
+		ReadOnly:    true,
+		Sensitive:   true,
+		Source:      "",
+		Synonyms:    nil,
+	})
 
 	for _, config := range listLinkConfigsRespData.Data {
-		outputWriter.AddElement(
-			&keyValueDisplay{
-				Key:   config.Name,
-				Value: config.Value,
-			})
+		outputWriter.AddElement(&LinkConfigWriter{
+			ConfigName:  config.Name,
+			ConfigValue: config.Value,
+			ReadOnly:    config.ReadOnly,
+			Sensitive:   config.Sensitive,
+			Source:      config.Source,
+			Synonyms:    config.Synonyms,
+		})
 	}
 
 	return outputWriter.Out()
@@ -572,18 +528,18 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-	_, err = kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsalterPut(
+	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsalterPut(
 		kafkaREST.Context, lkc, linkName,
 		&kafkarestv3.ClustersClusterIdLinksLinkNameConfigsalterPutOpts{
 			AlterConfigBatchRequestData: optional.NewInterface(
 				kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
 		})
-	if err != nil {
-		return err
+	if err == nil {
+		utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)
+		return nil
 	}
 
-	utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)
-	return nil
+	return handleOpenApiError(httpResp, err, kafkaREST)
 }
 
 // Will be deprecated soon
