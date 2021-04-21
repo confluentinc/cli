@@ -68,7 +68,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-infinite -o json", fixture: "kafka/42.golden"},
 		{args: "kafka cluster describe lkc-describe-infinite -o yaml", fixture: "kafka/43.golden"},
 
-		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/kafka-acls-list.golden"},
+		{args: "kafka acl list --cluster lkc-acls-kafka-api", fixture: "kafka/kafka-acls-list.golden"},
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/rp-kafka-acls-list.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
