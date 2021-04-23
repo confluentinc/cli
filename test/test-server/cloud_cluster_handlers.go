@@ -80,7 +80,7 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 			c.HandleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
 		case "lkc-update":
 			c.HandleKafkaClusterUpdateRequest(t)(w, r)
-		case "lkc-update-dedicated":
+		case "lkc-update-dedicated-expand":
 			c.HandleKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
 			c.HandleKafkaDedicatedClusterShrink(t)(w, r)
@@ -266,7 +266,7 @@ func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.
 	}
 }
 
-// Handler for GET/PUT "api/clusters/lkc-update-dedicated"
+// Handler for GET/PUT "api/clusters/lkc-update-dedicated-expand"
 func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
@@ -276,7 +276,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w 
 			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
 				Cluster: &schedv1.KafkaCluster{
 					Id:              id,
-					Name:            "lkc-update-dedicated",
+					Name:            "lkc-update-dedicated-expand",
 					Cku:             1,
 					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
 					NetworkIngress:  50,
