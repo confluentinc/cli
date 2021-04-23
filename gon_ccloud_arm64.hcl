@@ -1,4 +1,4 @@
-source = ["./dist/ccloud/signed_darwin_arm64/ccloud"]
+source = ["./dist/ccloud/signed-arm64_darwin_arm64/ccloud"]
 bundle_id = "io.confluent.cli.ccloud"
 
 apple_id {
