@@ -326,6 +326,8 @@ github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.2 h1:NElg57iRIm/YOCY9
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.2/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.3 h1:bAJ5tPTP0nACK1epHHr0PSDSLHunbtwXxV5aOo1+v/4=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.3/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
+github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.2.1 h1:nVrxGkUUVB8Pry9TpJihbc4VogNT+fsy7Ww5A6ztsHg=
+github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.2.1/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19 h1:iaoifvC9Q+iXpa2ibgbErJ0YOgeLiYWlY+Jr2P1SF9c=
 github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19/go.mod h1:wyYeXb6d0I/RRhPV7LaAFneTGqbT7chHZtpzfKwdrh0=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11 h1:SqknPrUP6isE35o3//c5agXxOl4/cVyxtNIsi65EPTY=
