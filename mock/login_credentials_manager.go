@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go-v1"
+	github_com_confluentinc_ccloud_sdk_go_v1 "github.com/confluentinc/ccloud-sdk-go-v1"
 	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/internal/pkg/netrc"
 	github_com_spf13_cobra "github.com/spf13/cobra"
@@ -19,7 +19,7 @@ type MockLoginCredentialsManager struct {
 	GetCCloudCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCCloudCredentialsFromPrompt sync.Mutex
-	GetCCloudCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCCloudCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go_v1.Client) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetConfluentCredentialsFromEnvVar sync.Mutex
 	GetConfluentCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -42,7 +42,7 @@ type MockLoginCredentialsManager struct {
 		}
 		GetCCloudCredentialsFromPrompt []struct {
 			Cmd    *github_com_spf13_cobra.Command
-			Client *github_com_confluentinc_ccloud_sdk_go.Client
+			Client *github_com_confluentinc_ccloud_sdk_go_v1.Client
 		}
 		GetConfluentCredentialsFromEnvVar []struct {
 			Cmd *github_com_spf13_cobra.Command
@@ -102,7 +102,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVarCalls() []st
 }
 
 // GetCCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go_v1.Client) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCCloudCredentialsFromPrompt.Unlock()
 
@@ -112,7 +112,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPrompt(cmd *github
 
 	call := struct {
 		Cmd    *github_com_spf13_cobra.Command
-		Client *github_com_confluentinc_ccloud_sdk_go.Client
+		Client *github_com_confluentinc_ccloud_sdk_go_v1.Client
 	}{
 		Cmd:    cmd,
 		Client: client,
@@ -134,7 +134,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPromptCalled() boo
 // GetCCloudCredentialsFromPromptCalls returns the calls made to GetCCloudCredentialsFromPrompt.
 func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPromptCalls() []struct {
 	Cmd    *github_com_spf13_cobra.Command
-	Client *github_com_confluentinc_ccloud_sdk_go.Client
+	Client *github_com_confluentinc_ccloud_sdk_go_v1.Client
 } {
 	m.lockGetCCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCCloudCredentialsFromPrompt.Unlock()

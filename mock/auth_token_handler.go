@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go-v1"
+	github_com_confluentinc_ccloud_sdk_go_v1 "github.com/confluentinc/ccloud-sdk-go-v1"
 	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
@@ -15,14 +15,14 @@ import (
 // MockAuthTokenHandler is a mock of AuthTokenHandler interface
 type MockAuthTokenHandler struct {
 	lockGetCCloudTokens sync.Mutex
-	GetCCloudTokensFunc func(client *github_com_confluentinc_ccloud_sdk_go.Client, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool) (string, string, error)
+	GetCCloudTokensFunc func(client *github_com_confluentinc_ccloud_sdk_go_v1.Client, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool) (string, string, error)
 
 	lockGetConfluentToken sync.Mutex
 	GetConfluentTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials) (string, error)
 
 	calls struct {
 		GetCCloudTokens []struct {
-			Client      *github_com_confluentinc_ccloud_sdk_go.Client
+			Client      *github_com_confluentinc_ccloud_sdk_go_v1.Client
 			Credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials
 			NoBrowser   bool
 		}
@@ -34,7 +34,7 @@ type MockAuthTokenHandler struct {
 }
 
 // GetCCloudTokens mocks base method by wrapping the associated func.
-func (m *MockAuthTokenHandler) GetCCloudTokens(client *github_com_confluentinc_ccloud_sdk_go.Client, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool) (string, string, error) {
+func (m *MockAuthTokenHandler) GetCCloudTokens(client *github_com_confluentinc_ccloud_sdk_go_v1.Client, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool) (string, string, error) {
 	m.lockGetCCloudTokens.Lock()
 	defer m.lockGetCCloudTokens.Unlock()
 
@@ -43,7 +43,7 @@ func (m *MockAuthTokenHandler) GetCCloudTokens(client *github_com_confluentinc_c
 	}
 
 	call := struct {
-		Client      *github_com_confluentinc_ccloud_sdk_go.Client
+		Client      *github_com_confluentinc_ccloud_sdk_go_v1.Client
 		Credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials
 		NoBrowser   bool
 	}{
@@ -67,7 +67,7 @@ func (m *MockAuthTokenHandler) GetCCloudTokensCalled() bool {
 
 // GetCCloudTokensCalls returns the calls made to GetCCloudTokens.
 func (m *MockAuthTokenHandler) GetCCloudTokensCalls() []struct {
-	Client      *github_com_confluentinc_ccloud_sdk_go.Client
+	Client      *github_com_confluentinc_ccloud_sdk_go_v1.Client
 	Credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials
 	NoBrowser   bool
 } {

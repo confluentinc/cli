@@ -8,16 +8,16 @@ import (
 	context "context"
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go-v1"
+	github_com_confluentinc_ccloud_sdk_go_v1 "github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 // MockCCloudClientFactory is a mock of CCloudClientFactory interface
 type MockCCloudClientFactory struct {
 	lockAnonHTTPClientFactory sync.Mutex
-	AnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go.Client
+	AnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
 
 	lockJwtHTTPClientFactory sync.Mutex
-	JwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go.Client
+	JwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
 
 	calls struct {
 		AnonHTTPClientFactory []struct {
@@ -32,7 +32,7 @@ type MockCCloudClientFactory struct {
 }
 
 // AnonHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *MockCCloudClientFactory) AnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go.Client {
+func (m *MockCCloudClientFactory) AnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client {
 	m.lockAnonHTTPClientFactory.Lock()
 	defer m.lockAnonHTTPClientFactory.Unlock()
 
@@ -70,7 +70,7 @@ func (m *MockCCloudClientFactory) AnonHTTPClientFactoryCalls() []struct {
 }
 
 // JwtHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *MockCCloudClientFactory) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go.Client {
+func (m *MockCCloudClientFactory) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client {
 	m.lockJwtHTTPClientFactory.Lock()
 	defer m.lockJwtHTTPClientFactory.Unlock()
 
