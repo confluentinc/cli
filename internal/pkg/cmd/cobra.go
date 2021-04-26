@@ -6,12 +6,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
+// NewCLIRunE - Wrapper function around RunE for formatting more helpful error messages when creating a cobra.Command
+// see https://github.com/confluentinc/cli/blob/master/errors.md
 func NewCLIRunE(runEFunc func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(runEFunc(cmd, args), cmd)
 	}
 }
 
+// NewCLIPreRunnerE - Wrapper function around PreRunnerE for formatting more helpful error messages when creating a cobra.Command
 func NewCLIPreRunnerE(prerunnerE func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		return errors.HandleCommon(prerunnerE(cmd, args), cmd)

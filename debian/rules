@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
 
 %:
-	APPLY_PATCHES=no dh $@
+	APPLY_PATCHES=no dh $@ --without systemd
 

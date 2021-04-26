@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -8,15 +9,18 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/gogo/protobuf/types"
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
+	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -25,26 +29,46 @@ import (
 )
 
 const (
-	kafkaClusterID    = "lkc-12345"
-	srClusterID       = "lsrc-12345"
-	apiKeyVal         = "abracadabra"
-	anotherApiKeyVal  = "abba"
-	apiSecretVal      = "opensesame"
-	promptReadString  = "readstring"
-	promptReadPass    = "readpassword"
-	environment       = "testAccount"
-	apiSecretFile     = "./api_secret_test.txt"
-	apiSecretFromFile = "api_secret_test"
-	apiKeyDescription = "Mock Apis"
+	kafkaClusterID     = "lkc-12345"
+	srClusterID        = "lsrc-12345"
+	apiKeyVal          = "abracadabra"
+	apiKeyResourceId   = int32(9999)
+	anotherApiKeyVal   = "abba"
+	apiSecretVal       = "opensesame"
+	promptReadString   = "readstring"
+	promptReadPass     = "readpassword"
+	environment        = "testAccount"
+	apiSecretFile      = "./api_secret_test.txt"
+	apiSecretFromFile  = "api_secret_test"
+	apiKeyDescription  = "Mock Apis"
+	serviceAccountId   = int32(123)
+	serviceAccountName = "service-account"
+
+	auditLogApiKeyResourceId   = int32(7753)
+	auditLogApiKeyVal   = "auditlog-apikey"
+	auditLogApiKeySecretVal       = "opensesameforauditlogs"
+	auditLogApiKeyDescription   = "Mock Apis for Audit Logs"
+	auditLogServiceAccountId   = int32(748)
 )
 
 var (
 	apiValue = &schedv1.ApiKey{
-		UserId:      123,
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
+		UserId:      serviceAccountId,
 		Key:         apiKeyVal,
 		Secret:      apiSecretVal,
 		Description: apiKeyDescription,
 		Created:     types.TimestampNow(),
+		Id:          apiKeyResourceId,
+	}
+	auditLogApiValue = &schedv1.ApiKey{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
+		UserId:      auditLogServiceAccountId,
+		Key:         auditLogApiKeyVal,
+		Secret:      auditLogApiKeySecretVal,
+		Description: auditLogApiKeyDescription,
+		Created:     types.TimestampNow(),
+		Id:          auditLogApiKeyResourceId,
 	}
 )
 
@@ -54,20 +78,32 @@ type APITestSuite struct {
 	apiMock          *ccsdkmock.APIKey
 	keystore         *mock.KeyStore
 	kafkaCluster     *schedv1.KafkaCluster
+	ksqlCluster      *schedv1.KSQLCluster
 	srCluster        *schedv1.SchemaRegistryCluster
 	srMothershipMock *ccsdkmock.SchemaRegistry
 	kafkaMock        *ccsdkmock.Kafka
+	ksqlMock         *ccsdkmock.KSQL
 	isPromptPipe     bool
 	userMock         *ccsdkmock.User
+	analyticsOutput  []segment.Message
+	analyticsClient  analytics.Client
 }
 
 //Require
 func (suite *APITestSuite) SetupTest() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
+
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
 	srCluster.SrCredentials = &v0.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	// Set up audit logs
+	ctx.State.Auth.Organization.AuditLog = &v1.AuditLog{
+		ClusterId:        cluster.ID,
+		AccountId:        "env-zy987",
+		ServiceAccountId: auditLogServiceAccountId,
+		TopicName:        "confluent-audit-log-events",
+	}
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
@@ -75,12 +111,24 @@ func (suite *APITestSuite) SetupTest() {
 		Enterprise: true,
 		AccountId:  environment,
 	}
+	suite.ksqlCluster = &schedv1.KSQLCluster{
+		Id:   "ksql-123",
+		Name: "ksql",
+	}
 	suite.srCluster = &schedv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 	suite.kafkaMock = &ccsdkmock.Kafka{
 		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
+		},
+		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
+		},
+	}
+	suite.ksqlMock = &ccsdkmock.KSQL{
+		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, e error) {
+			return []*schedv1.KSQLCluster{suite.ksqlCluster}, nil
 		},
 	}
 	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
@@ -96,7 +144,12 @@ func (suite *APITestSuite) SetupTest() {
 	}
 	suite.apiMock = &ccsdkmock.APIKey{
 		GetFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) (key *schedv1.ApiKey, e error) {
-			return apiValue, nil
+			switch apiKey.Key {
+			case auditLogApiValue.Key:
+				return auditLogApiValue, nil
+			default:
+				return apiValue, nil
+			}
 		},
 		UpdateFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) error {
 			return nil
@@ -108,7 +161,7 @@ func (suite *APITestSuite) SetupTest() {
 			return nil
 		},
 		ListFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) ([]*schedv1.ApiKey, error) {
-			return []*schedv1.ApiKey{apiValue}, nil
+			return []*schedv1.ApiKey{apiValue, auditLogApiValue}, nil
 		},
 	}
 	suite.keystore = &mock.KeyStore{
@@ -129,10 +182,17 @@ func (suite *APITestSuite) SetupTest() {
 			}, nil
 		},
 		GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
-			return []*v1.User{}, nil
+			return []*v1.User{
+				{
+					Id:          serviceAccountId,
+					ServiceName: serviceAccountName,
+				},
+			}, nil
 		},
 		CheckEmailFunc: nil,
 	}
+	suite.analyticsOutput = make([]segment.Message, 0)
+	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *APITestSuite) newCmd() *command {
@@ -144,7 +204,7 @@ func (suite *APITestSuite) newCmd() *command {
 		Connect:        &ccsdkmock.Connect{},
 		User:           suite.userMock,
 		APIKey:         suite.apiMock,
-		KSQL:           &ccsdkmock.KSQL{},
+		KSQL:           suite.ksqlMock,
 		Metrics:        &ccsdkmock.Metrics{},
 	}
 	prompt := &mock.Prompt{
@@ -168,51 +228,67 @@ func (suite *APITestSuite) newCmd() *command {
 		MDSClient:    nil,
 		Config:       suite.conf,
 	}
-	return New(prerunner, suite.keystore, resolverMock)
+	return New(prerunner, suite.keystore, resolverMock, suite.analyticsClient)
 }
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--resource", srClusterID}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--resource", srClusterID})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, srClusterID)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
+
+//func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
+//	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
+//
+//	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
+//	req.NoError(err)
+//	req.Equal(apiKeyVal, key.(string))
+//}
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--resource", suite.kafkaCluster.Id}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--resource", suite.kafkaCluster.Id})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--resource", "cloud"}))
-	err := cmd.Execute()
+	args := append([]string{"create", "--resource", "cloud"})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(0, len(inputKey.LogicalClusters))
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"delete", apiKeyVal}))
-	err := cmd.Execute()
+	args := append([]string{"delete", apiKeyVal})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.DeleteCalled())
 	inputKey := suite.apiMock.DeleteCalls()[0].Arg1
 	req.Equal(inputKey.Key, apiKeyVal)
+	// TODO add back with analytics
+	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestListSrApiKey() {
@@ -235,6 +311,23 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 	req.True(suite.apiMock.ListCalled())
 	inputKey := suite.apiMock.ListCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+}
+
+// Audit Log Destination Clusters are kafka clusters, however their API keys are created by internal service accounts
+func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
+	cmd := suite.newCmd()
+	buf := new(bytes.Buffer)
+	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
+	cmd.SetOut(buf)
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+	inputKey := suite.apiMock.ListCalls()[0].Arg1
+	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
+	req.Contains(buf.String(), "auditlog service account")
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {
@@ -343,7 +436,7 @@ func (suite *APITestSuite) TestServerComplete() {
 		want   []prompt.Suggest
 	}{
 		{
-			name: "suggest for authenticated user",
+			name: "suggest for command",
 			fields: fields{
 				Command: suite.newCmd(),
 			},
@@ -352,30 +445,96 @@ func (suite *APITestSuite) TestServerComplete() {
 					Text:        apiKeyVal,
 					Description: apiKeyDescription,
 				},
+				{
+					Text:        auditLogApiKeyVal,
+					Description: auditLogApiKeyDescription,
+				},
 			},
-		},
-		{
-			name: "don't suggest for unauthenticated user",
-			fields: fields{
-				Command: func() *command {
-					oldConf := suite.conf
-					suite.conf = v3.UnauthenticatedCloudConfigMock()
-					c := suite.newCmd()
-					suite.conf = oldConf
-					return c
-				}(),
-			},
-			want: nil,
 		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})
 	}
 }
+
+func (suite *APITestSuite) TestServerResourceFlagComplete() {
+	flagName := resourceFlagName
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for flag",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        suite.kafkaCluster.Id,
+					Description: suite.kafkaCluster.Name,
+				},
+				{
+					Text:        suite.srCluster.Id,
+					Description: suite.srCluster.Name,
+				},
+				{
+					Text:        suite.ksqlCluster.Id,
+					Description: suite.ksqlCluster.Name,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *APITestSuite) TestServerServiceAccountFlagComplete() {
+	flagName := "service-account"
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
+		{
+			name: "suggest for flag",
+			fields: fields{
+				Command: suite.newCmd(),
+			},
+			want: []prompt.Suggest{
+				{
+					Text:        fmt.Sprintf("%d", serviceAccountId),
+					Description: serviceAccountName,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
 func TestApiTestSuite(t *testing.T) {
 	suite.Run(t, new(APITestSuite))
 }

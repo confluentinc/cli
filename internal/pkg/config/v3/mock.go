@@ -30,8 +30,8 @@ var (
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
-	bootstrapServer    = "http://toby-cluster"
-	kafkaApiEndpoint   = "http://is-the-worst"
+	bootstrapServer    = "https://toby-cluster:9092"
+	kafkaApiEndpoint   = "https://is-the-worst:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 
@@ -43,11 +43,51 @@ var (
 )
 
 func AuthenticatedCloudConfigMock() *Config {
-	return AuthenticatedConfigMock("ccloud")
+	params := mockConfigParams{
+		cliName:        "ccloud",
+		contextName:    mockContextName,
+		userId:         mockUserId,
+		userResourceId: MockUserResourceId,
+		username:       mockEmail,
+		url:            MockUserResourceId,
+		envId:          MockEnvironmentId,
+		orgId:          mockOrganizationId,
+		orgResourceId:  MockOrgResourceId,
+		credentialName: usernameCredentialName,
+	}
+	return AuthenticatedConfigMock(params)
 }
 
 func AuthenticatedConfluentConfigMock() *Config {
-	return AuthenticatedConfigMock("")
+	params := mockConfigParams{
+		cliName:        "confluent",
+		contextName:    mockContextName,
+		userId:         mockUserId,
+		userResourceId: MockUserResourceId,
+		username:       mockEmail,
+		url:            MockUserResourceId,
+		envId:          MockEnvironmentId,
+		orgId:          mockOrganizationId,
+		orgResourceId:  MockOrgResourceId,
+		credentialName: usernameCredentialName,
+	}
+	return AuthenticatedConfigMock(params)
+}
+
+func AuthenticatedConfigMockWithContextName(cliName string, contextName string) *Config {
+	params := mockConfigParams{
+		cliName:        cliName,
+		contextName:    contextName,
+		userId:         mockUserId,
+		userResourceId: MockUserResourceId,
+		username:       mockEmail,
+		url:            MockUserResourceId,
+		envId:          MockEnvironmentId,
+		orgId:          mockOrganizationId,
+		orgResourceId:  MockOrgResourceId,
+		credentialName: usernameCredentialName,
+	}
+	return AuthenticatedConfigMock(params)
 }
 
 func APICredentialConfigMock() *Config {
@@ -83,12 +123,25 @@ func UnauthenticatedCloudConfigMock() *Config {
 	return c
 }
 
-func AuthenticatedConfigMock(cliName string) *Config {
-	authConfig := createAuthConfig(mockUserId, mockEmail, MockUserResourceId, MockEnvironmentId, mockOrganizationId, MockOrgResourceId)
-	credential := createUsernameCredential(usernameCredentialName, authConfig)
+type mockConfigParams struct {
+	cliName        string
+	contextName    string
+	userId         int32
+	userResourceId string
+	username       string
+	url            string
+	envId          string
+	orgId          int32
+	orgResourceId  string
+	credentialName string
+}
+
+func AuthenticatedConfigMock(params mockConfigParams) *Config {
+	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.envId, params.orgId, params.orgResourceId)
+	credential := createUsernameCredential(params.credentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
-	platform := createPlatform(mockURL, mockURL)
+	platform := createPlatform(params.url, params.url)
 
 	kafkaAPIKeyPair := createAPIKeyPair(kafkaAPIKey, kafkaAPISecret)
 	kafkaCluster := createKafkaCluster(kafkaClusterId, kafkaClusterName, kafkaAPIKeyPair)
@@ -103,12 +156,12 @@ func AuthenticatedConfigMock(cliName string) *Config {
 	}
 
 	conf := New(&config.Params{
-		CLIName:    cliName,
+		CLIName:    params.cliName,
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
 
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -153,6 +206,9 @@ func createAuthConfig(userId int32, email string, userResourceId string, envId s
 		Organization: &orgv1.Organization{
 			Id:         organizationId,
 			ResourceId: orgResourceId,
+		},
+		Accounts: []*orgv1.Account{
+			{Id: envId},
 		},
 	}
 	return auth
@@ -207,4 +263,12 @@ func setUpConfig(conf *Config, ctx *Context, platform *v2.Platform, credential *
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
+}
+
+func AddEnvironmentToConfigMock(config *Config, envId string, envName string) {
+	accounts := config.Context().State.Auth.Accounts
+	config.Context().State.Auth.Accounts = append(accounts, &orgv1.Account{
+		Id:   envId,
+		Name: envName,
+	})
 }

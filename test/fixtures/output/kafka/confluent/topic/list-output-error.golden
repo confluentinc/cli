@@ -1,0 +1,4 @@
+Error: invalid value "hello" for flag `--output`
+
+Suggestions:
+    The possible values for flag `output` are: human, json, yaml.

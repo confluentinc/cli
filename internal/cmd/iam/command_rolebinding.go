@@ -3,10 +3,11 @@ package iam
 import (
 	"context"
 	"fmt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"net/http"
 	"sort"
 	"strings"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -63,7 +64,7 @@ type rolebindingOptions struct {
 }
 
 type rolebindingCommand struct {
-	*cmd.AuthenticatedCLICommand
+	*cmd.AuthenticatedStateFlagCommand
 	cliName string
 }
 
@@ -78,28 +79,48 @@ type listDisplay struct {
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
 func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedWithMDSCLICommand(
-		&cobra.Command{
-			Use:   "rolebinding",
-			Short: "Manage RBAC and IAM role bindings.",
-			Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
-		}, prerunner)
+	cobraRolebindingCmd := &cobra.Command{
+		Use:   "rolebinding",
+		Short: "Manage RBAC and IAM role bindings.",
+		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+	}
+	var cliCmd *cmd.AuthenticatedStateFlagCommand
+	if cliName == "confluent" {
+		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRolebindingCmd, prerunner, RolebindingSubcommandFlags)
+	} else {
+		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRolebindingCmd, prerunner, nil)
+	}
 	roleBindingCmd := &rolebindingCommand{
-		AuthenticatedCLICommand: cliCmd,
-		cliName:                 cliName,
+		AuthenticatedStateFlagCommand: cliCmd,
+		cliName:                       cliName,
 	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
 }
 
 func (c *rolebindingCommand) init() {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List role bindings.",
-		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
-		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
-		Example: examples.BuildExampleString(
+	var example string
+	if c.cliName == "ccloud" {
+		example = examples.BuildExampleString(
+			examples.Example{
+				Text: "To list the role bindings for current user:",
+				Code: "iam rolebinding list --current-user",
+			},
+			examples.Example{
+				Text: "To list the role bindings for a specific principal:",
+				Code: "iam rolebinding list --principal User:frodo",
+			},
+			examples.Example{
+				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
+				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+			},
+			examples.Example{
+				Text: "To list the principals bound to a specific role:",
+				Code: "iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+			},
+		)
+	} else {
+		example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:",
 				Code: "iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
@@ -120,7 +141,17 @@ func (c *rolebindingCommand) init() {
 				Text: "To list the principals bound to a specific resource with a specific role:",
 				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
 			},
-		),
+		)
+
+	}
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List role bindings.",
+		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
+		Args:  cobra.NoArgs,
+		RunE:  cmd.NewCLIRunE(c.list),
+		Example: example,
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().Bool("current-user", false, "Show rolebindings belonging to current user.")
@@ -129,24 +160,6 @@ func (c *rolebindingCommand) init() {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 		listCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		listCmd.Example = examples.BuildExampleString(
-			examples.Example{
-				Text: "To list the role bindings for current user:",
-				Code: "iam rolebinding list --current-user",
-			},
-			examples.Example{
-				Text: "To list the role bindings for a specific principal:",
-				Code: "iam rolebinding list --principal User:frodo",
-			},
-			examples.Example{
-				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
-			},
-			examples.Example{
-				Text: "To list the principals bound to a specific role",
-				Code: "iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
-			},
-		)
 	} else {
 		listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with rolebindings to the role for this qualified resource.")
@@ -212,6 +225,7 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
+	check(deleteCmd.MarkFlagRequired("role"))
 	c.AddCommand(deleteCmd)
 }
 

@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/atrox/homedir"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
@@ -19,6 +21,7 @@ import (
 
 const (
 	defaultConfigFileFmt = "~/.%s/config.json"
+	emptyFieldIndicator  = "EMPTY"
 )
 
 var (
@@ -28,15 +31,42 @@ var (
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck bool                        `json:"disable_update_check"`
-	DisableUpdates     bool                        `json:"disable_updates"`
-	NoBrowser          bool                        `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*v2.Platform     `json:"platforms,omitempty"`
-	Credentials        map[string]*v2.Credential   `json:"credentials,omitempty"`
-	Contexts           map[string]*Context         `json:"contexts,omitempty"`
-	ContextStates      map[string]*v2.ContextState `json:"context_states,omitempty"`
-	CurrentContext     string                      `json:"current_context"`
-	AnonymousId        string                      `json:"anonymous_id,omitempty"`
+	DisableUpdateCheck     bool                        `json:"disable_update_check"`
+	DisableUpdates         bool                        `json:"disable_updates"`
+	NoBrowser              bool                        `json:"no_browser" hcl:"no_browser"`
+	Platforms              map[string]*v2.Platform     `json:"platforms,omitempty"`
+	Credentials            map[string]*v2.Credential   `json:"credentials,omitempty"`
+	Contexts               map[string]*Context         `json:"contexts,omitempty"`
+	ContextStates          map[string]*v2.ContextState `json:"context_states,omitempty"`
+	CurrentContext         string                      `json:"current_context"`
+	AnonymousId            string                      `json:"anonymous_id,omitempty"`
+	overwrittenAccount     *orgv1.Account
+	overwrittenCurrContext string
+	overwrittenActiveKafka string
+}
+
+func (c *Config) SetOverwrittenAccount(acct *orgv1.Account) {
+	if c.overwrittenAccount == nil {
+		c.overwrittenAccount = acct
+	}
+}
+
+func (c *Config) SetOverwrittenCurrContext(contextName string) {
+	if contextName == "" {
+		contextName = emptyFieldIndicator
+	}
+	if c.overwrittenCurrContext == "" {
+		c.overwrittenCurrContext = contextName
+	}
+}
+
+func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
+	if clusterId == "" {
+		clusterId = emptyFieldIndicator
+	}
+	if c.overwrittenActiveKafka == "" {
+		c.overwrittenActiveKafka = clusterId
+	}
 }
 
 // NewBaseConfig initializes a new Config object
@@ -115,10 +145,14 @@ func (c *Config) Load() error {
 
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
+	tempKafka := c.resolveOverwrittenKafka()
+	tempAccount := c.resolveOverwrittenAccount()
+	tempContext := c.resolveOverwrittenContext()
 	err := c.Validate()
 	if err != nil {
 		return err
 	}
+
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
@@ -135,7 +169,75 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
+	c.restoreOverwrittenContext(tempContext)
+	c.restoreOverwrittenAccount(tempAccount)
+	c.restoreOverwrittenKafka(tempKafka)
 	return nil
+}
+
+// If active Kafka cluster has been overwritten by flag value; if so, replace with previous active kafka
+// Return the flag value so that it can be restored after writing to file so that continued execution uses flag value
+// This prevents flags from updating state
+func (c *Config) resolveOverwrittenKafka() string {
+	ctx := c.Context()
+	var tempKafka string
+	if c.overwrittenActiveKafka != "" && ctx != nil && ctx.KafkaClusterContext != nil {
+		if c.overwrittenActiveKafka == emptyFieldIndicator {
+			c.overwrittenActiveKafka = ""
+		}
+		tempKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(c.overwrittenActiveKafka)
+	}
+	return tempKafka
+}
+
+// Restore the flag cluster back into the struct so that it is used for any execution after Save()
+func (c *Config) restoreOverwrittenKafka(tempKafka string) {
+	ctx := c.Context()
+	if tempKafka != "" {
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
+	}
+}
+
+// Switch the initial config context back into the struct so that it is saved and not the flag value
+// Return the overwriting flag context value so that it can be restored after writing the file
+func (c *Config) resolveOverwrittenContext() string {
+	var tempContext string
+	if c.overwrittenCurrContext != "" && c != nil {
+		if c.overwrittenCurrContext == emptyFieldIndicator {
+			c.overwrittenCurrContext = ""
+		}
+		tempContext = c.CurrentContext
+		c.CurrentContext = c.overwrittenCurrContext
+	}
+	return tempContext
+}
+
+// Restore the flag context back into the struct so that it is used for any execution after Save()
+func (c *Config) restoreOverwrittenContext(tempContext string) {
+	if tempContext != "" {
+		c.CurrentContext = tempContext
+	}
+}
+
+// Switch the initial config account back into the struct so that it is saved and not the flag value
+// Return the overwriting flag account value so that it can be restored after writing the file
+func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
+	ctx := c.Context()
+	var tempAccount *orgv1.Account
+	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
+		tempAccount = ctx.State.Auth.Account
+		ctx.State.Auth.Account = c.overwrittenAccount
+	}
+	return tempAccount
+}
+
+// Restore the flag account back into the struct so that it is used for any execution after Save()
+func (c *Config) restoreOverwrittenAccount(tempAccount *orgv1.Account) {
+	ctx := c.Context()
+	if tempAccount != nil {
+		ctx.State.Auth.Account = tempAccount
+	}
 }
 
 func (c *Config) Validate() error {
@@ -271,6 +373,9 @@ func (c *Config) SavePlatform(platform *v2.Platform) error {
 // Context returns the user specified context if it exists,
 // the current Context, or nil if there's no context set.
 func (c *Config) Context() *Context {
+	if c == nil {
+		return nil
+	}
 	return c.Contexts[c.CurrentContext]
 }
 

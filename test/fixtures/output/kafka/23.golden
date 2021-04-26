@@ -4,7 +4,7 @@
   "type": "BASIC",
   "ingress": 100,
   "egress": 100,
-  "storage": 5000,
+  "storage": "5000",
   "provider": "aws",
   "region": "us-east-1",
   "availability": "single-zone",

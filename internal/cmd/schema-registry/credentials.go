@@ -64,6 +64,20 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			return nil, nil, err
 		}
 	}
+	// Check if --api-key and --api-secret flags were set, if so, insert them as the credentials for the sr cluster
+	key, secret, err := currCtx.KeyAndSecretFlags(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+	if key != "" {
+		if srCluster.SrCredentials == nil {
+			srCluster.SrCredentials = &v0.APIKeyPair{}
+		}
+		srCluster.SrCredentials.Key = key
+		if secret != "" {
+			srCluster.SrCredentials.Secret = secret
+		}
+	}
 
 	// First examine existing credentials. If check fails(saved credentials no longer works or user enters
 	//incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.

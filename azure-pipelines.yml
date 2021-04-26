@@ -32,6 +32,13 @@ steps:
   condition: eq( variables['Agent.OS'], 'Darwin' )
   displayName: 'Install hub (Darwin)'
 
+# make generate-packaging-patch will update the timestamp (in the first two lines of the patch file), so we should ignore that line for the diff
+- script: |
+    make generate-packaging-patch
+    diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
+  condition: eq( variables['Agent.OS'], 'Linux' )
+  displayName: 'Ensure packaging patch is up-to-date (run make generate-packaging-patch)'
+
 - script: |
     make deps
   displayName: 'make deps'
@@ -41,16 +48,12 @@ steps:
 # make targets separately
 - script: |
     make test
+  timeoutInMinutes: 90
   displayName: 'make test'
 
 - script: |
     make lint-licenses
   displayName: 'make lint-licenses'
-
-- script: |
-    bash <(curl -s https://codecov.io/bash)
-  condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: 'Generate Codecov report (only run on Linux)'
 
 - script: |
     git checkout go.*

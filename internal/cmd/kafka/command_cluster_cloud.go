@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -13,10 +14,12 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -62,9 +65,10 @@ const (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 type describeStruct struct {
@@ -75,7 +79,7 @@ type describeStruct struct {
 	PendingClusterSize int32
 	NetworkIngress     int32
 	NetworkEgress      int32
-	Storage            int32
+	Storage            string
 	ServiceProvider    string
 	Region             string
 	Availability       string
@@ -86,15 +90,16 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
 			Short: "Manage Kafka clusters.",
-		}, prerunner)
+		}, prerunner, ClusterSubcommandFlags)
 	cmd := &clusterCommand{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
+		AuthenticatedStateFlagCommand: cliCmd,
+		prerunner:                     prerunner,
+		analyticsClient:               analyticsClient,
 	}
 	cmd.init()
 	return cmd
@@ -114,6 +119,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
+		Long: "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
@@ -179,8 +185,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -267,7 +272,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		cfg.Cku = int32(cku)
 	}
-
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
@@ -280,6 +284,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if outputFormat == output.Human.String() {
 		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
@@ -414,6 +419,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, args[0])
 	return nil
 }
 
@@ -477,6 +483,11 @@ func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaClu
 }
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
+	clusterStorage := strconv.Itoa(int(cluster.Storage))
+	if clusterStorage == "-1" || cluster.InfiniteStorage {
+		clusterStorage = "Infinite"
+	}
+
 	return &describeStruct{
 		Id:                 cluster.Id,
 		Name:               cluster.Name,
@@ -485,7 +496,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		PendingClusterSize: cluster.PendingCku,
 		NetworkIngress:     cluster.NetworkIngress,
 		NetworkEgress:      cluster.NetworkEgress,
-		Storage:            cluster.Storage,
+		Storage:            clusterStorage,
 		ServiceProvider:    cluster.ServiceProvider,
 		Region:             cluster.Region,
 		Availability:       durabilityToAvaiablityNameMap[cluster.Durability.String()],
@@ -524,11 +535,7 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return suggestions
 	}

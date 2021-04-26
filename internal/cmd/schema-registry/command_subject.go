@@ -15,20 +15,20 @@ import (
 )
 
 type subjectCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	srClient *srsdk.APIClient
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
 func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "subject",
 			Short: "Manage Schema Registry subjects.",
-		}, prerunner)
+		}, prerunner, SubjectSubcommandFlags)
 	subjectCmd := &subjectCommand{
-		AuthenticatedCLICommand: cliCmd,
-		srClient:                srClient,
+		AuthenticatedStateFlagCommand: cliCmd,
+		srClient:                      srClient,
 	}
 	subjectCmd.init(cliName)
 	return subjectCmd.Command

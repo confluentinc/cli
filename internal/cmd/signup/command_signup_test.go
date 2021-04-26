@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 

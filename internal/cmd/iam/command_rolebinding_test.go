@@ -3,22 +3,28 @@ package iam
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"testing"
+
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	mock2 "github.com/confluentinc/cli/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	mds2mock "github.com/confluentinc/mds-sdk-go/mdsv2alpha1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"net/http"
-	"testing"
+
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	mock2 "github.com/confluentinc/cli/mock"
 )
 
 var (
 	notfoundError = fmt.Errorf("User not found")
+)
+
+const (
+	env123 = "env-123"
 )
 
 type roleBindingTest struct {
@@ -42,6 +48,7 @@ type RoleBindingTestSuite struct {
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
+	v3.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
 func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
@@ -192,10 +199,10 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		err:  notfoundError,
 	},
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", "env-123"},
+		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
 		principal: "User:" + v3.MockUserResourceId,
 		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
 		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},

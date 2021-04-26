@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"io/ioutil"
 	"strings"
 
@@ -22,10 +23,13 @@ const (
 	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
+	includeTopicsFlagName              = "include-topics"
 )
 
 var (
-	keyValueFields = []string{"Key", "Value"}
+	keyValueFields      = []string{"Key", "Value"}
+	linkFieldsWithTopic = []string{"LinkName", "TopicName"}
+	linkFields          = []string{"LinkName"}
 )
 
 type keyValueDisplay struct {
@@ -33,30 +37,37 @@ type keyValueDisplay struct {
 	Value string
 }
 
+type LinkWriter struct {
+	LinkName string
+}
+
+type LinkTopicWriter struct {
+	LinkName  string
+	TopicName string
+}
+
 type linkCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
 }
 
 func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:    "link",
 			Hidden: true,
 			Short:  "Manages inter-cluster links.",
 		},
-		prerunner)
+		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{
-		AuthenticatedCLICommand: cliCmd,
-		prerunner:               prerunner,
+		AuthenticatedStateFlagCommand: cliCmd,
+		prerunner:                     prerunner,
 	}
 	cmd.init()
 	return cmd.Command
 }
 
 func (c *linkCommand) init() {
-	c.Command.PersistentFlags().String("cluster", "", "Kafka cluster ID.")
-
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List previously created cluster links.",
@@ -69,6 +80,7 @@ func (c *linkCommand) init() {
 		RunE: c.list,
 		Args: cobra.NoArgs,
 	}
+	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -146,22 +158,49 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster)
+
+	includeTopics, err := cmd.Flags().GetBool(includeTopicsFlagName)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"LinkName"}, []string{"LinkName"}, []string{"LinkName"})
+	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster, includeTopics)
 	if err != nil {
 		return err
 	}
-	type LinkWriter struct {
-		LinkName string
+
+	if includeTopics {
+		outputWriter, err := output.NewListOutputWriter(
+			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range resp.Links {
+			if len(link.Topics) > 0 {
+				for _, topic := range link.Topics {
+					outputWriter.AddElement(
+						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
+				}
+			} else {
+				outputWriter.AddElement(
+					&LinkTopicWriter{LinkName: link.LinkName, TopicName: ""})
+			}
+		}
+
+		return outputWriter.Out()
+	} else {
+		outputWriter, err := output.NewListOutputWriter(cmd, linkFields, linkFields, linkFields)
+		if err != nil {
+			return err
+		}
+
+		for _, link := range resp.Links {
+			outputWriter.AddElement(&LinkWriter{LinkName: link.LinkName})
+		}
+
+		return outputWriter.Out()
 	}
-	for _, link := range resp {
-		outputWriter.AddElement(&LinkWriter{LinkName: link})
-	}
-	return outputWriter.Out()
 }
 
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
@@ -208,7 +247,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 				linkConfigs = append(linkConfigs, s)
 			}
 		}
-		configMap, err = toMap(linkConfigs)
+		configMap, err = kafka.ToMap(linkConfigs)
 		if err != nil {
 			return err
 		}
@@ -295,7 +334,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	configMap, err := toMap(configs)
+	configMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}

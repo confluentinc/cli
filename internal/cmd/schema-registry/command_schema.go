@@ -18,19 +18,19 @@ import (
 )
 
 type schemaCommand struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 	srClient *srsdk.APIClient
 }
 
 func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "schema",
 			Short: "Manage Schema Registry schemas.",
-		}, prerunner)
+		}, prerunner, SchemaSubcommandFlags)
 	schemaCmd := &schemaCommand{
-		AuthenticatedCLICommand: cliCmd,
-		srClient:                srClient,
+		AuthenticatedStateFlagCommand: cliCmd,
+		srClient:                      srClient,
 	}
 	schemaCmd.init(cliName)
 	return schemaCmd.Command

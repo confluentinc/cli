@@ -2,13 +2,15 @@ package admin
 
 import (
 	"context"
+	"os"
+	"strings"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/token"
-	"os"
-	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -51,7 +53,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 
 func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
-	card, err := c.Client.Organization.GetPaymentInfo(context.Background(), org)
+	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
 	}
@@ -120,7 +122,7 @@ func (c *command) update(cmd *cobra.Command, prompt form.Prompt) error {
 		return err
 	}
 
-	if err := c.Client.Organization.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
+	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
 		return err
 	}
 

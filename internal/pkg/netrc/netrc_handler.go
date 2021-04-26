@@ -10,16 +10,17 @@ import (
 	"strings"
 
 	"github.com/atrox/homedir"
-	gonetrc "github.com/csreesan/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	gonetrc "github.com/confluentinc/go-netrc/netrc"
 )
 
 const (
 	// For integration test
 	NetrcIntegrationTestFile = "/tmp/netrc_test"
 
-	netrcCredentialStringFormat  = "confluent-cli:%s:%s"
+	netrcCredentialsPrefix       = "confluent-cli"
+	netrcCredentialStringFormat  = netrcCredentialsPrefix + ":%s:%s"
 	mdsUsernamePasswordString    = "mds-username-password"
 	ccloudUsernamePasswordString = "ccloud-username-password"
 	ccloudSSORefreshTokenString  = "ccloud-sso-refresh-token"
@@ -159,7 +160,7 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachin
 func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
 	if params.CtxName != "" {
-		contextNameRegex = params.CtxName
+		contextNameRegex = escapeSpecialRegexChars(params.CtxName)
 	} else if params.URL != "" {
 		url := strings.ReplaceAll(params.URL, ".", `\.`)
 		contextNameRegex = fmt.Sprintf(".*-%s", url)
@@ -182,6 +183,18 @@ func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
 	}
 
 	return regexp.MustCompile(regexString)
+}
+
+func escapeSpecialRegexChars(s string) string {
+	specialChars := `\^${}[]().*+?|<>-&`
+	res := ""
+	for _, c := range s {
+		if strings.ContainsRune(specialChars, c) {
+			res += `\`
+		}
+		res += string(c)
+	}
+	return res
 }
 
 func isSSOMachine(machineName string) bool {
