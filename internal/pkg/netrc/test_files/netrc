@@ -28,6 +28,9 @@ machine confluent-cli:ccloud-sso-refresh-token:login-sso-first@confluent.io-http
 machine confluent-cli:ccloud-username-password:login-sso-first@confluent.io-http://ssofirst
         login sso-first@confluent.io
         password mock-password
+machine confluent-cli:ccloud-username-password:login-chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io-http://the-special-one
+        login chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io
+        password mock-password
 machine leave-me-alone-too
         login pls-pls
         password please

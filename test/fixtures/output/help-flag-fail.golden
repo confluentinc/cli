@@ -6,12 +6,12 @@ Usage:
 Available Commands:
   admin             Perform administrative tasks for the current organization.
   api-key           Manage the API keys.
+  audit-log         Manage audit log configuration.
   completion        Print shell completion code.
   config            Modify the CLI configuration.
   connector         Manage Kafka Connect.
   connector-catalog Catalog of connectors and their configurations.
   environment       Manage and select ccloud environments.
-  feedback          Submit feedback about the Confluent Cloud CLI.
   help              Help about any command
   iam               Manage RBAC and IAM permissions.
   init              Initialize a context.

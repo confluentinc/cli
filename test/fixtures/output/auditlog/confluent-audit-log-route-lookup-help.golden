@@ -1,0 +1,11 @@
+Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.
+
+Usage:
+  confluent audit-log route lookup <crn> [flags]
+
+Flags:
+      --context string   CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

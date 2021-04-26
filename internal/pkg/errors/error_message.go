@@ -23,11 +23,14 @@ const (
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
+	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization."
 
 	// login command
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
 	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
 	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
+	NoURLFlagOrMdsEnvVarErrorMsg	 = "no mds url passed"
+	NoURLFlagOrMdsEnvVarSuggestions	 = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -108,12 +111,21 @@ const (
 	NonEmptyNameErrorMsg                 = "`--name` flag value must not be emtpy"
 
 	// kafka topic commands
-	FailedToProduceErrorMsg    = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg  = "configuration must be in the form of key=value"
-	MissingKeyErrorMsg         = "missing key in message"
-	UnknownValueFormatErrorMsg = "unknown value schema format"
-	TopicExistsErrorMsg        = "topic \"%s\" already exists for Kafka cluster \"%s\""
-	TopicExistsSuggestions     = ListTopicSuggestions
+	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
+	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
+	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
+	ConfigurationFormErrorMsg            = "configuration must be in the form of key=value"
+	MissingKeyErrorMsg                   = "missing key in message"
+	UnknownValueFormatErrorMsg           = "unknown value schema format"
+	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
+	TopicExistsSuggestions               = ListTopicSuggestions
+	NoAPISecretStoredOrPassedMsg         = "no API secret for API key \"%s\" of resource \"%s\" passed via flag or stored in local CLI state"
+	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `ccloud api-key store %s --resource %s`."
+	PassedSecretButNotKeyErrorMsg        = "no API key specified"
+	PassedSecretButNotKeySuggestions     = "Use the \"api-key\" flag to specify an API key."
+	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
+	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
+		"If your topic is compacted, ensure you are producing a record with a key."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
@@ -122,7 +134,8 @@ const (
 	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
-	NoServiceAccountErrorMsg = "no service account found for KSQL cluster \"%s\""
+	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
+	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -179,6 +192,8 @@ const (
 	CreateNetrcFileErrorMsg             = "unable to create netrc file \"%s\""
 	FailedToObtainedUserSSOErrorMsg     = "unable to obtain SSO info for user \"%s\""
 	NonSSOUserErrorMsg                  = "tried to obtain SSO token for non SSO user \"%s\""
+	NoCredentialsFoundErrorMsg          = "no credentials found"
+	NoURLEnvVarErrorMsg                 = "no URL env var"
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
@@ -307,9 +322,10 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
+	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
+	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
+	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."
+	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %v"
 
 	// catcher
 	CCloudBackendErrorPrefix           = "CCloud backend error"
@@ -336,6 +352,25 @@ const (
 		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
+
+	// Kafka REST Proxy errors
+	InternalServerErrorMsg            = "Internal server error"
+	UnknownErrorMsg                   = "Unknown error"
+	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket"
+	InvalidBootstrapServerErrorMsg    = "Invalid bootstrap server"
+	EmptyResponseMsg                  = "Empty server response"
+	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
+	KafkaRestConnectionMsg            = "Unable to establish Kafka REST connection: %s: %s"
+	KafkaRestUnexpectedStatusMsg      = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
+	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_CA_CERT_PATH\""
+	MDSTokenNotFoundMsg               = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
+	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
+	KafkaRestUrlNotFoundSuggestions   = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
+	NoClustersFoundErrorMsg           = "No clusters found"
+	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration"
+	NeedClientCertAndKeyPathsErrorMsg = "Must set \"client-cert-path\" and \"client-key-path\" flags together"
+	InvalidMDSToken                   = "Invalid MDS token"
+	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
 	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
@@ -366,6 +401,10 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `ccloud api-key create --resource %s`.\n" +
 		"To store an existing API key, use `ccloud api-key store --resource %s`."
+
+	//Flag parsing errors
+	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
+	ClusterFlagWithApiLoginErrorMsg     = "\"cluster\" flag should not be passed for API key context, cluster is inferred"
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "Metadata Service backend error: %s: %s"

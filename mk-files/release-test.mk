@@ -27,7 +27,10 @@ verify-binary-files:
 	@$(caasenv-authenticate) && \
 	for binary in ccloud confluent; do \
 		for os in linux darwin windows alpine; do \
-			for arch in amd64 386; do \
+			for arch in arm64 amd64 386; do \
+				if [ "$${os}" != "darwin" ] && [ "$${arch}" = "arm64" ] ; then \
+					continue; \
+				fi ; \
 				if [ "$${os}" = "darwin" ] && [ "$${arch}" = "386" ] ; then \
 					continue; \
 				fi ; \

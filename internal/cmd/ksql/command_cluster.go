@@ -3,17 +3,20 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/c-bata/go-prompt"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -28,19 +31,21 @@ var (
 )
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedCLICommand
-	prerunner           pcmd.PreRunner
-	completableChildren []*cobra.Command
+	*pcmd.AuthenticatedStateFlagCommand
+	prerunner               pcmd.PreRunner
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
+	analyticsClient         analytics.Client
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "app",
 			Short: "Manage ksqlDB apps.",
-		}, prerunner)
-	cmd := &clusterCommand{AuthenticatedCLICommand: cliCmd}
+		}, prerunner, SubcommandFlags)
+	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.prerunner = prerunner
 	cmd.init()
 	return cmd
@@ -52,10 +57,6 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
@@ -93,9 +94,10 @@ func (c *clusterCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
+	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key (recommended).")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -125,12 +127,14 @@ func (c *clusterCommand) init() {
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.configureACLs),
 	}
-	aclsCmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
 	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)
 
 	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, aclsCmd}
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		"cluster": {createCmd},
+	}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
@@ -164,6 +168,27 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	kafkaApiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return err
+	}
+	kafkaApiKeySecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return err
+	}
+
+	if kafkaApiKey != "" && kafkaApiKeySecret != "" {
+		cfg.KafkaApiKey = &schedv1.ApiKey{
+			Key:    kafkaApiKey,
+			Secret: kafkaApiKeySecret,
+		}
+	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
+		return fmt.Errorf(errors.APIKeyAndSecretBothRequired)
+	} else {
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
+	}
+
 	image, err := cmd.Flags().GetString("image")
 	if err == nil && len(image) > 0 {
 		cfg.Image = image
@@ -186,6 +211,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if cluster.Endpoint == "" {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -200,11 +226,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	id := args[0]
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: id}
 	err := c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
@@ -294,8 +322,9 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 	if err != nil {
 		return "", err
 	}
+
 	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) || (cluster.KafkaApiKey != nil && user.Id == cluster.KafkaApiKey.UserId) {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
@@ -321,6 +350,11 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
 	}
 
+	if cluster.ServiceAccountId == 0 {
+		return fmt.Errorf(errors.KsqlDBNoServiceAccount, args[0])
+	}
+
+
 	serviceAccountId, err := c.getServiceAccount(cluster)
 	if err != nil {
 		return err
@@ -336,4 +370,14 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	return nil
+}
+
+func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
+	}
 }

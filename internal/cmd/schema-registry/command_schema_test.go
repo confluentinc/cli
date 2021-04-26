@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
@@ -82,7 +82,7 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf.CLIName, cliMock.NewPreRunnerMock(client, nil, suite.conf), suite.srClientMock, suite.conf.Logger)
+	cmd := New(suite.conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.conf.Logger, cliMock.NewDummyAnalyticsMock())
 	return cmd
 }
 

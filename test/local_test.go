@@ -21,11 +21,9 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -40,10 +38,8 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 		{args: "local version", fixture: "local/version-ccs.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -58,10 +54,8 @@ func (s *CLITestSuite) TestLocalVersion() {
 		{args: "local version", fixture: "local/version-cp.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -75,10 +69,8 @@ func (s *CLITestSuite) TestLocalServicesList() {
 		{args: "local services list", fixture: "local/services-list-cp.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -94,10 +86,8 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 		{args: "local services top", fixture: "local/services-top-no-services-running.golden", wantErrCode: 1},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 
@@ -115,10 +105,8 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 		{args: "local services zookeeper version", fixture: "local/zookeeper-version.golden"},
 	}
 
-	loginURL := serveMds(s.T()).URL
-
 	for _, tt := range tests {
-		s.runConfluentTest(tt, loginURL)
+		s.runConfluentTest(tt)
 	}
 }
 

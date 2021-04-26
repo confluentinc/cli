@@ -8,5 +8,5 @@ name: my-new-cluster
 provider: aws
 region: us-east-1
 status: PROVISIONING
-storage: 5000
+storage: "5000"
 type: BASIC

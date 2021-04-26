@@ -4,6 +4,7 @@ Usage:
 
 Flags:
       --cluster-name string   REQUIRED: Cluster Name.
+      --context string        CLI Context name.
 
 Global Flags:
   -h, --help            Show help for this command.

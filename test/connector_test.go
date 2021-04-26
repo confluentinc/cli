@@ -17,13 +17,15 @@ func (s *CLITestSuite) TestConnector() {
 		{args: "connector pause lcc-123 --cluster lkc-123", fixture: "connector/connector-pause.golden"},
 		{args: "connector resume lcc-123 --cluster lkc-123", fixture: "connector/connector-resume.golden"},
 		{args: "connector update lcc-123 --cluster lkc-123 --config test/fixtures/input/connector-config.yaml", fixture: "connector/connector-update.golden"},
-	}
 
-	kafkaURL := serveKafkaAPI(s.T()).URL
-	loginURL := serve(s.T(), kafkaURL).URL
+		//Tests based on new config
+		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config-new-format.json -o json", fixture: "connector/connector-create-new-config-json.golden"},
+		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config-new-format.json -o yaml", fixture: "connector/connector-create-yaml.golden"},
+		{args: "connector update lcc-123 --cluster lkc-123 --config test/fixtures/input/connector-config-new-format.json", fixture: "connector/connector-update.golden"},
+	}
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt, loginURL)
+		s.runCcloudTest(tt)
 	}
 }
