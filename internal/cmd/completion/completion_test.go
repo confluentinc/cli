@@ -39,9 +39,9 @@ func TestCompletionUnknown(t *testing.T) {
 	cmd := New(root, "ccloud")
 	root.AddCommand(cmd)
 
-	output, err := pcmd.ExecuteCommand(root, "completion", "newsh")
+	_, err := pcmd.ExecuteCommand(root, "completion", "newsh")
 	req.Error(err)
-	req.Contains(output, "Error: unsupported shell type \"newsh\"")
+	req.Contains(err.Error(), "unsupported shell type \"newsh\"")
 }
 
 func TestCompletionNone(t *testing.T) {
@@ -51,7 +51,7 @@ func TestCompletionNone(t *testing.T) {
 	cmd := New(root, "ccloud")
 	root.AddCommand(cmd)
 
-	output, err := pcmd.ExecuteCommand(root, "completion")
+	_, err := pcmd.ExecuteCommand(root, "completion")
 	req.Error(err)
-	req.Contains(output, "Error: accepts 1 arg(s), received 0")
+	req.Contains(err.Error(), "accepts 1 arg(s), received 0")
 }
