@@ -69,6 +69,7 @@ func (c *roleCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available RBAC roles.",
+		Long:  "List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.",
 		Args:  cobra.NoArgs,
 		RunE:  cmd.NewCLIRunE(c.list),
 	}
