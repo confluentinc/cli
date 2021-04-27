@@ -31,7 +31,7 @@ var (
 	ccloudResourcePatternHumanListLabels      = []string{"Principal", "Email", "Role", "ResourceType", "Name", "PatternType"}
 	ccloudResourcePatternStructuredListLabels = []string{"principal", "email", "role", "resource_type", "name", "pattern_type"}
 
-	//TODO: please move this to a backend route
+	//TODO: please move this to a backend route (https://confluentinc.atlassian.net/browse/CIAM-890)
 	clusterScopedRoles = map[string]bool{
 		"SystemAdmin":   true,
 		"ClusterAdmin":  true,
