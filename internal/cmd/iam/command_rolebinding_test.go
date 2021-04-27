@@ -2,7 +2,9 @@ package iam
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"net/http"
 	"testing"
 
@@ -37,6 +39,7 @@ type roleBindingTest struct {
 
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
+	expected                []listDisplay
 }
 
 type expectedListCmdArgs struct {
@@ -222,7 +225,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 	{
 		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
 			{
-				Scope:        mdsv2alpha1.Scope{
+				Scope: mdsv2alpha1.Scope{
 					Path: []string{"organization=Skynet"},
 				},
 				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
@@ -232,6 +235,13 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
+		expected: []listDisplay{
+			{
+				Principal: "User:u-epo7ml",
+				Role:      "MetricsViewer",
+				Name:      "Skynet",
+			},
+		},
 	},
 }
 
@@ -239,13 +249,16 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 	mockedResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
 	for _, tc := range myRoleBindingListTests {
 		cmd := suite.newMockIamListRoleBindingCmd(mockedResult, "")
-		cmd.SetArgs(append([]string{"rolebinding", "list"}, "--current-user"))
 
 		go func() {
 			mockedResult <- tc.scopeRoleBindingMapping
 		}()
-		err := cmd.Execute()
+		output, err := pcmd.ExecuteCommand(cmd, "rolebinding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)
+		var actual []listDisplay
+		err = json.Unmarshal([]byte(output), &actual)
+		assert.Nil(suite.T(), err)
+		assert.Equal(suite.T(), tc.expected, actual)
 	}
 }
 
