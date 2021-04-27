@@ -11,6 +11,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c-bata/go-prompt v0.2.3
+	github.com/chromedp/cdproto v0.0.0-20191114225735-6626966fbae4 // indirect
 	github.com/chromedp/chromedp v0.5.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
