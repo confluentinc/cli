@@ -116,6 +116,10 @@ var _ krsdk.PartitionApi = (*Partition)(nil)
 type Partition struct {
 }
 
+func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, topicName string, partitionId int32) (krsdk.ConsumerLagData, *nethttp.Response, error) {
+	panic("implement me")
+}
+
 func NewPartitionMock() *Partition {
 	return &Partition{}
 }
