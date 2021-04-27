@@ -355,7 +355,8 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		// Fall back to use kafka-api
+		fmt.Println("Kafka REST is not enabled")
 		return c.createWithKafkaApi(cmd, linkName, sourceTopicName, replicationFactor, configMap)
 	}
 

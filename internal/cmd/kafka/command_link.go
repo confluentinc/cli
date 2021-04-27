@@ -179,7 +179,8 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		// Fall back to use kafka-api
+		fmt.Println("Kafka REST is not enabled")
 		return c.listWithKafkaApi(cmd, includeTopics)
 	}
 
@@ -324,7 +325,8 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		// Fall back to use kafka-api
+		fmt.Println("Kafka REST is not enabled")
 		return c.createWithKafkaApi(cmd, linkName, configMap, skipValidatingLink, validateOnly)
 	}
 
@@ -388,7 +390,8 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		// Fall back to use kafka-api
+		fmt.Println("Kafka REST is not enabled")
 		return c.deleteWithKafkaApi(cmd, linkName)
 	}
 
@@ -425,8 +428,8 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		fmt.Println("rest proxy not available")
-		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		// Fall back to use kafka-api
+		fmt.Println("Kafka REST is not enabled")
 		return c.describeWithKafkaApi(cmd, linkName)
 	}
 
@@ -517,7 +520,8 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api if the cluster doesn't support rest proxy
+		// Fall back to use kafka-api
+		fmt.Println("Kafka REST is not enabled")
 		return c.updateWithKafkaApi(cmd, linkName, configsMap)
 	}
 
