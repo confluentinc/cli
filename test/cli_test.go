@@ -161,14 +161,14 @@ func (s *CLITestSuite) TestConfluentHelp() {
 	var tests []CLITest
 	if runtime.GOOS == "windows" {
 		tests = []CLITest{
-			{name: "no args", fixture: "confluent-help-flag-windows.golden", wantErrCode: 1},
+			{name: "no args", fixture: "confluent-help-flag-windows.golden"},
 			{args: "help", fixture: "confluent-help-windows.golden"},
 			{args: "--help", fixture: "confluent-help-flag-windows.golden"},
 			{args: "version", fixture: "confluent-version.golden", regex: true},
 		}
 	} else {
 		tests = []CLITest{
-			{name: "no args", fixture: "confluent-help-flag.golden", wantErrCode: 1},
+			{name: "no args", fixture: "confluent-help-flag.golden"},
 			{args: "help", fixture: "confluent-help.golden"},
 			{args: "--help", fixture: "confluent-help-flag.golden"},
 			{args: "version", fixture: "confluent-version.golden", regex: true},
@@ -182,7 +182,7 @@ func (s *CLITestSuite) TestConfluentHelp() {
 
 func (s *CLITestSuite) TestCcloudHelp() {
 	tests := []CLITest{
-		{name: "no args", fixture: "help-flag-fail.golden", wantErrCode: 1},
+		{name: "no args", fixture: "help-flag-fail.golden"},
 		{args: "help", fixture: "help.golden"},
 		{args: "--help", fixture: "help-flag.golden"},
 		{args: "version", fixture: "version.golden", regex: true},
