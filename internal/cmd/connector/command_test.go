@@ -3,6 +3,7 @@ package connector
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/c-bata/go-prompt"
@@ -11,8 +12,8 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	segment "github.com/segmentio/analytics-go"
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
@@ -79,6 +80,9 @@ func (suite *ConnectTestSuite) SetupTest() {
 	suite.kafkaMock = &ccsdkmock.Kafka{
 		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
+		},
+		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
@@ -150,7 +154,8 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
 }
 
 func (suite *ConnectTestSuite) TestListConnectors() {
@@ -184,7 +189,41 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 	req.True(suite.connectMock.CreateCalled())
 	retVal := suite.connectMock.CreateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+	// TODO add back with analytics
+	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+}
+
+func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
+	cmd := suite.newCmd()
+	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"})
+	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.connectMock.CreateCalled())
+	retVal := suite.connectMock.CreateCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], connectorID, req)
+}
+
+func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
+	cmd := suite.newCmd()
+	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
+	fmt.Printf("error-- %s", err.Error())
+	assert.Contains(suite.T(), err.Error(), "unable to parse config")
+}
+
+func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
+	cmd := suite.newCmd()
+	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"}))
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.NotNil(err)
+	fmt.Printf("error-- %s", err.Error())
+	assert.Contains(suite.T(), err.Error(), "unable to parse config")
 }
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
@@ -220,23 +259,45 @@ func (suite *ConnectTestSuite) TestServerComplete() {
 				},
 			},
 		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerComplete()
+			fmt.Println(&got)
+			req.Equal(tt.want, got)
+		})
+	}
+}
+
+func (suite *ConnectTestSuite) TestServerClusterFlagComplete() {
+	flagName := "cluster"
+	req := suite.Require()
+	type fields struct {
+		Command *command
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []prompt.Suggest
+	}{
 		{
-			name: "don't suggest for unauthenticated user",
+			name: "suggest for flag",
 			fields: fields{
-				Command: func() *command {
-					oldConf := suite.conf
-					suite.conf = v3.UnauthenticatedCloudConfigMock()
-					c := suite.newCmd()
-					suite.conf = oldConf
-					return c
-				}(),
+				Command: suite.newCmd(),
 			},
-			want: nil,
+			want: []prompt.Suggest{
+				{
+					Text:        suite.kafkaCluster.Id,
+					Description: suite.kafkaCluster.Name,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := tt.fields.Command.ServerComplete()
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
+			got := tt.fields.Command.ServerFlagComplete()[flagName]()
 			fmt.Println(&got)
 			req.Equal(tt.want, got)
 		})

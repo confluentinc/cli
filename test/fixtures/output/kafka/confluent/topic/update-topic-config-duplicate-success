@@ -1,0 +1,4 @@
+Updated the following configs for topic "topic-exist":
+      Name     | Value  
++--------------+-------+
+  retention.ms |     1  

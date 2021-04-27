@@ -1,4 +1,4 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip alpine_amd64.tar.gz
+ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip alpine_amd64.tar.gz
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -7,14 +7,14 @@ release: get-release-image commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
-	@GO111MODULE=on VERSION=$(VERSION) make publish-docs
+	@VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
 
 .PHONY: release-to-stag
 release-to-stag:
-	@GO111MODULE=on make gorelease
+	@make gorelease
 	git checkout go.sum
 	make goreleaser-patches
 	make copy-stag-archives-to-latest
@@ -44,8 +44,8 @@ endef
 .PHONY: gorelease-alpine
 gorelease-alpine:
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
 
 # This builds the Darwin, Linux (non-Alpine), and Windows binaries using goreleaser on the host computer.  goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.  However, we then have to separately build the Alpine binaries/archives in a Docker container (since we need to use an OS which has the Alpine C runtimes instead of the C runtimes on macOS).  We then also have to manually upload the Alpine build artifacts to S3 since the goreleaser inside the Docker container doesn't have the S3 credentials from the host.
 .PHONY: gorelease
@@ -53,8 +53,8 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GO111MODULE=on GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
 	./build_alpine.sh && \
 	for binary in ccloud confluent; do \
 		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_alpine_amd64.tar.gz; \
@@ -149,42 +149,3 @@ publish-installers:
 	$(caasenv-authenticate) && \
 	aws s3 cp install-ccloud.sh $(S3_BUCKET_PATH)/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
-
-.PHONY: docs
-docs: clean-docs
-	@GO111MODULE=on go run -ldflags '-X main.cliName=ccloud' cmd/docs/main.go
-	@GO111MODULE=on go run -ldflags '-X main.cliName=confluent' cmd/docs/main.go
-
-.PHONY: publish-docs
-publish-docs: docs
-	@tmp=$$(mktemp -d); \
-	git clone git@github.com:confluentinc/docs.git $$tmp; \
-	echo -n "Publish ccloud docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=ccloud; fi; \
-	echo -n "Publish confluent docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$$tmp CLI_NAME=confluent; fi; \
-	rm -rf $$tmp
-
-.PHONY: publish-docs-internal
-publish-docs-internal:
-ifeq ($(CLI_NAME), ccloud)
-	$(eval DOCS_DIR := ccloud-cli/command-reference)
-else
-	$(eval DOCS_DIR := confluent-cli/command-reference)
-endif
-
-	@cd $(REPO_DIR); \
-	git checkout -b $(CLI_NAME)-cli-$(VERSION) origin/$(DOCS_BRANCH) || exit 1; \
-	rm -rf $(DOCS_DIR); \
-	cp -R $(GOPATH)/src/github.com/confluentinc/cli/docs/$(CLI_NAME) $(DOCS_DIR); \
-	[ ! -f "$(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' $(DOCS_DIR)/kafka/topic/ccloud_kafka_topic_consume.rst || exit 1; \
-	git add . || exit 1; \
-	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
-	git commit -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1; \
-	git push origin $(CLI_NAME)-cli-$(VERSION) || exit 1; \
-	hub pull-request -b $(DOCS_BRANCH) -m "chore: update $(CLI_NAME) CLI docs for $(VERSION)" || exit 1
-
-.PHONY: clean-docs
-clean-docs:
-	@rm -rf docs/
-

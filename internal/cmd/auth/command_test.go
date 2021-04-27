@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -18,8 +19,8 @@ import (
 	"github.com/spf13/cobra"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 	"github.com/stretchr/testify/require"
@@ -172,7 +173,7 @@ func TestCredentialsOverride(t *testing.T) {
 	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	req.Equal(pauth.GenerateContextName(envUser, ccloudURL), ctx.Name)
+	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
 
 	req.Equal(testToken, ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
@@ -207,6 +208,7 @@ func TestLoginSuccess(t *testing.T) {
 	suite := []struct {
 		cliName string
 		args    []string
+		setEnv  bool
 	}{
 		{
 			cliName: "ccloud",
@@ -218,15 +220,25 @@ func TestLoginSuccess(t *testing.T) {
 				"--url=http://localhost:8090",
 			},
 		},
+		{
+			cliName: "confluent",
+			setEnv: true,
+		},
 	}
 
 	for _, s := range suite {
 		// Login to the CLI control plane
+		if s.setEnv {
+			_ = os.Setenv(pauth.ConfluentURLEnvVar, "http://localhost:8090")
+		}
 		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
+		if s.setEnv {
+			_ = os.Unsetenv(pauth.ConfluentURLEnvVar)
+		}
 	}
 }
 
@@ -477,7 +489,7 @@ func TestURLRequiredWithMDS(t *testing.T) {
 	loginCmd, _ := newLoginCmd(auth, nil, "confluent", req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
-	req.Contains(err.Error(), "required flag(s) \"url\" not set")
+	req.Contains(err.Error(), errors.NoURLFlagOrMdsEnvVarErrorMsg)
 }
 
 func TestLogout(t *testing.T) {
@@ -494,32 +506,111 @@ func TestLogout(t *testing.T) {
 
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
-	cfg := v3.New(&config.Params{
-		CLIName:    "confluent",
-		MetricSink: nil,
-		Logger:     log.New(),
-	})
-	loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg)
-	_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=testcert.pem")
-	req.NoError(err)
+	tests := []struct {
+		name                string
+		caCertPathFlag      string
+		expectedContextName string
+		setEnv				bool
+		envCertPath			string
+	}{
+		{
+			name:                "specified ca-cert-path",
+			caCertPathFlag:      "testcert.pem",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
+		},
+		{
+			name:                "no ca-cert-path flag",
+			caCertPathFlag:      "",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090",
+		},
+		{
+			name:                "env var ca-cert-path flag",
+			setEnv: 			 true,
+			envCertPath: 		 "testcert.pem",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
+		},
+	}
 
-	// ensure CaCertPath is stored in Config
-	req.Equal("testcert.pem", cfg.Context().Platform.CaCertPath)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				os.Setenv(pauth.ConfluentCaCertPathEnvVar, "testcert.pem")
+			}
+			cfg := v3.New(&config.Params{
+				CLIName:    "confluent",
+				MetricSink: nil,
+				Logger:     log.New(),
+			})
+			var expectedCaCert string
+			if tt.setEnv {
+				expectedCaCert = tt.envCertPath
+			} else {
+				expectedCaCert = tt.caCertPathFlag
+			}
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
+			_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", tt.caCertPathFlag))
+			req.NoError(err)
 
-	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
-	// login using ca-cert-path stored in config
-	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090")
-	req.NoError(err)
-	req.Equal("testcert.pem", cfg.Context().Platform.CaCertPath)
+			ctx := cfg.Context()
 
-	loginCmd = getNewLoginCommandForSelfSignedCertTest(req, cfg)
-	// reset ca-cert-path
-	_, err = pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", "--ca-cert-path=")
-	req.NoError(err)
-	req.Equal("", cfg.Context().Platform.CaCertPath)
+			if tt.setEnv {
+				req.Equal(tt.envCertPath, ctx.Platform.CaCertPath)
+			} else {
+				// ensure the right CaCertPath is stored in Config
+				req.Equal(tt.caCertPathFlag, ctx.Platform.CaCertPath)
+			}
+
+			req.Equal(tt.expectedContextName, ctx.Name)
+			if tt.setEnv {
+				os.Unsetenv(pauth.ConfluentCaCertPathEnvVar)
+			}
+		})
+	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config) *loginCommand {
+func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
+	originalCaCertPath := "ogcert.pem"
+
+	req := require.New(t)
+	tests := []struct {
+		name               string
+		useCaCertPathFlag  bool
+		expectedCaCertPath string
+	}{
+		{
+			name:               "use existing caCertPath in config",
+			useCaCertPathFlag:  false,
+			expectedCaCertPath: originalCaCertPath,
+		},
+		{
+			name:              "reset ca-cert-path",
+			useCaCertPathFlag: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
+			cfg := v3.AuthenticatedConfigMockWithContextName("confluent", legacyContextName)
+			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
+
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)
+			args := []string{"--url=http://localhost:8090"}
+			if tt.useCaCertPathFlag {
+				args = append(args, "--ca-cert-path=")
+			}
+			_, err := pcmd.ExecuteCommand(loginCmd.Command, args...)
+			req.NoError(err)
+
+			ctx := cfg.Context()
+			// ensure the right CaCertPath is stored in Config and context name is the right name
+			req.Equal(tt.expectedCaCertPath, ctx.Platform.CaCertPath)
+			req.Equal(legacyContextName, ctx.Name)
+		})
+	}
+}
+
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config, expectedCaCertPath string) *loginCommand {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
@@ -563,7 +654,9 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
 		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
-			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, logger)
+			// ensure the right caCertPath is used
+			req.Equal(expectedCaCertPath, caCertPath)
+			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{}, logger)
 			if err != nil {
 				return nil, err
 			}

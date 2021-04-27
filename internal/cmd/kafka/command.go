@@ -51,11 +51,14 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		// and that doesn't trigger completion.
 		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)
-		c.AddCommand(NewACLCommand(c.prerunner))
+		aclCmd := NewACLCommand(c.prerunner)
+		c.AddCommand(aclCmd.Command)
+		c.serverCompleter.AddCommand(aclCmd)
 		c.AddCommand(NewRegionCommand(c.prerunner))
 		c.AddCommand(NewLinkCommand(c.prerunner))
 		c.AddCommand(NewMirrorCommand(c.prerunner))
 	} else {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+		c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
 	}
 }

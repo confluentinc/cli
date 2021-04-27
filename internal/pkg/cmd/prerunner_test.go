@@ -1,12 +1,15 @@
 package cmd_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
@@ -17,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,7 +34,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 
-	sdkMock "github.com/confluentinc/ccloud-sdk-go/mock"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
@@ -351,9 +354,16 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		err   error
 	}
 
-	creds := &pauth.Credentials{
-		Username: "csreesangkom",
+	username := "csreesangkom"
+
+	ccloudCreds := &pauth.Credentials{
+		Username: username,
 		Password: "csreepassword",
+	}
+	confluentCreds := &pauth.Credentials{
+		Username:       username,
+		Password:       "csreepassword",
+		PrerunLoginURL: "http://localhost:8090",
 	}
 	tests := []struct {
 		name          string
@@ -365,32 +375,65 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		netrcReturn   credentialsFuncReturnValues
 	}{
 		{
-			name:          "no env var credentials but successful login from netrc",
+			name:          "CCloud no env var credentials but successful login from netrc",
 			cliName:       "ccloud",
 			envVarReturn:  credentialsFuncReturnValues{nil, nil},
-			netrcReturn:   credentialsFuncReturnValues{creds, nil},
+			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
-			name:          "successful login from env var",
+			name:          "Confluent no env var credentials but successful login from netrc",
+			cliName:       "confluent",
+			envVarReturn:  credentialsFuncReturnValues{nil, nil},
+			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarChecked: true,
+			netrcChecked:  true,
+		},
+		{
+			name:          "CCloud successful login from env var",
 			cliName:       "ccloud",
-			envVarReturn:  credentialsFuncReturnValues{creds, nil},
-			netrcReturn:   credentialsFuncReturnValues{creds, nil},
+			envVarReturn:  credentialsFuncReturnValues{ccloudCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  false,
 		},
 		{
-			name:          "env var failed but netrc succeeds",
+			name:          "Confluent successful login from env var",
+			cliName:       "confluent",
+			envVarReturn:  credentialsFuncReturnValues{confluentCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarChecked: true,
+			netrcChecked:  false,
+		},
+		{
+			name:          "CCloud env var failed but netrc succeeds",
 			cliName:       "ccloud",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
-			netrcReturn:   credentialsFuncReturnValues{creds, nil},
+			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
-			name:          "failed non-interactive login",
+			name:          "Confluent env var failed but netrc succeeds",
+			cliName:       "confluent",
+			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
+			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarChecked: true,
+			netrcChecked:  true,
+		},
+		{
+			name:          "CCloud failed non-interactive login",
 			cliName:       "ccloud",
+			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
+			netrcReturn:   credentialsFuncReturnValues{nil, errors.New("NETRC FAILED")},
+			envVarChecked: true,
+			netrcChecked:  true,
+			wantErr:       true,
+		},
+		{
+			name:          "Confluent failed non-interactive login",
+			cliName:       "confluent",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
 			netrcReturn:   credentialsFuncReturnValues{nil, errors.New("NETRC FAILED")},
 			envVarChecked: true,
@@ -440,18 +483,32 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			}
 
-			var envVarCalled bool
-			var netrcCalled bool
+			var ccloudEnvVarCalled bool
+			var ccloudNetrcCalled bool
+			var confluentEnvVarCalled bool
+			var confluentNetrcCalled bool
 			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 				GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						envVarCalled = true
+						ccloudEnvVarCalled = true
 						return tt.envVarReturn.creds, tt.envVarReturn.err
 					}
 				},
 				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						netrcCalled = true
+						ccloudNetrcCalled = true
+						return tt.netrcReturn.creds, tt.netrcReturn.err
+					}
+				},
+				GetConfluentPrerunCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						confluentEnvVarCalled = true
+						return tt.envVarReturn.creds, tt.envVarReturn.err
+					}
+				},
+				GetConfluentPrerunCredentialsFromNetrcFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+					return func() (credentials *pauth.Credentials, e error) {
+						confluentNetrcCalled = true
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
 				},
@@ -470,13 +527,22 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			out, err := pcmd.ExecuteCommand(rootCmd.Command)
 
-			require.Equal(t, tt.netrcChecked, netrcCalled)
-			require.Equal(t, tt.envVarChecked, envVarCalled)
+			if tt.cliName == "ccloud" {
+				require.Equal(t, tt.envVarChecked, ccloudEnvVarCalled)
+				require.Equal(t, tt.netrcChecked, ccloudNetrcCalled)
+				require.False(t, confluentEnvVarCalled)
+				require.False(t, confluentNetrcCalled)
+			} else {
+				require.Equal(t, tt.envVarChecked, confluentEnvVarCalled)
+				require.Equal(t, tt.netrcChecked, confluentNetrcCalled)
+				require.False(t, ccloudEnvVarCalled)
+				require.False(t, ccloudNetrcCalled)
+			}
 
 			if !tt.wantErr {
 				require.NoError(t, err)
 				require.Contains(t, out, errors.AutoLoginMsg)
-				require.Contains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, creds.Username))
+				require.Contains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
 			} else {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), errors.NotLoggedInErrorMsg)
@@ -493,6 +559,10 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 		{
 			name:    "ccloud logged in user",
 			cliName: "ccloud",
+		},
+		{
+			name:    "confluent logged in user",
+			cliName: "confluent",
 		},
 	}
 	for _, tt := range tests {
@@ -781,4 +851,52 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestInitializeOnPremKafkaRest(t *testing.T) {
+	cfg := v3.AuthenticatedConfluentConfigMock()
+	cfg.Context().State.AuthToken = validAuthToken
+	r := getPreRunBase()
+	r.Config = cfg
+	cobraCmd := &cobra.Command{Use: "test"}
+	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
+	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
+	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
+		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		require.NoError(t, err)
+		kafkaRest, err := cmd.GetKafkaREST()
+		require.NoError(t, err)
+		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
+		require.True(t, ok)
+		require.Equal(t, validAuthToken, auth)
+	})
+	r.Config.Context().State.AuthToken = ""
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
+	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
+		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			GetConfluentPrerunCredentialsFromNetrcFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+			GetConfluentPrerunCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+			GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+		}
+		r.LoginCredentialsManager = mockLoginCredentialsManager
+		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		require.NoError(t, err)
+		kafkaRest, err := cmd.GetKafkaREST()
+		require.Error(t, err)
+		require.Nil(t, kafkaRest)
+		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
+	})
 }

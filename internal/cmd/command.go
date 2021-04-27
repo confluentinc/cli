@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connector"
 	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
-	"github.com/confluentinc/cli/internal/cmd/feedback"
+	//"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
@@ -42,7 +42,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
+	//pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -140,7 +140,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	if cliName == "ccloud" {
 		cli.AddCommand(admin.New(prerunner, isTest))
 		cli.AddCommand(auditlog.New(cliName, prerunner))
-		cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
+		//cli.AddCommand(feedback.New(cliName, prerunner, analyticsClient))
 		cli.AddCommand(initcontext.New(prerunner, resolver, analyticsClient))
 		cli.AddCommand(kafka.New(isAPILogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 		if isAPIKeyCredential(cfg) {
@@ -210,7 +210,7 @@ func (c *Command) Execute(cliName string, args []string) error {
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	c.sendAndFlushAnalytics(args, err)
-	pfeedback.HandleFeedbackNudge(cliName, args)
+	//pfeedback.HandleFeedbackNudge(cliName, args)
 	return err
 }
 

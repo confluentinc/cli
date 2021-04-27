@@ -28,7 +28,7 @@ const (
 	rpPartitions        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
 	rpPartitionReplicas = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
 	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
-	rpConfigsAlter      = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/configs:alter"
+	rpConfigsAlter      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
 	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
 	rpLink              = "/kafka/v3/clusters/{cluster}/links/{link}"
 	rpLinks             = "/kafka/v3/clusters/{cluster}/links"
@@ -37,6 +37,7 @@ const (
 	rpAllMirrors           = "/kafka/v3/clusters/{cluster}/links/-/mirrors"
 	rpMirrors           = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
 	rpMirrorPromote     = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote"
+	rpClusters          = "/kafka/v3/clusters"
 )
 
 type KafkaRouter struct {
@@ -98,6 +99,7 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpMirror, r.HandleKafkaRPMirror(t))
 	r.HandleFunc(rpAllMirrors, r.HandleKafkaRPAllMirrors(t))
 	r.HandleFunc(rpMirrors, r.HandleKafkaRPMirrors(t))
+	r.HandleFunc(rpClusters, r.HandleKafkaRPClusters(t))
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)

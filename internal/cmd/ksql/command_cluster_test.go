@@ -7,8 +7,8 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -65,16 +65,10 @@ func (suite *KsqlClusterTestSuite) TestServerComplete() {
 				},
 			},
 		},
-		{
-			name: "don't suggest for unauthenticated user",
-			fields: fields{
-				suite.newCmd(v3.UnauthenticatedCloudConfigMock()),
-			},
-			want: nil,
-		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
 			fmt.Println(&got)
 			req.Equal(tt.want, got)

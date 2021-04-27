@@ -11,13 +11,13 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -42,10 +42,11 @@ There are five ways to pass the secret:
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	keystore            keystore.KeyStore
-	flagResolver        pcmd.FlagResolver
-	completableChildren []*cobra.Command
-	analyticsClient     analytics.Client
+	keystore                keystore.KeyStore
+	flagResolver            pcmd.FlagResolver
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
+	analyticsClient         analytics.Client
 }
 
 var (
@@ -151,6 +152,10 @@ func (c *command) init() {
 	}
 	c.AddCommand(useCmd)
 	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		resourceFlagName:  {createCmd, listCmd, storeCmd, useCmd},
+		"service-account": {createCmd},
+	}
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
@@ -202,6 +207,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	users := map[int32]*orgv1.User{}
+
 	serviceAccounts, err := getServiceAccountsMap(c.Client)
 	if err != nil {
 		return err
@@ -226,7 +232,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if _, ok := serviceAccounts[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
-			if user, ok := users[apiKey.UserId]; ok {
+			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
+			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
+				email = "<auditlog service account>"
+			} else if user, ok := users[apiKey.UserId]; ok {
 				if user != nil {
 					email = user.Email
 				} else {
@@ -510,9 +519,6 @@ func (c *command) Cmd() *cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggests []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggests
-	}
 	apiKeys, err := c.fetchAPIKeys()
 	if err != nil {
 		return suggests
@@ -543,4 +549,40 @@ func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
 
 func (c *command) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
+}
+
+func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		resourceFlagName:  c.resourceFlagCompleterFunc,
+		"service-account": completer.ServiceAccountFlagCompleterFunc(c.Client),
+	}
+}
+
+func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
+	suggestions := completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId())()
+
+	ctx := context.Background()
+	ctxClient := pcmd.NewContextClient(c.Context)
+	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	if err == nil {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        cluster.Id,
+			Description: cluster.Name,
+		})
+	}
+	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+	clusters, err := c.Client.KSQL.List(context.Background(), req)
+	if err == nil {
+		for _, cluster := range clusters {
+			suggestions = append(suggestions, prompt.Suggest{
+				Text:        cluster.Id,
+				Description: cluster.Name,
+			})
+		}
+	}
+	return suggestions
 }

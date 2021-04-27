@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -31,6 +32,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -124,13 +126,9 @@ func (k *kafkaTopicCommand) Cmd() *cobra.Command {
 }
 
 func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
-
 	var suggestions []prompt.Suggest
 	cmd := k.authenticatedTopicCommand
 	if cmd == nil {
-		return suggestions
-	}
-	if !pcmd.CanCompleteCommand(cmd.Command) {
 		return suggestions
 	}
 	topics, err := cmd.getTopics(cmd.Command)
@@ -297,11 +295,6 @@ func (a *authenticatedTopicCommand) init() {
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
-type kafkaRestV3Error struct {
-	Code    int    `json:"error_code"`
-	Message string `json:"message"`
-}
-
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
@@ -364,7 +357,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	topicConfigsMap, err := toMap(configs)
+	topicConfigsMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -607,7 +600,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	configsMap, err := toMap(configStrings)
+	configsMap, err := kafka.ToMap(configStrings)
 	if err != nil {
 		return err
 	}
@@ -682,7 +675,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	configMap, err := toMap(configs)
+	configMap, err := kafka.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -769,7 +762,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		lkc := kafkaClusterConfig.ID
 
 		httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsTopicNameDelete(kafkaREST.Context, lkc, topicName)
-
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
@@ -794,7 +786,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err
@@ -859,6 +850,11 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	saramaClient, err := validateTopic(topic, cluster, h.clientID, false)
+	if err != nil {
+		return err
+	}
+	saramaClient.Close() //client is not resused for produce
 
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
@@ -1015,6 +1011,11 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	saramaClient, err := validateTopic(topic, cluster, h.clientID, beginning)
+	if err != nil {
+		return err
+	}
+
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
@@ -1048,7 +1049,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	InitSarama(h.logger)
-	consumer, err := NewSaramaConsumer(group, cluster, h.clientID, beginning)
+	consumer, err := NewSaramaConsumer(group, saramaClient)
 	if err != nil {
 		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
 		return err
@@ -1093,6 +1094,30 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	err = os.RemoveAll(dir)
 	return err
+}
+
+// validate that a topic exists before attempting to produce/consume messages
+func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error){
+	client, err := NewSaramaClient(cluster, clientID, beginning)
+	if err != nil {
+		return nil, err
+	}
+	topics, err := client.Topics()
+	if err != nil {
+		return nil, err
+	}
+	var foundTopic bool
+	for _, t := range topics {
+		if topic == t {
+			foundTopic = true
+			break
+		}
+	}
+	if !foundTopic {
+		client.Close()
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
+	}
+	return client, nil
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {

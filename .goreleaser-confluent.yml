@@ -30,7 +30,7 @@ builds:
       - amd64
       - 386
   - binary: confluent
-    id: signed
+    id: signed-amd64
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -49,10 +49,30 @@ builds:
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/confluent/signed_darwin_amd64/confluent
-        - cmd: gon gon_confluent.hcl
+            - LICENSE_BIN_PATH=./dist/confluent/signed-amd64_darwin_amd64/confluent
+        - cmd: gon gon_confluent_amd64.hcl
+  - binary: confluent
+    id: signed-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    hooks:
+      post:
+        - cmd: make download-licenses
           env:
-            - GO111MODULE=on
+            - LICENSE_BIN=confluent
+            - LICENSE_BIN_PATH=./dist/confluent/signed-arm64_darwin_arm64/confluent
+        - cmd: gon gon_confluent_arm64.hcl
 
 release:
   disable: true

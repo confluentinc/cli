@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
+	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -16,7 +15,9 @@ import (
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -28,10 +29,11 @@ var (
 
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	completableFlagChildren map[string][]*cobra.Command
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand(prerunner pcmd.PreRunner) *aclCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "acl",
@@ -39,7 +41,7 @@ func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		}, prerunner, AclSubcommandFlags)
 	cmd := &aclCommand{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.init()
-	return cmd.Command
+	return cmd
 }
 
 func (c *aclCommand) init() {
@@ -84,6 +86,11 @@ func (c *aclCommand) init() {
 	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
+
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		"cluster":         {createCmd, deleteCmd, listCmd},
+		"service-account": {createCmd, deleteCmd, listCmd},
+	}
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
@@ -368,4 +375,19 @@ func printAclsDeleted(cmd *cobra.Command, count int) {
 	} else {
 		utils.ErrPrintf(cmd, fmt.Sprintf(errors.DeletedACLsCountMsg, count))
 	}
+}
+
+func (c *aclCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *aclCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"cluster":         completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
+		"service-account": completer.ServiceAccountFlagCompleterFunc(c.Client),
+	}
+}
+
+func (c *aclCommand) Cmd() *cobra.Command {
+	return c.Command
 }

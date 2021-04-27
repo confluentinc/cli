@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -97,7 +97,8 @@ func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.CreateCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
 }
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
@@ -107,7 +108,8 @@ func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.DeleteCalled())
-	test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
+	// TODO add back with analytics
+	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
 }
 
 func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
@@ -143,22 +145,10 @@ func (suite *EnvironmentTestSuite) TestServerComplete() {
 				},
 			},
 		},
-		{
-			name: "don't suggest for unauthenticated user",
-			fields: fields{
-				Command: func() *command {
-					oldConf := suite.conf
-					suite.conf = v3.UnauthenticatedCloudConfigMock()
-					c := suite.newCmd()
-					suite.conf = oldConf
-					return c
-				}(),
-			},
-			want: nil,
-		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
 			fmt.Println(&got)
 			req.Equal(tt.want, got)

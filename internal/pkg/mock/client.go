@@ -1,8 +1,8 @@
 package mock
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 )
 
 func NewClientMock() *ccloud.Client {

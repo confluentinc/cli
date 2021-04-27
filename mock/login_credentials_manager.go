@@ -7,11 +7,10 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go"
-	github_com_spf13_cobra "github.com/spf13/cobra"
-
+	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go-v1"
 	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/internal/pkg/netrc"
+	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // MockLoginCredentialsManager is a mock of LoginCredentialsManager interface
@@ -31,6 +30,12 @@ type MockLoginCredentialsManager struct {
 	lockGetCredentialsFromNetrc sync.Mutex
 	GetCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
+	lockGetConfluentPrerunCredentialsFromEnvVar sync.Mutex
+	GetConfluentPrerunCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+
+	lockGetConfluentPrerunCredentialsFromNetrc sync.Mutex
+	GetConfluentPrerunCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+
 	calls struct {
 		GetCCloudCredentialsFromEnvVar []struct {
 			Cmd *github_com_spf13_cobra.Command
@@ -48,6 +53,12 @@ type MockLoginCredentialsManager struct {
 		GetCredentialsFromNetrc []struct {
 			Cmd          *github_com_spf13_cobra.Command
 			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+		}
+		GetConfluentPrerunCredentialsFromEnvVar []struct {
+			Cmd *github_com_spf13_cobra.Command
+		}
+		GetConfluentPrerunCredentialsFromNetrc []struct {
+			Cmd *github_com_spf13_cobra.Command
 		}
 	}
 }
@@ -248,6 +259,82 @@ func (m *MockLoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
 	return m.calls.GetCredentialsFromNetrc
 }
 
+// GetConfluentPrerunCredentialsFromEnvVar mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+	m.lockGetConfluentPrerunCredentialsFromEnvVar.Lock()
+	defer m.lockGetConfluentPrerunCredentialsFromEnvVar.Unlock()
+
+	if m.GetConfluentPrerunCredentialsFromEnvVarFunc == nil {
+		panic("mocker: MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar was called.")
+	}
+
+	call := struct {
+		Cmd *github_com_spf13_cobra.Command
+	}{
+		Cmd: cmd,
+	}
+
+	m.calls.GetConfluentPrerunCredentialsFromEnvVar = append(m.calls.GetConfluentPrerunCredentialsFromEnvVar, call)
+
+	return m.GetConfluentPrerunCredentialsFromEnvVarFunc(cmd)
+}
+
+// GetConfluentPrerunCredentialsFromEnvVarCalled returns true if GetConfluentPrerunCredentialsFromEnvVar was called at least once.
+func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVarCalled() bool {
+	m.lockGetConfluentPrerunCredentialsFromEnvVar.Lock()
+	defer m.lockGetConfluentPrerunCredentialsFromEnvVar.Unlock()
+
+	return len(m.calls.GetConfluentPrerunCredentialsFromEnvVar) > 0
+}
+
+// GetConfluentPrerunCredentialsFromEnvVarCalls returns the calls made to GetConfluentPrerunCredentialsFromEnvVar.
+func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVarCalls() []struct {
+	Cmd *github_com_spf13_cobra.Command
+} {
+	m.lockGetConfluentPrerunCredentialsFromEnvVar.Lock()
+	defer m.lockGetConfluentPrerunCredentialsFromEnvVar.Unlock()
+
+	return m.calls.GetConfluentPrerunCredentialsFromEnvVar
+}
+
+// GetConfluentPrerunCredentialsFromNetrc mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+	m.lockGetConfluentPrerunCredentialsFromNetrc.Lock()
+	defer m.lockGetConfluentPrerunCredentialsFromNetrc.Unlock()
+
+	if m.GetConfluentPrerunCredentialsFromNetrcFunc == nil {
+		panic("mocker: MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromNetrcFunc is nil but MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromNetrc was called.")
+	}
+
+	call := struct {
+		Cmd *github_com_spf13_cobra.Command
+	}{
+		Cmd: cmd,
+	}
+
+	m.calls.GetConfluentPrerunCredentialsFromNetrc = append(m.calls.GetConfluentPrerunCredentialsFromNetrc, call)
+
+	return m.GetConfluentPrerunCredentialsFromNetrcFunc(cmd)
+}
+
+// GetConfluentPrerunCredentialsFromNetrcCalled returns true if GetConfluentPrerunCredentialsFromNetrc was called at least once.
+func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrcCalled() bool {
+	m.lockGetConfluentPrerunCredentialsFromNetrc.Lock()
+	defer m.lockGetConfluentPrerunCredentialsFromNetrc.Unlock()
+
+	return len(m.calls.GetConfluentPrerunCredentialsFromNetrc) > 0
+}
+
+// GetConfluentPrerunCredentialsFromNetrcCalls returns the calls made to GetConfluentPrerunCredentialsFromNetrc.
+func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrcCalls() []struct {
+	Cmd *github_com_spf13_cobra.Command
+} {
+	m.lockGetConfluentPrerunCredentialsFromNetrc.Lock()
+	defer m.lockGetConfluentPrerunCredentialsFromNetrc.Unlock()
+
+	return m.calls.GetConfluentPrerunCredentialsFromNetrc
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *MockLoginCredentialsManager) Reset() {
 	m.lockGetCCloudCredentialsFromEnvVar.Lock()
@@ -265,4 +352,10 @@ func (m *MockLoginCredentialsManager) Reset() {
 	m.lockGetCredentialsFromNetrc.Lock()
 	m.calls.GetCredentialsFromNetrc = nil
 	m.lockGetCredentialsFromNetrc.Unlock()
+	m.lockGetConfluentPrerunCredentialsFromEnvVar.Lock()
+	m.calls.GetConfluentPrerunCredentialsFromEnvVar = nil
+	m.lockGetConfluentPrerunCredentialsFromEnvVar.Unlock()
+	m.lockGetConfluentPrerunCredentialsFromNetrc.Lock()
+	m.calls.GetConfluentPrerunCredentialsFromNetrc = nil
+	m.lockGetConfluentPrerunCredentialsFromNetrc.Unlock()
 }

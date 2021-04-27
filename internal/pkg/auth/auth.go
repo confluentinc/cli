@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -27,6 +27,9 @@ const (
 	ConfluentUsernameDeprecatedEnvVar = "XX_CONFLUENT_USERNAME"
 	CCloudPasswordDeprecatedEnvVar    = "XX_CCLOUD_PASSWORD"
 	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
+
+	ConfluentURLEnvVar        = "CONFLUENT_MDS_URL"
+	ConfluentCaCertPathEnvVar = "CONFLUENT_CA_CERT_PATH"
 )
 
 func PersistLogoutToConfig(config *v3.Config) error {
@@ -42,28 +45,34 @@ func PersistLogoutToConfig(config *v3.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string) error {
+func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
 	state := &v2.ContextState{
 		Auth:      nil,
 		AuthToken: token,
 	}
-	return addOrUpdateContext(config, username, url, state, caCertPath)
+	var ctxName string
+	if isLegacyContext {
+		ctxName = GenerateContextName(username, url, "")
+	} else {
+		ctxName = GenerateContextName(username, url, caCertPath)
+	}
+	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath)
 }
 
 func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
-	state, err := getCCloudContextState(config, email, url, token, client)
+	ctxName := GenerateCloudContextName(email, url)
+	state, err := getCCloudContextState(config, ctxName, email, url, token, client)
 	if err != nil {
 		return nil, err
 	}
-	err = addOrUpdateContext(config, email, url, state, "")
+	err = addOrUpdateContext(config, ctxName, email, url, state, "")
 	if err != nil {
 		return nil, err
 	}
 	return state.Auth.Account, nil
 }
 
-func addOrUpdateContext(config *v3.Config, username string, url string, state *v2.ContextState, caCertPath string) error {
-	ctxName := GenerateContextName(username, url)
+func addOrUpdateContext(config *v3.Config, ctxName string, username string, url string, state *v2.ContextState, caCertPath string) error {
 	credName := generateCredentialName(username)
 	platform := &v2.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -106,8 +115,7 @@ func addOrUpdateContext(config *v3.Config, username string, url string, state *v
 	return nil
 }
 
-func getCCloudContextState(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*v2.ContextState, error) {
-	ctxName := GenerateContextName(email, url)
+func getCCloudContextState(config *v3.Config, ctxName string, email string, url string, token string, client *ccloud.Client) (*v2.ContextState, error) {
 	user, err := getCCloudUser(token, client)
 	if err != nil {
 		return nil, err
@@ -159,8 +167,17 @@ func getCCloudUser(token string, client *ccloud.Client) (*orgv1.GetUserReply, er
 	return user, nil
 }
 
-func GenerateContextName(username string, url string) string {
-	return fmt.Sprintf("login-%s-%s", username, url)
+func GenerateCloudContextName(username string, url string) string {
+	return GenerateContextName(username, url, "")
+}
+
+// if CP users use cacertpath then include that in the context name
+// (legacy CP users may still have context without cacertpath in the name but have cacertpath stored)
+func GenerateContextName(username string, url string, caCertPath string) string {
+	if caCertPath == "" {
+		return fmt.Sprintf("login-%s-%s", username, url)
+	}
+	return fmt.Sprintf("login-%s-%s?cacertpath=%s", username, url, caCertPath)
 }
 
 func generateCredentialName(username string) string {

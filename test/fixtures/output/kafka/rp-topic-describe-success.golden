@@ -1,10 +1,14 @@
-Topic: topic1 PartitionCount: 1 ReplicationFactor: 1
-  Topic  | Partition | Leader | Replicas | ISR  
-+--------+-----------+--------+----------+-----+
-  topic1 |         2 |      0 | [0]      | []   
+Topic: topic-exist PartitionCount: 3 ReplicationFactor: 3
+     Topic    | Partition | Leader |     Replicas     |       ISR         
++-------------+-----------+--------+------------------+------------------+
+  topic-exist |         0 |   1001 | [1001 1002 1003] | [1001 1002 1003]  
+  topic-exist |         1 |   1002 | [1001 1002 1003] | [1002 1003]       
+  topic-exist |         2 |   1003 | [1001 1002 1003] | [1003]            
 
 Configuration
 
-     Name     |    Value      
-+-------------+--------------+
-  test-config | config-value  
+        Name       |   Value    
++------------------+-----------+
+  cleanup.policy   | delete     
+  compression.type | producer   
+  retention.ms     | 604800000  

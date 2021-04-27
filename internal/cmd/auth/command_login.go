@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -48,6 +49,8 @@ func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, 
 }
 
 func (a *loginCommand) init(prerunner pcmd.PreRunner) {
+	var longDesc string
+
 	remoteAPIName := getRemoteAPIName(a.cliName)
 	loginCmd := &cobra.Command{
 		Use:   "login",
@@ -59,15 +62,20 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 		}),
 	}
 	if a.cliName == "ccloud" {
+		longDesc = fmt.Sprintf("Log in to %s.\n\n%s\n\n%s", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Cloud non-interactively using the ``CCLOUD_EMAIL`` and ``CCLOUD_PASSWORD`` environment variables.", "Even with the above environment variables set, you can force an interactive login using the ``--prompt`` flag.")
+		loginCmd.Long = longDesc
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
 		loginCmd.Flags().String("url", pauth.CCloudURL, "Confluent Cloud service URL.")
 	} else {
+		longDesc=fmt.Sprintf("Log in to %s.\n\n%s\n\n", remoteAPIName, "Starting in the 1.24.0 release, you can log in to Confluent Platform non-interactively using the following environment variables: ``CONFLUENT_USERNAME``, ``CONFLUENT_PASSWORD``, ``CONFLUENT_MDS_URL``, ``CONFLUENT_CA_CERT_PATH``")
+		longDesc += "In a non-interactive login, ``CONFLUENT_MDS_URL`` replaces the ``--url`` flag, and ``CONFLUENT_CA_CERT_PATH`` replaces the ``--ca-cert-path`` flag.\n\n"
+		longDesc += "Even with the above environment variables set, you can force an interactive login using the ``--prompt`` flag."
+		loginCmd.Long = longDesc
 		loginCmd.RunE = pcmd.NewCLIRunE(a.loginMDS)
-		loginCmd.Flags().String("url", "", "Metadata service URL.")
+		loginCmd.Flags().String("url", "", "Metadata service URL. Must set flag or CONFLUENT_MDS_URL.")
 		loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 		loginCmd.Short = strings.ReplaceAll(loginCmd.Short, ".", " (required for RBAC).")
-		loginCmd.Long = strings.ReplaceAll(loginCmd.Long, ".", " (required for RBAC).")
-		check(loginCmd.MarkFlagRequired("url")) // because https://confluent.cloud isn't an MDS endpoint
+		loginCmd.Long = fmt.Sprintf("%s \n\n%s", loginCmd.Long, "This command is required for RBAC.")
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
@@ -106,8 +114,9 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token,
-		a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url))
+	client = a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
 	}
@@ -150,6 +159,9 @@ func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pa
 }
 
 func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
+	if !checkURLFlagOrEnvVarIsSet(cmd) {
+		return errors.NewErrorWithSuggestions(errors.NoURLFlagOrMdsEnvVarErrorMsg, errors.NoURLFlagOrMdsEnvVarSuggestions)
+	}
 	url, err := a.getURL(cmd)
 	if err != nil {
 		return err
@@ -160,9 +172,26 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	caCertPath, err := a.getCaCertPath(cmd, pauth.GenerateContextName(credentials.Username, url))
+	// Current functionality:
+	// empty ca-cert-path is equivalent to not using ca-cert-path flag
+	// if users want to login with ca-cert-path they must explicilty use the flag every time they login
+	//
+	// For legacy users:
+	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
+	// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
+	// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
+	var isLegacyContext bool
+	caCertPath, err := getCACertPath(cmd)
 	if err != nil {
 		return err
+	}
+	if caCertPath == "" {
+		contextName := pauth.GenerateContextName(credentials.Username, url, "")
+		caCertPath, err = a.checkLegacyContextCaCertPath(cmd, contextName)
+		if err != nil {
+			return err
+		}
+		isLegacyContext = caCertPath != ""
 	}
 
 	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
@@ -175,7 +204,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath)
+	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
 	if err != nil {
 		return err
 	}
@@ -187,6 +216,23 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 
 	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
 	return nil
+}
+
+func checkURLFlagOrEnvVarIsSet(cmd *cobra.Command) bool {
+	flagUrl, _ := cmd.Flags().GetString("url")
+	envUrl := os.Getenv(pauth.ConfluentURLEnvVar)
+	return !(flagUrl == "" && envUrl == "") //return true if one of them is set
+}
+
+func getCACertPath(cmd *cobra.Command) (string, error) {
+	caCertPathFlag, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return "", err
+	} else if caCertPathFlag != "" {
+		return caCertPathFlag, nil
+	} else {
+		return os.Getenv(pauth.ConfluentCaCertPathEnvVar), nil
+	}
 }
 
 // Order of precedence: env vars > netrc > prompt
@@ -211,24 +257,12 @@ func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (
 	)
 }
 
-// if ca-cert-path flag is not used, returns caCertPath value from config
-// if user passes empty string for ca-cert-path flag then user intends to reset the ca-cert-path
-func (a *loginCommand) getCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-	if err != nil {
-		return "", err
+func (a *loginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
+	changed := cmd.Flags().Changed("ca-cert-path")
+	// if flag used but empty string is passed then user intends to reset the ca-cert-path
+	if changed {
+		return "", nil
 	}
-	if caCertPath == "" {
-		changed := cmd.Flags().Changed("ca-cert-path")
-		if changed {
-			return "", nil
-		}
-		return a.getCaCertPathFromConfig(cmd, contextName)
-	}
-	return caCertPath, nil
-}
-
-func (a *loginCommand) getCaCertPathFromConfig(cmd *cobra.Command, contextName string) (string, error) {
 	ctx, ok := a.Config.Contexts[contextName]
 	if !ok {
 		return "", nil
@@ -240,6 +274,9 @@ func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return "", err
+	}
+	if url == "" && a.cliName == "confluent" {
+		url = os.Getenv(pauth.ConfluentURLEnvVar)
 	}
 	url, valid, errMsg := validateURL(url, a.cliName)
 	if !valid {
@@ -296,10 +333,4 @@ func validateURL(url string, cli string) (string, bool, string) {
 	matched, _ := regexp.Match(pattern, []byte(url))
 
 	return url, matched, strings.Join(msg, " and ")
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

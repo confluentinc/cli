@@ -7,11 +7,11 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -66,16 +66,10 @@ func (suite *KafkaTopicTestSuite) TestServerComplete() {
 				},
 			},
 		},
-		{
-			name: "don't suggest for unauthenticated user",
-			fields: fields{
-				suite.newCmd(v3.UnauthenticatedCloudConfigMock()),
-			},
-			want: nil,
-		},
 	}
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
+			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
 			got := tt.fields.Command.ServerComplete()
 			fmt.Println(&got)
 			req.Equal(tt.want, got)

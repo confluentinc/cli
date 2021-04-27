@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 /*
 	HANDLECOMMON HELPERS
+	see: https://github.com/confluentinc/cli/blob/master/errors.md
 */
 
 func catchTypedErrors(err error) error {

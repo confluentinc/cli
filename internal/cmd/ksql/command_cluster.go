@@ -7,15 +7,16 @@ import (
 	"strconv"
 
 	"github.com/c-bata/go-prompt"
+	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -31,9 +32,10 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner           pcmd.PreRunner
-	completableChildren []*cobra.Command
-	analyticsClient     analytics.Client
+	prerunner               pcmd.PreRunner
+	completableChildren     []*cobra.Command
+	completableFlagChildren map[string][]*cobra.Command
+	analyticsClient         analytics.Client
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
@@ -55,10 +57,6 @@ func (c *clusterCommand) Cmd() *cobra.Command {
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
@@ -134,6 +132,9 @@ func (c *clusterCommand) init() {
 	c.AddCommand(aclsCmd)
 
 	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, aclsCmd}
+	c.completableFlagChildren = map[string][]*cobra.Command{
+		"cluster": {createCmd},
+	}
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
@@ -349,6 +350,11 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
 	}
 
+	if cluster.ServiceAccountId == 0 {
+		return fmt.Errorf(errors.KsqlDBNoServiceAccount, args[0])
+	}
+
+
 	serviceAccountId, err := c.getServiceAccount(cluster)
 	if err != nil {
 		return err
@@ -364,4 +370,14 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	return nil
+}
+
+func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
+	return c.completableFlagChildren
+}
+
+func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
+	return map[string]func() []prompt.Suggest{
+		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
+	}
 }

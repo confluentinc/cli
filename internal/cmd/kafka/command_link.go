@@ -260,7 +260,7 @@ func (c *linkCommand) listWithKafkaApi(cmd *cobra.Command, includeTopics bool) e
 
 		for _, link := range resp.Links {
 			if len(link.Topics) > 0 {
-				for topic := range link.Topics {
+				for _, topic := range link.Topics {
 					outputWriter.AddElement(
 						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
 				}
