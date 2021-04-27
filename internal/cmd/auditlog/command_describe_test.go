@@ -25,9 +25,9 @@ func TestAuditLogDescribe(t *testing.T) {
 func TestAuditLogDescribeUnconfigured(t *testing.T) {
 	cmd := mockAuditLogCommand(false)
 
-	out, err := pcmd.ExecuteCommand(cmd, "describe")
+	_, err := pcmd.ExecuteCommand(cmd, "describe")
 	require.Error(t, err)
-	require.Equal(t, "Error: "+errors.AuditLogsNotEnabledErrorMsg+"\n", out)
+	require.Equal(t, errors.AuditLogsNotEnabledErrorMsg, err.Error())
 }
 
 func mockAuditLogCommand(configured bool) *cobra.Command {
