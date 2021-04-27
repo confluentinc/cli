@@ -50,6 +50,7 @@ var (
 
 	organizationScopedRoles = map[string]bool{
 		"OrganizationAdmin": true,
+		"MetricsViewer": true,
 	}
 )
 

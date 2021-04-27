@@ -35,6 +35,10 @@ type roleBindingTest struct {
 	err       error
 }
 
+type myRoleBindingTest struct {
+	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
+}
+
 type expectedListCmdArgs struct {
 	principal string
 	roleName  string
@@ -172,6 +176,76 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 			err := cmd.Execute()
 			assert.Equal(suite.T(), tc.err, err)
 		}
+	}
+}
+
+func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockedResult chan []mdsv2alpha1.ScopeRoleBindingMapping, message string) *cobra.Command {
+	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
+	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
+		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
+			return <-mockedResult, nil, nil
+		},
+	}
+
+	// copied todo
+	userMock := &ccsdkmock.User{
+		DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
+			if arg1.Email == "test@email.com" {
+				return &v1.User{
+					Email:      "test@email.com",
+					ResourceId: v3.MockUserResourceId,
+				}, nil
+			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
+				return nil, notfoundError
+			} else {
+				return &v1.User{
+					Email:      arg1.ResourceId + "@email.com",
+					ResourceId: arg1.ResourceId,
+				}, nil
+			}
+		},
+		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {
+			return []*v1.User{{
+				Email:      "test@email.com",
+				ResourceId: v3.MockUserResourceId,
+			}}, nil
+		},
+		CheckEmailFunc: nil,
+	}
+	client := &ccloud.Client{
+		User: userMock,
+	}
+	return New("ccloud", mock2.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+}
+
+var myRoleBindingListTests = []myRoleBindingTest{
+	{
+		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
+			{
+				Scope:        mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet"},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:u-epo7ml": {
+						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
+					},
+				},
+			},
+		},
+	},
+}
+
+func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
+	mockedResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
+	for _, tc := range myRoleBindingListTests {
+		cmd := suite.newMockIamListRoleBindingCmd(mockedResult, "")
+		cmd.SetArgs(append([]string{"rolebinding", "list"}, "--current-user"))
+
+		go func() {
+			mockedResult <- tc.scopeRoleBindingMapping
+		}()
+		err := cmd.Execute()
+		assert.Nil(suite.T(), err)
 	}
 }
 
