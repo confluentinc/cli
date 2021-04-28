@@ -698,7 +698,9 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 				if secret != "" {
 					cluster.APIKeys[key] = &v0.APIKeyPair{Key: key, Secret: secret}
 				} else if cluster.APIKeys[key] == nil {
-					return errors.NewErrorWithSuggestions(errors.NoAPISecretStoredOrPassedMsg, errors.NoAPISecretStoredOrPassedSuggestions)
+					return errors.NewErrorWithSuggestions(
+						fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, key, clusterId),
+						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
 				}
 			}
 		} else {
