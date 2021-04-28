@@ -104,7 +104,8 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka link create my_link --source-bootstrap-server myhost:1234 --config-file ~/myfile.txt",
+				Code: "ccloud kafka link create my_link source-cluster-id lkc-abced " +
+					"--source-bootstrap-server myhost:1234 --config-file ~/myfile.txt",
 			},
 		),
 		RunE: c.create,
