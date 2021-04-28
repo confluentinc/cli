@@ -17,10 +17,15 @@ import (
 )
 
 const (
+	apiKeyFlagName                     = "source-api-key"
+	apiSecretFlagName                  = "source-api-secret"
 	sourceBootstrapServersFlagName     = "source-bootstrap-server"
 	sourceClusterIdFlagName            = "source-cluster-id"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	configFileFlagName                 = "config-file"
+	securityProtocalPropertyName       = "security.protocol"
+	saslMechanismPropertyName          = "sasl.mechanism"
+	saslJaasConfigPropertyName          = "sasl.jaas.config"
+	configFileFlagName                  = "config-file"
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
 	includeTopicsFlagName              = "include-topics"
@@ -105,7 +110,9 @@ func (c *linkCommand) init() {
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
 				Code: "ccloud kafka link create my_link source-cluster-id lkc-abced " +
-					"--source-bootstrap-server myhost:1234 --config-file ~/myfile.txt",
+					"--source-bootstrap-server myhost:1234 --config-file ~/myfile.txt \n" +
+					"ccloud kafka link create my_link source-cluster-id lkc-abced " +
+					"--source-bootstrap-server myhost:1234 --source-api-key abcde --source-api-secret 88888 \n",
 			},
 		),
 		RunE: c.create,
@@ -115,6 +122,16 @@ func (c *linkCommand) init() {
 	createCmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
 	check(createCmd.MarkFlagRequired(sourceBootstrapServersFlagName))
 	check(createCmd.MarkFlagRequired(sourceClusterIdFlagName))
+	createCmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. " +
+		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. " +
+		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
+		"and add the security configs in the config file. " +
+		"Must be used with --source-api-secret.")
+	createCmd.Flags().String(apiSecretFlagName, "", "An API secret for the source cluster. " +
+		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. " +
+		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
+		"and add the security configs in the config file. " +
+		"Must be used with --source-api-key.")
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
@@ -310,7 +327,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Read in extra configs if applicable.
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
@@ -321,7 +337,36 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// The `source` argument is a convenience; we package everything into properties for the Source cluster.
+	// Two optional flags: --source-api-key and --source-api-secret
+	// 1. if I have neither flag set, then no change in behavior – use config-file as normal
+	//
+	// 2. if I have only 1 flag set, but not the other, then throw an error
+	//
+	// 3. if I have both set, then the CLI should add these configs on top of configs passed in config-file
+	apiKey, err := cmd.Flags().GetString(apiKeyFlagName)
+	if err != nil {
+		return err
+	}
+
+	apiSecret, err := cmd.Flags().GetString(apiSecretFlagName)
+	if err != nil {
+		return err
+	}
+
+	// Overriding the security props by the flag value
+	if apiKey != "" && apiSecret != "" {
+		configMap[securityProtocalPropertyName] = "SASL_SSL"
+		configMap[saslMechanismPropertyName] = "PLAIN"
+		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(
+			"org.apache.kafka.common.security.plain.PlainLoginModule required " +
+				"username=\"%s\" " +
+				"password=\"%s\";", apiKey, apiSecret)
+	} else if apiKey != "" {
+		return errors.New("--source-api-key and --source-api-secret must be used together. " +
+			"You cannot pass in one without the other.")
+	}
+
+	// Overriding the bootstrap server prop by the flag value
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
 	kafkaREST, _ := c.GetKafkaREST()
