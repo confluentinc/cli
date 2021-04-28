@@ -44,8 +44,9 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
-	serviceAccountID  = int32(12345)
-	deactivatedUserID = int32(6666)
+	serviceAccountID         = int32(12345)
+	serviceAccountResourceID = "sa-12345"
+	deactivatedUserID        = int32(6666)
 )
 
 // Fill API keyStore with default data
@@ -254,6 +255,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 		case "GET":
 			serviceAccount := &orgv1.User{
 				Id:                 serviceAccountID,
+				ResourceId:         serviceAccountResourceID,
 				ServiceName:        "service_account",
 				ServiceDescription: "at your service.",
 			}
@@ -269,6 +271,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 			require.NoError(t, err)
 			serviceAccount := &orgv1.User{
 				Id:                 55555,
+				ResourceId:         "sa-55555",
 				ServiceName:        req.User.ServiceName,
 				ServiceDescription: req.User.ServiceDescription,
 			}
