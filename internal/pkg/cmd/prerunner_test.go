@@ -680,8 +680,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:           "api key passed via flag without stored secret",
 			key:            "miles",
-			errMsg:         errors.NoAPISecretStoredOrPassedMsg,
-			suggestionsMsg: errors.NoAPISecretStoredOrPassedSuggestions,
+			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", "lkc-0000"),
+			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", "lkc-0000"),
 			config:         usernameClusterWithoutSecret,
 		},
 		{
