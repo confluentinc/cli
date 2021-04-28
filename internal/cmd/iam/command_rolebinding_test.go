@@ -39,7 +39,7 @@ type roleBindingTest struct {
 
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
-	mockedListUserResult []*v1.User
+	mockedListUserResult    []*v1.User
 	expected                []listDisplay
 }
 
@@ -184,9 +184,9 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 }
 
 func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(
-		mockeRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping,
-		mockeddListUserResult chan []*v1.User,
-		) *cobra.Command {
+	mockeRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping,
+	mockeddListUserResult chan []*v1.User,
+) *cobra.Command {
 	// Mock MDS Client
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
@@ -258,7 +258,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				Principal: "User:u-123",
 				Role:      "MetricsViewer",
 				Name:      "Skynet",
-				Email: "test@email.com",
+				Email:     "test@email.com",
 			},
 		},
 	},
