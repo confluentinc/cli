@@ -7,6 +7,7 @@ Available Commands:
   create      Create a connector.
   delete      Delete a connector.
   describe    Describe a connector.
+  event       Manage Connect log events configuration.
   list        List connectors.
   pause       Pause a connector.
   resume      Resume a connector.
