@@ -86,15 +86,16 @@ func readConfigsFromFile(configFile string) (map[string]string, error) {
 	}
 
 	// Create config map from the argument.a
-	var linkConfigs []string
+	var configs []string
 	for _, s := range strings.Split(string(configContents), "\n") {
 		// Filter out blank lines
-		if s != "" {
-			linkConfigs = append(linkConfigs, s)
+		spaceTrimmed := strings.TrimSpace(s)
+		if s != "" && spaceTrimmed[0] != '#' {
+			configs = append(configs, spaceTrimmed)
 		}
 	}
 
-	return toMap(linkConfigs)
+	return toMap(configs)
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Command) (string, error) {
