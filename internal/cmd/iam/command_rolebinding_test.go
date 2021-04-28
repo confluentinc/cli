@@ -39,6 +39,7 @@ type roleBindingTest struct {
 
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
+	mockedListUserResult []*v1.User
 	expected                []listDisplay
 }
 
@@ -182,36 +183,22 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	}
 }
 
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockedResult chan []mdsv2alpha1.ScopeRoleBindingMapping, message string) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(
+		mockeRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping,
+		mockeddListUserResult chan []*v1.User,
+		) *cobra.Command {
+	// Mock MDS Client
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
-			return <-mockedResult, nil, nil
+			return <-mockeRoleBindingsResult, nil, nil
 		},
 	}
 
-	// copied todo
+	// Mock User Client
 	userMock := &ccsdkmock.User{
-		DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
-			if arg1.Email == "test@email.com" {
-				return &v1.User{
-					Email:      "test@email.com",
-					ResourceId: v3.MockUserResourceId,
-				}, nil
-			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
-				return nil, notfoundError
-			} else {
-				return &v1.User{
-					Email:      arg1.ResourceId + "@email.com",
-					ResourceId: arg1.ResourceId,
-				}, nil
-			}
-		},
 		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {
-			return []*v1.User{{
-				Email:      "test@email.com",
-				ResourceId: v3.MockUserResourceId,
-			}}, nil
+			return <-mockeddListUserResult, nil
 		},
 		CheckEmailFunc: nil,
 	}
@@ -222,6 +209,7 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockedResult cha
 }
 
 var myRoleBindingListTests = []myRoleBindingTest{
+	// Principal whose email address is NOT known will be returned without an email address
 	{
 		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
 			{
@@ -235,6 +223,10 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
+		mockedListUserResult: []*v1.User{{
+			Email:      "test@email.com",
+			ResourceId: v3.MockUserResourceId,
+		}},
 		expected: []listDisplay{
 			{
 				Principal: "User:u-epo7ml",
@@ -243,15 +235,67 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			},
 		},
 	},
+	// Principal whose email address is known will be returned with eamil address
+	{
+		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet"},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:" + v3.MockUserResourceId: {
+						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
+					},
+				},
+			},
+		},
+		mockedListUserResult: []*v1.User{{
+			Email:      "test@email.com",
+			ResourceId: v3.MockUserResourceId,
+		}},
+		expected: []listDisplay{
+			{
+				Principal: "User:u-123",
+				Role:      "MetricsViewer",
+				Name:      "Skynet",
+				Email: "test@email.com",
+			},
+		},
+	},
+	// Service Account
+	{
+		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet"},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:sa-123": {
+						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
+					},
+				},
+			},
+		},
+		mockedListUserResult: []*v1.User{},
+		expected: []listDisplay{
+			{
+				Principal: "User:sa-123",
+				Role:      "MetricsViewer",
+				Name:      "Skynet",
+			},
+		},
+	},
 }
 
 func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
-	mockedResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
+	mockeRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
+	mockeListUserResult := make(chan []*v1.User)
 	for _, tc := range myRoleBindingListTests {
-		cmd := suite.newMockIamListRoleBindingCmd(mockedResult, "")
+		cmd := suite.newMockIamListRoleBindingCmd(mockeRoleBindingsResult, mockeListUserResult)
 
 		go func() {
-			mockedResult <- tc.scopeRoleBindingMapping
+			mockeRoleBindingsResult <- tc.scopeRoleBindingMapping
+			mockeListUserResult <- tc.mockedListUserResult
 		}()
 		output, err := pcmd.ExecuteCommand(cmd, "rolebinding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)
