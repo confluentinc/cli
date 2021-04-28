@@ -121,17 +121,17 @@ func (c *mirrorCommand) init() {
 			examples.Example{
 				Text: "Create a cluster link, using supplied Source URL and properties.",
 				Code: "ccloud kafka mirror create <source-topic-name> --link-name <link-name> " +
-					"--replication-factor <replication-factor> --config=\"unclean.leader.election.enable=true\"",
+					"--replication-factor <replication-factor> --config-file mirror_config.txt",
 			},
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
+	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	check(createCmd.MarkFlagRequired(linkFlagName))
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing topic config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
-	check(createCmd.MarkFlagRequired(linkFlagName))
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
