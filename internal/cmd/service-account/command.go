@@ -25,12 +25,12 @@ type command struct {
 }
 
 var (
-	listFields                = []string{"Id", "ServiceName", "ServiceDescription"}
-	listHumanLabels           = []string{"Id", "Name", "Description"}
-	listStructuredLabels      = []string{"id", "name", "description"}
-	describeFields            = []string{"Id", "ServiceName", "ServiceDescription"}
-	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
-	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description"}
+	listFields                = []string{"Id", "ResourceId", "ServiceName", "ServiceDescription"}
+	listHumanLabels           = []string{"Id", "Resource ID", "Name", "Description"}
+	listStructuredLabels      = []string{"id", "resource_id", "name", "description"}
+	describeFields            = []string{"Id", "ResourceId", "ServiceName", "ServiceDescription"}
+	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "Resource ID"}
+	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "resource_id"}
 )
 
 const nameLength = 64
