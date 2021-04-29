@@ -124,12 +124,12 @@ in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/10
 
 ## Developing
 
-This repo requires golang 1.16. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.16.3.  We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.16 already. If your `goenv` does not list this as an option,
+Fortunately `goenv` supports 1.16.3 already. If your `goenv` does not list this as an option,
 you may have to build `goenv`'s `master` branch from source, which you can do with the
 following instructions:
 
@@ -182,9 +182,9 @@ When you add a new command or resource, assuming its already in the SDK, you gen
 
 If you have a need to build a binary for a platform that is not the current one, use the following to target a different `.goreleaser-*` file matching the destined platform.
 
-    make build-go GORELEASER_SUFFIX=-linux.yml   # build linux
-    make build-go GORELEASER_SUFFIX=-mac.yml     # build mac
-    make build-go GORELEASER_SUFFIX=-windows.yml # build windows
+    make build GORELEASER_SUFFIX=-linux.yml   # build linux
+    make build GORELEASER_SUFFIX=-mac.yml     # build mac
+    make build GORELEASER_SUFFIX=-windows.yml # build windows
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment

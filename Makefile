@@ -35,7 +35,7 @@ generate:
 deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GOPRIVATE=github.com/confluentinc && \
-	go get github.com/goreleaser/goreleaser@v0.142.0 && \
+	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/mitchellh/golicense@v0.1.1
 
@@ -225,11 +225,11 @@ coverage-unit:
 coverage-integ:
       ifdef CI
 	@# Run integration tests with coverage.
-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 20m -ldflags '-buildmode=exe'
+	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 30m -ldflags '-buildmode=exe'
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 20m -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 30m -ldflags '-buildmode=exe'
       endif
 
 

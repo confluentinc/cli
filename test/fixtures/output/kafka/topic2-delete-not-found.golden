@@ -1,4 +1,2 @@
-Error: CCloud backend error: 1 error occurred:
-	* error deleting topic topic2: 
-
+Error: Unknown topic: "topic2".
 

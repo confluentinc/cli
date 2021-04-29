@@ -101,6 +101,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name
 		linter.ExcludeCommandContains("connector-catalog describe"),
+		// skip connector event describe as it shows connector log events configuration for an org
+		linter.ExcludeCommandContains("connector event describe"),
 		// skip feedback command
 		linter.ExcludeCommand("feedback"),
 		// skip signup command

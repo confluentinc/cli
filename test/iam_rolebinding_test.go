@@ -280,6 +280,13 @@ func (s *CLITestSuite) TestConfluentIAMRolebindingList() {
 			args:    "iam rolebinding list --kafka-cluster-id CID --role DeveloperWrite --resource Topic:shire-parties",
 			fixture: "iam-rolebinding/confluent-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
 		},
+		{
+			name:        "confluent iam rolebinding list --principal User:u-41dxz3 --cluster pantsCluster",
+			args:        "iam rolebinding list --principal User:u-41dxz3 --cluster pantsCluster",
+			fixture:     "iam-rolebinding/confluent-iam-rolebinding-list-failure-help.golden",
+			wantErrCode: 1,
+
+		},
 	}
 
 	for _, tt := range tests {
@@ -341,6 +348,18 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 		{
 			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o json",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-clusteradmin-json.golden",
+		},
+		{
+			name:        "ccloud iam rolebinding list --principal User:u-41dxz3 --cluster pantsCluster",
+			args:        "iam rolebinding list --principal User:u-41dxz3 --cluster pantsCluster",
+			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-list-failure-help.golden",
+			wantErrCode: 1,
+
+		},
+		{
+			name:    "ccloud iam rolebinding list --help",
+			args:    "iam rolebinding list --help",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-help.golden",
 		},
 	}
 

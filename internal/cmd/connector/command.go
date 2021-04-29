@@ -28,6 +28,7 @@ type command struct {
 	completableChildren     []*cobra.Command
 	completableFlagChildren map[string][]*cobra.Command
 	analyticsClient         analytics.Client
+	prerunner           pcmd.PreRunner
 }
 
 type connectorDescribeDisplay struct {
@@ -67,6 +68,7 @@ func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 				Use:   "connector",
 				Short: "Manage Kafka Connect.",
 			}, prerunner, SubcommandFlags),
+		prerunner: prerunner,
 		analyticsClient: analyticsClient,
 	}
 	cmd.init(cliName)
@@ -176,6 +178,11 @@ func (c *command) init(cliName string) {
 		),
 	}
 	c.AddCommand(resumeCmd)
+
+	if cliName == "ccloud" {
+		c.AddCommand(NewEventCommand(c.prerunner))
+	}
+
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
 	c.completableFlagChildren = map[string][]*cobra.Command{
 		"cluster": {createCmd},

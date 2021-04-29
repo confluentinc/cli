@@ -402,9 +402,17 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") != "" {
+		ctx, err := cliCmd.Config.Context(cliCmd.Command)
+		if err != nil {
+			return nil, err
+		}
+		enabled, restEndpoint, err := kafkaRestIsEnabled(ctx, cliCmd)
+		if err != nil {
+			return nil, err
+		}
+		if enabled {
 			result := &KafkaREST{}
-			result.Client, err = createKafkaRESTClient(cliCmd.Context, cliCmd, r.IsTest)
+			result.Client, err = createKafkaRESTClient(restEndpoint)
 			if err != nil {
 				return nil, err
 			}
@@ -416,9 +424,6 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			if err != nil {
-				return nil, err
-			}
 			result.Context = context.WithValue(context.Background(), krsdk.ContextAccessToken, bearerToken)
 			return result, nil
 		}
@@ -426,6 +431,36 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	})
 	cliCmd.KafkaRESTProvider = &provider
 	return nil
+}
+
+func kafkaRestIsEnabled(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (bool, string, error) {
+	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
+	if err != nil {
+		return false, "", err
+	}
+	if clusterConfig.RestEndpoint != "" {
+		return true, clusterConfig.RestEndpoint, nil
+	}
+	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
+	// potentially remove this once Rest Proxy is enabled across prod
+	client := NewContextClient(ctx)
+	kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
+	if err != nil {
+		return false, "", err
+	}
+	// no need to update the config if it's still empty
+	if kafkaCluster.RestEndpoint == "" {
+		return false, "", nil
+	}
+	// update config to have updated cluster if rest endpoint is no longer ""
+	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
+	err = ctx.Save() //should we fail on this error or log and continue?
+	if err != nil {
+		return false, "", err
+	}
+	return kafkaCluster.RestEndpoint != "", kafkaCluster.RestEndpoint, nil
+
 }
 
 func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
@@ -698,7 +733,9 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 				if secret != "" {
 					cluster.APIKeys[key] = &v0.APIKeyPair{Key: key, Secret: secret}
 				} else if cluster.APIKeys[key] == nil {
-					return errors.NewErrorWithSuggestions(errors.NoAPISecretStoredOrPassedMsg, errors.NoAPISecretStoredOrPassedSuggestions)
+					return errors.NewErrorWithSuggestions(
+						fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, key, clusterId),
+						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
 				}
 			}
 		} else {
@@ -856,34 +893,9 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(ctx *DynamicContext, cliCmd *AuthenticatedCLICommand, isTest bool) (*kafkarestv3.APIClient, error) {
-	kafkaClusterConfig, err := ctx.GetKafkaClusterForCommand(cliCmd.Command)
-	if err != nil {
-		// cluster is probably not available
-		return nil, err
-	}
-	kafkaRestURL, err := bootstrapServersToRestURL(kafkaClusterConfig.Bootstrap)
-	if err != nil {
-		return nil, err
-	}
-	if isTest {
-		return getTestRestClient(kafkaRestURL, kafkaClusterConfig.Bootstrap)
-	}
+func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	kafkarestv3.NewConfiguration()
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath: kafkaRestURL,
-	}), nil
-}
-
-// TODO: once rest url is included in cluster config, we should be able to get rid of this (return a http endpoint and we won't have to parse together the port)
-// This function is used for integration testing
-func getTestRestClient(baseUrl string, bootstrap string) (*krsdk.APIClient, error) {
-	testClient := http.DefaultClient
-	testServerPort := bootstrap[strings.Index(bootstrap, ":")+1:]
-	testBaseUrl := strings.Replace(baseUrl, "https", "http", 1)           // HACK so we don't have to mock https
-	testBaseUrl = strings.Replace(testBaseUrl, kafkaRestPort, testServerPort, 1) // HACK until we can get Rest URL from cluster config
-	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath:   testBaseUrl,
-		HTTPClient: testClient,
+		BasePath: kafkaRestURL+"/kafka/v3",
 	}), nil
 }

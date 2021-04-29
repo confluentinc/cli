@@ -11,6 +11,7 @@
 | Status             | EXPANDING                 |
 | Endpoint           | SASL_SSL://kafka-endpoint |
 | ApiEndpoint        | http://kafka-api-url      |
+| RestEndpoint       |                           |
 | ClusterSize        |                         1 |
 | PendingClusterSize |                         2 |
 +--------------------+---------------------------+

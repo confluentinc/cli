@@ -12,6 +12,7 @@ is_supported_platform() {
     linux/amd64) found=0 ;;
     linux/386) found=0 ;;
     darwin/amd64) found=0 ;;
+    darwin/arm64) found=0 ;;
     darwin/386) found=0 ;;
     windows/amd64) found=0 ;;
     windows/386) found=0 ;;
@@ -141,6 +142,7 @@ uname_arch() {
     x86) arch="386" ;;
     i686) arch="386" ;;
     i386) arch="386" ;;
+    arm64) arch="arm64" ;;
     aarch64) arch="arm64" ;;
     armv5*) arch="armv5" ;;
     armv6*) arch="armv6" ;;
