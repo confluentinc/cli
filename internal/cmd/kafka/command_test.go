@@ -793,7 +793,6 @@ func TestListGroups(t *testing.T) {
 	CheckIfCmdErrors(t, cmd, args, false)
 
 	for _, args := range [][]string{
-		{"consumer-group"},
 		{"consumer-group", "list", "egg"},
 	} {
 		cmd.SetArgs(args)
@@ -839,7 +838,6 @@ func TestSummarizeLag(t *testing.T) {
 	}
 
 	for _, args := range [][]string{
-		{"consumer-group", "lag"},
 		{"consumer-group", "lag", "summarize"},
 		{"consumer-group", "lag", "summarize", "consumer-group-1", "egg"},
 	} {
