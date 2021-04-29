@@ -48,7 +48,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 		{
 			name:        "error if topic already exists",
-			args:        "kafka topic create dupTopic",
+			args:        "kafka topic create topic-exist",
 			fixture:     "topic-exists.golden",
 			wantErrCode: 1,
 			login:       "default",

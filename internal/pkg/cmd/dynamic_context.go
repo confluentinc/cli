@@ -105,19 +105,25 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 	if err != nil {
 		return nil, err
 	}
-	cluster := &v1.KafkaClusterConfig{
-		ID:          clusterId,
-		Name:        kcc.Name,
-		Bootstrap:   strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
-		APIEndpoint: kcc.ApiEndpoint,
-		APIKeys:     make(map[string]*v0.APIKeyPair),
-	}
+	cluster := KafkaClusterToKafkaClusterConfig(kcc)
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 	if err != nil {
 		return nil, err
 	}
 	return cluster, nil
+}
+
+func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster) *v1.KafkaClusterConfig{
+	clusterConfig := &v1.KafkaClusterConfig{
+		ID:           kcc.Id,
+		Name:         kcc.Name,
+		Bootstrap:    strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
+		APIEndpoint:  kcc.ApiEndpoint,
+		APIKeys:      make(map[string]*v0.APIKeyPair),
+		RestEndpoint: kcc.RestEndpoint,
+	}
+	return clusterConfig
 }
 
 func (d *DynamicContext) SetActiveKafkaCluster(cmd *cobra.Command, clusterId string) error {

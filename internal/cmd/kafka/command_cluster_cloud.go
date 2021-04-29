@@ -28,7 +28,7 @@ var (
 	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
 	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -49,7 +49,9 @@ var (
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
-		"EncryptionKeyId":    "encryption_key_id"}
+		"EncryptionKeyId":    "encryption_key_id",
+		"RestEndpoint":		  "rest_endpoint",
+	}
 	durabilityToAvaiablityNameMap = map[string]string{
 		"LOW":  singleZone,
 		"HIGH": multiZone,
@@ -87,6 +89,7 @@ type describeStruct struct {
 	Endpoint           string
 	ApiEndpoint        string
 	EncryptionKeyId    string
+	RestEndpoint	   string
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
@@ -504,6 +507,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
 		EncryptionKeyId:    cluster.EncryptionKeyId,
+		RestEndpoint: 		cluster.RestEndpoint,
 	}
 }
 
