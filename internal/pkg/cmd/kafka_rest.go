@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/dghubble/sling"
 
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KafkaREST struct {
@@ -22,29 +20,6 @@ func NewKafkaREST(client *kafkarestv3.APIClient, context context.Context) *Kafka
 		Client:  client,
 		Context: context,
 	}
-}
-
-const kafkaRestPort = "443"
-
-func bootstrapServersToRestURL(bootstrap string) (string, error) {
-	bootstrapServers := strings.Split(bootstrap, ",")
-
-	server := bootstrapServers[0]
-	serverLength := len(server)
-
-	if serverLength <= 6 {
-		return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
-	}
-
-	if _, err := strconv.Atoi(server[serverLength-4:]); err == nil && server[serverLength-5] == ':' {
-		return "https://" + server[:serverLength-4] + kafkaRestPort + "/kafka/v3", nil
-	}
-
-	if _, err := strconv.Atoi(server[serverLength-5:]); err == nil && server[serverLength-6] == ':' {
-		return "https://" + server[:serverLength-5] + kafkaRestPort + "/kafka/v3", nil
-	}
-
-	return "", errors.New(errors.InvalidBootstrapServerErrorMsg)
 }
 
 type response struct {

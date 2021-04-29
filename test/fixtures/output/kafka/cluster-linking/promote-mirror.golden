@@ -3,6 +3,4 @@
   dest-topic-1    |         0 |             142857 |                |            
   dest-topic-1    |         1 |             285714 |                |            
   dest-topic-1    |         2 |             571428 |                |            
-  dest-topic-1    |         0 |             142857 | Not authorized |       401  
-  dest-topic-1    |         1 |             285714 | Not authorized |       401  
-  dest-topic-1    |         2 |             571428 | Not authorized |       401  
+  dest-topic-1    |        -1 |                 -1 | Not authorized |       401  

@@ -1,7 +1,5 @@
-            Key           |      Value        
-+-------------------------+------------------+
-  ClusterId               | cluster-1         
-  LinkName                | link-1            
-  LinkId                  | LINKID1           
-  replica.fetch.max.bytes |          1048576  
-  bootstrap.servers       | bitcoin.com:8888  
+        ConfigName        |   ConfigValue    | ReadOnly | Sensitive |  Source  |  Synonyms    
++-------------------------+------------------+----------+-----------+----------+-------------+
+  dest.cluster.id         | cluster-1        | true     | true      |          | []           
+  replica.fetch.max.bytes |          1048576 | false    | false     | source-1 | [rfmb bmfr]  
+  bootstrap.servers       | bitcoin.com:8888 | false    | false     | source-2 | []           
