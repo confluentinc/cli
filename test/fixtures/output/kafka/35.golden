@@ -9,6 +9,7 @@ name: kafka-cluster
 pending_cluster_size: 2
 provider: aws
 region: us-west-2
+rest_endpoint: http://kafka-rest-url
 status: PROVISIONING
 storage: "500"
 type: DEDICATED
