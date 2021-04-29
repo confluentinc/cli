@@ -7,5 +7,11 @@ import (
 )
 
 var SubcommandFlags = map[string]*pflag.FlagSet{
-	"connector": cmd.ClusterEnvironmentContextSet(),
+	"describe": cmd.ClusterEnvironmentContextSet(),
+	"list":     cmd.ClusterEnvironmentContextSet(),
+	"create":   cmd.ClusterEnvironmentContextSet(),
+	"delete":   cmd.ClusterEnvironmentContextSet(),
+	"update":   cmd.ClusterEnvironmentContextSet(),
+	"pause":    cmd.ClusterEnvironmentContextSet(),
+	"resume":   cmd.ClusterEnvironmentContextSet(),
 }
