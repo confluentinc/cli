@@ -464,7 +464,7 @@ type ListLinkConfigMatcher struct {
 
 func (m *ClusterLinking) ClustersClusterIdLinksLinkNameConfigsGet(ctx context.Context, clusterId string, linkName string) (krsdk.ListLinkConfigsResponseDataList, *nethttp.Response, error) {
 	expect := <- m.Expect
-	matcher := expect.(ListLinkConfigMatcher)
+	matcher := expect.(DescribeLinkMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
 		return krsdk.ListLinkConfigsResponseDataList{}, nil, err
 	}
@@ -759,7 +759,7 @@ type CreateLinkMatcher struct {
 func (m *ClusterLinking) ClustersClusterIdLinksPost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksPostOpts) (*nethttp.Response, error) {
 	expect := <- m.Expect
 	matcher := expect.(CreateLinkMatcher)
-	data := *localVarOptionals.CreateLinkRequestData.Value().(*krsdk.CreateLinkRequestData)
+	data := localVarOptionals.CreateLinkRequestData.Value().(krsdk.CreateLinkRequestData)
 
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
 		return nil, err

@@ -731,7 +731,7 @@ func TestDescribeLink(t *testing.T) {
 			expect <- cliMock.DescribeLinkMatcher{
 				LinkName: link.name,
 			}
-			expect <- cliMock.ListLinkConfigMatcher{
+			expect <- cliMock.DescribeLinkMatcher{
 				LinkName:    link.name,
 			}
 		},
@@ -815,7 +815,7 @@ func TestCreateLink(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "create", link.name, "--source-cluster", link.source, "--source-cluster-id", "id1"}
+			return []string{"link", "create", link.name, "--source-bootstrap-server", link.source, "--source-cluster-id", "id1"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.CreateLinkMatcher{
