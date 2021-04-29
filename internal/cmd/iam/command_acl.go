@@ -38,7 +38,8 @@ func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
+		Short: "Create a Kafka ACL.",
+		Long:  "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",		
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
@@ -63,7 +64,8 @@ func (c *aclCommand) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL.\n\nThis command only works with centralized ACLs.",
+		Short: "Delete a Kafka ACL.",
+		Long:  "Delete a Kafka ACL.\n\nThis command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
@@ -80,7 +82,8 @@ func (c *aclCommand) init(cliName string) {
 
 	cmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource.\n\nThis command only works with centralized ACLs.",
+		Short: "List Kafka ACLs for a resource.",
+		Long:  "List Kafka ACLs for a resource.\n\nThis command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
