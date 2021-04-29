@@ -1,4 +1,4 @@
-rest proxy not available
+Kafka REST is not enabled
             Key           |  Value   
 +-------------------------+---------+
   replica.fetch.max.bytes | 1048576  

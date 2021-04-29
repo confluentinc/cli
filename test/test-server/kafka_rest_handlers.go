@@ -475,7 +475,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.Respons
 	}
 }
 
-<<<<<<< HEAD
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links"
 func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -495,7 +494,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 					SourceClusterId:   "cluster-1",
 					LinkName:    "link-1",
 					LinkId:      "LINKID1",
-					Topics: []string{"link-1-topic-1", "link-1-topic-2"},
+					TopicNames:  []string{"link-1-topic-1", "link-1-topic-2"},
 				},
 				{
 					Kind:        "",
@@ -503,7 +502,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 					SourceClusterId:   "cluster-1",
 					LinkName:    "link-2",
 					LinkId:      "LINKID2",
-					Topics: []string{"link-2-topic-1", "link-2-topic-2"},
+					TopicNames:  []string{"link-2-topic-1", "link-2-topic-2"},
 				},
 			}})
 			require.NoError(t, err)
@@ -523,7 +522,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 				SourceClusterId:   "cluster-1",
 				LinkName:    "link-1",
 				LinkId:      "LINKID1",
-				Topics: []string{"link-1-topic-1", "link-1-topic-2"},
+				TopicNames: []string{"link-1-topic-1", "link-1-topic-2"},
 			})
 			require.NoError(t, err)
 		case "DELETE":

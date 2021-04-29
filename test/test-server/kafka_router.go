@@ -91,7 +91,7 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpTopicConfigs, r.HandleKafkaRPTopicConfigs(t))
 	r.HandleFunc(rpPartitionReplicas, r.HandleKafkaRPPartitionReplicas(t))
 	r.HandleFunc(rpConfigsAlter, r.HandleKafkaRPConfigsAlter(t))
-	r.HandleFunc(rpTopic, r.HandlKafkaRPTopic(t))
+	r.HandleFunc(rpTopic, r.HandleKafkaRPTopic(t))
 	r.HandleFunc(rpLink, r.HandleKafkaRPLink(t))
 	r.HandleFunc(rpLinks, r.HandleKafkaRPLinks(t))
 	r.HandleFunc(rpLinkConfigs, r.HandleKafkaRPLinkConfigs(t))

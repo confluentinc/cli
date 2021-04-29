@@ -110,8 +110,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic delete topic1 --cluster lkc-create-topic", login: "default", fixture: "kafka/topic-delete-not-found.golden", wantErrCode: 1},
 		{args: "kafka topic delete topic2", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1},
-
-<<<<<<< HEAD
+		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
+		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic update topic1 --config=\"testConfig=valueUpdate\"", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
 		{args: "kafka topic update topic1 --config=\"testConfig=valueUpdate\"", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
@@ -134,10 +134,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link-name link-1", fixture: "kafka/cluster-linking/promote-mirror.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link-name link-1 -o json", fixture: "kafka/cluster-linking/promote-mirror-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link-name link-1 -o yaml", fixture: "kafka/cluster-linking/promote-mirror-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-=======
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
->>>>>>> upstream/master
 	}
 
 	resetConfiguration(s.T(), "ccloud")
