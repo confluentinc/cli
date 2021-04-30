@@ -44,6 +44,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
 		}
 		envSet := false
+		if d.State.Auth == nil {
+			return nil
+		}
 		for _, account := range d.State.Auth.Accounts {
 			if account.Id == envId {
 				d.Config.SetOverwrittenAccount(d.State.Auth.Account)
