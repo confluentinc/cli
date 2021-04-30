@@ -670,16 +670,12 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 type testLink struct {
 	name       string
 	source     string
-	alterKey   string
-	alterValue string
 }
 
 var Links = []testLink{
 	{
 		name:       "test_link",
 		source:     "myhost:1234",
-		alterKey:   "retention.ms",
-		alterValue: "1234567890",
 	},
 }
 
