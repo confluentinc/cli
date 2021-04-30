@@ -40,6 +40,8 @@ type PreRunner interface {
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
 	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
+	ParseFlagsIntoContext(cmd *AuthenticatedCLICommand) func(*cobra.Command, []string) error
+	AnonymousParseFlagsIntoContext(cmd *CLICommand) func(*cobra.Command, []string) error
 }
 
 const DoNotTrack = "do-not-track-analytics"
@@ -120,6 +122,8 @@ func NewAuthenticatedStateFlagCommand(command *cobra.Command, prerunner PreRunne
 		NewAuthenticatedCLICommand(command, prerunner),
 		flagMap,
 	}
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(cmd.AuthenticatedCLICommand))
+	cmd.Command = command
 	return cmd
 }
 
@@ -129,6 +133,8 @@ func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner P
 		NewAuthenticatedWithMDSCLICommand(command, prerunner),
 		flagMap,
 	}
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(cmd.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(cmd.AuthenticatedCLICommand))
+	cmd.Command = command
 	return cmd
 }
 
@@ -138,6 +144,8 @@ func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, f
 		NewAnonymousCLICommand(command, prerunner),
 		flagMap,
 	}
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd.CLICommand), prerunner.AnonymousParseFlagsIntoContext(cmd.CLICommand))
+	cmd.Command = command
 	return cmd
 }
 
@@ -302,7 +310,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if r.Config == nil {
 			return r.ConfigLoadingError
 		}
-
 		err = r.setAuthenticatedContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
@@ -328,6 +335,23 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 		return r.setCCloudClient(command)
+	}
+}
+
+func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		ctx := command.Context
+		return ctx.ParseFlagsIntoContext(cmd, command.Client)
+	}
+}
+
+func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		ctx, err := command.Config.Context(cmd)
+		if err != nil {
+			return err
+		}
+		return ctx.ParseFlagsIntoContext(cmd, nil)
 	}
 }
 
@@ -781,7 +805,7 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
+func (r *PreRun)  updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
 	if ctx == nil {
 		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
