@@ -144,7 +144,7 @@ func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWr
 		cluster := vars["cluster"]
 		var listTopicReply schedv1.ListTopicReply
 		switch cluster {
-		case "lkc-kafka-api-topics":
+		case "lkc-kafka-api-topics", "lkc-topics":
 			listTopicReply = schedv1.ListTopicReply{
 				Topics: []*schedv1.TopicDescription{
 					{
