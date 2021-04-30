@@ -112,6 +112,9 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
+		// skip cluster linking commands
+		linter.ExcludeCommandContains("kafka link"),
+		linter.ExcludeCommandContains("kafka mirror"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
@@ -137,7 +140,7 @@ var rules = []linter.Rule{
 	),
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
-		linter.ExcludeCommandContains("secret"),
+		linter.ExcludeCommandContains("secret", "mirror"),
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
@@ -147,12 +150,12 @@ var rules = []linter.Rule{
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
-		linter.ExcludeCommandContains("secret"),
+		linter.ExcludeCommandContains("secret", "mirror"),
 	),
 	linter.Filter(
 		linter.RequireRealWords("Use", '-'),
 		linter.ExcludeCommandContains("unregister"),
-		linter.ExcludeCommandContains("audit-log"),
+		linter.ExcludeCommandContains("audit-log", "failover"),
 	),
 }
 
@@ -164,7 +167,7 @@ var flagRules = []linter.FlagRule{
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
 			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
-			"value-deserializer", "bootstrap-servers",
+			"value-deserializer", "bootstrap-servers", "source-bootstrap-server", "source-cluster-id", "source-api-secret",
 		),
 	),
 	linter.FlagFilter(
@@ -197,10 +200,14 @@ var flagRules = []linter.FlagRule{
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
 			"skip-message-on-error", "socket-buffer-size", "client-cert-path", "client-key-path",
+			"source-bootstrap-server", "source-cluster-id", "source-api-secret", "source-api-key",
 		),
 	),
 	linter.RequireFlagRealWords('-'),
-	linter.RequireFlagUsageRealWords,
+	linter.FlagFilter(
+		linter.RequireFlagUsageRealWords,
+		linter.ExcludeFlag("source-api-key", "source-api-secret"),
+	),
 }
 
 func main() {
