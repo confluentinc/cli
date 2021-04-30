@@ -38,6 +38,12 @@ const (
 	rpMirrors           = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
 	rpMirrorPromote     = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote"
 	rpClusters          = "/kafka/v3/clusters"
+	rpConsumerGroups    = "/kafka/v3/clusters/{cluster_id}/consumer-groups"
+	rpConsumerGroup     = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
+	rpConsumers         = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
+	rpLagSummary        = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
+	rpLags              = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
+	rpLag               = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
 )
 
 type KafkaRouter struct {
@@ -100,6 +106,12 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpAllMirrors, r.HandleKafkaRPAllMirrors(t))
 	r.HandleFunc(rpMirrors, r.HandleKafkaRPMirrors(t))
 	r.HandleFunc(rpClusters, r.HandleKafkaRPClusters(t))
+	r.HandleFunc(rpConsumerGroups, r.HandleKafkaRPConsumerGroups(t))
+	r.HandleFunc(rpConsumerGroup, r.HandleKafkaRPConsumerGroup(t))
+	r.HandleFunc(rpConsumers, r.HandleKafkaRPConsumers(t))
+	r.HandleFunc(rpLagSummary, r.HandleKafkaRPLagSummary(t))
+	r.HandleFunc(rpLags, r.HandleKafkaRPLags(t))
+	r.HandleFunc(rpLag, r.HandleKafkaRPLag(t))
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)

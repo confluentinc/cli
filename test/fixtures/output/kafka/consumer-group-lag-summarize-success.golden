@@ -1,0 +1,11 @@
++-----------------+------------------+
+| Cluster         | cluster-1        |
+| ConsumerGroup   | consumer-group-1 |
+| TotalLag        |              110 |
+| MaxLag          |              100 |
+| MaxLagConsumer  | consumer-1       |
+| MaxLagInstance  | instance-1       |
+| MaxLagClient    | client-1         |
+| MaxLagTopic     | topic-1          |
+| MaxLagPartition |                1 |
++-----------------+------------------+
