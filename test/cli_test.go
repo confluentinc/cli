@@ -130,8 +130,6 @@ func (s *CLITestSuite) SetupSuite() {
 	// dumb but effective
 	err = os.Chdir("..")
 	req.NoError(err)
-	err = os.Setenv("XX_CCLOUD_RBAC", "yes")
-	req.NoError(err)
 	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
 			var makeArgs string
@@ -152,7 +150,6 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
-	_ = os.Unsetenv("XX_CCLOUD_RBAC")
 	_ = covCollector.TearDown()
 	s.TestBackend.Close()
 }
