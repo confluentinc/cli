@@ -53,10 +53,6 @@ func (c *command) init(cliName string) {
 				Text: "Describe required connector configuration parameters for a specific connector plugin.",
 				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name>", cliName),
 			},
-			examples.Example{
-				Text: "With the ``--sample-file`` flag, create a sample connector configuration file.",
-				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name> --sample-file <filename>", cliName),
-			},
 		),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)

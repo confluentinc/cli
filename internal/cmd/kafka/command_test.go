@@ -773,10 +773,165 @@ func TestCreateLink(t *testing.T) {
 		})
 }
 
+/*************** TEST command_consumer-group_cloud ***************/
+type testConsumerGroup struct {
+	groupId string
+}
+
+var ConsumerGroups = []testConsumerGroup{
+	{
+		groupId: "consumer-group-1",
+	},
+}
+
+func TestListGroups(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	args := []string{"consumer-group", "list"}
+	cmd.SetArgs(args)
+
+	CheckIfCmdErrors(t, cmd, args, false)
+
+	for _, args := range [][]string{
+		{"consumer-group", "list", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestDescribeGroup(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "describe", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "describe"},
+		{"consumer-group", "describe", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestSummarizeLag(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "lag", "summarize", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "summarize"},
+		{"consumer-group", "lag", "summarize", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestListLag(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "lag", "list", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "list"},
+		{"consumer-group", "lag", "list", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+type testPartitionLag struct {
+	consumerGroupId string
+	topicName       string
+	partitionId     int32
+}
+
+var PartitionLags = []testPartitionLag{
+	{
+		consumerGroupId: "consumer-group-1",
+		topicName:       "topic-1",
+		partitionId:     1,
+	},
+}
+
+func TestGetLag(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+
+	// testing that properly formatted commands don't return errors
+	for _, lag := range PartitionLags {
+		args := []string{"consumer-group", "lag", "get", lag.consumerGroupId, "--topic", lag.topicName, "--partition", strconv.Itoa(int(lag.partitionId))}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.PartitionLagMatcher{
+				ConsumerGroupId: lag.consumerGroupId,
+				TopicName:       lag.topicName,
+				PartitionId:     lag.partitionId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	// testing that improperly formatted commands return errors
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "get"},
+		{"consumer-group", "lag", "get", "consumer-group-1", "egg"},
+		{"consumer-group", "lag", "get", "consumer-group-1", "consumer-group-1", "--topic", "topic-1"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+// Executes cmd, checks if there was an error. Test will fail if there was an error but expectErr was false,
+// or expectErr was true but no error was returned.
+func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr bool) {
+	err := cmd.Execute()
+	var errMsg string
+	if expectErr == true && err == nil {
+		errMsg = "expected error from executing " + strings.Join(args, " ") + " but received none"
+	} else if expectErr == false && err != nil {
+		errMsg = "error: " + err.Error()
+	}
+	if errMsg != "" {
+		t.Errorf(errMsg)
+		t.Fail()
+	}
+}
+
 /*************** TEST setup/helpers ***************/
-func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
+func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
-		Kafka: cliMock.NewKafkaMock(expect),
+		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
@@ -787,27 +942,33 @@ func newCmd(expect chan interface{}, enableREST bool) *cobra.Command {
 			},
 		},
 	}
-
 	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
 		if enableREST {
 			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
 			restMock.ACLApi = cliMock.NewACLMock()
 			restMock.TopicApi = cliMock.NewTopicMock()
-			restMock.PartitionApi = cliMock.NewPartitionMock()
+			restMock.PartitionApi = cliMock.NewPartitionMock(kafkaRestExpect)
 			restMock.ReplicaApi = cliMock.NewReplicaMock()
 			restMock.ConfigsApi = cliMock.NewConfigsMock()
+			restMock.ConsumerGroupApi = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
 			return kafkaREST, nil
 		}
 		return nil, nil
 	})
-
 	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-
 	return cmd
+}
+
+func newCmd(kafkaExpect chan interface{}, enableREST bool) *cobra.Command {
+	return newMockCmd(kafkaExpect, make(chan interface{}), enableREST)
+}
+
+func newRestCmd(restExpect chan interface{}) *cobra.Command {
+	return newMockCmd(make(chan interface{}), restExpect, true)
 }
 
 func init() {
