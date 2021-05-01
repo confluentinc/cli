@@ -1,7 +1,10 @@
 package cmd_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"os"
 	"testing"
 
@@ -22,9 +25,11 @@ var (
 	flagCluster      = "lkc-0001"
 	flagClusterInEnv = "lkc-0002"
 	badFlagEnv       = "bad-env"
+	apiEnvironment	 = "env-from-api-call"
 )
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
+	client := buildMockClient()
 	tests := []struct {
 		name           string
 		ctx            *pcmd.DynamicContext
@@ -63,6 +68,12 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			environment: flagEnvironment,
 			ctx:         getEnvAndClusterFlagContext(),
 		},
+		{
+			name:        "find environment from api call",
+			cluster:     flagClusterInEnv,
+			environment: apiEnvironment,
+			ctx:         getEnvFlagContext(),
+		},
 	}
 	for _, tt := range tests {
 		cmd := &cobra.Command{
@@ -74,7 +85,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		require.NoError(t, err)
 		initialEnvId := tt.ctx.GetCurrentEnvironmentId()
 		initialActiveKafkaId := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		err = tt.ctx.ParseFlagsIntoContext(cmd)
+		err = tt.ctx.ParseFlagsIntoContext(cmd, client)
 		if tt.errMsg != "" {
 			require.Error(t, err)
 			require.Equal(t, tt.errMsg, err.Error())
@@ -97,6 +108,14 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			}
 		}
 	}
+}
+
+func buildMockClient() *ccloud.Client {
+	client := pmock.NewClientMock()
+	client.Account = &mock.Account{ListFunc: func(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
+		return []*orgv1.Account{{Id: apiEnvironment}}, nil
+	}}
+	return client
 }
 
 func getBaseContext() *pcmd.DynamicContext {

@@ -142,6 +142,23 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 	}
 }
 
+func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		ctx := command.Context
+		return ctx.ParseFlagsIntoContext(cmd, command.Client)
+	}
+}
+
+func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		ctx, err := command.Config.Context(cmd)
+		if err != nil {
+			return err
+		}
+		return ctx.ParseFlagsIntoContext(cmd, nil)
+	}
+}
+
 func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
 	command.MDSClient = c.MDSClient
