@@ -515,7 +515,7 @@ func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
 	describeFields := basicDescribeFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
-		if isExpanding(cluster) {
+		if isExpanding(cluster) || isShrinking(cluster) {
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
 		if cluster.EncryptionKeyId != "" {
@@ -531,6 +531,11 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func isShrinking(cluster *schedv1.KafkaCluster) bool {
+	return cluster.Status == schedv1.ClusterStatus_SHRINKING ||
+		(cluster.PendingCku < cluster.Cku && cluster.PendingCku != 0)
 }
 
 func (c *clusterCommand) Cmd() *cobra.Command {

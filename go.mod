@@ -11,23 +11,22 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/chromedp/cdproto v0.0.0-20191114225735-6626966fbae4 // indirect
 	github.com/chromedp/chromedp v0.5.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/billing v0.731.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.731.0
-	github.com/confluentinc/cc-structs/kafka/core v0.731.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.731.0
-	github.com/confluentinc/cc-structs/kafka/metrics v0.731.0
-	github.com/confluentinc/cc-structs/kafka/org v0.731.0
+	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
+	github.com/confluentinc/cc-structs/kafka/core v0.753.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.753.0
+	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0
+	github.com/confluentinc/cc-structs/kafka/org v0.753.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.742.0
-	github.com/confluentinc/cc-structs/kafka/util v0.735.0
-	github.com/confluentinc/cc-structs/operator v0.731.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
+	github.com/confluentinc/cc-structs/kafka/util v0.753.0
+	github.com/confluentinc/cc-structs/operator v0.753.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.75
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
@@ -44,11 +43,9 @@ require (
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.10.0
 	github.com/gliderlabs/ssh v0.3.0 // indirect
-	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/golangci/golangci-lint v1.30.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
