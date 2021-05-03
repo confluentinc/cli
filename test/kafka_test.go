@@ -81,6 +81,7 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "default", fixture: "kafka/topic-list.golden"},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/rp-topic-list.golden"},
+		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic list", login: "default", useKafka: "lkc-kafka-api-no-topics", fixture: "kafka/topic-list-empty.golden"},
 		{args: "kafka topic list", login: "default", useKafka: "lkc-not-ready", fixture: "kafka/cluster-not-ready.golden", wantErrCode: 1},
 
