@@ -144,6 +144,7 @@ func NewGroupCommand(prerunner pcmd.PreRunner, serverCompleter completer.ServerS
 	command := &cobra.Command{
 		Use:   "consumer-group",
 		Short: "Manage Kafka consumer groups.",
+		Hidden: true,
 	}
 	groupCmd := &groupCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, GroupSubcommandFlags),
@@ -328,6 +329,7 @@ func NewLagCommand(prerunner pcmd.PreRunner, groupCmd *groupCommand) *lagCommand
 		&cobra.Command{
 			Use:   "lag",
 			Short: "View consumer lag.",
+			Hidden: true,
 		}, prerunner, LagSubcommandFlags)
 	lagCmd := &lagCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
