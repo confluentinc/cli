@@ -31,9 +31,12 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update --name lkc-update-name", fixture: "kafka/26.golden"},
 		{args: "kafka cluster update lkc-update --name lkc-update-name -o json", fixture: "kafka/28.golden"},
 		{args: "kafka cluster update lkc-update --name lkc-update-name -o yaml", fixture: "kafka/29.golden"},
-		{args: "kafka cluster update lkc-update-dedicated --name lkc-update-dedicated-name --cku 2", fixture: "kafka/27.golden"},
-		{args: "kafka cluster update lkc-update-dedicated --cku 2", fixture: "kafka/39.golden"},
+		{args: "kafka cluster update lkc-update-dedicated-expand --name lkc-update-dedicated-name --cku 2", fixture: "kafka/27.golden"},
+		{args: "kafka cluster update lkc-update-dedicated-expand --cku 2", fixture: "kafka/39.golden"},
 		{args: "kafka cluster update lkc-update --cku 2", fixture: "kafka/kafka-cluster-expansion-error.golden", wantErrCode: 1},
+		{args: "kafka cluster update lkc-update-dedicated-shrink --name lkc-update-dedicated-name --cku 1", fixture: "kafka/44.golden"},
+		{args: "kafka cluster update lkc-update-dedicated-shrink --cku 1", fixture: "kafka/45.golden"},
+		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/kafka-cluster-shrink-error.golden", wantErrCode: 1},
 
 		{args: "kafka cluster delete", fixture: "kafka/3.golden", wantErrCode: 1},
 		{args: "kafka cluster delete lkc-unknown", fixture: "kafka/kafka-delete-unknown-error.golden", wantErrCode: 1},
@@ -112,11 +115,57 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic2", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1},
 
 		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "default", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-update-success.golden"},
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden"},
 	}
 
 	resetConfiguration(s.T(), "ccloud")
 
+	for _, tt := range tests {
+		tt.login = "default"
+		tt.workflow = true
+		s.runCcloudTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {
+	tests := []CLITest{
+		{args: "kafka consumer-group --help", fixture: "kafka/consumer-group-help.golden"},
+
+		{args: "kafka consumer-group list --help", fixture: "kafka/consumer-group-list.golden"},
+		{args: "kafka consumer-group list", fixture: "kafka/consumer-group-list-no-flag.golden", wantErrCode: 1},
+		{args: "kafka consumer-group list --cluster lkc-groups", fixture: "kafka/consumer-group-list-success.golden", wantErrCode: 0},
+		{args: "kafka consumer-group list --cluster lkc-groups -o json", fixture: "kafka/consumer-group-list-success-json.golden"},
+		{args: "kafka consumer-group list --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group-list-success-yaml.golden"},
+
+		{args: "kafka consumer-group describe --help", fixture: "kafka/consumer-group-describe.golden"},
+		{args: "kafka consumer-group describe", fixture: "kafka/consumer-group-describe-no-args.golden", wantErrCode: 1},
+		{args: "kafka consumer-group describe --cluster lkc-groups", fixture: "kafka/consumer-group-describe-no-args.golden", wantErrCode: 1},
+		{args: "kafka consumer-group describe consumer-group-1", fixture: "kafka/consumer-group-describe-no-flag.golden", wantErrCode: 1},
+		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-groups", fixture: "kafka/consumer-group-describe-success.golden"},
+		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-groups -o json", fixture: "kafka/consumer-group-describe-success-json.golden"},
+		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group-describe-success-yaml.golden"},
+
+		{args: "kafka consumer-group lag --help", fixture: "kafka/consumer-group-lag-help.golden"},
+
+		{args: "kafka consumer-group lag summarize --help", fixture: "kafka/consumer-group-lag-summarize.golden"},
+		{args: "kafka consumer-group lag summarize", fixture: "kafka/consumer-group-lag-summarize-no-args.golden", wantErrCode: 1},
+		{args: "kafka consumer-group lag summarize consumer-group-1 --cluster lkc-groups", fixture: "kafka/consumer-group-lag-summarize-success.golden", wantErrCode: 0},
+		{args: "kafka consumer-group lag summarize consumer-group-1 --cluster lkc-groups -o json", fixture: "kafka/consumer-group-lag-summarize-success-json.golden"},
+		{args: "kafka consumer-group lag summarize consumer-group-1 --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group-lag-summarize-success-yaml.golden"},
+
+		{args: "kafka consumer-group lag list --help", fixture: "kafka/consumer-group-lag-list.golden"},
+		{args: "kafka consumer-group lag list", fixture: "kafka/consumer-group-lag-list-no-args.golden", wantErrCode: 1},
+		{args: "kafka consumer-group lag list consumer-group-1 --cluster lkc-groups", fixture: "kafka/consumer-group-lag-list-success.golden"},
+		{args: "kafka consumer-group lag list consumer-group-1 --cluster lkc-groups -o json", fixture: "kafka/consumer-group-lag-list-success-json.golden"},
+		{args: "kafka consumer-group lag list consumer-group-1 --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group-lag-list-success-yaml.golden"},
+
+		{args: "kafka consumer-group lag get --help", fixture: "kafka/consumer-group-lag-get.golden"},
+		{args: "kafka consumer-group lag get", fixture: "kafka/consumer-group-lag-get-no-args.golden", wantErrCode: 1},
+		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1", fixture: "kafka/consumer-group-lag-get-success.golden"},
+		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer-group-lag-get-success-json.golden"},
+		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1 -o yaml", fixture: "kafka/consumer-group-lag-get-success-yaml.golden"},
+	}
+	resetConfiguration(s.T(), "ccloud")
 	for _, tt := range tests {
 		tt.login = "default"
 		tt.workflow = true

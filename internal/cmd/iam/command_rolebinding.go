@@ -179,6 +179,12 @@ func (c *rolebindingCommand) init() {
 		Short: "Create a role binding.",
 		Args:  cobra.NoArgs,
 		RunE:  cmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a role binding for the client permitting it produce to the topic users.",
+				Code: "confluent iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+			},
+		),
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")

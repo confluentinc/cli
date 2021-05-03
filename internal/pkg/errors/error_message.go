@@ -18,6 +18,7 @@ const (
 	RefuseToOverrideSecretErrorMsg    = "refusing to overwrite existing secret for API Key \"%s\""
 	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg           = "unable to set active API key"
+	APIKeyUseFailedSuggestions        = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -29,8 +30,8 @@ const (
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
 	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
 	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
-	NoURLFlagOrMdsEnvVarErrorMsg	 = "no mds url passed"
-	NoURLFlagOrMdsEnvVarSuggestions	 = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
+	NoURLFlagOrMdsEnvVarErrorMsg     = "no mds url passed"
+	NoURLFlagOrMdsEnvVarSuggestions  = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
