@@ -1,5 +1,7 @@
 Create a Kafka ACL.
 
+This command only works with centralized ACLs.
+
 Usage:
   confluent iam acl create [flags]
 
