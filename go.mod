@@ -15,22 +15,22 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/billing v0.731.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.731.0
-	github.com/confluentinc/cc-structs/kafka/core v0.731.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.731.0
-	github.com/confluentinc/cc-structs/kafka/metrics v0.731.0
-	github.com/confluentinc/cc-structs/kafka/org v0.731.0
+	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
+	github.com/confluentinc/cc-structs/kafka/core v0.753.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.753.0
+	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0
+	github.com/confluentinc/cc-structs/kafka/org v0.753.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.742.0
-	github.com/confluentinc/cc-structs/kafka/util v0.735.0
-	github.com/confluentinc/cc-structs/operator v0.731.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
+	github.com/confluentinc/cc-structs/kafka/util v0.753.0
+	github.com/confluentinc/cc-structs/operator v0.753.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.72
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.75
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.0.3
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.0
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.19
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.11
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
