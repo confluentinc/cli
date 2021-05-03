@@ -35,7 +35,7 @@ type listMirrorWrite struct {
 	MirrorStatus             string
 	StatusTimeMs             int64
 	NumPartition             int32
-	MaxPerPartitionMirrorLag int32
+	MaxPerPartitionMirrorLag int64
 }
 
 type describeMirrorWrite struct {
@@ -45,7 +45,7 @@ type describeMirrorWrite struct {
 	MirrorStatus string
 	StatusTimeMs int64
 	Partition int32
-	PartitionMirrorLag int32
+	PartitionMirrorLag int64
 }
 
 type alterMirrorWrite struct {
@@ -53,7 +53,7 @@ type alterMirrorWrite struct {
 	Partition          int32
 	ErrorMessage       string
 	ErrorCode          string
-	PartitionMirrorLag int32
+	PartitionMirrorLag int64
 }
 
 type mirrorCommand struct {
@@ -260,7 +260,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
-		var maxLag int32 = 0
+		var maxLag int64 = 0
 		for _, mirrorLag := range mirror.MirrorLags {
 			if mirrorLag.Lag > maxLag {
 				maxLag = mirrorLag.Lag
