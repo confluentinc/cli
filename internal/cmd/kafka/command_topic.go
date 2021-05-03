@@ -221,7 +221,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 	}
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic config overrides ('key=value') for the topic being created.")
+	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
 	createCmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
 	createCmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
