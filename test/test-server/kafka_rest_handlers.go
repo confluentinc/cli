@@ -475,6 +475,40 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.Respons
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links"
+func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdLinksPostOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseDataList{Data: []kafkarestv3.ListLinksResponseData{
+				{
+					Kind:            "",
+					Metadata:        kafkarestv3.ResourceMetadata{},
+					SourceClusterId: "cluster-1",
+					LinkName:        "link-1",
+					LinkId:          "LINKID1",
+					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+				},
+				{
+					Kind:            "",
+					Metadata:        kafkarestv3.ResourceMetadata{},
+					SourceClusterId: "cluster-1",
+					LinkName:        "link-2",
+					LinkId:          "LINKID2",
+					TopicNames:      []string{"link-2-topic-1", "link-2-topic-2"},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups"
 func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -516,6 +550,28 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}"
+func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseData{
+				Kind:        "",
+				Metadata:    kafkarestv3.ResourceMetadata{},
+				SourceClusterId:   "cluster-1",
+				LinkName:    "link-1",
+				LinkId:      "LINKID1",
+				TopicNames: []string{"link-1-topic-1", "link-1-topic-2"},
+			})
+			require.NoError(t, err)
+		case "DELETE":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+		}
+	}
+}
+
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
 func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -541,6 +597,69 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 				// group not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
 			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/-/mirrors"
+func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-1",
+					MirrorTopicName: "dest-topic-1",
+					SourceTopicName:      "src-topic-1",
+					NumPartitions:        3,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      142857,
+						},
+						{
+							Partition: 1,
+							Lag:      285714,
+						},
+						{
+							Partition: 2,
+							Lag:      571428,
+						},
+					},
+					MirrorStatus:    "active",
+					StateTimeMs:          111111111,
+				},
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-2",
+					MirrorTopicName: "dest-topic-2",
+					SourceTopicName:      "src-topic-2",
+					NumPartitions:        2,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      0,
+						},
+						{
+							Partition: 1,
+							Lag:      0,
+						},
+					},
+					MirrorStatus:    "stopped",
+					StateTimeMs:          222222222,
+				},
+			}})
+			require.NoError(t, err)
 		}
 	}
 }
@@ -584,6 +703,69 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumers(t *testing.T) func(http.Res
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors"
+func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			w.WriteHeader(http.StatusNoContent)
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-1",
+					MirrorTopicName: "dest-topic-1",
+					SourceTopicName:      "src-topic-1",
+					NumPartitions:        3,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      142857,
+						},
+						{
+							Partition: 1,
+							Lag:      285714,
+						},
+						{
+							Partition: 2,
+							Lag:      571428,
+						},
+					},
+					MirrorStatus:    "active",
+					StateTimeMs:          111111111,
+				},
+				{
+					Kind:                 "",
+					Metadata:             kafkarestv3.ResourceMetadata{},
+					LinkName:             "link-2",
+					MirrorTopicName: "dest-topic-2",
+					SourceTopicName:      "src-topic-2",
+					NumPartitions:        2,
+					MirrorLags:           []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:      0,
+						},
+						{
+							Partition: 1,
+							Lag:      0,
+						},
+					},
+					MirrorStatus:    "stopped",
+					StateTimeMs:          222222222,
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
 func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -613,6 +795,64 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.Re
 				// group not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
 			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:promote"
+func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			fmt.Print("asdfgh")
+			errorMsg := "Not authorized"
+			var errorCode int32 = 401
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.AlterMirrorStatusResponseDataList{Data: []kafkarestv3.AlterMirrorStatusResponseData{
+				{
+					Kind:            "",
+					Metadata:        kafkarestv3.ResourceMetadata{},
+					MirrorTopicName: "dest-topic-1",
+					ErrorMessage:    nil,
+					ErrorCode:       nil,
+					MirrorLags: []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:       142857,
+						},
+						{
+							Partition: 1,
+							Lag:       285714,
+						},
+						{
+							Partition: 2,
+							Lag:       571428,
+						},
+					},
+				},
+				{
+					Kind:            "",
+					Metadata:        kafkarestv3.ResourceMetadata{},
+					MirrorTopicName: "dest-topic-1",
+					ErrorMessage:    &errorMsg,
+					ErrorCode:       &errorCode,
+					MirrorLags: []kafkarestv3.MirrorLag{
+						{
+							Partition: 0,
+							Lag:       142857,
+						},
+						{
+							Partition: 1,
+							Lag:       285714,
+						},
+						{
+							Partition: 2,
+							Lag:       571428,
+						},
+					},
+				},
+			}})
+			require.NoError(t, err)
 		}
 	}
 }
@@ -666,6 +906,78 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.Response
 				// group not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
 			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs"
+func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinkConfigsResponseDataList{Data: []kafkarestv3.ListLinkConfigsResponseData{
+				{
+					Kind:      "",
+					Metadata:  kafkarestv3.ResourceMetadata{},
+					ClusterId: "cluster-1",
+					Name:      "replica.fetch.max.bytes",
+					Value:     "1048576",
+					ReadOnly:  false,
+					Sensitive: false,
+					Source:    "source-1",
+					Synonyms:  []string{"rfmb", "bmfr"},
+					LinkName:  "link-1",
+				},
+				{
+					Kind:      "",
+					Metadata:  kafkarestv3.ResourceMetadata{},
+					ClusterId: "cluster-1",
+					Name:      "bootstrap.servers",
+					Value:     "bitcoin.com:8888",
+					ReadOnly:  false,
+					Sensitive: false,
+					Source:    "source-2",
+					Synonyms:  nil,
+					LinkName:  "link-1",
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors/{mirror_name}"
+func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseData{
+				Kind:            "",
+				Metadata:        kafkarestv3.ResourceMetadata{},
+				LinkName:        "link-1",
+				MirrorTopicName: "dest-topic-1",
+				SourceTopicName: "src-topic-1",
+				NumPartitions:   3,
+				MirrorLags: []kafkarestv3.MirrorLag{
+					{
+						Partition: 0,
+						Lag:       142857,
+					},
+					{
+						Partition: 1,
+						Lag:       285714,
+					},
+					{
+						Partition: 2,
+						Lag:       571428,
+					},
+				},
+				MirrorStatus: "active",
+				StateTimeMs:  111111111,
+			})
+			require.NoError(t, err)
 		}
 	}
 }

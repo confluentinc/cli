@@ -30,6 +30,10 @@ var LinkSubcommandFlags = map[string]*pflag.FlagSet{
 	"link": cmd.ClusterEnvironmentContextSet(),
 }
 
+var MirrorSubcommandFlags = map[string]*pflag.FlagSet{
+	"mirror": cmd.ClusterEnvironmentContextSet(),
+}
+
 var ProduceAndConsumeFlags = map[string]*pflag.FlagSet{
 	"topic": cmd.CombineFlagSet(cmd.ClusterEnvironmentContextSet(), cmd.KeySecretSet()),
 }
