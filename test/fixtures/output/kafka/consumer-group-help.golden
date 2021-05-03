@@ -1,14 +1,7 @@
 Manage Kafka consumer groups.
 
 Usage:
-  ccloud kafka consumer-group [command]
-
-Available Commands:
-  describe    Describe a Kafka consumer group.
-  list        List Kafka consumer groups.
 
 Global Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
-Use "ccloud kafka consumer-group [command] --help" for more information about a command.
