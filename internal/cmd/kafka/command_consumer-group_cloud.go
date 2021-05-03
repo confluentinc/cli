@@ -144,6 +144,7 @@ func NewGroupCommand(prerunner pcmd.PreRunner, serverCompleter completer.ServerS
 	command := &cobra.Command{
 		Use:   "consumer-group",
 		Short: "Manage Kafka consumer groups.",
+		Hidden: true,
 	}
 	groupCmd := &groupCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, GroupSubcommandFlags),
@@ -166,6 +167,7 @@ func (g *groupCommand) init() {
 				Code: "ccloud kafka consumer-group list",
 			},
 		),
+		Hidden: true,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -182,6 +184,7 @@ func (g *groupCommand) init() {
 				Code: "ccloud kafka consumer-group describe my_consumer_group",
 			},
 		),
+		Hidden: true,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -328,6 +331,7 @@ func NewLagCommand(prerunner pcmd.PreRunner, groupCmd *groupCommand) *lagCommand
 		&cobra.Command{
 			Use:   "lag",
 			Short: "View consumer lag.",
+			Hidden: true,
 		}, prerunner, LagSubcommandFlags)
 	lagCmd := &lagCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
@@ -367,6 +371,7 @@ func (lagCmd *lagCommand) init() {
 				Code: "ccloud kafka consumer-group lag list my_consumer_group",
 			},
 		),
+		Hidden: true,
 	}
 	listLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listLagCmd.Flags().SortFlags = false
@@ -384,6 +389,7 @@ func (lagCmd *lagCommand) init() {
 				Code: "ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0",
 			},
 		),
+		Hidden: true,
 	}
 	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	getLagCmd.Flags().String("topic", "", "Topic name.")
