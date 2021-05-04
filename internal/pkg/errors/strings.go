@@ -69,6 +69,10 @@ const (
 	CreatedLinkMsg = "Created cluster link \"%s\".\n"
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
 
+	// kafka mirror commands
+	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only support with kafka rest proxy."
+	CreatedMirrorMsg = "Created mirror topic \"%s\".\n"
+
 	// kafka acl commands
 	DeletedACLsMsg      = "Deleted ACLs.\n"
 	DeletedACLsCountMsg = "Deleted %d ACLs.\n"

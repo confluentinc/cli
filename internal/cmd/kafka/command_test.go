@@ -3,12 +3,13 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	logger "log"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
-
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -669,23 +670,19 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 type testLink struct {
 	name       string
 	source     string
-	alterKey   string
-	alterValue string
 }
 
 var Links = []testLink{
 	{
 		name:       "test_link",
 		source:     "myhost:1234",
-		alterKey:   "retention.ms",
-		alterValue: "1234567890",
 	},
 }
 
 func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
 	expect := make(chan interface{})
 	for _, link := range Links {
-		cmd := newCmd(expect, false)
+		cmd := newRestCmd(expect)
 		cmd.SetArgs(argmaker(link))
 
 		go expector(expect, link)
@@ -727,7 +724,12 @@ func TestDescribeLink(t *testing.T) {
 			return []string{"link", "describe", link.name}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
+			expect <- cliMock.DescribeLinkMatcher{
+				LinkName: link.name,
+			}
+			expect <- cliMock.DescribeLinkMatcher{
+				LinkName:    link.name,
+			}
 		},
 	)
 }
@@ -739,35 +741,223 @@ func TestDeleteLink(t *testing.T) {
 			return []string{"link", "delete", link.name}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
+			expect <- cliMock.DeleteLinkMatcher{
+				LinkName: link.name,
+			}
 		},
 	)
 }
 
-func TestAlterLink(t *testing.T) {
+func configMapWithJsonConfigValues() map[string]string {
+	type child struct {
+		Name        string `json:"name"`
+		PatternType string `json:"patternType"`
+		FilterType  string `json:"filterType"`
+	}
+
+	type aJson struct {
+		Children []child `json:"children"`
+	}
+
+	jsonConfig, _ := json.Marshal(aJson{
+		Children: []child{
+			{
+				Name:        "*",
+				PatternType: "LITERAL",
+				FilterType:  "INCLUDE",
+			},
+			{
+				Name:        "*",
+				PatternType: "LITERAL",
+				FilterType:  "INCLUDE",
+			},
+		},
+	})
+
+	println(string(jsonConfig))
+
+	return map[string]string{
+		"key1":"val1",
+		"key2":"val2",
+		"key3":string(jsonConfig),
+	}
+}
+
+func TestBatchAlterLink(t *testing.T) {
+	const configFileName = "link-config.in"
+	configs := configMapWithJsonConfigValues()
+	dir, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		logger.Fatal("Cannot create the test config file")
+	}
+
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s", link.alterKey, link.alterValue)}
+			return []string{"link", "update", link.name, "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
-			expect <- &linkv1.LinkProperties{Properties: map[string]string{link.alterKey: link.alterValue}}
+			expect <- cliMock.BatchUpdateLinkConfigMatcher{
+				LinkName: link.name,
+				Configs: configs,
+			}
 		},
 	)
+
+	defer os.Remove(dir + "/" + configFileName)
 }
 
 func TestCreateLink(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "create", link.name, "--source_cluster", link.source}
+			return []string{"link", "create", link.name, "--source-bootstrap-server", link.source, "--source-cluster-id", "id1"}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- &linkv1.ClusterLink{
-				LinkName: link.name,
-				Configs: map[string]string{
-					"bootstrap.servers": link.source,
+			expect <- cliMock.CreateLinkMatcher{
+				LinkName:        link.name,
+				ValidateLink:    true,
+				ValidateOnly:    false,
+				SourceClusterId: "id1",
+				Configs:          map[string]string{"bootstrap.servers": link.source},
+			}
+		})
+}
+
+func TestCreateMirror(t *testing.T) {
+	const configFileName = "mirror-topic-config.in"
+	configs := configMapWithJsonConfigValues()
+	dir, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		logger.Fatal("Cannot create the test config file")
+	}
+
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2",  "--config-file", configFileName}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.CreateMirrorMatcher{
+				LinkName:        "link-1",
+				SourceTopicName: "src-topic-1",
+				Configs:          configs,
+			}
+		},
+	)
+	defer os.Remove(dir + "/" + configFileName)
+}
+
+func TestListAllMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "list", "--mirror-status", "active"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListMirrorMatcher{
+				Status: "active",
+			}
+		},
+	)
+}
+
+func TestListMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "list", "--link-name", "link-1", "--mirror-status", "active"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListMirrorMatcher{
+				LinkName:    "link-1",
+				Status: "active",
+			}
+		},
+	)
+}
+
+func TestDescribeMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "describe", "dest-topic-1", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.DescribeMirrorMatcher{
+				LinkName:             "link-1",
+				MirrorTopicName: "dest-topic-1",
+			}
+		})
+}
+
+func TestPromoteMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "promote", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
+}
+
+func TestFailoverMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "failover", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
+}
+
+func TestPauseMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "pause", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
+}
+
+func TestResumeMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "resume", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
 				},
 			}
 		})
@@ -950,6 +1140,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			restMock.PartitionApi = cliMock.NewPartitionMock(kafkaRestExpect)
 			restMock.ReplicaApi = cliMock.NewReplicaMock()
 			restMock.ConfigsApi = cliMock.NewConfigsMock()
+			restMock.ClusterLinkingApi = cliMock.NewClusterLinkingMock(kafkaRestExpect)
 			restMock.ConsumerGroupApi = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)

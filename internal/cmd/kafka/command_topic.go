@@ -613,17 +613,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
-		kafkaRestConfigs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
-		i := 0
-		for k, v := range configsMap {
-			val := v
-			kafkaRestConfigs[i] = kafkarestv3.AlterConfigBatchRequestDataData{
-				Name:      k,
-				Value:     &val,
-				Operation: nil,
-			}
-			i++
-		}
+		kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
 		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
 		if err != nil {

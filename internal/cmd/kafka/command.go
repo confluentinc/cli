@@ -60,6 +60,7 @@ func (c *command) init(isAPIKeyLogin bool, cliName string) {
 		c.serverCompleter.AddCommand(aclCmd)
 		c.AddCommand(NewRegionCommand(c.prerunner))
 		c.AddCommand(NewLinkCommand(c.prerunner))
+		c.AddCommand(NewMirrorCommand(c.prerunner))
 	} else {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 		c.AddCommand(NewTopicCommandOnPrem(c.prerunner))

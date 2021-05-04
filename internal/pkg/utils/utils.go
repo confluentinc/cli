@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"unicode"
 
 	"github.com/confluentinc/properties"
 
@@ -97,6 +98,16 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 	normalized := bytes.Replace(raw, []byte{13, 10}, []byte{10}, -1)
 	normalized = bytes.Replace(normalized, []byte{13}, []byte{10}, -1)
 	return normalized
+}
+
+func RemoveSpace(s string) string {
+	rr := make([]rune, 0, len(s))
+	for _, r := range s {
+		if !unicode.IsSpace(r) {
+			rr = append(rr, r)
+		}
+	}
+	return string(rr)
 }
 
 func ValidateEmail(email string) bool {

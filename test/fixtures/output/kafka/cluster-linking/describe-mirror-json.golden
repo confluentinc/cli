@@ -1,0 +1,29 @@
+[
+  {
+    "LinkName": "link-1",
+    "MirrorStatus": "active",
+    "MirrorTopicName": "dest-topic-1",
+    "Partition": "0",
+    "PartitionMirrorLag": "142857",
+    "SourceTopicName": "src-topic-1",
+    "StatusTimeMs": "111111111"
+  }, 
+  {
+    "LinkName": "link-1",
+    "MirrorStatus": "active",
+    "MirrorTopicName": "dest-topic-1",
+    "Partition": "1",
+    "PartitionMirrorLag": "285714",
+    "SourceTopicName": "src-topic-1",
+    "StatusTimeMs": "111111111"
+  }, 
+  {
+    "LinkName": "link-1",
+    "MirrorStatus": "active",
+    "MirrorTopicName": "dest-topic-1",
+    "Partition": "2",
+    "PartitionMirrorLag": "571428",
+    "SourceTopicName": "src-topic-1",
+    "StatusTimeMs": "111111111"
+  }
+]
