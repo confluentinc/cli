@@ -103,7 +103,6 @@ replace (
 	k8s.io/api => k8s.io/api v0.0.0-20190126160459-e86510ea3fe7
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 => /Users/ctan/work/kafka-rest-sdk-go/kafkarestv3
 )
 
 go 1.16
