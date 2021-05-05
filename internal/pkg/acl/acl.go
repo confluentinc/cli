@@ -19,7 +19,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp krsdk.AclData
 	}
 
 	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, os.Stdout)
 	if err != nil {
 		return err
