@@ -73,6 +73,8 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka acl list --cluster lkc-acls-kafka-api", fixture: "kafka/kafka-acls-list.golden"},
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/rp-kafka-acls-list.golden"},
+		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/rp-kafka-acls-list-json.golden"},
+		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/rp-kafka-acls-list-yaml.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
