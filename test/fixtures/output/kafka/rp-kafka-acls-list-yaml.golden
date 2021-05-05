@@ -1,0 +1,6 @@
+- name: test-rest-proxy-topic
+  operation: READ
+  permission: ALLOW
+  resource: TOPIC
+  service_account_id: ""
+  type: ""
