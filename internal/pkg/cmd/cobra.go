@@ -15,8 +15,14 @@ func NewCLIRunE(runEFunc func(*cobra.Command, []string) error) func(*cobra.Comma
 }
 
 // NewCLIPreRunnerE - Wrapper function around PreRunnerE for formatting more helpful error messages when creating a cobra.Command
-func NewCLIPreRunnerE(prerunnerE func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
+func NewCLIPreRunnerE(prerunnerE ...func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		return errors.HandleCommon(prerunnerE(cmd, args), cmd)
+		for _, prerunner := range prerunnerE {
+			err := prerunner(cmd, args)
+			if err != nil {
+				return errors.HandleCommon(err, cmd)
+			}
+		}
+		return nil
 	}
 }

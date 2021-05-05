@@ -62,7 +62,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 		}),
 	}
 	if a.cliName == "ccloud" {
-		longDesc = fmt.Sprintf("Log in to %s.\n\n%s\n\n%s", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Cloud non-interactively using the ``CCLOUD_EMAIL`` and ``CCLOUD_PASSWORD`` environment variables.", "Even with the above environment variables set, you can force an interactive login using the ``--prompt`` flag.")
+		longDesc = fmt.Sprintf("Log in to %s using your Confluent Cloud email and password.\n\n%s\n\n%s", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Cloud non-interactively using the ``CCLOUD_EMAIL`` and ``CCLOUD_PASSWORD`` environment variables.", "Even with the above environment variables set, you can force an interactive login using the ``--prompt`` flag.")
 		loginCmd.Long = longDesc
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
 		loginCmd.Flags().String("url", pauth.CCloudURL, "Confluent Cloud service URL.")

@@ -28,7 +28,7 @@ var (
 	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
 	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -49,7 +49,9 @@ var (
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
-		"EncryptionKeyId":    "encryption_key_id"}
+		"EncryptionKeyId":    "encryption_key_id",
+		"RestEndpoint":		  "rest_endpoint",
+	}
 	durabilityToAvaiablityNameMap = map[string]string{
 		"LOW":  singleZone,
 		"HIGH": multiZone,
@@ -87,6 +89,7 @@ type describeStruct struct {
 	Endpoint           string
 	ApiEndpoint        string
 	EncryptionKeyId    string
+	RestEndpoint	   string
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
@@ -119,7 +122,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
-		Long: "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
+		Long:  "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
@@ -504,6 +507,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
 		EncryptionKeyId:    cluster.EncryptionKeyId,
+		RestEndpoint: 		cluster.RestEndpoint,
 	}
 }
 
@@ -511,7 +515,7 @@ func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
 	describeFields := basicDescribeFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
-		if isExpanding(cluster) {
+		if isExpanding(cluster) || isShrinking(cluster) {
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
 		if cluster.EncryptionKeyId != "" {
@@ -527,6 +531,11 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func isShrinking(cluster *schedv1.KafkaCluster) bool {
+	return cluster.Status == schedv1.ClusterStatus_SHRINKING ||
+		(cluster.PendingCku < cluster.Cku && cluster.PendingCku != 0)
 }
 
 func (c *clusterCommand) Cmd() *cobra.Command {

@@ -6,12 +6,20 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+var AclSubcommandFlags = map[string]*pflag.FlagSet{
+	"acl": cmd.ClusterEnvironmentContextSet(),
+}
+
 var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
 	"cluster": cmd.EnvironmentContextSet(),
 }
 
-var AclSubcommandFlags = map[string]*pflag.FlagSet{
-	"acl": cmd.ClusterEnvironmentContextSet(),
+var GroupSubcommandFlags = map[string]*pflag.FlagSet{
+	"consumer-group": cmd.ClusterEnvironmentContextSet(),
+}
+
+var LagSubcommandFlags = map[string]*pflag.FlagSet{
+	"lag": cmd.ClusterEnvironmentContextSet(),
 }
 
 var TopicSubcommandFlags = map[string]*pflag.FlagSet{
@@ -20,6 +28,10 @@ var TopicSubcommandFlags = map[string]*pflag.FlagSet{
 
 var LinkSubcommandFlags = map[string]*pflag.FlagSet{
 	"link": cmd.ClusterEnvironmentContextSet(),
+}
+
+var MirrorSubcommandFlags = map[string]*pflag.FlagSet{
+	"mirror": cmd.ClusterEnvironmentContextSet(),
 }
 
 var ProduceAndConsumeFlags = map[string]*pflag.FlagSet{

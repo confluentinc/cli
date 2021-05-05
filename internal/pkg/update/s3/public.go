@@ -129,7 +129,7 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 	result := results[0] // copy most properties from results[0]
 	result.IsTruncated = false
 	for _, r := range results[1:] { // skip results[0]
-		result.Contents = append(result.Contents, r.Contents[1:]...) // don't duplicate "marker" entry
+		result.Contents = append(result.Contents, r.Contents...)
 	}
 
 	return &result, nil

@@ -18,6 +18,7 @@ const (
 	RefuseToOverrideSecretErrorMsg    = "refusing to overwrite existing secret for API Key \"%s\""
 	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg           = "unable to set active API key"
+	APIKeyUseFailedSuggestions        = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -29,8 +30,8 @@ const (
 	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
 	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
 	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
-	NoURLFlagOrMdsEnvVarErrorMsg	 = "no mds url passed"
-	NoURLFlagOrMdsEnvVarSuggestions	 = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
+	NoURLFlagOrMdsEnvVarErrorMsg     = "no mds url passed"
+	NoURLFlagOrMdsEnvVarSuggestions  = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -43,10 +44,11 @@ const (
 	UnsupportedShellErrorMsg = "unsupported shell type \"%s\""
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg        = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	PluginNameNotPassedErrorMsg    = "plugin name must be passed"
-	InvalidCloudErrorMsg           = "error defining plugin on given Kafka cluster"
+	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	PluginNameNotPassedErrorMsg         = "plugin name must be passed"
+	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
+	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -114,7 +116,7 @@ const (
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg            = "configuration must be in the form of key=value"
+	ConfigurationFormErrorMsg             = "configuration must be in the form of key=value"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
@@ -126,6 +128,9 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
+
+	// Cluster Link commands
+	EmptyConfigErrorMsg           = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"

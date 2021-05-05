@@ -1,0 +1,4 @@
+   Cluster  |  ConsumerGroup   | Simple | State   
++-----------+------------------+--------+--------+
+  cluster-1 | consumer-group-1 | true   | STABLE  
+  cluster-1 | consumer-group-2 | true   | DEAD    
