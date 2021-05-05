@@ -66,6 +66,7 @@ func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:    "mirror",
 			Short:  "Manages cluster linking mirror topics.",
+			Hidden: true,
 		},
 		prerunner, MirrorSubcommandFlags)
 	cmd := &mirrorCommand{
@@ -88,6 +89,7 @@ func (c *mirrorCommand) init() {
 		),
 		RunE: c.list,
 		Args: cobra.NoArgs,
+		Hidden: true,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
@@ -107,6 +109,7 @@ func (c *mirrorCommand) init() {
 		),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
+		Hidden: true,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
@@ -126,6 +129,7 @@ func (c *mirrorCommand) init() {
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
+		Hidden: true,
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
@@ -146,6 +150,8 @@ func (c *mirrorCommand) init() {
 		),
 		RunE: c.promote,
 		Args: cobra.MinimumNArgs(1),
+		Hidden: true,
+
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -164,6 +170,7 @@ func (c *mirrorCommand) init() {
 		),
 		RunE: c.failover,
 		Args: cobra.MinimumNArgs(1),
+		Hidden: true,
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -182,6 +189,7 @@ func (c *mirrorCommand) init() {
 	),
 	RunE: c.pause,
 	Args: cobra.MinimumNArgs(1),
+	Hidden: true,
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -200,6 +208,7 @@ func (c *mirrorCommand) init() {
 		),
 		RunE: c.resume,
 		Args: cobra.MinimumNArgs(1),
+		Hidden: true,
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
