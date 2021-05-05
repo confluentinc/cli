@@ -151,7 +151,6 @@ func (c *mirrorCommand) init() {
 		RunE: c.promote,
 		Args: cobra.MinimumNArgs(1),
 		Hidden: true,
-
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
