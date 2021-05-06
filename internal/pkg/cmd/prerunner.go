@@ -747,6 +747,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 			ctx.client = client
 			command.Config.Client = client
+			err = ctx.ParseFlagsIntoContext(cmd, command.Config.Client)
+			if err != nil {
+				return err
+			}
 			cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 			if err != nil {
 				return err
