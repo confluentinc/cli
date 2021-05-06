@@ -74,6 +74,7 @@ func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:    "link",
 			Short:  "Manages inter-cluster links.",
+			Hidden: true,
 		},
 		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{
@@ -96,6 +97,7 @@ func (c *linkCommand) init() {
 		),
 		RunE: c.list,
 		Args: cobra.NoArgs,
+		Hidden: true,
 	}
 	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -117,6 +119,7 @@ func (c *linkCommand) init() {
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
+		Hidden: true,
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
 	createCmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
@@ -150,6 +153,7 @@ func (c *linkCommand) init() {
 		),
 		RunE: c.delete,
 		Args: cobra.ExactArgs(1),
+		Hidden: true,
 	}
 	c.AddCommand(deleteCmd)
 
@@ -164,6 +168,7 @@ func (c *linkCommand) init() {
 		),
 		RunE: c.describe,
 		Args: cobra.ExactArgs(1),
+		Hidden: true,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -181,6 +186,7 @@ func (c *linkCommand) init() {
 		),
 		RunE: c.update,
 		Args: cobra.ExactArgs(1),
+		Hidden: true,
 	}
 	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")

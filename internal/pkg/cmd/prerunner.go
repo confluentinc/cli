@@ -458,35 +458,36 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 }
 
 func kafkaRestIsEnabled(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (bool, string, error) {
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return false, "", nil
-	}
-	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
-	if err != nil {
-		return false, "", err
-	}
-	if clusterConfig.RestEndpoint != "" {
-		return true, clusterConfig.RestEndpoint, nil
-	}
-	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
-	// potentially remove this once Rest Proxy is enabled across prod
-	client := NewContextClient(ctx)
-	kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
-	if err != nil {
-		return false, "", err
-	}
-	// no need to update the config if it's still empty
-	if kafkaCluster.RestEndpoint == "" {
-		return false, "", nil
-	}
-	// update config to have updated cluster if rest endpoint is no longer ""
-	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
-	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
-	err = ctx.Save() //should we fail on this error or log and continue?
-	if err != nil {
-		return false, "", err
-	}
-	return kafkaCluster.RestEndpoint != "", kafkaCluster.RestEndpoint, nil
+	return false, "", nil
+	//if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
+	//	return false, "", nil
+	//}
+	//clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
+	//if err != nil {
+	//	return false, "", err
+	//}
+	//if clusterConfig.RestEndpoint != "" {
+	//	return true, clusterConfig.RestEndpoint, nil
+	//}
+	//// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
+	//// potentially remove this once Rest Proxy is enabled across prod
+	//client := NewContextClient(ctx)
+	//kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
+	//if err != nil {
+	//	return false, "", err
+	//}
+	//// no need to update the config if it's still empty
+	//if kafkaCluster.RestEndpoint == "" {
+	//	return false, "", nil
+	//}
+	//// update config to have updated cluster if rest endpoint is no longer ""
+	//refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
+	//ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
+	//err = ctx.Save() //should we fail on this error or log and continue?
+	//if err != nil {
+	//	return false, "", err
+	//}
+	//return kafkaCluster.RestEndpoint != "", kafkaCluster.RestEndpoint, nil
 
 }
 
