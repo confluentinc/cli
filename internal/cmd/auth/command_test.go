@@ -121,6 +121,9 @@ var (
 		WriteNetrcCredentialsFunc: func(cliName string, isSSO bool, ctxName, username, password string) error {
 			return nil
 		},
+		RemoveNetrcCredentialsFunc: func(cliName string, ctxName string) error {
+			return nil
+		},
 	}
 )
 
@@ -222,7 +225,7 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			cliName: "confluent",
-			setEnv: true,
+			setEnv:  true,
 		},
 	}
 
@@ -497,7 +500,7 @@ func TestLogout(t *testing.T) {
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v3.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
-	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
+	logoutCmd, cfg := newLogoutCmd("ccloud", cfg, mockNetrcHandler)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
@@ -510,8 +513,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 		name                string
 		caCertPathFlag      string
 		expectedContextName string
-		setEnv				bool
-		envCertPath			string
+		setEnv              bool
+		envCertPath         string
 	}{
 		{
 			name:                "specified ca-cert-path",
@@ -525,8 +528,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 		},
 		{
 			name:                "env var ca-cert-path flag",
-			setEnv: 			 true,
-			envCertPath: 		 "testcert.pem",
+			setEnv:              true,
+			envCertPath:         "testcert.pem",
 			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
 		},
 	}
@@ -742,7 +745,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg)
+		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg, mockNetrcHandler)
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)
@@ -900,8 +903,8 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cliName string, cfg *v3.Config) (*logoutCommand, *v3.Config) {
-	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
+func newLogoutCmd(cliName string, cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logoutCommand, *v3.Config) {
+	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
 	return logoutCmd, cfg
 }
 

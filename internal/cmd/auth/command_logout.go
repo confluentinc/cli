@@ -10,17 +10,22 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type logoutCommand struct {
 	*pcmd.CLICommand
+	cliName         string
 	analyticsClient analytics.Client
+	netrcHandler    netrc.NetrcHandler
 }
 
-func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *logoutCommand {
+func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *logoutCommand {
 	logoutCmd := &logoutCommand{
+		cliName:         cliName,
 		analyticsClient: analyticsClient,
+		netrcHandler:    netrcHandler,
 	}
 	logoutCmd.init(cliName, prerunner)
 	return logoutCmd
@@ -43,7 +48,12 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 }
 
 func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
-	err := pauth.PersistLogoutToConfig(a.Config.Config)
+	err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
+	if err != nil {
+		return err
+	}
+
+	err = pauth.PersistLogoutToConfig(a.Config.Config)
 	if err != nil {
 		return err
 	}

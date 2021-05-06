@@ -32,7 +32,7 @@ func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, re
 
 // Parse "--context" flag value into config struct
 // Call ParseFlagsIntoContext which handles environment and cluster flags
-func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {//version *version.Version) error {
+func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error { //version *version.Version) error {
 	ctxName, err := d.Resolver.ResolveContextFlag(cmd)
 	if err != nil {
 		return err

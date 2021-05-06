@@ -41,6 +41,7 @@ func (c netrcCredentialType) String() string {
 
 type NetrcHandler interface {
 	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
+	RemoveNetrcCredentials(cliName string, ctxName string) error
 	GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error)
 	GetFileName() string
 }
@@ -94,6 +95,62 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 	err = ioutil.WriteFile(filename, netrcBytes, 0600)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+	}
+	return nil
+}
+
+func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) error {
+	filename, err := homedir.Expand(n.FileName)
+	if err != nil {
+		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
+	}
+
+	netrcFile, err := getOrCreateNetrc(filename)
+	if err != nil {
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename) // ?
+	}
+
+	machineName1 := getNetrcMachineName(cliName, true, ctxName)
+	machine1 := netrcFile.FindMachine(machineName1)
+
+	machineName2 := getNetrcMachineName(cliName, false, ctxName)
+	machine2 := netrcFile.FindMachine(machineName2)
+
+	if machine1 == nil && machine2 == nil {
+		return nil
+	} else {
+		netrcBytes, err := netrcFile.MarshalText()
+		if err != nil {
+			return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		}
+		var buf []byte
+		lines := strings.Split(string(netrcBytes), "\n")
+		count := 3
+		length := len(lines)
+		if equal := strings.Index(lines[0], "machine confluent-cli"); equal > -1 {
+			count = 0
+		}
+		for i := 0; i < length; i++ {
+			line := lines[i]
+			if i < length-1 {
+				nextLine := lines[i+1]
+				if equal := strings.Index(nextLine, "machine confluent-cli"); equal > -1 {
+					count = -1
+				}
+			}
+			count += 1
+			if count >= 4 {
+				buf = append(buf, line...)
+				if i < length-1 {
+					buf = append(buf, []byte("\n")...)
+				}
+			}
+		}
+		err = ioutil.WriteFile(filename, buf, 0600)
+		if err != nil {
+			return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		}
+		fmt.Println("Your credentials have been removed from \"~/.netrc\".")
 	}
 	return nil
 }
