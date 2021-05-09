@@ -150,7 +150,6 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 		if err != nil {
 			return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 		}
-		fmt.Println("Your credentials have been removed from \"~/.netrc\".")
 	}
 	return nil
 }

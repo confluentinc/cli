@@ -48,12 +48,14 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 }
 
 func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
-	err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
-	if err != nil {
-		return err
+	if a.Config.Config.Context() != nil {
+		err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
+		if err != nil {
+			return err
+		}
+		utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, a.netrcHandler.GetFileName())
 	}
-
-	err = pauth.PersistLogoutToConfig(a.Config.Config)
+	err := pauth.PersistLogoutToConfig(a.Config.Config)
 	if err != nil {
 		return err
 	}
