@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
@@ -50,10 +51,11 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if a.Config.Config.Context() != nil {
 		err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
-		if err != nil {
+		if err == nil {
+			utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, a.netrcHandler.GetFileName())
+		} else if equal := strings.Index(err.Error(), "login credentials not found"); equal <= -1 {
 			return err
 		}
-		utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, a.netrcHandler.GetFileName())
 	}
 	err := pauth.PersistLogoutToConfig(a.Config.Config)
 	if err != nil {
