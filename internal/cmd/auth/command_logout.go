@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/spf13/cobra"
 
@@ -50,9 +51,11 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 
 func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if a.Config.Config.Context() != nil {
-		err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
+		username, err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
 		if err == nil {
-			utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, a.netrcHandler.GetFileName())
+			if a.Config.Logger.GetLevel() >= log.WARN {
+				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())
+			}
 		} else if equal := strings.Index(err.Error(), "login credentials not found"); equal <= -1 {
 			return err
 		}

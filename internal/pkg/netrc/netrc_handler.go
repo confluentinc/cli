@@ -41,7 +41,7 @@ func (c netrcCredentialType) String() string {
 
 type NetrcHandler interface {
 	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
-	RemoveNetrcCredentials(cliName string, ctxName string) error
+	RemoveNetrcCredentials(cliName string, ctxName string) (string, error)
 	GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error)
 	GetFileName() string
 }
@@ -99,15 +99,15 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 	return nil
 }
 
-func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) error {
+func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) (string, error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
-		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
+		return "", errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
 	}
 
 	netrcFile, err := getNetrc(filename)
 	if err != nil {
-		return err
+		return "", err
 	}
 	machineName1 := getNetrcMachineName(cliName, true, ctxName)
 	machine1 := netrcFile.FindMachine(machineName1)
@@ -117,30 +117,34 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 
 	if machine1 == nil && machine2 == nil {
 		err = errors.New(errors.NetrcCredentialsNotFoundErrorMsg)
-		return errors.Wrapf(err, errors.NetrcCredentialsNotFoundErrorMsg, filename)
+		return "", err
 	} else {
 		if machine1 != nil {
 			buf, err := RemoveCredentials(machineName1, netrcFile, filename)
 			if err != nil {
-				return err
+				return "", err
 			}
 			err = ioutil.WriteFile(filename, buf, 0600)
 			if err != nil {
-				return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+				return "", errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 			}
+			user1 := machine1.Login
+			return user1, nil
 		}
 		if machine2 != nil {
 			buf, err := RemoveCredentials(machineName2, netrcFile, filename)
 			if err != nil {
-				return err
+				return "", err
 			}
 			err = ioutil.WriteFile(filename, buf, 0600)
 			if err != nil {
-				return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+				return "", errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 			}
+			user2 := machine2.Login
+			return user2, nil
 		}
 	}
-	return nil
+	return "", nil
 }
 
 func RemoveCredentials(machineName string, netrcFile *gonetrc.Netrc, filename string) ([]byte, error) {
@@ -150,7 +154,7 @@ func RemoveCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 	}
 	var buf []byte
 	lines := strings.Split(string(netrcBytes), "\n")
-	count := 3
+	count := 3 // to remove 3 lines of credentials
 	length := len(lines)
 	if equal := strings.Index(lines[0], machineName); equal > -1 {
 		count = 0
@@ -160,16 +164,16 @@ func RemoveCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		if i < length-1 {
 			nextLine := lines[i+1]
 			if equal := strings.Index(nextLine, machineName); equal > -1 {
-				count = -1
+				count = -1 // remove one extra empty line if the credentials are not at the top of the netrc file
 			}
 		}
-		count += 1
-		if count >= 4 {
+		if count >= 3 {
 			buf = append(buf, line...)
 			if i < length-1 {
 				buf = append(buf, []byte("\n")...)
 			}
 		}
+		count += 1
 	}
 	return buf, nil
 }

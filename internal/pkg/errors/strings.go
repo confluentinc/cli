@@ -14,7 +14,7 @@ const (
 	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
 	LoggedOutMsg               = "You are now logged out."
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
-	RemoveNetrcCredentialsMsg  = "Removed credentials from netrc file \"%s\"\n"
+	RemoveNetrcCredentialsMsg  = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
 	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
