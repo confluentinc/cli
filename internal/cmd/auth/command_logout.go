@@ -51,9 +51,13 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 
 func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if a.Config.Config.Context() != nil {
+		var level log.Level
+		if a.Config.Logger != nil {
+			level = a.Config.Logger.GetLevel()
+		}
 		username, err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
 		if err == nil {
-			if a.Config.Logger.GetLevel() >= log.WARN {
+			if level >= log.WARN {
 				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())
 			}
 		} else if equal := strings.Index(err.Error(), "login credentials not found"); equal <= -1 {
