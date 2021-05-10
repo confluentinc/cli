@@ -121,8 +121,8 @@ var (
 		WriteNetrcCredentialsFunc: func(cliName string, isSSO bool, ctxName, username, password string) error {
 			return nil
 		},
-		RemoveNetrcCredentialsFunc: func(cliName string, ctxName string) error {
-			return nil
+		RemoveNetrcCredentialsFunc: func(cliName string, ctxName string) (string, error) {
+			return "", nil
 		},
 	}
 )
