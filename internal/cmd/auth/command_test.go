@@ -124,6 +124,9 @@ var (
 		RemoveNetrcCredentialsFunc: func(cliName string, ctxName string) (string, error) {
 			return "", nil
 		},
+		CheckCredentialExistFunc: func(cliName string, ctxName string) (bool, error) {
+			return false, nil
+		},
 	}
 )
 
@@ -504,7 +507,13 @@ func TestLogout(t *testing.T) {
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
-	req.NotContains(output, errors.FailedRemoveNetrcCredentialsMsg)
+	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
+	if err != nil {
+		req.NotContains(err.Error(), "cannot expand user-specific home dir")
+	} else {
+		req.NoError(err)
+	}
+	req.Equal(exist, false)
 	verifyLoggedOutState(t, cfg, contextName)
 }
 

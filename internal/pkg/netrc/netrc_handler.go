@@ -42,6 +42,7 @@ func (c netrcCredentialType) String() string {
 type NetrcHandler interface {
 	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
 	RemoveNetrcCredentials(cliName string, ctxName string) (string, error)
+	CheckCredentialExist(cliName string, ctxName string) (bool, error)
 	GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error)
 	GetFileName() string
 }
@@ -134,11 +135,6 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 			}
 			user = machine2.Login
 		}
-	}
-	// check if credential have been successfully removed
-	credentialExist, _ := n.checkCredentialExist(cliName, ctxName)
-	if credentialExist {
-		return "", errors.New(errors.FailedRemoveNetrcCredentialsMsg)
 	}
 	return user, nil
 }
@@ -306,7 +302,7 @@ func GetNetrcFilePath(isIntegrationTest bool) string {
 	}
 }
 
-func (n *NetrcHandlerImpl) checkCredentialExist(cliName string, ctxName string) (bool, error) {
+func (n *NetrcHandlerImpl) CheckCredentialExist(cliName string, ctxName string) (bool, error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
 		return false, err

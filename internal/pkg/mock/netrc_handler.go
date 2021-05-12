@@ -15,6 +15,7 @@ type MockNetrcHandler struct {
 	lockWriteNetrcCredentials   sync.Mutex
 	WriteNetrcCredentialsFunc   func(cliName string, isSSO bool, ctxName, username, password string) error
 	RemoveNetrcCredentialsFunc  func(cliName string, ctxName string) (string, error)
+	CheckCredentialExistFunc    func(cliName string, ctxName string) (bool, error)
 	lockGetMatchingNetrcMachine sync.Mutex
 	GetMatchingNetrcMachineFunc func(params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (*github_com_confluentinc_cli_internal_pkg_netrc.Machine, error)
 
@@ -30,6 +31,10 @@ type MockNetrcHandler struct {
 			Password string
 		}
 		RemoveNetrcCredentials []struct {
+			CliName string
+			CtxName string
+		}
+		CheckCredentialExist []struct {
 			CliName string
 			CtxName string
 		}
@@ -86,6 +91,25 @@ func (m *MockNetrcHandler) RemoveNetrcCredentials(cliName string, ctxName string
 	m.calls.RemoveNetrcCredentials = append(m.calls.RemoveNetrcCredentials, call)
 
 	return m.RemoveNetrcCredentialsFunc(cliName, ctxName)
+}
+
+func (m *MockNetrcHandler) CheckCredentialExist(cliName string, ctxName string) (bool, error) {
+
+	if m.CheckCredentialExistFunc == nil {
+		panic("mocker: MockNetrcHandler.CheckCredentialExistFunc is nil but MockNetrcHandler.CheckCredentialExist was called.")
+	}
+
+	call := struct {
+		CliName string
+		CtxName string
+	}{
+		CliName: cliName,
+		CtxName: ctxName,
+	}
+
+	m.calls.CheckCredentialExist = append(m.calls.CheckCredentialExist, call)
+
+	return m.CheckCredentialExistFunc(cliName, ctxName)
 }
 
 // WriteNetrcCredentialsCalled returns true if WriteNetrcCredentials was called at least once.
