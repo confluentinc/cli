@@ -115,42 +115,38 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 	machineName2 := getNetrcMachineName(cliName, false, ctxName)
 	machine2 := netrcFile.FindMachine(machineName2)
 
+	var user string
 	if machine1 == nil && machine2 == nil {
 		err = errors.New(errors.NetrcCredentialsNotFoundErrorMsg)
 		return "", err
 	} else {
 		if machine1 != nil {
-			buf, err := RemoveCredentials(machineName1, netrcFile, filename)
+			err := removeCredentials(machineName1, netrcFile, filename)
 			if err != nil {
 				return "", err
 			}
-			err = ioutil.WriteFile(filename, buf, 0600)
-			if err != nil {
-				return "", errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
-			}
-			user1 := machine1.Login
-			return user1, nil
+			user = machine1.Login
 		}
 		if machine2 != nil {
-			buf, err := RemoveCredentials(machineName2, netrcFile, filename)
+			err := removeCredentials(machineName2, netrcFile, filename)
 			if err != nil {
 				return "", err
 			}
-			err = ioutil.WriteFile(filename, buf, 0600)
-			if err != nil {
-				return "", errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
-			}
-			user2 := machine2.Login
-			return user2, nil
+			user = machine2.Login
 		}
 	}
-	return "", nil
+	// check if credential have been successfully removed
+	credentialExist, _ := n.checkCredentialExist(cliName, ctxName)
+	if credentialExist {
+		return "", errors.New(errors.FailedRemoveNetrcCredentialsMsg)
+	}
+	return user, nil
 }
 
-func RemoveCredentials(machineName string, netrcFile *gonetrc.Netrc, filename string) ([]byte, error) {
+func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename string) error {
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
-		return nil, errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	var buf []byte
 	lines := strings.Split(string(netrcBytes), "\n")
@@ -175,7 +171,11 @@ func RemoveCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		}
 		count += 1
 	}
-	return buf, nil
+	err = ioutil.WriteFile(filename, buf, 0600)
+	if err != nil {
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+	}
+	return nil
 }
 
 func getNetrc(filename string) (*gonetrc.Netrc, error) {
@@ -304,4 +304,25 @@ func GetNetrcFilePath(isIntegrationTest bool) string {
 	} else {
 		return "~/.netrc"
 	}
+}
+
+func (n *NetrcHandlerImpl) checkCredentialExist(cliName string, ctxName string) (bool, error) {
+	filename, err := homedir.Expand(n.FileName)
+	if err != nil {
+		return false, err
+	}
+	netrcFile, err := getNetrc(filename)
+	if err != nil {
+		return false, err
+	}
+	machineName1 := getNetrcMachineName(cliName, true, ctxName)
+	machine1 := netrcFile.FindMachine(machineName1)
+
+	machineName2 := getNetrcMachineName(cliName, false, ctxName)
+	machine2 := netrcFile.FindMachine(machineName2)
+
+	if machine1 == nil && machine2 == nil {
+		return false, nil
+	}
+	return true, nil
 }

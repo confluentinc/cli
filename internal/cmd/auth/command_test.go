@@ -504,6 +504,7 @@ func TestLogout(t *testing.T) {
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
+	req.NotContains(output, errors.FailedRemoveNetrcCredentialsMsg)
 	verifyLoggedOutState(t, cfg, contextName)
 }
 
