@@ -44,31 +44,31 @@ const (
 	serviceAccountId   = int32(123)
 	serviceAccountName = "service-account"
 
-	auditLogApiKeyResourceId   = int32(7753)
-	auditLogApiKeyVal   = "auditlog-apikey"
-	auditLogApiKeySecretVal       = "opensesameforauditlogs"
-	auditLogApiKeyDescription   = "Mock Apis for Audit Logs"
-	auditLogServiceAccountId   = int32(748)
+	auditLogApiKeyResourceId  = int32(7753)
+	auditLogApiKeyVal         = "auditlog-apikey"
+	auditLogApiKeySecretVal   = "opensesameforauditlogs"
+	auditLogApiKeyDescription = "Mock Apis for Audit Logs"
+	auditLogServiceAccountId  = int32(748)
 )
 
 var (
 	apiValue = &schedv1.ApiKey{
 		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
-		UserId:      serviceAccountId,
-		Key:         apiKeyVal,
-		Secret:      apiSecretVal,
-		Description: apiKeyDescription,
-		Created:     types.TimestampNow(),
-		Id:          apiKeyResourceId,
+		UserId:          serviceAccountId,
+		Key:             apiKeyVal,
+		Secret:          apiSecretVal,
+		Description:     apiKeyDescription,
+		Created:         types.TimestampNow(),
+		Id:              apiKeyResourceId,
 	}
 	auditLogApiValue = &schedv1.ApiKey{
 		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
-		UserId:      auditLogServiceAccountId,
-		Key:         auditLogApiKeyVal,
-		Secret:      auditLogApiKeySecretVal,
-		Description: auditLogApiKeyDescription,
-		Created:     types.TimestampNow(),
-		Id:          auditLogApiKeyResourceId,
+		UserId:          auditLogServiceAccountId,
+		Key:             auditLogApiKeyVal,
+		Secret:          auditLogApiKeySecretVal,
+		Description:     auditLogApiKeyDescription,
+		Created:         types.TimestampNow(),
+		Id:              auditLogApiKeyResourceId,
 	}
 )
 

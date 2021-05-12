@@ -3,8 +3,9 @@ package connector
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/stretchr/testify/require"

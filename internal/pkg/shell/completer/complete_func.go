@@ -7,6 +7,7 @@ import (
 	"github.com/c-bata/go-prompt"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+
 	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 )
 

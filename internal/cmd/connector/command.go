@@ -28,7 +28,7 @@ type command struct {
 	completableChildren     []*cobra.Command
 	completableFlagChildren map[string][]*cobra.Command
 	analyticsClient         analytics.Client
-	prerunner           pcmd.PreRunner
+	prerunner               pcmd.PreRunner
 }
 
 type connectorDescribeDisplay struct {
@@ -68,7 +68,7 @@ func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 				Use:   "connector",
 				Short: "Manage Kafka Connect.",
 			}, prerunner, SubcommandFlags),
-		prerunner: prerunner,
+		prerunner:       prerunner,
 		analyticsClient: analyticsClient,
 	}
 	cmd.init(cliName)

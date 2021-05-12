@@ -4,6 +4,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+
 	"github.com/antihax/optional"
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"

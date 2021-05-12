@@ -12,12 +12,14 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	prodv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"

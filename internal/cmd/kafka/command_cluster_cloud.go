@@ -50,7 +50,7 @@ var (
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
 		"EncryptionKeyId":    "encryption_key_id",
-		"RestEndpoint":		  "rest_endpoint",
+		"RestEndpoint":       "rest_endpoint",
 	}
 	durabilityToAvaiablityNameMap = map[string]string{
 		"LOW":  singleZone,
@@ -89,7 +89,7 @@ type describeStruct struct {
 	Endpoint           string
 	ApiEndpoint        string
 	EncryptionKeyId    string
-	RestEndpoint	   string
+	RestEndpoint       string
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
@@ -577,7 +577,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
 		EncryptionKeyId:    cluster.EncryptionKeyId,
-		RestEndpoint: 		cluster.RestEndpoint,
+		RestEndpoint:       cluster.RestEndpoint,
 	}
 }
 

@@ -49,6 +49,7 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/golangci/golangci-lint v1.30.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
+	github.com/google/go-cmp v0.5.4
 	github.com/google/go-github/v25 v25.0.2
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0

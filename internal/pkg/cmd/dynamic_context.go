@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"strings"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -132,7 +133,7 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 	return cluster, nil
 }
 
-func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster) *v1.KafkaClusterConfig{
+func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster) *v1.KafkaClusterConfig {
 	clusterConfig := &v1.KafkaClusterConfig{
 		ID:           kcc.Id,
 		Name:         kcc.Name,

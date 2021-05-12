@@ -813,7 +813,7 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	}
 }
 
-func (r *PreRun)  updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
+func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
 	if ctx == nil {
 		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
@@ -928,6 +928,6 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	kafkarestv3.NewConfiguration()
 	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath: kafkaRestURL+"/kafka/v3",
+		BasePath: kafkaRestURL + "/kafka/v3",
 	}), nil
 }

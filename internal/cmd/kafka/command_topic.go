@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	"github.com/c-bata/go-prompt"
 
@@ -1097,7 +1098,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error){
+func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
 	client, err := NewSaramaClient(cluster, clientID, beginning)
 	if err != nil {
 		return nil, err
