@@ -8,9 +8,12 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/google/go-cmp/cmp"
+	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	prodv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -19,6 +22,7 @@ import (
 
 	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
+	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/mock"
