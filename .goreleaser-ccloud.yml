@@ -18,7 +18,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud -buildmode=exe
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
@@ -30,7 +30,7 @@ builds:
       - amd64
       - 386
   - binary: ccloud
-    id: signed
+    id: signed-amd64
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -49,11 +49,31 @@ builds:
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=ccloud
-            - LICENSE_BIN_PATH=./dist/ccloud/signed_darwin_amd64/ccloud
-        - cmd: gon gon_ccloud.hcl
+            - LICENSE_BIN_PATH=./dist/ccloud/signed-amd64_darwin_amd64/ccloud
+        - cmd: gon gon_ccloud_amd64.hcl
+  - binary: ccloud
+    id: signed-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=ccloud
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    hooks:
+      post:
+        - cmd: make download-licenses
           env:
-            - GO111MODULE=on
- 
+            - LICENSE_BIN=ccloud
+            - LICENSE_BIN_PATH=./dist/ccloud/signed-arm64_darwin_arm64/ccloud
+        - cmd: gon gon_ccloud_arm64.hcl
+
 release:
   disable: true
 

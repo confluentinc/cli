@@ -1,0 +1,14 @@
+- LinkName: link-1
+  MaxPerPartitionMirrorLag: "571428"
+  MirrorStatus: active
+  MirrorTopicName: dest-topic-1
+  NumPartition: "3"
+  SourceTopicName: src-topic-1
+  StatusTimeMs: "111111111"
+- LinkName: link-2
+  MaxPerPartitionMirrorLag: "0"
+  MirrorStatus: stopped
+  MirrorTopicName: dest-topic-2
+  NumPartition: "2"
+  SourceTopicName: src-topic-2
+  StatusTimeMs: "222222222"

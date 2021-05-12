@@ -1,0 +1,15 @@
+{
+  "name": "test-connector",
+  "config": {
+    "name": "test-connector",
+    "data.format": "JSON",
+    "kafka.api.key": "key",
+    "kafka.api.secret": "key",
+    "tasks.max": "1",
+    "topics": "test",
+    "quickstart": {
+      "name": "USERS"
+    },
+    "connector.class": "DataGenConnector"
+  }
+}

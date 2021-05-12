@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 /*
 	HANDLECOMMON HELPERS
+	see: https://github.com/confluentinc/cli/blob/master/errors.md
 */
 
 func catchTypedErrors(err error) error {
@@ -183,6 +184,21 @@ func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotE
 		return NewErrorWithSuggestions(errorMsg, suggestions)
 	}
 	return err
+}
+
+/*
+failed to produce offset -1: Unknown error, how did this happen? Error code = 87
+*/
+func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error) {
+	if err == nil {
+		return false, nil
+	}
+	compiledRegex := regexp.MustCompile(`Unknown error, how did this happen\? Error code = 87`)
+	if compiledRegex.MatchString(err.Error()) {
+		errorMsg := fmt.Sprintf(ProducingToCompactedTopicErrorMsg, topicName)
+		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
+	}
+	return false, err
 }
 
 /*

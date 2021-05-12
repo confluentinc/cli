@@ -22,7 +22,7 @@ Flags:
       --encryption-key string   Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
       --environment string      Environment ID.
-      --context string          Context name.
+      --context string          CLI Context name.
 
 Global Flags:
   -h, --help            Show help for this command.

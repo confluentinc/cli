@@ -14,10 +14,12 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -26,7 +28,7 @@ var (
 	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
 	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -47,7 +49,9 @@ var (
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
-		"EncryptionKeyId":    "encryption_key_id"}
+		"EncryptionKeyId":    "encryption_key_id",
+		"RestEndpoint":		  "rest_endpoint",
+	}
 	durabilityToAvaiablityNameMap = map[string]string{
 		"LOW":  singleZone,
 		"HIGH": multiZone,
@@ -66,6 +70,7 @@ type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 type describeStruct struct {
@@ -84,10 +89,11 @@ type describeStruct struct {
 	Endpoint           string
 	ApiEndpoint        string
 	EncryptionKeyId    string
+	RestEndpoint	   string
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
@@ -96,6 +102,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner) *clusterCommand {
 	cmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		prerunner:                     prerunner,
+		analyticsClient:               analyticsClient,
 	}
 	cmd.init()
 	return cmd
@@ -115,6 +122,7 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
+		Long:  "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
 			return c.create(cmd, args, form.NewPrompt(os.Stdin))
@@ -182,8 +190,7 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -274,7 +281,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		}
 		cfg.Cku = int32(cku)
 	}
-
 	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
 	if err != nil {
 		// TODO: don't swallow validation errors (reportedly separately)
@@ -287,6 +293,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	if outputFormat == output.Human.String() {
 		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
@@ -485,6 +492,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, args[0])
 	return nil
 }
 
@@ -569,6 +577,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
 		EncryptionKeyId:    cluster.EncryptionKeyId,
+		RestEndpoint: 		cluster.RestEndpoint,
 	}
 }
 
@@ -576,7 +585,7 @@ func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
 	describeFields := basicDescribeFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
-		if isExpanding(cluster) {
+		if isExpanding(cluster) || isShrinking(cluster) {
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
 		if cluster.EncryptionKeyId != "" {
@@ -594,17 +603,18 @@ func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
 }
 
+func isShrinking(cluster *schedv1.KafkaCluster) bool {
+	return cluster.Status == schedv1.ClusterStatus_SHRINKING ||
+		(cluster.PendingCku < cluster.Cku && cluster.PendingCku != 0)
+}
+
 func (c *clusterCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
 func (c *clusterCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.Kafka.List(context.Background(), req)
+	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 	if err != nil {
 		return suggestions
 	}

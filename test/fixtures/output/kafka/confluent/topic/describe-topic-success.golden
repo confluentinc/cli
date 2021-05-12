@@ -1,0 +1,17 @@
+Topic: topic-exist
+PartitionCount: 3
+ReplicationFactor: 3
+
+     Topic    | Partition | Leader |     Replicas     |       ISR         
++-------------+-----------+--------+------------------+------------------+
+  topic-exist |         0 |   1001 | [1001 1002 1003] | [1001 1002 1003]  
+  topic-exist |         1 |   1002 | [1001 1002 1003] | [1002 1003]       
+  topic-exist |         2 |   1003 | [1001 1002 1003] | [1003]            
+
+Configuration
+
+        Name       |   Value    
++------------------+-----------+
+  cleanup.policy   | delete     
+  compression.type | producer   
+  retention.ms     | 604800000  

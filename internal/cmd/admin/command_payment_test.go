@@ -8,9 +8,10 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 
+	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -155,14 +156,14 @@ func getCommand() (c *command) {
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
 	cfg := v3.AuthenticatedCloudConfigMock()
-	return New(climock.NewPreRunnerMock(client, nil, cfg), true)
+	return New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
 }
 
 func mockClient() (client *ccloud.Client) {
 	client = &ccloud.Client{
-		Organization: &ccloudmock.Organization{
-			GetPaymentInfoFunc: func(_ context.Context, _ *orgv1.Organization) (*orgv1.Card, error) {
-				card := &orgv1.Card{
+		Billing: &ccloudmock.Billing{
+			GetPaymentInfoFunc: func(_ context.Context, _ *orgv1.Organization) (*billingv1.Card, error) {
+				card := &billingv1.Card{
 					Brand: "Visa",
 					Last4: "4242",
 				}

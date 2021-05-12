@@ -10,6 +10,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -20,22 +21,23 @@ import (
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 var (
-	listFields                = []string{"Id", "ServiceName", "ServiceDescription"}
-	listHumanLabels           = []string{"Id", "Name", "Description"}
-	listStructuredLabels      = []string{"id", "name", "description"}
-	describeFields            = []string{"Id", "ServiceName", "ServiceDescription"}
-	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description"}
-	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description"}
+	listFields                = []string{"Id", "ResourceId", "ServiceName", "ServiceDescription"}
+	listHumanLabels           = []string{"Id", "Resource ID", "Name", "Description"}
+	listStructuredLabels      = []string{"id", "resource_id", "name", "description"}
+	describeFields            = []string{"Id", "ResourceId", "ServiceName", "ServiceDescription"}
+	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "Resource ID"}
+	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "resource_id"}
 )
 
 const nameLength = 64
 const descriptionLength = 128
 
 // New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner) *command {
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "service-account",
@@ -43,6 +45,7 @@ func New(prerunner pcmd.PreRunner) *command {
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,
+		analyticsClient:         analyticsClient,
 	}
 	cmd.init()
 	return cmd
@@ -54,10 +57,6 @@ func (c *command) Cmd() *cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
-
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return suggestions
@@ -173,6 +172,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -218,6 +218,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return nil
 }
 

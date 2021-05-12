@@ -10,7 +10,7 @@ import (
 
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 // Compile-time check interface adherence
@@ -134,20 +134,19 @@ func (m *Kafka) CreateLink(ctx context.Context, destination *schedv1.KafkaCluste
 
 func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster, includeTopics bool) (*linkv1.ListLinksResponse, error) {
 	if includeTopics {
+		topics := []string{"topic-1", "topic-2"}
+
 		return &linkv1.ListLinksResponse{
 			Links: []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName: "link-1", Topics: []string{
-					"topic-1",
-					"topic-2",
-				}},
-				&linkv1.ListLinksResponseItem{LinkName: "link-2"},
+				{LinkName: "link-1", Topics: topics},
+				{LinkName: "link-2"},
 			},
 		}, nil
 	} else {
 		return &linkv1.ListLinksResponse{
 			Links: []*linkv1.ListLinksResponseItem{
-				&linkv1.ListLinksResponseItem{LinkName: "link-1"},
-				&linkv1.ListLinksResponseItem{LinkName: "link-2"},
+				{LinkName: "link-1"},
+				{LinkName: "link-2"},
 			},
 		}, nil
 	}

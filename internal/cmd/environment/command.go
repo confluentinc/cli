@@ -8,6 +8,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -17,6 +18,7 @@ import (
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
+	analyticsClient     analytics.Client
 }
 
 var (
@@ -29,13 +31,13 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(cliName string, prerunner pcmd.PreRunner) *command {
+func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "environment",
 			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
 		}, prerunner, SubcommandFlags)
-	cmd := &command{AuthenticatedStateFlagCommand: cliCmd}
+	cmd := &command{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.init()
 	return cmd
 }
@@ -48,7 +50,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().String("context", "", "Context name.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -58,8 +59,6 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
 	}
-	useCmd.Flags().String("context", "", "Context name.")
-	useCmd.Flags().SortFlags = false
 	c.AddCommand(useCmd)
 
 	createCmd := &cobra.Command{
@@ -169,6 +168,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, environment.Id)
 	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
 }
 
@@ -197,6 +197,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 	return nil
 }
 
@@ -210,9 +211,6 @@ func (c *command) ServerCompletableChildren() []*cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
 		return suggestions

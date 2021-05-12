@@ -27,7 +27,7 @@ var (
 )
 
 type roleCommand struct {
-	*cmd.AuthenticatedCLICommand
+	*cmd.AuthenticatedStateFlagCommand
 	cliName string
 }
 
@@ -43,15 +43,15 @@ func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
 		Short: "Manage RBAC and IAM roles.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
-	var cliCmd *cmd.AuthenticatedCLICommand
+	var cliCmd *cmd.AuthenticatedStateFlagCommand
 	if cliName == "confluent" {
-		cliCmd = cmd.NewAuthenticatedWithMDSCLICommand(cobraRoleCmd, prerunner)
+		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRoleCmd, prerunner, RoleSubcommandFlags)
 	} else {
-		cliCmd = cmd.NewAuthenticatedCLICommand(cobraRoleCmd, prerunner)
+		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
 	}
 	roleCmd := &roleCommand{
-		AuthenticatedCLICommand: cliCmd,
-		cliName:                 cliName,
+		AuthenticatedStateFlagCommand: cliCmd,
+		cliName:                       cliName,
 	}
 	roleCmd.init()
 	return roleCmd.Command
@@ -69,6 +69,7 @@ func (c *roleCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the available RBAC roles.",
+		Long:  "List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.",
 		Args:  cobra.NoArgs,
 		RunE:  cmd.NewCLIRunE(c.list),
 	}

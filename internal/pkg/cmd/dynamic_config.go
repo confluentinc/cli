@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -21,6 +21,8 @@ func NewDynamicConfig(config *v3.Config, resolver FlagResolver, client *ccloud.C
 	}
 }
 
+// Set DynamicConfig values for command with config and resolver from prerunner
+// Calls ParseFlagsIntoConfig so that state flags are parsed ino config struct
 func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, resolver FlagResolver) error {
 	d.Config = cfg
 	d.Resolver = resolver
@@ -30,7 +32,7 @@ func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, re
 
 // Parse "--context" flag value into config struct
 // Call ParseFlagsIntoContext which handles environment and cluster flags
-func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
+func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {//version *version.Version) error {
 	ctxName, err := d.Resolver.ResolveContextFlag(cmd)
 	if err != nil {
 		return err
@@ -43,16 +45,7 @@ func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
 		d.Config.SetOverwrittenCurrContext(d.Config.CurrentContext)
 		d.Config.CurrentContext = ctxName
 	}
-	//called to initiate DynamicContext so that flags are parsed into context
-	ctx, err := d.Context(cmd)
-	if err != nil {
-		return err
-	}
-	if ctx == nil {
-		return nil
-	}
-	err = ctx.ParseFlagsIntoContext(cmd)
-	return err
+	return nil
 }
 
 func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {

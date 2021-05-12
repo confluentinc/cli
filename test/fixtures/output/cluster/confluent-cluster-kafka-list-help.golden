@@ -1,0 +1,12 @@
+List Kafka clusters that are registered with the MDS cluster registry.
+
+Usage:
+  confluent kafka cluster list [flags]
+
+Flags:
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string   CLI Context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

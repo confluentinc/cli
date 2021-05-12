@@ -8,7 +8,7 @@ import (
 	context "context"
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go"
+	github_com_confluentinc_ccloud_sdk_go "github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 // MockCCloudClientFactory is a mock of CCloudClientFactory interface

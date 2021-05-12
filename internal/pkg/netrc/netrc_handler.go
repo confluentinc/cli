@@ -10,16 +10,17 @@ import (
 	"strings"
 
 	"github.com/atrox/homedir"
-	gonetrc "github.com/csreesan/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	gonetrc "github.com/confluentinc/go-netrc/netrc"
 )
 
 const (
 	// For integration test
 	NetrcIntegrationTestFile = "/tmp/netrc_test"
 
-	netrcCredentialStringFormat  = "confluent-cli:%s:%s"
+	netrcCredentialsPrefix       = "confluent-cli"
+	netrcCredentialStringFormat  = netrcCredentialsPrefix + ":%s:%s"
 	mdsUsernamePasswordString    = "mds-username-password"
 	ccloudUsernamePasswordString = "ccloud-username-password"
 	ccloudSSORefreshTokenString  = "ccloud-sso-refresh-token"

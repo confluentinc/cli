@@ -53,10 +53,6 @@ func (c *command) init(cliName string) {
 				Text: "Describe required connector configuration parameters for a specific connector plugin.",
 				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name>", cliName),
 			},
-			examples.Example{
-				Text: "With the ``--sample-file`` flag, create a sample connector configuration file.",
-				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name> --sample-file <filename>", cliName),
-			},
 		),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -158,9 +154,6 @@ func (c *command) Cmd() *cobra.Command {
 
 func (c *command) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	if !pcmd.CanCompleteCommand(c.Command) {
-		return suggestions
-	}
 	catalog, err := c.getCatalog(c.Command)
 	if err != nil {
 		return suggestions

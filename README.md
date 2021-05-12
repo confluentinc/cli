@@ -2,7 +2,6 @@
 
 [![Build Status](https://dev.azure.com/confluentinc/cli/_apis/build/status/confluentinc.cli?branchName=master)](https://dev.azure.com/confluentinc/cli/_build/latest?definitionId=1&branchName=master)
 ![Release](release.svg)
-[![codecov](https://codecov.io/gh/confluentinc/cli/branch/master/graph/badge.svg?token=67t1cdciLU)](https://codecov.io/gh/confluentinc/cli)
 
 This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Confluent "*Converged CLI*" efforts.
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
@@ -117,14 +116,19 @@ $ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
 $ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
 ```
 
+If `make deps` fails with an "unknown revision" error, you probably need to put your username and a
+[github personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
+in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/1072829). The access token needs to be
+[authorized](https://docs.github.com/en/github/authenticating-to-github/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on) for SSO.
+
 ## Developing
 
-This repo requires golang 1.14.7. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.16.3.  We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.14.7 already. If your `goenv` does not list this as an option,
+Fortunately `goenv` supports 1.16.3 already. If your `goenv` does not list this as an option,
 you may have to build `goenv`'s `master` branch from source, which you can do with the
 following instructions:
 
@@ -167,22 +171,19 @@ Here's the basic file structure:
 * `cmd/confluent/main.go` - entrypoint for the CLI binary
 * `internal/cmd/command.go` - bootstraps the root `confluent` CLI command
 * `internal/cmd/<command>/<command>.go` - defines each command we support
-* `internal/pkg/sdk/<resource>/<resource>.go` - a thin wrapper around `ccloud-sdk-go` to add logging and typed errors
-   TODO: if we add logging and typed errors to the SDK, we might be able to drop the pkg/sdk stuff entirely.
 
 Things under `internal/cmd` are commands, things under `internal/pkg` are packages to be used by commands.
 
 When you add a new command or resource, assuming its already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
-* `internal/pkg/sdk/<resource>/<resource>.go` (and test)
 
 ### Build Other Platforms
 
 If you have a need to build a binary for a platform that is not the current one, use the following to target a different `.goreleaser-*` file matching the destined platform.
 
-    make build-go GORELEASER_SUFFIX=-linux.yml   # build linux
-    make build-go GORELEASER_SUFFIX=-mac.yml     # build mac
-    make build-go GORELEASER_SUFFIX=-windows.yml # build windows
+    make build GORELEASER_SUFFIX=-linux.yml   # build linux
+    make build GORELEASER_SUFFIX=-mac.yml     # build mac
+    make build GORELEASER_SUFFIX=-windows.yml # build windows
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment
@@ -388,22 +389,30 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 )
 
 type fileCommand struct {
-	*cobra.Command
-	config *v3.Config
+	*pcmd.CLICommand
+	cliName   string
+	prerunner pcmd.PreRunner
+	analytics analytics.Client
 }
 
-func NewFileCommand(config *v3.Config) *cobra.Command {
-	cmd := &fileCommand{
-		Command: &cobra.Command{
+func NewFileCommand(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+	cliCmd := pcmd.NewAnonymousCLICommand(
+		&cobra.Command{
 			Use:   "file",
 			Short: "Manage the config file.",
-		},
-		config: config,
+		}, prerunner)
+	cmd := &fileCommand{
+		cliName:    cliName,
+		CLICommand: cliCmd,
+		prerunner:  prerunner,
+		analytics:  analytics,
 	}
 	cmd.init()
 	return cmd.Command
@@ -424,12 +433,12 @@ func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	filename := c.config.Filename
+	filename := c.CLICommand.Config.Config.Filename
 	if filename == "" {
-		return errors.New(errors.NoConfigFileErrorMsg)
+		return errors.New(errors.EmptyConfigFileErrorMsg)
 	}
 	for i := 0; i < numTimes; i++ {
-		pcmd.Println(cmd, filename)
+		utils.Println(cmd, filename)
 	}
 	return nil
 }
@@ -438,12 +447,8 @@ func (c *fileCommand) show(cmd *cobra.Command, args []string) error {
 #### `New[Command]` Function
 Here, we create the actual Cobra top-level command `file`, specifying the syntax with `Use`, and a short description with `Short`. Then we initialize the command using `init`, a convention used in the CLI codebase. Since the CLI commands often require additional parameters, we use a wrapper around Cobra commands, in this case named `fileCommand`.
 
-For our command, the constructor needs to take a `Config` struct as a parameter. `Config` describes the configuration of the CLI, and is parsed from a file located by default at `~/.ccloud/config.json` for `ccloud` commands, and at `~/.confluent/config.json` for `confluent` commands.
-
-
-
 #### `init` Function
-Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run. Not that all `RunE` function must be intialized using `cmd` package's `NewCLIRunE` function, which handles the common logic for all CLI commands.
+Here, we add the subcommands, in this case just `show`. We specify the usage messages, number of arguments our command needs, and the function that will be executed when our command is run. Note that all `RunE` function must be intialized using `cmd` package's `NewCLIRunE` function, which handles the common logic for all CLI commands.
 #### Main (Work) Function
 This function is named after the verb component of the command, `show`. It does the "heavy" lifting by parsing the `<num-times>` arg, retrieving the filename, and either printing its name to the console, or returning an error if there's no filename set.
 
@@ -451,7 +456,7 @@ This function is named after the verb component of the command, `show`. It does 
 See [error.md](errors.md) for details.
 
 ### Registering the Command
-We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.config))`.
+We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.cliName, c.prerunner, c.analytics))`.
 
 With an entirely new command, we would also need to register it with the base top-level command (`ccloud` and/or `confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
 
@@ -475,13 +480,13 @@ func (s *CLITestSuite) TestFileCommands() {
 		{name: "succeed if showing existing config file", args: "config file show 3", fixture: "file1.golden"},
 	}
 	resetConfiguration(s.T(), "ccloud")
+
 	for _, tt := range tests {
 		if tt.name == "" {
 			tt.name = tt.args
 		}
 		tt.workflow = true
-		kafkaAPIURL := serveKafkaAPI(s.T()).URL
-		s.runCcloudTest(tt, serve(s.T(), kafkaAPIURL).URL)
+		s.runCcloudTest(tt)
 	}
 }
 ```

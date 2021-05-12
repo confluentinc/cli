@@ -3,19 +3,23 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	logger "log"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go"
-	"github.com/confluentinc/ccloud-sdk-go/mock"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -275,21 +279,24 @@ var aclEntries = []struct {
 	},
 }
 
-func TestCreateACLs(t *testing.T) {
+func CreateACLsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "create"}, resource.args...)
 		for _, aclEntry := range aclEntries {
-			cmd := newCmd(expect)
+			cmd := newCmd(expect, enableREST)
 			cmd.SetArgs(append(args, aclEntry.args...))
 
-			go func() {
-				var bindings []*schedv1.ACLBinding
-				for _, entry := range aclEntry.entries {
-					bindings = append(bindings, &schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry})
-				}
-				expect <- bindings
-			}()
+			// TODO: better testing of KafkaREST
+			if !enableREST {
+				go func() {
+					var bindings []*schedv1.ACLBinding
+					for _, entry := range aclEntry.entries {
+						bindings = append(bindings, &schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry})
+					}
+					expect <- bindings
+				}()
+			}
 
 			if err := cmd.Execute(); err != nil {
 				t.Errorf("error: %s", err)
@@ -298,12 +305,20 @@ func TestCreateACLs(t *testing.T) {
 	}
 }
 
-func TestDeleteACLs(t *testing.T) {
-	for i, _ := range resourcePatterns {
+func TestCreateACLs1(t *testing.T) {
+	CreateACLsTest(t, true)
+}
+
+func TestCreateACLs2(t *testing.T) {
+	CreateACLsTest(t, false)
+}
+
+func DeleteACLsTest(t *testing.T, enableREST bool) {
+	for i := range resourcePatterns {
 		args := append([]string{"acl", "delete"}, resourcePatterns[i].args...)
-		for j, _ := range aclEntries {
+		for j := range aclEntries {
 			expect := make(chan interface{})
-			cmd := newCmd(expect)
+			cmd := newCmd(expect, enableREST)
 			cmd.SetArgs(append(args, aclEntries[j].args...))
 
 			var filters []*schedv1.ACLFilter
@@ -322,15 +337,26 @@ func TestDeleteACLs(t *testing.T) {
 	}
 }
 
-func TestListResourceACL(t *testing.T) {
+func TestDeleteACLs1(t *testing.T) {
+	DeleteACLsTest(t, true)
+}
+
+func TestDeleteACLs2(t *testing.T) {
+	DeleteACLsTest(t, false)
+}
+
+func ListResourceACLTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"acl", "list"}, resource.args...))
 
-		go func() {
-			expect <- convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: &schedv1.AccessControlEntryConfig{}})
-		}()
+		// TODO: better testing of KafkaREST
+		if !enableREST {
+			go func() {
+				expect <- convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: &schedv1.AccessControlEntryConfig{}})
+			}()
+		}
 
 		if err := cmd.Execute(); err != nil {
 			t.Errorf("error: %s", err)
@@ -338,14 +364,22 @@ func TestListResourceACL(t *testing.T) {
 	}
 }
 
-func TestListPrincipalACL(t *testing.T) {
+func TestListResourceACL1(t *testing.T) {
+	ListResourceACLTest(t, true)
+}
+
+func TestListResourceACL2(t *testing.T) {
+	ListResourceACLTest(t, false)
+}
+
+func ListPrincipalACLTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, aclEntry := range aclEntries {
 		if len(aclEntry.entries) != 1 {
 			continue
 		}
 		entry := aclEntry.entries[0]
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
@@ -358,7 +392,15 @@ func TestListPrincipalACL(t *testing.T) {
 	}
 }
 
-func TestListResourcePrincipalFilterACL(t *testing.T) {
+func TestListPrincipalACL1(t *testing.T) {
+	ListPrincipalACLTest(t, true)
+}
+
+func TestListPrincipalACL2(t *testing.T) {
+	ListPrincipalACLTest(t, false)
+}
+
+func ListResourcePrincipalFilterACLTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, resource := range resourcePatterns {
 		args := append([]string{"acl", "list"}, resource.args...)
@@ -367,12 +409,15 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 				continue
 			}
 			entry := aclEntry.entries[0]
-			cmd := newCmd(expect)
+			cmd := newCmd(expect, enableREST)
 			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
 
-			go func() {
-				expect <- convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry})
-			}()
+			// TODO: better testing of KafkaREST
+			if !enableREST {
+				go func() {
+					expect <- convertToFilter(&schedv1.ACLBinding{Pattern: resource.pattern, Entry: entry})
+				}()
+			}
 
 			if err := cmd.Execute(); err != nil {
 				t.Errorf("error: %s", err)
@@ -381,11 +426,19 @@ func TestListResourcePrincipalFilterACL(t *testing.T) {
 	}
 }
 
-func TestMultipleResourceACL(t *testing.T) {
+func TestListResourcePrincipalFilterACL1(t *testing.T) {
+	ListResourcePrincipalFilterACLTest(t, true)
+}
+
+func TestListResourcePrincipalFilterACL2(t *testing.T) {
+	ListResourcePrincipalFilterACLTest(t, false)
+}
+
+func MultipleResourceACLTest(t *testing.T, enableREST bool) {
 	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
-	cmd := newCmd(nil)
+	cmd := newCmd(nil, enableREST)
 	cmd.SetArgs(args)
 
 	err := cmd.Execute()
@@ -393,6 +446,14 @@ func TestMultipleResourceACL(t *testing.T) {
 	if !strings.Contains(err.Error(), expect) {
 		t.Errorf("expected: %s got: %s", expect, err.Error())
 	}
+}
+
+func TestMultipleResourceACL1(t *testing.T) {
+	MultipleResourceACLTest(t, true)
+}
+
+func TestMultipleResourceACL2(t *testing.T) {
+	MultipleResourceACLTest(t, false)
 }
 
 /*************** TEST command_topic ***************/
@@ -406,10 +467,10 @@ var Topics = []struct {
 	},
 }
 
-func TestListTopics(t *testing.T) {
+func ListTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs([]string{"topic", "list"})
 		go func() {
 			expect <- &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.spec.Name}}
@@ -423,10 +484,18 @@ func TestListTopics(t *testing.T) {
 	}
 }
 
-func TestCreateTopic(t *testing.T) {
+func TestListTopics1(t *testing.T) {
+	ListTopicTest(t, true)
+}
+
+func TestListTopics2(t *testing.T) {
+	ListTopicTest(t, false)
+}
+
+func CreateTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "create"}, topic.args...))
 
 		go func() {
@@ -441,10 +510,18 @@ func TestCreateTopic(t *testing.T) {
 	}
 }
 
-func TestDescribeTopic(t *testing.T) {
+func TestCreateTopic1(t *testing.T) {
+	CreateTopicTest(t, true)
+}
+
+func TestCreateTopic2(t *testing.T) {
+	CreateTopicTest(t, false)
+}
+
+func DescribeTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "describe"}, topic.args[0]))
 
 		go func() {
@@ -459,10 +536,18 @@ func TestDescribeTopic(t *testing.T) {
 	}
 }
 
-func TestDeleteTopic(t *testing.T) {
+func TestDescribeTopic1(t *testing.T) {
+	DescribeTopicTest(t, true)
+}
+
+func TestDescribeTopic2(t *testing.T) {
+	DescribeTopicTest(t, false)
+}
+
+func DeleteTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "delete"}, topic.args[0]))
 
 		go func() {
@@ -477,10 +562,18 @@ func TestDeleteTopic(t *testing.T) {
 	}
 }
 
-func TestUpdateTopic(t *testing.T) {
+func TestDeleteTopic1(t *testing.T) {
+	DeleteTopicTest(t, true)
+}
+
+func TestDeleteTopic2(t *testing.T) {
+	DeleteTopicTest(t, false)
+}
+
+func UpdateTopicTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	for _, topic := range Topics {
-		cmd := newCmd(expect)
+		cmd := newCmd(expect, enableREST)
 		cmd.SetArgs(append([]string{"topic", "update"}, topic.args[0:3]...))
 		go func() {
 			expect <- &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.spec.Name, Configs: topic.spec.Configs}}
@@ -494,9 +587,17 @@ func TestUpdateTopic(t *testing.T) {
 	}
 }
 
-func TestDefaults(t *testing.T) {
+func TestUpdateTopic1(t *testing.T) {
+	UpdateTopicTest(t, true)
+}
+
+func TestUpdateTopic2(t *testing.T) {
+	UpdateTopicTest(t, false)
+}
+
+func DefaultsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
-	cmd := newCmd(expect)
+	cmd := newCmd(expect, enableREST)
 	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
@@ -514,7 +615,7 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("Topic PatternType was not set to default value of PatternTypes_LITERAL")
 	}
 
-	cmd = newCmd(expect)
+	cmd = newCmd(expect, enableREST)
 	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
 		"--operation", "read"})
 
@@ -534,6 +635,14 @@ func TestDefaults(t *testing.T) {
 	}
 }
 
+func TestDefaults1(t *testing.T) {
+	DefaultsTest(t, true)
+}
+
+func TestDefaults2(t *testing.T) {
+	DefaultsTest(t, false)
+}
+
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
@@ -543,7 +652,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf),
+		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs(append([]string{"cluster", "list"}))
 	buf := new(bytes.Buffer)
@@ -560,23 +670,19 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 type testLink struct {
 	name       string
 	source     string
-	alterKey   string
-	alterValue string
 }
 
 var Links = []testLink{
 	{
 		name:       "test_link",
 		source:     "myhost:1234",
-		alterKey:   "retention.ms",
-		alterValue: "1234567890",
 	},
 }
 
 func linkTestHelper(t *testing.T, argmaker func(testLink) []string, expector func(chan interface{}, testLink)) {
 	expect := make(chan interface{})
 	for _, link := range Links {
-		cmd := newCmd(expect)
+		cmd := newRestCmd(expect)
 		cmd.SetArgs(argmaker(link))
 
 		go expector(expect, link)
@@ -618,7 +724,12 @@ func TestDescribeLink(t *testing.T) {
 			return []string{"link", "describe", link.name}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
+			expect <- cliMock.DescribeLinkMatcher{
+				LinkName: link.name,
+			}
+			expect <- cliMock.DescribeLinkMatcher{
+				LinkName:    link.name,
+			}
 		},
 	)
 }
@@ -630,44 +741,387 @@ func TestDeleteLink(t *testing.T) {
 			return []string{"link", "delete", link.name}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
+			expect <- cliMock.DeleteLinkMatcher{
+				LinkName: link.name,
+			}
 		},
 	)
 }
 
-func TestAlterLink(t *testing.T) {
+func configMapWithJsonConfigValues() map[string]string {
+	type child struct {
+		Name        string `json:"name"`
+		PatternType string `json:"patternType"`
+		FilterType  string `json:"filterType"`
+	}
+
+	type aJson struct {
+		Children []child `json:"children"`
+	}
+
+	jsonConfig, _ := json.Marshal(aJson{
+		Children: []child{
+			{
+				Name:        "*",
+				PatternType: "LITERAL",
+				FilterType:  "INCLUDE",
+			},
+			{
+				Name:        "*",
+				PatternType: "LITERAL",
+				FilterType:  "INCLUDE",
+			},
+		},
+	})
+
+	println(string(jsonConfig))
+
+	return map[string]string{
+		"key1":"val1",
+		"key2":"val2",
+		"key3":string(jsonConfig),
+	}
+}
+
+func TestBatchAlterLink(t *testing.T) {
+	const configFileName = "link-config.in"
+	configs := configMapWithJsonConfigValues()
+	dir, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		logger.Fatal("Cannot create the test config file")
+	}
+
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "update", link.name, "--config", fmt.Sprintf("%s=%s", link.alterKey, link.alterValue)}
+			return []string{"link", "update", link.name, "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- link.name
-			expect <- &linkv1.LinkProperties{Properties: map[string]string{link.alterKey: link.alterValue}}
+			expect <- cliMock.BatchUpdateLinkConfigMatcher{
+				LinkName: link.name,
+				Configs: configs,
+			}
 		},
 	)
+
+	defer os.Remove(dir + "/" + configFileName)
 }
 
 func TestCreateLink(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"link", "create", link.name, "--source_cluster", link.source}
+			return []string{"link", "create", link.name, "--source-bootstrap-server", link.source, "--source-cluster-id", "id1"}
 		},
 		func(expect chan interface{}, link testLink) {
-			expect <- &linkv1.ClusterLink{
-				LinkName: link.name,
-				Configs: map[string]string{
-					"bootstrap.servers": link.source,
+			expect <- cliMock.CreateLinkMatcher{
+				LinkName:        link.name,
+				ValidateLink:    true,
+				ValidateOnly:    false,
+				SourceClusterId: "id1",
+				Configs:          map[string]string{"bootstrap.servers": link.source},
+			}
+		})
+}
+
+func TestCreateMirror(t *testing.T) {
+	const configFileName = "mirror-topic-config.in"
+	configs := configMapWithJsonConfigValues()
+	dir, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		logger.Fatal("Cannot create the test config file")
+	}
+
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2",  "--config-file", configFileName}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.CreateMirrorMatcher{
+				LinkName:        "link-1",
+				SourceTopicName: "src-topic-1",
+				Configs:          configs,
+			}
+		},
+	)
+	defer os.Remove(dir + "/" + configFileName)
+}
+
+func TestListAllMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "list", "--mirror-status", "active"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListMirrorMatcher{
+				Status: "active",
+			}
+		},
+	)
+}
+
+func TestListMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "list", "--link-name", "link-1", "--mirror-status", "active"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.ListMirrorMatcher{
+				LinkName:    "link-1",
+				Status: "active",
+			}
+		},
+	)
+}
+
+func TestDescribeMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "describe", "dest-topic-1", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.DescribeMirrorMatcher{
+				LinkName:             "link-1",
+				MirrorTopicName: "dest-topic-1",
+			}
+		})
+}
+
+func TestPromoteMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "promote", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
 				},
 			}
 		})
 }
 
+func TestFailoverMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "failover", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
+}
+
+func TestPauseMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "pause", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
+}
+
+func TestResumeMirror(t *testing.T) {
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "resume", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.AlterMirrorMatcher{
+				LinkName:              "link-1",
+				MirrorTopicNames: map[string]bool{
+					"dest-topic-1" : true,
+					"dest-topic-2" : true,
+					"dest-topic-3" : true,
+				},
+			}
+		})
+}
+
+/*************** TEST command_consumer-group_cloud ***************/
+type testConsumerGroup struct {
+	groupId string
+}
+
+var ConsumerGroups = []testConsumerGroup{
+	{
+		groupId: "consumer-group-1",
+	},
+}
+
+func TestListGroups(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	args := []string{"consumer-group", "list"}
+	cmd.SetArgs(args)
+
+	CheckIfCmdErrors(t, cmd, args, false)
+
+	for _, args := range [][]string{
+		{"consumer-group", "list", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestDescribeGroup(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "describe", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "describe"},
+		{"consumer-group", "describe", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestSummarizeLag(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "lag", "summarize", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "summarize"},
+		{"consumer-group", "lag", "summarize", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+func TestListLag(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+	for _, consumerGroup := range ConsumerGroups {
+		args := []string{"consumer-group", "lag", "list", consumerGroup.groupId}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.GroupMatcher{
+				ConsumerGroupId: consumerGroup.groupId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "list"},
+		{"consumer-group", "lag", "list", "consumer-group-1", "egg"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+type testPartitionLag struct {
+	consumerGroupId string
+	topicName       string
+	partitionId     int32
+}
+
+var PartitionLags = []testPartitionLag{
+	{
+		consumerGroupId: "consumer-group-1",
+		topicName:       "topic-1",
+		partitionId:     1,
+	},
+}
+
+func TestGetLag(t *testing.T) {
+	expect := make(chan interface{})
+	cmd := newRestCmd(expect)
+
+	// testing that properly formatted commands don't return errors
+	for _, lag := range PartitionLags {
+		args := []string{"consumer-group", "lag", "get", lag.consumerGroupId, "--topic", lag.topicName, "--partition", strconv.Itoa(int(lag.partitionId))}
+		cmd.SetArgs(args)
+		go func() {
+			expect <- cliMock.PartitionLagMatcher{
+				ConsumerGroupId: lag.consumerGroupId,
+				TopicName:       lag.topicName,
+				PartitionId:     lag.partitionId,
+			}
+		}()
+		CheckIfCmdErrors(t, cmd, args, false)
+	}
+
+	// testing that improperly formatted commands return errors
+	for _, args := range [][]string{
+		{"consumer-group", "lag", "get"},
+		{"consumer-group", "lag", "get", "consumer-group-1", "egg"},
+		{"consumer-group", "lag", "get", "consumer-group-1", "consumer-group-1", "--topic", "topic-1"},
+	} {
+		cmd.SetArgs(args)
+		CheckIfCmdErrors(t, cmd, args, true)
+	}
+}
+
+// Executes cmd, checks if there was an error. Test will fail if there was an error but expectErr was false,
+// or expectErr was true but no error was returned.
+func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr bool) {
+	err := cmd.Execute()
+	var errMsg string
+	if expectErr == true && err == nil {
+		errMsg = "expected error from executing " + strings.Join(args, " ") + " but received none"
+	} else if expectErr == false && err != nil {
+		errMsg = "error: " + err.Error()
+	}
+	if errMsg != "" {
+		t.Errorf(errMsg)
+		t.Fail()
+	}
+}
+
 /*************** TEST setup/helpers ***************/
-func newCmd(expect chan interface{}) *cobra.Command {
+func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
-		Kafka: cliMock.NewKafkaMock(expect),
+		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
@@ -678,10 +1132,34 @@ func newCmd(expect chan interface{}) *cobra.Command {
 			},
 		},
 	}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, conf), log.New(), "test-client", &cliMock.ServerSideCompleter{})
+	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
+		if enableREST {
+			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
+			restMock.ACLApi = cliMock.NewACLMock()
+			restMock.TopicApi = cliMock.NewTopicMock()
+			restMock.PartitionApi = cliMock.NewPartitionMock(kafkaRestExpect)
+			restMock.ReplicaApi = cliMock.NewReplicaMock()
+			restMock.ConfigsApi = cliMock.NewConfigsMock()
+			restMock.ClusterLinkingApi = cliMock.NewClusterLinkingMock(kafkaRestExpect)
+			restMock.ConsumerGroupApi = cliMock.NewConsumerGroupMock(kafkaRestExpect)
+			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
+			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
+			return kafkaREST, nil
+		}
+		return nil, nil
+	})
+	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
+		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-
 	return cmd
+}
+
+func newCmd(kafkaExpect chan interface{}, enableREST bool) *cobra.Command {
+	return newMockCmd(kafkaExpect, make(chan interface{}), enableREST)
+}
+
+func newRestCmd(restExpect chan interface{}) *cobra.Command {
+	return newMockCmd(make(chan interface{}), restExpect, true)
 }
 
 func init() {
