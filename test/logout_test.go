@@ -15,12 +15,13 @@ import (
 )
 
 var (
-	RemovedFromNetrcOutput = "Removed credentials for user \"login-cli-mock-email@confluent.io\" from netrc file \"/tmp/netrc_test\""
+	RemovedFromNetrcOutput = "Removed credentials for user \"good@user.com\" from netrc file \"/tmp/netrc_test\""
 	loggedOutOutput        = fmt.Sprintf(errors.LoggedOutMsg)
 )
 
 func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	type saveTest struct {
+		input    string
 		cliName  string
 		want     string
 		loginURL string
@@ -30,56 +31,54 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	defer cloudBackend.Close()
 	mdsServer := serveMDSBackend(s.T())
 	defer mdsServer.Close()
+	_, callerFileName, _, ok := runtime.Caller(0)
+	if !ok {
+		s.T().Fatalf("problems recovering caller information")
+	}
 	tests := []saveTest{
 		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud"),
 			"ccloud",
-			"netrc-remove-ccloud-username-password.golden",
+			"netrc-remove-username-password.golden",
 			cloudBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds"),
 			"confluent",
 			"netrc-remove-username-password.golden",
 			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
-	_, callerFileName, _, ok := runtime.Caller(0)
-	if !ok {
-		s.T().Fatalf("problems recovering caller information")
-	}
-	var netrcInput string
 	for _, tt := range tests {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
 		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=cli-mock-email@confluent.io", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
-			netrcInput = filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud")
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
 		} else {
-			env = []string{fmt.Sprintf("%s=cli-mock-email@confluent.io", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
-			netrcInput = filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds")
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
-		originalNetrc, err := ioutil.ReadFile(netrcInput)
+		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
+		original := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
+		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(original), 0600)
 		s.NoError(err)
 
-		// run logout command and check output
+		// run login to provide context, then logout command and check output
+		runCommand(s.T(), tt.bin, env, "login --url "+tt.loginURL, 0)
 		output := runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
-		fmt.Println("output of logout is: ", output)
 		s.Contains(output, loggedOutOutput)
 		s.Contains(output, RemovedFromNetrcOutput)
 
 		// check netrc file doesn't contain credentials
 		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
-		fmt.Println("got is: ", string(got))
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
 		wantBytes, err := ioutil.ReadFile(wantFile)
 		s.NoError(err)
-		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		s.Equal(utils.NormalizeNewLines(string(wantBytes)), utils.NormalizeNewLines(string(got)))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
