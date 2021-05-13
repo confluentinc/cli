@@ -61,6 +61,7 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())
 			}
 		} else if equal := strings.Index(err.Error(), "login credentials not found"); equal <= -1 {
+			// return err when other than NetrcCredentialsNotFoundErrorMsg
 			return err
 		}
 	}

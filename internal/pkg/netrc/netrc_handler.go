@@ -103,11 +103,13 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) (string, error) {
 	filename, err := homedir.Expand(n.FileName)
 	if err != nil {
+		fmt.Println("Here--------------------------------------")
 		return "", errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
 	}
 
 	netrcFile, err := getNetrc(filename)
 	if err != nil {
+		fmt.Println("There--------------------------------------")
 		return "", err
 	}
 	machineName1 := getNetrcMachineName(cliName, true, ctxName)
@@ -116,8 +118,12 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 	machineName2 := getNetrcMachineName(cliName, false, ctxName)
 	machine2 := netrcFile.FindMachine(machineName2)
 
+	fmt.Println("Machine Names:")
+	fmt.Println(machineName1)
+	fmt.Println(machineName2)
 	var user string
 	if machine1 == nil && machine2 == nil {
+		fmt.Println("machine not found!")
 		err = errors.New(errors.NetrcCredentialsNotFoundErrorMsg)
 		return "", err
 	} else {

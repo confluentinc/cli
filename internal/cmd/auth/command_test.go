@@ -509,9 +509,7 @@ func TestLogout(t *testing.T) {
 	req.Contains(output, errors.LoggedOutMsg)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
 	if err != nil {
-		req.NotContains(err.Error(), "cannot expand user-specific home dir")
-	} else {
-		req.NoError(err)
+		req.Contains(err.Error(), errors.NetrcCredentialsNotFoundErrorMsg)
 	}
 	req.Equal(exist, false)
 	verifyLoggedOutState(t, cfg, contextName)
