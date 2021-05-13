@@ -133,6 +133,7 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	req := require.New(suite.T())
 	root := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	root.analyticsClient.SetStartTime()
 	kafkaMock := &ccsdkmock.Kafka{
 		CreateFunc: func(ctx context.Context, config *v1.KafkaClusterConfig) (*v1.KafkaCluster, error) {
 			return &v1.KafkaCluster{
@@ -203,6 +204,22 @@ Identity:
 
 
 Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 5 minutes for the Kafka cluster to be ready.
++--------------+---------------+
+| Id           | lkc-xyz       |
+| Name         | gcp-byok-test |
+| Type         | DEDICATED     |
+| Ingress      |             0 |
+| Egress       |             0 |
+| Storage      |             0 |
+| Provider     | gcp           |
+| Availability | single-zone   |
+| Region       | us-central1   |
+| Status       | PROVISIONING  |
+| Endpoint     |               |
+| ApiEndpoint  |               |
+| RestEndpoint |               |
+| ClusterSize  |             0 |
++--------------+---------------+
 `)
 	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
 	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)
