@@ -3,15 +3,17 @@ package kafka
 import (
 	"bufio"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	logger "log"
 	_nethttp "net/http"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func copyMap(inputMap map[string]string) map[string]string {
@@ -71,8 +73,6 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.A
 	return kafkaRestConfigs
 }
 
-
-
 func readConfigsFromFile(configFile string) (map[string]string, error) {
 	if configFile == "" {
 		return map[string]string{}, nil
@@ -105,8 +105,8 @@ func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Comm
 }
 
 func createTestConfigFile(name string, configs map[string]string) (string, error) {
-	dir,_ := os.Getwd()
-	logger.Println("Test config file dir:",dir)
+	dir, _ := os.Getwd()
+	logger.Println("Test config file dir:", dir)
 	file, err := os.OpenFile(name, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
 	if err != nil {
 		return dir, err
@@ -132,7 +132,7 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, kafkaREST *pcmd.
 		return nil
 	}
 
-	if httpResp != nil{
+	if httpResp != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 

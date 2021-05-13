@@ -3,10 +3,11 @@ package cmd_test
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"os"
 	"testing"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ var (
 	flagCluster      = "lkc-0001"
 	flagClusterInEnv = "lkc-0002"
 	badFlagEnv       = "bad-env"
-	apiEnvironment	 = "env-from-api-call"
+	apiEnvironment   = "env-from-api-call"
 )
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {

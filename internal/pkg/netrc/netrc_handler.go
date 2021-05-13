@@ -11,8 +11,9 @@ import (
 
 	"github.com/atrox/homedir"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const (

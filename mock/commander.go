@@ -42,7 +42,7 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, kafkaREST
 	}
 }
 
-func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) pcmd.PreRunner {
+func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) *Commander {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,

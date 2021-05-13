@@ -44,11 +44,11 @@ const (
 	UnsupportedShellErrorMsg = "unsupported shell type \"%s\""
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	PluginNameNotPassedErrorMsg         = "plugin name must be passed"
-	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
-	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
+	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	PluginNameNotPassedErrorMsg        = "plugin name must be passed"
+	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
+	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -96,8 +96,10 @@ const (
 	ListTopicSuggestions                 = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
 	FailedToRenderKeyPolicyErrorMsg      = "BYOK error: failed to render key policy"
 	FailedToReadConfirmationErrorMsg     = "BYOK error: failed to read your confirmation"
-	AuthorizeAccountsErrorMsg            = "BYOK error: please authorize the accounts (%s) for the key"
+	AuthorizeAccountsErrorMsg            = "BYOK error: please authorize the key for the accounts (%s)x"
+	AuthorizeIdentityErrorMsg            = "BYOK error: please authorize the key for the identity (%s)"
 	CKUOnlyForDedicatedErrorMsg          = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	BYOKSupportErrorMsg                  = "BYOK is available on AWS and GCP."
 	CKUMoreThanZeroErrorMsg              = "`--cku` value must be greater than 0"
 	CloudRegionNotAvailableErrorMsg      = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions   = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
@@ -116,7 +118,7 @@ const (
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg             = "configuration must be in the form of key=value"
+	ConfigurationFormErrorMsg            = "configuration must be in the form of key=value"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
@@ -130,7 +132,7 @@ const (
 		"If your topic is compacted, ensure you are producing a record with a key."
 
 	// Cluster Link commands
-	EmptyConfigErrorMsg           = "Config file name is empty or config file is empty."
+	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"

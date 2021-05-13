@@ -668,14 +668,14 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 
 /*************** TEST command_links ***************/
 type testLink struct {
-	name       string
-	source     string
+	name   string
+	source string
 }
 
 var Links = []testLink{
 	{
-		name:       "test_link",
-		source:     "myhost:1234",
+		name:   "test_link",
+		source: "myhost:1234",
 	},
 }
 
@@ -728,7 +728,7 @@ func TestDescribeLink(t *testing.T) {
 				LinkName: link.name,
 			}
 			expect <- cliMock.DescribeLinkMatcher{
-				LinkName:    link.name,
+				LinkName: link.name,
 			}
 		},
 	)
@@ -777,9 +777,9 @@ func configMapWithJsonConfigValues() map[string]string {
 	println(string(jsonConfig))
 
 	return map[string]string{
-		"key1":"val1",
-		"key2":"val2",
-		"key3":string(jsonConfig),
+		"key1": "val1",
+		"key2": "val2",
+		"key3": string(jsonConfig),
 	}
 }
 
@@ -799,7 +799,7 @@ func TestBatchAlterLink(t *testing.T) {
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.BatchUpdateLinkConfigMatcher{
 				LinkName: link.name,
-				Configs: configs,
+				Configs:  configs,
 			}
 		},
 	)
@@ -819,7 +819,7 @@ func TestCreateLink(t *testing.T) {
 				ValidateLink:    true,
 				ValidateOnly:    false,
 				SourceClusterId: "id1",
-				Configs:          map[string]string{"bootstrap.servers": link.source},
+				Configs:         map[string]string{"bootstrap.servers": link.source},
 			}
 		})
 }
@@ -835,13 +835,13 @@ func TestCreateMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2",  "--config-file", configFileName}
+			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2", "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.CreateMirrorMatcher{
 				LinkName:        "link-1",
 				SourceTopicName: "src-topic-1",
-				Configs:          configs,
+				Configs:         configs,
 			}
 		},
 	)
@@ -870,8 +870,8 @@ func TestListMirror(t *testing.T) {
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.ListMirrorMatcher{
-				LinkName:    "link-1",
-				Status: "active",
+				LinkName: "link-1",
+				Status:   "active",
 			}
 		},
 	)
@@ -885,7 +885,7 @@ func TestDescribeMirror(t *testing.T) {
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.DescribeMirrorMatcher{
-				LinkName:             "link-1",
+				LinkName:        "link-1",
 				MirrorTopicName: "dest-topic-1",
 			}
 		})
@@ -899,11 +899,11 @@ func TestPromoteMirror(t *testing.T) {
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
-				LinkName:              "link-1",
+				LinkName: "link-1",
 				MirrorTopicNames: map[string]bool{
-					"dest-topic-1" : true,
-					"dest-topic-2" : true,
-					"dest-topic-3" : true,
+					"dest-topic-1": true,
+					"dest-topic-2": true,
+					"dest-topic-3": true,
 				},
 			}
 		})
@@ -917,11 +917,11 @@ func TestFailoverMirror(t *testing.T) {
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
-				LinkName:              "link-1",
+				LinkName: "link-1",
 				MirrorTopicNames: map[string]bool{
-					"dest-topic-1" : true,
-					"dest-topic-2" : true,
-					"dest-topic-3" : true,
+					"dest-topic-1": true,
+					"dest-topic-2": true,
+					"dest-topic-3": true,
 				},
 			}
 		})
@@ -935,11 +935,11 @@ func TestPauseMirror(t *testing.T) {
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
-				LinkName:              "link-1",
+				LinkName: "link-1",
 				MirrorTopicNames: map[string]bool{
-					"dest-topic-1" : true,
-					"dest-topic-2" : true,
-					"dest-topic-3" : true,
+					"dest-topic-1": true,
+					"dest-topic-2": true,
+					"dest-topic-3": true,
 				},
 			}
 		})
@@ -953,11 +953,11 @@ func TestResumeMirror(t *testing.T) {
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
-				LinkName:              "link-1",
+				LinkName: "link-1",
 				MirrorTopicNames: map[string]bool{
-					"dest-topic-1" : true,
-					"dest-topic-2" : true,
-					"dest-topic-3" : true,
+					"dest-topic-1": true,
+					"dest-topic-2": true,
+					"dest-topic-3": true,
 				},
 			}
 		})

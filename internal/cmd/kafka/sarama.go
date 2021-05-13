@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io"
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -40,7 +41,7 @@ func NewSaramaProducer(kafka *v1.KafkaClusterConfig, clientID string) (sarama.Sy
 }
 
 // NewSaramaClient returns a sarama.Client configured for the CLI config
-func NewSaramaClient(kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error){
+func NewSaramaClient(kafka *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
 	conf, err := saramaConf(kafka, clientID, beginning)
 	if err != nil {
 		return nil, err
