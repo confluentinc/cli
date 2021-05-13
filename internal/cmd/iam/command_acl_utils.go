@@ -31,7 +31,6 @@ func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
 func addACLFlags() *pflag.FlagSet {
 	// An error is only returned if the flag name is not present.
-	// We know the flag name is present so its safe to ignore this.
 	flgSet := aclFlags()
 	_ = cobra.MarkFlagRequired(flgSet, "principal")
 	_ = cobra.MarkFlagRequired(flgSet, "operation")
