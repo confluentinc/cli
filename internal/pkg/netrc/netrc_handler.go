@@ -143,28 +143,27 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
-	var buf []byte
+	var stringBuf []string
 	lines := strings.Split(string(netrcBytes), "\n")
 	count := 3 // to remove 3 lines of credentials
 	length := len(lines)
-	if equal := strings.Index(lines[0], machineName); equal > -1 {
-		count = 0
-	}
 	for i := 0; i < length; i++ {
-		line := lines[i]
-		if i < length-1 {
-			nextLine := lines[i+1]
-			if equal := strings.Index(nextLine, machineName); equal > -1 {
-				count = -1 // remove one extra empty line if the credentials are not at the top of the netrc file
-			}
+		if strings.Contains(lines[i], machineName) {
+			count = 0
 		}
-		if count >= 3 {
-			buf = append(buf, line...)
+		if count >= 3 && lines[i] != "" {
+			stringBuf = append(stringBuf, lines[i])
 			if i < length-1 {
-				buf = append(buf, []byte("\n")...)
+				stringBuf = append(stringBuf, "\n")
 			}
 		}
 		count += 1
+	}
+
+	var buf []byte
+	fmt.Println(len(stringBuf))
+	for j := 0; j < len(stringBuf); j++ {
+		buf = append(buf, stringBuf[j]...)
 	}
 	err = ioutil.WriteFile(filename, buf, 0600)
 	if err != nil {

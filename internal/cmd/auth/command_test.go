@@ -515,6 +515,57 @@ func TestLogout(t *testing.T) {
 	verifyLoggedOutState(t, cfg, contextName)
 }
 
+func TestRemoveNetrcCredentials(t *testing.T) {
+	req := require.New(t)
+	clearCCloudDeprecatedEnvVar(req)
+	cfg := v3.AuthenticatedCloudConfigMock()
+	contextName := cfg.Context().Name
+	logoutCmd, cfg := newLogoutCmd("ccloud", cfg, mockNetrcHandler)
+	// run login command
+	auth := &sdkMock.Auth{
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+			return &orgv1.GetUserReply{
+				User: &orgv1.User{
+					Id:        23,
+					Email:     promptUser,
+					FirstName: "Cody",
+				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: promptUser,
+			}, nil
+		},
+	}
+	suite := []struct {
+		cliName string
+		args    []string
+		setEnv  bool
+	}{
+		{
+			cliName: "ccloud",
+			args:    []string{},
+		},
+	}
+	loginCmd, cfg := newLoginCmd(auth, user, suite[0].cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	_, err := pcmd.ExecuteCommand(loginCmd.Command, suite[0].args...)
+	req.NoError(err)
+
+	logoutCmd.netrcHandler.RemoveNetrcCredentials(logoutCmd.cliName, contextName)
+	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
+	if err != nil {
+		req.Contains(err.Error(), errors.NetrcCredentialsNotFoundErrorMsg)
+	}
+	req.Equal(exist, false)
+}
+
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
 	tests := []struct {

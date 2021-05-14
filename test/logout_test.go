@@ -27,10 +27,8 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		loginURL string
 		bin      string
 	}
-	cloudBackend := serveCloudBackend(s.T())
-	defer cloudBackend.Close()
-	mdsServer := serveMDSBackend(s.T())
-	defer mdsServer.Close()
+	cloudUrl := s.TestBackend.GetCloudUrl()
+	mdsUrl := s.TestBackend.GetMdsUrl()
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
@@ -40,14 +38,14 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud"),
 			"ccloud",
 			"netrc-remove-username-password.golden",
-			cloudBackend.GetCloudUrl(),
+			cloudUrl,
 			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds"),
 			"confluent",
 			"netrc-remove-username-password.golden",
-			mdsServer.GetMdsUrl(),
+			mdsUrl,
 			confluentTestBin,
 		},
 	}
