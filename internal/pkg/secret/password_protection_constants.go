@@ -18,7 +18,7 @@ const (
 	MetadataKeyIterations         = "_metadata.symmetric_key.0.iterations"
 	MetadataDataKey               = "_metadata.symmetric_key.0.enc"
 	MetadataKeyDefaultLengthBytes = 32
-	MetadataKeyDefaultIterations  = 1000
+	MetadataKeyDefaultIterations  = 10000
 	MetadataPrefix                = "_metadata"
 )
 
