@@ -3,7 +3,6 @@ package service_account
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/c-bata/go-prompt"
 
@@ -106,14 +105,14 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <id>",
+		Use:   "update <ResourceId>",
 		Short: "Update a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of a service account with the ID ``2786``",
-				Code: `ccloud service-account update 2786 --description "Update demo service account information."`,
+				Text: "Update the description of a service account with the ResourceId ``sa-lqv3mm``",
+				Code: `ccloud service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
 	}
@@ -123,14 +122,14 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <id>",
+		Use:   "delete <ResouceId>",
 		Short: "Delete a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete a service account with the ID ``2786``",
-				Code: "ccloud service-account delete 2786",
+				Text: "Delete a service account with the ResourceId ``sa-lqv3mm``",
+				Code: "ccloud service-account delete sa-lqv3mm",
 			},
 		),
 	}
@@ -172,16 +171,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.ResourceId)
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	idp, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	id := int32(idp)
+	resourceId := args[0]
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
@@ -193,7 +188,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	user := &orgv1.User{
-		Id:                 id,
+		ResourceId:         resourceId,
 		ServiceDescription: description,
 	}
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
@@ -205,20 +200,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	idp, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	id := int32(idp)
+	resourceId := args[0]
 
 	user := &orgv1.User{
-		Id: id,
+		ResourceId: resourceId,
 	}
-	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
+	err := c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.ResourceId)
 	return nil
 }
 
