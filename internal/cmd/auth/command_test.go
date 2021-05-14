@@ -558,7 +558,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	_, err := pcmd.ExecuteCommand(loginCmd.Command, suite[0].args...)
 	req.NoError(err)
 
-	logoutCmd.netrcHandler.RemoveNetrcCredentials(logoutCmd.cliName, contextName)
+	_, err = logoutCmd.netrcHandler.RemoveNetrcCredentials(logoutCmd.cliName, contextName)
+	req.NoError(err)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
 	if err != nil {
 		req.Contains(err.Error(), errors.NetrcCredentialsNotFoundErrorMsg)
