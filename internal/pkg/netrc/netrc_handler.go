@@ -151,7 +151,7 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		if strings.Contains(lines[i], machineName) {
 			count = 0
 		}
-		if count >= 3 && lines[i] != "" {
+		if count >= 3 {
 			stringBuf = append(stringBuf, lines[i])
 			if i < length-1 {
 				stringBuf = append(stringBuf, "\n")
@@ -159,12 +159,12 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		}
 		count += 1
 	}
-
-	var buf []byte
-	fmt.Println(len(stringBuf))
-	for j := 0; j < len(stringBuf); j++ {
-		buf = append(buf, stringBuf[j]...)
+	if stringBuf[len(stringBuf)-1] == "\n" { // remove the last newline
+		stringBuf = stringBuf[0 : len(stringBuf)-2]
 	}
+	joinedString := strings.Join(stringBuf[:], "")
+	joinedString = strings.Replace(joinedString, "\n\n", "\n", -1) // remove duplicate newlines
+	buf := []byte(joinedString)
 	err = ioutil.WriteFile(filename, buf, 0600)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
