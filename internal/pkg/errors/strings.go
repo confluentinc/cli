@@ -74,9 +74,10 @@ const (
 	CreatedMirrorMsg         = "Created mirror topic \"%s\".\n"
 
 	// kafka acl commands
-	DeletedACLsMsg      = "Deleted ACLs.\n"
-	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
-	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
+	InvalidServiceAccountMsg = "Invalid service account ID \"%s\".\n"
+	DeletedACLsMsg           = "Deleted ACLs.\n"
+	DeletedACLsCountMsg      = "Deleted %d ACLs.\n"
+	ACLsNotFoundMsg          = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."

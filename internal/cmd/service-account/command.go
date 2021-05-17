@@ -3,6 +3,7 @@ package service_account
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/c-bata/go-prompt"
 
@@ -176,8 +177,13 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	resourceId := args[0]
+	_, err := strconv.Atoi(args[0])
+	if err == nil {
+		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, args[0])
+		return nil
+	}
 
+	resourceId := args[0]
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -200,12 +206,17 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	resourceId := args[0]
+	_, err := strconv.Atoi(args[0])
+	if err == nil {
+		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, args[0])
+		return nil
+	}
 
+	resourceId := args[0]
 	user := &orgv1.User{
 		ResourceId: resourceId,
 	}
-	err := c.Client.User.DeleteServiceAccount(context.Background(), user)
+	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return err
 	}
