@@ -22,6 +22,15 @@ type aclOnPremCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
+type enumUtils map[string]interface{}
+
+func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
+	for _, enum := range enums {
+		enumUtils[fmt.Sprintf("%v", enum)] = enum
+	}
+	return enumUtils
+}
+
 func NewAclCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	aclCmd := &aclOnPremCommand{
 		pcmd.NewAuthenticatedStateFlagCommand(
@@ -42,7 +51,7 @@ func (aclCmd *aclOnPremCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(aclCmd.create),
 		Example: examples.BuildExampleString(
-			examples.Example{
+			examples.Example{ // TODO change this
 				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
 				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
 			}),
@@ -148,6 +157,7 @@ func (aclCmd *aclOnPremCommand) list(cmd *cobra.Command, _ []string) error {
 
 func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
 	acl := parseCreatAclRequest(cmd)
+	acl = validateCreateAclRequestData(acl)
 	if acl.errors != nil {
 		return acl.errors
 	}
@@ -155,7 +165,6 @@ func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	acl = validateCreateAclRequestData(acl)
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
@@ -202,7 +211,7 @@ func validateCreateAclRequestData(aclConfiguration *CreateAclRequestDataWithErro
 
 func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
+	//flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
@@ -221,6 +230,9 @@ access to the provided operations on the Kafka cluster itself.`)
 operations on the topics that start with that prefix, depending on whether
 the --prefix option was also passed.`)
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	//_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
 	flgSet.SortFlags = false
 	return flgSet
 }
@@ -281,6 +293,30 @@ func populateCreateAclRequest(conf *CreateAclRequestDataWithError) func(*pflag.F
 			conf.Principal = v
 		case "host":
 			conf .Host = v
+		case "operation":
+			v = strings.ToUpper(v)
+			v = strings.ReplaceAll(v, "-", "_")
+			enumUtils := enumUtils{}
+			enumUtils.init(
+				kafkarestv3.ACLOPERATION_UNKNOWN,
+				kafkarestv3.ACLOPERATION_ANY,
+				kafkarestv3.ACLOPERATION_ALL,
+				kafkarestv3.ACLOPERATION_READ,
+				kafkarestv3.ACLOPERATION_WRITE,
+				kafkarestv3.ACLOPERATION_CREATE,
+				kafkarestv3.ACLOPERATION_DELETE,
+				kafkarestv3.ACLOPERATION_ALTER,
+				kafkarestv3.ACLOPERATION_DESCRIBE,
+				kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
+				kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS,
+				kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
+				kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE,
+			)
+			if op, ok := enumUtils[v]; ok {
+				conf.Operation = op.(kafkarestv3.AclOperation)
+				break
+			}
+			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: "+v))
 		}
 	}
 }
@@ -298,11 +334,10 @@ func setCreateAclRequestResourcePattern(conf *CreateAclRequestDataWithError, n, 
 	n = strings.ToUpper(n)
 	n = strings.ReplaceAll(n, "-", "_")
 
-	//enumUtils := enumUtils{}
-	//enumUtils.init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
-	//	mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)
-	//conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mds.AclResourceType)
-	conf.ResourceType = kafkarestv3.AclResourceType(n) // TODO does this work?
+	enumUtils := enumUtils{}
+	enumUtils.init(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
+		kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
+	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
 
 	if conf.ResourceType == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
 		conf.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
