@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
@@ -81,7 +83,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
-	listCmd.Flags().Int("service-account", 0, "Service account ID.")
+	listCmd.Flags().String("service-account", "", "Service account ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 
@@ -97,6 +99,12 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl, err := parse(cmd)
 	if err != nil {
 		return err
+	}
+
+	principal := acl[0].ACLBinding.GetEntry().Principal
+	if !isResourceId(principal) {
+		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, principal[5:])
+		return nil
 	}
 
 	kafkaREST, _ := c.GetKafkaREST()
@@ -222,6 +230,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
 		return err
+	}
+
+	principal := acls[0].ACLBinding.GetEntry().Principal
+	if !isResourceId(principal) {
+		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, principal[5:])
+		return nil
 	}
 
 	var filters []*schedv1.ACLFilter
@@ -390,4 +404,14 @@ func (c *aclCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 
 func (c *aclCommand) Cmd() *cobra.Command {
 	return c.Command
+}
+
+func isResourceId(Id string) bool {
+	if Id == "" {
+		return true
+	}
+	idx := strings.Index(Id, ":")
+	user := Id[idx+1:]
+	_, err := strconv.Atoi(user)
+	return err != nil
 }

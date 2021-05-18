@@ -81,199 +81,199 @@ var aclEntries = []struct {
 	err     error
 }{
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "read"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "read"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_READ, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_READ, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "read"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "read"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_READ, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_READ, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "write"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_WRITE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "write"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_WRITE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "create"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_CREATE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "create"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_CREATE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "delete"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "delete"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_DELETE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "delete"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "delete"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_DELETE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "alter"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "alter"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_ALTER, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "alter"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_ALTER, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "describe"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "describe"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "describe"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "describe"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "cluster-action"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "cluster-action"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "cluster-action"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "cluster-action"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "describe-configs"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "describe-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "describe-configs"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "describe-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "alter-configs"},
-		entries: []*schedv1.AccessControlEntryConfig{
-			{
-				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
-			},
-		},
-	},
-	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs"},
-		entries: []*schedv1.AccessControlEntryConfig{
-			{
-				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
-			},
-		},
-	},
-	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "idempotent-write"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "alter-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "idempotent-write"},
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "alter-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
 			},
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
+		args: []string{"--allow", "--service-account", "sa-55555", "--operation", "idempotent-write"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "idempotent-write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--service-account", "sa-55555", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
 			},
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
 			},
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+				Principal:      "User:sa-55555", Operation: schedv1.ACLOperations_CREATE, Host: "*",
 			},
 		},
 	},
@@ -435,7 +435,7 @@ func TestListResourcePrincipalFilterACL2(t *testing.T) {
 }
 
 func MultipleResourceACLTest(t *testing.T, enableREST bool) {
-	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
+	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "sa-55555",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
 	cmd := newCmd(nil, enableREST)
@@ -598,14 +598,14 @@ func TestUpdateTopic2(t *testing.T) {
 func DefaultsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	cmd := newCmd(expect, enableREST)
-	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
+	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "sa-55555",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- []*schedv1.ACLBinding{
 			{
 				Pattern: &schedv1.ResourcePatternConfig{ResourceType: schedv1.ResourceTypes_TOPIC, Name: "dan",
 					PatternType: schedv1.PatternTypes_LITERAL},
-				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:sa-55555",
 					Operation: schedv1.ACLOperations_READ, PermissionType: schedv1.ACLPermissionTypes_ALLOW},
 			},
 		}
@@ -616,7 +616,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}
 
 	cmd = newCmd(expect, enableREST)
-	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
+	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "sa-55555",
 		"--operation", "read"})
 
 	go func() {
@@ -624,7 +624,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 			{
 				Pattern: &schedv1.ResourcePatternConfig{ResourceType: schedv1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
 					PatternType: schedv1.PatternTypes_LITERAL},
-				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
+				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:sa-55555",
 					Operation: schedv1.ACLOperations_READ, PermissionType: schedv1.ACLPermissionTypes_ALLOW},
 			},
 		}
