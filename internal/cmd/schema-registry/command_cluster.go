@@ -219,7 +219,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		numSchemas = strconv.Itoa(numSchemasInt)
 		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - numSchemasInt)
 	} else {
-		c.logger.Warn("Unexpeted results from Metrics API")
+		c.logger.Warn("Unexpected results from Metrics API")
 		numSchemas = ""
 		availableSchemas = ""
 	}
