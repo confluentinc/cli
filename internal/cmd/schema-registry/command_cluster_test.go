@@ -4,13 +4,13 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	metricsv1 "github.com/confluentinc/cc-structs/kafka/metrics/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -36,7 +36,7 @@ type ClusterTestSuite struct {
 	srCluster       *schedv1.SchemaRegistryCluster
 	srMock          *mock.SchemaRegistry
 	srClientMock    *srsdk.APIClient
-	metrics         *ccsdkmock.Metrics
+	metricsApi      *ccsdkmock.MetricsApi
 	logger          *log.Logger
 	analyticsClient analytics.Client
 	analyticsOutput []segment.Message
@@ -82,10 +82,16 @@ func (suite *ClusterTestSuite) SetupTest() {
 			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
-	suite.metrics = &ccsdkmock.Metrics{
-		SchemaRegistryMetricsFunc: func(arg0 context.Context, arg1 string) (*metricsv1.SchemaRegistryMetric, error) {
-			return &metricsv1.SchemaRegistryMetric{
-				NumSchemas: 8,
+	suite.metricsApi = &ccsdkmock.MetricsApi{
+		QueryV2Func: func(ctx context.Context, view string, query *ccloud.MetricsApiRequest, jwt string) (*ccloud.MetricsApiQueryReply, error) {
+			return &ccloud.MetricsApiQueryReply{
+				Result: []ccloud.ApiData{
+					{
+						Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
+						Value:     0.0,
+						Labels:    map[string]interface{}{"metric.topic": "test-topic"},
+					},
+				},
 			}, nil
 		},
 	}
@@ -96,7 +102,7 @@ func (suite *ClusterTestSuite) SetupTest() {
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMock,
-		Metrics:        suite.metrics,
+		MetricsApi:     suite.metricsApi,
 	}
 	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.logger, suite.analyticsClient)
 	return cmd
@@ -122,7 +128,7 @@ func (suite *ClusterTestSuite) TestDescribeSR() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
-	req.True(suite.metrics.SchemaRegistryMetricsCalled())
+	req.True(suite.metricsApi.QueryV2Called())
 }
 
 func (suite *ClusterTestSuite) TestUpdateCompatibility() {

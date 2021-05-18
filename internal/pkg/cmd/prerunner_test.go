@@ -900,3 +900,50 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
 	})
 }
+
+func TestConvertToMetricsBaseURL(t *testing.T) {
+	tests := []struct {
+		name        string
+		inputUrl    string
+		expectedUrl string
+	}{
+		{
+			"test exact url",
+			"https://api.telemetry.confluent.cloud/",
+			"https://api.telemetry.confluent.cloud/",
+		},
+		{
+			"test dev url",
+			"https://devel.cpdev.cloud",
+			"https://devel-sandbox-api.telemetry.aws.confluent.cloud/",
+		},
+		{
+			"test cpd url",
+			"https://nearby-asp.gcp.priv.cpdev.cloud",
+			"https://devel-sandbox-api.telemetry.aws.confluent.cloud/",
+		},
+		{
+			"test stag url",
+			"https://stag.cpdev.cloud",
+			"https://stag-sandbox-api.telemetry.aws.confluent.cloud/",
+		},
+		{
+			"test prod url",
+			"https://confluent.cloud",
+			"https://api.telemetry.confluent.cloud/",
+		},
+		{
+			"test prod url",
+			"https://confluent.cloud/",
+			"https://api.telemetry.confluent.cloud/",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := pcmd.ConvertToMetricsBaseURL(tt.inputUrl)
+			if got != tt.expectedUrl {
+				t.Errorf("got = %v, want %v", got, tt.expectedUrl)
+			}
+		})
+	}
+}
