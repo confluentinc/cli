@@ -55,7 +55,7 @@ func (c *aclCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
-				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
+				Code: "ccloud kafka acl create --allow --service-account sa-55555 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account sa-55555 --operation READ --topic '*'",
 			},
 		),
 	}
@@ -99,12 +99,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl, err := parse(cmd)
 	if err != nil {
 		return err
-	}
-
-	principal := acl[0].ACLBinding.GetEntry().Principal
-	if !isResourceId(principal) {
-		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, principal[5:])
-		return nil
 	}
 
 	kafkaREST, _ := c.GetKafkaREST()
@@ -230,12 +224,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
 		return err
-	}
-
-	principal := acls[0].ACLBinding.GetEntry().Principal
-	if !isResourceId(principal) {
-		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, principal[5:])
-		return nil
 	}
 
 	var filters []*schedv1.ACLFilter

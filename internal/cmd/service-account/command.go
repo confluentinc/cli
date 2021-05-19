@@ -64,7 +64,7 @@ func (c *command) ServerComplete() []prompt.Suggest {
 
 	for _, user := range users {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text:        fmt.Sprintf("%d", user.Id),
+			Text:        fmt.Sprintf("%s", user.ResourceId),
 			Description: fmt.Sprintf("%s: %s", user.ServiceName, user.ServiceDescription),
 		})
 	}
@@ -177,13 +177,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	_, err := strconv.Atoi(args[0])
-	if err == nil {
-		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, args[0])
-		return nil
-	}
-
-	resourceId := args[0]
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -193,10 +186,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	idp, err := strconv.Atoi(args[0])
 	user := &orgv1.User{
-		ResourceId:         resourceId,
 		ServiceDescription: description,
 	}
+	if err == nil { // it's a numeric id
+		user.Id = int32(idp)
+	} else {
+		user.ResourceId = args[0]
+	}
+
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
 		return err
@@ -206,15 +205,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	_, err := strconv.Atoi(args[0])
-	if err == nil {
-		utils.ErrPrintf(cmd, errors.InvalidServiceAccountMsg, args[0])
-		return nil
-	}
-
-	resourceId := args[0]
-	user := &orgv1.User{
-		ResourceId: resourceId,
+	idp, err := strconv.Atoi(args[0])
+	user := &orgv1.User{}
+	if err == nil { // it's a numeric id
+		user.Id = int32(idp)
+	} else {
+		user.ResourceId = args[0]
 	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {

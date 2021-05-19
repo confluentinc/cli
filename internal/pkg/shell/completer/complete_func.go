@@ -2,7 +2,6 @@ package completer
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/c-bata/go-prompt"
 
@@ -37,7 +36,7 @@ func ServiceAccountFlagCompleterFunc(client *ccloud.Client) func() []prompt.Sugg
 		}
 		for _, user := range users {
 			suggestions = append(suggestions, prompt.Suggest{
-				Text:        fmt.Sprintf("%d", user.Id),
+				Text:        user.ResourceId,
 				Description: user.ServiceName,
 			})
 		}

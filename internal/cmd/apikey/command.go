@@ -9,9 +9,10 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -51,7 +52,7 @@ type command struct {
 }
 
 var (
-	listFields              = []string{"Key", "Description", "UserId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listFields              = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
 	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Email", "Resource Type", "Resource ID", "Created"}
 	listStructuredLabels    = []string{"key", "description", "owner", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
@@ -86,7 +87,7 @@ func (c *command) init() {
 	}
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
-	listCmd.Flags().Int32("service-account", 0, "The service account ID to filter by.")
+	listCmd.Flags().String("service-account", "", "The service account ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -98,7 +99,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 	createCmd.Flags().String(resourceFlagName, "", "The resource ID. Use \"cloud\" to create a Cloud API key.")
-	createCmd.Flags().Int32("service-account", 0, "Service account ID. If not specified, the API key will have full access on the cluster.")
+	createCmd.Flags().String("service-account", "", "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
@@ -162,13 +163,13 @@ func (c *command) init() {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 	type keyDisplay struct {
-		Key          string
-		Description  string
-		UserId       int32
-		UserEmail    string
-		ResourceType string
-		ResourceId   string
-		Created      string
+		Key            string
+		Description    string
+		UserResourceId string
+		UserEmail      string
+		ResourceType   string
+		ResourceId     string
+		Created        string
 	}
 	var apiKeys []*schedv1.ApiKey
 
@@ -181,7 +182,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
-	userId, err := cmd.Flags().GetInt32("service-account")
+	UserResourceId, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -191,23 +192,23 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if userId != 0 {
+		if UserResourceId != "" {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		userId = c.State.Auth.User.Id
+		UserResourceId = c.State.Auth.User.ResourceId
 	}
-
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserResourceId: UserResourceId})
 	if err != nil {
 		return err
 	}
+	fmt.Println(apiKeys)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return err
 	}
 
-	users := map[int32]*orgv1.User{}
+	users := map[string]*orgv1.User{}
 
 	serviceAccounts, err := getServiceAccountsMap(c.Client)
 	if err != nil {
@@ -216,7 +217,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
-		if apiKey.UserId == 0 {
+		if apiKey.UserResourceId == "" {
 			continue
 		}
 		// Add '*' only in the case where we are printing out tables
@@ -230,26 +231,26 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		var email string
-		if _, ok := serviceAccounts[apiKey.UserId]; ok {
+		if _, ok := serviceAccounts[apiKey.UserResourceId]; ok {
 			email = "<service account>"
 		} else {
 			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
-			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
+			if enabled && auditLog.AccountId == apiKey.UserResourceId {
 				email = "<auditlog service account>"
-			} else if user, ok := users[apiKey.UserId]; ok {
+			} else if user, ok := users[apiKey.UserResourceId]; ok {
 				if user != nil {
 					email = user.Email
 				} else {
 					email = "<deactivated user>"
 				}
 			} else {
-				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
+				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: apiKey.UserResourceId})
 				if err != nil {
 					email = "<deactivated user>"
-					users[apiKey.UserId] = nil
+					users[apiKey.UserResourceId] = nil
 				} else {
 					email = user.Email
-					users[user.Id] = user
+					users[user.ResourceId] = user
 				}
 			}
 		}
@@ -261,12 +262,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
 			// Cloud key.
 			outputWriter.AddElement(&keyDisplay{
-				Key:          outputKey,
-				Description:  apiKey.Description,
-				UserId:       apiKey.UserId,
-				UserEmail:    email,
-				ResourceType: pcmd.CloudResourceType,
-				Created:      created,
+				Key:            outputKey,
+				Description:    apiKey.Description,
+				UserResourceId: apiKey.UserResourceId,
+				UserEmail:      email,
+				ResourceType:   pcmd.CloudResourceType,
+				Created:        created,
 			})
 		}
 
@@ -276,13 +277,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		for _, lc := range apiKey.LogicalClusters {
 			outputWriter.AddElement(&keyDisplay{
-				Key:          outputKey,
-				Description:  apiKey.Description,
-				UserId:       apiKey.UserId,
-				UserEmail:    email,
-				ResourceType: lc.Type,
-				ResourceId:   lc.Id,
-				Created:      created,
+				Key:            outputKey,
+				Description:    apiKey.Description,
+				UserResourceId: apiKey.UserResourceId,
+				UserEmail:      email,
+				ResourceType:   lc.Type,
+				ResourceId:     lc.Id,
+				Created:        created,
 			})
 		}
 	}
@@ -290,14 +291,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
+func getServiceAccountsMap(client *ccloud.Client) (map[string]bool, error) {
 	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	saMap := make(map[int32]bool)
+	saMap := make(map[string]bool)
 	for _, sa := range serviceAccounts {
-		saMap[sa.Id] = true
+		saMap[sa.ResourceId] = true
 	}
 	return saMap, nil
 }
@@ -335,7 +336,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	userId, err := cmd.Flags().GetInt32("service-account")
+	UserResourceId, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -345,11 +346,23 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	key := &schedv1.ApiKey{
-		UserId:      userId,
-		Description: description,
-		AccountId:   c.EnvironmentId(),
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return err
 	}
+
+	key := &schedv1.ApiKey{
+		UserResourceId: UserResourceId,
+		Description:    description,
+		AccountId:      c.EnvironmentId(),
+	}
+
+	for _, account := range serviceAccounts { // get corresponding user Id
+		if account.ResourceId == key.UserResourceId {
+			key.UserId = account.Id
+		}
+	}
+
 	if resourceType != pcmd.CloudResourceType {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
@@ -379,8 +392,10 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, key.UserResourceId)
 	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
+
+	fmt.Println("resource id ", userKey.UserResourceId)
 	return nil
 }
 
@@ -393,10 +408,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	key := &schedv1.ApiKey{
-		Id:        userKey.Id,
-		Key:       apiKey,
-		AccountId: c.EnvironmentId(),
-		UserId:    userKey.UserId,
+		Id:             userKey.Id,
+		Key:            apiKey,
+		AccountId:      c.EnvironmentId(),
+		UserResourceId: userKey.UserResourceId,
 	}
 
 	err = c.Client.APIKey.Delete(context.Background(), key)
@@ -408,8 +423,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.Id)
-	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, key.UserResourceId)
+	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, key.Key)
 	return nil
 }
 
@@ -534,14 +549,14 @@ func (c *command) ServerComplete() []prompt.Suggest {
 }
 
 func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
-	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserResourceId: ""})
 	if err != nil {
 		return nil, errors.HandleCommon(err, c.Command)
 	}
 
 	var userApiKeys []*schedv1.ApiKey
 	for _, key := range apiKeys {
-		if key.UserId != 0 {
+		if key.UserResourceId != "" {
 			userApiKeys = append(userApiKeys, key)
 		}
 	}
