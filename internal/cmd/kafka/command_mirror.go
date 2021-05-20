@@ -3,11 +3,12 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
-	"net/http"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -17,10 +18,9 @@ import (
 )
 
 const (
-	replicationFactorFlagName          = "replication-factor"
-	mirrorStatusFlagName               = "mirror-status"
+	replicationFactorFlagName = "replication-factor"
+	mirrorStatusFlagName      = "mirror-status"
 )
-
 
 var (
 	listMirrorOutputFields     = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
@@ -30,7 +30,7 @@ var (
 
 type listMirrorWrite struct {
 	LinkName                 string
-	MirrorTopicName     string
+	MirrorTopicName          string
 	SourceTopicName          string
 	MirrorStatus             string
 	StatusTimeMs             int64
@@ -39,12 +39,12 @@ type listMirrorWrite struct {
 }
 
 type describeMirrorWrite struct {
-	LinkName string
-	MirrorTopicName  string
-	SourceTopicName string
-	MirrorStatus string
-	StatusTimeMs int64
-	Partition int32
+	LinkName           string
+	MirrorTopicName    string
+	SourceTopicName    string
+	MirrorStatus       string
+	StatusTimeMs       int64
+	Partition          int32
 	PartitionMirrorLag int64
 }
 
@@ -87,13 +87,13 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror list --link-name <link-name> --mirror-status <mirror-status>",
 			},
 		),
-		RunE: c.list,
-		Args: cobra.NoArgs,
+		RunE:   c.list,
+		Args:   cobra.NoArgs,
 		Hidden: true,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
-	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of " +
+	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of "+
 		"[active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -107,8 +107,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror describe <destination-topic-name> --link-name <link-name>",
 			},
 		),
-		RunE: c.describe,
-		Args: cobra.ExactArgs(1),
+		RunE:   c.describe,
+		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -127,14 +127,14 @@ func (c *mirrorCommand) init() {
 					"--replication-factor <replication-factor> --config-file mirror_config.txt",
 			},
 		),
-		RunE: c.create,
-		Args: cobra.ExactArgs(1),
+		RunE:   c.create,
+		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
-	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing topic config overrides. " +
+	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing topic config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
@@ -148,8 +148,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
 			},
 		),
-		RunE: c.promote,
-		Args: cobra.MinimumNArgs(1),
+		RunE:   c.promote,
+		Args:   cobra.MinimumNArgs(1),
 		Hidden: true,
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -167,8 +167,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
 			},
 		),
-		RunE: c.failover,
-		Args: cobra.MinimumNArgs(1),
+		RunE:   c.failover,
+		Args:   cobra.MinimumNArgs(1),
 		Hidden: true,
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -178,17 +178,17 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(failoverCmd)
 
 	pauseCmd := &cobra.Command{
-	Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
-	Short: "Pause the mirror topics.",
-	Example: examples.BuildExampleString(
-		examples.Example{
-			Text: "Pause the mirror topics.",
-			Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
-		},
-	),
-	RunE: c.pause,
-	Args: cobra.MinimumNArgs(1),
-	Hidden: true,
+		Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+		Short: "Pause the mirror topics.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Pause the mirror topics.",
+				Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+			},
+		),
+		RunE:   c.pause,
+		Args:   cobra.MinimumNArgs(1),
+		Hidden: true,
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -205,8 +205,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
 			},
 		),
-		RunE: c.resume,
-		Args: cobra.MinimumNArgs(1),
+		RunE:   c.resume,
+		Args:   cobra.MinimumNArgs(1),
 		Hidden: true,
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -325,13 +325,13 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	for _, partitionLag := range mirror.MirrorLags {
 		outputWriter.AddElement(&describeMirrorWrite{
-			LinkName:             mirror.LinkName,
-			MirrorTopicName: mirror.MirrorTopicName,
-			SourceTopicName:      mirror.SourceTopicName,
-			MirrorStatus:         string(mirror.MirrorStatus),
-			StatusTimeMs:         mirror.StateTimeMs,
-			Partition:            partitionLag.Partition,
-			PartitionMirrorLag:   partitionLag.Lag,
+			LinkName:           mirror.LinkName,
+			MirrorTopicName:    mirror.MirrorTopicName,
+			SourceTopicName:    mirror.SourceTopicName,
+			MirrorStatus:       string(mirror.MirrorStatus),
+			StatusTimeMs:       mirror.StateTimeMs,
+			Partition:          partitionLag.Partition,
+			PartitionMirrorLag: partitionLag.Lag,
 		})
 	}
 
@@ -378,7 +378,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 			kafkarestv3.CreateMirrorTopicRequestData{
 				SourceTopicName:   sourceTopicName,
 				ReplicationFactor: replicationFactor,
-				Configs: 		   toCreateTopicConfigs(configMap),
+				Configs:           toCreateTopicConfigs(configMap),
 			},
 		),
 	}
@@ -562,7 +562,7 @@ func (c *mirrorCommand) createWithKafkaApi(
 			Name:                 sourceTopicName,
 			NumPartitions:        unspecifiedPartitionCount,
 			ReplicationFactor:    uint32(factor),
-			Configs:               configMap,
+			Configs:              configMap,
 			Mirror:               &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: sourceTopicName},
 			XXX_NoUnkeyedLiteral: struct{}{},
 			XXX_unrecognized:     nil,

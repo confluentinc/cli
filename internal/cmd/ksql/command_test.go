@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/c-bata/go-prompt"
 	segment "github.com/segmentio/analytics-go"

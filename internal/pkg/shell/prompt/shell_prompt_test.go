@@ -12,6 +12,7 @@ import (
 )
 
 type Quotation int
+
 const (
 	NO_QUOTES Quotation = iota
 	SINGLE_QUOTES
@@ -20,77 +21,77 @@ const (
 
 func TestPromptExecutorFunc(t *testing.T) {
 	tests := []struct {
-		name      string
-		flagValue string
+		name         string
+		flagValue    string
 		expectedFlag string
-		quoteType Quotation
+		quoteType    Quotation
 	}{
 		{
-			name:      "no quotes basic flag value",
-			flagValue: `describing`,
+			name:         "no quotes basic flag value",
+			flagValue:    `describing`,
 			expectedFlag: `describing`,
-			quoteType: NO_QUOTES,
+			quoteType:    NO_QUOTES,
 		},
 		{
-			name:      "single quotes basic flag value",
-			flagValue: `describing`,
+			name:         "single quotes basic flag value",
+			flagValue:    `describing`,
 			expectedFlag: `describing`,
-			quoteType: SINGLE_QUOTES,
+			quoteType:    SINGLE_QUOTES,
 		},
 		{
-			name:      "double quotes basic flag value",
-			flagValue: `describing`,
+			name:         "double quotes basic flag value",
+			flagValue:    `describing`,
 			expectedFlag: `describing`,
-			quoteType: DOUBLE_QUOTES,
+			quoteType:    DOUBLE_QUOTES,
 		},
 		{
-			name:      "no quotes with escaped quotes",
-			flagValue: `\"describing\'`,
+			name:         "no quotes with escaped quotes",
+			flagValue:    `\"describing\'`,
 			expectedFlag: `"describing'`,
-			quoteType: NO_QUOTES,
+			quoteType:    NO_QUOTES,
 		},
 		{
-			name:      "no quotes value with space in between splits flag value",
-			flagValue: `describing stuff`,
+			name:         "no quotes value with space in between splits flag value",
+			flagValue:    `describing stuff`,
 			expectedFlag: `describing`,
-			quoteType: NO_QUOTES,
+			quoteType:    NO_QUOTES,
 		},
 		{
-			name:      "double quotes flag value with space in between",
-			flagValue: `describing stuff`,
+			name:         "double quotes flag value with space in between",
+			flagValue:    `describing stuff`,
 			expectedFlag: `describing stuff`,
-			quoteType: DOUBLE_QUOTES,
+			quoteType:    DOUBLE_QUOTES,
 		},
 		{
-			name:      "single quotes flag value with space in between",
-			flagValue: `describing stuff`,
+			name:         "single quotes flag value with space in between",
+			flagValue:    `describing stuff`,
 			expectedFlag: `describing stuff`,
-			quoteType: SINGLE_QUOTES,
+			quoteType:    SINGLE_QUOTES,
 		},
 
 		{
-			name:      "single quotes nested in double quotes",
-			flagValue: `describing 'complex' stuff`,
+			name:         "single quotes nested in double quotes",
+			flagValue:    `describing 'complex' stuff`,
 			expectedFlag: `describing 'complex' stuff`,
-			quoteType: DOUBLE_QUOTES,
+			quoteType:    DOUBLE_QUOTES,
 		},
 		{
-			name:      "escaped double quotes nested in double quotes",
-			flagValue: `describing \"complex\" stuff`,
+			name:         "escaped double quotes nested in double quotes",
+			flagValue:    `describing \"complex\" stuff`,
 			expectedFlag: `describing "complex" stuff`,
-			quoteType: DOUBLE_QUOTES,
+			quoteType:    DOUBLE_QUOTES,
 		},
 		{
-			name:      "single quotes including escape character",
-			flagValue: `describing \"complex\" stuff`,
+			name:         "single quotes including escape character",
+			flagValue:    `describing \"complex\" stuff`,
 			expectedFlag: `describing \"complex\" stuff`,
-			quoteType: SINGLE_QUOTES,
+			quoteType:    SINGLE_QUOTES,
 		},
 		{
-			name:      "double quotes nested in single quotes",
-			flagValue: `describing "complex" stuff`,
+			name:         "double quotes nested in single quotes",
+			flagValue:    `describing "complex" stuff`,
 			expectedFlag: `describing "complex" stuff`,
-			quoteType: SINGLE_QUOTES,
+			quoteType:    SINGLE_QUOTES,
 		},
 	}
 	for _, tt := range tests {

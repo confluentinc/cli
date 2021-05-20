@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"net/http"
 	"testing"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"

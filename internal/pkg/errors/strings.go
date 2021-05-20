@@ -47,8 +47,8 @@ const (
 	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
 
 	// kafka cluster commands
-	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
-	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
+	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
 	// kafka consumer-group commands
 	UnknownGroupMsg       = "Unknown Consumer Group: \"%s\".\n"

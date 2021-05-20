@@ -39,7 +39,7 @@ func (c *aclCommand) init(cliName string) {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
-		Long:  "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",		
+		Long:  "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(

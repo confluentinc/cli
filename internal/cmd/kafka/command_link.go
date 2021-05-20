@@ -4,6 +4,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+
 	"github.com/antihax/optional"
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -24,8 +25,8 @@ const (
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
 	securityProtocalPropertyName       = "security.protocol"
 	saslMechanismPropertyName          = "sasl.mechanism"
-	saslJaasConfigPropertyName          = "sasl.jaas.config"
-	configFileFlagName                  = "config-file"
+	saslJaasConfigPropertyName         = "sasl.jaas.config"
+	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
 	includeTopicsFlagName              = "include-topics"
@@ -35,7 +36,7 @@ const (
 var (
 	keyValueFields      = []string{"Key", "Value"}
 	linkFieldsWithTopic = []string{"LinkName", "TopicName", "SourceClusterId"}
-	linkFields     = []string{"LinkName", "SourceClusterId"}
+	linkFields          = []string{"LinkName", "SourceClusterId"}
 	linkFieldsKafkaApi  = []string{"LinkName"}
 	linkConfigFields    = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
 )
@@ -50,8 +51,8 @@ type LinkWriterKafkaApi struct {
 }
 
 type LinkTopicWriter struct {
-	LinkName  string
-	TopicName string
+	LinkName        string
+	TopicName       string
 	SourceClusterId string
 }
 
@@ -95,8 +96,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link list",
 			},
 		),
-		RunE: c.list,
-		Args: cobra.NoArgs,
+		RunE:   c.list,
+		Args:   cobra.NoArgs,
 		Hidden: true,
 	}
 	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
@@ -117,25 +118,25 @@ func (c *linkCommand) init() {
 					"--source-bootstrap-server myhost:1234 --source-api-key abcde --source-api-secret 88888 \n",
 			},
 		),
-		RunE: c.create,
-		Args: cobra.ExactArgs(1),
+		RunE:   c.create,
+		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
 	createCmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
 	check(createCmd.MarkFlagRequired(sourceBootstrapServersFlagName))
 	check(createCmd.MarkFlagRequired(sourceClusterIdFlagName))
-	createCmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. " +
-		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. " +
-		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
-		"and add the security configs in the config file. " +
+	createCmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. "+
+		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
+		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
+		"and add the security configs in the config file. "+
 		"Must be used with --source-api-secret.")
-	createCmd.Flags().String(apiSecretFlagName, "", "An API secret for the source cluster. " +
-		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. " +
-		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
-		"and add the security configs in the config file. " +
+	createCmd.Flags().String(apiSecretFlagName, "", "An API secret for the source cluster. "+
+		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
+		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
+		"and add the security configs in the config file. "+
 		"Must be used with --source-api-key.")
-	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
+	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
 	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
@@ -151,8 +152,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link delete my_link",
 			},
 		),
-		RunE: c.delete,
-		Args: cobra.ExactArgs(1),
+		RunE:   c.delete,
+		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 	}
 	c.AddCommand(deleteCmd)
@@ -166,8 +167,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link describe my_link",
 			},
 		),
-		RunE: c.describe,
-		Args: cobra.ExactArgs(1),
+		RunE:   c.describe,
+		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -184,11 +185,11 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link update my_link --config-file ~/config.txt",
 			},
 		),
-		RunE: c.update,
-		Args: cobra.ExactArgs(1),
+		RunE:   c.update,
+		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 	}
-	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. " +
+	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	check(updateCmd.MarkFlagRequired(configFileFlagName))
 	updateCmd.Flags().SortFlags = false
@@ -221,7 +222,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 	if includeTopics {
 		outputWriter, err := output.NewListOutputWriter(
-			cmd	, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
 		if err != nil {
 			return err
 		}
@@ -364,8 +365,8 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		configMap[securityProtocalPropertyName] = "SASL_SSL"
 		configMap[saslMechanismPropertyName] = "PLAIN"
 		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(
-			"org.apache.kafka.common.security.plain.PlainLoginModule required " +
-				"username=\"%s\" " +
+			"org.apache.kafka.common.security.plain.PlainLoginModule required "+
+				"username=\"%s\" "+
 				"password=\"%s\";", apiKey, apiSecret)
 	} else if apiKey != "" {
 		return errors.New("--source-api-key and --source-api-secret must be used together. " +
@@ -392,7 +393,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		ValidateLink: optional.NewBool(!skipValidatingLink),
 		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
 			SourceClusterId: sourceClusterId,
-			Configs: toCreateTopicConfigs(configMap),
+			Configs:         toCreateTopicConfigs(configMap),
 		}),
 	}
 
@@ -412,7 +413,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 // Will be deprecated soon
-func (c* linkCommand) createWithKafkaApi(
+func (c *linkCommand) createWithKafkaApi(
 	cmd *cobra.Command, linkName string, configMap map[string]string, skipValidatingLink bool, validateOnly bool) error {
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
