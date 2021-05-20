@@ -110,30 +110,26 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 	if err != nil {
 		return "", err
 	}
-	machineName1 := getNetrcMachineName(cliName, true, ctxName)
-	machine1 := netrcFile.FindMachine(machineName1)
 
-	machineName2 := getNetrcMachineName(cliName, false, ctxName)
-	machine2 := netrcFile.FindMachine(machineName2)
+	// machineName could be either sso: confluent-cli:ccloud-sso-refresh-token:login-cli-mock-email@confluent.io-http://test
+	// or non-sso: confluent-cli:ccloud-username-password:login-cli-mock-email@confluent.io-http://test
 	var user string
-	if machine1 == nil && machine2 == nil {
+	found := false
+	for _, isSSO := range []bool{true, false} {
+		machineName := getNetrcMachineName(cliName, isSSO, ctxName)
+		machine := netrcFile.FindMachine(machineName)
+		if machine != nil {
+			found = true
+			err := removeCredentials(machineName, netrcFile, filename)
+			if err != nil {
+				return "", err
+			}
+			user = machine.Login
+		}
+	}
+	if !found {
 		err = errors.New(errors.NetrcCredentialsNotFoundErrorMsg)
 		return "", err
-	} else {
-		if machine1 != nil {
-			err := removeCredentials(machineName1, netrcFile, filename)
-			if err != nil {
-				return "", err
-			}
-			user = machine1.Login
-		}
-		if machine2 != nil {
-			err := removeCredentials(machineName2, netrcFile, filename)
-			if err != nil {
-				return "", err
-			}
-			user = machine2.Login
-		}
 	}
 	return user, nil
 }
@@ -145,25 +141,26 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 	}
 	var stringBuf []string
 	lines := strings.Split(string(netrcBytes), "\n")
-	count := 3 // to remove 3 lines of credentials
 	length := len(lines)
 	for i := 0; i < length; i++ {
 		if strings.Contains(lines[i], machineName) {
-			count = 0
-		}
-		if count >= 3 {
-			stringBuf = append(stringBuf, lines[i])
-			if i < length-1 {
-				stringBuf = append(stringBuf, "\n")
+			count := 3 // remove 3 non-empty lines or credentials
+			for count > 0 {
+				if lines[i] != "" {
+					count -= 1
+				}
+				i += 1
 			}
 		}
-		count += 1
+		if i < length {
+			stringBuf = append(stringBuf, lines[i]+"\n")
+		}
 	}
 	if stringBuf[len(stringBuf)-1] == "\n" { // remove the last newline
-		stringBuf = stringBuf[0 : len(stringBuf)-2]
+		stringBuf = stringBuf[:len(stringBuf)-1]
 	}
 	joinedString := strings.Join(stringBuf[:], "")
-	joinedString = strings.Replace(joinedString, "\n\n", "\n", -1) // remove duplicate newlines
+	joinedString = strings.Replace(joinedString, "\n\n", "\n", -1)
 	buf := []byte(joinedString)
 	err = ioutil.WriteFile(filename, buf, 0600)
 	if err != nil {

@@ -508,9 +508,7 @@ func TestLogout(t *testing.T) {
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
-	if err != nil {
-		req.Contains(err.Error(), errors.NetrcCredentialsNotFoundErrorMsg)
-	}
+	req.NoError(err)
 	req.Equal(exist, false)
 	verifyLoggedOutState(t, cfg, contextName)
 }
@@ -561,9 +559,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	_, err = logoutCmd.netrcHandler.RemoveNetrcCredentials(logoutCmd.cliName, contextName)
 	req.NoError(err)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
-	if err != nil {
-		req.Contains(err.Error(), errors.NetrcCredentialsNotFoundErrorMsg)
-	}
+	req.NoError(err)
 	req.Equal(exist, false)
 }
 
