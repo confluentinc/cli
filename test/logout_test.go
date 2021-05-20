@@ -76,9 +76,6 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		s.NoError(err)
 		wantBytes, err := ioutil.ReadFile(wantFile)
 		s.NoError(err)
-		fmt.Println("Here ------------------------------")
-		fmt.Println(string(wantBytes))
-		fmt.Println(string(got))
 		s.Equal(utils.NormalizeNewLines(string(wantBytes)), utils.NormalizeNewLines(string(got)))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
