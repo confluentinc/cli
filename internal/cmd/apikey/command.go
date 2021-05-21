@@ -3,6 +3,7 @@ package apikey
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -338,7 +339,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	UserResourceId, err := cmd.Flags().GetString("service-account")
+	Id, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -348,26 +349,20 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	key := &schedv1.ApiKey{
+		Description: description,
+		AccountId:   c.EnvironmentId(),
+	}
+
+	key, err = c.completeKeyId(key, Id)
 	if err != nil {
 		return err
-	}
-
-	key := &schedv1.ApiKey{
-		UserResourceId: UserResourceId,
-		Description:    description,
-		AccountId:      c.EnvironmentId(),
-	}
-
-	for _, account := range serviceAccounts { // get corresponding user Id
-		if account.ResourceId == key.UserResourceId {
-			key.UserId = account.Id
-		}
 	}
 
 	if resourceType != pcmd.CloudResourceType {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
+	fmt.Println(key.UserResourceId)
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
 		return err
@@ -396,6 +391,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, key.UserResourceId)
 	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
+	fmt.Println(userKey.UserResourceId)
 	return nil
 }
 
@@ -601,4 +597,57 @@ func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
 		}
 	}
 	return suggestions
+}
+
+func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
+	if Id != "" { // it has a service-account flag
+		users, err := c.Client.User.GetServiceAccounts(context.Background())
+		if err != nil {
+			return key, err
+		}
+		idp, err := strconv.Atoi(Id)
+		if err != nil { // it's a resource id
+			key.UserResourceId = Id
+			for _, user := range users {
+				if Id == user.ResourceId {
+					key.UserId = user.Id
+				}
+			}
+		} else { // it's a numeric id
+			key.UserId = int32(idp)
+			for _, user := range users {
+				if int32(idp) == user.Id {
+					key.UserResourceId = user.ResourceId
+				}
+			}
+		}
+	}
+	return key, nil
+}
+
+func (c *command) setUserId(currentUser bool, UserId string, isResourceId bool) (string, error) {
+	if currentUser {
+		if isResourceId {
+			if UserId != "" {
+				return "", errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
+			}
+			UserId = c.State.Auth.User.ResourceId
+			return UserId, nil
+		} else {
+			if UserId != "" {
+				return "", errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
+			}
+			UserId = string(c.State.Auth.User.Id)
+			return UserId, nil
+		}
+	}
+	return UserId, nil
+}
+
+func isResourceId(Id string) bool {
+	if Id == "" {
+		return true
+	}
+	_, err := strconv.Atoi(Id)
+	return err != nil
 }
