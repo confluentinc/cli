@@ -403,3 +403,28 @@ func isResourceId(Id string) bool {
 	_, err := strconv.Atoi(user)
 	return err != nil
 }
+
+func (c *aclCommand) getServiceAccountACL(acl []*ACLConfiguration) error {
+	if acl[0].ACLBinding.Entry.Principal != "" { // it has a service-account flag
+		users, err := c.Client.User.GetServiceAccounts(context.Background())
+		if err != nil {
+			return err
+		}
+		id := acl[0].ACLBinding.Entry.Principal[5:] // extract service account id
+		idp, err := strconv.Atoi(id)
+		if err != nil { // it's a resource id
+			for _, user := range users {
+				if id == user.ResourceId {
+					acl[0].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(user.Id))
+				}
+			}
+		} else { // it's a numeric id
+			for _, user := range users {
+				if int32(idp) == user.Id {
+					acl[0].ACLBinding.Entry.Principal = "User:" + user.ResourceId
+				}
+			}
+		}
+	}
+	return nil
+}

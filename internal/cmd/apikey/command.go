@@ -52,9 +52,9 @@ type command struct {
 }
 
 var (
-	listFields              = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels    = []string{"key", "description", "owner", "owner_email", "resource_type", "resource_id", "created"}
+	listFields              = []string{"Key", "Description", "UserId", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner", "Owner Id", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
@@ -165,6 +165,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	type keyDisplay struct {
 		Key            string
 		Description    string
+		UserId         int32
 		UserResourceId string
 		UserEmail      string
 		ResourceType   string
@@ -201,7 +202,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(apiKeys)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
@@ -217,7 +217,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
-		if apiKey.UserResourceId == "" {
+		if apiKey.UserId == 0 {
 			continue
 		}
 		// Add '*' only in the case where we are printing out tables
@@ -235,7 +235,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			email = "<service account>"
 		} else {
 			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
-			if enabled && auditLog.AccountId == apiKey.UserResourceId {
+			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
 				email = "<auditlog service account>"
 			} else if user, ok := users[apiKey.UserResourceId]; ok {
 				if user != nil {
@@ -264,6 +264,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
+				UserId:         apiKey.UserId,
 				UserResourceId: apiKey.UserResourceId,
 				UserEmail:      email,
 				ResourceType:   pcmd.CloudResourceType,
@@ -279,6 +280,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
+				UserId:         apiKey.UserId,
 				UserResourceId: apiKey.UserResourceId,
 				UserEmail:      email,
 				ResourceType:   lc.Type,
@@ -394,8 +396,6 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, key.UserResourceId)
 	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
-
-	fmt.Println("resource id ", userKey.UserResourceId)
 	return nil
 }
 
