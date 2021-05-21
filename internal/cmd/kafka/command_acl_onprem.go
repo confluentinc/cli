@@ -2,33 +2,24 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/antihax/optional"
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"sort"
-	"strings"
+)
+
+var (
+	onPremAclListFields = []string{"Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
+	onPremAclListStructuredRenames = []string{"principal", "permission", "operation", "host", "resource", "name", "type"}
 )
 
 type aclOnPremCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-}
-
-type enumUtils map[string]interface{}
-
-func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
-	for _, enum := range enums {
-		enumUtils[fmt.Sprintf("%v", enum)] = enum
-	}
-	return enumUtils
 }
 
 func NewAclCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
@@ -52,114 +43,81 @@ func (aclCmd *aclOnPremCommand) init() {
 		RunE:  pcmd.NewCLIRunE(aclCmd.create),
 		Example: examples.BuildExampleString(
 			examples.Example{ // TODO change this
-				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
-				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
+				Text: "You can specify only one of the following flags per command invocation: ``cluster-scope``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
+				Code: "confluent kafka acl create --allow --User:Jane --operation READ --consumer-group java_example_group_1\nconfluent kafka acl create --allow --Group:Finance --operation READ --topic '*'",
 			}),
 	}
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	createCmd.Flags().AddFlagSet(aclFlags())
-	//createCmd.Flags().Bool("allow", false, "Access to the resource is allowed.")
-	//createCmd.Flags().Bool("deny", false, "Access to the resource is denied.")
-	//createCmd.Flags().String("resource_type", "", "Resource type.")
-	//createCmd.Flags().String("pattern_type", "", "Pattern type.")
-	//createCmd.Flags().String("principal", "", "Principal.")
-	//createCmd.Flags().String("operation", "", "Operation.")
-//	createCmd.Flags().String("permission", "", "Permission.")
+	createCmd.Flags().AddFlagSet(createACLFlags())
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
 	aclCmd.AddCommand(createCmd)
 
 	deleteCmd = &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL.",
+		Short: "Delete Kafka ACLs matching the search criteria.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(aclCmd.delete),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete all READ access ACLs for the specified user:",
+				Code: "confluent kafka acl delete --operation READ --allow --topic Test --principal User:Jane --host '*'",
+			}),
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	deleteCmd.Flags().AddFlagSet(aclConfigFlags())
+	deleteCmd.Flags().AddFlagSet(deleteACLFlags())
+	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	deleteCmd.Flags().SortFlags = false
 	aclCmd.AddCommand(deleteCmd)
 
 	listCmd = &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource.",
+		Short: "List Kafka ACLs.",
 		Args: cobra.NoArgs,
 		RunE: pcmd.NewCLIRunE(aclCmd.list),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all the local ACLs for the Kafka cluster:",
+				Code: "confluent acl list",
+			},
+			examples.Example{
+				Text: "List all the ACLs for the Kafka cluster that include allow permissions for the user Jane:",
+				Code: "confluent kafka acl list --allow --principal User:Jane",
+			},
+		),
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	listCmd.Flags().AddFlagSet(resourceFlags())
-	listCmd.Flags().Int("service-account", 0, "Service account ID.")
+	listCmd.Flags().AddFlagSet(aclFlags())
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	aclCmd.AddCommand(listCmd)
 }
 
 func (aclCmd *aclOnPremCommand) list(cmd *cobra.Command, _ []string) error {
-	acl, err := parse(cmd)
-	if err != nil {
-		return err
+	acl := aclutil.ParseAclRequest(cmd)
+	if acl.Errors != nil {
+		return acl.Errors
 	}
 	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
-	opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
 	}
-	aclGetResp, httpResp, err := restClient.ACLApi.ClustersClusterIdAclsGet(restContext, clusterId, &opts)
+	opts := aclutil.AclRequestToListAclReqest(acl)
+	aclGetResp, httpResp, err := restClient.ACLApi.ClustersClusterIdAclsGet(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp, cmd.OutOrStdout())
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data, cmd.OutOrStdout(), onPremAclListFields, onPremAclListStructuredRenames)
 }
 
-//func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
-//	acls, err := parse(cmd)
-//	if err != nil {
-//		return err
-//	}
-//	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
-//	if err != nil {
-//		return err
-//	}
-//	var bindings []*schedv1.ACLBinding
-//	for _, acl := range acls {
-//		validateAddAndDelete(acl)
-//		if acl.errors != nil {
-//			return acl.errors
-//		}
-//		bindings = append(bindings, acl.ACLBinding)
-//	}
-//	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
-//	if err != nil {
-//		return err
-//	}
-//	for i, binding := range bindings {
-//		opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
-//		httpResp, err := restClient.ACLApi.ClustersClusterIdAclsPost(restContext, clusterId, &opts)
-//		if err != nil {
-//			if i > 0 {
-//				_ = aclutil.PrintACLs(cmd, bindings[:i], cmd.OutOrStdout())
-//			}
-//			return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
-//		} else if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
-//			if i > 0 {
-//				_ = aclutil.PrintACLs(cmd, bindings[:i], cmd.OutOrStdout())
-//			}
-//			return errors.NewErrorWithSuggestions(
-//				fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
-//				errors.InternalServerErrorSuggestions)
-//		}
-//	}
-//	return aclutil.PrintACLs(cmd, bindings, cmd.OutOrStdout())
-//}
-
 func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
-	acl := parseCreatAclRequest(cmd)
-	acl = validateCreateAclRequestData(acl)
-	if acl.errors != nil {
-		return acl.errors
+	acl := aclutil.ParseAclRequest(cmd)
+	acl = validateCreateDeleteAclRequestData(acl)
+	if acl.Errors != nil {
+		return acl.Errors
 	}
 	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
@@ -169,32 +127,43 @@ func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	var opts kafkarestv3.ClustersClusterIdAclsPostOpts
-	opts.CreateAclRequestData = optional.NewInterface(*acl.CreateAclRequestData)
-	httpResp, err := restClient.ACLApi.ClustersClusterIdAclsPost(restContext, clusterId, &opts)
+	opts := aclutil.AclRequestToCreateAclReqest(acl)
+	httpResp, err := restClient.ACLApi.ClustersClusterIdAclsPost(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}
-	utils.Println(cmd, "yeeted a new acl")
-	// TODO print the created acl
-	return nil
+	aclData := aclutil.CreateAclRequestDataToAclData(acl)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData}, cmd.OutOrStdout(), onPremAclListFields, onPremAclListStructuredRenames)
 }
 
 func (aclCmd *aclOnPremCommand) delete(cmd *cobra.Command, _ []string) error {
-	return nil
+	acl := aclutil.ParseAclRequest(cmd)
+	acl = validateCreateDeleteAclRequestData(acl)
+	if acl.Errors != nil {
+		return acl.Errors
+	}
+	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
+	if err != nil {
+		return err
+	}
+	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	if err != nil {
+		return err
+	}
+	opts := aclutil.AclRequestToDeleteAclReqest(acl)
+	aclDeleteResp, httpResp, err := restClient.ACLApi.ClustersClusterIdAclsDelete(restContext, clusterId, opts)
+	if err != nil {
+		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
+	}
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data, cmd.OutOrStdout(), onPremAclListFields, onPremAclListStructuredRenames)
 }
 
-type CreateAclRequestDataWithError struct {
-	*kafkarestv3.CreateAclRequestData
-	errors error
-}
-
-func validateCreateAclRequestData(aclConfiguration *CreateAclRequestDataWithError) *CreateAclRequestDataWithError {
+func validateCreateDeleteAclRequestData(aclConfiguration *aclutil.AclRequestDataWithError) *aclutil.AclRequestDataWithError {
 	// delete is deliberately less powerful in the cli than in the API to prevent accidental
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.Permission == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.PatternType == "" {
@@ -202,22 +171,36 @@ func validateCreateAclRequestData(aclConfiguration *CreateAclRequestDataWithErro
 	}
 
 	if aclConfiguration.ResourceType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
-			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
+			aclutil.ConvertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }
 
+func createACLFlags() *pflag.FlagSet {
+	flgSet := aclFlags()
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	return flgSet
+}
+
+func deleteACLFlags() *pflag.FlagSet {
+	flgSet := aclFlags()
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	_ = cobra.MarkFlagRequired(flgSet, "host")
+	return flgSet
+}
+
 func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	//flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(kafkarestv3.ACLOPERATION_ALL, kafkarestv3.ACLOPERATION_READ, kafkarestv3.ACLOPERATION_WRITE,		// TODO : do we want the ALL operation included? (included w iam acl but not in cloud)
+		aclutil.ConvertToFlags(kafkarestv3.ACLOPERATION_ALL, kafkarestv3.ACLOPERATION_READ, kafkarestv3.ACLOPERATION_WRITE,		// TODO : do we want the ALL operation included? (included w iam acl but not in cloud)
 			kafkarestv3.ACLOPERATION_CREATE, kafkarestv3.ACLOPERATION_DELETE, kafkarestv3.ACLOPERATION_ALTER,
 			kafkarestv3.ACLOPERATION_DESCRIBE, kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
 			kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS, kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
@@ -230,117 +213,6 @@ access to the provided operations on the Kafka cluster itself.`)
 operations on the topics that start with that prefix, depending on whether
 the --prefix option was also passed.`)
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
-	_ = cobra.MarkFlagRequired(flgSet, "principal")
-	_ = cobra.MarkFlagRequired(flgSet, "operation")
-	//_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
 	flgSet.SortFlags = false
 	return flgSet
-}
-
-func convertToFlags(operations ...interface{}) string {
-	var ops []string
-
-	for _, v := range operations {
-		if v == mds.ACLRESOURCETYPE_GROUP {
-			v = "consumer-group"
-		}
-		if v == mds.ACLRESOURCETYPE_CLUSTER {
-			v = "cluster-scope"
-		}
-		s := fmt.Sprintf("%v", v)
-		s = strings.ReplaceAll(s, "_", "-")
-		ops = append(ops, strings.ToLower(s))
-	}
-
-	sort.Strings(ops)
-	return strings.Join(ops, ", ")
-}
-
-func parseCreatAclRequest(cmd *cobra.Command) *CreateAclRequestDataWithError {
-	aclRequest := &CreateAclRequestDataWithError{
-		CreateAclRequestData: &kafkarestv3.CreateAclRequestData{
-			Host: "*",
-		},
-		errors: nil,
-	}
-	cmd.Flags().Visit(populateCreateAclRequest(aclRequest))
-	return aclRequest
-}
-
-func populateCreateAclRequest(conf *CreateAclRequestDataWithError) func(*pflag.Flag) {
-	return func(flag *pflag.Flag) {
-		v := flag.Value.String()
-		switch n := flag.Name; n {
-		case "consumer-group":
-			setCreateAclRequestResourcePattern(conf, "GROUP", v) // set aclRequestData.ResourceType and aclRequestData.ResourceName
-		case "cluster-scope":
-			// The only valid name for a cluster is kafka-cluster
-			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
-			setCreateAclRequestResourcePattern(conf, "cluster", "kafka-cluster")
-		case "topic":
-			fallthrough
-		case "delegation-token":
-			fallthrough
-		case "transactional-id":
-			setCreateAclRequestResourcePattern(conf, n, v)
-		case "allow":
-			conf.Permission = kafkarestv3.ACLPERMISSION_ALLOW
-		case "deny":
-			conf.Permission = kafkarestv3.ACLPERMISSION_DENY
-		case "prefix":
-			conf.PatternType = kafkarestv3.ACLPATTERNTYPE_PREFIXED
-		case "principal":
-			conf.Principal = v
-		case "host":
-			conf .Host = v
-		case "operation":
-			v = strings.ToUpper(v)
-			v = strings.ReplaceAll(v, "-", "_")
-			enumUtils := enumUtils{}
-			enumUtils.init(
-				kafkarestv3.ACLOPERATION_UNKNOWN,
-				kafkarestv3.ACLOPERATION_ANY,
-				kafkarestv3.ACLOPERATION_ALL,
-				kafkarestv3.ACLOPERATION_READ,
-				kafkarestv3.ACLOPERATION_WRITE,
-				kafkarestv3.ACLOPERATION_CREATE,
-				kafkarestv3.ACLOPERATION_DELETE,
-				kafkarestv3.ACLOPERATION_ALTER,
-				kafkarestv3.ACLOPERATION_DESCRIBE,
-				kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
-				kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS,
-				kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
-				kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE,
-			)
-			if op, ok := enumUtils[v]; ok {
-				conf.Operation = op.(kafkarestv3.AclOperation)
-				break
-			}
-			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: "+v))
-		}
-	}
-}
-
-func setCreateAclRequestResourcePattern(conf *CreateAclRequestDataWithError, n, v string) {
-	if conf.ResourceType != "" {
-		// A resourceType has already been set with a previous flag
-		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
-		return
-	}
-
-	// Normalize the resource pattern name
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
-
-	enumUtils := enumUtils{}
-	enumUtils.init(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-		kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
-	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
-
-	if conf.ResourceType == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
-		conf.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
-	}
-	conf.ResourceName = v
 }

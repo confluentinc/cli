@@ -25,6 +25,8 @@ var (
 	createCmd *cobra.Command
 	deleteCmd *cobra.Command
 	listCmd   *cobra.Command
+	aclListFields = []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+	aclListStructuredRenames = []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
 )
 
 type aclCommand struct {
@@ -123,7 +125,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp, os.Stdout)
+			return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data, cmd.OutOrStdout(), aclListFields, aclListStructuredRenames)
 		}
 	}
 
