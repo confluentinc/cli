@@ -450,7 +450,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.ChooseRightEnvironmentSuggestions)
 	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
