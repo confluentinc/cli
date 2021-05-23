@@ -448,6 +448,10 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		AccountId: c.EnvironmentId(),
 		Id:        args[0],
 	}
+	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
+	if err != nil {
+		return err
+	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -458,10 +462,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		req.Name = name
 	} else {
-		currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
-		if err != nil {
-			return err
-		}
 		req.Name = currentCluster.Name
 	}
 	if cmd.Flags().Changed("cku") {
@@ -472,11 +472,20 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		if cku <= 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
+
+		// Cluster can't be resized while it's provisioning or being expanded already.
+		// Name _can_ be changed during these times, though.
+		if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
+			return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+		} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
+			return errors.New(errors.KafkaClusterExpandingErrorMsg)
+		}
+
 		req.Cku = int32(cku)
 	}
 	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
 	return outputKafkaClusterDescription(cmd, updatedCluster)
 }
