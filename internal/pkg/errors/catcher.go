@@ -126,7 +126,7 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 	if isResourceNotFoundError(err) {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
-	return err
+	return NewErrorWithSuggestions(err.Error(), ChooseRightEnvironmentSuggestions)
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {
