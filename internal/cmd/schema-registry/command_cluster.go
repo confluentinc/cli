@@ -305,8 +305,6 @@ func schemaCountQueryFor(schemaRegistryId string) *ccloud.MetricsApiRequest {
 			Value: schemaRegistryId,
 		},
 		Granularity: "PT1M",
-		GroupBy:     []string{"resource.schema_registry.id"},
 		Intervals:   []string{"PT1M/now-2m|m"},
-		Limit:       25,
 	}
 }
