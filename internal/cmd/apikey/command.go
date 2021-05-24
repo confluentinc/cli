@@ -184,9 +184,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
-	UserResourceId, err := cmd.Flags().GetString("service-account")
+	saId, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
+	}
+
+	UserId := int32(0)
+	if isResourceId(saId) {
+		UserId, err = c.getUserIdByResourceId(saId)
+		if err != nil {
+			return err
+		}
+	} else {
+		UserIdp, _ := strconv.Atoi(saId)
+		UserId = int32(UserIdp)
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -194,12 +205,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if UserResourceId != "" {
+		if UserId != 0 {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		UserResourceId = c.State.Auth.User.ResourceId
+		UserId = c.State.Auth.User.Id
 	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserResourceId: UserResourceId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: UserId})
 	if err != nil {
 		return err
 	}
@@ -209,7 +220,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users := map[string]*orgv1.User{}
+	users := map[int32]*orgv1.User{}
 
 	serviceAccounts, err := getServiceAccountsMap(c.Client)
 	if err != nil {
@@ -232,13 +243,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		var email string
-		if _, ok := serviceAccounts[apiKey.UserResourceId]; ok {
+		if _, ok := serviceAccounts[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
 			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
 			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
 				email = "<auditlog service account>"
-			} else if user, ok := users[apiKey.UserResourceId]; ok {
+			} else if user, ok := users[apiKey.UserId]; ok {
 				if user != nil {
 					email = user.Email
 				} else {
@@ -248,10 +259,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: apiKey.UserResourceId})
 				if err != nil {
 					email = "<deactivated user>"
-					users[apiKey.UserResourceId] = nil
+					users[apiKey.UserId] = nil
 				} else {
 					email = user.Email
-					users[user.ResourceId] = user
+					users[user.Id] = user
 				}
 			}
 		}
@@ -294,14 +305,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func getServiceAccountsMap(client *ccloud.Client) (map[string]bool, error) {
+func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
 	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	saMap := make(map[string]bool)
+	saMap := make(map[int32]bool)
 	for _, sa := range serviceAccounts {
-		saMap[sa.ResourceId] = true
+		saMap[sa.Id] = true
 	}
 	return saMap, nil
 }
@@ -362,7 +373,6 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if resourceType != pcmd.CloudResourceType {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
-	fmt.Println(key.UserResourceId)
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
 		return err
@@ -389,9 +399,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, key.UserResourceId)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.UserResourceId)
 	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
-	fmt.Println(userKey.UserResourceId)
 	return nil
 }
 
@@ -625,20 +634,18 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) setUserId(currentUser bool, UserId string, isResourceId bool) (string, error) {
-	if currentUser {
-		if isResourceId {
-			if UserId != "" {
-				return "", errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
-			}
-			UserId = c.State.Auth.User.ResourceId
-			return UserId, nil
-		} else {
-			if UserId != "" {
-				return "", errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
-			}
-			UserId = string(c.State.Auth.User.Id)
-			return UserId, nil
+func (c *command) getUserIdByResourceId(resourceId string) (int32, error) {
+	if resourceId == "" {
+		return 0, nil
+	}
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	UserId := int32(0)
+	for _, user := range users {
+		if resourceId == user.ResourceId {
+			UserId = user.Id
 		}
 	}
 	return UserId, nil
