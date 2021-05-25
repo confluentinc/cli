@@ -414,7 +414,7 @@ func (c *aclCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *aclCommand) ACLresourceIdtoNumericId(acl []*ACLConfiguration) error {
+func (c *aclCommand) ACLResourceIdtoNumericId(acl []*ACLConfiguration) error {
 	IdMap, err := getResourceIdMap(c.Client)
 	if err != nil {
 		return err
@@ -423,7 +423,6 @@ func (c *aclCommand) ACLresourceIdtoNumericId(acl []*ACLConfiguration) error {
 		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
 			id := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
 			_, err := strconv.Atoi(id)
-			fmt.Println("Hey!")
 			if err != nil { // it's a resource id
 				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(IdMap[id])) // translate into numeric ID
 			}
