@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connector"
 	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
+
 	//"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
@@ -42,6 +43,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	//pfeedback "github.com/confluentinc/cli/internal/pkg/feedback"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
@@ -168,9 +170,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		cli.AddCommand(serviceAccountCmd.Command)
 		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, logger, analyticsClient, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent))
-		if os.Getenv("XX_CCLOUD_RBAC") != "" {
-			cli.AddCommand(iam.New(cliName, prerunner))
-		}
+		cli.AddCommand(iam.New(cliName, prerunner))
 	} else if cliName == "confluent" {
 		cli.AddCommand(auditlog.New(cliName, prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))

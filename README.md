@@ -2,7 +2,6 @@
 
 [![Build Status](https://dev.azure.com/confluentinc/cli/_apis/build/status/confluentinc.cli?branchName=master)](https://dev.azure.com/confluentinc/cli/_build/latest?definitionId=1&branchName=master)
 ![Release](release.svg)
-[![codecov](https://codecov.io/gh/confluentinc/cli/branch/master/graph/badge.svg?token=67t1cdciLU)](https://codecov.io/gh/confluentinc/cli)
 
 This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Confluent "*Converged CLI*" efforts.
 In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
@@ -124,12 +123,12 @@ in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/10
 
 ## Developing
 
-This repo requires golang 1.16. We recommend you use `goenv` to manage your go versions.
+This repo requires golang 1.16.3.  We recommend you use `goenv` to manage your go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 ### Go Version
 
-Fortunately `goenv` supports 1.16 already. If your `goenv` does not list this as an option,
+Fortunately `goenv` supports 1.16.3 already. If your `goenv` does not list this as an option,
 you may have to build `goenv`'s `master` branch from source, which you can do with the
 following instructions:
 

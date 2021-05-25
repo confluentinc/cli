@@ -31,7 +31,7 @@ var (
 	ccloudResourcePatternHumanListLabels      = []string{"Principal", "Email", "Role", "ResourceType", "Name", "PatternType"}
 	ccloudResourcePatternStructuredListLabels = []string{"principal", "email", "role", "resource_type", "name", "pattern_type"}
 
-	//TODO: please move this to a backend route
+	//TODO: please move this to a backend route (https://confluentinc.atlassian.net/browse/CIAM-890)
 	clusterScopedRoles = map[string]bool{
 		"SystemAdmin":   true,
 		"ClusterAdmin":  true,
@@ -50,6 +50,7 @@ var (
 
 	organizationScopedRoles = map[string]bool{
 		"OrganizationAdmin": true,
+		"MetricsViewer":     true,
 	}
 )
 
@@ -146,11 +147,11 @@ func (c *rolebindingCommand) init() {
 	}
 
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List role bindings.",
-		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
-		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
+		Use:     "list",
+		Short:   "List role bindings.",
+		Long:    "List the role bindings for a particular principal and/or role, and a particular scope.",
+		Args:    cobra.NoArgs,
+		RunE:    cmd.NewCLIRunE(c.list),
 		Example: example,
 	}
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
@@ -178,6 +179,12 @@ func (c *rolebindingCommand) init() {
 		Short: "Create a role binding.",
 		Args:  cobra.NoArgs,
 		RunE:  cmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a role binding for the client permitting it produce to the topic users.",
+				Code: "confluent iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+			},
+		),
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")

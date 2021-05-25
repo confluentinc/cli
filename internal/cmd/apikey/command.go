@@ -12,6 +12,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -491,7 +492,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Context.UseAPIKey(cmd, apiKey, cluster.ID)
 	if err != nil {
-		return errors.Wrap(err, errors.APIKeyUseFailedErrorMsg)
+		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
 	}
 	utils.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil

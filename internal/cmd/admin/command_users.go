@@ -17,17 +17,19 @@ import (
 )
 
 var (
-	listFields    = []string{"ResourceId", "Email", "FirstName", "LastName", "Status"}
-	humanLabels   = []string{"Resource ID", "Email", "First Name", "Last Name", "Status"}
+	listFields    = []string{"Id", "ResourceId", "Email", "FirstName", "LastName", "Status"}
+	humanLabels   = []string{"Id", "Resource ID", "Email", "First Name", "Last Name", "Status"}
 	humanLabelMap = map[string]string{
+		"Id":         "Id",
 		"ResourceId": "Resource ID",
 		"Email":      "Email",
 		"FirstName":  "First Name",
 		"LastName":   "Last Name",
 		"Status":     "Status",
 	}
-	structuredLabels   = []string{"resource_id", "email", "first_name", "last_name", "status"}
+	structuredLabels   = []string{"id", "resource_id", "email", "first_name", "last_name", "status"}
 	structuredLabelMap = map[string]string{
+		"Id":         "id",
 		"ResourceId": "resource_id",
 		"Email":      "email",
 		"FirstName":  "first_name",
@@ -47,6 +49,7 @@ type userCommand struct {
 }
 
 type userStruct struct {
+	Id         int32
 	ResourceId string
 	Email      string
 	FirstName  string
@@ -149,6 +152,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		outputWriter.AddElement(&userStruct{
+			Id:         user.Id,
 			ResourceId: userProfile.ResourceId,
 			Email:      userProfile.Email,
 			FirstName:  userProfile.FirstName,

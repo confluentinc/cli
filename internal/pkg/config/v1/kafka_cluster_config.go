@@ -10,5 +10,6 @@ type KafkaClusterConfig struct {
 	APIEndpoint string                    `json:"api_endpoint,omitempty" hcl:"api_endpoint"`
 	APIKeys     map[string]*v0.APIKeyPair `json:"api_keys" hcl:"api_keys"`
 	// APIKey is your active api key for this cluster and references a key in the APIKeys map
-	APIKey string `json:"api_key,omitempty" hcl:"api_key"`
+	APIKey       string `json:"api_key,omitempty" hcl:"api_key"`
+	RestEndpoint string `json:"rest_endpoint,omitempty" hcl:"rest_endpoint"`
 }

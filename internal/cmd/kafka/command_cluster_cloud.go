@@ -28,7 +28,7 @@ var (
 	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
 	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -49,7 +49,9 @@ var (
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
-		"EncryptionKeyId":    "encryption_key_id"}
+		"EncryptionKeyId":    "encryption_key_id",
+		"RestEndpoint":       "rest_endpoint",
+	}
 	durabilityToAvaiablityNameMap = map[string]string{
 		"LOW":  singleZone,
 		"HIGH": multiZone,
@@ -87,6 +89,7 @@ type describeStruct struct {
 	Endpoint           string
 	ApiEndpoint        string
 	EncryptionKeyId    string
+	RestEndpoint       string
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
@@ -119,9 +122,11 @@ func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
-		Long: "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
+		Long:  "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
+			return c.create(cmd, args, form.NewPrompt(os.Stdin))
+		}),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
@@ -207,7 +212,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.Prompt) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -245,7 +250,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if encryptionKeyID != "" {
-		if err := c.validateEncryptionKey(cmd, cloud, clouds); err != nil {
+		if err := c.validateEncryptionKey(cmd, prompt, validateEncryptionKeyInput{
+			Cloud:          cloud,
+			MetadataClouds: clouds,
+			AccountID:      c.EnvironmentId(),
+		}); err != nil {
 			return err
 		}
 	}
@@ -306,11 +315,75 @@ var encryptionKeyPolicy = template.Must(template.New("encryptionKey").Parse(`{{r
     "Resource" : "*"
 }{{end}}`))
 
-func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string, clouds []*schedv1.CloudMetadata) error {
-	accounts := getEnvironmentsForCloud(cloud, clouds)
+type validateEncryptionKeyInput struct {
+	Cloud          string
+	MetadataClouds []*schedv1.CloudMetadata
+	AccountID      string
+}
+
+func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
+	switch input.Cloud {
+	case "aws":
+		return c.validateAWSEncryptionKey(cmd, prompt, input)
+	case "gcp":
+		return c.validateGCPEncryptionKey(cmd, prompt, input)
+	default:
+		return errors.New(errors.BYOKSupportErrorMsg)
+	}
+}
+
+var permitBYOKGCP = template.Must(template.New("byok_gcp_permissions").Parse(`Create a role with these permissions, add the identity as a member of your key, and grant your role to the member:
+
+Permissions:
+  - cloudkms.cryptoKeyVersions.useToDecrypt
+  - cloudkms.cryptoKeyVersions.useToEncrypt
+  - cloudkms.cryptoKeys.get
+
+Identity:
+  {{.ExternalIdentity}}`))
+
+func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
+	ctx := context.Background()
+	// The call is idempotent so repeated create commands return the same ID for the same account.
+	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	err = permitBYOKGCP.Execute(buf, struct {
+		ExternalIdentity string
+	}{
+		ExternalIdentity: externalID,
+	})
+	if err != nil {
+		return err
+	}
+	buf.WriteString("\n\n")
+	utils.Println(cmd, buf.String())
+
+	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
+	f := form.New(
+		form.Field{ID: "authorized",
+			Prompt:    promptMsg,
+			IsYesOrNo: true})
+	for {
+		if err := f.Prompt(cmd, prompt); err != nil {
+			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
+			continue
+		}
+		if !f.Responses["authorized"].(bool) {
+			return errors.Errorf(errors.AuthorizeIdentityErrorMsg, externalID)
+
+		}
+		return nil
+	}
+}
+
+func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
+	accounts := getEnvironmentsForCloud(input.Cloud, input.MetadataClouds)
 
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyBYOKPermissionsHeaderMsg)
+	buf.WriteString(errors.CopyBYOKAWSPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
@@ -318,14 +391,14 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, cloud string,
 	buf.WriteString("\n\n")
 	utils.Println(cmd, buf.String())
 
-	prompt := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
+	promptMsg := "Please confirm you've authorized the key for these accounts: " + strings.Join(accounts, ", ")
 	if len(accounts) == 1 {
-		prompt = "Please confirm you've authorized the key for this account: " + accounts[0]
+		promptMsg = "Please confirm you've authorized the key for this account: " + accounts[0]
 	}
 
-	f := form.New(form.Field{ID: "authorized", Prompt: prompt, IsYesOrNo: true})
+	f := form.New(form.Field{ID: "authorized", Prompt: promptMsg, IsYesOrNo: true})
 	for {
-		if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+		if err := f.Prompt(cmd, prompt); err != nil {
 			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
@@ -504,6 +577,7 @@ func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStru
 		Endpoint:           cluster.Endpoint,
 		ApiEndpoint:        cluster.ApiEndpoint,
 		EncryptionKeyId:    cluster.EncryptionKeyId,
+		RestEndpoint:       cluster.RestEndpoint,
 	}
 }
 
@@ -511,7 +585,7 @@ func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster) []string {
 	describeFields := basicDescribeFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
-		if isExpanding(cluster) {
+		if isExpanding(cluster) || isShrinking(cluster) {
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
 		if cluster.EncryptionKeyId != "" {
@@ -527,6 +601,11 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func isShrinking(cluster *schedv1.KafkaCluster) bool {
+	return cluster.Status == schedv1.ClusterStatus_SHRINKING ||
+		(cluster.PendingCku < cluster.Cku && cluster.PendingCku != 0)
 }
 
 func (c *clusterCommand) Cmd() *cobra.Command {

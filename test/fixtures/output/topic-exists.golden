@@ -1,4 +1,4 @@
-Error: CCloud backend error: 1 error occurred:
-	* error creating topic dupTopic: 
+Error: topic "topic-exist" already exists for Kafka cluster "lkc-create-topic"
 
-
+Suggestions:
+    To list topics for the cluster "lkc-create-topic", use `ccloud kafka topic list --cluster lkc-create-topic`.

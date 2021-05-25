@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	CONFIG = "config"
-	NAME = "name"
+	CONFIG          = "config"
+	NAME            = "name"
 	CONNECTOR_CLASS = "connector.class"
 )
 

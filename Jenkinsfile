@@ -36,8 +36,8 @@ def job = {
                         "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                         sh '''#!/usr/bin/env bash
                             export HASH=$(git rev-parse --short=7 HEAD)
-                            wget "https://golang.org/dl/go1.16.linux-amd64.tar.gz" --quiet --output-document go1.16.tar.gz
-                            tar -C $(pwd) -xzf go1.16.tar.gz
+                            wget "https://golang.org/dl/go1.16.3.linux-amd64.tar.gz" --quiet --output-document go1.16.3.tar.gz
+                            tar -C $(pwd) -xzf go1.16.3.tar.gz
                             export GOROOT=$(pwd)/go
                             export GOPATH=$(pwd)/go/path
                             export GOBIN=$(pwd)/go/bin
@@ -81,7 +81,7 @@ def job = {
                             export confluent_s3="https://s3-us-west-2.amazonaws.com"
                             git clone git@github.com:confluentinc/muckrake.git
                             cd muckrake
-                            git checkout 6.0.x
+                            git checkout 6.2.x
                             sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                             sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                             sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -106,7 +106,7 @@ def job = {
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                 ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                 withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=6.0.x"]) {
+                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=6.2.x"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",

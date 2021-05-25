@@ -1,5 +1,5 @@
---- cli/Makefile	2021-03-16 11:28:05.000000000 -0700
-+++ debian/Makefile	2021-04-03 22:51:23.000000000 -0700
+--- cli/Makefile	2021-05-01 15:24:41.000000000 -0500
++++ debian/Makefile	2021-04-15 19:51:20.000000000 -0500
 @@ -1,257 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -56,7 +56,7 @@
 -deps:
 -	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 -	export GOPRIVATE=github.com/confluentinc && \
--	go get github.com/goreleaser/goreleaser@v0.142.0 && \
+-	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 -	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 -	go get github.com/mitchellh/golicense@v0.1.1
 -
@@ -339,11 +339,11 @@
 -coverage-integ:
 -      ifdef CI
 -	@# Run integration tests with coverage.
--	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 20m -ldflags '-buildmode=exe'
+-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 -      else
 -	@# Run integration tests.
--	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 20m -ldflags '-buildmode=exe'
+-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
 -      endif
 -
 -

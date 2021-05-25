@@ -17,10 +17,10 @@ const (
 	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
 	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
 	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s " +
+	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	EnvLoginFailedMsg = "Non-interactive login with environment variables failed: %s\n"
-	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s " +
+	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	NetrcLoginFailedMsg = "Non-interactive login with netrc failed: %s\n"
 
@@ -45,8 +45,12 @@ const (
 	InitContextMsg = "Context \"%s\" initialized and set as current context.\n"
 
 	// kafka cluster commands
-	UseKafkaClusterMsg           = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
-	CopyBYOKPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
+	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+
+	// kafka consumer-group commands
+	UnknownGroupMsg       = "Unknown Consumer Group: \"%s\".\n"
+	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
 	StartingProducerMsg    = "Starting Kafka Producer. ^C or ^D to exit"
@@ -64,6 +68,10 @@ const (
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
 	CreatedLinkMsg = "Created cluster link \"%s\".\n"
 	UpdatedLinkMsg = "Updated cluster link \"%s\".\n"
+
+	// kafka mirror commands
+	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only support with kafka rest proxy."
+	CreatedMirrorMsg         = "Created mirror topic \"%s\".\n"
 
 	// kafka acl commands
 	DeletedACLsMsg      = "Deleted ACLs.\n"

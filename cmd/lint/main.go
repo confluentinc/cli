@@ -33,7 +33,7 @@ var (
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
-		"deserializers", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init", "io",
+		"deserializers", "env", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init", "io",
 		"json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "pem", "plaintext",
 		"producer.config", "protobuf", "rbac", "readwrite", "recv", "rolebinding", "rolebindings", "signup",
 		"single-zone", "sr", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us", "v2", "vpc",
@@ -63,10 +63,12 @@ var rules = []linter.Rule{
 		linter.RequireNamedArgument(
 			linter.NamedArgumentConfig{CreateCommandArg: "<name>", OtherCommandsArg: "<id>"},
 			map[string]linter.NamedArgumentConfig{
-				"environment": {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
-				"role":        {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
-				"topic":       {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
-				"api-key":     {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+				"environment":    {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
+				"role":           {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
+				"topic":          {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
+				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
+				"lag":            {CreateCommandArg: "N/A", OtherCommandsArg: "<consumer-group>"},
 			},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
@@ -99,6 +101,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name
 		linter.ExcludeCommandContains("connector-catalog describe"),
+		// skip connector event describe as it shows connector log events configuration for an org
+		linter.ExcludeCommandContains("connector event describe"),
 		// skip feedback command
 		linter.ExcludeCommand("feedback"),
 		// skip signup command
@@ -110,6 +114,9 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
+		// skip cluster linking commands
+		linter.ExcludeCommandContains("kafka link"),
+		linter.ExcludeCommandContains("kafka mirror"),
 	),
 	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
 	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
@@ -135,7 +142,7 @@ var rules = []linter.Rule{
 	),
 	linter.Filter(
 		linter.RequireLengthBetween("Short", 13, 60),
-		linter.ExcludeCommandContains("secret"),
+		linter.ExcludeCommandContains("secret", "mirror"),
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
@@ -145,12 +152,12 @@ var rules = []linter.Rule{
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
-		linter.ExcludeCommandContains("secret"),
+		linter.ExcludeCommandContains("secret", "mirror"),
 	),
 	linter.Filter(
 		linter.RequireRealWords("Use", '-'),
 		linter.ExcludeCommandContains("unregister"),
-		linter.ExcludeCommandContains("audit-log"),
+		linter.ExcludeCommandContains("audit-log", "failover"),
 	),
 }
 
@@ -162,7 +169,7 @@ var flagRules = []linter.FlagRule{
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
 			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
 			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
-			"value-deserializer", "bootstrap-servers",
+			"value-deserializer", "bootstrap-servers", "source-bootstrap-server", "source-cluster-id", "source-api-secret",
 		),
 	),
 	linter.FlagFilter(
@@ -195,10 +202,14 @@ var flagRules = []linter.FlagRule{
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
 			"skip-message-on-error", "socket-buffer-size", "client-cert-path", "client-key-path",
+			"source-bootstrap-server", "source-cluster-id", "source-api-secret", "source-api-key",
 		),
 	),
 	linter.RequireFlagRealWords('-'),
-	linter.RequireFlagUsageRealWords,
+	linter.FlagFilter(
+		linter.RequireFlagUsageRealWords,
+		linter.ExcludeFlag("source-api-key", "source-api-secret"),
+	),
 }
 
 func main() {

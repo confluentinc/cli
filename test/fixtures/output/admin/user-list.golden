@@ -1,7 +1,7 @@
-  Resource ID |         Email         | First Name | Last Name |   Status    
-+-------------+-----------------------+------------+-----------+------------+
-  u11         | bstrauch@confluent.io | Brian      | Strauch   | Unverified  
-  u-17        | mtodzo@confluent.io   | Miles      | Todzo     | Unverified  
-  u-11aaa     | u-11aaa@confluent.io  |         11 | Aaa       | Unverified  
-  u-22bbb     | u-22bbb@confluent.io  |         22 | Bbb       | Unverified  
-  u-33ccc     | u-33ccc@confluent.io  |         33 | Ccc       | Unverified  
+  Id | Resource ID |         Email         | First Name | Last Name |   Status    
++----+-------------+-----------------------+------------+-----------+------------+
+   1 | u11         | bstrauch@confluent.io | Brian      | Strauch   | Unverified  
+   2 | u-17        | mtodzo@confluent.io   | Miles      | Todzo     | Unverified  
+   3 | u-11aaa     | u-11aaa@confluent.io  |         11 | Aaa       | Unverified  
+   4 | u-22bbb     | u-22bbb@confluent.io  |         22 | Bbb       | Unverified  
+   5 | u-33ccc     | u-33ccc@confluent.io  |         33 | Ccc       | Unverified  

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
@@ -31,7 +33,7 @@ func NewDynamicContext(context *v3.Context, resolver FlagResolver, client *cclou
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {
 	if d.resolver == nil {
 		return nil
 	}
@@ -43,17 +45,23 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		if d.Credential.CredentialType == v2.APIKey {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
 		}
-		envSet := false
-		for _, account := range d.State.Auth.Accounts {
-			if account.Id == envId {
-				d.Config.SetOverwrittenAccount(d.State.Auth.Account)
-				d.State.Auth.Account = account
-				envSet = true
-				break
-			}
-		}
+		envSet := d.verifyEnvironmentId(envId, d.State.Auth.Accounts)
+		// if environment ID is not found in config, make api call and check against those accounts
 		if !envSet {
-			return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+			if client == nil {
+				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+			}
+			accounts, err := client.Account.List(context.Background(), &orgv1.Account{})
+			if err != nil {
+				return err
+			}
+			envSet = d.verifyEnvironmentId(envId, accounts)
+			if envSet {
+				d.State.Auth.Accounts = accounts
+				_ = d.Save()
+			} else {
+				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, envId, d.Name)
+			}
 		}
 	}
 	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
@@ -69,6 +77,17 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	}
 	return nil
+}
+
+func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
+	for _, env := range environments {
+		if env.Id == envId {
+			d.Config.SetOverwrittenAccount(d.State.Auth.Account)
+			d.State.Auth.Account = env
+			return true
+		}
+	}
+	return false
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
@@ -105,19 +124,25 @@ func (d *DynamicContext) FindKafkaCluster(cmd *cobra.Command, clusterId string) 
 	if err != nil {
 		return nil, err
 	}
-	cluster := &v1.KafkaClusterConfig{
-		ID:          clusterId,
-		Name:        kcc.Name,
-		Bootstrap:   strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
-		APIEndpoint: kcc.ApiEndpoint,
-		APIKeys:     make(map[string]*v0.APIKeyPair),
-	}
+	cluster := KafkaClusterToKafkaClusterConfig(kcc)
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 	if err != nil {
 		return nil, err
 	}
 	return cluster, nil
+}
+
+func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster) *v1.KafkaClusterConfig {
+	clusterConfig := &v1.KafkaClusterConfig{
+		ID:           kcc.Id,
+		Name:         kcc.Name,
+		Bootstrap:    strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
+		APIEndpoint:  kcc.ApiEndpoint,
+		APIKeys:      make(map[string]*v0.APIKeyPair),
+		RestEndpoint: kcc.RestEndpoint,
+	}
+	return clusterConfig
 }
 
 func (d *DynamicContext) SetActiveKafkaCluster(cmd *cobra.Command, clusterId string) error {
