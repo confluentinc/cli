@@ -123,7 +123,7 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <ResouceId>",
+		Use:   "delete <ResourceId>",
 		Short: "Delete a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
@@ -172,7 +172,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.ResourceId)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -216,7 +216,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.ResourceId)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return nil
 }
 

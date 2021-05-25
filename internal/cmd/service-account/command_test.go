@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	UserId             = int32(123)
 	serviceAccountId   = "sa-55555"
 	serviceDescription = "testing"
 	serviceName        = "demo"
@@ -37,6 +38,7 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 	suite.userMock = &ccsdkmock.User{
 		CreateServiceAccountFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
 			return &orgv1.User{
+				Id:                 UserId,
 				ResourceId:         serviceAccountId,
 				ServiceName:        serviceName,
 				ServiceDescription: serviceDescription,
