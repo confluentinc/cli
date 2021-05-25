@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -101,6 +101,16 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	err = c.ACLresourceIdtoNumericId(acl)
+	if err != nil {
+		return err
+	}
+
+	IdMap, err := getUserIdMap(c.Client)
+	if err != nil {
+		return err
+	}
+
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
 		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
@@ -125,7 +135,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp, os.Stdout)
+			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, os.Stdout, IdMap)
 		}
 	}
 
@@ -140,11 +150,16 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return aclutil.PrintACLs(cmd, resp, os.Stdout)
+	return aclutil.PrintACLsWithMap(cmd, resp, os.Stdout, IdMap)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
+	if err != nil {
+		return err
+	}
+
+	err = c.ACLresourceIdtoNumericId(acls)
 	if err != nil {
 		return err
 	}
@@ -222,6 +237,11 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
+	if err != nil {
+		return err
+	}
+
+	err = c.ACLresourceIdtoNumericId(acls)
 	if err != nil {
 		return err
 	}
@@ -394,37 +414,44 @@ func (c *aclCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func isResourceId(Id string) bool {
-	if Id == "" {
-		return true
+func (c *aclCommand) ACLresourceIdtoNumericId(acl []*ACLConfiguration) error {
+	IdMap, err := getResourceIdMap(c.Client)
+	if err != nil {
+		return err
 	}
-	idx := strings.Index(Id, ":")
-	user := Id[idx+1:]
-	_, err := strconv.Atoi(user)
-	return err != nil
-}
-
-func (c *aclCommand) getServiceAccountACL(acl []*ACLConfiguration) error {
-	if acl[0].ACLBinding.Entry.Principal != "" { // it has a service-account flag
-		users, err := c.Client.User.GetServiceAccounts(context.Background())
-		if err != nil {
-			return err
-		}
-		id := acl[0].ACLBinding.Entry.Principal[5:] // extract service account id
-		idp, err := strconv.Atoi(id)
-		if err != nil { // it's a resource id
-			for _, user := range users {
-				if id == user.ResourceId {
-					acl[0].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(user.Id))
-				}
-			}
-		} else { // it's a numeric id
-			for _, user := range users {
-				if int32(idp) == user.Id {
-					acl[0].ACLBinding.Entry.Principal = "User:" + user.ResourceId
-				}
+	for i := 0; i < len(acl); i++ {
+		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
+			id := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
+			_, err := strconv.Atoi(id)
+			fmt.Println("Hey!")
+			if err != nil { // it's a resource id
+				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(IdMap[id])) // translate into numeric ID
 			}
 		}
 	}
 	return nil
+}
+
+func getResourceIdMap(client *ccloud.Client) (map[string]int32, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[string]int32)
+	for _, sa := range serviceAccounts {
+		saMap[sa.ResourceId] = sa.Id
+	}
+	return saMap, nil
+}
+
+func getUserIdMap(client *ccloud.Client) (map[int32]string, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[int32]string)
+	for _, sa := range serviceAccounts {
+		saMap[sa.Id] = sa.ResourceId
+	}
+	return saMap, nil
 }

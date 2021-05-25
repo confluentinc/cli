@@ -190,7 +190,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	UserId := int32(0)
-	if isResourceId(saId) {
+	if saId != "" && isResourceId(saId) {
 		UserId, err = c.getUserIdByResourceId(saId)
 		if err != nil {
 			return err
@@ -554,14 +554,14 @@ func (c *command) ServerComplete() []prompt.Suggest {
 }
 
 func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
-	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserResourceId: ""})
+	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
 	if err != nil {
 		return nil, errors.HandleCommon(err, c.Command)
 	}
 
 	var userApiKeys []*schedv1.ApiKey
 	for _, key := range apiKeys {
-		if key.UserResourceId != "" {
+		if key.UserId != 0 {
 			userApiKeys = append(userApiKeys, key)
 		}
 	}
@@ -652,9 +652,6 @@ func (c *command) getUserIdByResourceId(resourceId string) (int32, error) {
 }
 
 func isResourceId(Id string) bool {
-	if Id == "" {
-		return true
-	}
 	_, err := strconv.Atoi(Id)
 	return err != nil
 }
