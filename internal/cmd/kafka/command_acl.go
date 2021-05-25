@@ -101,7 +101,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.ACLresourceIdtoNumericId(acl)
+	err = c.ACLResourceIdtoNumericId(acl)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.ACLresourceIdtoNumericId(acls)
+	err = c.ACLResourceIdtoNumericId(acls)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.ACLresourceIdtoNumericId(acls)
+	err = c.ACLResourceIdtoNumericId(acls)
 	if err != nil {
 		return err
 	}
