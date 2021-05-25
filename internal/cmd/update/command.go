@@ -23,7 +23,7 @@ const (
 	S3BinRegion          = "us-west-2"
 	S3BinPrefix          = "%s-cli/binaries"
 	S3ReleaseNotesPrefix = "%s-cli/release-notes"
-	CheckFileFmt         = "~/.%s/update_check"
+	CheckFileFmt         = "%s/.%s/update_check"
 	CheckInterval        = 24 * time.Hour
 )
 
@@ -41,10 +41,11 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 		S3ObjectKey:          objectKey,
 		Logger:               logger,
 	})
+	homedir, _ := os.UserHomeDir()
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,
 		DisableCheck:  disableUpdateCheck,
-		CheckFile:     fmt.Sprintf(CheckFileFmt, cliName),
+		CheckFile:     fmt.Sprintf(CheckFileFmt, homedir, cliName),
 		CheckInterval: CheckInterval,
 		Logger:        logger,
 		Out:           os.Stdout,

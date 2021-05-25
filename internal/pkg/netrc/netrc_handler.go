@@ -9,8 +9,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/atrox/homedir"
-
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -69,10 +67,7 @@ type NetrcHandlerImpl struct {
 }
 
 func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
-	filename, err := homedir.Expand(n.FileName)
-	if err != nil {
-		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
-	}
+	filename := GetNetrcFilePath(false)
 
 	netrcFile, err := getOrCreateNetrc(filename)
 	if err != nil {
@@ -136,10 +131,7 @@ func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
 // Returns the first match
 // For SSO case the password is the refreshToken
 func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error) {
-	filename, err := homedir.Expand(n.FileName)
-	if err != nil {
-		return nil, errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
-	}
+	filename := GetNetrcFilePath(false)
 	if params.CLIName == "" {
 		return nil, errors.New(errors.NetrcCLINameMissingErrorMsg)
 	}
@@ -210,9 +202,10 @@ func GetNetrcFilePath(isIntegrationTest bool) string {
 	if isIntegrationTest {
 		return NetrcIntegrationTestFile
 	}
+	homedir, _ := os.UserHomeDir()
 	if runtime.GOOS == "windows" {
-		return "~/_netrc"
+		return homedir + "/_netrc"
 	} else {
-		return "~/.netrc"
+		return homedir + "/.netrc"
 	}
 }

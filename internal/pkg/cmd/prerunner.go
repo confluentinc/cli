@@ -383,8 +383,8 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 		return err
 	}
 	utils.ErrPrint(cmd, errors.AutoLoginMsg)
-	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
-	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	r.Logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return nil
 }
 

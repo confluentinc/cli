@@ -130,8 +130,8 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
-	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	a.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	a.Logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return err
 }
 
