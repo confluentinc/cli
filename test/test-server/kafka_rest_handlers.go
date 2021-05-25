@@ -75,6 +75,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 			w.Header().Set("Content-Type", "application/json")
 			var req kafkarestv3.ClustersClusterIdAclsDeleteOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
 			err = json.NewEncoder(w).Encode(kafkarestv3.InlineResponse200{Data: []kafkarestv3.AclData{
 				{
 					ResourceName: req.ResourceName.Value(),
