@@ -92,7 +92,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-bob", Type: "kafka"},
 		},
-		UserId: serviceAccountID,
+		UserId:         serviceAccountID,
+		UserResourceId: serviceAccountResourceID,
 	}
 	keyStore[201] = &schedv1.ApiKey{
 		Id:     keyIndex,
@@ -101,7 +102,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-bob", Type: "kafka"},
 		},
-		UserId: deactivatedUserID,
+		UserId:         deactivatedUserID,
+		UserResourceId: deactivatedResourceID,
 	}
 	for _, k := range keyStore {
 		k.Created = keyTimestamp
