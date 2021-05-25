@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	onPremAclListFields = []string{"Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
-	onPremAclListStructuredRenames = []string{"principal", "permission", "operation", "host", "resource", "name", "type"}
+	onPremAclListFields = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
+	onPremAclListStructuredRenames = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 )
 
 type aclOnPremCommand struct {
@@ -42,7 +42,7 @@ func (aclCmd *aclOnPremCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(aclCmd.create),
 		Example: examples.BuildExampleString(
-			examples.Example{ // TODO change this
+			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: ``cluster-scope``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
 				Code: "confluent kafka acl create --allow --User:Jane --operation READ --consumer-group java_example_group_1\nconfluent kafka acl create --allow --Group:Finance --operation READ --topic '*'",
 			}),

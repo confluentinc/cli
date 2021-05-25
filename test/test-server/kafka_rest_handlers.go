@@ -59,6 +59,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				ResourceName: "test-rest-proxy-topic",
 				Operation:    "READ",
 				Permission:   "ALLOW",
+				Host: 		  "*",
+				Principal: 	  "User:Alice",
 			}}})
 			require.NoError(t, err)
 		case "POST":
@@ -71,7 +73,15 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 			require.NoError(t, err)
 		case "DELETE":
 			w.Header().Set("Content-Type", "application/json")
-			err := json.NewEncoder(w).Encode(kafkarestv3.InlineResponse200{Data: []kafkarestv3.AclData{{ResourceName: "topic-1"}}})
+			var req kafkarestv3.ClustersClusterIdAclsDeleteOpts
+			err := json.NewDecoder(r.Body).Decode(&req)
+			err = json.NewEncoder(w).Encode(kafkarestv3.InlineResponse200{Data: []kafkarestv3.AclData{
+				{
+					ResourceName: req.ResourceName.Value(),
+					Principal:    req.Principal.Value(),
+					Host: 		  req.Host.Value(),
+				},
+			}})
 			require.NoError(t, err)
 		}
 	}

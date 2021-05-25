@@ -54,8 +54,11 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []krsdk.AclDa
 			Operation        string
 			Host			 string
 			Resource         string
+			ResourceType	 string
 			Name             string
+			ResourceName	 string
 			Type             string
+			PatternType		 string
 		}{
 			aclData.Principal,
 			aclData.Principal,
@@ -63,7 +66,10 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []krsdk.AclDa
 			string(aclData.Operation),
 			aclData.Host,
 			string(aclData.ResourceType),
-			string(aclData.ResourceName),
+			string(aclData.ResourceType),
+			aclData.ResourceName,
+			aclData.ResourceName,
+			string(aclData.PatternType),
 			string(aclData.PatternType),
 		}
 		outputWriter.AddElement(record)
