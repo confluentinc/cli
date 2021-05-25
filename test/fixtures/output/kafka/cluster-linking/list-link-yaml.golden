@@ -1,0 +1,4 @@
+- LinkName: link-1
+  SourceClusterId: cluster-1
+- LinkName: link-2
+  SourceClusterId: cluster-1

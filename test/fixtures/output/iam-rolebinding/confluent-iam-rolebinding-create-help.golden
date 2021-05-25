@@ -3,6 +3,15 @@ Create a role binding.
 Usage:
   confluent iam rolebinding create [flags]
 
+Examples:
+Create a role binding for the client permitting it produce to the topic users.
+
+::
+
+  confluent iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID
+
+
+
 Flags:
       --role string                         Role name of the new role binding.
       --principal string                    Qualified principal name for the role binding.

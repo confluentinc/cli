@@ -42,7 +42,7 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, kafkaREST
 	}
 }
 
-func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) pcmd.PreRunner {
+func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) *Commander {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -139,6 +139,23 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 		}
 		command.KafkaRESTProvider = c.KafkaRESTProvider
 		return nil
+	}
+}
+
+func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		ctx := command.Context
+		return ctx.ParseFlagsIntoContext(cmd, command.Client)
+	}
+}
+
+func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		ctx, err := command.Config.Context(cmd)
+		if err != nil {
+			return err
+		}
+		return ctx.ParseFlagsIntoContext(cmd, nil)
 	}
 }
 

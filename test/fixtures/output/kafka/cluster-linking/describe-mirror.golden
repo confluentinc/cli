@@ -1,0 +1,5 @@
+  LinkName | MirrorTopicName | Partition | PartitionMirrorLag | SourceTopicName | MirrorStatus | StatusTimeMs  
++----------+-----------------+-----------+--------------------+-----------------+--------------+--------------+
+  link-1   | dest-topic-1    |         0 |             142857 | src-topic-1     | active       |    111111111  
+  link-1   | dest-topic-1    |         1 |             285714 | src-topic-1     | active       |    111111111  
+  link-1   | dest-topic-1    |         2 |             571428 | src-topic-1     | active       |    111111111  

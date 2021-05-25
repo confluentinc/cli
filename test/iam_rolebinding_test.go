@@ -59,7 +59,6 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			args:        "iam rolebinding delete --principal User:u-11aaa --current-env --cloud-cluster lkc-1111aaa",
 			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-delete-missing-role.golden",
 			wantErrCode: 1,
-
 		},
 	}
 
@@ -285,7 +284,6 @@ func (s *CLITestSuite) TestConfluentIAMRolebindingList() {
 			args:        "iam rolebinding list --principal User:u-41dxz3 --cluster pantsCluster",
 			fixture:     "iam-rolebinding/confluent-iam-rolebinding-list-failure-help.golden",
 			wantErrCode: 1,
-
 		},
 	}
 
@@ -354,7 +352,6 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 			args:        "iam rolebinding list --principal User:u-41dxz3 --cluster pantsCluster",
 			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-list-failure-help.golden",
 			wantErrCode: 1,
-
 		},
 		{
 			name:    "ccloud iam rolebinding list --help",

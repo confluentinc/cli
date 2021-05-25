@@ -144,7 +144,7 @@ func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWr
 		cluster := vars["cluster"]
 		var listTopicReply schedv1.ListTopicReply
 		switch cluster {
-		case "lkc-topics":
+		case "lkc-kafka-api-topics", "lkc-topics":
 			listTopicReply = schedv1.ListTopicReply{
 				Topics: []*schedv1.TopicDescription{
 					{
@@ -155,7 +155,7 @@ func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) func(http.ResponseWr
 					},
 				},
 			}
-		case "lkc-no-topics":
+		case "lkc-kafka-api-no-topics":
 			listTopicReply = schedv1.ListTopicReply{Topics: []*schedv1.TopicDescription{}}
 		default: //cluster not ready
 			w.WriteHeader(http.StatusInternalServerError)
@@ -184,7 +184,7 @@ func (k *KafkaApiRouter) HandleKafkaCreateTopic(t *testing.T) func(http.Response
 		topicName := spec.Name
 		var createTopicReply *schedv1.CreateTopicReply
 		switch {
-		case cluster == "lkc-create-topic" && topicName == "dupTopic":
+		case cluster == "lkc-create-topic-kafka-api" && topicName == "dupTopic":
 			w.WriteHeader(http.StatusBadRequest)
 			createTopicReply = &schedv1.CreateTopicReply{Error: &schedv1.KafkaAPIError{Message: "topic already exists"}}
 		default:
@@ -217,7 +217,7 @@ func (k *KafkaApiRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.Respon
 		topic := vars["topic"]
 		var describeTopicReply *schedv1.DescribeTopicReply
 		switch {
-		case cluster == "lkc-describe-topic" && topic == "topic1":
+		case cluster == "lkc-describe-topic-kafka-api" && topic == "topic1":
 			describeTopicReply = &schedv1.DescribeTopicReply{Topic: &schedv1.TopicDescription{
 				Name:       "topic1",
 				Partitions: []*schedv1.TopicPartitionInfo{{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1}, Replicas: []*schedv1.KafkaNode{{Id: 1}}}},
@@ -247,7 +247,7 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.Response
 		topic := vars["topic"]
 		var deleteTopicReply *schedv1.DeleteTopicReply
 		switch {
-		case cluster == "lkc-delete-topic" && (topic == "topic1" || topic == "topic-exist"):
+		case cluster == "lkc-delete-topic-kafka-api" && (topic == "topic1" || topic == "topic-exist"):
 			deleteTopicReply = &schedv1.DeleteTopicReply{}
 		default:
 			w.WriteHeader(http.StatusNotFound)

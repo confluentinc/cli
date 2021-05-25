@@ -222,7 +222,7 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			cliName: "confluent",
-			setEnv: true,
+			setEnv:  true,
 		},
 	}
 
@@ -510,8 +510,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 		name                string
 		caCertPathFlag      string
 		expectedContextName string
-		setEnv				bool
-		envCertPath			string
+		setEnv              bool
+		envCertPath         string
 	}{
 		{
 			name:                "specified ca-cert-path",
@@ -525,8 +525,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 		},
 		{
 			name:                "env var ca-cert-path flag",
-			setEnv: 			 true,
-			envCertPath: 		 "testcert.pem",
+			setEnv:              true,
+			envCertPath:         "testcert.pem",
 			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
 		},
 	}
