@@ -27,7 +27,7 @@ func NewAclCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 		pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use: "acl",
-				Short: "Manage Kafka ACLs with Confluent Rest Proxy.",
+				Short: "Manage Kafka ACLs.",
 			}, prerunner, OnPremTopicSubcommandFlags),
 	}
 	aclCmd.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(aclCmd.AuthenticatedCLICommand))
