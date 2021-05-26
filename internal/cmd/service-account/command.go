@@ -106,7 +106,7 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <ResourceId>",
+		Use:   "update <id>",
 		Short: "Update a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
@@ -123,7 +123,7 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <ResourceId>",
+		Use:   "delete <id>",
 		Short: "Delete a service account.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
