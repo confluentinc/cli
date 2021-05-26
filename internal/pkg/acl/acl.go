@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -114,6 +115,45 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 	return outputWriter.Out()
 }
 
+func CreateACLFlags() *pflag.FlagSet {
+	flgSet := AclFlags()
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	return flgSet
+}
+
+func DeleteACLFlags() *pflag.FlagSet {
+	flgSet := AclFlags()
+	_ = cobra.MarkFlagRequired(flgSet, "principal")
+	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	_ = cobra.MarkFlagRequired(flgSet, "host")
+	return flgSet
+}
+
+func AclFlags() *pflag.FlagSet {
+	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
+	flgSet.Bool("allow", false, "ACL permission to allow access.")
+	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
+	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
+	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
+		convertToFlags(kafkarestv3.ACLOPERATION_ALL, kafkarestv3.ACLOPERATION_READ, kafkarestv3.ACLOPERATION_WRITE,
+			kafkarestv3.ACLOPERATION_CREATE, kafkarestv3.ACLOPERATION_DELETE, kafkarestv3.ACLOPERATION_ALTER,
+			kafkarestv3.ACLOPERATION_DESCRIBE, kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
+			kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS, kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
+			kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE)))
+	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
+access to the provided operations on the Kafka cluster itself.`)
+	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
+	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
+	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
+operations on the topics that start with that prefix, depending on whether
+the --prefix option was also passed.`)
+	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
+	flgSet.SortFlags = false
+	return flgSet
+}
+
 func ParseAclRequest(cmd *cobra.Command) *AclRequestDataWithError {
 	aclRequest := &AclRequestDataWithError{
 		Host:   "*",
@@ -181,7 +221,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	if conf.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("exactly one of %v must be set",
-			ConvertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
+			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 		return
 	}
@@ -201,7 +241,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	conf.ResourceName = v
 }
 
-func ConvertToFlags(operations ...interface{}) string {
+func convertToFlags(operations ...interface{}) string {
 	var ops []string
 
 	for _, v := range operations {
@@ -218,6 +258,26 @@ func ConvertToFlags(operations ...interface{}) string {
 
 	sort.Strings(ops)
 	return strings.Join(ops, ", ")
+}
+
+func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
+	// delete is deliberately less powerful in the cli than in the API to prevent accidental
+	// deletion of too many acls at once. Expectation is that multi delete will be done via
+	// repeated invocation of the cli by external scripts.
+	if aclConfiguration.Permission == "" {
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+	}
+
+	if aclConfiguration.PatternType == "" {
+		aclConfiguration.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
+	}
+
+	if aclConfiguration.ResourceType == "" {
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
+			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
+				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+	}
+	return aclConfiguration
 }
 
 func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersClusterIdAclsPostOpts {
