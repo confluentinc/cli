@@ -357,7 +357,7 @@ const (
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
 		"Also verify that the correct API secret is stored for the API key.\n" +
 		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`.\n" +
-		"Finally, ensure the API key being used was not deleted by another user or via the UI."
+		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `ccloud api-key list`)."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 
