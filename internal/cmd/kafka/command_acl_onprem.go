@@ -74,7 +74,7 @@ func (aclCmd *aclOnPremCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the local ACLs for the Kafka cluster:",
-				Code: "confluent acl list",
+				Code: "confluent kafka acl list",
 			},
 			examples.Example{
 				Text: "List all the ACLs for the Kafka cluster that include allow permissions for the user Jane:",
@@ -153,23 +153,3 @@ func (aclCmd *aclOnPremCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data, cmd.OutOrStdout(), onPremAclListFields, onPremAclListStructuredRenames)
 }
-
-//func validateCreateDeleteAclRequestData(aclConfiguration *aclutil.AclRequestDataWithError) *aclutil.AclRequestDataWithError {
-//	// delete is deliberately less powerful in the cli than in the API to prevent accidental
-//	// deletion of too many acls at once. Expectation is that multi delete will be done via
-//	// repeated invocation of the cli by external scripts.
-//	if aclConfiguration.Permission == "" {
-//		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
-//	}
-//
-//	if aclConfiguration.PatternType == "" {
-//		aclConfiguration.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
-//	}
-//
-//	if aclConfiguration.ResourceType == "" {
-//		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
-//			aclutil.ConvertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-//				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
-//	}
-//	return aclConfiguration
-//}

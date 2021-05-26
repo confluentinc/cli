@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"sort"
 	"strings"
 
@@ -17,15 +18,6 @@ import (
 type ACLConfiguration struct {
 	*mds.CreateAclRequest
 	errors error
-}
-
-type enumUtils map[string]interface{}
-
-func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
-	for _, enum := range enums {
-		enumUtils[fmt.Sprintf("%v", enum)] = enum
-	}
-	return enumUtils
 }
 
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
@@ -131,8 +123,8 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "operation":
 			v = strings.ToUpper(v)
 			v = strings.ReplaceAll(v, "-", "_")
-			enumUtils := enumUtils{}
-			enumUtils.init(
+			enumUtils := utils.EnumUtils{}
+			enumUtils.Init(
 				mds.ACLOPERATION_UNKNOWN,
 				mds.ACLOPERATION_ANY,
 				mds.ACLOPERATION_ALL,
@@ -169,8 +161,8 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	n = strings.ToUpper(n)
 	n = strings.ReplaceAll(n, "-", "_")
 
-	enumUtils := enumUtils{}
-	enumUtils.init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
+	enumUtils := utils.EnumUtils{}
+	enumUtils.Init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
 		mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)
 	conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mds.AclResourceType)
 

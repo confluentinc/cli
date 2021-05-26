@@ -661,7 +661,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			}
 			var restContext context.Context
 			if useMdsToken && !restFlags.prompt {
-				r.Logger.Log("msg", "found mds token to use as bearer")
+				r.Logger.Debug("found mds token to use as bearer")
 				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
@@ -688,7 +688,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 
 func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	if caCertPath == "" && os.Getenv(pauth.ConfluentCaCertPathEnvVar) != "" {
-		logger.Log(fmt.Sprintf("found ca cert path in %s", pauth.ConfluentCaCertPathEnvVar))
+		logger.Debug(fmt.Sprintf("found ca cert path in %s", pauth.ConfluentCaCertPathEnvVar))
 		caCertPath = os.Getenv(pauth.ConfluentCaCertPathEnvVar)
 	}
 	// use cert path flag or env var if it was passed

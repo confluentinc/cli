@@ -6,6 +6,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/hashicorp/go-multierror"
@@ -27,15 +28,6 @@ type AclRequestDataWithError struct {
 	Errors error
 }
 
-type enumUtils map[string]interface{}
-
-func (enumUtils enumUtils) init(enums ...interface{}) enumUtils {
-	for _, enum := range enums {
-		enumUtils[fmt.Sprintf("%v", enum)] = enum
-	}
-	return enumUtils
-}
-
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []krsdk.AclData, writer io.Writer, aclListFields, aclListStructuredRenames []string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
@@ -48,7 +40,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []krsdk.AclDa
 	}
 
 	for _, aclData := range aclGetResp {
-		record := &struct {
+		record := &struct { //TODO remove KafkaAPI field names and move to only Kafka REST ones
 			ServiceAccountId string
 			Principal		 string
 			Permission       string
@@ -192,8 +184,8 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 		case "operation":
 			v = strings.ToUpper(v)
 			v = strings.ReplaceAll(v, "-", "_")
-			enumUtils := enumUtils{}
-			enumUtils.init(
+			enumUtils := utils.EnumUtils{}
+			enumUtils.Init(
 				kafkarestv3.ACLOPERATION_UNKNOWN,
 				kafkarestv3.ACLOPERATION_ANY,
 				kafkarestv3.ACLOPERATION_ALL,
@@ -230,8 +222,8 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	n = strings.ToUpper(n)
 	n = strings.ReplaceAll(n, "-", "_")
 
-	enumUtils := enumUtils{}
-	enumUtils.init(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
+	enumUtils := utils.EnumUtils{}
+	enumUtils.Init(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 		kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
 	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
 
@@ -245,6 +237,7 @@ func convertToFlags(operations ...interface{}) string {
 	var ops []string
 
 	for _, v := range operations {
+		// clean the resources that don't map directly to flag name
 		if v == krsdk.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
@@ -294,6 +287,8 @@ func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersCl
 	opts.CreateAclRequestData = optional.NewInterface(requestData)
 	return &opts
 }
+
+// Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
 func AclRequestToListAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersClusterIdAclsGetOpts {
 	opts := krsdk.ClustersClusterIdAclsGetOpts{
