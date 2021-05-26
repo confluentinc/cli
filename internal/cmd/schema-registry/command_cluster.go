@@ -3,10 +3,12 @@ package schema_registry
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
@@ -203,15 +205,23 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		mode = "<Requires API Key>"
 	}
 
-	// Get Schema usage metrics
-	metrics, err := c.Client.Metrics.SchemaRegistryMetrics(ctx, cluster.Id)
-	if err != nil {
-		c.logger.Warn("Could not retrieve Schema Registry Metrics")
+	query := schemaCountQueryFor(cluster.Id)
+	metricsResponse, err := c.Client.MetricsApi.QueryV2(ctx, "cloud", query, "")
+	if err != nil || metricsResponse == nil {
+		c.logger.Warn("Could not retrieve Schema Registry Metrics: ", err)
 		numSchemas = ""
 		availableSchemas = ""
+	} else if len(metricsResponse.Result) == 0 {
+		numSchemas = "0"
+		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas))
+	} else if len(metricsResponse.Result) == 1 {
+		numSchemasInt := int(math.Round(metricsResponse.Result[0].Value)) // the return value is a double
+		numSchemas = strconv.Itoa(numSchemasInt)
+		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - numSchemasInt)
 	} else {
-		numSchemas = strconv.Itoa(int(metrics.NumSchemas))
-		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - int(metrics.NumSchemas))
+		c.logger.Warn("Unexpected results from Metrics API")
+		numSchemas = ""
+		availableSchemas = ""
 	}
 
 	serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)
@@ -280,4 +290,21 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 	}
 	utils.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
+}
+
+func schemaCountQueryFor(schemaRegistryId string) *ccloud.MetricsApiRequest {
+	return &ccloud.MetricsApiRequest{
+		Aggregations: []ccloud.ApiAggregation{
+			ccloud.ApiAggregation{
+				Metric: "io.confluent.kafka.schema_registry/schema_count",
+			},
+		},
+		Filter: ccloud.ApiFilter{
+			Field: "resource.schema_registry.id",
+			Op:    "EQ",
+			Value: schemaRegistryId,
+		},
+		Granularity: "ALL",
+		Intervals:   []string{"PT1M/now-2m|m"},
+	}
 }
