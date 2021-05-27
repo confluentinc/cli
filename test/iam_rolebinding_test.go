@@ -49,6 +49,18 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			wantErrCode: 1,
 		},
 		{
+			name:        "ccloud iam rolebinding delete, invalid use case: missing environment",
+			args:        "iam rolebinding delete --principal User:u-11aaa --role EnvironmentAdmin",
+			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-missing-environment.golden",
+			wantErrCode: 1,
+		},
+		{
+			name:        "ccloud iam rolebinding delete cluster-name, invalid use case: missing role",
+			args:        "iam rolebinding delete --principal User:u-11aaa --current-env --cloud-cluster lkc-1111aaa",
+			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-delete-missing-role.golden",
+			wantErrCode: 1,
+		},
+		{
 			name:		"ccloud iam rolebinding create with email as principal",
 			args:		"iam rolebinding create --principal User:u-11aaa@confluent.io --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
 			fixture: 	"iam-rolebinding/ccloud-iam-rolebinding-create-with-email.golden",

@@ -753,7 +753,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			}
 		}
 	}
-	
+
 	if cmd.Flags().Changed("principal") {
 		err = c.validatePrincipalFormat(principal)
 		if err != nil {
