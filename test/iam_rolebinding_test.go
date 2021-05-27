@@ -49,16 +49,9 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			wantErrCode: 1,
 		},
 		{
-			name:        "ccloud iam rolebinding delete, invalid use case: missing environment",
-			args:        "iam rolebinding delete --principal User:u-11aaa --role EnvironmentAdmin",
-			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-missing-environment.golden",
-			wantErrCode: 1,
-		},
-		{
-			name:        "ccloud iam rolebinding delete cluster-name, invalid use case: missing role",
-			args:        "iam rolebinding delete --principal User:u-11aaa --current-env --cloud-cluster lkc-1111aaa",
-			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-delete-missing-role.golden",
-			wantErrCode: 1,
+			name:		"ccloud iam rolebinding create with email as principal",
+			args:		"iam rolebinding create --principal User:u-11aaa@confluent.io --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+			fixture: 	"iam-rolebinding/ccloud-iam-rolebinding-create-with-email.golden",
 		},
 	}
 
@@ -159,6 +152,11 @@ func (s *CLITestSuite) TestConfluentIAMRoleBindingCRUD() {
 			args:        "iam rolebinding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --ksql-cluster-id ksqlName --connect-cluster-id connectID --kafka-cluster-id kafka-GUID",
 			fixture:     "iam-rolebinding/confluent-iam-rolebinding-multiple-non-kafka-id.golden",
 			wantErrCode: 1,
+		},
+		{
+			name:    "confluent iam rolebinding create principal with @",
+			args:    "iam rolebinding create --principal User:bob@Kafka --role DeveloperRead --resource Topic:connect-configs --kafka-cluster-id kafka-GUID",
+			fixture: "iam-rolebinding/confluent-iam-rolebinding-create-cluster-id-at.golden",
 		},
 	}
 
