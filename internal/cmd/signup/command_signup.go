@@ -2,6 +2,7 @@ package signup
 
 import (
 	"context"
+	"github.com/gogo/protobuf/types"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -97,6 +98,7 @@ func signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error
 	req := &v1.SignupRequest{
 		Organization: &v1.Organization{
 			Name: f.Responses["organization"].(string),
+			Plan: &v1.Plan{AcceptTos: &types.BoolValue{Value: f.Responses["tos"].(bool)}},
 		},
 		User: &v1.User{
 			Email:     fEmail.Responses["email"].(string),

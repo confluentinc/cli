@@ -741,16 +741,19 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	if err != nil {
 		return nil, err
 	}
-	if strings.HasPrefix(principal, "User:") {
-		principalValue := strings.TrimLeft(principal, "User:")
-		if strings.Contains(principalValue, "@") {
-			user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue, OrganizationId: c.State.Auth.Organization.GetId()})
-			if err != nil {
-				return nil, err
+	if c.cliName == "ccloud" {
+		if strings.HasPrefix(principal, "User:") {
+			principalValue := strings.TrimLeft(principal, "User:")
+			if strings.Contains(principalValue, "@") {
+				user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue, OrganizationId: c.State.Auth.Organization.GetId()})
+				if err != nil {
+					return nil, err
+				}
+				principal = "User:" + user.ResourceId
 			}
-			principal = "User:" + user.ResourceId
 		}
 	}
+
 	if cmd.Flags().Changed("principal") {
 		err = c.validatePrincipalFormat(principal)
 		if err != nil {
