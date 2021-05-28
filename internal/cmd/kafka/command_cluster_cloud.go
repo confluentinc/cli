@@ -165,6 +165,12 @@ func (c *clusterCommand) init() {
 		Short: "Update a Kafka cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Change a cluster's name and expand its CKU count:",
+				Code: `ccloud kafka cluster update lkc-abc123 --name "Cool Cluster" --cku 3`,
+			},
+		),
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only.")

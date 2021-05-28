@@ -116,6 +116,7 @@ const (
 	KafkaClusterStillProvisioningErrorMsg = "Your cluster is still provisioning, so it can't be updated yet.  Please retry in a few minutes."
 	KafkaClusterUpdateFailedSuggestions   = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
+	ChooseRightEnvironmentSuggestions     = "Ensure the cluster ID you entered is valid.\n" +
 
 	// kafka topic commands
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
@@ -359,7 +360,8 @@ const (
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
 		"Also verify that the correct API secret is stored for the API key.\n" +
-		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
+		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`.\n" +
+		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `ccloud api-key list`)."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 
