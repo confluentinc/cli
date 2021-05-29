@@ -112,7 +112,9 @@ const (
 	InvalidTypeFlagErrorMsg              = "invalid value \"%s\" for `--type` flag"
 	InvalidTypeFlagSuggestions           = "Allowed values for `--type` flag are: %s, %s, %s."
 	NameOrCKUFlagErrorMsg                = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
-	NonEmptyNameErrorMsg                 = "`--name` flag value must not be emtpy"
+	NonEmptyNameErrorMsg                 = "`--name` flag value must not be empty"
+	ChooseRightEnvironmentSuggestions    = "Ensure the cluster ID you entered is valid.\n" +
+		"Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`."
 
 	// kafka topic commands
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
@@ -356,7 +358,8 @@ const (
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
 		"Also verify that the correct API secret is stored for the API key.\n" +
-		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
+		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`.\n" +
+		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `ccloud api-key list`)."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 
