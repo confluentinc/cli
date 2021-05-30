@@ -214,7 +214,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
+	a.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 

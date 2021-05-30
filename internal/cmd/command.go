@@ -169,7 +169,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		serverCompleter.AddCommand(serviceAccountCmd)
 		cli.AddCommand(serviceAccountCmd.Command)
 		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, logger, analyticsClient, jwtValidator))
-		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent))
+		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent).Command)
 		cli.AddCommand(iam.New(cliName, prerunner))
 	} else if cliName == "confluent" {
 		cli.AddCommand(auditlog.New(cliName, prerunner))

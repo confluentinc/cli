@@ -382,7 +382,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	utils.ErrPrint(cmd, errors.AutoLoginMsg)
+	r.Logger.Debug(errors.AutoLoginMsg)
 	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	r.Logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return nil
@@ -588,9 +588,8 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	// TODO: change to verbosity level logging
-	utils.ErrPrint(cmd, errors.AutoLoginMsg)
-	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
+	r.Logger.Debug(errors.AutoLoginMsg)
+	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 

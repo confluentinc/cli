@@ -2,8 +2,9 @@ package signup
 
 import (
 	"context"
-	"github.com/gogo/protobuf/types"
 	"os"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/spf13/cobra"
 
@@ -23,7 +24,7 @@ type command struct {
 	userAgent string
 }
 
-func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.Command {
+func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *command {
 	c := &command{
 		pcmd.NewAnonymousCLICommand(
 			&cobra.Command{
@@ -42,6 +43,10 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string) *cobra.
 
 	c.RunE = pcmd.NewCLIRunE(c.signupRunE)
 
+	return c
+}
+
+func (c *command) Cmd() *cobra.Command {
 	return c.Command
 }
 
@@ -58,10 +63,10 @@ func (c *command) signupRunE(cmd *cobra.Command, _ []string) error {
 		Logger:     c.logger,
 	})
 
-	return signup(cmd, form.NewPrompt(os.Stdin), client)
+	return c.Signup(cmd, form.NewPrompt(os.Stdin), client)
 }
 
-func signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
+func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
 	utils.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
 	fEmail := form.New(
 		form.Field{ID: "email", Prompt: "Email", Regex: "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"},
@@ -140,7 +145,7 @@ func signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error
 		}
 
 		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
-		utils.Printf(cmd, errors.LoggedInAsMsg, fEmail.Responses["email"])
+		c.logger.Debugf(errors.LoggedInAsMsg, fEmail.Responses["email"])
 		return nil
 	}
 }

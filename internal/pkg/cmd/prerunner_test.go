@@ -541,8 +541,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			if !tt.wantErr {
 				require.NoError(t, err)
-				require.Contains(t, out, errors.AutoLoginMsg)
-				require.Contains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
+				require.NotContains(t, out, errors.AutoLoginMsg)
+				require.NotContains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
 			} else {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), errors.NotLoggedInErrorMsg)
