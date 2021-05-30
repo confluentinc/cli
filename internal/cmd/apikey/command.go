@@ -471,6 +471,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	for _, lkc := range apiKey.LogicalClusters {
 		if lkc.Id == cluster.ID {
 			apiKeyIsValidForTargetCluster = true
+			break
 		}
 	}
 	if !apiKeyIsValidForTargetCluster {
