@@ -628,11 +628,11 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 
 	usernameClusterWithoutKeyOrSecret := v3.AuthenticatedCloudConfigMock()
 	usernameClusterWithoutKeyOrSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig("lkc-0000").APIKey = ""
+	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v3.MockKafkaClusterId()).APIKey = ""
 
 	usernameClusterWithStoredSecret := v3.AuthenticatedCloudConfigMock()
 	usernameClusterWithStoredSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig("lkc-0000").APIKeys["miles"] = &v0.APIKeyPair{
+	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v3.MockKafkaClusterId()).APIKeys["miles"] = &v0.APIKeyPair{
 		Key:    "miles",
 		Secret: "secret",
 	}
@@ -680,8 +680,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:           "api key passed via flag without stored secret",
 			key:            "miles",
-			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", "lkc-0000"),
-			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", "lkc-0000"),
+			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", v3.MockKafkaClusterId()),
+			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v3.MockKafkaClusterId()),
 			config:         usernameClusterWithoutSecret,
 		},
 		{

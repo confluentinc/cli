@@ -13,12 +13,15 @@ const (
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
-	UnableToStoreAPIKeyErrorMsg       = "unable to store API key locally"
-	NonKafkaNotImplementedErrorMsg    = "command not yet available for non-Kafka cluster resources"
-	RefuseToOverrideSecretErrorMsg    = "refusing to overwrite existing secret for API Key \"%s\""
-	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
-	APIKeyUseFailedErrorMsg           = "unable to set active API key"
-	APIKeyUseFailedSuggestions        = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
+	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
+	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
+	RefuseToOverrideSecretErrorMsg      = "refusing to overwrite existing secret for API Key \"%s\""
+	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
+	APIKeyUseFailedErrorMsg             = "unable to set active API key"
+	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
+	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
+	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `ccloud kafka cluster use` command."
+	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
