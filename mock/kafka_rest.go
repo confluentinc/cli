@@ -4,6 +4,7 @@ import (
 	"context"
 	nethttp "net/http"
 
+	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
@@ -267,8 +268,8 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx
 }
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
-	// lkc-0000 is the id of the mock cluster set in v3/mock.go
-	if err := assertEqualValues(clusterId, "lkc-0000"); err != nil {
+	// lkc-12345 is the id of the mock cluster set in v3/mock.go
+	if err := assertEqualValues(clusterId, configv3mock.MockKafkaClusterId()); err != nil {
 		return krsdk.ConsumerGroupDataList{}, nil, err
 	}
 
