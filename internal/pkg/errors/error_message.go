@@ -120,6 +120,7 @@ const (
 	KafkaClusterUpdateFailedSuggestions   = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
 	ChooseRightEnvironmentSuggestions     = "Ensure the cluster ID you entered is valid.\n" +
+		"Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`."
 
 	// kafka topic commands
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
