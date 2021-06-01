@@ -1,4 +1,4 @@
-Error: CCloud backend error: 1 error occurred:
-	* error updating kafka cluster: cluster expansion is supported for dedicated clusters only
+Error: error updating kafka cluster: cluster expansion is supported for dedicated clusters only
 
-
+Suggestions:
+    A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes.
