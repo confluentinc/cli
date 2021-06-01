@@ -628,11 +628,11 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 
 	usernameClusterWithoutKeyOrSecret := v3.AuthenticatedCloudConfigMock()
 	usernameClusterWithoutKeyOrSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig("lkc-0000").APIKey = ""
+	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v3.MockKafkaClusterId()).APIKey = ""
 
 	usernameClusterWithStoredSecret := v3.AuthenticatedCloudConfigMock()
 	usernameClusterWithStoredSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig("lkc-0000").APIKeys["miles"] = &v0.APIKeyPair{
+	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v3.MockKafkaClusterId()).APIKeys["miles"] = &v0.APIKeyPair{
 		Key:    "miles",
 		Secret: "secret",
 	}
@@ -680,8 +680,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:           "api key passed via flag without stored secret",
 			key:            "miles",
-			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", "lkc-0000"),
-			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", "lkc-0000"),
+			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", v3.MockKafkaClusterId()),
+			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v3.MockKafkaClusterId()),
 			config:         usernameClusterWithoutSecret,
 		},
 		{
@@ -899,4 +899,51 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		require.Nil(t, kafkaRest)
 		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
 	})
+}
+
+func TestConvertToMetricsBaseURL(t *testing.T) {
+	tests := []struct {
+		name        string
+		inputUrl    string
+		expectedUrl string
+	}{
+		{
+			"test exact url",
+			"https://api.telemetry.confluent.cloud/",
+			"https://api.telemetry.confluent.cloud/",
+		},
+		{
+			"test dev url",
+			"https://devel.cpdev.cloud",
+			"https://devel-sandbox-api.telemetry.aws.confluent.cloud/",
+		},
+		{
+			"test cpd url",
+			"https://nearby-asp.gcp.priv.cpdev.cloud",
+			"https://devel-sandbox-api.telemetry.aws.confluent.cloud/",
+		},
+		{
+			"test stag url",
+			"https://stag.cpdev.cloud",
+			"https://stag-sandbox-api.telemetry.aws.confluent.cloud/",
+		},
+		{
+			"test prod url",
+			"https://confluent.cloud",
+			"https://api.telemetry.confluent.cloud/",
+		},
+		{
+			"test prod url",
+			"https://confluent.cloud/",
+			"https://api.telemetry.confluent.cloud/",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := pcmd.ConvertToMetricsBaseURL(tt.inputUrl)
+			if got != tt.expectedUrl {
+				t.Errorf("got = %v, want %v", got, tt.expectedUrl)
+			}
+		})
+	}
 }

@@ -1,1 +1,4 @@
 Error: Unknown API key UNKNOWN
+
+Suggestions:
+    Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`.
