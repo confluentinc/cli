@@ -10,14 +10,16 @@ const (
 	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg              = "Logged in as \"%s\".\n"
-	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg               = "You are now logged out."
-	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
-	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
-	InvalidInputFormatMsg      = "\"%s\" is not of valid format for field \"%s\"."
-	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
+	LoggedInAsMsg                   = "Logged in as \"%s\".\n"
+	LoggedInUsingEnvMsg             = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg                    = "You are now logged out."
+	WroteCredentialsToNetrcMsg      = "Wrote credentials to netrc file \"%s\"\n"
+	RemoveNetrcCredentialsMsg       = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
+	FailedRemoveNetrcCredentialsMsg = "Failed to remove credentials."
+	KafkaClusterDeletedMsg          = "Deleted Kafka cluster \"%s\".\n"
+	InvalidInputFormatMsg           = "\"%s\" is not of valid format for field \"%s\"."
+	StopNonInteractiveMsg           = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg                 = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	EnvLoginFailedMsg = "Non-interactive login with environment variables failed: %s\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
