@@ -582,6 +582,18 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 				Users: users,
 				Error: nil,
 			}
+			email := r.URL.Query().Get("email")
+			if email != "" {
+				for _, u := range users {
+					if u.Email == email {
+						res = orgv1.GetUsersReply{
+							Users:                []*orgv1.User{u},
+							Error:                nil,
+						}
+						break
+					}
+				}
+			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 			_, err = w.Write(data)

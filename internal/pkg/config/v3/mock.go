@@ -26,7 +26,7 @@ var (
 	mockAuthToken          = "some.token.here"
 
 	// kafka cluster
-	kafkaClusterId     = "lkc-0000"
+	kafkaClusterId     = "lkc-12345"
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
@@ -41,6 +41,10 @@ var (
 	srAPIKey    = "michael"
 	srAPISecret = "scott"
 )
+
+func MockKafkaClusterId() string {
+	return kafkaClusterId
+}
 
 func AuthenticatedCloudConfigMock() *Config {
 	params := mockConfigParams{

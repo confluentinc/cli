@@ -17,6 +17,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -147,12 +148,9 @@ func (c *command) init() {
 		Args:  cobra.MaximumNArgs(2),
 		RunE:  pcmd.NewCLIRunE(c.store),
 	}
-	storeCmd.Flags().String(resourceFlagName, "", "The resource ID.")
+	storeCmd.Flags().String(resourceFlagName, "", "The resource ID of the resource the API key is for.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	storeCmd.Flags().SortFlags = false
-	if err := storeCmd.MarkFlagRequired(resourceFlagName); err != nil {
-		panic(err)
-	}
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
@@ -449,16 +447,24 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) store(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
+	var cluster *configv1.KafkaClusterConfig
+
+	// Attempt to get cluster from --resource flag if set; if that doesn't work,
+	// attempt to fall back to the currently active Kafka cluster
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
-	if err != nil {
-		return err
-	}
-	if resourceType != pcmd.KafkaResourceType {
-		return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
-	}
-	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
-	if err != nil {
-		return err
+	if err == nil && clusterId != "" {
+		if resourceType != pcmd.KafkaResourceType {
+			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
+		}
+		cluster, err = c.Context.FindKafkaCluster(cmd, clusterId)
+		if err != nil {
+			return err
+		}
+	} else {
+		cluster, err = c.Context.GetKafkaClusterForCommand(cmd)
+		if err != nil {
+			return err
+		}
 	}
 
 	var key string
@@ -489,9 +495,20 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	_, err = c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
+	apiKey, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
+	}
+
+	apiKeyIsValidForTargetCluster := false
+	for _, lkc := range apiKey.LogicalClusters {
+		if lkc.Id == cluster.ID {
+			apiKeyIsValidForTargetCluster = true
+			break
+		}
+	}
+	if !apiKeyIsValidForTargetCluster {
+		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
 	}
 
 	// API key exists server-side... now check if API key exists locally already

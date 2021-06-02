@@ -19,6 +19,6 @@ func New(cliName string, prerunner pcmd.PreRunner, logger *log.Logger, ccloudCli
 		analyticsClient, netrcHandler, loginCredentialsManager,
 		authTokenHandler,
 	)
-	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient)
+	logoutCmd := NewLogoutCmd(cliName, prerunner, analyticsClient, netrcHandler)
 	return []*cobra.Command{loginCmd.Command, logoutCmd.Command}
 }
