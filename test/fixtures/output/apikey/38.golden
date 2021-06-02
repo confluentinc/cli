@@ -2,6 +2,15 @@ Error: required flag(s) "resource" not set
 Usage:
   ccloud api-key create [flags]
 
+Examples:
+Create an API keys for service account with the ResourceId ``sa-lqv3mm`` in cluster ``lkc-xyz``
+
+::
+
+  ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm 
+
+
+
 Flags:
       --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.
       --service-account string   Service account ID. If not specified, the API key will have full access on the cluster.
