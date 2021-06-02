@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
@@ -54,8 +55,8 @@ type command struct {
 
 var (
 	listFields              = []string{"Key", "Description", "UserId", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels    = []string{"key", "description", "owner", "Owner Id", "owner_email", "resource_type", "resource_id", "created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Resource Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
@@ -85,6 +86,12 @@ func (c *command) init() {
 		Short: "List the API keys.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List the API keys the belongs to service account with the ResourceId ``sa-lqv3mm`` on cluster ``lkc-xyz``",
+				Code: `ccloud api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
+			},
+		),
 	}
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
@@ -98,6 +105,12 @@ func (c *command) init() {
 		Short: "Create API keys for a given resource.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create an API keys for service account with the ResourceId ``sa-lqv3mm`` in cluster ``lkc-xyz``",
+				Code: `ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm `,
+			},
+		),
 	}
 	createCmd.Flags().String(resourceFlagName, "", "The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().String("service-account", "", "Service account ID. If not specified, the API key will have full access on the cluster.")
@@ -190,12 +203,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	UserId := int32(0)
-	if saId != "" && isResourceId(saId) {
+	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
 		UserId, err = c.getUserIdByResourceId(saId)
 		if err != nil {
 			return err
 		}
-	} else {
+	} else { // if user inputs numeric ID, convert it to int32
 		UserIdp, _ := strconv.Atoi(saId)
 		UserId = int32(UserIdp)
 	}
@@ -365,7 +378,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		AccountId:   c.EnvironmentId(),
 	}
 
-	key, err = c.completeKeyId(key, Id)
+	key, err = c.completeKeyId(key, Id) // get corresponding numeric/resource ID if the cmd has a service-account flag
 	if err != nil {
 		return err
 	}

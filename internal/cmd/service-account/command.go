@@ -190,9 +190,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		ServiceDescription: description,
 	}
-	if err == nil { // it's a numeric id
+	if err == nil { // it's a numeric ID
 		user.Id = int32(idp)
-	} else {
+	} else { // it's a resource ID
 		user.ResourceId = args[0]
 	}
 
@@ -207,9 +207,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	idp, err := strconv.Atoi(args[0])
 	user := &orgv1.User{}
-	if err == nil { // it's a numeric id
+	if err == nil { // it's a numeric ID
 		user.Id = int32(idp)
-	} else {
+	} else { // it's a resource ID
 		user.ResourceId = args[0]
 	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
