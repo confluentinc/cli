@@ -60,8 +60,8 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 			if level >= log.WARN {
 				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())
 			}
-		} else if !strings.Contains(err.Error(), "login credentials not found") {
-			// return err when other than NetrcCredentialsNotFoundErrorMsg
+		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
+			// return err when other than NetrcCredentialsNotFoundErrorMsg or parsing error
 			return err
 		}
 	}

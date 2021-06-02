@@ -163,7 +163,13 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 	joinedString := strings.Join(stringBuf[:], "")
 	joinedString = strings.Replace(joinedString, "\n\n", "\n", -1)
 	buf := []byte(joinedString)
-	err = ioutil.WriteFile(filename, buf, 0600)
+	// get file mode
+	info, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	filemode := info.Mode()
+	err = ioutil.WriteFile(filename, buf, filemode)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
@@ -175,6 +181,8 @@ func getNetrc(filename string) (*gonetrc.Netrc, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, errors.Wrapf(err, errors.NetrcCredentialsNotFoundErrorMsg, filename)
+		} else {
+			return nil, err // failed to parse the netrc file due to other reasons
 		}
 	}
 	return n, nil

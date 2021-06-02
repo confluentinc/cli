@@ -23,7 +23,7 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	type saveTest struct {
 		input    string
 		cliName  string
-		want     string
+		wantFile string
 		loginURL string
 		bin      string
 	}
@@ -35,16 +35,76 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
 			"ccloud",
-			"netrc-remove-username-password.golden",
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
 			cloudUrl,
 			ccloudTestBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
 			"confluent",
-			"netrc-remove-username-password.golden",
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			mdsUrl,
+			confluentTestBin,
+		},
+	}
+	for _, tt := range tests {
+		// store existing credentials in a temp netrc to check that they are not corrupted
+		var env []string
+		if tt.cliName == "ccloud" {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+		} else {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+		}
+		originalNetrc, err := ioutil.ReadFile(tt.input)
+		s.NoError(err)
+		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
+		s.NoError(err)
+
+		// run login to provide context, then logout command and check output
+		runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
+		s.Contains(output, loggedOutOutput)
+		s.Contains(output, RemovedFromNetrcOutput)
+
+		// check netrc file matches wanted file
+		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		s.NoError(err)
+		wantBytes, err := ioutil.ReadFile(tt.wantFile)
+		s.NoError(err)
+		s.Equal(utils.NormalizeNewLines(string(wantBytes)), utils.NormalizeNewLines(string(got)))
+	}
+	_ = os.Remove(netrc.NetrcIntegrationTestFile)
+}
+
+func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
+	// fail to parse the netrc file should leave it unchanged
+	type saveTest struct {
+		input    string
+		cliName  string
+		wantFile string
+		loginURL string
+		bin      string
+	}
+	cloudUrl := s.TestBackend.GetCloudUrl()
+	mdsUrl := s.TestBackend.GetMdsUrl()
+	_, callerFileName, _, ok := runtime.Caller(0)
+	if !ok {
+		s.T().Fatalf("problems recovering caller information")
+	}
+	tests := []saveTest{
+		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			"ccloud",
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			cloudUrl,
+			ccloudTestBin,
+		},
+		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
+			"confluent",
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
 			mdsUrl,
 			confluentTestBin,
 		},
@@ -64,19 +124,17 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		s.NoError(err)
 
 		// run login to provide context, then logout command and check output
-		runCommand(s.T(), tt.bin, env, "login --url "+tt.loginURL, 0)
-		output := runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
+		runCommand(s.T(), tt.bin, env, "login --url "+tt.loginURL, 0) // without save flag so the netrc file won't be modified
+		output := runCommand(s.T(), tt.bin, env, "logout", 0)
 		s.Contains(output, loggedOutOutput)
-		s.Contains(output, RemovedFromNetrcOutput)
 
-		// check netrc file doesn't contain credentials
+		// check netrc file matches wanted file
 		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
-		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
+		wantBytes, err := ioutil.ReadFile(tt.wantFile)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
-		s.NoError(err)
-		s.Equal(utils.NormalizeNewLines(string(wantBytes)), utils.NormalizeNewLines(string(got)))
+		wantString := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
+		s.Equal(utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }

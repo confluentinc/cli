@@ -4,6 +4,8 @@ machine random-sacred-machine
 machine dont-touch-this-machine
         login cant-touch-this
         password doo-doo-doo-doo
-machine confluent-cli:ccloud-username-password:login-good@user.com-<URL_PLACEHOLDER>
+
+machine confluent-cli:          mds-username-password:login-good@user.com-<URL_PLACEHOLDER>
+
 	login good@user.com
 	password old-password
