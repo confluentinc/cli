@@ -67,11 +67,9 @@ type NetrcHandlerImpl struct {
 }
 
 func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
-	filename := GetNetrcFilePath(false)
-
-	netrcFile, err := getOrCreateNetrc(filename)
+	netrcFile, err := getOrCreateNetrc(n.FileName)
 	if err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
@@ -85,11 +83,11 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 	}
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
-	err = ioutil.WriteFile(filename, netrcBytes, 0600)
+	err = ioutil.WriteFile(n.FileName, netrcBytes, 0600)
 	if err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 	return nil
 }
@@ -131,11 +129,10 @@ func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
 // Returns the first match
 // For SSO case the password is the refreshToken
 func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error) {
-	filename := GetNetrcFilePath(false)
 	if params.CLIName == "" {
 		return nil, errors.New(errors.NetrcCLINameMissingErrorMsg)
 	}
-	machines, err := gonetrc.GetMachines(filename)
+	machines, err := gonetrc.GetMachines(n.FileName)
 	if err != nil {
 		return nil, err
 	}
