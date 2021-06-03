@@ -241,7 +241,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	}
 
 	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "-vvv", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
 	cliStdOut, err := cmd.StdoutPipe()
