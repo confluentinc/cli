@@ -64,7 +64,7 @@ func (c *command) ServerComplete() []prompt.Suggest {
 
 	for _, user := range users {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text:        fmt.Sprintf("%d", user.Id),
+			Text:        fmt.Sprintf("%s", user.ResourceId),
 			Description: fmt.Sprintf("%s: %s", user.ServiceName, user.ServiceDescription),
 		})
 	}
@@ -112,8 +112,8 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of a service account with the ID ``2786``",
-				Code: `ccloud service-account update 2786 --description "Update demo service account information."`,
+				Text: "Update the description of a service account with resource ID ``sa-lqv3mm``",
+				Code: `ccloud service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
 	}
@@ -129,8 +129,8 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete a service account with the ID ``2786``",
-				Code: "ccloud service-account delete 2786",
+				Text: "Delete a service account with resource ID ``sa-lqv3mm``",
+				Code: "ccloud service-account delete sa-lqv3mm",
 			},
 		),
 	}
@@ -177,12 +177,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	idp, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	id := int32(idp)
-
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -192,10 +186,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	idp, err := strconv.Atoi(args[0])
 	user := &orgv1.User{
-		Id:                 id,
 		ServiceDescription: description,
 	}
+	if err == nil { // it's a numeric ID
+		user.Id = int32(idp)
+	} else { // it's a resource ID
+		user.ResourceId = args[0]
+	}
+
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
 	if err != nil {
 		return err
@@ -206,13 +206,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	idp, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	id := int32(idp)
-
-	user := &orgv1.User{
-		Id: id,
+	user := &orgv1.User{}
+	if err == nil { // it's a numeric ID
+		user.Id = int32(idp)
+	} else { // it's a resource ID
+		user.ResourceId = args[0]
 	}
 	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {

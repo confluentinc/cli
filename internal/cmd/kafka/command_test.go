@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -24,6 +25,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
+)
+
+const (
+	serviceAccountId   = int32(123)
+	serviceAccountName = "service-account"
+	userResourceId     = "sa-55555"
 )
 
 var conf *v3.Config
@@ -1122,6 +1129,23 @@ func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr
 func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
+		User: &mock.User{
+			DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
+				return &v1.User{
+					Email: "csreesangkom@confluent.io",
+				}, nil
+			},
+			GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
+				return []*v1.User{
+					{
+						Id:          serviceAccountId,
+						ResourceId:  userResourceId,
+						ServiceName: serviceAccountName,
+					},
+				}, nil
+			},
+			CheckEmailFunc: nil,
+		},
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{

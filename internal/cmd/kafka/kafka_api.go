@@ -47,7 +47,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	flgSet.Bool("allow", false, "Access to the resource is allowed.") // permission
 	flgSet.Bool("deny", false, "Access to the resource is denied.")
 	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
-	flgSet.Int("service-account", 0, "The service account ID.")
+	flgSet.String("service-account", "", "The service account ID.")
 	operationHelpOneLine := fmt.Sprintf("The ACL Operation: (%s).\nNote: This flag may be specified more than once.",
 		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"}))
 	operationHelpParts := strings.SplitAfter(operationHelpOneLine, "delete, ")
