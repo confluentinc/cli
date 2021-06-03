@@ -89,7 +89,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the API keys the belongs to service account with the ResourceId ``sa-lqv3mm`` on cluster ``lkc-xyz``",
+				Text: "List the API keys that belong to service account with resource ID ``sa-lqv3mm`` on cluster ``lkc-xyz``",
 				Code: `ccloud api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
 			},
 		),
@@ -108,7 +108,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an API keys for service account with the ResourceId ``sa-lqv3mm`` in cluster ``lkc-xyz``",
+				Text: "Create an API key for service account with resource ID ``sa-lqv3mm`` for cluster ``lkc-xyz``",
 				Code: `ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm `,
 			},
 		),

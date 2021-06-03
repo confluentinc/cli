@@ -112,7 +112,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of a service account with the ResourceId ``sa-lqv3mm``",
+				Text: "Update the description of a service account with resource ID ``sa-lqv3mm``",
 				Code: `ccloud service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
@@ -129,7 +129,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete a service account with the ResourceId ``sa-lqv3mm``",
+				Text: "Delete a service account with resource ID ``sa-lqv3mm``",
 				Code: "ccloud service-account delete sa-lqv3mm",
 			},
 		),
