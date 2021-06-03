@@ -335,7 +335,7 @@ func (c *Config) DeleteUserAuth() error {
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName)
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
 	}
 	return c.Filename, nil
 }
