@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -246,14 +247,20 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 
 	cliStdOut, err := cmd.StdoutPipe()
 	s.NoError(err)
+	cliStdErr, err := cmd.StderrPipe()
+	s.NoError(err)
 	cliStdIn, err := cmd.StdinPipe()
 	s.NoError(err)
 
-	scanner := bufio.NewScanner(cliStdOut)
+	var wg sync.WaitGroup
+
+	scannerOut := bufio.NewScanner(cliStdOut)
+	scannerErr := bufio.NewScanner(cliStdErr)
+	wg.Add(1)
 	go func() {
 		var url string
-		for scanner.Scan() {
-			txt := scanner.Text()
+		for scannerOut.Scan() {
+			txt := scannerOut.Text()
 			fmt.Println("CLI output | " + txt)
 			if url == "" {
 				url = parseSsoAuthUrlFromOutput([]byte(txt))
@@ -272,14 +279,22 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 			e = cliStdIn.Close()
 			s.NoError(e)
 
-			scanner.Scan()
-			s.Equal(fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail), scanner.Text()+"\n")
+			scannedText := ""
+			for scannerOut.Scan() {
+				scannedText = scannedText + scannerOut.Text() + "\n"
+			}
+			for scannerErr.Scan() {
+				scannedText = scannedText + scannerErr.Text() + "\n"
+			}
+			s.Contains(scannedText, fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail))
 		}
+		wg.Done()
 	}()
 
 	err = cmd.Start()
 	s.NoError(err)
 
+	wg.Wait()
 	done := make(chan error)
 	go func() { done <- cmd.Wait() }()
 

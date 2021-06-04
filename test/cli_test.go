@@ -274,7 +274,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("expired token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL+" -v", 0)
+		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
@@ -284,7 +284,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("malformed token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL+" -v", 0)
+		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
@@ -295,7 +295,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL+" -v", 0)
+		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
