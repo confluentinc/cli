@@ -176,7 +176,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
-	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
+	req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
@@ -240,7 +240,7 @@ func TestLoginSuccess(t *testing.T) {
 		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 		if s.setEnv {
 			_ = os.Unsetenv(pauth.ConfluentURLEnvVar)
@@ -377,7 +377,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd.Command, loginArgs...)
 			req.NoError(err)
-			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, tt.wantUser))
+			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, tt.wantUser))
 		})
 	}
 }
@@ -453,7 +453,7 @@ func TestPromptLoginFlag(t *testing.T) {
 			req.False(mockLoginCredentialsManager.GetConfluentCredentialsFromEnvVarCalled())
 			req.False(mockLoginCredentialsManager.GetCredentialsFromNetrcCalled())
 
-			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		})
 	}
 }
@@ -792,7 +792,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// Set kafka related states for the logged in context
@@ -810,7 +810,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// verify that kafka cluster info persists between logging back in again

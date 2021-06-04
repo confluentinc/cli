@@ -11,8 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/mock"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 func TestSignupSuccess(t *testing.T) {
@@ -99,12 +101,21 @@ func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
-	err := signup(cmd, prompt, mockCcloudClient())
+	signupCmd := newCmd(v3.AuthenticatedCloudConfigMock())
+
+	err := signupCmd.Signup(cmd, prompt, mockCcloudClient())
 	require.NoError(t, err)
 
 	for _, x := range expected {
 		require.Contains(t, buf.String(), x)
 	}
+}
+
+func newCmd(conf *v3.Config) *command {
+	client := mockCcloudClient()
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	cmd := New(prerunner, conf.Logger, "ccloud-cli")
+	return cmd
 }
 
 func mockCcloudClient() *ccloud.Client {

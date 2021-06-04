@@ -9,7 +9,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
-	"github.com/atrox/homedir"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
 
@@ -20,7 +19,7 @@ import (
 )
 
 const (
-	defaultConfigFileFmt = "~/.%s/config.json"
+	defaultConfigFileFmt = "%s/.%s/config.json"
 	emptyFieldIndicator  = "EMPTY"
 )
 
@@ -411,13 +410,8 @@ func (c *Config) ResetAnonymousId() error {
 
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
-		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
+		homedir, _ := os.UserHomeDir()
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
 	}
-	filename, err := homedir.Expand(c.Filename)
-	if err != nil {
-		c.Logger.Error(err)
-		// Return a more user-friendly error.
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ResolvingConfigPathErrorMsg, c.Filename), errors.ResolvingConfigPathSuggestions)
-	}
-	return filename, nil
+	return c.Filename, nil
 }

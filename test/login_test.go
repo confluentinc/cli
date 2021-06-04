@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -141,7 +142,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
 		//TODO add save test using stdin input
-		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
 		if tt.cliName == "ccloud" {
@@ -208,7 +209,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
-		output := runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
 		if tt.cliName == "ccloud" {
@@ -241,19 +242,25 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	}
 
 	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "-vvv", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
 	cliStdOut, err := cmd.StdoutPipe()
 	s.NoError(err)
+	cliStdErr, err := cmd.StderrPipe()
+	s.NoError(err)
 	cliStdIn, err := cmd.StdinPipe()
 	s.NoError(err)
 
-	scanner := bufio.NewScanner(cliStdOut)
+	var wg sync.WaitGroup
+
+	scannerOut := bufio.NewScanner(cliStdOut)
+	scannerErr := bufio.NewScanner(cliStdErr)
+	wg.Add(1)
 	go func() {
 		var url string
-		for scanner.Scan() {
-			txt := scanner.Text()
+		for scannerOut.Scan() {
+			txt := scannerOut.Text()
 			fmt.Println("CLI output | " + txt)
 			if url == "" {
 				url = parseSsoAuthUrlFromOutput([]byte(txt))
@@ -272,14 +279,22 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 			e = cliStdIn.Close()
 			s.NoError(e)
 
-			scanner.Scan()
-			s.Equal(fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail), scanner.Text()+"\n")
+			scannedText := ""
+			for scannerOut.Scan() {
+				scannedText = scannedText + scannerOut.Text() + "\n"
+			}
+			for scannerErr.Scan() {
+				scannedText = scannedText + scannerErr.Text() + "\n"
+			}
+			s.Contains(scannedText, fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail))
 		}
+		wg.Done()
 	}()
 
 	err = cmd.Start()
 	s.NoError(err)
 
+	wg.Wait()
 	done := make(chan error)
 	go func() { done <- cmd.Wait() }()
 

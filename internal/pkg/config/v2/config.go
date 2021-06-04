@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/atrox/homedir"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
 
@@ -17,7 +16,7 @@ import (
 )
 
 const (
-	defaultConfigFileFmt = "~/.%s/config.json"
+	defaultConfigFileFmt = "%s/.%s/config.json"
 )
 
 var (
@@ -297,15 +296,8 @@ func (c *Config) ResetAnonymousId() error {
 
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
-		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
+		homedir, _ := os.UserHomeDir()
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
 	}
-	filename, err := homedir.Expand(c.Filename)
-	if err != nil {
-		c.Logger.Error(err)
-		// Return a more user-friendly error.
-		err = fmt.Errorf("an error resolving the config filepath at %s has occurred. "+
-			"Please try moving the file to a different location", c.Filename)
-		return "", err
-	}
-	return filename, nil
+	return c.Filename, nil
 }
