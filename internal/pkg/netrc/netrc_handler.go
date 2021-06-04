@@ -95,12 +95,7 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 }
 
 func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) (string, error) {
-	filename, err := homedir.Expand(n.FileName)
-	if err != nil {
-		return "", errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
-	}
-
-	netrcFile, err := getNetrc(filename)
+	netrcFile, err := getNetrc(n.FileName)
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +109,7 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 		machine := netrcFile.FindMachine(machineName)
 		if machine != nil {
 			found = true
-			err := removeCredentials(machineName, netrcFile, filename)
+			err := removeCredentials(machineName, netrcFile, n.FileName)
 			if err != nil {
 				return "", err
 			}
@@ -297,11 +292,7 @@ func GetNetrcFilePath(isIntegrationTest bool) string {
 }
 
 func (n *NetrcHandlerImpl) CheckCredentialExist(cliName string, ctxName string) (bool, error) {
-	filename, err := homedir.Expand(n.FileName)
-	if err != nil {
-		return false, err
-	}
-	netrcFile, err := getNetrc(filename)
+	netrcFile, err := getNetrc(n.FileName)
 	if err != nil {
 		return false, err
 	}
