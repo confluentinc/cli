@@ -2,10 +2,10 @@ package acl
 
 import (
 	"fmt"
+	errMsgs "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	errMsgs "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -48,6 +48,12 @@ func TestParseAclRequest(t *testing.T) {
 				Errors:       multierror.Append(errors.New("Invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
 					convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 						kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID))),
+			},
+		},
+		{
+			args: []string{"--operation", "READ", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
+			expectedAcl: AclRequestDataWithError{
+				Errors:       multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
 			},
 		},
 	}

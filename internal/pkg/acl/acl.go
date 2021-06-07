@@ -173,9 +173,9 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 		case "transactional-id":
 			setAclRequestResourcePattern(conf, n, v)
 		case "allow":
-			conf.Permission = kafkarestv3.ACLPERMISSION_ALLOW
+			setAclRequestPermission(conf, kafkarestv3.ACLPERMISSION_ALLOW)
 		case "deny":
-			conf.Permission = kafkarestv3.ACLPERMISSION_DENY
+			setAclRequestPermission(conf, kafkarestv3.ACLPERMISSION_DENY)
 		case "prefix":
 			conf.PatternType = kafkarestv3.ACLPATTERNTYPE_PREFIXED
 		case "principal":
@@ -208,6 +208,13 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("Invalid operation value: "+v))
 		}
 	}
+}
+
+func setAclRequestPermission(conf *AclRequestDataWithError, permission krsdk.AclPermission) {
+	if conf.Permission != "" {
+		conf.Errors = multierror.Append(conf.Errors, errors.Errorf(errors.OnlySetAllowOrDenyErrorMsg))
+	}
+	conf.Permission = permission
 }
 
 func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
