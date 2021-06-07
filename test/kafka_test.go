@@ -77,9 +77,9 @@ func (s *CLITestSuite) TestKafka() {
 		//{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/rp-kafka-acls-list-yaml.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBE --topic 'test-topic'"},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'"},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'"},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'"},
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "default", fixture: "kafka/topic-list.golden"},
 		//	{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/rp-topic-list.golden"},

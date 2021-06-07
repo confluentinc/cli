@@ -10,7 +10,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/atrox/homedir"
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 
@@ -232,11 +231,7 @@ func (c *client) readCheckFile() (shouldCheck bool, err error) {
 	if c.CheckFile == "" {
 		return true, nil
 	}
-	updateFile, err := homedir.Expand(c.CheckFile)
-	if err != nil {
-		return false, err
-	}
-	info, err := c.fs.Stat(updateFile)
+	info, err := c.fs.Stat(c.CheckFile)
 	if err != nil && !os.IsNotExist(err) {
 		return false, err
 	}
@@ -256,18 +251,14 @@ func (c *client) touchCheckFile() error {
 	if c.CheckFile == "" {
 		return nil
 	}
-	checkFile, err := homedir.Expand(c.CheckFile)
-	if err != nil {
-		return err
-	}
 
-	if _, err := c.fs.Stat(checkFile); os.IsNotExist(err) {
-		if f, err := c.fs.Create(checkFile); err != nil {
+	if _, err := c.fs.Stat(c.CheckFile); os.IsNotExist(err) {
+		if f, err := c.fs.Create(c.CheckFile); err != nil {
 			return err
 		} else {
 			f.Close()
 		}
-	} else if err := c.fs.Chtimes(checkFile, c.clock.Now(), c.clock.Now()); err != nil {
+	} else if err := c.fs.Chtimes(c.CheckFile, c.clock.Now(), c.clock.Now()); err != nil {
 		return err
 	}
 	return nil

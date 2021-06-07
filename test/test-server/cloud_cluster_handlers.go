@@ -282,7 +282,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w 
 					NetworkIngress:  50,
 					NetworkEgress:   150,
 					Storage:         30000,
-					Status:          schedv1.ClusterStatus_EXPANDING,
+					Status:          schedv1.ClusterStatus_UP,
 					ServiceProvider: "aws",
 					Region:          "us-west-2",
 					Endpoint:        "SASL_SSL://kafka-endpoint",

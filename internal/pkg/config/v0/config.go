@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/atrox/homedir"
 	"github.com/blang/semver"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -15,7 +14,7 @@ import (
 )
 
 const (
-	defaultConfigFileFmt = "~/.%s/config.json"
+	defaultConfigFileFmt = "%s/.%s/config.json"
 )
 
 var (
@@ -186,11 +185,8 @@ func (c *Config) CheckHasAPIKey(clusterID string) error {
 
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
-		c.Filename = fmt.Sprintf(defaultConfigFileFmt, c.CLIName)
+		homedir, _ := os.UserHomeDir()
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
 	}
-	filename, err := homedir.Expand(c.Filename)
-	if err != nil {
-		return "", err
-	}
-	return filename, nil
+	return c.Filename, nil
 }

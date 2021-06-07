@@ -6,11 +6,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 
@@ -72,16 +70,6 @@ func TestCheckForUpdates(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(tmpCheckFile1.Name())
 
-	// we don't need to cross compile for tests
-	u, err := user.Current()
-	require.NoError(t, err)
-	tmpCheckFile2Handle, err := ioutil.TempFile(u.HomeDir, "cli-test2-")
-	require.NoError(t, err)
-	// replace the user homedir with ~ to test expansion by our own code
-	tmpCheckFile2 := strings.Replace(tmpCheckFile2Handle.Name(), u.HomeDir, "~", 1)
-	defer os.Remove(tmpCheckFile2Handle.Name())
-
-	require.NoError(t, err)
 	type args struct {
 		name           string
 		currentVersion string
@@ -230,27 +218,6 @@ func TestCheckForUpdates(t *testing.T) {
 			wantUpdateAvailable: false,
 			wantLatestVersion:   "v1.2.3",
 			wantErr:             true,
-		},
-		{
-			name: "should support files in your homedir",
-			client: NewClient(&ClientParams{
-				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
-					},
-				},
-				Logger: log.New(),
-				// This check file name has ~ in the path
-				CheckFile: tmpCheckFile2,
-			}),
-			args: args{
-				name:           "my-cli",
-				currentVersion: "v1.2.3",
-			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             false,
 		},
 		{
 			name: "should not check if disabled",

@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -55,7 +57,7 @@ func (c *aclCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, to modify both ``consumer-group`` and ``topic`` resources, you need to issue two separate commands:",
-				Code: "ccloud kafka acl create --allow --service-account 1522 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account 1522 --operation READ --topic '*'",
+				Code: "ccloud kafka acl create --allow --service-account sa-55555 --operation READ --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account sa-55555 --operation READ --topic '*'",
 			},
 		),
 	}
@@ -83,7 +85,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
-	listCmd.Flags().Int("service-account", 0, "Service account ID.")
+	listCmd.Flags().String("service-account", "", "Service account ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 
@@ -97,6 +99,16 @@ func (c *aclCommand) init() {
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl, err := parse(cmd)
+	if err != nil {
+		return err
+	}
+
+	err = c.ACLResourceIdtoNumericId(acl)
+	if err != nil {
+		return err
+	}
+
+	IdMap, err := getUserIdMap(c.Client)
 	if err != nil {
 		return err
 	}
@@ -125,7 +137,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data, cmd.OutOrStdout(), aclListFields, aclListStructuredRenames)
+			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, cmd.OutOrStdout(), IdMap)
 		}
 	}
 
@@ -140,11 +152,16 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return aclutil.PrintACLs(cmd, resp, os.Stdout)
+	return aclutil.PrintACLsWithMap(cmd, resp, os.Stdout, IdMap)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
+	if err != nil {
+		return err
+	}
+
+	err = c.ACLResourceIdtoNumericId(acls)
 	if err != nil {
 		return err
 	}
@@ -222,6 +239,11 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
+	if err != nil {
+		return err
+	}
+
+	err = c.ACLResourceIdtoNumericId(acls)
 	if err != nil {
 		return err
 	}
@@ -392,4 +414,45 @@ func (c *aclCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 
 func (c *aclCommand) Cmd() *cobra.Command {
 	return c.Command
+}
+
+func (c *aclCommand) ACLResourceIdtoNumericId(acl []*ACLConfiguration) error {
+	IdMap, err := getResourceIdMap(c.Client)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(acl); i++ {
+		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
+			id := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
+			_, err := strconv.Atoi(id)
+			if err != nil { // it's a resource id
+				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(IdMap[id])) // translate into numeric ID
+			}
+		}
+	}
+	return nil
+}
+
+func getResourceIdMap(client *ccloud.Client) (map[string]int32, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[string]int32)
+	for _, sa := range serviceAccounts {
+		saMap[sa.ResourceId] = sa.Id
+	}
+	return saMap, nil
+}
+
+func getUserIdMap(client *ccloud.Client) (map[int32]string, error) {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	saMap := make(map[int32]string)
+	for _, sa := range serviceAccounts {
+		saMap[sa.Id] = sa.ResourceId
+	}
+	return saMap, nil
 }

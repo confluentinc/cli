@@ -382,9 +382,9 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	utils.ErrPrint(cmd, errors.AutoLoginMsg)
-	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
-	utils.Printf(cmd, errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	r.Logger.Debug(errors.AutoLoginMsg)
+	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	r.Logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return nil
 }
 
@@ -491,6 +491,21 @@ func kafkaRestIsEnabled(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (bool
 
 }
 
+// Converts a ccloud base URL to the appropriate Metrics URL.
+func ConvertToMetricsBaseURL(baseURL string) string {
+	// strip trailing slashes before comparing.
+	trimmedURL := strings.TrimRight(baseURL, "/")
+	if trimmedURL == "https://confluent.cloud" {
+		return "https://api.telemetry.confluent.cloud/"
+	} else if strings.HasSuffix(trimmedURL, "priv.cpdev.cloud") || trimmedURL == "https://devel.cpdev.cloud" {
+		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud/"
+	} else if trimmedURL == "https://stag.cpdev.cloud" {
+		return "https://stag-sandbox-api.telemetry.aws.confluent.cloud/"
+	}
+	// if no matches, then use original URL
+	return baseURL
+}
+
 func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
@@ -507,7 +522,7 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 		userAgent = ver.UserAgent
 	}
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
-		BaseURL: baseURL, Logger: logger, UserAgent: userAgent,
+		BaseURL: baseURL, Logger: logger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
 	}), nil
 }
 
@@ -573,9 +588,8 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	// TODO: change to verbosity level logging
-	utils.ErrPrint(cmd, errors.AutoLoginMsg)
-	utils.Printf(cmd, errors.LoggedInAsMsg, credentials.Username)
+	r.Logger.Debug(errors.AutoLoginMsg)
+	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 

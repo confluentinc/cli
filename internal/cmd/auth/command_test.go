@@ -121,6 +121,12 @@ var (
 		WriteNetrcCredentialsFunc: func(cliName string, isSSO bool, ctxName, username, password string) error {
 			return nil
 		},
+		RemoveNetrcCredentialsFunc: func(cliName string, ctxName string) (string, error) {
+			return "", nil
+		},
+		CheckCredentialExistFunc: func(cliName string, ctxName string) (bool, error) {
+			return false, nil
+		},
 	}
 )
 
@@ -170,7 +176,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
-	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
+	req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
@@ -234,7 +240,7 @@ func TestLoginSuccess(t *testing.T) {
 		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 		if s.setEnv {
 			_ = os.Unsetenv(pauth.ConfluentURLEnvVar)
@@ -371,7 +377,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd.Command, loginArgs...)
 			req.NoError(err)
-			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, tt.wantUser))
+			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, tt.wantUser))
 		})
 	}
 }
@@ -447,7 +453,7 @@ func TestPromptLoginFlag(t *testing.T) {
 			req.False(mockLoginCredentialsManager.GetConfluentCredentialsFromEnvVarCalled())
 			req.False(mockLoginCredentialsManager.GetCredentialsFromNetrcCalled())
 
-			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		})
 	}
 }
@@ -497,11 +503,64 @@ func TestLogout(t *testing.T) {
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v3.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
-	logoutCmd, cfg := newLogoutCmd("ccloud", cfg)
+	logoutCmd, cfg := newLogoutCmd("ccloud", cfg, mockNetrcHandler)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
+	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
+	req.NoError(err)
+	req.Equal(exist, false)
 	verifyLoggedOutState(t, cfg, contextName)
+}
+
+func TestRemoveNetrcCredentials(t *testing.T) {
+	req := require.New(t)
+	clearCCloudDeprecatedEnvVar(req)
+	cfg := v3.AuthenticatedCloudConfigMock()
+	contextName := cfg.Context().Name
+	logoutCmd, cfg := newLogoutCmd("ccloud", cfg, mockNetrcHandler)
+	// run login command
+	auth := &sdkMock.Auth{
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+			return &orgv1.GetUserReply{
+				User: &orgv1.User{
+					Id:        23,
+					Email:     promptUser,
+					FirstName: "Cody",
+				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: promptUser,
+			}, nil
+		},
+	}
+	suite := []struct {
+		cliName string
+		args    []string
+		setEnv  bool
+	}{
+		{
+			cliName: "ccloud",
+			args:    []string{},
+		},
+	}
+	loginCmd, cfg := newLoginCmd(auth, user, suite[0].cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	_, err := pcmd.ExecuteCommand(loginCmd.Command, suite[0].args...)
+	req.NoError(err)
+
+	_, err = logoutCmd.netrcHandler.RemoveNetrcCredentials(logoutCmd.cliName, contextName)
+	req.NoError(err)
+	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
+	req.NoError(err)
+	req.Equal(exist, false)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {
@@ -733,7 +792,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// Set kafka related states for the logged in context
@@ -742,7 +801,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg)
+		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg, mockNetrcHandler)
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)
@@ -751,7 +810,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// logging back in the the same context
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
-		req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 
 		// verify that kafka cluster info persists between logging back in again
@@ -900,8 +959,8 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cliName string, cfg *v3.Config) (*logoutCommand, *v3.Config) {
-	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock())
+func newLogoutCmd(cliName string, cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logoutCommand, *v3.Config) {
+	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
 	return logoutCmd, cfg
 }
 

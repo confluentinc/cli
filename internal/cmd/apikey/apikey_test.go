@@ -42,6 +42,7 @@ const (
 	apiSecretFromFile  = "api_secret_test"
 	apiKeyDescription  = "Mock Apis"
 	serviceAccountId   = int32(123)
+	userResourceId     = "sa-55555"
 	serviceAccountName = "service-account"
 
 	auditLogApiKeyResourceId  = int32(7753)
@@ -49,12 +50,14 @@ const (
 	auditLogApiKeySecretVal   = "opensesameforauditlogs"
 	auditLogApiKeyDescription = "Mock Apis for Audit Logs"
 	auditLogServiceAccountId  = int32(748)
+	auditLogUserResourceId    = "sa-55555"
 )
 
 var (
 	apiValue = &schedv1.ApiKey{
 		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
 		UserId:          serviceAccountId,
+		UserResourceId:  userResourceId,
 		Key:             apiKeyVal,
 		Secret:          apiSecretVal,
 		Description:     apiKeyDescription,
@@ -64,6 +67,7 @@ var (
 	auditLogApiValue = &schedv1.ApiKey{
 		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
 		UserId:          auditLogServiceAccountId,
+		UserResourceId:  auditLogUserResourceId,
 		Key:             auditLogApiKeyVal,
 		Secret:          auditLogApiKeySecretVal,
 		Description:     auditLogApiKeyDescription,
@@ -185,6 +189,7 @@ func (suite *APITestSuite) SetupTest() {
 			return []*v1.User{
 				{
 					Id:          serviceAccountId,
+					ResourceId:  userResourceId,
 					ServiceName: serviceAccountName,
 				},
 			}, nil

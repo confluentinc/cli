@@ -4,20 +4,17 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/atrox/homedir"
 	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestUpdate() {
 	s.T().Skip("Skipping this test until its less flaky")
 
-	configFile, err := homedir.Expand("~/.confluent/config.json")
-	require.NoError(s.T(), err)
+	configFile := os.Getenv("HOME") + "/.confluent/config.json"
 
 	// Remove the cache file so we'll see the update prompt
-	path, err := homedir.Expand("~/.confluent/update_check")
-	require.NoError(s.T(), err)
-	err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
+	path := os.Getenv("HOME") + "/.confluent/update_check"
+	err := os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
 	require.NoError(s.T(), err)
 
 	// Be nice and restore the config when we're done

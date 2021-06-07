@@ -13,12 +13,15 @@ const (
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
-	UnableToStoreAPIKeyErrorMsg       = "unable to store API key locally"
-	NonKafkaNotImplementedErrorMsg    = "command not yet available for non-Kafka cluster resources"
-	RefuseToOverrideSecretErrorMsg    = "refusing to overwrite existing secret for API Key \"%s\""
-	RefuseToOverrideSecretSuggestions = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
-	APIKeyUseFailedErrorMsg           = "unable to set active API key"
-	APIKeyUseFailedSuggestions        = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
+	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
+	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
+	RefuseToOverrideSecretErrorMsg      = "refusing to overwrite existing secret for API Key \"%s\""
+	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
+	APIKeyUseFailedErrorMsg             = "unable to set active API key"
+	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
+	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
+	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `ccloud kafka cluster use` command."
+	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -93,26 +96,31 @@ const (
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
 	// kafka cluster commands
-	ListTopicSuggestions                 = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
-	FailedToRenderKeyPolicyErrorMsg      = "BYOK error: failed to render key policy"
-	FailedToReadConfirmationErrorMsg     = "BYOK error: failed to read your confirmation"
-	AuthorizeAccountsErrorMsg            = "BYOK error: please authorize the key for the accounts (%s)x"
-	AuthorizeIdentityErrorMsg            = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg          = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
-	BYOKSupportErrorMsg                  = "BYOK is available on AWS and GCP."
-	CKUMoreThanZeroErrorMsg              = "`--cku` value must be greater than 0"
-	CloudRegionNotAvailableErrorMsg      = "\"%s\" is not an available region for \"%s\""
-	CloudRegionNotAvailableSuggestions   = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
-	CloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider"
-	CloudProviderNotAvailableSuggestions = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
-	TopicNotExistsErrorMsg               = "topic \"%s\" does not exist"
-	TopicNotExistsSuggestions            = ListTopicSuggestions
-	InvalidAvailableFlagErrorMsg         = "invalid value \"%s\" for `--availability` flag"
-	InvalidAvailableFlagSuggestions      = "Allowed values for `--availability` flag are: %s, %s."
-	InvalidTypeFlagErrorMsg              = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions           = "Allowed values for `--type` flag are: %s, %s, %s."
-	NameOrCKUFlagErrorMsg                = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
-	NonEmptyNameErrorMsg                 = "`--name` flag value must not be emtpy"
+	ListTopicSuggestions                  = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
+	FailedToRenderKeyPolicyErrorMsg       = "BYOK error: failed to render key policy"
+	FailedToReadConfirmationErrorMsg      = "BYOK error: failed to read your confirmation"
+	AuthorizeAccountsErrorMsg             = "BYOK error: please authorize the key for the accounts (%s)x"
+	AuthorizeIdentityErrorMsg             = "BYOK error: please authorize the key for the identity (%s)"
+	CKUOnlyForDedicatedErrorMsg           = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	BYOKSupportErrorMsg                   = "BYOK is available on AWS and GCP."
+	CKUMoreThanZeroErrorMsg               = "`--cku` value must be greater than 0"
+	CloudRegionNotAvailableErrorMsg       = "\"%s\" is not an available region for \"%s\""
+	CloudRegionNotAvailableSuggestions    = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
+	CloudProviderNotAvailableErrorMsg     = "\"%s\" is not an available cloud provider"
+	CloudProviderNotAvailableSuggestions  = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
+	TopicNotExistsErrorMsg                = "topic \"%s\" does not exist"
+	TopicNotExistsSuggestions             = ListTopicSuggestions
+	InvalidAvailableFlagErrorMsg          = "invalid value \"%s\" for `--availability` flag"
+	InvalidAvailableFlagSuggestions       = "Allowed values for `--availability` flag are: %s, %s."
+	InvalidTypeFlagErrorMsg               = "invalid value \"%s\" for `--type` flag"
+	InvalidTypeFlagSuggestions            = "Allowed values for `--type` flag are: %s, %s, %s."
+	NameOrCKUFlagErrorMsg                 = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
+	NonEmptyNameErrorMsg                  = "`--name` flag value must not be emtpy"
+	KafkaClusterStillProvisioningErrorMsg = "Your cluster is still provisioning, so it can't be updated yet.  Please retry in a few minutes."
+	KafkaClusterUpdateFailedSuggestions   = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
+	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
+	ChooseRightEnvironmentSuggestions     = "Ensure the cluster ID you entered is valid.\n" +
+		"Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`."
 
 	// kafka topic commands
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
@@ -356,7 +364,8 @@ const (
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
 		"Also verify that the correct API secret is stored for the API key.\n" +
-		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`."
+		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`.\n" +
+		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `ccloud api-key list`)."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
 

@@ -29,10 +29,11 @@ type describeCmd struct {
 }
 
 type auditLogStruct struct {
-	ClusterId        string
-	EnvironmentId    string
-	ServiceAccountId int32
-	TopicName        string
+	ClusterId                string
+	EnvironmentId            string
+	ServiceAccountId         int32
+	ServiceAccountResourceId string
+	TopicName                string
 }
 
 func NewDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -59,9 +60,10 @@ func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
 
 	auditLog := c.State.Auth.Organization.AuditLog
 	return output.DescribeObject(cmd, &auditLogStruct{
-		ClusterId:        auditLog.ClusterId,
-		EnvironmentId:    auditLog.AccountId,
-		ServiceAccountId: auditLog.ServiceAccountId,
-		TopicName:        auditLog.TopicName,
+		ClusterId:                auditLog.ClusterId,
+		EnvironmentId:            auditLog.AccountId,
+		ServiceAccountId:         auditLog.ServiceAccountId,
+		ServiceAccountResourceId: auditLog.AccountId,
+		TopicName:                auditLog.TopicName,
 	}, listFields, humanLabelMap, structuredLabelMap)
 }

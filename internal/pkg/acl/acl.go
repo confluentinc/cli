@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/pflag"
 	"io"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -327,4 +328,98 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) krsdk.AclData 
 		Permission:   data.Permission,
 	}
 	return aclData
+}
+
+func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp krsdk.AclDataList, writer io.Writer, IdMap map[int32]string) error {
+	// non list commands which do not have -o flags also uses this function, need to set default
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	aclListFields := []string{"UserId", "ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+	aclListStructuredRenames := []string{"user_id", "service_account_id", "permission", "operation", "resource", "name", "type"}
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	if err != nil {
+		return err
+	}
+
+	for _, aclData := range aclGetResp.Data {
+		principal := aclData.Principal
+		var resourceId string
+		if principal != "" {
+			UserId := principal[5:]
+			idp, err := strconv.Atoi(UserId)
+			if err == nil {
+				resourceId = IdMap[int32(idp)]
+			}
+		}
+		record := &struct {
+			UserId           string
+			ServiceAccountId string
+			Permission       string
+			Operation        string
+			Resource         string
+			Name             string
+			Type             string
+		}{
+			aclData.Principal,
+			resourceId,
+			string(aclData.Permission),
+			string(aclData.Operation),
+			string(aclData.ResourceType),
+			string(aclData.ResourceName),
+			string(aclData.PatternType),
+		}
+		outputWriter.AddElement(record)
+	}
+
+	return outputWriter.Out()
+}
+
+func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, IdMap map[int32]string) error {
+	// non list commands which do not have -o flags also uses this function, need to set default
+	_, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	}
+
+	aclListFields := []string{"UserId", "ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
+	aclListStructuredRenames := []string{"user_id", "service_account_id", "permission", "operation", "resource", "name", "type"}
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	if err != nil {
+		return err
+	}
+
+	for _, binding := range bindingsObj {
+		principal := binding.Entry.Principal
+		var resourceId string
+		if principal != "" {
+			UserId := principal[5:]
+			idp, err := strconv.Atoi(UserId)
+			if err == nil {
+				resourceId = IdMap[int32(idp)]
+			}
+		}
+		record := &struct {
+			UserId           string
+			ServiceAccountId string
+			Permission       string
+			Operation        string
+			Resource         string
+			Name             string
+			Type             string
+		}{
+			binding.Entry.Principal,
+			resourceId,
+			binding.Entry.PermissionType.String(),
+			binding.Entry.Operation.String(),
+			binding.Pattern.ResourceType.String(),
+			binding.Pattern.Name,
+			binding.Pattern.PatternType.String(),
+		}
+		outputWriter.AddElement(record)
+	}
+
+	return outputWriter.Out()
 }

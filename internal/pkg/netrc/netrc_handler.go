@@ -9,8 +9,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/atrox/homedir"
-
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -42,6 +40,8 @@ func (c netrcCredentialType) String() string {
 
 type NetrcHandler interface {
 	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
+	RemoveNetrcCredentials(cliName string, ctxName string) (string, error)
+	CheckCredentialExist(cliName string, ctxName string) (bool, error)
 	GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error)
 	GetFileName() string
 }
@@ -69,14 +69,9 @@ type NetrcHandlerImpl struct {
 }
 
 func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
-	filename, err := homedir.Expand(n.FileName)
+	netrcFile, err := getOrCreateNetrc(n.FileName)
 	if err != nil {
-		return errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
-	}
-
-	netrcFile, err := getOrCreateNetrc(filename)
-	if err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
 	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
@@ -90,13 +85,95 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 	}
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
+	}
+	err = ioutil.WriteFile(n.FileName, netrcBytes, 0600)
+	if err != nil {
+		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
+	}
+	return nil
+}
+
+func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) (string, error) {
+	netrcFile, err := getNetrc(n.FileName)
+	if err != nil {
+		return "", err
+	}
+
+	// machineName could be either sso: confluent-cli:ccloud-sso-refresh-token:login-cli-mock-email@confluent.io-http://test
+	// or non-sso: confluent-cli:ccloud-username-password:login-cli-mock-email@confluent.io-http://test
+	var user string
+	found := false
+	for _, isSSO := range []bool{true, false} {
+		machineName := getNetrcMachineName(cliName, isSSO, ctxName)
+		machine := netrcFile.FindMachine(machineName)
+		if machine != nil {
+			found = true
+			err := removeCredentials(machineName, netrcFile, n.FileName)
+			if err != nil {
+				return "", err
+			}
+			user = machine.Login
+		}
+	}
+	if !found {
+		err = errors.New(errors.NetrcCredentialsNotFoundErrorMsg)
+		return "", err
+	}
+	return user, nil
+}
+
+func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename string) error {
+	netrcBytes, err := netrcFile.MarshalText()
+	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
-	err = ioutil.WriteFile(filename, netrcBytes, 0600)
+	var stringBuf []string
+	lines := strings.Split(string(netrcBytes), "\n")
+	length := len(lines)
+	for i := 0; i < length; i++ {
+		if strings.Contains(lines[i], machineName) {
+			count := 3 // remove 3 non-empty lines or credentials
+			for count > 0 {
+				if lines[i] != "" {
+					count -= 1
+				}
+				i += 1
+			}
+		}
+		if i < length {
+			stringBuf = append(stringBuf, lines[i]+"\n")
+		}
+	}
+	if stringBuf[len(stringBuf)-1] == "\n" { // remove the last newline
+		stringBuf = stringBuf[:len(stringBuf)-1]
+	}
+	joinedString := strings.Join(stringBuf[:], "")
+	joinedString = strings.Replace(joinedString, "\n\n", "\n", -1)
+	buf := []byte(joinedString)
+	// get file mode
+	info, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	filemode := info.Mode()
+	err = ioutil.WriteFile(filename, buf, filemode)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	return nil
+}
+
+func getNetrc(filename string) (*gonetrc.Netrc, error) {
+	n, err := gonetrc.ParseFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, errors.Wrapf(err, errors.NetrcCredentialsNotFoundErrorMsg, filename)
+		} else {
+			return nil, err // failed to parse the netrc file due to other reasons
+		}
+	}
+	return n, nil
 }
 
 func getOrCreateNetrc(filename string) (*gonetrc.Netrc, error) {
@@ -136,14 +213,10 @@ func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
 // Returns the first match
 // For SSO case the password is the refreshToken
 func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error) {
-	filename, err := homedir.Expand(n.FileName)
-	if err != nil {
-		return nil, errors.Wrapf(err, errors.ResolvingNetrcFilepathErrorMsg, filename)
-	}
 	if params.CLIName == "" {
 		return nil, errors.New(errors.NetrcCLINameMissingErrorMsg)
 	}
-	machines, err := gonetrc.GetMachines(filename)
+	machines, err := gonetrc.GetMachines(n.FileName)
 	if err != nil {
 		return nil, err
 	}
@@ -210,9 +283,27 @@ func GetNetrcFilePath(isIntegrationTest bool) string {
 	if isIntegrationTest {
 		return NetrcIntegrationTestFile
 	}
+	homedir, _ := os.UserHomeDir()
 	if runtime.GOOS == "windows" {
-		return "~/_netrc"
+		return homedir + "/_netrc"
 	} else {
-		return "~/.netrc"
+		return homedir + "/.netrc"
 	}
+}
+
+func (n *NetrcHandlerImpl) CheckCredentialExist(cliName string, ctxName string) (bool, error) {
+	netrcFile, err := getNetrc(n.FileName)
+	if err != nil {
+		return false, err
+	}
+	machineName1 := getNetrcMachineName(cliName, true, ctxName)
+	machine1 := netrcFile.FindMachine(machineName1)
+
+	machineName2 := getNetrcMachineName(cliName, false, ctxName)
+	machine2 := netrcFile.FindMachine(machineName2)
+
+	if machine1 == nil && machine2 == nil {
+		return false, nil
+	}
+	return true, nil
 }
