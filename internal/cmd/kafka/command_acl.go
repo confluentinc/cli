@@ -27,8 +27,6 @@ var (
 	createCmd *cobra.Command
 	deleteCmd *cobra.Command
 	listCmd   *cobra.Command
-	aclListFields = []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames = []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
 )
 
 type aclCommand struct {
