@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	RemovedFromNetrcOutput = "Removed credentials for user \"good@user.com\" from netrc file \"/tmp/netrc_test\""
+	removedFromNetrcOutput = "Removed credentials for user \"good@user.com\" from netrc file \"/tmp/netrc_test\""
 	loggedOutOutput        = fmt.Sprintf(errors.LoggedOutMsg)
 )
 
@@ -48,6 +48,20 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 			mdsUrl,
 			confluentTestBin,
 		},
+		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
+			"ccloud",
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			cloudUrl,
+			ccloudTestBin,
+		},
+		{
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
+			"confluent",
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			mdsUrl,
+			confluentTestBin,
+		},
 	}
 	for _, tt := range tests {
 		// store existing credentials in a temp netrc to check that they are not corrupted
@@ -63,10 +77,13 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		s.NoError(err)
 
 		// run login to provide context, then logout command and check output
-		runCommand(s.T(), tt.bin, env, "login --save --url "+tt.loginURL, 0)
-		output := runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
+		output := runCommand(s.T(), tt.bin, env, "login -vvvv --save --url "+tt.loginURL, 0)
+		s.Contains(output, savedToNetrcOutput)
+		s.Contains(output, loggedInAsOutput)
+
+		output = runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
 		s.Contains(output, loggedOutOutput)
-		s.Contains(output, RemovedFromNetrcOutput)
+		s.Contains(output, removedFromNetrcOutput)
 
 		// check netrc file matches wanted file
 		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
