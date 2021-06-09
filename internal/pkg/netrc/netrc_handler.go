@@ -145,7 +145,7 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 			stringBuf = append(stringBuf, lines[i]+"\n")
 		}
 	}
-	if stringBuf[len(stringBuf)-1] == "\n" { // remove the last newline
+	if len(stringBuf) > 0 && stringBuf[len(stringBuf)-1] == "\n" { // remove the last newline
 		stringBuf = stringBuf[:len(stringBuf)-1]
 	}
 	joinedString := strings.Join(stringBuf[:], "")
