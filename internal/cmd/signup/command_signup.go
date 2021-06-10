@@ -4,6 +4,7 @@ import (
 	"context"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"os"
+	"strings"
 
 	"github.com/gogo/protobuf/types"
 
@@ -101,7 +102,11 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	}
 
 	if _, err := client.Signup.Create(context.Background(), req); err != nil {
+		if strings.Contains(err.Error(), "email already exists") {
+			return errors.NewErrorWithSuggestions(err.Error(), "If you believe this is a mistake, please check your email for a verification link.")
+		}
 		return err
+
 	}
 
 	utils.Printf(cmd, "A verification email has been sent to %s.\n", f.Responses["email"].(string))
