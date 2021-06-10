@@ -1,0 +1,7 @@
+- host: '*'
+  operation: ALL
+  pattern_type: LITERAL
+  permission: ALLOW
+  principal: User:Alice
+  resource_name: Test
+  resource_type: TOPIC

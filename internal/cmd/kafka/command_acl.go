@@ -135,7 +135,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, os.Stdout, IdMap)
+			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, cmd.OutOrStdout(), IdMap)
 		}
 	}
 

@@ -63,6 +63,7 @@ const (
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
 	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg 	  = "only --allow or --deny may be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"

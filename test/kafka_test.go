@@ -298,3 +298,33 @@ func (s *CLITestSuite) TestConfluentKafkaTopicDescribe() {
 		s.runConfluentTest(clitest)
 	}
 }
+
+func (s *CLITestSuite) TestConfluentKafkaACL() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		// error case: bad operation, specified more than one resource type
+		{args: fmt.Sprintf("kafka acl list --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation and conflicting resource type errors", fixture: "kafka/confluent/acl/list-errors.golden", wantErrCode: 1},
+		// success cases
+		{args: fmt.Sprintf("kafka acl list --url %s --no-auth", kafkaRestURL), name: "acl list output human", fixture: "kafka/confluent/acl/acl-list.golden"},
+		{args: fmt.Sprintf("kafka acl list -o json --url %s --no-auth", kafkaRestURL), name: "acl list output json", fixture: "kafka/confluent/acl/acl-list-json.golden"},
+		{args: fmt.Sprintf("kafka acl list -o yaml --url %s --no-auth", kafkaRestURL), name: "acl list output yaml", fixture: "kafka/confluent/acl/acl-list-yaml.golden"},
+
+		// error case: bad operation, specified more than one resource type, allow/deny not set
+		{args: fmt.Sprintf("kafka acl create --principal User:Alice --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/confluent/acl/create-errors.golden", wantErrCode: 1},
+		// success cases
+		{args: fmt.Sprintf("kafka acl create --operation write --cluster-scope --principal User:Alice --allow --url %s --no-auth", kafkaRestURL), name: "acl create output human", fixture: "kafka/confluent/acl/acl-create.golden"},
+		{args: fmt.Sprintf("kafka acl create --operation all --cluster-scope --principal User:Alice --allow -o json --url %s --no-auth", kafkaRestURL), name: "acl create output json", fixture: "kafka/confluent/acl/acl-create-json.golden"},
+		{args: fmt.Sprintf("kafka acl create --operation all --topic Test --principal User:Alice --allow -o yaml --url %s --no-auth", kafkaRestURL), name: "acl create output yaml", fixture: "kafka/confluent/acl/acl-create-yaml.golden"},
+
+		// error case: bad operation, specified more than one resource type, allow/deny not set
+		{args: fmt.Sprintf("kafka acl delete --principal User:Alice --host '*' --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/confluent/acl/delete-errors.golden", wantErrCode: 1},
+		// success cases
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-auth", kafkaRestURL), name: "acl delete output human", fixture: "kafka/confluent/acl/acl-delete.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o json --url %s --no-auth", kafkaRestURL), name: "acl delete output json", fixture: "kafka/confluent/acl/acl-delete-json.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o yaml --url %s --no-auth", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/confluent/acl/acl-delete-yaml.golden"},
+	}
+
+	for _, clitest := range tests {
+		s.runConfluentTest(clitest)
+	}
+}
