@@ -10,11 +10,17 @@ import (
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-
+	cmdPkg "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+)
+
+const (
+	testToken      = "y0ur.jwt.T0kEn"
+	promptUser     = "prompt-user@confluent.io"
 )
 
 func TestSignupSuccess(t *testing.T) {
@@ -89,19 +95,15 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 	)
 }
 
-func TestSignupWithExistingEmail(t *testing.T) {
-	testSignup(t, mock.NewPromptMock("mtodzo@confluent.io"),
-		"There is already an account associated with this email. If your email has not been verified, a new verification email will be sent.",
-		"Once your email is verified, please login using \"ccloud login\". For any assistance, contact support@confluent.io.",
-	)
-}
-
 func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	cmd := &cobra.Command{}
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
 	signupCmd := newCmd(v3.AuthenticatedCloudConfigMock())
+	signupCmd.Config = &cmdPkg.DynamicConfig{
+		Config: v3.UnauthenticatedCloudConfigMock(),
+	}
 
 	err := signupCmd.Signup(cmd, prompt, mockCcloudClient())
 	require.NoError(t, err)
@@ -114,7 +116,34 @@ func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 func newCmd(conf *v3.Config) *command {
 	client := mockCcloudClient()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := New(prerunner, conf.Logger, "ccloud-cli")
+	auth := &sdkMock.Auth{
+		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+			return &orgv1.GetUserReply{
+				User: &orgv1.User{
+					Id:        23,
+					Email:     promptUser,
+					FirstName: "Cody",
+				},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
+	user := &sdkMock.User{
+		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				Email: promptUser,
+			}, nil
+		},
+	}
+	ccloudClientFactory := &cliMock.MockCCloudClientFactory{
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			return &ccloud.Client{Auth: auth, User: user}
+		},
+	}
+	cmd := New(prerunner, conf.Logger, "ccloud-cli", ccloudClientFactory)
 	return cmd
 }
 
@@ -141,5 +170,6 @@ func mockCcloudClient() *ccloud.Client {
 				return nil, nil
 			},
 		},
+		Params: &ccloud.Params{BaseURL: "http://baseurl.com"},
 	}
 }
