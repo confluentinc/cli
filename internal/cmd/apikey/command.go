@@ -267,7 +267,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 					email = "<deactivated user>"
 				}
 			} else {
-				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: apiKey.UserResourceId})
+				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId, ResourceId: apiKey.UserResourceId})
 				if err != nil {
 					email = "<deactivated user>"
 					users[apiKey.UserId] = nil
