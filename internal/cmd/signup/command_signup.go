@@ -103,7 +103,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 	if _, err := client.Signup.Create(context.Background(), req); err != nil {
 		if strings.Contains(err.Error(), "email already exists") {
-			return errors.NewErrorWithSuggestions(err.Error(), "If you believe this is a mistake, please check your email for a verification link.")
+			return errors.NewErrorWithSuggestions("failed to signup", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
 		}
 		return err
 
