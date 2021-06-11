@@ -18,7 +18,7 @@ VERSION ?= $(shell git rev-parse --is-inside-work-tree > /dev/null && git descri
 ifneq (,$(findstring dirty,$(VERSION)))
 VERSION := $(VERSION)-$(USER)
 endif
-CLEAN_VERSION := $(shell echo $(VERSION) | grep -Eo '([0-9]+\.){2}[0-9]+')
+CLEAN_VERSION ?= $(shell echo $(VERSION) | grep -Eo '([0-9]+\.){2}[0-9]+')
 VERSION_NO_V := $(shell echo $(VERSION) | sed 's,^v,,' )
 
 CI_SKIP ?= [ci skip]
