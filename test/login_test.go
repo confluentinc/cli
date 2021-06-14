@@ -1,21 +1,15 @@
 package test
 
 import (
-	"bufio"
 	"context"
 	"fmt"
+	test_server "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
-	"time"
-
-	test_server "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/chromedp/chromedp"
 
@@ -229,112 +223,112 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
-func (s *CLITestSuite) TestSSOLoginAndSave() {
-	if *skipSsoBrowserTests {
-		s.T().Skip()
-	}
+//func (s *CLITestSuite) TestSSOLoginAndSave() {
+//	if *skipSsoBrowserTests {
+//		s.T().Skip()
+//	}
+//
+//	resetConfiguration(s.T(), "ccloud")
+//
+//	err := ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte{}, 0600)
+//	if err != nil {
+//		s.Fail("Failed to create netrc file")
+//	}
+//
+//	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
+//	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "-vvv", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
+//	cmd.Env = append(os.Environ(), env...)
+//
+//	cliStdOut, err := cmd.StdoutPipe()
+//	s.NoError(err)
+//	cliStdErr, err := cmd.StderrPipe()
+//	s.NoError(err)
+//	cliStdIn, err := cmd.StdinPipe()
+//	s.NoError(err)
+//
+//	var wg sync.WaitGroup
+//
+//	scannerOut := bufio.NewScanner(cliStdOut)
+//	scannerErr := bufio.NewScanner(cliStdErr)
+//	wg.Add(1)
+//	go func() {
+//		var url string
+//		for scannerOut.Scan() {
+//			txt := scannerOut.Text()
+//			fmt.Println("CLI output | " + txt)
+//			if url == "" {
+//				url = parseSsoAuthUrlFromOutput([]byte(txt))
+//			}
+//			if strings.Contains(txt, "paste the code here") {
+//				break
+//			}
+//		}
+//
+//		if url == "" {
+//			s.Fail("CLI did not output auth URL")
+//		} else {
+//			token := s.ssoAuthenticateViaBrowser(url)
+//			_, e := cliStdIn.Write([]byte(token))
+//			s.NoError(e)
+//			e = cliStdIn.Close()
+//			s.NoError(e)
+//
+//			scannedText := ""
+//			for scannerOut.Scan() {
+//				scannedText = scannedText + scannerOut.Text() + "\n"
+//			}
+//			for scannerErr.Scan() {
+//				scannedText = scannedText + scannerErr.Text() + "\n"
+//			}
+//			s.Contains(scannedText, fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail))
+//		}
+//		wg.Done()
+//	}()
+//
+//	err = cmd.Start()
+//	s.NoError(err)
+//
+//	wg.Wait()
+//	done := make(chan error)
+//	go func() { done <- cmd.Wait() }()
+//
+//	timeout := time.After(60 * time.Second)
+//
+//	select {
+//	case <-timeout:
+//		s.Fail("Timed out. The CLI may have printed out something unexpected or something went awry in the okta browser auth flow.")
+//	case err := <-done:
+//		// the output from the cmd.Wait(). Should not have an error status
+//		s.NoError(err)
+//	}
+//
+//	// Verifying login --save functionality by checking netrc file
+//	got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+//	s.NoError(err)
+//	pattern := `machine\sconfluent-cli:ccloud-sso-refresh-token:login-ziru\+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\r?\n\s+login\sziru\+paas-integ-sso@confluent.io\r?\n\s+password\s[\w-]+`
+//	match, err := regexp.Match(pattern, got)
+//	s.NoError(err)
+//	if !match {
+//		fmt.Println("Refresh token credential not written to netrc file properly.")
+//		want := "machine confluent-cli:ccloud-sso-refresh-token:login-ziru+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\n	login ziru+paas-integ-sso@confluent.io\n	password <refresh_token>"
+//		msg := fmt.Sprintf("expected: %s\nactual: %s\n", want, got)
+//		s.Fail("sso login command with --save flag failed to properly write refresh token credential.\n" + msg)
+//	}
+//	_ = os.Remove(netrc.NetrcIntegrationTestFile)
+//}
 
-	resetConfiguration(s.T(), "ccloud")
-
-	err := ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte{}, 0600)
-	if err != nil {
-		s.Fail("Failed to create netrc file")
-	}
-
-	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "-vvv", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
-	cmd.Env = append(os.Environ(), env...)
-
-	cliStdOut, err := cmd.StdoutPipe()
-	s.NoError(err)
-	cliStdErr, err := cmd.StderrPipe()
-	s.NoError(err)
-	cliStdIn, err := cmd.StdinPipe()
-	s.NoError(err)
-
-	var wg sync.WaitGroup
-
-	scannerOut := bufio.NewScanner(cliStdOut)
-	scannerErr := bufio.NewScanner(cliStdErr)
-	wg.Add(1)
-	go func() {
-		var url string
-		for scannerOut.Scan() {
-			txt := scannerOut.Text()
-			fmt.Println("CLI output | " + txt)
-			if url == "" {
-				url = parseSsoAuthUrlFromOutput([]byte(txt))
-			}
-			if strings.Contains(txt, "paste the code here") {
-				break
-			}
-		}
-
-		if url == "" {
-			s.Fail("CLI did not output auth URL")
-		} else {
-			token := s.ssoAuthenticateViaBrowser(url)
-			_, e := cliStdIn.Write([]byte(token))
-			s.NoError(e)
-			e = cliStdIn.Close()
-			s.NoError(e)
-
-			scannedText := ""
-			for scannerOut.Scan() {
-				scannedText = scannedText + scannerOut.Text() + "\n"
-			}
-			for scannerErr.Scan() {
-				scannedText = scannedText + scannerErr.Text() + "\n"
-			}
-			s.Contains(scannedText, fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail))
-		}
-		wg.Done()
-	}()
-
-	err = cmd.Start()
-	s.NoError(err)
-
-	wg.Wait()
-	done := make(chan error)
-	go func() { done <- cmd.Wait() }()
-
-	timeout := time.After(60 * time.Second)
-
-	select {
-	case <-timeout:
-		s.Fail("Timed out. The CLI may have printed out something unexpected or something went awry in the okta browser auth flow.")
-	case err := <-done:
-		// the output from the cmd.Wait(). Should not have an error status
-		s.NoError(err)
-	}
-
-	// Verifying login --save functionality by checking netrc file
-	got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
-	s.NoError(err)
-	pattern := `machine\sconfluent-cli:ccloud-sso-refresh-token:login-ziru\+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\r?\n\s+login\sziru\+paas-integ-sso@confluent.io\r?\n\s+password\s[\w-]+`
-	match, err := regexp.Match(pattern, got)
-	s.NoError(err)
-	if !match {
-		fmt.Println("Refresh token credential not written to netrc file properly.")
-		want := "machine confluent-cli:ccloud-sso-refresh-token:login-ziru+paas-integ-sso@confluent.io-https://devel.cpdev.cloud\n	login ziru+paas-integ-sso@confluent.io\n	password <refresh_token>"
-		msg := fmt.Sprintf("expected: %s\nactual: %s\n", want, got)
-		s.Fail("sso login command with --save flag failed to properly write refresh token credential.\n" + msg)
-	}
-	_ = os.Remove(netrc.NetrcIntegrationTestFile)
-}
-
-func parseSsoAuthUrlFromOutput(output []byte) string {
-	regex, err := regexp.Compile(`.*([\S]*connection=` + ssoTestConnectionName + `).*`)
-	if err != nil {
-		panic("Error compiling regex")
-	}
-	groups := regex.FindSubmatch(output)
-	if groups == nil || len(groups) < 2 {
-		return ""
-	}
-	authUrl := string(groups[0])
-	return authUrl
-}
+//func parseSsoAuthUrlFromOutput(output []byte) string {
+//	regex, err := regexp.Compile(`.*([\S]*connection=` + ssoTestConnectionName + `).*`)
+//	if err != nil {
+//		panic("Error compiling regex")
+//	}
+//	groups := regex.FindSubmatch(output)
+//	if groups == nil || len(groups) < 2 {
+//		return ""
+//	}
+//	authUrl := string(groups[0])
+//	return authUrl
+//}
 
 func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:]) // uncomment to disable headless mode and see the actual browser
