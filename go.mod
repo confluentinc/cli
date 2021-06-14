@@ -6,7 +6,6 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
-	github.com/atrox/homedir v1.0.0
 	github.com/aws/aws-sdk-go v1.36.1
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
