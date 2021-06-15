@@ -109,7 +109,7 @@ func mockSingleRowCommand() *cobra.Command {
 func mockPriceCommand(prices map[string]float64) *cobra.Command {
 	client := &ccloud.Client{
 		Billing: &ccloudmock.Billing{
-			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization) (*billingv1.PriceTable, error) {
+			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization, _ string) (*billingv1.PriceTable, error) {
 				table := &billingv1.PriceTable{
 					PriceTable: map[string]*billingv1.UnitPrices{
 						exampleMetric: {Unit: exampleUnit, Prices: prices},
