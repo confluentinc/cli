@@ -202,8 +202,6 @@ github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/aslakhellesoy/gox v1.0.100/go.mod h1:AJl542QsKKG96COVsv0N74HHzVQgDIQPceVUh1aeU2M=
-github.com/atrox/homedir v1.0.0 h1:99Vwk+XECZTDLaAPeMj7vF9JMNcVarWddqPeyDzJT5E=
-github.com/atrox/homedir v1.0.0/go.mod h1:ZKVEIDNKscX8qV1TyrwLP+ayjv3XQO7wbVmc5EW00A8=
 github.com/aws/aws-sdk-go v1.15.27/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/aws/aws-sdk-go v1.20.6/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.23.20/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
@@ -313,8 +311,8 @@ github.com/confluentinc/cc-structs/operator v0.753.0 h1:/7iehTE/W8bJrJ8A9b/JFhWo
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-utils-public v0.1.0 h1:0EkUM94lvOLoYQIoaglfCldLCjJTNDiITYoGqUZrpS4=
 github.com/confluentinc/cc-utils-public v0.1.0/go.mod h1:9GIApQ66kQGr+ROZvop7GFyxpXyzwIi83ZedYrHLQUU=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.76 h1:rrt2IPNNzP3ISCjEw4AEPZ4iIWHJPSR7yNMLf0Z2BhQ=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.76/go.mod h1:n956UXVT5qrVBauHOdqN5xrCanykhonNZsej6zlb6QY=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.78 h1:3ADZ2WAxV8vrcW/JfBAX+gFE2TL/vykNuqE8XWUikpU=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.78/go.mod h1:n956UXVT5qrVBauHOdqN5xrCanykhonNZsej6zlb6QY=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=
