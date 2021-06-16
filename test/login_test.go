@@ -276,12 +276,10 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 			s.NoError(e)
 			printedLoginMessage := false
 			for scannerErr.Scan() {
-				fmt.Println("yoo" + scannerErr.Text())
 				if strings.Contains(scannerErr.Text()+"\n", fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail)) {
 					printedLoginMessage = true
 					break
 				}
-				//s.Equal(fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail), scanner.Text()+"\n")
 			}
 			s.True(printedLoginMessage)
 
