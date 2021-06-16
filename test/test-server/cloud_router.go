@@ -28,7 +28,7 @@ const (
 	ksqls               = "/api/ksqls"
 	priceTable          = "/api/organizations/{id}/price_table"
 	paymentInfo         = "/api/organizations/{id}/payment_info"
-	promoCode           = "/api/organizations/{id}/promo_code_claims"
+	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
 	user                = "/api/users/{id}"
 	users               = "/api/users"
@@ -117,7 +117,7 @@ func (c *CloudRouter) addUserRoutes(t *testing.T) {
 func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 	c.HandleFunc(priceTable, c.HandlePriceTable(t))
 	c.HandleFunc(paymentInfo, c.HandlePaymentInfo(t))
-	c.HandleFunc(promoCode, c.HandlePromoCode(t))
+	c.HandleFunc(promoCodeClaims, c.HandlePromoCodeClaims(t))
 	c.HandleFunc(invites, c.HandleInvite(t))
 }
 
