@@ -133,7 +133,7 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	}
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
-	res, err := c.Client.Billing.GetPriceTable(nil, org)
+	res, err := c.Client.Billing.GetPriceTable(nil, org, "")
 	if err != nil {
 		return err
 	}

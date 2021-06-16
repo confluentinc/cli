@@ -249,6 +249,16 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 	}
 }
 
+// Handler for: "/api/organizations/{id}/promo_code_claims"
+func (c *CloudRouter) HandlePromoCode(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := &billingv1.ClaimPromoCodeReply{}
+
+		err := json.NewEncoder(w).Encode(res)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/api/service_accounts"
 func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
