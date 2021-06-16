@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -242,25 +241,22 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	}
 
 	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "-vvv", "--save", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "-vvv", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
 	cliStdOut, err := cmd.StdoutPipe()
 	s.NoError(err)
-	cliStdErr, err := cmd.StderrPipe()
-	s.NoError(err)
 	cliStdIn, err := cmd.StdinPipe()
 	s.NoError(err)
+	cliStdErr, err := cmd.StderrPipe()
+	s.NoError(err)
 
-	var wg sync.WaitGroup
-
-	scannerOut := bufio.NewScanner(cliStdOut)
+	scanner := bufio.NewScanner(cliStdOut)
 	scannerErr := bufio.NewScanner(cliStdErr)
-	wg.Add(1)
 	go func() {
 		var url string
-		for scannerOut.Scan() {
-			txt := scannerOut.Text()
+		for scanner.Scan() {
+			txt := scanner.Text()
 			fmt.Println("CLI output | " + txt)
 			if url == "" {
 				url = parseSsoAuthUrlFromOutput([]byte(txt))
@@ -278,23 +274,21 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 			s.NoError(e)
 			e = cliStdIn.Close()
 			s.NoError(e)
-
-			scannedText := ""
-			for scannerOut.Scan() {
-				scannedText = scannedText + scannerOut.Text() + "\n"
-			}
+			printedLoginMessage := false
 			for scannerErr.Scan() {
-				scannedText = scannedText + scannerErr.Text() + "\n"
+				if strings.Contains(scannerErr.Text()+"\n", fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail)) {
+					printedLoginMessage = true
+					break
+				}
 			}
-			s.Contains(scannedText, fmt.Sprintf(errors.LoggedInAsMsg, ssoTestEmail))
+			s.True(printedLoginMessage)
+
 		}
-		wg.Done()
 	}()
 
 	err = cmd.Start()
 	s.NoError(err)
 
-	wg.Wait()
 	done := make(chan error)
 	go func() { done <- cmd.Wait() }()
 
@@ -322,6 +316,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
+
 
 func parseSsoAuthUrlFromOutput(output []byte) string {
 	regex, err := regexp.Compile(`.*([\S]*connection=` + ssoTestConnectionName + `).*`)
