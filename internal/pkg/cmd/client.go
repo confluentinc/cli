@@ -26,12 +26,14 @@ func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*sch
 	if err != nil {
 		return nil, err
 	}
+	
 	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
-	kc, err := c.context.client.Kafka.Describe(context.Background(), req)
+	cluster, err := c.context.client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
 	}
-	return kc, nil
+	
+	return cluster, nil
 }
 
 func (c *contextClient) FetchAPIKeyError(cmd *cobra.Command, apiKey string, clusterID string) error {
