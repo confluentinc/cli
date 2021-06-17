@@ -134,7 +134,10 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	}
 
 	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
-	res, err := c.Client.Billing.GetPriceTable(context.Background(), org, "")
+
+	// Only kafka price is supported by the CLI now
+	product := "kafka"
+	res, err := c.Client.Billing.GetPriceTable(context.Background(), org, product)
 	if err != nil {
 		return err
 	}
