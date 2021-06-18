@@ -514,15 +514,14 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
-	_, err := c.Context.FindKafkaCluster(cmd, clusterID)
-	if err != nil {
-		err = errors.CatchKafkaNotFoundError(err, clusterID)
+	if _, err := c.Context.FindKafkaCluster(cmd, clusterID); err != nil {
 		return err
 	}
-	err = c.Context.SetActiveKafkaCluster(cmd, clusterID)
-	if err != nil {
+	
+	if err := c.Context.SetActiveKafkaCluster(cmd, clusterID); err != nil {
 		return err
 	}
+	
 	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
 	return nil
 }
