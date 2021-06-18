@@ -206,7 +206,7 @@ lint-licenses: build
 	@for binary in ccloud confluent; do \
 		echo Licenses for $${binary} binary ; \
 		[ -t 0 ] && args="" || args="-plain" ; \
-		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
+		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
 		echo ; \
 	done
 

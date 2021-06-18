@@ -286,7 +286,7 @@
 -	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
 -
 -.PHONY: lint-licenses
--## Scan and validate third-party dependeny licenses
+-## Scan and validate third-party dependency licenses
 -lint-licenses: build
 -	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 -	@for binary in ccloud confluent; do \
