@@ -78,7 +78,7 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 
 	machine := netrcFile.FindMachine(machineName)
 	if machine == nil {
-		machine = netrcFile.NewMachine(machineName, username, password, "")
+		netrcFile.NewMachine(machineName, username, password, "")
 	} else {
 		machine.UpdateLogin(username)
 		machine.UpdatePassword(password)

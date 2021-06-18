@@ -59,7 +59,6 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			}
 			config = pattern.ReplaceAllString(config, del)
 		}
-		break
 	case Update:
 		keyValuePattern := key + JAASValuePattern
 		pattern := regexp.MustCompile(keyValuePattern)
@@ -74,7 +73,6 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			add := Space + key + j.WhitespaceKey + "=" + j.WhitespaceKey + value
 			config = strings.TrimSuffix(config, ";") + add + ";"
 		}
-		break
 	default:
 		return "", errors.Errorf(errors.OperationNotSupportedErrorMsg, op)
 	}

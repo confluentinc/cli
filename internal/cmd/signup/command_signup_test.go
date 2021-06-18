@@ -5,22 +5,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 	cmdPkg "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 )
 
 const (
-	testToken      = "y0ur.jwt.T0kEn"
-	promptUser     = "prompt-user@confluent.io"
+	testToken  = "y0ur.jwt.T0kEn"
+	promptUser = "prompt-user@confluent.io"
 )
 
 func TestSignupSuccess(t *testing.T) {
@@ -116,7 +116,7 @@ func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 func newCmd(conf *v3.Config) *command {
 	client := mockCcloudClient()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	auth := &sdkMock.Auth{
+	auth := &ccloudmock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
 		},
@@ -131,7 +131,7 @@ func newCmd(conf *v3.Config) *command {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
+	user := &ccloudmock.User{
 		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 			return &orgv1.User{
 				Email: promptUser,

@@ -64,7 +64,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *command {
 
 func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
-	args := append([]string{"create", serviceName, "--description", serviceDescription})
+	args := []string{"create", serviceName, "--description", serviceDescription}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -74,7 +74,7 @@ func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 
 func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
-	args := append([]string{"delete", serviceAccountId})
+	args := []string{"delete", serviceAccountId}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)

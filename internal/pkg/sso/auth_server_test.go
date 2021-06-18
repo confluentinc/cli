@@ -39,7 +39,7 @@ func TestCallback(t *testing.T) {
 
 	ch := make(chan bool)
 	go func() {
-		_ = <-ch
+		<-ch
 		// send mock request to server's callback endpoint
 		req, err := http.NewRequest("GET", mockUri, nil)
 		require.NoError(t, err)

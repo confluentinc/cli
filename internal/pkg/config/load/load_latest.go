@@ -40,17 +40,15 @@ func loadLatestNoErr(latestCfg *v3.Config, cfgIndex int) (config.Config, error) 
 }
 
 func migrateToLatest(cfg config.Config) (*v3.Config, error) {
-	switch cfg.(type) {
+	switch cfg := cfg.(type) {
 	case *v0.Config:
-		cfgV0 := cfg.(*v0.Config)
-		cfgV1, err := migrations.MigrateV0ToV1(cfgV0)
+		cfgV1, err := migrations.MigrateV0ToV1(cfg)
 		if err != nil {
 			return nil, err
 		}
 		return migrateToLatest(cfgV1)
 	case *v1.Config:
-		cfgV1 := cfg.(*v1.Config)
-		cfgV2, err := migrations.MigrateV1ToV2(cfgV1)
+		cfgV2, err := migrations.MigrateV1ToV2(cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -60,8 +58,7 @@ func migrateToLatest(cfg config.Config) (*v3.Config, error) {
 		}
 		return migrateToLatest(cfgV2)
 	case *v2.Config:
-		cfgV2 := cfg.(*v2.Config)
-		cfgV3, err := migrations.MigrateV2ToV3(cfgV2)
+		cfgV3, err := migrations.MigrateV2ToV3(cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -71,8 +68,7 @@ func migrateToLatest(cfg config.Config) (*v3.Config, error) {
 		}
 		return cfgV3, nil
 	case *v3.Config:
-		cfgV3 := cfg.(*v3.Config)
-		return cfgV3, nil
+		return cfg, nil
 	default:
 		panic("unknown config type")
 	}

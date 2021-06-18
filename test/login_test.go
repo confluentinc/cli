@@ -317,7 +317,6 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
-
 func parseSsoAuthUrlFromOutput(output []byte) string {
 	regex, err := regexp.Compile(`.*([\S]*connection=` + ssoTestConnectionName + `).*`)
 	if err != nil {
@@ -332,7 +331,7 @@ func parseSsoAuthUrlFromOutput(output []byte) string {
 }
 
 func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
-	opts := append(chromedp.DefaultExecAllocatorOptions[:]) // uncomment to disable headless mode and see the actual browser
+	opts := chromedp.DefaultExecAllocatorOptions[:] // uncomment to disable headless mode and see the actual browser
 	//chromedp.Flag("headless", false),
 
 	var err error

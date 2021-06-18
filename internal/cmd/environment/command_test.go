@@ -92,7 +92,7 @@ func (suite *EnvironmentTestSuite) newCmd() *command {
 
 func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", environmentName})
+	args := []string{"create", environmentName}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -103,7 +103,7 @@ func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	cmd := suite.newCmd()
-	args := append([]string{"delete", environmentID})
+	args := []string{"delete", environmentID}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)

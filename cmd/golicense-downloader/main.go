@@ -192,7 +192,7 @@ func (g *LicenseDownloader) ParseLicense(text string) (*License, error) {
 	text = strings.ReplaceAll(text, "\n", "") // convert CRLF to LF
 	columns := strings.SplitN(text, " ", 2)
 	if len(columns) != 2 {
-		return nil, fmt.Errorf("invalid golicense output: %s\n", text)
+		return nil, fmt.Errorf("invalid golicense output: %s", text)
 	}
 	dep, license := strings.TrimSpace(columns[0]), strings.TrimSpace(columns[1])
 	if override, ok := g.DepOverrides[dep]; ok {
@@ -256,16 +256,18 @@ func (g *LicenseDownloader) GetLicense(ctx context.Context, owner, repo string) 
 }
 
 func (g *LicenseDownloader) GetNotice(ctx context.Context, owner, repo string) (string, error) {
-	for _, noticeFile := range noticeFiles {
-		notice, _, resp, err := g.Client.Repositories.GetContents(ctx, owner, repo, noticeFile,
-			&github.RepositoryContentGetOptions{Ref: "master"})
-		if err != nil {
-			if resp.StatusCode == http.StatusNotFound {
-				return "", nil
-			}
-			return "", err
-		}
-		return notice.GetContent()
+	if len(noticeFiles) == 0 {
+		return "", nil
 	}
-	return "", nil
+
+	notice, _, resp, err := g.Client.Repositories.GetContents(ctx, owner, repo, noticeFiles[0],
+		&github.RepositoryContentGetOptions{Ref: "master"})
+	if err != nil {
+		if resp.StatusCode == http.StatusNotFound {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return notice.GetContent()
 }

@@ -597,8 +597,8 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 				for _, u := range users {
 					if u.Email == email {
 						res = orgv1.GetUsersReply{
-							Users:                []*orgv1.User{u},
-							Error:                nil,
+							Users: []*orgv1.User{u},
+							Error: nil,
 						}
 						break
 					}
@@ -721,7 +721,6 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 
@@ -729,7 +728,6 @@ func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *h
 func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 
@@ -737,7 +735,6 @@ func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWrite
 func (c *CloudRouter) HandleConnectorResume(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 
@@ -870,7 +867,6 @@ func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWrite
 func (c *CloudRouter) HandleConnectUpdate(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 

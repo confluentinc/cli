@@ -89,7 +89,7 @@ func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 
 			routerConfig, ok := propertyFile.Get("confluent.security.event.router.config")
 			if !ok {
-				fmt.Println(fmt.Sprintf("Ignoring property file %s because it does not contain a router configuration.", filePath))
+				fmt.Printf("Ignoring property file %s because it does not contain a router configuration.\n", filePath)
 				continue
 			}
 			clusterConfigs[clusterId] = routerConfig
