@@ -257,18 +257,16 @@ func (g *LicenseDownloader) GetLicense(ctx context.Context, owner, repo string) 
 }
 
 func (g *LicenseDownloader) GetNotice(ctx context.Context, owner, repo string) (string, error) {
-	if len(noticeFiles) == 0 {
-		return "", nil
-	}
-
-	notice, _, resp, err := g.Client.Repositories.GetContents(ctx, owner, repo, noticeFiles[0],
-		&github.RepositoryContentGetOptions{Ref: "master"})
-	if err != nil {
-		if resp.StatusCode == http.StatusNotFound {
-			return "", nil
+	for _, noticeFile := range noticeFiles {
+		notice, _, resp, err := g.Client.Repositories.GetContents(ctx, owner, repo, noticeFile,
+			&github.RepositoryContentGetOptions{Ref: "master"})
+		if err != nil {
+			if resp.StatusCode == http.StatusNotFound {
+				return "", nil
+			}
+			return "", err
 		}
-		return "", err
+		return notice.GetContent()
 	}
-
-	return notice.GetContent()
+	return "", nil
 }
