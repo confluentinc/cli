@@ -121,23 +121,6 @@ func (j *JAASParser) ignoreBackslash() {
 	}
 }
 
-func (j *JAASParser) isClosingBracket() bool {
-	// If it's whitespace move ahead
-	tokenizer := j.tokenizer
-	if unicode.IsSpace(tokenizer.Peek()) {
-		tokenizer.Scan()
-		if tokenizer.TokenText() == "}" {
-			j.tokenizer.Scan()
-			return true
-		}
-	} else if tokenizer.Peek() == '}' {
-		j.tokenizer.Scan()
-		return true
-	}
-
-	return false
-}
-
 func (j *JAASParser) parseControlFlag() error {
 	j.tokenizer.Scan()
 	val := j.tokenizer.TokenText()
