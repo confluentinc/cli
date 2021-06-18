@@ -54,7 +54,7 @@ require (
 	github.com/google/go-github/v28 v28.1.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0
-	github.com/goreleaser/goreleaser v0.169.0
+	github.com/goreleaser/goreleaser v0.162.1
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/go-multierror v1.1.0
