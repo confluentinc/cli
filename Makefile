@@ -37,7 +37,7 @@ deps:
 	export GOPRIVATE=github.com/confluentinc && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
-	go get github.com/mitchellh/golicense@v0.1.1
+	go get github.com/mitchellh/golicense@v0.2.0
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
@@ -200,13 +200,13 @@ lint-installers:
 	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
 
 .PHONY: lint-licenses
-## Scan and validate third-party dependeny licenses
+## Scan and validate third-party dependency licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	@for binary in ccloud confluent; do \
 		echo Licenses for $${binary} binary ; \
 		[ -t 0 ] && args="" || args="-plain" ; \
-		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
+		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
 		echo ; \
 	done
 
