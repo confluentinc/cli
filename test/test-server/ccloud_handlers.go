@@ -250,12 +250,43 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 }
 
 // Handler for: "/api/organizations/{id}/promo_code_claims"
-func (c *CloudRouter) HandlePromoCode(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := &billingv1.ClaimPromoCodeReply{}
+		switch r.Method {
+		case "GET":
+			var tenDollars int64 = 10 * 10000
 
-		err := json.NewEncoder(w).Encode(res)
-		require.NoError(t, err)
+			// The time is set to noon so that all time zones display the same local time
+			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
+			expiration := &types.Timestamp{Seconds: date.Unix()}
+
+			res := &billingv1.GetPromoCodeClaimsReply{
+				Claims: []*billingv1.PromoCodeClaim{
+					{
+						Code:                 "PROMOCODE1",
+						Amount:               tenDollars,
+						Balance:              tenDollars,
+						CreditExpirationDate: expiration,
+					},
+					{
+						Code:                 "PROMOCODE2",
+						Balance:              tenDollars,
+						Amount:               tenDollars,
+						CreditExpirationDate: expiration,
+					},
+				},
+			}
+
+			listReply, err := utilv1.MarshalJSONToBytes(res)
+			require.NoError(t, err)
+			_, err = w.Write(listReply)
+			require.NoError(t, err)
+		case "POST":
+			res := &billingv1.ClaimPromoCodeReply{}
+
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -597,8 +628,8 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 				for _, u := range users {
 					if u.Email == email {
 						res = orgv1.GetUsersReply{
-							Users:                []*orgv1.User{u},
-							Error:                nil,
+							Users: []*orgv1.User{u},
+							Error: nil,
 						}
 						break
 					}

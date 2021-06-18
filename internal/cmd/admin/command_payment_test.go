@@ -172,9 +172,6 @@ func mockClient() (client *ccloud.Client) {
 			UpdatePaymentInfoFunc: func(_ context.Context, _ *orgv1.Organization, _ string) error {
 				return nil
 			},
-			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) error {
-				return nil
-			},
 		},
 	}
 	return
