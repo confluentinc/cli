@@ -203,7 +203,6 @@ func createAuthConfig(userId int32, email string, userResourceId string, envId s
 		User: &orgv1.User{
 			Id:             userId,
 			Email:          email,
-			OrganizationId: organizationId,
 			ResourceId:     userResourceId,
 		},
 		Account: &orgv1.Account{Id: envId},

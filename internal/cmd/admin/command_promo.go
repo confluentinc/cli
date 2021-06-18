@@ -39,7 +39,7 @@ func (c *promoCommand) newAddCommand() *cobra.Command {
 }
 
 func (c *promoCommand) addRunE(cmd *cobra.Command, args []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
+	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	code := args[0]
 
 	if err := c.Client.Billing.ClaimPromoCode(context.Background(), org, code); err != nil {
