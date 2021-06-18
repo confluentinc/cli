@@ -192,7 +192,8 @@ func (g *LicenseDownloader) ParseLicense(text string) (*License, error) {
 	text = strings.ReplaceAll(text, "\n", "") // convert CRLF to LF
 	columns := strings.SplitN(text, " ", 2)
 	if len(columns) != 2 {
-		return nil, fmt.Errorf("invalid golicense output: %s", text)
+		fmt.Fprintf(os.Stderr, "Invalid golicense output: %s\n", text)
+		return nil, nil
 	}
 	dep, license := strings.TrimSpace(columns[0]), strings.TrimSpace(columns[1])
 	if override, ok := g.DepOverrides[dep]; ok {
