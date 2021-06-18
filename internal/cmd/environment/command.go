@@ -92,6 +92,34 @@ func (c *command) init() {
 	c.completableChildren = []*cobra.Command{deleteCmd, updateCmd, useCmd}
 }
 
+func (c *command) refreshEnvList() error {
+	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return err
+	}
+	c.State.Auth.Accounts = environments
+
+	// If current env has gone away, reset active env to 0th env
+	hasGoodEnv := false
+	if c.State.Auth.Account != nil {
+		for _, acc := range c.State.Auth.Accounts {
+			if acc.Id == c.EnvironmentId() {
+				hasGoodEnv = true
+			}
+		}
+	}
+	if !hasGoodEnv {
+		c.State.Auth.Account = c.State.Auth.Accounts[0]
+	}
+
+	err = c.Config.Save()
+	if err != nil {
+		return errors.Wrap(err, errors.EnvRefreshErrorMsg)
+	}
+
+	return nil
+}
+
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {

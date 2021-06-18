@@ -199,3 +199,13 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 
 	return nil
 }
+
+// mustParseTemplate will panic if text can't be parsed or executed
+// don't call with user-provided text!
+func (c *promptCommand) mustParseTemplate(text string) string {
+	t, err := c.ps1.ParseTemplate(text)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
