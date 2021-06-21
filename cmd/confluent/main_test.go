@@ -7,7 +7,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -15,7 +14,7 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	req := require.New(t)
 
 	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
-	cli := cmd.NewConfluentCommand("ccloud", true, ver, netrc.NewNetrcHandler(""))
+	cli := cmd.NewConfluentCommand("ccloud", true, ver)
 
 	output, err := pcmd.ExecuteCommand(cli.Command, "help")
 	req.NoError(err)
@@ -35,7 +34,7 @@ func TestAddCommands_ShownInHelpUsage_Confluent(t *testing.T) {
 	req := require.New(t)
 
 	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
-	cli := cmd.NewConfluentCommand("confluent", true, ver, netrc.NewNetrcHandler(""))
+	cli := cmd.NewConfluentCommand("confluent", true, ver)
 
 	output, err := pcmd.ExecuteCommand(cli.Command, "help")
 	req.NoError(err)

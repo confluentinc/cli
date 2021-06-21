@@ -54,14 +54,14 @@ import (
 	"github.com/confluentinc/cli/mock"
 )
 
-type Command struct {
+type command struct {
 	*cobra.Command
 	// @VisibleForTesting
 	Analytics analytics.Client
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, netrcHandler netrc.NetrcHandler) *Command {
+func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *command {
 	cli := &cobra.Command{
 		Use:               cliName,
 		Version:           ver.Version,
@@ -101,6 +101,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
+	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger)
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 
@@ -121,7 +122,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version, net
 		Version:                 ver,
 	}
 
-	command := &Command{Command: cli, Analytics: analyticsClient, logger: logger}
+	command := &command{Command: cli, Analytics: analyticsClient, logger: logger}
 
 	// Shell Completion
 	shellCompleter := completer.NewShellCompleter(cli)
@@ -207,7 +208,7 @@ func isAPIKeyCredential(cfg *v3.Config) bool {
 	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
 }
 
-func (c *Command) Execute(args []string) error {
+func (c *command) Execute(args []string) error {
 	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
@@ -216,7 +217,7 @@ func (c *Command) Execute(args []string) error {
 	return err
 }
 
-func (c *Command) sendAndFlushAnalytics(args []string, err error) {
+func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	if err := c.Analytics.SendCommandAnalytics(c.Command, args, err); err != nil {
 		c.logger.Debugf("segment analytics sending event failed: %s\n", err.Error())
 	}

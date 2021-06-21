@@ -8,7 +8,6 @@ import (
 
 	"github.com/confluentinc/bincover"
 	"github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -31,9 +30,8 @@ func main() {
 	}
 
 	version := pversion.NewVersion(cliName, version, commit, date, host)
-	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 
-	cli := cmd.NewConfluentCommand(cliName, isTest, version, netrcHandler)
+	cli := cmd.NewConfluentCommand(cliName, isTest, version)
 
 	if err := cli.Execute(os.Args[1:]); err != nil {
 		if isTest {

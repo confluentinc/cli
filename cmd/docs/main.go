@@ -11,7 +11,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/doc"
-	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -25,7 +24,7 @@ func main() {
 		panic(err)
 	}
 
-	cli := cmd.NewConfluentCommand(cliName, true, &version.Version{}, netrc.NewNetrcHandler(""))
+	cli := cmd.NewConfluentCommand(cliName, true, &version.Version{})
 
 	root := path.Join(".", "docs")
 
