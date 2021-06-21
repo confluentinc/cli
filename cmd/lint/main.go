@@ -236,13 +236,8 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, netrc.NewNetrcHandler(""))
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		err = l.Lint(cli.Command)
-		if err != nil {
+		cli := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, netrc.NewNetrcHandler(""))
+		if err := l.Lint(cli.Command); err != nil {
 			issues = multierror.Append(issues, err)
 		}
 	}
