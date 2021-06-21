@@ -33,9 +33,9 @@ func main() {
 	version := pversion.NewVersion(cliName, version, commit, date, host)
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 
-	confluent := cmd.NewConfluentCommand(cliName, isTest, version, netrcHandler)
+	cli := cmd.NewConfluentCommand(cliName, isTest, version, netrcHandler)
 
-	if err := confluent.Execute(os.Args[1:]); err != nil {
+	if err := cli.Execute(os.Args[1:]); err != nil {
 		if isTest {
 			bincover.ExitCode = 1
 			return
