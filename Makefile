@@ -229,7 +229,7 @@ coverage-integ:
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc go test -v -race github.com/confluentinc/cli/test $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
       endif
 
 
