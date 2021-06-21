@@ -15,9 +15,9 @@ func TestAddCommands_ShownInHelpUsage_CCloud(t *testing.T) {
 	req := require.New(t)
 
 	ver := pversion.NewVersion("ccloud", "1.2.3", "abc1234", "01/23/45", "CI")
-	root := cmd.NewConfluentCommand("ccloud", true, ver, netrc.NewNetrcHandler(""))
+	cli := cmd.NewConfluentCommand("ccloud", true, ver, netrc.NewNetrcHandler(""))
 
-	output, err := pcmd.ExecuteCommand(root.Command, "help")
+	output, err := pcmd.ExecuteCommand(cli.Command, "help")
 	req.NoError(err)
 	req.Contains(output, "kafka")
 	//Hidden: req.Contains(output, "ksql")
