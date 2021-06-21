@@ -68,9 +68,6 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 	return err
 }
 
-
-
-
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsGetOpts
 func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsGetOpts {
 	var opts kafkarestv3.ClustersClusterIdAclsGetOpts

@@ -139,11 +139,10 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		if r != nil && r.StatusCode == http.StatusConflict {
 			if apiError, ok := err.(mds.GenericOpenAPIError); ok {
-				if err2 := enc.Encode(apiError.Model()); err2 != nil {
-					// We can just ignore this extra error. Why?
-					// We expected a payload we could display as JSON, but got something unexpected.
-					// That's OK though, we'll still handle and show the API error message.
-				}
+				_ = enc.Encode(apiError.Model())
+				// We can just ignore this extra error. Why?
+				// We expected a payload we could display as JSON, but got something unexpected.
+				// That's OK though, we'll still handle and show the API error message.
 			}
 		}
 		return HandleMdsAuditLogApiError(cmd, err, r)
@@ -178,11 +177,10 @@ func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 	result, r, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), putSpec)
 	if err != nil {
 		if r.StatusCode == http.StatusConflict {
-			if err2 := enc.Encode(result); err2 != nil {
-				// We can just ignore this extra error. Why?
-				// We expected a payload we could display as JSON, but got something unexpected.
-				// That's OK though, we'll still handle and show the API error message.
-			}
+			_ = enc.Encode(result)
+			// We can just ignore this extra error. Why?
+			// We expected a payload we could display as JSON, but got something unexpected.
+			// That's OK though, we'll still handle and show the API error message.
 		}
 		return HandleMdsAuditLogApiError(cmd, err, r)
 	}

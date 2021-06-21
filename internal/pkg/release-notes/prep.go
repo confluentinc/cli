@@ -25,7 +25,7 @@ func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	prepBaseFile := path.Join(".", "internal", "pkg", "release-notes", "prep-base")
 	prepBaseBytes, err := ioutil.ReadFile(prepBaseFile)
 	if err != nil {
-		return fmt.Errorf("Unable to load release prep-base.")
+		return fmt.Errorf("unable to load release prep-base")
 	}
 	prepBaseString := string(prepBaseBytes)
 	f, err := os.Create(filename)

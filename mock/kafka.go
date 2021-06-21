@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-
 	"github.com/golang/protobuf/proto"
 
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 )

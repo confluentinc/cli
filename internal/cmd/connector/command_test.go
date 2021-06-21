@@ -127,7 +127,7 @@ func (suite *ConnectTestSuite) newCmd() *command {
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"pause", connectorID}))
+	cmd.SetArgs([]string{"pause", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -138,7 +138,7 @@ func (suite *ConnectTestSuite) TestPauseConnector() {
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"resume", connectorID}))
+	cmd.SetArgs([]string{"resume", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -149,7 +149,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
-	args := append([]string{"delete", connectorID})
+	args := []string{"delete", connectorID}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -161,7 +161,7 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 
 func (suite *ConnectTestSuite) TestListConnectors() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"list"}))
+	cmd.SetArgs([]string{"list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -172,7 +172,7 @@ func (suite *ConnectTestSuite) TestListConnectors() {
 
 func (suite *ConnectTestSuite) TestDescribeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"describe", connectorID}))
+	cmd.SetArgs([]string{"describe", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -183,7 +183,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"})
+	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -196,7 +196,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"})
+	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -209,7 +209,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"}))
+	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -219,7 +219,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"}))
+	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -229,7 +229,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connector-config.yaml"}))
+	cmd.SetArgs([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connector-config.yaml"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

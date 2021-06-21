@@ -1,13 +1,12 @@
 package serdes
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
-
 	parse "github.com/jhump/protoreflect/desc/protoparse"
-	dynamic "github.com/jhump/protoreflect/dynamic"
+	"github.com/jhump/protoreflect/dynamic"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type ProtoSerializationProvider struct {

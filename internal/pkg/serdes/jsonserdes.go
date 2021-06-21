@@ -95,5 +95,5 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 	if err != nil {
 		return "", err
 	}
-	return string(compactedBuffer.Bytes()), nil
+	return compactedBuffer.String(), nil
 }

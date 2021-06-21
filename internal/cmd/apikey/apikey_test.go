@@ -238,7 +238,7 @@ func (suite *APITestSuite) newCmd() *command {
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--resource", srClusterID})
+	args := []string{"create", "--resource", srClusterID}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -259,7 +259,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--resource", suite.kafkaCluster.Id})
+	args := []string{"create", "--resource", suite.kafkaCluster.Id}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -272,7 +272,7 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--resource", "cloud"})
+	args := []string{"create", "--resource", "cloud"}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -285,7 +285,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
-	args := append([]string{"delete", apiKeyVal})
+	args := []string{"delete", apiKeyVal}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -298,7 +298,7 @@ func (suite *APITestSuite) TestDeleteApiKey() {
 
 func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"list", "--resource", srClusterID}))
+	cmd.SetArgs([]string{"list", "--resource", srClusterID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -309,7 +309,7 @@ func (suite *APITestSuite) TestListSrApiKey() {
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
+	cmd.SetArgs([]string{"list", "--resource", suite.kafkaCluster.Id})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -322,7 +322,7 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
 	cmd := suite.newCmd()
 	buf := new(bytes.Buffer)
-	cmd.SetArgs(append([]string{"list", "--resource", suite.kafkaCluster.Id}))
+	cmd.SetArgs([]string{"list", "--resource", suite.kafkaCluster.Id})
 	cmd.SetOut(buf)
 
 	err := cmd.Execute()
@@ -337,7 +337,7 @@ func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
 
 func (suite *APITestSuite) TestListCloudAPIKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"list", "--resource", "cloud"}))
+	cmd.SetArgs([]string{"list", "--resource", "cloud"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -350,13 +350,13 @@ func (suite *APITestSuite) TestStoreApiKeyForce() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"store", apiKeyVal, apiSecretVal, "--resource", kafkaClusterID}))
+	cmd.SetArgs([]string{"store", apiKeyVal, apiSecretVal, "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	// refusing to overwrite existing secret
 	req.Error(err)
 	req.False(suite.keystore.StoreAPIKeyCalled())
 
-	cmd.SetArgs(append([]string{"store", apiKeyVal, apiSecretVal, "-f", "--resource", kafkaClusterID}))
+	cmd.SetArgs([]string{"store", apiKeyVal, apiSecretVal, "-f", "--resource", kafkaClusterID})
 	err = cmd.Execute()
 	req.NoError(err)
 	req.True(suite.keystore.StoreAPIKeyCalled())
@@ -370,7 +370,7 @@ func (suite *APITestSuite) TestStoreApiKeyPipe() {
 	suite.isPromptPipe = true
 	cmd := suite.newCmd()
 	// no need to force for new api keys
-	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID}))
+	cmd.SetArgs([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)
 	req.True(suite.keystore.StoreAPIKeyCalled())
@@ -383,7 +383,7 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForSecret() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "--resource", kafkaClusterID}))
+	cmd.SetArgs([]string{"store", anotherApiKeyVal, "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)
 	req.True(suite.keystore.StoreAPIKeyCalled())
@@ -396,7 +396,7 @@ func (suite *APITestSuite) TestStoreApiKeyPassSecretByFile() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"store", anotherApiKeyVal, "@" + apiSecretFile, "--resource", kafkaClusterID}))
+	cmd.SetArgs([]string{"store", anotherApiKeyVal, "@" + apiSecretFile, "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)
 	req.True(suite.keystore.StoreAPIKeyCalled())
@@ -409,7 +409,7 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = false
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"store", "--resource", kafkaClusterID}))
+	cmd.SetArgs([]string{"store", "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)
 	req.True(suite.keystore.StoreAPIKeyCalled())

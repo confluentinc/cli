@@ -357,10 +357,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
-		if strings.HasPrefix(tt.args, "api-key list") {
-
-		}
-
 		s.validateTestOutput(tt, t, output)
 	})
 }

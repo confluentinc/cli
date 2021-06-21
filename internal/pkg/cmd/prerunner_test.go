@@ -743,7 +743,7 @@ func TestStateFlagCommand_AddCommand(t *testing.T) {
 	cmdRoot := &cobra.Command{Use: "root"}
 	root := pcmd.NewAnonymousStateFlagCommand(cmdRoot, r, subcommandFlags)
 
-	for subcommand, _ := range subcommandFlags {
+	for subcommand := range subcommandFlags {
 		t.Run(subcommand, func(t *testing.T) {
 			cmd := &cobra.Command{Use: subcommand}
 			//flags should be added in AddCommand()
@@ -787,7 +787,7 @@ func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 	cmdRoot := &cobra.Command{Use: "root"}
 	root := pcmd.NewAuthenticatedStateFlagCommand(cmdRoot, r, subcommandFlags)
 
-	for subcommand, _ := range subcommandFlags {
+	for subcommand := range subcommandFlags {
 		t.Run(subcommand, func(t *testing.T) {
 			cmd := &cobra.Command{Use: subcommand}
 			//flags should be added in AddCommand()
@@ -831,7 +831,7 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 	cmdRoot := &cobra.Command{Use: "root"}
 	root := pcmd.NewHasAPIKeyCLICommand(cmdRoot, r, subcommandFlags)
 
-	for subcommand, _ := range subcommandFlags {
+	for subcommand := range subcommandFlags {
 		t.Run(subcommand, func(t *testing.T) {
 			cmd := &cobra.Command{Use: subcommand}
 			//flags should be added in AddCommand()
