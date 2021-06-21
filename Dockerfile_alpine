@@ -12,7 +12,7 @@ RUN apk update --no-cache && \
     cd /go/src/github.com/mitchellh && \
     git clone https://github.com/mitchellh/golicense.git && \
     cd golicense && \
-    git checkout v0.1.1 && \
+    git checkout v0.2.0 && \
     go install . && \
     mkdir -p /go/src/github.com/confluentinc/cli && \
     cd /go/src/github.com/confluentinc/cli

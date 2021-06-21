@@ -35,8 +35,6 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.9
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.3.0
-	github.com/dgryski/go-metro v0.0.0-20180109044635-280f6062b5bc // indirect
-	github.com/dgryski/go-spooky v0.0.0-20170606183049-ed3d087f40e2 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.10.0
@@ -65,8 +63,7 @@ require (
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-tty v0.0.3 // indirect
-	github.com/mitchellh/golicense v0.1.1
-	github.com/neurosnap/sentences v1.0.6 // indirect
+	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
@@ -90,7 +87,6 @@ require (
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
-	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 	mvdan.cc/sh/v3 v3.2.2
 )
