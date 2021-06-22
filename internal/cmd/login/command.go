@@ -1,4 +1,4 @@
-package auth
+package login
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -18,27 +18,27 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type loginCommand struct {
+type LoginCommand struct {
 	*pcmd.CLICommand
 	cliName         string
-	Logger          *log.Logger
+	logger          *log.Logger
 	analyticsClient analytics.Client
 	// for testing
-	ccloudClientFactory     pauth.CCloudClientFactory
-	MDSClientManager        pauth.MDSClientManager
+	ccloudClientFactory     auth.CCloudClientFactory
+	mdsClientManager        auth.MDSClientManager
 	netrcHandler            netrc.NetrcHandler
-	loginCredentialsManager pauth.LoginCredentialsManager
-	authTokenHandler        pauth.AuthTokenHandler
+	loginCredentialsManager auth.LoginCredentialsManager
+	authTokenHandler        auth.AuthTokenHandler
 }
 
-func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
-	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) *loginCommand {
-	cmd := &loginCommand{
+func New(cliName string, prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory auth.CCloudClientFactory,
+	mdsClientManager auth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
+	loginCredentialsManager auth.LoginCredentialsManager, authTokenHandler auth.AuthTokenHandler) *LoginCommand {
+	cmd := &LoginCommand{
 		cliName:                 cliName,
-		Logger:                  log,
+		logger:                  log,
 		analyticsClient:         analyticsClient,
-		MDSClientManager:        mdsClientManager,
+		mdsClientManager:        mdsClientManager,
 		ccloudClientFactory:     ccloudClientFactory,
 		netrcHandler:            netrcHandler,
 		loginCredentialsManager: loginCredentialsManager,
@@ -48,10 +48,10 @@ func NewLoginCommand(cliName string, prerunner pcmd.PreRunner, log *log.Logger, 
 	return cmd
 }
 
-func (a *loginCommand) init(prerunner pcmd.PreRunner) {
+func (a *LoginCommand) init(prerunner pcmd.PreRunner) {
 	var longDesc string
 
-	remoteAPIName := getRemoteAPIName(a.cliName)
+	remoteAPIName := auth.GetRemoteAPIName(a.cliName)
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: fmt.Sprintf("Log in to %s.", remoteAPIName),
@@ -65,7 +65,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 		longDesc = fmt.Sprintf("Log in to %s using your Confluent Cloud email and password.\n\n%s\n\n%s", remoteAPIName, "Starting in the 1.20.1 release, you can log in to Confluent Cloud non-interactively using the ``CCLOUD_EMAIL`` and ``CCLOUD_PASSWORD`` environment variables.", "Even with the above environment variables set, you can force an interactive login using the ``--prompt`` flag.")
 		loginCmd.Long = longDesc
 		loginCmd.RunE = pcmd.NewCLIRunE(a.login)
-		loginCmd.Flags().String("url", pauth.CCloudURL, "Confluent Cloud service URL.")
+		loginCmd.Flags().String("url", auth.CCloudURL, "Confluent Cloud service URL.")
 	} else {
 		longDesc = fmt.Sprintf("Log in to %s.\n\n%s\n\n", remoteAPIName, "Starting in the 1.24.0 release, you can log in to Confluent Platform non-interactively using the following environment variables: ``CONFLUENT_USERNAME``, ``CONFLUENT_PASSWORD``, ``CONFLUENT_MDS_URL``, ``CONFLUENT_CA_CERT_PATH``")
 		longDesc += "In a non-interactive login, ``CONFLUENT_MDS_URL`` replaces the ``--url`` flag, and ``CONFLUENT_CA_CERT_PATH`` replaces the ``--ca-cert-path`` flag.\n\n"
@@ -85,14 +85,7 @@ func (a *loginCommand) init(prerunner pcmd.PreRunner) {
 	a.CLICommand = cliLoginCmd
 }
 
-func getRemoteAPIName(cliName string) string {
-	if cliName == "ccloud" {
-		return "Confluent Cloud"
-	}
-	return "Confluent Platform"
-}
-
-func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
+func (a *LoginCommand) login(cmd *cobra.Command, _ []string) error {
 	url, err := a.getURL(cmd)
 	if err != nil {
 		return err
@@ -116,7 +109,7 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 
 	client = a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
+	currentEnv, err := auth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
 	}
@@ -130,14 +123,14 @@ func (a *loginCommand) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	a.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
-	a.Logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	a.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	a.logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return err
 }
 
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (a *LoginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*auth.Credentials, error) {
 	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
@@ -145,20 +138,20 @@ func (a *loginCommand) getCCloudCredentials(cmd *cobra.Command, url string) (*pa
 	}
 
 	if promptOnly {
-		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client))
+		return auth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client))
 	}
 	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
 		URL:     url,
 	}
-	return pauth.GetLoginCredentials(
+	return auth.GetLoginCredentials(
 		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
 		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client),
 	)
 }
 
-func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
+func (a *LoginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 	if !checkURLFlagOrEnvVarIsSet(cmd) {
 		return errors.NewErrorWithSuggestions(errors.NoURLFlagOrMdsEnvVarErrorMsg, errors.NoURLFlagOrMdsEnvVarSuggestions)
 	}
@@ -186,7 +179,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if caCertPath == "" {
-		contextName := pauth.GenerateContextName(credentials.Username, url, "")
+		contextName := auth.GenerateContextName(credentials.Username, url, "")
 		caCertPath, err = a.checkLegacyContextCaCertPath(cmd, contextName)
 		if err != nil {
 			return err
@@ -194,7 +187,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		isLegacyContext = caCertPath != ""
 	}
 
-	client, err := a.MDSClientManager.GetMDSClient(url, caCertPath, a.Logger)
+	client, err := a.mdsClientManager.GetMDSClient(url, caCertPath, a.logger)
 	if err != nil {
 		return err
 	}
@@ -204,7 +197,7 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
+	err = auth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
 	if err != nil {
 		return err
 	}
@@ -214,13 +207,13 @@ func (a *loginCommand) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	a.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	a.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 
 func checkURLFlagOrEnvVarIsSet(cmd *cobra.Command) bool {
 	flagUrl, _ := cmd.Flags().GetString("url")
-	envUrl := os.Getenv(pauth.ConfluentURLEnvVar)
+	envUrl := os.Getenv(auth.ConfluentURLEnvVar)
 	return !(flagUrl == "" && envUrl == "") //return true if one of them is set
 }
 
@@ -231,33 +224,33 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 	} else if caCertPathFlag != "" {
 		return caCertPathFlag, nil
 	} else {
-		return os.Getenv(pauth.ConfluentCaCertPathEnvVar), nil
+		return os.Getenv(auth.ConfluentCaCertPathEnvVar), nil
 	}
 }
 
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (a *loginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (a *LoginCommand) getConfluentCredentials(cmd *cobra.Command, url string) (*auth.Credentials, error) {
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
 
 	if promptOnly {
-		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
+		return auth.GetLoginCredentials(a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
 	}
 	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
 		URL:     url,
 	}
-	return pauth.GetLoginCredentials(
+	return auth.GetLoginCredentials(
 		a.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
 		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd),
 	)
 }
 
-func (a *loginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
+func (a *LoginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextName string) (string, error) {
 	changed := cmd.Flags().Changed("ca-cert-path")
 	// if flag used but empty string is passed then user intends to reset the ca-cert-path
 	if changed {
@@ -270,13 +263,13 @@ func (a *loginCommand) checkLegacyContextCaCertPath(cmd *cobra.Command, contextN
 	return ctx.Platform.CaCertPath, nil
 }
 
-func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
+func (a *LoginCommand) getURL(cmd *cobra.Command) (string, error) {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return "", err
 	}
 	if url == "" && a.cliName == "confluent" {
-		url = os.Getenv(pauth.ConfluentURLEnvVar)
+		url = os.Getenv(auth.ConfluentURLEnvVar)
 	}
 	url, valid, errMsg := validateURL(url, a.cliName)
 	if !valid {
@@ -288,7 +281,7 @@ func (a *loginCommand) getURL(cmd *cobra.Command) (string, error) {
 	return url, nil
 }
 
-func (a *loginCommand) saveLoginToNetrc(cmd *cobra.Command, credentials *pauth.Credentials) error {
+func (a *LoginCommand) saveLoginToNetrc(cmd *cobra.Command, credentials *auth.Credentials) error {
 	saveToNetrc, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err

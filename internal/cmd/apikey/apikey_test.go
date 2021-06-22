@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"testing"
 
@@ -19,7 +20,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -197,7 +197,7 @@ func (suite *APITestSuite) SetupTest() {
 		CheckEmailFunc: nil,
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *APITestSuite) newCmd() *command {
@@ -239,7 +239,7 @@ func (suite *APITestSuite) newCmd() *command {
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", srClusterID}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
@@ -260,7 +260,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", suite.kafkaCluster.Id}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
@@ -273,7 +273,7 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", "cloud"}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
@@ -286,7 +286,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"delete", apiKeyVal}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.DeleteCalled())

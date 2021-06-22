@@ -3,6 +3,7 @@ package connector
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,6 @@ import (
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	segment "github.com/segmentio/analytics-go"
 
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -116,7 +116,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ConnectTestSuite) newCmd() *command {
@@ -150,7 +150,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
 	args := []string{"delete", connectorID}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
@@ -184,7 +184,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -197,7 +197,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())

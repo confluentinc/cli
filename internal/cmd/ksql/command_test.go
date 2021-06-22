@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,7 +20,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -135,7 +135,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
@@ -221,7 +221,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 func (suite *KSQLTestSuite) TestCreateKSQL() {
 	cmd := suite.newCMD()
 	args := []string{"app", "create", ksqlClusterID}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.CreateCalled())
@@ -236,7 +236,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	cmd := suite.newCMD()
 	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
 
-	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.CreateCalled())
@@ -275,7 +275,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()
 	args := []string{"app", "create", ksqlClusterID, "--image", "foo"}
 
-	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	cfg := suite.ksqlc.CreateCalls()[0].Arg1
@@ -306,7 +306,7 @@ func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	cmd := suite.newCMD()
 	args := []string{"app", "delete", ksqlClusterID}
 
-	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.DeleteCalled())
