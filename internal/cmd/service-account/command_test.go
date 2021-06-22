@@ -2,7 +2,6 @@ package serviceaccount
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"testing"
 
 	segment "github.com/segmentio/analytics-go"
@@ -12,7 +11,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
+	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
