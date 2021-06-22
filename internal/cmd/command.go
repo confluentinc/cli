@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/confluentinc/cli/internal/cmd/apikey"
 	"github.com/confluentinc/cli/internal/cmd/auditlog"
-	"github.com/confluentinc/cli/internal/cmd/auth"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
@@ -20,10 +19,12 @@ import (
 	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
-	initcontext "github.com/confluentinc/cli/internal/cmd/init-context"
+	initcontext "github.com/confluentinc/cli/internal/cmd/init"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
+	"github.com/confluentinc/cli/internal/cmd/login"
+	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -134,10 +135,11 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
 	cli.AddCommand(auditlog.New(cliName, prerunner))
-	cli.AddCommand(auth.New(cliName, prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler)...)
 	cli.AddCommand(completion.New(cli, cliName))
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(login.New(cliName, prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler).Command)
+	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(version.New(cliName, prerunner, ver))
 
 	if cfg == nil || !cfg.DisableUpdates {

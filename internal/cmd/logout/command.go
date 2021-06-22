@@ -1,30 +1,29 @@
-package auth
+package logout
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type logoutCommand struct {
+type LogoutCommand struct {
 	*pcmd.CLICommand
 	cliName         string
 	analyticsClient analytics.Client
 	netrcHandler    netrc.NetrcHandler
 }
 
-func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *logoutCommand {
-	logoutCmd := &logoutCommand{
+func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *LogoutCommand {
+	logoutCmd := &LogoutCommand{
 		cliName:         cliName,
 		analyticsClient: analyticsClient,
 		netrcHandler:    netrcHandler,
@@ -33,8 +32,8 @@ func NewLogoutCmd(cliName string, prerunner pcmd.PreRunner, analyticsClient anal
 	return logoutCmd
 }
 
-func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := getRemoteAPIName(cliName)
+func (a *LogoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
+	remoteAPIName := auth.GetRemoteAPIName(cliName)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Log out of %s.", remoteAPIName),
@@ -49,7 +48,7 @@ func (a *logoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	a.CLICommand = cliLogoutCmd
 }
 
-func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
+func (a *LogoutCommand) logout(cmd *cobra.Command, _ []string) error {
 	if a.Config.Config.Context() != nil {
 		var level log.Level
 		if a.Config.Logger != nil {
@@ -65,7 +64,7 @@ func (a *logoutCommand) logout(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	err := pauth.PersistLogoutToConfig(a.Config.Config)
+	err := auth.PersistLogoutToConfig(a.Config.Config)
 	if err != nil {
 		return err
 	}
