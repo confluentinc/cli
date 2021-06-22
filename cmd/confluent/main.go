@@ -1,16 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
-	"github.com/confluentinc/bincover"
 	"github.com/spf13/viper"
 
+	"github.com/confluentinc/bincover"
 	"github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -25,43 +22,23 @@ var (
 )
 
 func main() {
+	viper.AutomaticEnv()
+
 	isTest, err := strconv.ParseBool(isTest)
 	if err != nil {
 		panic(err)
 	}
-	viper.AutomaticEnv()
 
 	version := pversion.NewVersion(cliName, version, commit, date, host)
 
-	cli, err := cmd.NewConfluentCommand(cliName, isTest, version, netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest)))
-	if err != nil {
-		if cli == nil {
-			fmt.Fprintln(os.Stderr, err)
-		} else {
-			utils.ErrPrintln(cli.Command, err)
-		}
-		if isTest {
-			bincover.ExitCode = 1
-			return
-		} else {
-			exit(1)
-		}
-	}
-	err = cli.Execute(cliName, os.Args[1:])
-	if err != nil {
-		if isTest {
-			bincover.ExitCode = 1
-			return
-		} else {
-			exit(1)
-		}
-	}
-	exit(0)
-}
+	cli := cmd.NewConfluentCommand(cliName, isTest, version)
 
-func exit(exitCode int) {
-	if exitCode == 1 {
-		os.Exit(exitCode)
+	if err := cli.Execute(os.Args[1:]); err != nil {
+		if isTest {
+			bincover.ExitCode = 1
+			return
+		} else {
+			os.Exit(1)
+		}
 	}
-	// no os.Exit(0) because it will shutdown integration test
 }

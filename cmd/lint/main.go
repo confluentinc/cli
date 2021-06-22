@@ -12,7 +12,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
-	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -236,13 +235,8 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli, err := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName}, netrc.NewNetrcHandler(""))
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		err = l.Lint(cli.Command)
-		if err != nil {
+		cli := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName})
+		if err := l.Lint(cli.Command); err != nil {
 			issues = multierror.Append(issues, err)
 		}
 	}

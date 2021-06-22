@@ -28,11 +28,10 @@ const (
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (update.Client, error) {
-	objectKey, err := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
-	if err != nil {
-		return nil, err
-	}
+func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
+	// The following function will never err, since "_" is a valid separator.
+	objectKey, _ := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
+
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:          S3BinRegion,
 		S3BinBucket:          S3BinBucket,
@@ -49,7 +48,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 		CheckInterval: CheckInterval,
 		Logger:        logger,
 		Out:           os.Stdout,
-	}), nil
+	})
 }
 
 type command struct {
