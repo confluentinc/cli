@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
-	"github.com/confluentinc/cli/internal/cmd/init"
+	initcontext "github.com/confluentinc/cli/internal/cmd/init"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
@@ -153,7 +153,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	} else if cliName == "ccloud" {
 		cli.AddCommand(admin.New(prerunner, isTest))
-		cli.AddCommand(init.New(prerunner, flagResolver, analyticsClient))
+		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 	}
 
 	// If a user uses an API key to log in, don't allow the remaining commands.
