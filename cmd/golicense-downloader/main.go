@@ -31,10 +31,9 @@ const (
 )
 
 var (
-	noticeFiles = []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"}
-	licenseDir  = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
-	noticeDir   = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
-	configFile  = pflag.StringP("config-file", "F", "", "File from which to read golicense-downloader configuration")
+	licenseDir = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
+	noticeDir  = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
+	configFile = pflag.StringP("config-file", "F", "", "File from which to read golicense-downloader configuration")
 )
 
 type Config struct {
@@ -119,26 +118,25 @@ func main() {
 func (g *LicenseDownloader) Run(ctx context.Context) error {
 	// We both remove any existing files and create any missing parent directories for licenses and notices
 	licenseDir := filepath.Dir(fmt.Sprintf(g.LicenseFmt, "example", "example"))
-	err := os.RemoveAll(licenseDir)
-	if err != nil {
+	if err := os.RemoveAll(licenseDir); err != nil {
 		return err
 	}
-	err = os.MkdirAll(licenseDir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	noticeDir := filepath.Dir(fmt.Sprintf(g.NoticeFmt, "example", "example"))
-	err = os.RemoveAll(noticeDir)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(noticeDir, os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(licenseDir, os.ModePerm); err != nil {
 		return err
 	}
 
+	noticeDir := filepath.Dir(fmt.Sprintf(g.NoticeFmt, "example", "example"))
+	if err := os.RemoveAll(noticeDir); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(noticeDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	// Read licenses from golicense
 	var licenses []*License
 	reader := bufio.NewReader(os.Stdin)
+
 	for {
 		text, err := reader.ReadString('\n')
 		if err != nil {
@@ -156,20 +154,17 @@ func (g *LicenseDownloader) Run(ctx context.Context) error {
 		}
 		licenses = append(licenses, license)
 
-		// Download the project LICENSE text from github
 		err = g.DownloadLicense(ctx, license.Owner, license.Repo)
 		if err != nil {
 			return err
 		}
 
-		// Download the project NOTICE text from github
 		err = g.DownloadNotice(ctx, license.Owner, license.Repo)
 		if err != nil {
 			return err
 		}
 	}
 
-	// Create licenses.txt index
 	return g.CreateLicenseIndex(licenses)
 }
 
@@ -192,7 +187,8 @@ func (g *LicenseDownloader) ParseLicense(text string) (*License, error) {
 	text = strings.ReplaceAll(text, "\n", "") // convert CRLF to LF
 	columns := strings.SplitN(text, " ", 2)
 	if len(columns) != 2 {
-		return nil, fmt.Errorf("invalid golicense output: %s\n", text)
+		fmt.Fprintf(os.Stderr, "Invalid golicense output: %s\n", text)
+		return nil, nil
 	}
 	dep, license := strings.TrimSpace(columns[0]), strings.TrimSpace(columns[1])
 	if override, ok := g.DepOverrides[dep]; ok {
@@ -244,28 +240,32 @@ func (g *LicenseDownloader) DownloadNotice(ctx context.Context, owner, repo stri
 }
 
 func (g *LicenseDownloader) GetLicense(ctx context.Context, owner, repo string) (string, error) {
-	lic, resp, err := g.Client.Repositories.License(ctx, owner, repo)
+	license, res, err := g.Client.Repositories.License(ctx, owner, repo)
 	if err != nil {
-		if resp.StatusCode == http.StatusNotFound {
+		if res.StatusCode == http.StatusNotFound {
 			return "", nil
 		}
 		return "", err
 	}
-	contents, err := base64.StdEncoding.DecodeString(*lic.Content)
-	return string(contents), err
+
+	content, err := base64.StdEncoding.DecodeString(*license.Content)
+	return string(content), err
 }
 
 func (g *LicenseDownloader) GetNotice(ctx context.Context, owner, repo string) (string, error) {
-	for _, noticeFile := range noticeFiles {
-		notice, _, resp, err := g.Client.Repositories.GetContents(ctx, owner, repo, noticeFile,
-			&github.RepositoryContentGetOptions{Ref: "master"})
+	opts := &github.RepositoryContentGetOptions{Ref: "master"}
+
+	for _, file := range []string{"NOTICE", "NOTICES", "NOTICE.txt", "NOTICES.txt"} {
+		notice, _, res, err := g.Client.Repositories.GetContents(ctx, owner, repo, file, opts)
 		if err != nil {
-			if resp.StatusCode == http.StatusNotFound {
-				return "", nil
+			if res.StatusCode == http.StatusNotFound {
+				continue
 			}
 			return "", err
 		}
+
 		return notice.GetContent()
 	}
+
 	return "", nil
 }

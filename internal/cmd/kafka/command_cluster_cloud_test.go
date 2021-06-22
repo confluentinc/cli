@@ -14,9 +14,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	prodv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
@@ -48,18 +46,18 @@ type KafkaClusterTestSuite struct {
 func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	suite.kafkaMock = &ccsdkmock.Kafka{
-		CreateFunc: func(ctx context.Context, config *v1.KafkaClusterConfig) (cluster *v1.KafkaCluster, e error) {
-			return &v1.KafkaCluster{
+		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (cluster *schedv1.KafkaCluster, e error) {
+			return &schedv1.KafkaCluster{
 				Id:         clusterId,
 				Name:       clusterName,
-				Deployment: &v1.Deployment{Sku: prodv1.Sku_BASIC},
+				Deployment: &schedv1.Deployment{Sku: corev1.Sku_BASIC},
 			}, nil
 		},
-		DeleteFunc: func(ctx context.Context, cluster *v1.KafkaCluster) error {
+		DeleteFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) error {
 			return nil
 		},
-		ListFunc: func(_ context.Context, cluster *v1.KafkaCluster) ([]*v1.KafkaCluster, error) {
-			return []*v1.KafkaCluster{
+		ListFunc: func(_ context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
+			return []*schedv1.KafkaCluster{
 				{
 					Id:   clusterId,
 					Name: clusterName,
@@ -68,17 +66,17 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 		},
 	}
 	suite.envMetadataMock = &ccsdkmock.EnvironmentMetadata{
-		GetFunc: func(arg0 context.Context) (metadata []*v1.CloudMetadata, e error) {
-			cloudMeta := &v1.CloudMetadata{
+		GetFunc: func(arg0 context.Context) (metadata []*schedv1.CloudMetadata, e error) {
+			cloudMeta := &schedv1.CloudMetadata{
 				Id: cloudId,
-				Regions: []*v1.Region{
+				Regions: []*schedv1.Region{
 					{
 						Id:            regionId,
 						IsSchedulable: true,
 					},
 				},
 			}
-			return []*v1.CloudMetadata{
+			return []*schedv1.CloudMetadata{
 				cloudMeta,
 			}, nil
 		},
@@ -135,13 +133,13 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	root := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	root.analyticsClient.SetStartTime()
 	kafkaMock := &ccsdkmock.Kafka{
-		CreateFunc: func(ctx context.Context, config *v1.KafkaClusterConfig) (*v1.KafkaCluster, error) {
-			return &v1.KafkaCluster{
+		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
+			return &schedv1.KafkaCluster{
 				Id:              "lkc-xyz",
 				Name:            "gcp-byok-test",
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
-				Deployment: &v1.Deployment{
+				Deployment: &schedv1.Deployment{
 					Sku: corev1.Sku_DEDICATED,
 				},
 			}, nil
@@ -245,7 +243,7 @@ func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {
 
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
-	args := append([]string{"create", clusterName, "--cloud", cloudId, "--region", regionId})
+	args := []string{"create", clusterName, "--cloud", cloudId, "--region", regionId}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -257,7 +255,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
-	args := append([]string{"delete", clusterId})
+	args := []string{"delete", clusterId}
 	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)

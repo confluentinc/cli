@@ -270,7 +270,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 			}
 			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
-				if ifNotExists == false {
+				if !ifNotExists {
 					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsOnPremErrorMsg, topicName), errors.TopicExistsOnPremSuggestions)
 				} // ignore error if ifNotExists flag is set
 				return nil
@@ -334,7 +334,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if output.IsValidFormatString(format) == false { // catch format flag
+	} else if !output.IsValidFormatString(format) { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
@@ -420,7 +420,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if output.IsValidFormatString(format) == false { // catch format flag
+	} else if !output.IsValidFormatString(format) { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)

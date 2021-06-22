@@ -13,7 +13,6 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
@@ -34,7 +33,7 @@ type ClusterTestSuite struct {
 	conf            *v3.Config
 	kafkaCluster    *schedv1.KafkaCluster
 	srCluster       *schedv1.SchemaRegistryCluster
-	srMock          *mock.SchemaRegistry
+	srMock          *ccsdkmock.SchemaRegistry
 	srClientMock    *srsdk.APIClient
 	metricsApi      *ccsdkmock.MetricsApi
 	logger          *log.Logger
@@ -74,7 +73,7 @@ func (suite *ClusterTestSuite) SetupSuite() {
 }
 
 func (suite *ClusterTestSuite) SetupTest() {
-	suite.srMock = &mock.SchemaRegistry{
+	suite.srMock = &ccsdkmock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
@@ -110,7 +109,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 
 func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	args := append([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"})
+	args := []string{"cluster", "enable", "--cloud", "aws", "--geo", "us"}
 
 	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -122,7 +121,7 @@ func (suite *ClusterTestSuite) TestCreateSR() {
 
 func (suite *ClusterTestSuite) TestDescribeSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster", "describe"}))
+	cmd.SetArgs([]string{"cluster", "describe"})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -133,7 +132,7 @@ func (suite *ClusterTestSuite) TestDescribeSR() {
 
 func (suite *ClusterTestSuite) TestUpdateCompatibility() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster", "update", "--compatibility", "BACKWARD"}))
+	cmd.SetArgs([]string{"cluster", "update", "--compatibility", "BACKWARD"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -145,7 +144,7 @@ func (suite *ClusterTestSuite) TestUpdateCompatibility() {
 
 func (suite *ClusterTestSuite) TestUpdateMode() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster", "update", "--mode", "READWRITE"}))
+	cmd.SetArgs([]string{"cluster", "update", "--mode", "READWRITE"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -157,7 +156,7 @@ func (suite *ClusterTestSuite) TestUpdateMode() {
 
 func (suite *ClusterTestSuite) TestUpdateNoArgs() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"cluster", "update"}))
+	cmd.SetArgs([]string{"cluster", "update"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Error(err, "flag string not set")

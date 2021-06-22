@@ -662,7 +662,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	cmd.SetArgs(append([]string{"cluster", "list"}))
+	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)
 	cmd.SetOutput(buf)
 

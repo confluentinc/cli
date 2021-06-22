@@ -221,15 +221,15 @@ func (c *Command) initFlags(mode string) {
 	}
 
 	for flag, val := range defaults {
-		switch val.(type) {
+		switch val := val.(type) {
 		case bool:
-			c.Flags().Bool(flag, val.(bool), usage[flag])
+			c.Flags().Bool(flag, val, usage[flag])
 		case int:
-			c.Flags().Int(flag, val.(int), usage[flag])
+			c.Flags().Int(flag, val, usage[flag])
 		case string:
-			c.Flags().String(flag, val.(string), usage[flag])
+			c.Flags().String(flag, val, usage[flag])
 		case []string:
-			c.Flags().StringArray(flag, val.([]string), usage[flag])
+			c.Flags().StringArray(flag, val, usage[flag])
 		}
 	}
 }

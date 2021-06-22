@@ -190,12 +190,12 @@ func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	}
 
 	if strings.HasPrefix(cmd.CommandPath(), "confluent secret") {
-		tip := fmt.Sprintf("For examples, see :platform:`Secrets Usage Examples|security/secrets.html#secrets-examples`.")
+		tip := "For examples, see :platform:`Secrets Usage Examples|security/secrets.html#secrets-examples`."
 		buf.WriteString(sphinxBlock("tip", tip, nil))
 	}
 
 	if cmd.CommandPath() == "confluent iam rolebinding create" {
-		note := fmt.Sprintf("If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`.")
+		note := "If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`."
 		buf.WriteString(sphinxBlock("note", note, nil))
 	}
 }
@@ -210,7 +210,7 @@ func sphinxBlock(key, val string, args map[string]string) string {
 	str.WriteString(fmt.Sprintf(".. %s:: %s\n", key, val))
 
 	var keys []string
-	for key, _ := range args {
+	for key := range args {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)

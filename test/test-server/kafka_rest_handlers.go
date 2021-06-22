@@ -59,8 +59,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				ResourceName: "test-rest-proxy-topic",
 				Operation:    "READ",
 				Permission:   "ALLOW",
-				Host: 		  "*",
-				Principal: 	  "User:Alice",
+				Host:         "*",
+				Principal:    "User:Alice",
 			}}})
 			require.NoError(t, err)
 		case "POST":
@@ -79,7 +79,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				{
 					ResourceName: req.ResourceName.Value(),
 					Principal:    req.Principal.Value(),
-					Host: 		  req.Host.Value(),
+					Host:         req.Host.Value(),
 				},
 			}})
 			require.NoError(t, err)
@@ -262,7 +262,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 		case "GET":
 			// if topic exists
 			if topicName == "topic-exist" {
-				responseString := fmt.Sprintf(`{
+				responseString := `{
 					"kind": "KafkaTopicConfigList",
 					"metadata": {
 						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist/configs",
@@ -330,7 +330,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 							"is_default": true
 						}
 					]
-				}`)
+				}`
 
 				w.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(w, responseString)

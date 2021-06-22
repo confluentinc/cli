@@ -88,7 +88,7 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 
 func (suite *SubjectTestSuite) TestSubjectList() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "list"}))
+	cmd.SetArgs([]string{"subject", "list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -98,7 +98,7 @@ func (suite *SubjectTestSuite) TestSubjectList() {
 
 func (suite *SubjectTestSuite) TestSubjectListDeleted() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "list", "--deleted"}))
+	cmd.SetArgs([]string{"subject", "list", "--deleted"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -110,7 +110,7 @@ func (suite *SubjectTestSuite) TestSubjectListDeleted() {
 
 func (suite *SubjectTestSuite) TestSubjectUpdateMode() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "update", subjectName, "--mode", "READWRITE"}))
+	cmd.SetArgs([]string{"subject", "update", subjectName, "--mode", "READWRITE"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -123,7 +123,7 @@ func (suite *SubjectTestSuite) TestSubjectUpdateMode() {
 
 func (suite *SubjectTestSuite) TestSubjectUpdateCompatibility() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "update", subjectName, "--compatibility", "BACKWARD"}))
+	cmd.SetArgs([]string{"subject", "update", subjectName, "--compatibility", "BACKWARD"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -135,7 +135,7 @@ func (suite *SubjectTestSuite) TestSubjectUpdateCompatibility() {
 
 func (suite *SubjectTestSuite) TestSubjectUpdateNoArgs() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "update", subjectName}))
+	cmd.SetArgs([]string{"subject", "update", subjectName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Error(err, "Error: flag string not set")
@@ -143,7 +143,7 @@ func (suite *SubjectTestSuite) TestSubjectUpdateNoArgs() {
 
 func (suite *SubjectTestSuite) TestSubjectDescribe() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "describe", subjectName}))
+	cmd.SetArgs([]string{"subject", "describe", subjectName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -155,7 +155,7 @@ func (suite *SubjectTestSuite) TestSubjectDescribe() {
 
 func (suite *SubjectTestSuite) TestSubjectDescribeDeleted() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"subject", "describe", subjectName, "--deleted"}))
+	cmd.SetArgs([]string{"subject", "describe", subjectName, "--deleted"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

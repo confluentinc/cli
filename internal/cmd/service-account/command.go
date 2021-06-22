@@ -64,7 +64,7 @@ func (c *command) ServerComplete() []prompt.Suggest {
 
 	for _, user := range users {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text:        fmt.Sprintf("%s", user.ResourceId),
+			Text:        user.ResourceId,
 			Description: fmt.Sprintf("%s: %s", user.ServiceName, user.ServiceDescription),
 		})
 	}
