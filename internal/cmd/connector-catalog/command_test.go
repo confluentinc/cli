@@ -1,4 +1,4 @@
-package connector_catalog
+package connectorcatalog
 
 import (
 	"context"
