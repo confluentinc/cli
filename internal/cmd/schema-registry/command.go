@@ -1,4 +1,4 @@
-package schema_registry
+package schemaregistry
 
 import (
 	"github.com/spf13/cobra"
