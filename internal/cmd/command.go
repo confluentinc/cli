@@ -9,17 +9,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	"github.com/confluentinc/cli/internal/cmd/apikey"
-	"github.com/confluentinc/cli/internal/cmd/auditlog"
+	"github.com/confluentinc/cli/internal/cmd/api-key"
+	"github.com/confluentinc/cli/internal/cmd/audit-log"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
-	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
+	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
-	initcontext "github.com/confluentinc/cli/internal/cmd/init"
+	"github.com/confluentinc/cli/internal/cmd/init"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
@@ -27,9 +27,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -153,7 +153,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	} else if cliName == "ccloud" {
 		cli.AddCommand(admin.New(prerunner, isTest))
-		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
+		cli.AddCommand(init.New(prerunner, flagResolver, analyticsClient))
 	}
 
 	// If a user uses an API key to log in, don't allow the remaining commands.

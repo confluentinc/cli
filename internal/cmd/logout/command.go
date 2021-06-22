@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	"github.com/confluentinc/cli/internal/pkg/auth"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -15,15 +15,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type LogoutCommand struct {
+type Command struct {
 	*pcmd.CLICommand
 	cliName         string
 	analyticsClient analytics.Client
 	netrcHandler    netrc.NetrcHandler
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *LogoutCommand {
-	logoutCmd := &LogoutCommand{
+func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *Command {
+	logoutCmd := &Command{
 		cliName:         cliName,
 		analyticsClient: analyticsClient,
 		netrcHandler:    netrcHandler,
@@ -32,8 +32,8 @@ func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 	return logoutCmd
 }
 
-func (a *LogoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := auth.GetRemoteAPIName(cliName)
+func (a *Command) init(cliName string, prerunner pcmd.PreRunner) {
+	remoteAPIName := pauth.GetRemoteAPIName(cliName)
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
 		Short: fmt.Sprintf("Log out of %s.", remoteAPIName),
@@ -48,7 +48,7 @@ func (a *LogoutCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	a.CLICommand = cliLogoutCmd
 }
 
-func (a *LogoutCommand) logout(cmd *cobra.Command, _ []string) error {
+func (a *Command) logout(cmd *cobra.Command, _ []string) error {
 	if a.Config.Config.Context() != nil {
 		var level log.Level
 		if a.Config.Logger != nil {
@@ -64,7 +64,7 @@ func (a *LogoutCommand) logout(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-	err := auth.PersistLogoutToConfig(a.Config.Config)
+	err := pauth.PersistLogoutToConfig(a.Config.Config)
 	if err != nil {
 		return err
 	}

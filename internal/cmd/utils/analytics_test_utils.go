@@ -1,15 +1,18 @@
 package utils
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/jonboulle/clockwork"
+	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
-	"github.com/jonboulle/clockwork"
-	segment "github.com/segmentio/analytics-go"
 )
 
 func NewTestAnalyticsClient(config *v3.Config, out *[]segment.Message) analytics.Client {
@@ -24,6 +27,18 @@ func NewTestAnalyticsClient(config *v3.Config, out *[]segment.Message) analytics
 	return analytics.NewAnalyticsClient(config.CLIName, config, "1.1.1.1.1", mockSegmentClient, clockwork.NewFakeClockAt(testTime))
 }
 
+func GetPagePropertyValue(segmentMsg segment.Message, key string) (interface{}, error) {
+	page, ok := segmentMsg.(segment.Page)
+	if !ok {
+		return "", errors.New("failed to convert segment Message to Page")
+	}
+	val, ok := page.Properties[key]
+	if !ok {
+		return "", fmt.Errorf("key %s does not exist in properties map", key)
+	}
+	return val, nil
+}
+
 func ExecuteCommandWithAnalytics(cmd *cobra.Command, args []string, analyticsClient analytics.Client) error {
 	cmd.SetArgs(args)
 	analyticsClient.SetStartTime()
@@ -32,4 +47,16 @@ func ExecuteCommandWithAnalytics(cmd *cobra.Command, args []string, analyticsCli
 		return err
 	}
 	return analyticsClient.SendCommandAnalytics(cmd, args, err)
+}
+
+func CheckTrackedResourceIDString(segmentMsg segment.Message, expectedId string, req *require.Assertions) {
+	resourceID, err := GetPagePropertyValue(segmentMsg, analytics.ResourceIDPropertiesKey)
+	req.NoError(err)
+	req.Equal(expectedId, resourceID.(string))
+}
+
+func CheckTrackedResourceIDInt32(segmentMsg segment.Message, expectedId int32, req *require.Assertions) {
+	resourceID, err := GetPagePropertyValue(segmentMsg, analytics.ResourceIDPropertiesKey)
+	req.NoError(err)
+	req.Equal(expectedId, resourceID.(int32))
 }
