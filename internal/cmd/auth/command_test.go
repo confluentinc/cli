@@ -801,7 +801,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg, mockNetrcHandler)
+		logoutCmd, _ := newLogoutCmd(pversion.CLIName, cfg, mockNetrcHandler)
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)

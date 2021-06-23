@@ -14,7 +14,7 @@ uname() {
   fi
 }
 
-TEST=true . install-ccloud.sh  # commands are identical for ccloud and confluent, enforced by linter
+TEST=true . install-confluent.sh
 
 # useful reference for valid uname system/machine pairs: https://en.wikipedia.org/wiki/Uname
 for pair in Darwin,x86_64,darwin,amd64 Darwin,arm64,darwin,arm64 Linux,x86_64,linux,amd64 Linux,i686,linux,386 CYGWIN_NT-10.0,386,windows,386 CYGWIN_NT-10.0,x86_64,windows,amd64; do
@@ -28,28 +28,21 @@ for pair in Darwin,x86_64,darwin,amd64 Darwin,arm64,darwin,arm64 Linux,x86_64,li
   uname_arch_check
 done
 
-for cliBinary in ccloud confluent; do
-  TEST_OS=$(go env GOOS)
-  TEST_ARCH=$(go env GOARCH)
-  [[ -z "$ARCHIVES_VERSION" ]] && VERSION_TO_TEST="LATEST" || VERSION_TO_TEST=$ARCHIVES_VERSION
-  echo === TESTING $cliBinary insaller script, VERSION: $VERSION_TO_TEST ===
-  output=$(./install-${cliBinary}.sh -d ${ARCHIVES_VERSION} 2>&1)
-  tmpdir=$(echo "${output}" | sed -n 's/.*licenses located in \(.*\)/\1/p')
-  echo "<install-${cliBinary}.sh output and debug log>:"
-  echo $output
+TEST_OS=$(go env GOOS)
+TEST_ARCH=$(go env GOARCH)
+[[ -z "$ARCHIVES_VERSION" ]] && VERSION_TO_TEST="LATEST" || VERSION_TO_TEST=$ARCHIVES_VERSION
+echo === TESTING confluent installer script, VERSION: $VERSION_TO_TEST ===
+output=$(./install-confluent.sh -d ${ARCHIVES_VERSION} 2>&1)
+tmpdir=$(echo "${output}" | sed -n 's/.*licenses located in \(.*\)/\1/p')
+echo "<install-confluent.sh output and debug log>:"
+echo $output
 
-  ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
-  [[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
+ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
+[[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
 
-  if [[ "${cliBinary}" = "ccloud" ]]; then
-    cliName="Confluent Cloud"
-  else
-    cliName="Confluent Platform"
-  fi
-  ./bin/${cliBinary} -h 2>&1 >/dev/null | grep -q "Manage your ${cliName}." || ( echo "Unable to execute installed ${cliBinary} CLI" && exit 1 )
+./bin/confluent -h 2>&1 >/dev/null | grep -q "Manage your Confluent Cloud or Confluent Platform." || ( echo "Unable to execute installed Confluent CLI" && exit 1 )
 
-  #rm -rf ${tmpdir}  # too scary for now
-done
+#rm -rf ${tmpdir}  # too scary for now
 
 echo "All tests passed!"
 

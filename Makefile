@@ -56,17 +56,9 @@ show-args:
 
 #
 # START DEVELOPMENT HELPERS
-# Usage: make run-ccloud -- version
-#        make run-ccloud -- --version
+# Usage: make run-confluent -- version
+#        make run-confluent -- --version
 #
-
-# If the first argument is "run-ccloud"...
-ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run-ccloud"
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  # ...and turn them into do-nothing targets
-  $(eval $(RUN_ARGS):;@:)
-endif
 
 # If the first argument is "run-confluent"...
 ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
@@ -76,12 +68,8 @@ ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
-.PHONY: run-ccloud
-run-ccloud:
-	 @go run -ldflags '-buildmode=exe -X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
-
-.PHONY: run-confluent
-run-confluent:
+.PHONY: run
+run:
 	 @go run -ldflags '-buildmode=exe -X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
 
 #
@@ -90,15 +78,6 @@ run-confluent:
 
 .PHONY: build
 build:
-	make build-ccloud
-	make build-confluent
-
-.PHONY: build-ccloud
-build-ccloud:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
-
-.PHONY: build-confluent
-build-confluent:
 	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
@@ -108,19 +87,6 @@ build-integ:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	make build-integ-ccloud-nonrace
-	make build-integ-confluent-nonrace
-
-.PHONY: build-integ-ccloud-nonrace
-build-integ-ccloud-nonrace:
-	binary="ccloud_test" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
-	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
-
-.PHONY: build-integ-confluent-nonrace
-build-integ-confluent-nonrace:
 	binary="confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
@@ -129,19 +95,6 @@ build-integ-confluent-nonrace:
 
 .PHONY: build-integ-race
 build-integ-race:
-	make build-integ-ccloud-race
-	make build-integ-confluent-race
-
-.PHONY: build-integ-ccloud-race
-build-integ-ccloud-race:
-	binary="ccloud_test_race" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
-	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
-
-.PHONY: build-integ-confluent-race
-build-integ-confluent-race:
 	binary="confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
@@ -203,12 +156,9 @@ lint-installers:
 ## Scan and validate third-party dependency licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@for binary in ccloud confluent; do \
-		echo Licenses for $${binary} binary ; \
-		[ -t 0 ] && args="" || args="-plain" ; \
-		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
-		echo ; \
-	done
+	[ -t 0 ] && args="" || args="-plain" ; \
+	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent/$(shell go env GOOS)_$(shell go env GOARCH)/confluent ; \
+	echo ; \
 
 .PHONY: coverage-unit
 coverage-unit:

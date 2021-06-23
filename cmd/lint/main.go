@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"os"
 	"strings"
 
@@ -235,7 +236,7 @@ func main() {
 
 	var issues *multierror.Error
 	for _, cliName := range cliNames {
-		cli := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName})
+		cli := cmd.NewConfluentCommand(new(v3.Config), true, &version.Version{Binary: cliName})
 		if err := l.Lint(cli.Command); err != nil {
 			issues = multierror.Append(issues, err)
 		}

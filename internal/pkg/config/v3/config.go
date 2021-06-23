@@ -3,6 +3,7 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -414,4 +415,21 @@ func (c *Config) getFilename() (string, error) {
 		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
 	}
 	return c.Filename, nil
+}
+
+// IsOnPrem determines if the user's configuration is set to on-prem.
+func (c *Config) IsOnPrem() bool {
+	if context := c.Context(); context != nil {
+		return len(context.PlatformName) > 0 && !c.IsCloud()
+	}
+	return false
+}
+
+// IsCloud determines if the user's configuration is set to the cloud.
+func (c *Config) IsCloud() bool {
+	if context := c.Context(); context != nil {
+		cloudPlatforms := []string{"confluent.cloud", "stag.cpdev.cloud", "devel.cpdev.cloud"}
+		return utils.Contains(cloudPlatforms, context.PlatformName)
+	}
+	return false
 }

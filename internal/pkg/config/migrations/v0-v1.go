@@ -7,7 +7,6 @@ import (
 )
 
 func MigrateV0ToV1(cfgV0 *v0.Config) (*v1.Config, error) {
-
 	platformsV1 := make(map[string]*v1.Platform)
 	credentialsV1 := make(map[string]*v1.Credential)
 	contextsV1 := make(map[string]*v1.Context)

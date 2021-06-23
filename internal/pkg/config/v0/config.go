@@ -35,17 +35,12 @@ type Config struct {
 
 // NewBaseConfig initializes a new Config object
 func New(params *config.Params) *Config {
-	c := &Config{}
-	baseCfg := config.NewBaseConfig(params, Version)
-	c.BaseConfig = baseCfg
-	if c.CLIName == "" {
-		// HACK: this is a workaround while we're building multiple binaries off one codebase
-		c.CLIName = "confluent"
+	return &Config{
+		BaseConfig:  config.NewBaseConfig(params, Version),
+		Platforms:   map[string]*Platform{},
+		Credentials: map[string]*Credential{},
+		Contexts:    map[string]*Context{},
 	}
-	c.Platforms = map[string]*Platform{}
-	c.Credentials = map[string]*Credential{}
-	c.Contexts = map[string]*Context{}
-	return c
 }
 
 // Load reads the CLI config from disk.

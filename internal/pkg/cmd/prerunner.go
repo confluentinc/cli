@@ -44,7 +44,6 @@ const DoNotTrack = "do-not-track-analytics"
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                  *v3.Config
-	ConfigLoadingError      error
 	UpdateClient            update.Client
 	CLIName                 string
 	Logger                  *log.Logger
@@ -269,10 +268,6 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 					r.Logger.Debug(analyticsError.Error())
 				}
 			}
-		} else {
-			if isAuthOrConfigCommands(cmd) {
-				return r.ConfigLoadingError
-			}
 		}
 		LabelRequiredFlags(cmd)
 		return nil
@@ -302,9 +297,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		if r.Config == nil {
-			return r.ConfigLoadingError
-		}
 		err = r.setAuthenticatedContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
@@ -524,32 +516,26 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := r.Anonymous(command.CLICommand)(cmd, args); err != nil {
 			return err
 		}
-		if r.Config == nil {
-			return r.ConfigLoadingError
-		}
-		err = r.setAuthenticatedWithMDSContext(cmd, command)
-		if err != nil {
-			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
-			_, isNoContextError := err.(*errors.NoContextError)
-			if isNotLoggedInError || isNoContextError {
+
+		if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
+			switch err.(type) {
+			case *errors.NotLoggedInError, *errors.NoContextError:
 				// Attempt Prerun auto login
-				autoLoginErr := r.confluentAutoLogin(cmd)
-				if autoLoginErr != nil {
+				if autoLoginErr := r.confluentAutoLogin(cmd); autoLoginErr != nil {
 					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
 					return err
 				}
-				err = r.setAuthenticatedWithMDSContext(cmd, command)
-				if err != nil {
+				if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
 					return err
 				}
-			} else {
+			default:
 				return err
 			}
 		}
+
 		return r.ValidateToken(cmd, command.Config)
 	}
 }
@@ -729,13 +715,10 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := r.Anonymous(command.CLICommand)(cmd, args); err != nil {
 			return err
 		}
-		if r.Config == nil {
-			return r.ConfigLoadingError
-		}
+
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return err
@@ -744,6 +727,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return &errors.NoContextError{CLIName: r.CLIName}
 		}
 		command.Context = ctx
+
 		var clusterId string
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
