@@ -3,20 +3,19 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
 	"github.com/blang/semver"
 	"github.com/google/uuid"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (

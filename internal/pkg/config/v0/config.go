@@ -37,9 +37,9 @@ type Config struct {
 func New(params *config.Params) *Config {
 	return &Config{
 		BaseConfig:  config.NewBaseConfig(params, Version),
-		Platforms:   map[string]*Platform{},
-		Credentials: map[string]*Credential{},
-		Contexts:    map[string]*Context{},
+		Platforms:   make(map[string]*Platform),
+		Credentials: make(map[string]*Credential),
+		Contexts:    make(map[string]*Context),
 	}
 }
 
