@@ -274,12 +274,6 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 	}
 }
 
-func isAuthOrConfigCommands(cmd *cobra.Command) bool {
-	return strings.Contains(cmd.CommandPath(), "login") ||
-		strings.Contains(cmd.CommandPath(), "logout") ||
-		strings.Contains(cmd.CommandPath(), "config")
-}
-
 func LabelRequiredFlags(cmd *cobra.Command) {
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
