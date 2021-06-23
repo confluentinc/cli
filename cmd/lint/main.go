@@ -4,16 +4,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"log"
 	"os"
 	"strings"
 
 	"github.com/client9/gospell"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -22,8 +22,6 @@ var (
 	dicFile = flag.String("dic-file", "", "hunspell .dic file")
 
 	vocab *gospell.GoSpell
-
-	cliNames = []string{"confluent", "ccloud"}
 
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
@@ -146,10 +144,10 @@ var rules = []linter.Rule{
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Short", utils.Remove(properNouns, "Confluent")),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Long", utils.Remove(properNouns, "Confluent")),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret", "mirror"),
@@ -234,15 +232,15 @@ func main() {
 		Debug:     *debug,
 	}
 
-	var issues *multierror.Error
-	for _, cliName := range cliNames {
-		cli := cmd.NewConfluentCommand(new(v3.Config), true, &version.Version{Binary: cliName})
-		if err := l.Lint(cli.Command); err != nil {
-			issues = multierror.Append(issues, err)
-		}
+	cfg, err := cmd.LoadV3Config()
+	if err != nil {
+		log.Fatal(err)
 	}
-	if issues.ErrorOrNil() != nil {
-		fmt.Println(issues)
-		os.Exit(1)
+
+	version := &pversion.Version{Binary: "confluent"}
+
+	cli := cmd.NewConfluentCommand(cfg, true, version)
+	if err := l.Lint(cli.Command); err != nil {
+		log.Fatal(err)
 	}
 }

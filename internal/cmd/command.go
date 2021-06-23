@@ -36,12 +36,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	pconfig "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
@@ -61,8 +64,8 @@ type command struct {
 func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *command {
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
-		Short:             pversion.FullCLIName,
-		Long:              "Manage your Confluent Cloud or Confluent Platform",
+		Short:             "The Confluent CLI.",
+		Long:              "Manage your Confluent Cloud or Confluent Platform.",
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
@@ -171,6 +174,15 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	return command
+}
+
+func LoadV3Config() (*v3.Config, error) {
+	cfg := v3.New(&pconfig.Params{
+		Logger:     log.New(),
+		MetricSink: metric.NewSink(),
+	})
+
+	return load.LoadAndMigrate(cfg)
 }
 
 func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {

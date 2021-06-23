@@ -24,7 +24,12 @@ func main() {
 		panic(err)
 	}
 
-	cli := cmd.NewConfluentCommand(cliName, true, &version.Version{})
+	cfg, err := cmd.LoadV3Config()
+	if err != nil {
+		panic(err)
+	}
+
+	cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
 
 	root := path.Join(".", "docs")
 

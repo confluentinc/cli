@@ -59,6 +59,16 @@ func Contains(haystack []string, needle string) bool {
 	return false
 }
 
+func Remove(haystack []string, needle string) []string {
+	for i, x := range haystack {
+		if x == needle {
+			// Remove without modifying original
+			return append(append([]string{}, haystack[:i]...), haystack[i+1:]...)
+		}
+	}
+	return haystack
+}
+
 func DoesPathExist(path string) bool {
 	if path == "" {
 		return false

@@ -433,22 +433,6 @@ func RequireFlagUsageRealWords(flag *pflag.Flag, cmd *cobra.Command) error {
 	return issues.ErrorOrNil()
 }
 
-// SetDifference returns set1 - set2
-func SetDifferenceIgnoresCase(set1 []string, set2 []string) []string {
-	// make a hash set from set2 for efficient searches
-	hashSet2 := make(map[string]interface{})
-	for _, elem := range set2 {
-		hashSet2[strings.ToLower(elem)] = struct{}{}
-	}
-	var diff []string
-	for _, elem := range set1 {
-		if _, inSet2 := hashSet2[strings.ToLower(elem)]; !inSet2 {
-			diff = append(diff, elem)
-		}
-	}
-	return diff
-}
-
 func getValueByName(obj interface{}, name string) string {
 	return reflect.Indirect(reflect.ValueOf(obj)).FieldByName(name).String()
 }
