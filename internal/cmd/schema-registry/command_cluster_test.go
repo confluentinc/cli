@@ -1,4 +1,4 @@
-package schema_registry
+package schemaregistry
 
 import (
 	"context"
@@ -14,14 +14,13 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 )
 
 const (
@@ -95,7 +94,7 @@ func (suite *ClusterTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
@@ -111,7 +110,7 @@ func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
 	args := []string{"cluster", "enable", "--cloud", "aws", "--geo", "us"}
 
-	err := test_utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())

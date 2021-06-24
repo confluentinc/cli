@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"

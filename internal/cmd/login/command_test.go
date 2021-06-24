@@ -1,4 +1,4 @@
-package auth
+package login
 
 import (
 	"bytes"
@@ -17,14 +17,12 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
-	"github.com/stretchr/testify/require"
-
+	"github.com/confluentinc/cli/internal/cmd/logout"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -37,6 +35,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	cliMock "github.com/confluentinc/cli/mock"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 )
 
 const (
@@ -498,71 +498,6 @@ func TestURLRequiredWithMDS(t *testing.T) {
 	req.Contains(err.Error(), errors.NoURLFlagOrMdsEnvVarErrorMsg)
 }
 
-func TestLogout(t *testing.T) {
-	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
-	cfg := v3.AuthenticatedCloudConfigMock()
-	contextName := cfg.Context().Name
-	logoutCmd, cfg := newLogoutCmd("ccloud", cfg, mockNetrcHandler)
-	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
-	req.NoError(err)
-	req.Contains(output, errors.LoggedOutMsg)
-	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
-	req.NoError(err)
-	req.Equal(exist, false)
-	verifyLoggedOutState(t, cfg, contextName)
-}
-
-func TestRemoveNetrcCredentials(t *testing.T) {
-	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
-	cfg := v3.AuthenticatedCloudConfigMock()
-	contextName := cfg.Context().Name
-	logoutCmd, _ := newLogoutCmd("ccloud", cfg, mockNetrcHandler)
-	// run login command
-	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
-			return testToken, nil
-		},
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
-				User: &orgv1.User{
-					Id:        23,
-					Email:     promptUser,
-					FirstName: "Cody",
-				},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
-			}, nil
-		},
-	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
-	suite := []struct {
-		cliName string
-		args    []string
-		setEnv  bool
-	}{
-		{
-			cliName: "ccloud",
-			args:    []string{},
-		},
-	}
-	loginCmd, _ := newLoginCmd(auth, user, suite[0].cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
-	_, err := pcmd.ExecuteCommand(loginCmd.Command, suite[0].args...)
-	req.NoError(err)
-
-	_, err = logoutCmd.netrcHandler.RemoveNetrcCredentials(logoutCmd.cliName, contextName)
-	req.NoError(err)
-	exist, err := mockNetrcHandler.CheckCredentialExistFunc("ccloud", contextName)
-	req.NoError(err)
-	req.Equal(exist, false)
-}
-
 func Test_SelfSignedCerts(t *testing.T) {
 	req := require.New(t)
 	tests := []struct {
@@ -669,7 +604,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config, expectedCaCertPath string) *loginCommand {
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config, expectedCaCertPath string) *Command {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
@@ -722,7 +657,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := NewLoginCommand("confluent", prerunner, log.New(), nil,
+	loginCmd := New("confluent", prerunner, log.New(), nil,
 		mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -889,37 +824,8 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
-	req := require.New(t)
-	ctx := cfg.Context()
-	req.NotNil(ctx)
-	req.Equal(testToken, ctx.State.AuthToken)
-	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
-	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
-	req.Contains(cfg.Platforms, ctx.Platform.Name)
-	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
-	req.Contains(cfg.Credentials, credName)
-	req.Equal(promptUser, cfg.Credentials[credName].Username)
-	req.Contains(cfg.Contexts, contextName)
-	req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
-	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
-	if cliName == "ccloud" {
-		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
-		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
-	} else {
-		req.Equal("http://localhost:8090", ctx.Platform.Server)
-	}
-}
-
-func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string) {
-	req := require.New(t)
-	state := cfg.Contexts[loggedOutContext].State
-	req.Empty(state.AuthToken)
-	req.Empty(state.Auth)
-}
-
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*loginCommand, *v3.Config) {
+	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*Command, *v3.Config) {
 	cfg := v3.New(&config.Params{
 		CLIName:    cliName,
 		MetricSink: nil,
@@ -954,14 +860,43 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := NewLoginCommand(cliName, prerunner, log.New(), ccloudClientFactory, mdsClientManager,
+	loginCmd := New(cliName, prerunner, log.New(), ccloudClientFactory, mdsClientManager,
 		cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler)
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cliName string, cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logoutCommand, *v3.Config) {
-	logoutCmd := NewLogoutCmd(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
+func newLogoutCmd(cliName string, cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v3.Config) {
+	logoutCmd := logout.New(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
 	return logoutCmd, cfg
+}
+
+func verifyLoggedInState(t *testing.T, cfg *v3.Config, cliName string) {
+	req := require.New(t)
+	ctx := cfg.Context()
+	req.NotNil(ctx)
+	req.Equal(testToken, ctx.State.AuthToken)
+	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
+	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
+	req.Contains(cfg.Platforms, ctx.Platform.Name)
+	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
+	req.Contains(cfg.Credentials, credName)
+	req.Equal(promptUser, cfg.Credentials[credName].Username)
+	req.Contains(cfg.Contexts, contextName)
+	req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
+	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
+	if cliName == "ccloud" {
+		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
+		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
+	} else {
+		req.Equal("http://localhost:8090", ctx.Platform.Server)
+	}
+}
+
+func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string) {
+	req := require.New(t)
+	state := cfg.Contexts[loggedOutContext].State
+	req.Empty(state.AuthToken)
+	req.Empty(state.Auth)
 }
 
 // XX_CCLOUD_EMAIL is used for integration test hack

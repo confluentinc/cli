@@ -1,4 +1,4 @@
-package service_account
+package serviceaccount
 
 import (
 	"context"
@@ -11,8 +11,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -50,7 +49,7 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *command {
@@ -65,7 +64,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *command {
 func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	args := []string{"create", serviceName, "--description", serviceDescription}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.userMock.CreateServiceAccountCalled())
@@ -75,7 +74,7 @@ func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	args := []string{"delete", serviceAccountId}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.userMock.DeleteServiceAccountCalled())

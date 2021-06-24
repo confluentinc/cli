@@ -1,4 +1,4 @@
-package schema_registry
+package schemaregistry
 
 import (
 	"testing"

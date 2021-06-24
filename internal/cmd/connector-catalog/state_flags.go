@@ -1,4 +1,4 @@
-package connector_catalog
+package connectorcatalog
 
 import (
 	"github.com/spf13/pflag"
