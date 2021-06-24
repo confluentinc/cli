@@ -61,14 +61,14 @@ func (s *CLITestSuite) TestClusterScopedId() {
 	cpIdURL4 := serveClusterScopedIdError().URL
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL1), fixture: "scoped_id1.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL2), fixture: "scoped_id2.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL3), fixture: "scoped_id3.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s --ca-cert-path %s", cpIdURL3TLS, caCertPath), fixture: "scoped_id3.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "scoped_id4.golden", wantErrCode: 1},
+		{Args: fmt.Sprintf("cluster describe --url %s", cpIdURL1), Fixture: "scoped_id1.golden"},
+		{Args: fmt.Sprintf("cluster describe --url %s", cpIdURL2), Fixture: "scoped_id2.golden"},
+		{Args: fmt.Sprintf("cluster describe --url %s", cpIdURL3), Fixture: "scoped_id3.golden"},
+		{Args: fmt.Sprintf("cluster describe --url %s --ca-cert-path %s", cpIdURL3TLS, caCertPath), Fixture: "scoped_id3.golden"},
+		{Args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), Fixture: "scoped_id4.golden", WantErrCode: 1},
 	}
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 

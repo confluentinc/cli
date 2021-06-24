@@ -1,18 +1,13 @@
 package test
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
-	"reflect"
-	"regexp"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/confluentinc/bincover"
@@ -27,78 +22,75 @@ import (
 	test_server "github.com/confluentinc/cli/test/test-server"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update              = flag.Bool("update", false, "update golden files")
-	debug               = flag.Bool("debug", true, "enable verbose output")
-	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
-	ssoTestEmail        = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
-	ssoTestPassword     = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
-	// this connection is preconfigured in Auth0 to hit a test Okta account
-	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
-	// browser tests by default against devel
-	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
-	cover            = false
-	ccloudTestBin    = ccloudTestBinNormal
-	confluentTestBin = confluentTestBinNormal
-	covCollector     *bincover.CoverageCollector
-)
+//var (
+//	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+//	update              = flag.Bool("update", false, "update golden files")
+//	debug               = flag.Bool("debug", true, "enable verbose output")
+//	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
+//	ssoTestEmail        = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
+//	ssoTestPassword     = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
+//	// this connection is preconfigured in Auth0 to hit a test Okta account
+//	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
+//	// browser tests by default against devel
+//	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+//	cover            = false
+//	ccloudTestBin    = ccloudTestBinNormal
+//	confluentTestBin = confluentTestBinNormal
+//	covCollector     *bincover.CoverageCollector
+//)
+//
+//const (
+//	confluentTestBinNormal = "confluent_test"
+//	ccloudTestBinNormal    = "ccloud_test"
+//	ccloudTestBinRace      = "ccloud_test_race"
+//	confluentTestBinRace   = "confluent_test_race"
+//	mergedCoverageFilename = "integ_coverage.txt"
+//)
 
-const (
-	confluentTestBinNormal = "confluent_test"
-	ccloudTestBinNormal    = "ccloud_test"
-	ccloudTestBinRace      = "ccloud_test_race"
-	confluentTestBinRace   = "confluent_test_race"
-	mergedCoverageFilename = "integ_coverage.txt"
-)
-
-// CLITest represents a test configuration
-type CLITest struct {
-	// Name to show in go test output; defaults to args if not set
-	name string
-	// The CLI command being tested; this is a string of args and flags passed to the binary
-	args string
-	// The set of environment variables to be set when the CLI is run
-	env []string
-	// "default" if you need to login, or "" otherwise
-	login string
-	// Optional Cloud URL if test does not use default server
-	loginURL string
-	// The kafka cluster ID to "use"
-	useKafka string
-	// The API Key to set as Kafka credentials
-	authKafka string
-	// Name of a golden output fixture containing expected output
-	fixture string
-	// True iff fixture represents a regex
-	regex bool
-	// Fixed string to check if output contains
-	contains string
-	// Fixed string to check that output does not contain
-	notContains string
-	// Expected exit code (e.g., 0 for success or 1 for failure)
-	wantErrCode int
-	// If true, don't reset the config/state between tests to enable testing CLI workflows
-	workflow bool
-	// An optional function that allows you to specify other calls
-	wantFunc func(t *testing.T)
-	// Optional functions that will be executed directly before the command is run (i.e. overwriting stdin before run)
-	preCmdFuncs []bincover.PreCmdFunc
-	// Optional functions that will be executed directly after the command is run
-	postCmdFuncs []bincover.PostCmdFunc
-}
-
-// CLITestSuite is the CLI integration tests.
-type CLITestSuite struct {
-	suite.Suite
-	TestBackend *test_server.TestBackend
-}
+//// CLITest represents a test configuration
+//type CLITest struct {
+//	// Name to show in go test output; defaults to args if not set
+//	name string
+//	// The CLI command being tested; this is a string of args and flags passed to the binary
+//	args string
+//	// The set of environment variables to be set when the CLI is run
+//	env []string
+//	// "default" if you need to login, or "" otherwise
+//	login string
+//	// Optional Cloud URL if test does not use default server
+//	loginURL string
+//	// The kafka cluster ID to "use"
+//	useKafka string
+//	// The API Key to set as Kafka credentials
+//	authKafka string
+//	// Name of a golden output Fixture containing expected output
+//	Fixture string
+//	// True iff Fixture represents a regex
+//	regex bool
+//	// Fixed string to check if output contains
+//	contains string
+//	// Fixed string to check that output does not contain
+//	notContains string
+//	// Expected exit code (e.g., 0 for success or 1 for failure)
+//	wantErrCode int
+//	// If true, don't reset the config/state between tests to enable testing CLI workflows
+//	workflow bool
+//	// An optional function that allows you to specify other calls
+//	wantFunc func(t *testing.T)
+//	// Optional functions that will be executed directly before the command is run (i.e. overwriting stdin before run)
+//	preCmdFuncs []bincover.PreCmdFunc
+//	// Optional functions that will be executed directly after the command is run
+//	postCmdFuncs []bincover.PostCmdFunc
+//}
+//
+//// CLITestSuite is the CLI integration tests.
+//type CLITestSuite struct {
+//	suite.Suite
+//	TestBackend *test_server.TestBackend
+//}
 
 // TestCLI runs the CLI integration test suite.
 func TestCLI(t *testing.T) {
@@ -120,33 +112,33 @@ func init() {
 }
 
 // SetupSuite builds the CLI binary to test
-func (s *CLITestSuite) SetupSuite() {
-	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
-	req := require.New(s.T())
-	err := covCollector.Setup()
-	req.NoError(err)
-	s.TestBackend = test_server.StartTestBackend(s.T())
-
-	// dumb but effective
-	err = os.Chdir("..")
-	req.NoError(err)
-	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
-		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
-			var makeArgs string
-			if ccloudTestBin == ccloudTestBinRace {
-				makeArgs = "build-integ-race"
-			} else {
-				makeArgs = "build-integ-nonrace"
-			}
-			makeCmd := exec.Command("make", makeArgs)
-			output, err := makeCmd.CombinedOutput()
-			if err != nil {
-				s.T().Log(string(output))
-				req.NoError(err)
-			}
-		}
-	}
-}
+//func (s *CLITestSuite) SetupSuite() {
+//	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
+//	req := require.New(s.T())
+//	err := covCollector.Setup()
+//	req.NoError(err)
+//	s.TestBackend = test_server.StartTestBackend(s.T())
+//
+//	// dumb but effective
+//	err = os.Chdir("..")
+//	req.NoError(err)
+//	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
+//		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
+//			var makeArgs string
+//			if ccloudTestBin == ccloudTestBinRace {
+//				makeArgs = "build-integ-race"
+//			} else {
+//				makeArgs = "build-integ-nonrace"
+//			}
+//			makeCmd := exec.Command("make", makeArgs)
+//			output, err := makeCmd.CombinedOutput()
+//			if err != nil {
+//				s.T().Log(string(output))
+//				req.NoError(err)
+//			}
+//		}
+//	}
+//}
 
 func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
@@ -158,35 +150,35 @@ func (s *CLITestSuite) TestConfluentHelp() {
 	var tests []CLITest
 	if runtime.GOOS == "windows" {
 		tests = []CLITest{
-			{name: "no args", fixture: "confluent-help-flag-windows.golden"},
-			{args: "help", fixture: "confluent-help-windows.golden"},
-			{args: "--help", fixture: "confluent-help-flag-windows.golden"},
-			{args: "version", fixture: "confluent-version.golden", regex: true},
+			{Name: "no args", Fixture: "confluent-help-flag-windows.golden"},
+			{Args: "help", Fixture: "confluent-help-windows.golden"},
+			{Args: "--help", Fixture: "confluent-help-flag-windows.golden"},
+			{Args: "version", Fixture: "confluent-version.golden", Regex: true},
 		}
 	} else {
 		tests = []CLITest{
-			{name: "no args", fixture: "confluent-help-flag.golden"},
-			{args: "help", fixture: "confluent-help.golden"},
-			{args: "--help", fixture: "confluent-help-flag.golden"},
-			{args: "version", fixture: "confluent-version.golden", regex: true},
+			{Name: "no args", Fixture: "confluent-help-flag.golden"},
+			{Args: "help", Fixture: "confluent-help.golden"},
+			{Args: "--help", Fixture: "confluent-help-flag.golden"},
+			{Args: "version", Fixture: "confluent-version.golden", Regex: true},
 		}
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestCcloudHelp() {
 	tests := []CLITest{
-		{name: "no args", fixture: "help-flag-fail.golden"},
-		{args: "help", fixture: "help.golden"},
-		{args: "--help", fixture: "help-flag.golden"},
-		{args: "version", fixture: "version.golden", regex: true},
+		{Name: "no args", Fixture: "help-flag-fail.golden"},
+		{Args: "help", Fixture: "help.golden"},
+		{Args: "--help", Fixture: "help-flag.golden"},
+		{Args: "version", Fixture: "version.golden", Regex: true},
 	}
 
 	for _, tt := range tests {
-		s.runCcloudTest(tt)
+		s.RunCcloudTest(tt)
 	}
 }
 
@@ -305,152 +297,152 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	})
 }
 
-func (s *CLITestSuite) runCcloudTest(tt CLITest) {
-	if tt.name == "" {
-		tt.name = tt.args
-	}
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
-	}
+//func (s *CLITestSuite) runCcloudTest(tt CLITest) {
+//	if tt.name == "" {
+//		tt.name = tt.args
+//	}
+//	if strings.HasPrefix(tt.name, "error") {
+//		tt.wantErrCode = 1
+//	}
+//
+//	s.T().Run(tt.name, func(t *testing.T) {
+//		if !tt.workflow {
+//			t.Parallel()
+//			resetConfiguration(t, "ccloud")
+//		}
+//		loginURL := s.getLoginURL("ccloud", tt)
+//		if tt.login == "default" {
+//			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
+//			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
+//			if *debug {
+//				fmt.Println(output)
+//			}
+//		}
+//
+//		if tt.useKafka != "" {
+//			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.useKafka, 0)
+//			if *debug {
+//				fmt.Println(output)
+//			}
+//		}
+//
+//		if tt.authKafka != "" {
+//			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.useKafka, 0)
+//			if *debug {
+//				fmt.Println(output)
+//			}
+//			// HACK: we don't have scriptable output yet so we parse it from the table
+//			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
+//			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
+//			if *debug {
+//				fmt.Println(output)
+//			}
+//		}
+//		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
+//		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
+//		if *debug {
+//			fmt.Println(output)
+//		}
+//
+//		if strings.HasPrefix(tt.args, "kafka cluster create") ||
+//			strings.HasPrefix(tt.args, "config context current") {
+//			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+//			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+//		}
+//
+//		s.validateTestOutput(tt, t, output)
+//	})
+//}
 
-	s.T().Run(tt.name, func(t *testing.T) {
-		if !tt.workflow {
-			t.Parallel()
-			resetConfiguration(t, "ccloud")
-		}
-		loginURL := s.getLoginURL("ccloud", tt)
-		if tt.login == "default" {
-			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-		}
+//func (s *CLITestSuite) runConfluentTest(tt CLITest) {
+//	if tt.name == "" {
+//		tt.name = tt.args
+//	}
+//	if strings.HasPrefix(tt.name, "error") {
+//		tt.wantErrCode = 1
+//	}
+//	s.T().Run(tt.name, func(t *testing.T) {
+//		if !tt.workflow {
+//			//t.Parallel()
+//			resetConfiguration(t, "confluent")
+//		}
+//
+//		// Executes login command if test specifies
+//		loginURL := s.getLoginURL("confluent", tt)
+//		if tt.login == "default" {
+//			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+//			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
+//			if *debug {
+//				fmt.Println(output)
+//			}
+//		}
+//		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
+//		output := runCommand(t, confluentTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
+//
+//		if strings.HasPrefix(tt.args, "config context list") ||
+//			strings.HasPrefix(tt.args, "config context current") {
+//			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
+//			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
+//		}
+//
+//		s.validateTestOutput(tt, t, output)
+//	})
+//}
 
-		if tt.useKafka != "" {
-			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.useKafka, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-		}
+//func (s *CLITestSuite) getLoginURL(cliName string, tt CLITest) string {
+//	if tt.loginURL != "" {
+//		return tt.loginURL
+//	}
+//	switch cliName {
+//	case "ccloud":
+//		return s.TestBackend.GetCloudUrl()
+//	case "confluent":
+//		return s.TestBackend.GetMdsUrl()
+//	default:
+//		return ""
+//	}
+//}
 
-		if tt.authKafka != "" {
-			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.useKafka, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
-			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
-			if *debug {
-				fmt.Println(output)
-			}
-		}
-		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
-		if *debug {
-			fmt.Println(output)
-		}
+//func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
+//	if *update && !tt.regex && tt.Fixture != "" {
+//		writeFixture(t, tt.Fixture, output)
+//	}
+//	actual := utils.NormalizeNewLines(output)
+//	if tt.contains != "" {
+//		require.Contains(t, actual, tt.contains)
+//	} else if tt.notContains != "" {
+//		require.NotContains(t, actual, tt.notContains)
+//	} else if tt.Fixture != "" {
+//		expected := utils.NormalizeNewLines(LoadFixture(t, tt.Fixture))
+//		if tt.regex {
+//			require.Regexp(t, expected, actual)
+//		} else if !reflect.DeepEqual(actual, expected) {
+//			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
+//		}
+//	}
+//	if tt.wantFunc != nil {
+//		tt.wantFunc(t)
+//	}
+//}
 
-		if strings.HasPrefix(tt.args, "kafka cluster create") ||
-			strings.HasPrefix(tt.args, "config context current") {
-			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
-		}
+//func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, coverageCollectorOptions ...bincover.CoverageCollectorOption) string {
+//	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), coverageCollectorOptions...)
+//	if err != nil && wantErrCode == 0 {
+//		require.Failf(t, "unexpected error",
+//			"exit %d: %s\n%s", exitCode, args, output)
+//	}
+//	require.Equal(t, wantErrCode, exitCode, output)
+//	return output
+//}
 
-		s.validateTestOutput(tt, t, output)
-	})
-}
-
-func (s *CLITestSuite) runConfluentTest(tt CLITest) {
-	if tt.name == "" {
-		tt.name = tt.args
-	}
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
-	}
-	s.T().Run(tt.name, func(t *testing.T) {
-		if !tt.workflow {
-			t.Parallel()
-			resetConfiguration(t, "confluent")
-		}
-
-		// Executes login command if test specifies
-		loginURL := s.getLoginURL("confluent", tt)
-		if tt.login == "default" {
-			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
-			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-		}
-		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, confluentTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
-
-		if strings.HasPrefix(tt.args, "config context list") ||
-			strings.HasPrefix(tt.args, "config context current") {
-			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
-		}
-
-		s.validateTestOutput(tt, t, output)
-	})
-}
-
-func (s *CLITestSuite) getLoginURL(cliName string, tt CLITest) string {
-	if tt.loginURL != "" {
-		return tt.loginURL
-	}
-	switch cliName {
-	case "ccloud":
-		return s.TestBackend.GetCloudUrl()
-	case "confluent":
-		return s.TestBackend.GetMdsUrl()
-	default:
-		return ""
-	}
-}
-
-func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
-	if *update && !tt.regex && tt.fixture != "" {
-		writeFixture(t, tt.fixture, output)
-	}
-	actual := utils.NormalizeNewLines(output)
-	if tt.contains != "" {
-		require.Contains(t, actual, tt.contains)
-	} else if tt.notContains != "" {
-		require.NotContains(t, actual, tt.notContains)
-	} else if tt.fixture != "" {
-		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
-		if tt.regex {
-			require.Regexp(t, expected, actual)
-		} else if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
-		}
-	}
-	if tt.wantFunc != nil {
-		tt.wantFunc(t)
-	}
-}
-
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, coverageCollectorOptions ...bincover.CoverageCollectorOption) string {
-	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), coverageCollectorOptions...)
-	if err != nil && wantErrCode == 0 {
-		require.Failf(t, "unexpected error",
-			"exit %d: %s\n%s", exitCode, args, output)
-	}
-	require.Equal(t, wantErrCode, exitCode, output)
-	return output
-}
-
-// Parses pre and post CmdFuncs into CoverageCollectorOptions which can be unsed in covCollector.RunBinary()
-func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, postCmdFuncs []bincover.PostCmdFunc) []bincover.CoverageCollectorOption {
-	if len(preCmdFuncs) == 0 && len(postCmdFuncs) == 0 {
-		return []bincover.CoverageCollectorOption{}
-	}
-	var options []bincover.CoverageCollectorOption
-	return append(options, bincover.PreExec(preCmdFuncs...), bincover.PostExec(postCmdFuncs...))
-}
+//// Parses pre and post CmdFuncs into CoverageCollectorOptions which can be unsed in covCollector.RunBinary()
+//func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, postCmdFuncs []bincover.PostCmdFunc) []bincover.CoverageCollectorOption {
+//	if len(preCmdFuncs) == 0 && len(postCmdFuncs) == 0 {
+//		return []bincover.CoverageCollectorOption{}
+//	}
+//	var options []bincover.CoverageCollectorOption
+//	return append(options, bincover.PreExec(preCmdFuncs...), bincover.PostExec(postCmdFuncs...))
+//}
 
 // Used for tests needing to overwrite StdIn for mock input
 // returns a cmdFunc struct with the StdinPipe functionality and isPreCmdFunc set to true
@@ -481,28 +473,28 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	}
 }
 
-func resetConfiguration(t *testing.T, cliName string) {
-	// HACK: delete your current config to isolate tests cases for non-workflow tests...
-	// probably don't really want to do this or devs will get mad
-	cfg := v3.New(&config.Params{
-		CLIName: cliName,
-	})
-	err := cfg.Save()
-	require.NoError(t, err)
-}
+//func resetConfiguration(t *testing.T, cliName string) {
+//	// HACK: delete your current config to isolate tests cases for non-workflow tests...
+//	// probably don't really want to do this or devs will get mad
+//	cfg := v3.New(&config.Params{
+//		CLIName: cliName,
+//	})
+//	err := cfg.Save()
+//	require.NoError(t, err)
+//}
 
-func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+//func writeFixture(t *testing.T, Fixture string, content string) {
+//	err := ioutil.WriteFile(FixturePath(t, Fixture), []byte(content), 0644)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//}
 
-func binaryPath(t *testing.T, binaryName string) string {
-	dir, err := os.Getwd()
-	require.NoError(t, err)
-	return path.Join(dir, binaryName)
-}
+//func binaryPath(t *testing.T, binaryName string) string {
+//	dir, err := os.Getwd()
+//	require.NoError(t, err)
+//	return path.Join(dir, binaryName)
+//}
 
 func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

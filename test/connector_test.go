@@ -3,30 +3,30 @@ package test
 func (s *CLITestSuite) TestConnector() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "connector --help", fixture: "connector/connector-help.golden"},
-		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config.yaml -o json", fixture: "connector/connector-create-json.golden"},
-		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config.yaml -o yaml", fixture: "connector/connector-create-yaml.golden"},
-		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config.yaml", fixture: "connector/connector-create.golden"},
-		{args: "connector delete lcc-123 --cluster lkc-123", fixture: "connector/connector-delete.golden"},
-		{args: "connector describe lcc-123 --cluster lkc-123 -o json", fixture: "connector/connector-describe-json.golden"},
-		{args: "connector describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connector/connector-describe-yaml.golden"},
-		{args: "connector describe lcc-123 --cluster lkc-123", fixture: "connector/connector-describe.golden"},
-		{args: "connector list --cluster lkc-123 -o json", fixture: "connector/connector-list-json.golden"},
-		{args: "connector list --cluster lkc-123 -o yaml", fixture: "connector/connector-list-yaml.golden"},
-		{args: "connector list --cluster lkc-123", fixture: "connector/connector-list.golden"},
-		{args: "connector pause lcc-123 --cluster lkc-123", fixture: "connector/connector-pause.golden"},
-		{args: "connector resume lcc-123 --cluster lkc-123", fixture: "connector/connector-resume.golden"},
-		{args: "connector update lcc-123 --cluster lkc-123 --config test/fixtures/input/connector-config.yaml", fixture: "connector/connector-update.golden"},
-		{args: "connector event describe", fixture: "connector/connector-event-describe.golden"},
+		{Args: "connector --help", Fixture: "connector/connector-help.golden"},
+		{Args: "connector create --cluster lkc-123 --config test/Fixtures/input/connector-config.yaml -o json", Fixture: "connector/connector-create-json.golden"},
+		{Args: "connector create --cluster lkc-123 --config test/Fixtures/input/connector-config.yaml -o yaml", Fixture: "connector/connector-create-yaml.golden"},
+		{Args: "connector create --cluster lkc-123 --config test/Fixtures/input/connector-config.yaml", Fixture: "connector/connector-create.golden"},
+		{Args: "connector delete lcc-123 --cluster lkc-123", Fixture: "connector/connector-delete.golden"},
+		{Args: "connector describe lcc-123 --cluster lkc-123 -o json", Fixture: "connector/connector-describe-json.golden"},
+		{Args: "connector describe lcc-123 --cluster lkc-123 -o yaml", Fixture: "connector/connector-describe-yaml.golden"},
+		{Args: "connector describe lcc-123 --cluster lkc-123", Fixture: "connector/connector-describe.golden"},
+		{Args: "connector list --cluster lkc-123 -o json", Fixture: "connector/connector-list-json.golden"},
+		{Args: "connector list --cluster lkc-123 -o yaml", Fixture: "connector/connector-list-yaml.golden"},
+		{Args: "connector list --cluster lkc-123", Fixture: "connector/connector-list.golden"},
+		{Args: "connector pause lcc-123 --cluster lkc-123", Fixture: "connector/connector-pause.golden"},
+		{Args: "connector resume lcc-123 --cluster lkc-123", Fixture: "connector/connector-resume.golden"},
+		{Args: "connector update lcc-123 --cluster lkc-123 --config test/Fixtures/input/connector-config.yaml", Fixture: "connector/connector-update.golden"},
+		{Args: "connector event describe", Fixture: "connector/connector-event-describe.golden"},
 
 		//Tests based on new config
-		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config-new-format.json -o json", fixture: "connector/connector-create-new-config-json.golden"},
-		{args: "connector create --cluster lkc-123 --config test/fixtures/input/connector-config-new-format.json -o yaml", fixture: "connector/connector-create-yaml.golden"},
-		{args: "connector update lcc-123 --cluster lkc-123 --config test/fixtures/input/connector-config-new-format.json", fixture: "connector/connector-update.golden"},
+		{Args: "connector create --cluster lkc-123 --config test/Fixtures/input/connector-config-new-format.json -o json", Fixture: "connector/connector-create-new-config-json.golden"},
+		{Args: "connector create --cluster lkc-123 --config test/Fixtures/input/connector-config-new-format.json -o yaml", Fixture: "connector/connector-create-yaml.golden"},
+		{Args: "connector update lcc-123 --cluster lkc-123 --config test/Fixtures/input/connector-config-new-format.json", Fixture: "connector/connector-update.golden"},
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.Login = "default"
+		s.RunCcloudTest(tt)
 	}
 }

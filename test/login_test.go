@@ -34,17 +34,17 @@ var (
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
 		{
-			name:        "error if not authenticated",
-			args:        "kafka topic create integ",
-			fixture:     "err-not-authenticated.golden",
-			wantErrCode: 1,
+			Name:        "error if not authenticated",
+			Args:        "kafka topic create integ",
+			Fixture:     "err-not-authenticated.golden",
+			WantErrCode: 1,
 		},
 		{
-			name:        "error if no active kafka",
-			args:        "kafka topic create integ",
-			fixture:     "err-no-kafka.golden",
-			wantErrCode: 1,
-			login:       "default",
+			Name:        "error if no active kafka",
+			Args:        "kafka topic create integ",
+			Fixture:     "err-no-kafka.golden",
+			WantErrCode: 1,
+			Login:       "default",
 		},
 		//{
 		//	name:        "error if topic already exists",
@@ -56,33 +56,33 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		//	authKafka:   "true",
 		//},
 		{
-			name:        "error if no api key used",
-			args:        "kafka topic produce integ",
-			fixture:     "err-no-api-key.golden",
-			wantErrCode: 1,
-			login:       "default",
-			useKafka:    "lkc-abc123",
+			Name:        "error if no api key used",
+			Args:        "kafka topic produce integ",
+			Fixture:     "err-no-api-key.golden",
+			WantErrCode: 1,
+			Login:       "default",
+			UseKafka:    "lkc-abc123",
 		},
 		{
-			name:        "error if deleting non-existent api-key",
-			args:        "api-key delete UNKNOWN",
-			fixture:     "delete-unknown-key.golden",
-			wantErrCode: 1,
-			login:       "default",
-			useKafka:    "lkc-abc123",
-			authKafka:   "true",
+			Name:        "error if deleting non-existent api-key",
+			Args:        "api-key delete UNKNOWN",
+			Fixture:     "delete-unknown-key.golden",
+			WantErrCode: 1,
+			Login:       "default",
+			UseKafka:    "lkc-abc123",
+			AuthKafka:   "true",
 		},
 		{
-			name:        "error if using unknown kafka",
-			args:        "kafka cluster use lkc-unknown",
-			fixture:     "err-use-unknown-kafka.golden",
-			wantErrCode: 1,
-			login:       "default",
+			Name:        "error if using unknown kafka",
+			Args:        "kafka cluster use lkc-unknown",
+			Fixture:     "err-use-unknown-kafka.golden",
+			WantErrCode: 1,
+			Login:       "default",
 		},
 	}
 
 	for _, tt := range tests {
-		s.runCcloudTest(tt)
+		s.RunCcloudTest(tt)
 	}
 }
 
@@ -233,7 +233,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 		s.T().Skip()
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	ResetConfiguration(s.T(), "ccloud")
 
 	err := ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte{}, 0600)
 	if err != nil {
@@ -386,10 +386,10 @@ func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
 func (s *CLITestSuite) TestMDSLoginURL() {
 	tests := []CLITest{
 		{
-			name:        "invalid URL provided",
-			args:        "login --url http:///test",
-			fixture:     "invalid-login-url.golden",
-			wantErrCode: 1,
+			Name:        "invalid URL provided",
+			Args:        "login --url http:///test",
+			Fixture:     "invalid-login-url.golden",
+			WantErrCode: 1,
 		},
 	}
 	mdsServer := serveMDSBackend(s.T())
@@ -397,6 +397,6 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 
 	for _, tt := range tests {
 		tt.loginURL = mdsServer.GetMdsUrl()
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }

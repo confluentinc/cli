@@ -2,13 +2,13 @@ package test
 
 func (s *CLITestSuite) TestCCloudAuditLogDescribe() {
 	tests := []CLITest{
-		{args: "audit-log describe", login: "default", fixture: "auditlog/describe.golden"},
+		{Args: "audit-log describe", Login: "default", Fixture: "auditlog/describe.golden"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	ResetConfiguration(s.T(), "ccloud")
 
 	for _, tt := range tests {
-		tt.workflow = true
-		s.runCcloudTest(tt)
+		tt.Workflow = true
+		s.RunCcloudTest(tt)
 	}
 }

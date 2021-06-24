@@ -30,19 +30,19 @@ func (s *CLITestSuite) TestUpdate() {
 	require.NoError(s.T(), err)
 
 	tests := []CLITest{
-		{args: "version", fixture: "update1.golden", regex: true},
-		{args: "--help", contains: "Update the confluent CLI."},
-		{name: "HACK: disable update checks"},
-		{args: "version", fixture: "update2.golden", regex: true},
-		{args: "--help", contains: "Update the confluent CLI."},
-		{name: "HACK: enabled checks, disable updates"},
-		{args: "version", fixture: "update2.golden", regex: true},
-		{args: "--help", notContains: "Update the confluent CLI."},
+		{Args: "version", Fixture: "update1.golden", Regex: true},
+		{Args: "--help", Contains: "Update the confluent CLI."},
+		{Name: "HACK: disable update checks"},
+		{Args: "version", Fixture: "update2.golden", Regex: true},
+		{Args: "--help", Contains: "Update the confluent CLI."},
+		{Name: "HACK: enabled checks, disable updates"},
+		{Args: "version", Fixture: "update2.golden", Regex: true},
+		{Args: "--help", NotContains: "Update the confluent CLI."},
 	}
 
 	for _, tt := range tests {
-		tt.workflow = true
-		switch tt.name {
+		tt.Workflow = true
+		switch tt.Name {
 		case "HACK: disable update checks":
 			err = ioutil.WriteFile(configFile, []byte(`{"disable_update_checks": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
@@ -50,8 +50,8 @@ func (s *CLITestSuite) TestUpdate() {
 			err = ioutil.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
-			s.runConfluentTest(tt)
-			if tt.fixture == "update1.golden" {
+			s.RunConfluentTest(tt)
+			if tt.Fixture == "update1.golden" {
 				// Remove the cache file so it _would_ prompt again (if not disabled)
 				err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
 				require.NoError(s.T(), err)

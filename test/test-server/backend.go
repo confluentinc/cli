@@ -15,7 +15,12 @@ type TestBackend struct {
 	sr             *httptest.Server
 }
 
+var Backend *TestBackend
+
 func StartTestBackend(t *testing.T) *TestBackend {
+	if Backend != nil {
+		return Backend
+	}
 	cloudRouter := NewCloudRouter(t)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
@@ -32,6 +37,7 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
+	Backend = backend
 	return backend
 }
 

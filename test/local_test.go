@@ -16,14 +16,14 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local destroy", fixture: "local/destroy-error.golden", wantErrCode: 1},
-		{args: "local current", fixture: "local/current.golden", regex: true},
-		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
+		{Args: "local destroy", Fixture: "local/destroy-error.golden", WantErrCode: 1},
+		{Args: "local current", Fixture: "local/current.golden", Regex: true},
+		{Args: "local destroy", Fixture: "local/destroy.golden", Regex: true},
 	}
 
 	for _, tt := range tests {
-		tt.workflow = true
-		s.runConfluentTest(tt)
+		tt.Workflow = true
+		s.RunConfluentTest(tt)
 	}
 }
 
@@ -34,12 +34,12 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services list", fixture: "local/services-list-ccs.golden"},
-		{args: "local version", fixture: "local/version-ccs.golden"},
+		{Args: "local services list", Fixture: "local/services-list-ccs.golden"},
+		{Args: "local version", Fixture: "local/version-ccs.golden"},
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 
@@ -51,11 +51,11 @@ func (s *CLITestSuite) TestLocalVersion() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local version", fixture: "local/version-cp.golden"},
+		{Args: "local version", Fixture: "local/version-cp.golden"},
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 
@@ -66,11 +66,11 @@ func (s *CLITestSuite) TestLocalServicesList() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services list", fixture: "local/services-list-cp.golden"},
+		{Args: "local services list", Fixture: "local/services-list-cp.golden"},
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 
@@ -81,13 +81,13 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services status", fixture: "local/services-status-all-stopped.golden", regex: true},
-		{args: "local services stop", fixture: "local/services-stop-already-stopped.golden", regex: true},
-		{args: "local services top", fixture: "local/services-top-no-services-running.golden", wantErrCode: 1},
+		{Args: "local services status", Fixture: "local/services-status-all-stopped.golden", Regex: true},
+		{Args: "local services stop", Fixture: "local/services-stop-already-stopped.golden", Regex: true},
+		{Args: "local services top", Fixture: "local/services-top-no-services-running.golden", WantErrCode: 1},
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 
@@ -98,15 +98,15 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services zookeeper log", fixture: "local/zookeeper-log-error.golden", wantErrCode: 1},
-		{args: "local services zookeeper status", fixture: "local/zookeeper-status-stopped.golden", regex: true},
-		{args: "local services zookeeper stop", fixture: "local/zookeeper-stop-already-stopped.golden", regex: true},
-		{args: "local services zookeeper top", fixture: "local/zookeeper-top-stopped.golden"},
-		{args: "local services zookeeper version", fixture: "local/zookeeper-version.golden"},
+		{Args: "local services zookeeper log", Fixture: "local/zookeeper-log-error.golden", WantErrCode: 1},
+		{Args: "local services zookeeper status", Fixture: "local/zookeeper-status-stopped.golden", Regex: true},
+		{Args: "local services zookeeper stop", Fixture: "local/zookeeper-stop-already-stopped.golden", Regex: true},
+		{Args: "local services zookeeper top", Fixture: "local/zookeeper-top-stopped.golden"},
+		{Args: "local services zookeeper version", Fixture: "local/zookeeper-version.golden"},
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.RunConfluentTest(tt)
 	}
 }
 

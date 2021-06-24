@@ -12,13 +12,13 @@ const (
 func (s *CLITestSuite) TestPriceList() {
 	tests := []CLITest{
 		{
-			args:    fmt.Sprintf("price list --cloud %s --region %s", exampleCloud, exampleRegion),
-			fixture: "price/list.golden",
+			Args:    fmt.Sprintf("price list --cloud %s --region %s", exampleCloud, exampleRegion),
+			Fixture: "price/list.golden",
 		},
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.Login = "default"
+		s.RunCcloudTest(test)
 	}
 }
