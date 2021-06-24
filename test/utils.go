@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	noRebuild           = flag.Bool("no-rebuild", true, "skip rebuilding CLI if it already exists")
 	update              = flag.Bool("update", false, "update golden files")
 	debug               = flag.Bool("debug", true, "enable verbose output")
 	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
@@ -130,6 +130,12 @@ func (s *CLITestSuite) SetupSuite() {
 			}
 		}
 	}
+}
+
+func (s *CLITestSuite) TearDownSuite() {
+	// Merge coverage profiles.
+	_ = covCollector.TearDown()
+	//s.TestBackend.Close() // TODO hopefully add this back at some point
 }
 
 func (s *CLITestSuite) RunCcloudTest(tt CLITest) {

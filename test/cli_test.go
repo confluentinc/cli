@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
 	"runtime"
 	"testing"
@@ -97,19 +96,19 @@ func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }
 
-func init() {
-	collectCoverage := os.Getenv("INTEG_COVER")
-	cover = collectCoverage == "on"
-	ciEnv := os.Getenv("CI")
-	if ciEnv == "on" {
-		ccloudTestBin = ccloudTestBinRace
-		confluentTestBin = confluentTestBinRace
-	}
-	if runtime.GOOS == "windows" {
-		ccloudTestBin = ccloudTestBin + ".exe"
-		confluentTestBin = confluentTestBin + ".exe"
-	}
-}
+//func init() {
+//	collectCoverage := os.Getenv("INTEG_COVER")
+//	cover = collectCoverage == "on"
+//	ciEnv := os.Getenv("CI")
+//	if ciEnv == "on" {
+//		ccloudTestBin = ccloudTestBinRace
+//		confluentTestBin = confluentTestBinRace
+//	}
+//	if runtime.GOOS == "windows" {
+//		ccloudTestBin = ccloudTestBin + ".exe"
+//		confluentTestBin = confluentTestBin + ".exe"
+//	}
+//}
 
 // SetupSuite builds the CLI binary to test
 //func (s *CLITestSuite) SetupSuite() {
@@ -140,11 +139,11 @@ func init() {
 //	}
 //}
 
-func (s *CLITestSuite) TearDownSuite() {
-	// Merge coverage profiles.
-	_ = covCollector.TearDown()
-	s.TestBackend.Close()
-}
+//func (s *CLITestSuite) TearDownSuite() {
+//	// Merge coverage profiles.
+//	_ = covCollector.TearDown()
+//	s.TestBackend.Close()
+//}
 
 func (s *CLITestSuite) TestConfluentHelp() {
 	var tests []CLITest
