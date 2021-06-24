@@ -148,7 +148,7 @@ func (s *CLITestSuite) RunCcloudTest(tt CLITest) {
 
 	s.T().Run(tt.Name, func(t *testing.T) {
 		if !tt.Workflow {
-			t.Parallel()
+			//t.Parallel()
 			ResetConfiguration(t, "ccloud")
 		}
 		loginURL := s.getLoginURL("ccloud", tt)
