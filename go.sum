@@ -288,6 +288,8 @@ github.com/confluentinc/cc-structs/kafka/org v0.410.0/go.mod h1:cHFmFDME3PjKTkK9
 github.com/confluentinc/cc-structs/kafka/org v0.719.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.753.0 h1:d716lHvfPUpkV7ZsgC8ejjW1m2psOTouWWH13KYfkos=
 github.com/confluentinc/cc-structs/kafka/org v0.753.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
+github.com/confluentinc/cc-structs/kafka/org v0.812.0 h1:OrSOFbAWm0iDAMAOnrAYkxHSXOAR5XQWOgnNrmJDusY=
+github.com/confluentinc/cc-structs/kafka/org v0.812.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/product/core v0.405.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
 github.com/confluentinc/cc-structs/kafka/product/core v0.408.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
 github.com/confluentinc/cc-structs/kafka/product/core v0.410.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
