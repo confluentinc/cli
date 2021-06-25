@@ -56,7 +56,7 @@ type LoginCredentialsManager interface {
 	GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error)
 	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
 	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
-	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
+	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
 	GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
@@ -126,7 +126,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cob
 	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
@@ -140,7 +140,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
+func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMachineParams) (*netrc.Machine, error) {
 	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
 	if err != nil {
@@ -230,7 +230,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 			return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
-		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCaCertPathEnvVar)
+		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCACertPathEnvVar)
 		return creds, nil
 	}
 }
@@ -239,7 +239,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
 // URL and ca-cert-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
-	filterParams := netrc.GetMatchingNetrcMachineParams{
+	filterParams := netrc.NetrcMachineParams{
 		CLIName: "confluent",
 	}
 	return func() (*Credentials, error) {

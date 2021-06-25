@@ -1,9 +1,14 @@
 package test_server
 
 import (
+	"net"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+// TestCloudURL is used to hardcode a specific port (1024) so tests can identify CCloud URLs
+const TestCloudURL = "127.0.0.1:1024"
 
 // TestBackend consists of the servers for necessary mocked backend services
 // Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined
@@ -23,21 +28,43 @@ func StartTestBackend(t *testing.T) *TestBackend {
 	kafkaRPServer := configureKafkaRestServer(kafkaRouter.KafkaRP)
 
 	backend := &TestBackend{
-		cloud:          httptest.NewServer(cloudRouter),
+		cloud:          newTestCloudServer(cloudRouter),
 		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
 		kafkaRestProxy: kafkaRPServer,
 		mds:            httptest.NewServer(mdsRouter),
 		sr:             httptest.NewServer(srRouter),
 	}
+
 	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
+
 	return backend
 }
 
 //var kafkaRestPort *string // another test uses port 8090
 func configureKafkaRestServer(router KafkaRestProxyRouter) *httptest.Server {
 	return httptest.NewServer(router)
+}
+
+func newTestCloudServer(handler http.Handler) *httptest.Server {
+	server := httptest.NewUnstartedServer(handler)
+
+	// Stop the old listener
+	if err := server.Listener.Close(); err != nil {
+		panic(err)
+	}
+
+	// Create a new listener with the hardcoded port
+	l, err := net.Listen("tcp", TestCloudURL)
+	if err != nil {
+		panic(err)
+	}
+	server.Listener = l
+
+	server.Start()
+
+	return server
 }
 
 func (b *TestBackend) Close() {

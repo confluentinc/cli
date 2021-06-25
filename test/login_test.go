@@ -11,10 +11,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"testing"
 	"time"
-
-	test_server "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/chromedp/chromedp"
 
@@ -86,45 +83,32 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	}
 }
 
-func serveCloudBackend(t *testing.T) *test_server.TestBackend {
-	router := test_server.NewCloudRouter(t)
-	return test_server.NewCloudTestBackendFromRouters(router, test_server.NewEmptyKafkaRouter())
-}
-
-func serveMDSBackend(t *testing.T) *test_server.TestBackend {
-	router := test_server.NewMdsRouter(t)
-	return test_server.NewConfluentTestBackendFromRouter(router)
-}
-
 func (s *CLITestSuite) TestSaveUsernamePassword() {
-	type saveTest struct {
+	tests := []struct {
 		cliName  string
 		want     string
 		loginURL string
 		bin      string
-	}
-	cloudBackend := serveCloudBackend(s.T())
-	defer cloudBackend.Close()
-	mdsServer := serveMDSBackend(s.T())
-	defer mdsServer.Close()
-	tests := []saveTest{
+	}{
 		{
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			cloudBackend.GetCloudUrl(),
+			s.TestBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			mdsServer.GetMdsUrl(),
+			s.TestBackend.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
+
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
 	}
+
 	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc")
 	for _, tt := range tests {
 		// store existing credentials in netrc to check that they are not corrupted
@@ -140,7 +124,8 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
-		//TODO add save test using stdin input
+
+		// TODO: add save test using stdin input
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
@@ -162,37 +147,34 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 }
 
 func (s *CLITestSuite) TestUpdateNetrcPassword() {
-	type updateTest struct {
+	_, callerFileName, _, ok := runtime.Caller(0)
+	if !ok {
+		s.T().Fatalf("problems recovering caller information")
+	}
+
+	tests := []struct {
 		input    string
 		cliName  string
 		want     string
 		loginURL string
 		bin      string
-	}
-	_, callerFileName, _, ok := runtime.Caller(0)
-	if !ok {
-		s.T().Fatalf("problems recovering caller information")
-	}
-	cloudServer := serveCloudBackend(s.T())
-	defer cloudServer.Close()
-	mdsServer := serveMDSBackend(s.T())
-	defer mdsServer.Close()
-	tests := []updateTest{
+	}{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
-			cloudServer.GetCloudUrl(),
+			s.TestBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
-			mdsServer.GetMdsUrl(),
+			s.TestBackend.GetMdsUrl(),
 			confluentTestBin,
 		},
 	}
+
 	for _, tt := range tests {
 		// store existing credential + the user credential to be updated
 		originalNetrc, err := ioutil.ReadFile(tt.input)
@@ -282,7 +264,6 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 				}
 			}
 			s.True(printedLoginMessage)
-
 		}
 	}()
 
@@ -392,11 +373,9 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 			wantErrCode: 1,
 		},
 	}
-	mdsServer := serveMDSBackend(s.T())
-	defer mdsServer.Close()
 
 	for _, tt := range tests {
-		tt.loginURL = mdsServer.GetMdsUrl()
+		tt.loginURL = s.TestBackend.GetMdsUrl()
 		s.runConfluentTest(tt)
 	}
 }

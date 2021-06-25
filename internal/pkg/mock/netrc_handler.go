@@ -17,7 +17,7 @@ type MockNetrcHandler struct {
 	RemoveNetrcCredentialsFunc  func(cliName string, ctxName string) (string, error)
 	CheckCredentialExistFunc    func(cliName string, ctxName string) (bool, error)
 	lockGetMatchingNetrcMachine sync.Mutex
-	GetMatchingNetrcMachineFunc func(params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (*github_com_confluentinc_cli_internal_pkg_netrc.Machine, error)
+	GetMatchingNetrcMachineFunc func(params github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) (*github_com_confluentinc_cli_internal_pkg_netrc.Machine, error)
 
 	lockGetFileName sync.Mutex
 	GetFileNameFunc func() string
@@ -39,7 +39,7 @@ type MockNetrcHandler struct {
 			CtxName string
 		}
 		GetMatchingNetrcMachine []struct {
-			Params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+			Params github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetFileName []struct {
 		}
@@ -135,7 +135,7 @@ func (m *MockNetrcHandler) WriteNetrcCredentialsCalls() []struct {
 }
 
 // GetMatchingNetrcMachine mocks base method by wrapping the associated func.
-func (m *MockNetrcHandler) GetMatchingNetrcMachine(params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (*github_com_confluentinc_cli_internal_pkg_netrc.Machine, error) {
+func (m *MockNetrcHandler) GetMatchingNetrcMachine(params github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) (*github_com_confluentinc_cli_internal_pkg_netrc.Machine, error) {
 	m.lockGetMatchingNetrcMachine.Lock()
 	defer m.lockGetMatchingNetrcMachine.Unlock()
 
@@ -144,7 +144,7 @@ func (m *MockNetrcHandler) GetMatchingNetrcMachine(params github_com_confluentin
 	}
 
 	call := struct {
-		Params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+		Params github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 	}{
 		Params: params,
 	}
@@ -164,7 +164,7 @@ func (m *MockNetrcHandler) GetMatchingNetrcMachineCalled() bool {
 
 // GetMatchingNetrcMachineCalls returns the calls made to GetMatchingNetrcMachine.
 func (m *MockNetrcHandler) GetMatchingNetrcMachineCalls() []struct {
-	Params github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+	Params github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetMatchingNetrcMachine.Lock()
 	defer m.lockGetMatchingNetrcMachine.Unlock()

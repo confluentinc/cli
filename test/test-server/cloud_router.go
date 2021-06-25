@@ -59,7 +59,7 @@ func NewCloudRouter(t *testing.T) *CloudRouter {
 	return c
 }
 
-// New CLoudRouter with no predefined handlers
+// New CloudRouter with no predefined handlers
 func NewEmptyCloudRouter() *CloudRouter {
 	return &CloudRouter{
 		Router: mux.NewRouter(),

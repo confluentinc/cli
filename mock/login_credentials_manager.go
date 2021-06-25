@@ -29,7 +29,7 @@ type MockLoginCredentialsManager struct {
 	GetConfluentCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromNetrc sync.Mutex
-	GetCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetConfluentPrerunCredentialsFromEnvVar sync.Mutex
 	GetConfluentPrerunCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -53,7 +53,7 @@ type MockLoginCredentialsManager struct {
 		}
 		GetCredentialsFromNetrc []struct {
 			Cmd          *github_com_spf13_cobra.Command
-			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetConfluentPrerunCredentialsFromEnvVar []struct {
 			Cmd *github_com_spf13_cobra.Command
@@ -220,7 +220,7 @@ func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromPromptCalls() [
 }
 
 // GetCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *MockLoginCredentialsManager) GetCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCredentialsFromNetrc.Lock()
 	defer m.lockGetCredentialsFromNetrc.Unlock()
 
@@ -230,7 +230,7 @@ func (m *MockLoginCredentialsManager) GetCredentialsFromNetrc(cmd *github_com_sp
 
 	call := struct {
 		Cmd          *github_com_spf13_cobra.Command
-		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 	}{
 		Cmd:          cmd,
 		FilterParams: filterParams,
@@ -252,7 +252,7 @@ func (m *MockLoginCredentialsManager) GetCredentialsFromNetrcCalled() bool {
 // GetCredentialsFromNetrcCalls returns the calls made to GetCredentialsFromNetrc.
 func (m *MockLoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
 	Cmd          *github_com_spf13_cobra.Command
-	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetCredentialsFromNetrc.Lock()
 	defer m.lockGetCredentialsFromNetrc.Unlock()

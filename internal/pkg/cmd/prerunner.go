@@ -385,7 +385,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 
 func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
 	url := pauth.CCloudURL
-	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+	netrcFilterParams := netrc.NetrcMachineParams{
 		CLIName: r.CLIName,
 		URL:     url,
 	}
@@ -698,9 +698,9 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 }
 
 func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
-	if caCertPath == "" && os.Getenv(pauth.ConfluentCaCertPathEnvVar) != "" {
-		logger.Debug(fmt.Sprintf("found ca cert path in %s", pauth.ConfluentCaCertPathEnvVar))
-		caCertPath = os.Getenv(pauth.ConfluentCaCertPathEnvVar)
+	if caCertPath == "" && os.Getenv(pauth.ConfluentCACertPathEnvVar) != "" {
+		logger.Debug(fmt.Sprintf("found ca cert path in %s", pauth.ConfluentCACertPathEnvVar))
+		caCertPath = os.Getenv(pauth.ConfluentCACertPathEnvVar)
 	}
 	// use cert path flag or env var if it was passed
 	if caCertPath != "" {
@@ -844,7 +844,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 }
 
 func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
-	params := netrc.GetMatchingNetrcMachineParams{
+	params := netrc.NetrcMachineParams{
 		CLIName: r.CLIName,
 		CtxName: ctx.Name,
 	}
