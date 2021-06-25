@@ -3,6 +3,7 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,9 +13,12 @@ import (
 	"testing"
 	"time"
 
-	v1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	"github.com/gogo/protobuf/types"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 
 	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
@@ -22,9 +26,6 @@ import (
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/gogo/protobuf/types"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -427,7 +428,33 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 
 // Handler for: "/api/clusters"
 func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	write := func(w http.ResponseWriter, resp proto.Message) {
+		type errorer interface {
+			GetError() *corev1.Error
+		}
+
+		if r, ok := resp.(errorer); ok {
+			w.WriteHeader(int(r.GetError().Code))
+		}
+
+		b, err := utilv1.MarshalJSONToBytes(resp)
+		require.NoError(t, err)
+
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Header.Get("Authorization") {
+		case "Bearer expired":
+			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
+		case "Bearer malformed":
+			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
+		case "Bearer invalid":
+			// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
+			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
+		}
+
 		if r.Method == "POST" {
 			c.HandleKafkaClusterCreate(t)(w, r)
 		} else if r.Method == "GET" {
@@ -652,7 +679,7 @@ func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.R
 		switch userId {
 		case "u-1":
 			res = orgv1.DeleteUserReply{
-				Error: &v1.Error{Message: "user not found"},
+				Error: &corev1.Error{Message: "user not found"},
 			}
 		default:
 			res = orgv1.DeleteUserReply{
@@ -683,7 +710,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 		switch userId {
 		case "u-0":
 			res = flowv1.GetUserProfileReply{
-				Error: &v1.Error{Message: "user not found"},
+				Error: &corev1.Error{Message: "user not found"},
 			}
 		case "u11":
 			user = users[0]
@@ -732,7 +759,7 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 		switch {
 		case strings.Contains(bs, "user@exists.com"):
 			res = flowv1.SendInviteReply{
-				Error: &v1.Error{Message: "User is already active"},
+				Error: &corev1.Error{Message: "User is already active"},
 				User:  nil,
 			}
 		default:

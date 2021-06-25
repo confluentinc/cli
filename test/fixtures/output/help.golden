@@ -17,7 +17,7 @@ Available Commands:
   init              Initialize a context.
   kafka             Manage Apache Kafka.
   ksql              Manage ksqlDB applications.
-  login             Log in to Confluent Cloud.
+  login             Log in to Confluent Cloud or Confluent Platform.
   logout            Log out of Confluent Cloud.
   price             See Confluent Cloud pricing information.
   prompt            Print Confluent Cloud CLI context for your terminal prompt.

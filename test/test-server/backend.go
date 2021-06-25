@@ -106,7 +106,7 @@ func (b *TestBackend) GetMdsUrl() string {
 // Define/override the endpoints on the corresponding routers
 func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *KafkaRouter) *TestBackend {
 	ccloud := &TestBackend{
-		cloud:          httptest.NewServer(cloudRouter),
+		cloud:          newTestCloudServer(cloudRouter),
 		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
 		kafkaRestProxy: configureKafkaRestServer(kafkaRouter.KafkaRP),
 	}

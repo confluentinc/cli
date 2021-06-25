@@ -13,7 +13,7 @@ Available Commands:
   iam             Manage RBAC, ACL and IAM permissions.
   kafka           Manage Apache Kafka.
   ksql            Manage ksqlDB applications.
-  login           Log in to Confluent Platform (required for RBAC).
+  login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Platform.
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
