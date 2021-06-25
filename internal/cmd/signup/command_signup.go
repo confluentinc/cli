@@ -33,14 +33,6 @@ type command struct {
 	clientFactory pauth.CCloudClientFactory
 }
 
-type countries struct {
-	countries []countries `json:"country_codes"`
-}
-
-type country struct {
-	Name string `json:"`
-}
-
 func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
 	c := &command{
 		pcmd.NewAnonymousCLICommand(
