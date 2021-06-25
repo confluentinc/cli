@@ -2,15 +2,10 @@ package signup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
-	"runtime"
+	"regexp"
 	"strings"
-
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 
 	"github.com/gogo/protobuf/types"
 
@@ -19,6 +14,7 @@ import (
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -78,40 +74,41 @@ func (c *command) signupRunE(cmd *cobra.Command, _ []string) error {
 
 func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
 	utils.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
-	f_email_name := form.New(
+	fEmailName := form.New(
 		form.Field{ID: "email", Prompt: "Email", Regex: "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"},
 		form.Field{ID: "first", Prompt: "First Name"},
 		form.Field{ID: "last", Prompt: "Last Name"},
 	)
 
-	f_countrycode := form.New(
+	fCountrycode := form.New(
 		form.Field{ID: "country", Prompt: "Two-letter country code (https://www.nationsonline.org/oneworld/country_code_list.htm)"},
 	)
 
-	f_org_pswd_toc_pri := form.New(
+	fOrgPswdTosPri := form.New(
 		form.Field{ID: "organization", Prompt: "Organization"},
 		form.Field{ID: "password", Prompt: "Password (8 characters, 1 lowercase, 1 uppercase, 1 number)", IsHidden: true},
 		form.Field{ID: "tos", Prompt: "I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/)", IsYesOrNo: true, RequireYes: true},
 		form.Field{ID: "privacy", Prompt: `By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/)`, IsYesOrNo: true, RequireYes: true},
 	)
 
-	if err := f_email_name.Prompt(cmd, prompt); err != nil {
+	if err := fEmailName.Prompt(cmd, prompt); err != nil {
 		return err
 	}
 
-	countries, err := getCountriesMap()
-	if err != nil {
-		return err
-	}
-
+	countries := GetCountrycodeMap()
 	var confirmedCountryCode string
 
 	for {
-		if err := f_countrycode.Prompt(cmd, prompt); err != nil {
+		if err := fCountrycode.Prompt(cmd, prompt); err != nil {
 			return err
 		}
-		code := strings.ToUpper(f_countrycode.Responses["country"].(string))
-		if country, ok := countries[code]; ok {
+		code := strings.ToUpper(fCountrycode.Responses["country"].(string))
+		pattern := regexp.MustCompile("^[A-Z]{2}$")
+		match := pattern.MatchString(code)
+		if !match {
+			utils.Println(cmd, "Invalid format of country code.")
+			continue // reprompt for country code
+		} else if country, ok := countries[code]; ok {
 			f := form.New(
 				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", code, country), IsYesOrNo: true},
 			)
@@ -130,22 +127,22 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		}
 	}
 
-	if err := f_org_pswd_toc_pri.Prompt(cmd, prompt); err != nil {
+	if err := fOrgPswdTosPri.Prompt(cmd, prompt); err != nil {
 		return err
 	}
 
 	req := &v1.SignupRequest{
 		Organization: &v1.Organization{
-			Name: f_org_pswd_toc_pri.Responses["organization"].(string),
-			Plan: &v1.Plan{AcceptTos: &types.BoolValue{Value: f_org_pswd_toc_pri.Responses["tos"].(bool)}},
+			Name: fOrgPswdTosPri.Responses["organization"].(string),
+			Plan: &v1.Plan{AcceptTos: &types.BoolValue{Value: fOrgPswdTosPri.Responses["tos"].(bool)}},
 		},
 		User: &v1.User{
-			Email:     f_email_name.Responses["email"].(string),
-			FirstName: f_email_name.Responses["first"].(string),
-			LastName:  f_email_name.Responses["last"].(string),
+			Email:     fEmailName.Responses["email"].(string),
+			FirstName: fEmailName.Responses["first"].(string),
+			LastName:  fEmailName.Responses["last"].(string),
 		},
 		Credentials: &v1.Credentials{
-			Password: f_org_pswd_toc_pri.Responses["password"].(string),
+			Password: fOrgPswdTosPri.Responses["password"].(string),
 		},
 		CountryCode: confirmedCountryCode,
 	}
@@ -158,7 +155,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 	}
 
-	utils.Printf(cmd, "A verification email has been sent to %s.\n", f_email_name.Responses["email"].(string))
+	utils.Printf(cmd, "A verification email has been sent to %s.\n", fEmailName.Responses["email"].(string))
 	v := form.New(form.Field{ID: "verified", Prompt: `Type "y" once verified, or type "n" to resend.`, IsYesOrNo: true})
 
 	for {
@@ -167,16 +164,16 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		}
 
 		if !v.Responses["verified"].(bool) {
-			if err := client.Signup.SendVerificationEmail(context.Background(), &v1.User{Email: f_email_name.Responses["email"].(string)}); err != nil {
+			if err := client.Signup.SendVerificationEmail(context.Background(), &v1.User{Email: fEmailName.Responses["email"].(string)}); err != nil {
 				return err
 			}
 
-			utils.Printf(cmd, "A new verification email has been sent to %s. If this email is not received, please contact support@confluent.io.\n", f_email_name.Responses["email"].(string))
+			utils.Printf(cmd, "A new verification email has been sent to %s. If this email is not received, please contact support@confluent.io.\n", fEmailName.Responses["email"].(string))
 			continue
 		}
 		var token string
 		var err error
-		if token, err = client.Auth.Login(context.Background(), "", f_email_name.Responses["email"].(string), f_org_pswd_toc_pri.Responses["password"].(string)); err != nil {
+		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string)); err != nil {
 			if err.Error() == "username or password is invalid" {
 				utils.ErrPrintln(cmd, "Sorry, your email is not verified. Another verification email was sent to your address. Please click the verification link in that message to verify your email.")
 				continue
@@ -186,30 +183,12 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), token, client.BaseURL)
-		_, err = pauth.PersistCCloudLoginToConfig(c.Config.Config, f_email_name.Responses["email"].(string), client.BaseURL, token, authorizedClient)
+		_, err = pauth.PersistCCloudLoginToConfig(c.Config.Config, fEmailName.Responses["email"].(string), client.BaseURL, token, authorizedClient)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `ccloud login` to log in using the new credentials.")
 			return nil
 		}
-		c.logger.Debugf(errors.LoggedInAsMsg, f_email_name.Responses["email"])
+		c.logger.Debugf(errors.LoggedInAsMsg, fEmailName.Responses["email"])
 		return nil
 	}
-}
-
-func getCountriesMap() (map[string]interface{}, error) {
-	_, callerFileName, _, _ := runtime.Caller(0)
-	countryCodeFilepath := filepath.Join(filepath.Dir(callerFileName), "country_code.json")
-	countryCode, err := os.Open(countryCodeFilepath)
-	if err != nil {
-		return nil, err
-	}
-	defer countryCode.Close()
-
-	byteValue, _ := ioutil.ReadAll(countryCode)
-	var countries map[string]interface{}
-	err = json.Unmarshal(byteValue, &countries)
-	if err != nil {
-		return nil, err
-	}
-	return countries, nil
 }
