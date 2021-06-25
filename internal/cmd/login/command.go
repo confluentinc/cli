@@ -2,7 +2,6 @@ package login
 
 import (
 	"context"
-	test_server "github.com/confluentinc/cli/test/test-server"
 	"os"
 	"regexp"
 	"strings"
@@ -16,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type Command struct {
@@ -125,8 +125,8 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	if refreshToken != "" {
 		credentials.Password = refreshToken
 	}
-	err = c.saveLoginToNetrc(cmd, credentials)
-	if err != nil {
+
+	if err := c.saveLoginToNetrc(cmd, credentials); err != nil {
 		return err
 	}
 
@@ -212,7 +212,6 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
-	// Read flag
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return "", err
@@ -221,7 +220,6 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 		return caCertPath, nil
 	}
 
-	// Read environment variable
 	return os.Getenv(pauth.ConfluentCACertPathEnvVar), nil
 }
 
@@ -328,7 +326,7 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 
 func (c *Command) isCCloudURL(url string) bool {
 	if c.isTest {
-		if strings.Contains(url, test_server.TestCloudURL) {
+		if strings.Contains(url, testserver.TestCloudURL) {
 			return true
 		}
 	}
