@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -184,15 +183,8 @@ func (s *CLITestSuite) TestCcloudHelp() {
 	}
 }
 
-func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		require.Regexp(t, expected, r.Header.Get("User-Agent"))
-	}
-}
-
 func (s *CLITestSuite) TestCcloudErrors() {
 	// TODO: Add this test back when we add prompt testing for integration test
-
 	// Now that non-interactive login is officially supported, we ignore failures from env var and netrc login and give user another chance at login
 	//	s.T().Run("invalid user or pass", func(tt *testing.T) {
 	//		loginURL := serveErrors(tt)
@@ -430,12 +422,4 @@ func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 	return path.Join(dir, binaryName)
-}
-
-func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		for _, f := range funcs {
-			f(w, r)
-		}
-	}
 }
