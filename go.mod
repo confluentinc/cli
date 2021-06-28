@@ -23,7 +23,6 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
-	github.com/confluentinc/cc-utils-public v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.79
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928

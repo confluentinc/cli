@@ -309,8 +309,6 @@ github.com/confluentinc/cc-structs/kafka/util v0.753.0/go.mod h1:zK+BAdNsqeeEbGW
 github.com/confluentinc/cc-structs/operator v0.405.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
 github.com/confluentinc/cc-structs/operator v0.753.0 h1:/7iehTE/W8bJrJ8A9b/JFhWovHGYoU6p60joR8sKNCo=
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
-github.com/confluentinc/cc-utils-public v0.1.0 h1:0EkUM94lvOLoYQIoaglfCldLCjJTNDiITYoGqUZrpS4=
-github.com/confluentinc/cc-utils-public v0.1.0/go.mod h1:9GIApQ66kQGr+ROZvop7GFyxpXyzwIi83ZedYrHLQUU=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.79 h1:fXh3L655WvBfEyg7fi2Q1ZjrHOFDhwiAuCRLPpABEps=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.79/go.mod h1:n956UXVT5qrVBauHOdqN5xrCanykhonNZsej6zlb6QY=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
@@ -867,7 +865,6 @@ github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfV
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
 github.com/kelseyhightower/envconfig v1.4.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
-github.com/kevinburke/go-bindata v3.13.0+incompatible/go.mod h1:/pEEZ72flUW2p0yi30bslSp9YqD9pysLxunQDdb2CPM=
 github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
