@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	noRebuild           = flag.Bool("no-rebuild", true, "skip rebuilding CLI if it already exists")
+	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
 	update              = flag.Bool("update", false, "update golden files")
 	debug               = true //= flag.Bool("debug", true, "enable verbose output")
 	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
@@ -112,7 +112,11 @@ func (s *CLITestSuite) SetupSuite() {
 	s.TestBackend = test_server.StartTestBackend(s.T())
 
 	// dumb but effective
-	err = os.Chdir("..")
+	dir, err := os.Getwd()
+	s.T().Log("1: " + dir)
+	err = os.Chdir(strings.Split(dir, "/test")[0])
+	dir2, err := os.Getwd()
+	s.T().Log("2: " + dir2)
 	req.NoError(err)
 	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
