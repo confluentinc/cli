@@ -378,14 +378,14 @@ const ListReleaseNotesVersionsPublicFixture = `\
   <MaxKeys>1000</MaxKeys>
   <IsTruncated>false</IsTruncated>
   <Contents>
-    <Key>ccloud-cli/release-notes/0.47.0/release-notes.rst</Key>
+    <Key>ccloud-cli/release-notes/0.0.0/release-notes.rst</Key>
     <LastModified>2019-03-30T03:47:23.000Z</LastModified>
     <ETag>"6d67d14d2e493c4954f3b9a73c3b7e96"</ETag>
     <Size>469</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/release-notes/0.48.0/release-notes.rst</Key>
+    <Key>ccloud-cli/release-notes/0.1.0/release-notes.rst</Key>
     <LastModified>2019-03-30T03:47:23.000Z</LastModified>
     <ETag>"a040fb753aa77009330bb7b6e0f805a8"</ETag>
     <Size>469</Size>

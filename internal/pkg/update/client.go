@@ -21,7 +21,7 @@ import (
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
 	CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
-	GetLatestReleaseNotes() (string, string, error)
+	GetLatestReleaseNotes(currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string) error
 }
@@ -95,16 +95,26 @@ func (c *client) CheckForUpdates(cliName string, currentVersion string, forceChe
 	return false, currentVersion, nil
 }
 
-func (c *client) GetLatestReleaseNotes() (string, string, error) {
-	latestReleaseNotesVersion, err := c.Repository.GetLatestReleaseNotesVersion()
+func (c *client) GetLatestReleaseNotes(currentVersion string) (string, []string, error) {
+	latestReleaseNotesVersions, err := c.Repository.GetLatestReleaseNotesVersions(currentVersion)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
-	releaseNotes, err := c.Repository.DownloadReleaseNotes(latestReleaseNotesVersion.String())
-	if err != nil {
-		return "", "", err
+
+	var latestVersion string
+	var allReleaseNotes []string
+
+	for _, version := range latestReleaseNotesVersions {
+		releaseNotes, err := c.Repository.DownloadReleaseNotes(version.String())
+		if err != nil {
+			return "", nil, err
+		}
+
+		latestVersion = version.Original()
+		allReleaseNotes = append(allReleaseNotes, releaseNotes)
 	}
-	return latestReleaseNotesVersion.Original(), releaseNotes, nil
+
+	return latestVersion, allReleaseNotes, nil
 }
 
 // SemVer considers x.x.x-yyy to be less (older) than x.x.x

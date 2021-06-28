@@ -3,6 +3,7 @@ package update
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-version"
@@ -127,7 +128,8 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getReleaseNotes(latestBinaryVersion string) string {
-	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
+	latestReleaseNotesVersion, allReleaseNotes, err := c.client.GetLatestReleaseNotes(c.version.Version)
+
 	var errMsg string
 	if err != nil {
 		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
@@ -140,12 +142,14 @@ func (c *command) getReleaseNotes(latestBinaryVersion string) string {
 			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
+
 	if errMsg != "" {
 		c.logger.Debugf(errMsg)
 		c.analyticsClient.SetSpecialProperty(analytics.ReleaseNotesErrorPropertiesKeys, errMsg)
 		return ""
 	}
-	return releaseNotes
+
+	return strings.Join(allReleaseNotes, "\n")
 }
 
 func sameVersionCheck(v1 string, v2 string) (bool, error) {
