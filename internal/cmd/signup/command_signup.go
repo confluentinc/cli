@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/gogo/protobuf/types"
@@ -81,7 +80,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	)
 
 	fCountrycode := form.New(
-		form.Field{ID: "country", Prompt: "Two-letter country code (https://www.nationsonline.org/oneworld/country_code_list.htm)"},
+		form.Field{ID: "country", Prompt: "Two-letter country code (https://www.nationsonline.org/oneworld/country_code_list.htm)", Regex: "^[a-zA-Z]{2}$"},
 	)
 
 	fOrgPswdTosPri := form.New(
@@ -103,12 +102,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return err
 		}
 		code := strings.ToUpper(fCountrycode.Responses["country"].(string))
-		pattern := regexp.MustCompile("^[A-Z]{2}$")
-		match := pattern.MatchString(code)
-		if !match {
-			utils.Println(cmd, "Invalid format of country code.")
-			continue // reprompt for country code
-		} else if country, ok := countries[code]; ok {
+		if country, ok := countries[code]; ok {
 			f := form.New(
 				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", code, country), IsYesOrNo: true},
 			)

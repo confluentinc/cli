@@ -42,6 +42,26 @@ func TestSignupSuccess(t *testing.T) {
 	)
 }
 
+func TestSignupBadCountryCode(t *testing.T) {
+	testSignup(t,
+		mock.NewPromptMock(
+			"bstrauch@confluent.io",
+			"Brian",
+			"Strauch",
+			"ZZ",
+			"US",
+			"y",
+			"Confluent",
+			"password",
+			"y",
+			"y",
+			"y",
+		),
+		"A verification email has been sent to bstrauch@confluent.io.",
+		"Success! Welcome to Confluent Cloud.",
+	)
+}
+
 func TestSignupRejectTOS(t *testing.T) {
 	testSignup(t,
 		mock.NewPromptMock(

@@ -1,6 +1,6 @@
 package signup
 
-var CountryCodes = map[string]string{
+var countryCodes = map[string]string{
 	"AF": "Afghanistan",
 	"AL": "Albania",
 	"DZ": "Algeria",
@@ -160,7 +160,7 @@ var CountryCodes = map[string]string{
 	"OM": "Oman",
 	"PK": "Pakistan",
 	"PW": "Palau",
-	"PS": "State of Palestine, Palestine",
+	"PS": "State of Palestine / Palestine",
 	"PA": "Panama",
 	"PG": "Papua New Guinea",
 	"PY": "Paraguay",
@@ -173,7 +173,7 @@ var CountryCodes = map[string]string{
 	"QA": "Qatar",
 	"RE": "Reunion",
 	"RO": "Romania",
-	"RU": "Russian Federation, Russia",
+	"RU": "Russian Federation / Russia",
 	"RW": "Rwanda",
 	"SH": "Saint Helena",
 	"KN": "Saint Kitts and Nevis",
@@ -202,7 +202,7 @@ var CountryCodes = map[string]string{
 	"SZ": "Eswatini",
 	"SE": "Sweden",
 	"CH": "Switzerland",
-	"TW": "Taiwan, Province of China, Taiwan",
+	"TW": "Taiwan, Province of China / Taiwan",
 	"TJ": "Tajikistan",
 	"TZ": "Tanzania, United Republic of",
 	"TH": "Thailand",
@@ -219,8 +219,8 @@ var CountryCodes = map[string]string{
 	"UG": "Uganda",
 	"UA": "Ukraine",
 	"AE": "United Arab Emirates",
-	"GB": "United Kingdom, UK, Great Britain",
-	"US": "United States of America, USA",
+	"GB": "United Kingdom / UK / Great Britain",
+	"US": "United States of America / USA",
 	"UM": "United States Minor Outlying Islands",
 	"UY": "Uruguay",
 	"UZ": "Uzbekistan",
@@ -249,5 +249,5 @@ var CountryCodes = map[string]string{
 }
 
 func GetCountrycodeMap() map[string]string {
-	return CountryCodes
+	return countryCodes
 }
