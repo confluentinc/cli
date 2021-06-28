@@ -94,7 +94,6 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		return err
 	}
 
-	countries := countryCodes
 	var countryCode string
 
 	for {
@@ -102,7 +101,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return err
 		}
 		countryCode = strings.ToUpper(fCountrycode.Responses["country"].(string))
-		if country, ok := countries[countryCode]; ok {
+		if country, ok := countryCodes[countryCode]; ok {
 			f := form.New(
 				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", countryCode, country), IsYesOrNo: true},
 			)
