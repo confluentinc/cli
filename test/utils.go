@@ -1,6 +1,8 @@
 package test
 
 import (
+	"flag"
+	"fmt"
 	"github.com/confluentinc/bincover"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -10,23 +12,21 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
-	"flag"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
 	"testing"
-	"reflect"
-	"os/exec"
-	"fmt"
 )
 
 var (
 	noRebuild           = flag.Bool("no-rebuild", true, "skip rebuilding CLI if it already exists")
 	update              = flag.Bool("update", false, "update golden files")
-	debug               = flag.Bool("debug", true, "enable verbose output")
+	debug               = true //= flag.Bool("debug", true, "enable verbose output")
 	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
 	ssoTestEmail        = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
 	ssoTestPassword     = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
@@ -155,33 +155,33 @@ func (s *CLITestSuite) RunCcloudTest(tt CLITest) {
 		if tt.Login == "default" {
 			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
 			output := runCommand(t, ccloudTestBin, env, "login --url "+loginURL, 0)
-			if *debug {
+			if debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.UseKafka != "" {
 			output := runCommand(t, ccloudTestBin, []string{}, "kafka cluster use "+tt.UseKafka, 0)
-			if *debug {
+			if debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.AuthKafka != "" {
 			output := runCommand(t, ccloudTestBin, []string{}, "api-key create --resource "+tt.UseKafka, 0)
-			if *debug {
+			if debug {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
 			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
 			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.UseKafka), 0)
-			if *debug {
+			if debug {
 				fmt.Println(output)
 			}
 		}
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.PreCmdFuncs, tt.PostCmdFuncs)
 		output := runCommand(t, ccloudTestBin, tt.Env, tt.Args, tt.WantErrCode, covCollectorOptions...)
-		if *debug {
+		if debug {
 			fmt.Println(output)
 		}
 
@@ -213,7 +213,7 @@ func (s *CLITestSuite) RunConfluentTest(tt CLITest) {
 		if tt.Login == "default" {
 			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
 			output := runCommand(t, confluentTestBin, env, "login --url "+loginURL, 0)
-			if *debug {
+			if debug {
 				fmt.Println(output)
 			}
 		}
