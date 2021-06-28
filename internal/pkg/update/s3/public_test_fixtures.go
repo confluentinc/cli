@@ -296,7 +296,7 @@ const ListVersionsPublicFixtureUnsortedVersions = `\
   <MaxKeys>1000</MaxKeys>
   <IsTruncated>false</IsTruncated>
   <Contents>
-    <Key>ccloud-cli/binaries/0.44.0/confluent_0.44.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.43.0/confluent_0.43.0_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
@@ -310,7 +310,7 @@ const ListVersionsPublicFixtureUnsortedVersions = `\
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/binaries/0.43.0/confluent_0.43.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.42.1/confluent_0.42.1_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
@@ -453,7 +453,7 @@ const ListReleaseNotesVersionsPublicFixtureUnsortedVersions = `\
   <MaxKeys>1000</MaxKeys>
   <IsTruncated>false</IsTruncated>
   <Contents>
-    <Key>ccloud-cli/release-notes/0.44.0/release-notes.rst</Key>
+    <Key>ccloud-cli/release-notes/0.43.0/release-notes.rst</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
@@ -467,7 +467,7 @@ const ListReleaseNotesVersionsPublicFixtureUnsortedVersions = `\
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/release-notes/0.43.0/release-notes.rst</Key>
+    <Key>ccloud-cli/release-notes/0.42.1/release-notes.rst</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>

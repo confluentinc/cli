@@ -134,7 +134,7 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 			args: args{
 				name: "confluent",
 			},
-			want: makeVersions("0.42.0", "0.43.0", "0.44.0"),
+			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
 		},
 		{
 			name: "errors when no version available",
@@ -242,7 +242,7 @@ func TestPublicRepo_GetLatestBinaryVersion(t *testing.T) {
 			args: args{
 				name: "confluent",
 			},
-			want: makeVersion("0.44.0"),
+			want: makeVersion("0.43.0"),
 		},
 		{
 			name: "errors when no version available",
@@ -335,7 +335,7 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersions("0.42.0", "0.43.0", "0.44.0"),
+			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
 		},
 		{
 			name: "invalid file names",
@@ -441,7 +441,7 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersions("0.42.0", "0.43.0", "0.44.0"),
+			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
 		},
 		{
 			name: "invalid file names",
