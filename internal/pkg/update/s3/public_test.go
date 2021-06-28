@@ -298,7 +298,6 @@ func TestPublicRepo_GetLatestBinaryVersion(t *testing.T) {
 
 func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 	req := require.New(t)
-	logger := log.New()
 
 	makeVersions := func(versions ...string) version.Collection {
 		col := version.Collection{}
@@ -328,7 +327,7 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixture, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersions("0.47.0", "0.48.0"),
+			want: makeVersions("0.0.0", "0.1.0"),
 		},
 		{
 			name: "sorts by version",
@@ -385,7 +384,7 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				S3BinBucket:          tt.fields.S3BinBucket,
 				S3BinRegion:          tt.fields.S3BinRegion,
 				S3ReleaseNotesPrefix: tt.fields.S3ReleaseNotesPrefix,
-				Logger:               logger,
+				Logger:               log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
@@ -407,13 +406,13 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 	currentVersion := "v0.0.0"
 
 	makeVersions := func(versions ...string) version.Collection {
-		var collection version.Collection
+		col := version.Collection{}
 		for _, v := range versions {
 			ver, err := version.NewSemver(v)
 			req.NoError(err)
-			collection = append(collection, ver)
+			col = append(col, ver)
 		}
-		return collection
+		return col
 	}
 
 	type fields struct {
