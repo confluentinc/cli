@@ -247,7 +247,3 @@ var countryCodes = map[string]string{
 	"SX": "Sint Maarten (Dutch part)",
 	"XK": "Kosovo",
 }
-
-func GetCountrycodeMap() map[string]string {
-	return countryCodes
-}

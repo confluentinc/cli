@@ -94,30 +94,26 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		return err
 	}
 
-	countries := GetCountrycodeMap()
-	var confirmedCountryCode string
+	countries := countryCodes
+	var countryCode string
 
 	for {
 		if err := fCountrycode.Prompt(cmd, prompt); err != nil {
 			return err
 		}
-		code := strings.ToUpper(fCountrycode.Responses["country"].(string))
-		if country, ok := countries[code]; ok {
+		countryCode = strings.ToUpper(fCountrycode.Responses["country"].(string))
+		if country, ok := countries[countryCode]; ok {
 			f := form.New(
-				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", code, country), IsYesOrNo: true},
+				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", countryCode, country), IsYesOrNo: true},
 			)
 			if err := f.Prompt(cmd, prompt); err != nil {
 				return err
 			}
 			if f.Responses["confirmation"].(bool) {
-				confirmedCountryCode = code
 				break
-			} else {
-				continue // reprompt for country code
 			}
 		} else {
 			utils.Println(cmd, "Country code not found.")
-			continue // reprompt for country code
 		}
 	}
 
@@ -138,7 +134,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		Credentials: &v1.Credentials{
 			Password: fOrgPswdTosPri.Responses["password"].(string),
 		},
-		CountryCode: confirmedCountryCode,
+		CountryCode: countryCode,
 	}
 
 	if _, err := client.Signup.Create(context.Background(), req); err != nil {
