@@ -222,8 +222,6 @@ func (a *authenticatedTopicCommand) init() {
 	}
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
-	createCmd.Flags().String("link", "", "The name of the cluster link the topic is associated with, if mirrored.")
-	createCmd.Flags().String("mirror-topic", "", "The name of the topic over the cluster link to mirror.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	createCmd.Flags().SortFlags = false
@@ -261,23 +259,6 @@ func (a *authenticatedTopicCommand) init() {
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	updateCmd.Flags().SortFlags = false
 	a.AddCommand(updateCmd)
-
-	mirrorCmd := &cobra.Command{
-		Use:    "mirror <action> <topic>",
-		Short:  "Perform a mirroring action on a Kafka topic.",
-		Args:   cobra.ExactArgs(2),
-		RunE:   pcmd.NewCLIRunE(a.mirror),
-		Hidden: true,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Stop the mirroring of topic ``my_topic``.",
-				Code: "ccloud kafka topic mirror stop my_topic",
-			},
-		),
-	}
-	mirrorCmd.Flags().Bool("dry-run", false, "Validate the request without applying changes to Kafka.")
-	mirrorCmd.Flags().SortFlags = false
-	a.AddCommand(mirrorCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <topic>",
@@ -363,16 +344,6 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	linkName, err := cmd.Flags().GetString("link")
-	if err != nil {
-		return err
-	}
-
-	mirrorTopic, err := cmd.Flags().GetString("mirror-topic")
-	if err != nil {
-		return err
-	}
-
 	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
@@ -384,7 +355,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 
 	kafkaREST, _ := a.GetKafkaREST()
-	if kafkaREST != nil && (!dryRun && mirrorTopic == "" && linkName == "") {
+	if kafkaREST != nil && (!dryRun) {
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 		i := 0
 		for k, v := range topicConfigsMap {
@@ -458,13 +429,6 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	topic.Spec.ReplicationFactor = defaultReplicationFactor
 	topic.Validate = dryRun
 	topic.Spec.Configs = topicConfigsMap
-
-	if len(linkName) > 0 || len(mirrorTopic) > 0 {
-		topic.Spec.Mirror = &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: mirrorTopic}
-
-		// Avoid specifying partition count for mirrored topics.
-		topic.Spec.NumPartitions = unspecifiedPartitionCount
-	}
 
 	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
@@ -704,50 +668,6 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return entries[i][0] < entries[j][0]
 	})
 	printer.RenderCollectionTable(entries, titleRow)
-	return nil
-}
-
-func (a *authenticatedTopicCommand) mirror(cmd *cobra.Command, args []string) error {
-	const stopAction = "stop"
-
-	action := args[0]
-	topic := args[1]
-
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
-	if err != nil {
-		return err
-	}
-
-	validate, err := cmd.Flags().GetBool("dry-run")
-	if err != nil {
-		return err
-	}
-
-	op := &schedv1.AlterMirrorOp{}
-	switch action {
-	case stopAction:
-		op.Type = &schedv1.AlterMirrorOp_StopTopicMirror_{
-			StopTopicMirror: &schedv1.AlterMirrorOp_StopTopicMirror{
-				Topic: &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic}, Validate: validate},
-			},
-		}
-	default:
-		return fmt.Errorf(errors.InvalidMirrorActionMsg, action)
-	}
-
-	result, err := a.Client.Kafka.AlterMirror(context.Background(), cluster, op)
-	if err != nil {
-		return err
-	}
-
-	switch action {
-	case stopAction:
-		result.GetStopTopicMirror()
-		utils.Printf(cmd, errors.StoppedTopicMirrorMsg, topic)
-	default:
-		panic("unreachable")
-	}
-
 	return nil
 }
 
