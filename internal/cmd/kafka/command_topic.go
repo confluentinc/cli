@@ -355,7 +355,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 
 	kafkaREST, _ := a.GetKafkaREST()
-	if kafkaREST != nil && (!dryRun) {
+	if kafkaREST != nil && !dryRun {
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 		i := 0
 		for k, v := range topicConfigsMap {
