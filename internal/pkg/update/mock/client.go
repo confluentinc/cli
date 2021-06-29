@@ -14,7 +14,7 @@ type Client struct {
 	CheckForUpdatesFunc func(cliName, currentVersion string, forceCheck bool) (bool, string, error)
 
 	lockGetLatestReleaseNotes sync.Mutex
-	GetLatestReleaseNotesFunc func() (string, string, error)
+	GetLatestReleaseNotesFunc func(currentVersion string) (string, []string, error)
 
 	lockPromptToDownload sync.Mutex
 	PromptToDownloadFunc func(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
@@ -29,6 +29,7 @@ type Client struct {
 			ForceCheck     bool
 		}
 		GetLatestReleaseNotes []struct {
+			CurrentVersion string
 		}
 		PromptToDownload []struct {
 			CliName       string
@@ -90,7 +91,7 @@ func (m *Client) CheckForUpdatesCalls() []struct {
 }
 
 // GetLatestReleaseNotes mocks base method by wrapping the associated func.
-func (m *Client) GetLatestReleaseNotes() (string, string, error) {
+func (m *Client) GetLatestReleaseNotes(currentVersion string) (string, []string, error) {
 	m.lockGetLatestReleaseNotes.Lock()
 	defer m.lockGetLatestReleaseNotes.Unlock()
 
@@ -99,11 +100,14 @@ func (m *Client) GetLatestReleaseNotes() (string, string, error) {
 	}
 
 	call := struct {
-	}{}
+		CurrentVersion string
+	}{
+		CurrentVersion: currentVersion,
+	}
 
 	m.calls.GetLatestReleaseNotes = append(m.calls.GetLatestReleaseNotes, call)
 
-	return m.GetLatestReleaseNotesFunc()
+	return m.GetLatestReleaseNotesFunc(currentVersion)
 }
 
 // GetLatestReleaseNotesCalled returns true if GetLatestReleaseNotes was called at least once.
@@ -116,6 +120,7 @@ func (m *Client) GetLatestReleaseNotesCalled() bool {
 
 // GetLatestReleaseNotesCalls returns the calls made to GetLatestReleaseNotes.
 func (m *Client) GetLatestReleaseNotesCalls() []struct {
+	CurrentVersion string
 } {
 	m.lockGetLatestReleaseNotes.Lock()
 	defer m.lockGetLatestReleaseNotes.Unlock()
