@@ -29,6 +29,49 @@ func TestSignupSuccess(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
+			"Confluent",
+			"password",
+			"y",
+			"y",
+			"y",
+		),
+		"A verification email has been sent to bstrauch@confluent.io.",
+		"Success! Welcome to Confluent Cloud.",
+	)
+}
+
+func TestSignupBadCountryCode(t *testing.T) {
+	testSignup(t,
+		mock.NewPromptMock(
+			"bstrauch@confluent.io",
+			"Brian",
+			"Strauch",
+			"ZZ",
+			"US",
+			"y",
+			"Confluent",
+			"password",
+			"y",
+			"y",
+			"y",
+		),
+		"A verification email has been sent to bstrauch@confluent.io.",
+		"Success! Welcome to Confluent Cloud.",
+	)
+}
+
+func TestSignupRejectCountryCode(t *testing.T) {
+	testSignup(t,
+		mock.NewPromptMock(
+			"bstrauch@confluent.io",
+			"Brian",
+			"Strauch",
+			"CH",
+			"n",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"y",
@@ -46,6 +89,8 @@ func TestSignupRejectTOS(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"n", // Reject TOS
@@ -64,6 +109,8 @@ func TestSignupRejectPrivacyPolicy(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"y",
@@ -82,6 +129,8 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"y",

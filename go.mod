@@ -18,7 +18,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
 	github.com/confluentinc/cc-structs/kafka/core v0.753.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.753.0
-	github.com/confluentinc/cc-structs/kafka/org v0.753.0
+	github.com/confluentinc/cc-structs/kafka/org v0.812.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
