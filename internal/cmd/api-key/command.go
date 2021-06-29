@@ -202,10 +202,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	UserId := int32(0)
 	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
-		UserId, err = c.getUserIdByResourceId(saId)
+		userIdMap, err := c.getUserIdMap()
 		if err != nil {
 			return err
 		}
+		UserId = userIdMap[saId]
 	} else { // if user inputs numeric ID, convert it to int32
 		UserIdp, _ := strconv.Atoi(saId)
 		UserId = int32(UserIdp)
@@ -234,6 +235,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	users := map[int32]*orgv1.User{}
 
 	serviceAccounts, err := getServiceAccountsMap(c.Client)
+	if err != nil {
+		return err
+	}
+
+	resourceIdMap, err := c.getResourceIdMap()
 	if err != nil {
 		return err
 	}
@@ -279,6 +285,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
+		resourceId := apiKey.UserResourceId
+		if resourceId == "" {
+			resourceId = resourceIdMap[apiKey.UserId]
+		}
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
@@ -288,7 +298,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserId:         apiKey.UserId,
-				UserResourceId: apiKey.UserResourceId,
+				UserResourceId: resourceId,
 				UserEmail:      email,
 				ResourceType:   pcmd.CloudResourceType,
 				Created:        created,
@@ -304,7 +314,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserId:         apiKey.UserId,
-				UserResourceId: apiKey.UserResourceId,
+				UserResourceId: resourceId,
 				UserEmail:      email,
 				ResourceType:   lc.Type,
 				ResourceId:     lc.Id,
@@ -638,9 +648,22 @@ func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
 	return suggestions
 }
 
+func (c *command) getAllUsers() ([]*orgv1.User, error) {
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	users := append(serviceAccounts, adminUsers...)
+	return users, nil
+}
+
 func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
 	if Id != "" { // it has a service-account flag
-		users, err := c.Client.User.GetServiceAccounts(context.Background())
+		users, err := c.getAllUsers()
 		if err != nil {
 			return key, err
 		}
@@ -664,21 +687,28 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) getUserIdByResourceId(resourceId string) (int32, error) {
-	if resourceId == "" {
-		return 0, nil
-	}
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+func (c *command) getResourceIdMap() (map[int32]string, error) {
+	users, err := c.getAllUsers()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	UserId := int32(0)
+	IdMap := make(map[int32]string)
 	for _, user := range users {
-		if resourceId == user.ResourceId {
-			UserId = user.Id
-		}
+		IdMap[user.Id] = user.ResourceId
 	}
-	return UserId, nil
+	return IdMap, nil
+}
+
+func (c *command) getUserIdMap() (map[string]int32, error) {
+	users, err := c.getAllUsers()
+	if err != nil {
+		return nil, err
+	}
+	IdMap := make(map[string]int32)
+	for _, user := range users {
+		IdMap[user.ResourceId] = user.Id
+	}
+	return IdMap, nil
 }
 
 func isResourceId(Id string) bool {
