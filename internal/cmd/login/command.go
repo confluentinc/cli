@@ -59,7 +59,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
 	}
 
-	loginCmd.Flags().String("url", "", "Confluent Cloud URL or Metadata Service (MDS) URL.")
+	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
 	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
@@ -268,7 +268,7 @@ func (c *Command) getURL(cmd *cobra.Command) (string, error) {
 		return url, nil
 	}
 
-	if url, ok := os.LookupEnv(pauth.ConfluentURLEnvVar); ok {
+	if url := os.Getenv(pauth.ConfluentURLEnvVar); url != "" {
 		return url, nil
 	}
 
