@@ -456,41 +456,43 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 }
 
 func TestGetLatestReleaseNotes(t *testing.T) {
+	currentVersion := "0.1.0"
 	releaseNotesVersion := "1.0.0"
 	releaseNotes := "nice release notes"
+
 	tests := []struct {
 		name             string
 		client           *client
 		wantVersion      string
-		wantReleaseNotes string
+		wantReleaseNotes []string
 		wantErr          bool
 	}{
 		{
 			name: "success",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
+					GetLatestReleaseNotesVersionsFunc: func(currentVersion string) (version.Collection, error) {
 						v, _ := version.NewSemver(releaseNotesVersion)
-						return v, nil
+						return version.Collection{v}, nil
 					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
+					DownloadReleaseNotesFunc: func(version string) (string, error) {
 						return releaseNotes, nil
 					},
 				},
 				Logger: log.New(),
 			}),
 			wantVersion:      releaseNotesVersion,
-			wantReleaseNotes: releaseNotes,
+			wantReleaseNotes: []string{releaseNotes},
 			wantErr:          false,
 		},
 		{
 			name: "error getting release notes version",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
+					GetLatestReleaseNotesVersionsFunc: func(currentVersion string) (version.Collection, error) {
 						return nil, errors.New("whoops")
 					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
+					DownloadReleaseNotesFunc: func(version string) (string, error) {
 						return "", nil
 					},
 				},
@@ -502,11 +504,11 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "error downloading release notes",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionFunc: func() (*version.Version, error) {
-						v, _ := version.NewSemver("v1")
-						return v, nil
+					GetLatestReleaseNotesVersionsFunc: func(currentVersion string) (version.Collection, error) {
+						v1, _ := version.NewSemver("v1")
+						return version.Collection{v1}, nil
 					},
-					DownloadReleaseNotesFunc: func(version string) (s string, e error) {
+					DownloadReleaseNotesFunc: func(version string) (string, error) {
 						return "", errors.New("whoops")
 					},
 				},
@@ -517,17 +519,16 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("client.GetLatestReleaseNotes() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes(currentVersion)
+
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 			}
-			if gotReleaseNotesVersion != tt.wantVersion {
-				t.Errorf("client.GetLatestReleaseNotes() got releaseNotesVersion = %v, want %v", releaseNotesVersion, tt.wantVersion)
-			}
-			if gotReleaseNotes != tt.wantReleaseNotes {
-				t.Errorf("client.GetLatestReleaseNotes() got releaseNotes = %v, want %v", gotReleaseNotes, tt.wantReleaseNotes)
-			}
+
+			require.Equal(t, tt.wantVersion, gotReleaseNotesVersion)
+			require.Equal(t, tt.wantReleaseNotes, gotReleaseNotes)
 		})
 	}
 }

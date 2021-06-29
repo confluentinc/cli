@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	GetLatestBinaryVersion(name string) (*version.Version, error)
 
-	GetLatestReleaseNotesVersion() (*version.Version, error)
+	GetLatestReleaseNotesVersions(currentVersion string) (version.Collection, error)
 
 	GetAvailableBinaryVersions(name string) (version.Collection, error)
 

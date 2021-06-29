@@ -17,8 +17,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
@@ -82,7 +81,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
@@ -244,7 +243,7 @@ func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	args := []string{"create", clusterName, "--cloud", cloudId, "--region", regionId}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.envMetadataMock.GetCalled())
@@ -256,7 +255,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	args := []string{"delete", clusterId}
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.kafkaMock.DeleteCalled())

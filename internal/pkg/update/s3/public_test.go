@@ -134,7 +134,7 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 			args: args{
 				name: "confluent",
 			},
-			want: makeVersions("0.42.0", "0.43.0", "0.44.0"),
+			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
 		},
 		{
 			name: "errors when no version available",
@@ -242,7 +242,7 @@ func TestPublicRepo_GetLatestBinaryVersion(t *testing.T) {
 			args: args{
 				name: "confluent",
 			},
-			want: makeVersion("0.44.0"),
+			want: makeVersion("0.43.0"),
 		},
 		{
 			name: "errors when no version available",
@@ -298,7 +298,6 @@ func TestPublicRepo_GetLatestBinaryVersion(t *testing.T) {
 
 func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 	req := require.New(t)
-	logger := log.New()
 
 	makeVersions := func(versions ...string) version.Collection {
 		col := version.Collection{}
@@ -328,7 +327,7 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixture, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersions("0.47.0", "0.48.0"),
+			want: makeVersions("0.0.0", "0.1.0"),
 		},
 		{
 			name: "sorts by version",
@@ -336,7 +335,7 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersions("0.42.0", "0.43.0", "0.44.0"),
+			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
 		},
 		{
 			name: "invalid file names",
@@ -385,7 +384,7 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				S3BinBucket:          tt.fields.S3BinBucket,
 				S3BinRegion:          tt.fields.S3BinRegion,
 				S3ReleaseNotesPrefix: tt.fields.S3ReleaseNotesPrefix,
-				Logger:               logger,
+				Logger:               log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
@@ -403,12 +402,17 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 
 func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 	req := require.New(t)
-	logger := log.New()
 
-	makeVersion := func(v string) *version.Version {
-		ver, err := version.NewSemver(v)
-		req.NoError(err)
-		return ver
+	currentVersion := "v0.0.0"
+
+	makeVersions := func(versions ...string) version.Collection {
+		col := version.Collection{}
+		for _, v := range versions {
+			ver, err := version.NewSemver(v)
+			req.NoError(err)
+			col = append(col, ver)
+		}
+		return col
 	}
 
 	type fields struct {
@@ -420,7 +424,7 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    *version.Version
+		want    version.Collection
 		wantErr bool
 	}{
 		{
@@ -429,7 +433,7 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixture, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersion("0.48.0"),
+			want: makeVersions("0.1.0"),
 		},
 		{
 			name: "sorts by version",
@@ -437,7 +441,7 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersion("0.44.0"),
+			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
 		},
 		{
 			name: "invalid file names",
@@ -453,7 +457,7 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 				Endpoint:             NewMockPublicS3(ListReleaseNotesVersionsExcludeInvalidFiles, "/", "prefix=ccloud-cli/release-notes/", req).URL,
 				S3ReleaseNotesPrefix: "ccloud-cli/release-notes",
 			},
-			want: makeVersion("0.47.0"),
+			want: makeVersions("0.47.0"),
 		},
 		{
 			name: "error when no files available",
@@ -486,18 +490,19 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 				S3BinBucket:          tt.fields.S3BinBucket,
 				S3BinRegion:          tt.fields.S3BinRegion,
 				S3ReleaseNotesPrefix: tt.fields.S3ReleaseNotesPrefix,
-				Logger:               logger,
+				Logger:               log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
-			got, err := r.GetLatestReleaseNotesVersion()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PublicRepo.GetLatelstReleaseNotesVersion() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			got, err := r.GetLatestReleaseNotesVersions(currentVersion)
+
+			if tt.wantErr {
+				req.Error(err)
+			} else {
+				req.NoError(err)
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PublicRepo.GetLatelstReleaseNotesVersion() = %v, want %v", got, tt.want)
-			}
+
+			req.Equal(tt.want, got)
 		})
 	}
 }
