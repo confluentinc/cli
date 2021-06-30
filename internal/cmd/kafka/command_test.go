@@ -842,7 +842,7 @@ func TestCreateMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "create", "src-topic-1", "--link-name", "link-1", "--replication-factor", "2", "--config-file", configFileName}
+			return []string{"mirror", "create", "src-topic-1", "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.CreateMirrorMatcher{
@@ -873,7 +873,7 @@ func TestListMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "list", "--link-name", "link-1", "--mirror-status", "active"}
+			return []string{"mirror", "list", "--link", "link-1", "--mirror-status", "active"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.ListMirrorMatcher{
@@ -888,7 +888,7 @@ func TestDescribeMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "describe", "dest-topic-1", "--link-name", "link-1"}
+			return []string{"mirror", "describe", "dest-topic-1", "--link", "link-1"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.DescribeMirrorMatcher{
@@ -902,7 +902,7 @@ func TestPromoteMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "promote", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+			return []string{"mirror", "promote", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link", "link-1"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
@@ -920,7 +920,7 @@ func TestFailoverMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "failover", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+			return []string{"mirror", "failover", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link", "link-1"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
@@ -938,7 +938,7 @@ func TestPauseMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "pause", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+			return []string{"mirror", "pause", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link", "link-1"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{
@@ -956,7 +956,7 @@ func TestResumeMirror(t *testing.T) {
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "resume", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link-name", "link-1"}
+			return []string{"mirror", "resume", "dest-topic-1", "dest-topic-2", "dest-topic-3", "--link", "link-1"}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.AlterMirrorMatcher{

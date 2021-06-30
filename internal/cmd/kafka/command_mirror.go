@@ -84,7 +84,7 @@ func (c *mirrorCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all mirrors in the cluster or under the given cluster link.",
-				Code: "ccloud kafka mirror list --link-name <link-name> --mirror-status <mirror-status>",
+				Code: "ccloud kafka mirror list --link <link> --mirror-status <mirror-status>",
 			},
 		),
 		RunE:   c.list,
@@ -104,7 +104,7 @@ func (c *mirrorCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe a mirror topic under the link.",
-				Code: "ccloud kafka mirror describe <destination-topic-name> --link-name <link-name>",
+				Code: "ccloud kafka mirror describe <destination-topic-name> --link <link>",
 			},
 		),
 		RunE:   c.describe,
@@ -123,7 +123,7 @@ func (c *mirrorCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied Source URL and properties.",
-				Code: "ccloud kafka mirror create <source-topic-name> --link-name <link-name> " +
+				Code: "ccloud kafka mirror create <source-topic-name> --link <link> " +
 					"--replication-factor <replication-factor> --config-file mirror_config.txt",
 			},
 		),
@@ -140,12 +140,12 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(createCmd)
 
 	promoteCmd := &cobra.Command{
-		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 		Short: "Promote the mirror topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Promote the mirror topics.",
-				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
 		RunE:   c.promote,
@@ -159,12 +159,12 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(promoteCmd)
 
 	failoverCmd := &cobra.Command{
-		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 		Short: "Failover the mirror topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Failover the mirror topics.",
-				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
 		RunE:   c.failover,
@@ -178,12 +178,12 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(failoverCmd)
 
 	pauseCmd := &cobra.Command{
-		Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+		Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 		Short: "Pause the mirror topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause the mirror topics.",
-				Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link-name <link-name>",
+				Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
 		RunE:   c.pause,
