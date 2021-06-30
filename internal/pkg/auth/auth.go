@@ -32,6 +32,10 @@ const (
 	ConfluentCACertPathEnvVar = "CONFLUENT_CA_CERT_PATH"
 )
 
+var (
+	CCloudHostnames = []string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}
+)
+
 func PersistLogoutToConfig(config *v3.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
