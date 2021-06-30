@@ -240,7 +240,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 		s.Fail("Failed to create netrc file")
 	}
 
-	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
+	env := []string{auth.CCloudEmailEnvVar + "=" + ssoTestEmail}
 	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "-vvv", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 

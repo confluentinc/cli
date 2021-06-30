@@ -175,11 +175,9 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromPrompt(cmd *cob
 }
 
 func (h *LoginCredentialsManagerImpl) promptForUser(cmd *cobra.Command, userField string) string {
-	// HACK: SSO integration test extracts email from env var
-	// TODO: remove this hack once we implement prompting for integration test
-	if testEmail := os.Getenv(CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
-		h.logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, CCloudEmailDeprecatedEnvVar)
-		return testEmail
+	if email := os.Getenv(CCloudEmailEnvVar); len(email) > 0 && userField == "Email" {
+		h.logger.Debugf("Using email \"%s\" found from env var \"%s\"", email, CCloudEmailEnvVar)
+		return email
 	}
 
 	f := form.New(form.Field{ID: userField, Prompt: userField})
