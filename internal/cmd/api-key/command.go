@@ -285,9 +285,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
-		resourceId := apiKey.UserResourceId
-		if resourceId == "" {
-			resourceId = resourceIdMap[apiKey.UserId]
+		userResourceId := apiKey.UserResourceId
+		if userResourceId == "" {
+			userResourceId = resourceIdMap[apiKey.UserId]
 		}
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
@@ -298,7 +298,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserId:         apiKey.UserId,
-				UserResourceId: resourceId,
+				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   pcmd.CloudResourceType,
 				Created:        created,
@@ -314,7 +314,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserId:         apiKey.UserId,
-				UserResourceId: resourceId,
+				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   lc.Type,
 				ResourceId:     lc.Id,

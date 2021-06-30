@@ -44,7 +44,6 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
-	userResourceID           = "u-qwerty"
 	serviceAccountID         = int32(12345)
 	serviceAccountResourceID = "sa-12345"
 	deactivatedUserID        = int32(6666)
@@ -365,6 +364,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 			apiKey.Created = keyTimestamp
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
+				apiKey.UserResourceId = "u-23"
 			} else {
 				apiKey.UserId = req.ApiKey.UserId
 			}

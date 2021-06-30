@@ -15,7 +15,7 @@
     "key": "MYKEY1",
     "owner": "12",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-12",
     "resource_id": "lkc-bob",
     "resource_type": "kafka"
   }, 
@@ -25,7 +25,7 @@
     "key": "MYKEY2",
     "owner": "18",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-18",
     "resource_id": "lkc-abc",
     "resource_type": "kafka"
   }, 
@@ -35,7 +35,7 @@
     "key": "MYKEY3",
     "owner": "23",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-23",
     "resource_id": "lkc-bob",
     "resource_type": "kafka"
   }, 
@@ -55,7 +55,7 @@
     "key": "UIAPIKEY100",
     "owner": "25",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-25",
     "resource_id": "lkc-cool1",
     "resource_type": "kafka"
   }, 
@@ -65,7 +65,7 @@
     "key": "UIAPIKEY101",
     "owner": "25",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-25",
     "resource_id": "lkc-other1",
     "resource_type": "kafka"
   }, 
@@ -75,7 +75,7 @@
     "key": "UIAPIKEY102",
     "owner": "25",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-25",
     "resource_id": "lksqlc-ksql1",
     "resource_type": "ksql"
   }, 
@@ -85,7 +85,7 @@
     "key": "UIAPIKEY103",
     "owner": "25",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "",
+    "owner_resource_id": "u-25",
     "resource_id": "lkc-cool1",
     "resource_type": "kafka"
   }
