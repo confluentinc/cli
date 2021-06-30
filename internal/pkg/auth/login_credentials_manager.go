@@ -154,6 +154,7 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.GetMatc
 
 func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
+		utils.Println(cmd, "Enter your Confluent Cloud credentials:")
 		email := h.promptForUser(cmd, "Email")
 		if isSSOUser(email, client) {
 			h.logger.Debug("Entered email belongs to an SSO user.")
@@ -166,6 +167,7 @@ func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.
 
 func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
+		utils.Println(cmd, "Enter your Confluent credentials:")
 		username := h.promptForUser(cmd, "Username")
 		password := h.promptForPassword(cmd)
 		return &Credentials{Username: username, Password: password}, nil
@@ -179,11 +181,12 @@ func (h *LoginCredentialsManagerImpl) promptForUser(cmd *cobra.Command, userFiel
 		h.logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, CCloudEmailDeprecatedEnvVar)
 		return testEmail
 	}
-	utils.Println(cmd, "Enter your Confluent credentials:")
+
 	f := form.New(form.Field{ID: userField, Prompt: userField})
 	if err := f.Prompt(cmd, h.prompt); err != nil {
 		return ""
 	}
+
 	return f.Responses[userField].(string)
 }
 
