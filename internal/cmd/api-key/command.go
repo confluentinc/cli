@@ -10,8 +10,6 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
@@ -200,9 +198,18 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return err
+	}
+	users, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return err
+	}
+	allUsers := append(serviceAccounts, users...)
 	userId := int32(0)
 	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
-		userIdMap, err := c.mapResourceIdToUserId()
+		userIdMap, err := c.mapResourceIdToUserId(allUsers)
 		if err != nil {
 			return err
 		}
@@ -232,14 +239,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users := map[int32]*orgv1.User{}
+	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
+	usersMap := getUsersMap(users)
 
-	serviceAccounts, err := getServiceAccountsMap(c.Client)
-	if err != nil {
-		return err
-	}
-
-	resourceIdMap, err := c.mapUserIdToResourceId()
+	resourceIdMap, err := c.mapUserIdToResourceId(allUsers)
 	if err != nil {
 		return err
 	}
@@ -260,26 +263,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		var email string
-		if _, ok := serviceAccounts[apiKey.UserId]; ok {
+		if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
 			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
 			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
 				email = "<auditlog service account>"
-			} else if user, ok := users[apiKey.UserId]; ok {
-				if user != nil {
-					email = user.Email
-				} else {
-					email = "<deactivated user>"
-				}
 			} else {
-				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
-				if err != nil {
-					email = "<deactivated user>"
-					users[apiKey.UserId] = nil
-				} else {
+				if user, ok := usersMap[apiKey.UserId]; ok {
 					email = user.Email
-					users[user.Id] = user
+				} else {
+					email = "<deactivated user>"
 				}
 			}
 		}
@@ -326,16 +320,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return nil, err
-	}
+func getServiceAccountsMap(serviceAccounts []*orgv1.User) map[int32]bool {
 	saMap := make(map[int32]bool)
 	for _, sa := range serviceAccounts {
 		saMap[sa.Id] = true
 	}
-	return saMap, nil
+	return saMap
+}
+
+func getUsersMap(users []*orgv1.User) map[int32]*orgv1.User {
+	userMap := make(map[int32]*orgv1.User)
+	for _, user := range users {
+		userMap[user.Id] = user
+	}
+	return userMap
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
@@ -686,11 +684,7 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) mapUserIdToResourceId() (map[int32]string, error) {
-	users, err := c.getAllUsers()
-	if err != nil {
-		return nil, err
-	}
+func (c *command) mapUserIdToResourceId(users []*orgv1.User) (map[int32]string, error) {
 	idMap := make(map[int32]string)
 	for _, user := range users {
 		idMap[user.Id] = user.ResourceId
@@ -698,11 +692,7 @@ func (c *command) mapUserIdToResourceId() (map[int32]string, error) {
 	return idMap, nil
 }
 
-func (c *command) mapResourceIdToUserId() (map[string]int32, error) {
-	users, err := c.getAllUsers()
-	if err != nil {
-		return nil, err
-	}
+func (c *command) mapResourceIdToUserId(users []*orgv1.User) (map[string]int32, error) {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
