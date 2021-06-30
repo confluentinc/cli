@@ -202,7 +202,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	userId := int32(0)
 	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
-		userIdMap, err := c.mapResourceIdtoUserId()
+		userIdMap, err := c.mapResourceIdToUserId()
 		if err != nil {
 			return err
 		}
@@ -239,7 +239,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resourceIdMap, err := c.mapUserIdtoResourceId()
+	resourceIdMap, err := c.mapUserIdToResourceId()
 	if err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 					email = "<deactivated user>"
 				}
 			} else {
-				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId, ResourceId: apiKey.UserResourceId})
+				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId})
 				if err != nil {
 					email = "<deactivated user>"
 					users[apiKey.UserId] = nil
@@ -686,7 +686,7 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) mapUserIdtoResourceId() (map[int32]string, error) {
+func (c *command) mapUserIdToResourceId() (map[int32]string, error) {
 	users, err := c.getAllUsers()
 	if err != nil {
 		return nil, err
@@ -698,7 +698,7 @@ func (c *command) mapUserIdtoResourceId() (map[int32]string, error) {
 	return idMap, nil
 }
 
-func (c *command) mapResourceIdtoUserId() (map[string]int32, error) {
+func (c *command) mapResourceIdToUserId() (map[string]int32, error) {
 	users, err := c.getAllUsers()
 	if err != nil {
 		return nil, err

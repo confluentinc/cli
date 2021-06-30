@@ -44,6 +44,7 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
+	userResourceID           = "u-qwerty"
 	serviceAccountID         = int32(12345)
 	serviceAccountResourceID = "sa-12345"
 	deactivatedUserID        = int32(6666)
