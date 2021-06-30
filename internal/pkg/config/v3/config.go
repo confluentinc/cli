@@ -7,15 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
 	"github.com/blang/semver"
 	"github.com/google/uuid"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	Version = semver.MustParse("3.0.0")
+	Version         = semver.MustParse("3.0.0")
+	CCloudHostnames = []string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}
 )
 
 // Config represents the CLI configuration.
@@ -411,7 +412,23 @@ func (c *Config) ResetAnonymousId() error {
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, "confluent"))
 	}
 	return c.Filename, nil
+}
+
+func (c *Config) IsCloud() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+	return utils.Contains(CCloudHostnames, ctx.PlatformName)
+}
+
+func (c *Config) IsOnPrem() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+	return ctx.PlatformName != "" && !utils.Contains(CCloudHostnames, ctx.PlatformName)
 }
