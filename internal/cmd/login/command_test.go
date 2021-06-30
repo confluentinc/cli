@@ -102,7 +102,7 @@ var (
 			}
 		},
 
-		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -161,7 +161,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -177,6 +177,7 @@ func TestCredentialsOverride(t *testing.T) {
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
 	req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
+
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
@@ -233,7 +234,7 @@ func TestLoginSuccess(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		// Login to the CLI control plane
+		// Log in to the CLI control plane
 		if s.setEnv {
 			_ = os.Setenv(pauth.ConfluentURLEnvVar, "http://localhost:8090")
 		}
@@ -340,14 +341,14 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				},
 
-				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
 			}
 			if tt.setNetrcUser {
-				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return netrcCreds, nil
 					}
@@ -435,7 +436,7 @@ func TestPromptLoginFlag(t *testing.T) {
 					}
 				},
 
-				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
 					}
@@ -467,7 +468,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
@@ -482,20 +483,6 @@ func TestLoginFail(t *testing.T) {
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
 	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
-}
-
-func TestURLRequiredWithMDS(t *testing.T) {
-	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
-	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
-			return "", &ccloud.InvalidLoginError{}
-		},
-	}
-	loginCmd, _ := newLoginCmd(auth, nil, "confluent", req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
-
-	_, err := pcmd.ExecuteCommand(loginCmd.Command)
-	req.Contains(err.Error(), errors.NoURLFlagOrMdsEnvVarErrorMsg)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {
@@ -528,7 +515,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setEnv {
-				os.Setenv(pauth.ConfluentCaCertPathEnvVar, "testcert.pem")
+				os.Setenv(pauth.ConfluentCACertPathEnvVar, "testcert.pem")
 			}
 			cfg := v3.New(&config.Params{
 				CLIName:    "confluent",
@@ -556,7 +543,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 
 			req.Equal(tt.expectedContextName, ctx.Name)
 			if tt.setEnv {
-				os.Unsetenv(pauth.ConfluentCaCertPathEnvVar)
+				os.Unsetenv(pauth.ConfluentCACertPathEnvVar)
 			}
 		})
 	}
@@ -657,8 +644,8 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New("confluent", prerunner, log.New(), nil,
-		mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler)
+	loginCmd := New(prerunner, log.New(), nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler,
+		mockLoginCredentialsManager, mockAuthTokenHandler, true)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return loginCmd
@@ -758,69 +745,63 @@ func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
 	suite := []struct {
-		url_in      string
-		valid       bool
-		url_out     string
-		warning_msg string
-		cli         string
+		urlIn      string
+		valid      bool
+		urlOut     string
+		warningMsg string
+		isCCloud   bool
 	}{
 		{
-			url_in:      "https:///test.com",
-			valid:       false,
-			url_out:     "",
-			warning_msg: "default MDS port 8090",
-			cli:         "confluent",
+			urlIn:      "https:///test.com",
+			valid:      false,
+			urlOut:     "",
+			warningMsg: "default MDS port 8090",
 		},
 		{
-			url_in:      "test.com",
-			valid:       true,
-			url_out:     "http://test.com:8090",
-			warning_msg: "http protocol and default MDS port 8090",
-			cli:         "confluent",
+			urlIn:      "test.com",
+			valid:      true,
+			urlOut:     "http://test.com:8090",
+			warningMsg: "http protocol and default MDS port 8090",
 		},
 		{
-			url_in:      "test.com:80",
-			valid:       true,
-			url_out:     "http://test.com:80",
-			warning_msg: "http protocol",
-			cli:         "confluent",
+			urlIn:      "test.com:80",
+			valid:      true,
+			urlOut:     "http://test.com:80",
+			warningMsg: "http protocol",
 		},
 		{
-			url_in:      "http://test.com",
-			valid:       true,
-			url_out:     "http://test.com:8090",
-			warning_msg: "default MDS port 8090",
-			cli:         "confluent",
+			urlIn:      "http://test.com",
+			valid:      true,
+			urlOut:     "http://test.com:8090",
+			warningMsg: "default MDS port 8090",
 		},
 		{
-			url_in:      "https://127.0.0.1:8090",
-			valid:       true,
-			url_out:     "https://127.0.0.1:8090",
-			warning_msg: "",
-			cli:         "confluent",
+			urlIn:      "https://127.0.0.1:8090",
+			valid:      true,
+			urlOut:     "https://127.0.0.1:8090",
+			warningMsg: "",
 		},
 		{
-			url_in:      "127.0.0.1",
-			valid:       true,
-			url_out:     "http://127.0.0.1:8090",
-			warning_msg: "http protocol and default MDS port 8090",
-			cli:         "confluent",
+			urlIn:      "127.0.0.1",
+			valid:      true,
+			urlOut:     "http://127.0.0.1:8090",
+			warningMsg: "http protocol and default MDS port 8090",
 		},
 		{
-			url_in:      "devel.cpdev.cloud",
-			valid:       true,
-			url_out:     "https://devel.cpdev.cloud",
-			warning_msg: "https protocol",
-			cli:         "ccloud",
+			urlIn:      "devel.cpdev.cloud",
+			valid:      true,
+			urlOut:     "https://devel.cpdev.cloud",
+			warningMsg: "https protocol",
+			isCCloud:   true,
 		},
 	}
 	for _, s := range suite {
-		url, matched, msg := validateURL(s.url_in, s.cli)
+		url, matched, msg := validateURL(s.urlIn, s.isCCloud)
 		req.Equal(s.valid, matched)
 		if s.valid {
-			req.Equal(s.url_out, url)
+			req.Equal(s.urlOut, url)
 		}
-		req.Equal(s.warning_msg, msg)
+		req.Equal(s.warningMsg, msg)
 	}
 }
 
@@ -860,8 +841,8 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := New(cliName, prerunner, log.New(), ccloudClientFactory, mdsClientManager,
-		cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler)
+	loginCmd := New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(),
+		netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 
@@ -902,4 +883,28 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 // XX_CCLOUD_EMAIL is used for integration test hack
 func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
 	req.NoError(os.Setenv(pauth.CCloudEmailDeprecatedEnvVar, ""))
+}
+
+func TestIsCCloudURL_True(t *testing.T) {
+	for _, url := range []string{
+		"devel.cpdev.cloud",
+		"stag.cpdev.cloud",
+		"confluent.cloud",
+		"confluent.cloud:8090",
+		"https://confluent.cloud",
+	} {
+		c := &Command{isTest: true}
+		require.True(t, c.isCCloudURL(url), url+" should return true")
+	}
+}
+
+func TestIsCCloudURL_False(t *testing.T) {
+	for _, url := range []string{
+		"example.com",
+		"example.com:8090",
+		"https://example.com",
+	} {
+		c := &Command{isTest: true}
+		require.False(t, c.isCCloudURL(url), url+" should return false")
+	}
 }

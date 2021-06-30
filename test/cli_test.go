@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -15,22 +14,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/bincover"
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	test_server "github.com/confluentinc/cli/test/test-server"
-
+	"github.com/confluentinc/bincover"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -97,7 +90,7 @@ type CLITest struct {
 // CLITestSuite is the CLI integration tests.
 type CLITestSuite struct {
 	suite.Suite
-	TestBackend *test_server.TestBackend
+	TestBackend *testserver.TestBackend
 }
 
 // TestCLI runs the CLI integration test suite.
@@ -125,7 +118,7 @@ func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 	err := covCollector.Setup()
 	req.NoError(err)
-	s.TestBackend = test_server.StartTestBackend(s.T())
+	s.TestBackend = testserver.StartTestBackend(s.T())
 
 	// dumb but effective
 	err = os.Chdir("..")
@@ -190,80 +183,9 @@ func (s *CLITestSuite) TestCcloudHelp() {
 	}
 }
 
-func assertUserAgent(t *testing.T, expected string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		require.Regexp(t, expected, r.Header.Get("User-Agent"))
-	}
-}
-
-func (s *CLITestSuite) TestUserAgent() {
-	checkUserAgent := func(t *testing.T, expected string) *test_server.TestBackend {
-		kafkaRouter := test_server.NewEmptyKafkaRouter()
-		kafkaRouter.KafkaApi.PathPrefix("/").HandlerFunc(assertUserAgent(t, expected))
-		cloudRouter := test_server.NewCloudRouter(t)
-		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), cloudRouter.HandleLogin(t)))
-		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), cloudRouter.HandleMe(t)))
-		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), cloudRouter.HandleCheckEmail(t)))
-		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), cloudRouter.HandleKafkaClusterGetListDeleteDescribe(t)))
-		return test_server.NewCloudTestBackendFromRouters(cloudRouter, kafkaRouter)
-	}
-	backend := checkUserAgent(s.T(), fmt.Sprintf("Confluent-Cloud-CLI/v(?:[0-9]\\.?){3}([^ ]*) \\(https://confluent.cloud; support@confluent.io\\) "+
-		"ccloud-sdk-go-v1/%s \\(%s/%s; go[^ ]*\\)", ccloud.SDKVersion, runtime.GOOS, runtime.GOARCH))
-	defer backend.Close()
-	serverURL := backend.GetCloudUrl()
-	env := []string{fmt.Sprintf("%s=valid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-
-	s.T().Run("ccloud login", func(tt *testing.T) {
-		_ = runCommand(tt, ccloudTestBin, env, "login --url "+serverURL, 0)
-	})
-	s.T().Run("ccloud cluster list", func(tt *testing.T) {
-		_ = runCommand(tt, ccloudTestBin, env, "kafka cluster list", 0)
-	})
-	s.T().Run("ccloud topic list", func(tt *testing.T) {
-		_ = runCommand(tt, ccloudTestBin, env, "kafka topic list --cluster lkc-abc123", 0)
-	})
-}
-
 func (s *CLITestSuite) TestCcloudErrors() {
-	type errorer interface {
-		GetError() *corev1.Error
-	}
-	serveErrors := func(t *testing.T) *test_server.TestBackend {
-		req := require.New(t)
-		write := func(w http.ResponseWriter, resp proto.Message) {
-			if r, ok := resp.(errorer); ok {
-				w.WriteHeader(int(r.GetError().Code))
-			}
-			b, err := utilv1.MarshalJSONToBytes(resp)
-			req.NoError(err)
-			_, err = io.WriteString(w, string(b))
-			req.NoError(err)
-		}
-		router := test_server.NewCloudRouter(t)
-		router.HandleFunc("/api/clusters", func(w http.ResponseWriter, r *http.Request) {
-			switch r.Header.Get("Authorization") {
-			// TODO: these assume the upstream doesn't change its error responses. Fragile, fragile, fragile. :(
-			// https://github.com/confluentinc/cc-auth-service/blob/06db0bebb13fb64c9bc3c6e2cf0b67709b966632/jwt/token.go#L23
-			case "Bearer expired":
-				write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
-			case "Bearer malformed":
-				write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
-			case "Bearer invalid":
-				// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
-				write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
-			default:
-				req.Fail("reached the unreachable", "auth=%s", r.Header.Get("Authorization"))
-			}
-		})
-		backend := test_server.NewCloudTestBackendFromRouters(router, test_server.NewKafkaRouter(t))
-		return backend
-	}
-
-	backend := serveErrors(s.T())
-	defer backend.Close()
-	loginURL := backend.GetCloudUrl()
-	//TODO: add this test back when we add prompt testing for integration test
-	// Now that non-interactive login is offically supported, we ignore failurs from env var and netrc login and give user anothe change at loggin in from prompting
+	// TODO: Add this test back when we add prompt testing for integration test
+	// Now that non-interactive login is officially supported, we ignore failures from env var and netrc login and give user another chance at login
 	//	s.T().Run("invalid user or pass", func(tt *testing.T) {
 	//		loginURL := serveErrors(tt)
 	//		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
@@ -274,7 +196,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("expired token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		output = runCommand(tt, ccloudTestBin, []string{}, "kafka cluster list", 1)
@@ -284,7 +206,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("malformed token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
@@ -295,7 +217,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+loginURL, 0)
+		output := runCommand(tt, ccloudTestBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
@@ -500,12 +422,4 @@ func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 	return path.Join(dir, binaryName)
-}
-
-func compose(funcs ...func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		for _, f := range funcs {
-			f(w, r)
-		}
-	}
 }

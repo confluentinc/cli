@@ -42,11 +42,11 @@ type NetrcHandler interface {
 	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
 	RemoveNetrcCredentials(cliName string, ctxName string) (string, error)
 	CheckCredentialExist(cliName string, ctxName string) (bool, error)
-	GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error)
+	GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error)
 	GetFileName() string
 }
 
-type GetMatchingNetrcMachineParams struct {
+type NetrcMachineParams struct {
 	CLIName string
 	IsSSO   bool
 	CtxName string
@@ -83,14 +83,16 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 		machine.UpdateLogin(username)
 		machine.UpdatePassword(password)
 	}
+
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
-	err = ioutil.WriteFile(n.FileName, netrcBytes, 0600)
-	if err != nil {
+
+	if err := ioutil.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
+
 	return nil
 }
 
@@ -212,7 +214,7 @@ func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
 // Using the parameters to filter and match machine name
 // Returns the first match
 // For SSO case the password is the refreshToken
-func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error) {
+func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error) {
 	if params.CLIName == "" {
 		return nil, errors.New(errors.NetrcCLINameMissingErrorMsg)
 	}
@@ -231,7 +233,7 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachin
 	return nil, nil
 }
 
-func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
+func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
 	if params.CtxName != "" {
 		contextNameRegex = escapeSpecialRegexChars(params.CtxName)

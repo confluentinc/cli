@@ -83,14 +83,14 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 	tests := []struct {
 		name    string
 		want    *Machine
-		params  GetMatchingNetrcMachineParams
+		params  NetrcMachineParams
 		wantErr bool
 		file    string
 	}{
 		{
 			name: "mds context",
 			want: confluentMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 				CtxName: mdsContext,
 			},
@@ -99,7 +99,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		{
 			name: "ccloud login context",
 			want: ccloudMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: ccloudLoginContext,
 			},
@@ -108,7 +108,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		{
 			name: "ccloud sso context",
 			want: ccloudSSOMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: ccloudSSOContext,
 				IsSSO:   true,
@@ -117,7 +117,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		},
 		{
 			name: "No file error",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 				CtxName: mdsContext,
 			},
@@ -127,7 +127,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		{
 			name: "Context doesn't exist",
 			want: nil,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: "non-existent-context",
 			},
@@ -136,7 +136,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		{
 			name: "Context name with special characters",
 			want: specialCharsMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: specialCharsContext,
 			},
@@ -181,14 +181,14 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 	tests := []struct {
 		name    string
 		want    *Machine
-		params  GetMatchingNetrcMachineParams
+		params  NetrcMachineParams
 		wantErr bool
 		file    string
 	}{
 		{
 			name: "ccloud login with url",
 			want: ccloudMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				URL:     loginURL,
 			},
@@ -197,7 +197,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		{
 			name: "ccloud login no url",
 			want: ccloudDiffURLMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 			},
 			file: netrcFilePath,
@@ -205,7 +205,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		{
 			name: "confluent login with url",
 			want: confluentMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 				URL:     loginURL,
 			},
@@ -214,7 +214,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		{
 			name: "ccloud sso with url",
 			want: ccloudSSOMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				IsSSO:   true,
 				URL:     loginURL,
@@ -224,7 +224,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		{
 			name: "no sso specified but sso comes first",
 			want: ssoFirstMachine,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				URL:     ssoFirstURL,
 			},
@@ -232,7 +232,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		},
 		{
 			name: "No file error",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 			},
 			wantErr: true,
@@ -241,7 +241,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		{
 			name: "URL doesn't exist",
 			want: nil,
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				URL:     "http://dontexist",
 			},
@@ -367,13 +367,13 @@ func TestGetMachineNameRegex(t *testing.T) {
 	specialCharsCtxName := `login-csreesangkom+adoooo+\/@-+\^${}[]().*+?|<>-&@confleunt.io-https://confluent.cloud`
 	tests := []struct {
 		name          string
-		params        GetMatchingNetrcMachineParams
+		params        NetrcMachineParams
 		matchNames    []string
 		nonMatchNames []string
 	}{
 		{
 			name: "ccloud-ctx-name-regex",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: ccloudCtxName,
 			},
@@ -389,7 +389,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "ccloud-sso-regex",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				IsSSO:   true,
 				URL:     url,
@@ -405,7 +405,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "ccloud-all-regex",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				IsSSO:   false,
 				URL:     url,
@@ -421,7 +421,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "confluent-ctx-name-regex",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 				CtxName: confluentCtxName,
 			},
@@ -435,7 +435,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "confluent-regex",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 				IsSSO:   false,
 				URL:     url,
@@ -450,7 +450,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "ccloud-special-chars",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: specialCharsCtxName,
 			},
@@ -465,7 +465,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "confluent-special-chars",
-			params: GetMatchingNetrcMachineParams{
+			params: NetrcMachineParams{
 				CLIName: "confluent",
 				CtxName: specialCharsCtxName,
 			},
