@@ -200,16 +200,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	UserId := int32(0)
+	userId := int32(0)
 	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
-		userIdMap, err := c.getUserIdMap()
+		userIdMap, err := c.mapResourceIdtoUserId()
 		if err != nil {
 			return err
 		}
-		UserId = userIdMap[saId]
+		userId = userIdMap[saId]
 	} else { // if user inputs numeric ID, convert it to int32
 		UserIdp, _ := strconv.Atoi(saId)
-		UserId = int32(UserIdp)
+		userId = int32(UserIdp)
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -217,12 +217,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if UserId != 0 {
+		if userId != 0 {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		UserId = c.State.Auth.User.Id
+		userId = c.State.Auth.User.Id
 	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: UserId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resourceIdMap, err := c.getResourceIdMap()
+	resourceIdMap, err := c.mapUserIdtoResourceId()
 	if err != nil {
 		return err
 	}
@@ -657,8 +657,7 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	users := append(serviceAccounts, adminUsers...)
-	return users, nil
+	return append(serviceAccounts, adminUsers...), nil
 }
 
 func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
@@ -687,28 +686,28 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) getResourceIdMap() (map[int32]string, error) {
+func (c *command) mapUserIdtoResourceId() (map[int32]string, error) {
 	users, err := c.getAllUsers()
 	if err != nil {
 		return nil, err
 	}
-	IdMap := make(map[int32]string)
+	idMap := make(map[int32]string)
 	for _, user := range users {
-		IdMap[user.Id] = user.ResourceId
+		idMap[user.Id] = user.ResourceId
 	}
-	return IdMap, nil
+	return idMap, nil
 }
 
-func (c *command) getUserIdMap() (map[string]int32, error) {
+func (c *command) mapResourceIdtoUserId() (map[string]int32, error) {
 	users, err := c.getAllUsers()
 	if err != nil {
 		return nil, err
 	}
-	IdMap := make(map[string]int32)
+	idMap := make(map[string]int32)
 	for _, user := range users {
-		IdMap[user.ResourceId] = user.Id
+		idMap[user.ResourceId] = user.Id
 	}
-	return IdMap, nil
+	return idMap, nil
 }
 
 func isResourceId(Id string) bool {
