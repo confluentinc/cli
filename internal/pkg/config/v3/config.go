@@ -9,9 +9,8 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
-	"github.com/google/uuid"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/google/uuid"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
