@@ -94,7 +94,7 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Co
 			email, password = h.getEnvVarCredentials(cmd, envVars.deprecatedUsername, envVars.deprecatedPassword)
 		}
 		if len(email) == 0 {
-			h.logger.Debug("Found no credentials from environment variables")
+			h.logger.Debug("Did not find full credential set from environment variables")
 			return nil, nil
 		}
 		return &Credentials{Username: email, Password: password}, nil
