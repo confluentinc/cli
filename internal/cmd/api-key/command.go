@@ -207,6 +207,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	allUsers := append(serviceAccounts, users...)
+
 	userId := int32(0)
 	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
 		userIdMap, err := c.mapResourceIdToUserId(allUsers)
@@ -215,8 +216,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 		userId = userIdMap[saId]
 	} else { // if user inputs numeric ID, convert it to int32
-		UserIdp, _ := strconv.Atoi(saId)
-		userId = int32(UserIdp)
+		userIdp, _ := strconv.Atoi(saId)
+		userId = int32(userIdp)
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -241,7 +242,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(users)
-
 	resourceIdMap, err := c.mapUserIdToResourceId(allUsers)
 	if err != nil {
 		return err

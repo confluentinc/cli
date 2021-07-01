@@ -36,8 +36,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-bob", Type: "kafka"},
 		},
-		UserId:         12,
-		UserResourceId: "u-12",
+		UserId:         1,
+		UserResourceId: "u11",
 	}
 	keyIndex += 1
 	keyStore[keyIndex] = &schedv1.ApiKey{
@@ -47,8 +47,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-abc", Type: "kafka"},
 		},
-		UserId:         18,
-		UserResourceId: "u-18",
+		UserId:         2,
+		UserResourceId: "u-17",
 	}
 	keyIndex += 1
 	keyStore[100] = &schedv1.ApiKey{
@@ -58,8 +58,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-cool1", Type: "kafka"},
 		},
-		UserId:         25,
-		UserResourceId: "u-25",
+		UserId:         4,
+		UserResourceId: "u-22bbb",
 	}
 	keyStore[101] = &schedv1.ApiKey{
 		Id:     keyIndex,
@@ -68,8 +68,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-other1", Type: "kafka"},
 		},
-		UserId:         25,
-		UserResourceId: "u-25",
+		UserId:         4,
+		UserResourceId: "u-22bbb",
 	}
 	keyStore[102] = &schedv1.ApiKey{
 		Id:     keyIndex,
@@ -78,8 +78,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lksqlc-ksql1", Type: "ksql"},
 		},
-		UserId:         25,
-		UserResourceId: "u-25",
+		UserId:         4,
+		UserResourceId: "u-22bbb",
 	}
 	keyStore[103] = &schedv1.ApiKey{
 		Id:     keyIndex,
@@ -88,8 +88,8 @@ func fillKeyStore() {
 		LogicalClusters: []*schedv1.ApiKey_Cluster{
 			{Id: "lkc-cool1", Type: "kafka"},
 		},
-		UserId:         25,
-		UserResourceId: "u-25",
+		UserId:         4,
+		UserResourceId: "u-22bbb",
 	}
 	keyStore[200] = &schedv1.ApiKey{
 		Id:     keyIndex,
