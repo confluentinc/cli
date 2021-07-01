@@ -135,6 +135,26 @@ func TestCheckForUpdates(t *testing.T) {
 			wantErr:             false,
 		},
 		{
+			name: "should not check for the new version since has checked recently",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+						v3, _ := version.NewSemver("v3")
+						return v3, nil
+					},
+				},
+				Logger: log.New(),
+				CheckFile: tmpCheckFile1.Name(),
+			}),
+			args: args{
+				name:           "my-cli",
+				currentVersion: "v1.2.3",
+			},
+			wantUpdateAvailable: false,
+			wantLatestVersion:   "v1.2.3",
+			wantErr:             false,
+		},
+		{
 			name: "should not check again if checked recently",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
