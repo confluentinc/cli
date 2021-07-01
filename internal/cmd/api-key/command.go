@@ -10,8 +10,6 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
@@ -200,15 +198,26 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	UserId := int32(0)
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return err
+	}
+	users, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return err
+	}
+	allUsers := append(serviceAccounts, users...)
+
+	userId := int32(0)
 	if saId != "" && isResourceId(saId) { // if user inputs resource ID, get corresponding numeric ID
-		UserId, err = c.getUserIdByResourceId(saId)
+		userIdMap, err := c.mapResourceIdToUserId(allUsers)
 		if err != nil {
 			return err
 		}
+		userId = userIdMap[saId]
 	} else { // if user inputs numeric ID, convert it to int32
-		UserIdp, _ := strconv.Atoi(saId)
-		UserId = int32(UserIdp)
+		userIdp, _ := strconv.Atoi(saId)
+		userId = int32(userIdp)
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -216,12 +225,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if UserId != 0 {
+		if userId != 0 {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		UserId = c.State.Auth.User.Id
+		userId = c.State.Auth.User.Id
 	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: UserId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
 	if err != nil {
 		return err
 	}
@@ -231,9 +240,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users := map[int32]*orgv1.User{}
-
-	serviceAccounts, err := getServiceAccountsMap(c.Client)
+	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
+	usersMap := getUsersMap(users)
+	resourceIdMap, err := c.mapUserIdToResourceId(allUsers)
 	if err != nil {
 		return err
 	}
@@ -254,31 +263,26 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		var email string
-		if _, ok := serviceAccounts[apiKey.UserId]; ok {
+		if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
 			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
 			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
 				email = "<auditlog service account>"
-			} else if user, ok := users[apiKey.UserId]; ok {
-				if user != nil {
-					email = user.Email
-				} else {
-					email = "<deactivated user>"
-				}
 			} else {
-				user, err = c.Client.User.Describe(context.Background(), &orgv1.User{Id: apiKey.UserId, ResourceId: apiKey.UserResourceId})
-				if err != nil {
-					email = "<deactivated user>"
-					users[apiKey.UserId] = nil
-				} else {
+				if user, ok := usersMap[apiKey.UserId]; ok {
 					email = user.Email
-					users[user.Id] = user
+				} else {
+					email = "<deactivated user>"
 				}
 			}
 		}
 
 		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
+		userResourceId := apiKey.UserResourceId
+		if userResourceId == "" {
+			userResourceId = resourceIdMap[apiKey.UserId]
+		}
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
@@ -288,7 +292,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserId:         apiKey.UserId,
-				UserResourceId: apiKey.UserResourceId,
+				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   pcmd.CloudResourceType,
 				Created:        created,
@@ -304,7 +308,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserId:         apiKey.UserId,
-				UserResourceId: apiKey.UserResourceId,
+				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   lc.Type,
 				ResourceId:     lc.Id,
@@ -316,16 +320,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func getServiceAccountsMap(client *ccloud.Client) (map[int32]bool, error) {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return nil, err
-	}
+func getServiceAccountsMap(serviceAccounts []*orgv1.User) map[int32]bool {
 	saMap := make(map[int32]bool)
 	for _, sa := range serviceAccounts {
 		saMap[sa.Id] = true
 	}
-	return saMap, nil
+	return saMap
+}
+
+func getUsersMap(users []*orgv1.User) map[int32]*orgv1.User {
+	userMap := make(map[int32]*orgv1.User)
+	for _, user := range users {
+		userMap[user.Id] = user
+	}
+	return userMap
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
@@ -638,9 +646,21 @@ func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
 	return suggestions
 }
 
+func (c *command) getAllUsers() ([]*orgv1.User, error) {
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return append(serviceAccounts, adminUsers...), nil
+}
+
 func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
 	if Id != "" { // it has a service-account flag
-		users, err := c.Client.User.GetServiceAccounts(context.Background())
+		users, err := c.getAllUsers()
 		if err != nil {
 			return key, err
 		}
@@ -664,21 +684,20 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) getUserIdByResourceId(resourceId string) (int32, error) {
-	if resourceId == "" {
-		return 0, nil
-	}
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return 0, err
-	}
-	UserId := int32(0)
+func (c *command) mapUserIdToResourceId(users []*orgv1.User) (map[int32]string, error) {
+	idMap := make(map[int32]string)
 	for _, user := range users {
-		if resourceId == user.ResourceId {
-			UserId = user.Id
-		}
+		idMap[user.Id] = user.ResourceId
 	}
-	return UserId, nil
+	return idMap, nil
+}
+
+func (c *command) mapResourceIdToUserId(users []*orgv1.User) (map[string]int32, error) {
+	idMap := make(map[string]int32)
+	for _, user := range users {
+		idMap[user.ResourceId] = user.Id
+	}
+	return idMap, nil
 }
 
 func isResourceId(Id string) bool {
