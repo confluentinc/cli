@@ -58,7 +58,7 @@ var (
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
 			return &orgv1.GetUserReply{
 				User: &orgv1.User{
-					Id:        23333,
+					Id:        23,
 					Email:     "",
 					FirstName: "",
 				},

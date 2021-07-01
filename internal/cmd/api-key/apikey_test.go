@@ -194,7 +194,7 @@ func (suite *APITestSuite) SetupTest() {
 			}, nil
 		},
 		CheckEmailFunc: nil,
-		ListFunc: func(arg0 context.Context) (users []*v1.User, e error) {
+		ListFunc: func(_ context.Context) ([]*v1.User, error) {
 			return []*v1.User{
 				{
 					Id:          serviceAccountId,
