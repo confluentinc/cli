@@ -23,12 +23,13 @@ var (
 
 type contextCommand struct {
 	*pcmd.CLICommand
+	isCloud   bool
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func NewContext(isCloud bool, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "context",
@@ -36,6 +37,7 @@ func NewContext(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Com
 		}, prerunner)
 	cmd := &contextCommand{
 		CLICommand: cliCmd,
+		isCloud:    isCloud,
 		prerunner:  prerunner,
 		analytics:  analytics,
 	}
@@ -73,7 +75,7 @@ func (c *contextCommand) init() {
 	currentCmd.Flags().SortFlags = false
 	c.AddCommand(currentCmd)
 
-	if c.cliName == "ccloud" {
+	if c.isCloud {
 		getCmd := &cobra.Command{
 			Use:   "get <id or no argument for current context>",
 			Short: "Get a config context parameter.",

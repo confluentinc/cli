@@ -16,6 +16,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -40,6 +41,7 @@ type Config struct {
 	ContextStates          map[string]*v2.ContextState `json:"context_states,omitempty"`
 	CurrentContext         string                      `json:"current_context"`
 	AnonymousId            string                      `json:"anonymous_id,omitempty"`
+	IsTest                 bool                        `json:"-"`
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
@@ -422,6 +424,11 @@ func (c *Config) IsCloud() bool {
 	if ctx == nil {
 		return false
 	}
+
+	if c.IsTest {
+		return ctx.PlatformName == testserver.TestCloudURL.String()
+	}
+
 	return utils.Contains(CCloudHostnames, ctx.PlatformName)
 }
 
@@ -430,5 +437,6 @@ func (c *Config) IsOnPrem() bool {
 	if ctx == nil {
 		return false
 	}
-	return ctx.PlatformName != "" && !utils.Contains(CCloudHostnames, ctx.PlatformName)
+
+	return ctx.PlatformName != "" && !c.IsCloud()
 }

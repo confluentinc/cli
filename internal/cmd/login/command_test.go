@@ -893,7 +893,7 @@ func TestIsCCloudURL_True(t *testing.T) {
 		"confluent.cloud:8090",
 		"https://confluent.cloud",
 	} {
-		c := &Command{isTest: true}
+		c := new(Command)
 		require.True(t, c.isCCloudURL(url), url+" should return true")
 	}
 }
@@ -904,7 +904,7 @@ func TestIsCCloudURL_False(t *testing.T) {
 		"example.com:8090",
 		"https://example.com",
 	} {
-		c := &Command{isTest: true}
+		c := new(Command)
 		require.False(t, c.isCCloudURL(url), url+" should return false")
 	}
 }
