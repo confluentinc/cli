@@ -179,7 +179,7 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	if !matched {
 		return errors.New(errors.BadEmailFormatErrorMsg)
 	}
-	newUser := &orgv1.User{Email: email, OrganizationId: c.State.Auth.User.OrganizationId}
+	newUser := &orgv1.User{Email: email}
 	user, err := c.Client.User.Invite(context.Background(), newUser)
 	if err != nil {
 		return err
@@ -206,7 +206,6 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	err := c.Client.User.Delete(context.Background(), &orgv1.User{
 		ResourceId:     resourceId,
-		OrganizationId: c.State.Auth.User.OrganizationId,
 	})
 	if err != nil {
 		return err
