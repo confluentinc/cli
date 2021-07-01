@@ -30,7 +30,7 @@ const (
 	dryrunFlagName                     = "dry-run"
 	noValidateFlagName                 = "no-validate"
 	includeTopicsFlagName              = "include-topics"
-	linkFlagName                       = "link-name"
+	linkFlagName                       = "link"
 )
 
 var (
@@ -107,7 +107,7 @@ func (c *linkCommand) init() {
 
 	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
 	createCmd := &cobra.Command{
-		Use:   "create <link-name>",
+		Use:   "create <link>",
 		Short: "Create a new cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -144,7 +144,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <link-name>",
+		Use:   "delete <link>",
 		Short: "Delete a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -159,7 +159,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <link-name>",
+		Use:   "describe <link>",
 		Short: "Describe a previously created cluster link.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -177,7 +177,7 @@ func (c *linkCommand) init() {
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
 	updateCmd := &cobra.Command{
-		Use:   "update <link-name>",
+		Use:   "update <link>",
 		Short: "Update link configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{

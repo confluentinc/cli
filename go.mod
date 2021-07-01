@@ -3,10 +3,12 @@ module github.com/confluentinc/cli
 require (
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
+	github.com/alecthomas/kingpin v2.2.6+incompatible // indirect
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
-	github.com/aws/aws-sdk-go v1.36.1
+	github.com/aws/aws-sdk-go v1.38.35
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c-bata/go-prompt v0.2.3
@@ -24,7 +26,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
 	github.com/confluentinc/cc-utils-public v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.79
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.80
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
@@ -37,16 +39,17 @@ require (
 	github.com/dghubble/sling v1.3.0
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.12.0
 	github.com/gliderlabs/ssh v0.3.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.30.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
-	github.com/google/go-cmp v0.5.4
+	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github/v25 v25.0.2
+	github.com/google/go-github/v28 v28.1.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/goreleaser/goreleaser v0.162.1
@@ -82,8 +85,8 @@ require (
 	github.com/travisjeffery/mocker v1.1.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/oauth2 v0.0.0-20201203001011-0b49973bad19
+	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
+	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1

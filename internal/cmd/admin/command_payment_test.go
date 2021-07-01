@@ -142,8 +142,9 @@ func getCommand() (c *command) {
 			Client: mockClient(),
 			State: &v2.ContextState{
 				Auth: &v1.AuthConfig{
-					User: &orgv1.User{
-						OrganizationId: int32(0),
+					User: &orgv1.User{},
+					Organization: &orgv1.Organization{
+						Id: int32(0),
 					},
 				},
 			},

@@ -165,7 +165,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		ServiceName:        name,
 		ServiceDescription: description,
-		OrganizationId:     c.State.Auth.User.OrganizationId,
 		ServiceAccount:     true,
 	}
 	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
