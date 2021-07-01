@@ -881,7 +881,7 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
-	if isUpdateCommand(cmd) {
+	if isUpdateCommand(cmd) || r.IsTest {
 		return nil
 	}
 	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
