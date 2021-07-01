@@ -86,10 +86,11 @@ func (c *client) CheckForUpdates(cliName string, currentVersion string, forceChe
 	if err != nil {
 		return false, currentVersion, err
 	}
+	// after fetching the latest version we touch the file so that we don't make the request again for 24hrs
+	if err := c.touchCheckFile(); err != nil {
+		return false, currentVersion, errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
+	}
 	if isLessThanVersion(currVersion, latestBinaryVersion) {
-		if err := c.touchCheckFile(); err != nil {
-			return false, currentVersion, errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
-		}
 		return true, latestBinaryVersion.Original(), nil
 	}
 	return false, currentVersion, nil
