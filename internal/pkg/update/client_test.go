@@ -135,7 +135,7 @@ func TestCheckForUpdates(t *testing.T) {
 			wantErr:             false,
 		},
 		{
-			name: "should not check for the new version since has checked recently",
+			name: "should not check for the new version if has checked recently",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
