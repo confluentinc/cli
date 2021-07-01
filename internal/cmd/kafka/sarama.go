@@ -81,8 +81,7 @@ func (*GroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
 		value := msg.Value
-		// For messages with schema, first byte is magic byte 0x0.
-		_ = value[0]
+
 		if h.Properties.PrintKey {
 			key := msg.Key
 			var keyString string
