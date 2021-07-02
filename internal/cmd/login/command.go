@@ -326,14 +326,14 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 }
 
 func (c *Command) isCCloudURL(url string) bool {
-	if c.isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host)
-	}
-
 	for _, hostname := range v3.CCloudHostnames {
 		if strings.Contains(url, hostname) {
 			return true
 		}
+	}
+
+	if c.isTest {
+		strings.Contains(url, testserver.TestCloudURL.Host)
 	}
 
 	return false
