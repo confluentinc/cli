@@ -61,9 +61,9 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			wantErrCode: 1,
 		},
 		{
-			name:		"ccloud iam rolebinding create with email as principal",
-			args:		"iam rolebinding create --principal User:u-11aaa@confluent.io --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
-			fixture: 	"iam-rolebinding/ccloud-iam-rolebinding-create-with-email.golden",
+			name:    "ccloud iam rolebinding create with email as principal",
+			args:    "iam rolebinding create --principal User:u-11aaa@confluent.io --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-create-with-email.golden",
 		},
 	}
 

@@ -47,31 +47,31 @@ func TestUserInviteEmailRegex(t *testing.T) {
 		matched bool
 	}
 	tests := []*RegexTest{
-		&RegexTest{
+		{
 			email:   "",
 			matched: false,
 		},
-		&RegexTest{
+		{
 			email:   "mtodzo@confluent.io",
 			matched: true,
 		},
-		&RegexTest{
+		{
 			email:   "m@t.t.com",
 			matched: true,
 		},
-		&RegexTest{
+		{
 			email:   "m@t",
 			matched: true,
 		},
-		&RegexTest{
+		{
 			email:   "google.com",
 			matched: false,
 		},
-		&RegexTest{
+		{
 			email:   "@images.google.com",
 			matched: false,
 		},
-		&RegexTest{
+		{
 			email:   "david.hyde+cli@confluent.io",
 			matched: true,
 		},

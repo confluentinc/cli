@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	onPremAclListFields = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
+	onPremAclListFields            = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
 	onPremAclListStructuredRenames = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 )
 
@@ -22,7 +22,7 @@ func NewAclCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	aclCmd := &aclOnPremCommand{
 		pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
-				Use: "acl",
+				Use:   "acl",
 				Short: "Manage Kafka ACLs.",
 			}, prerunner, OnPremTopicSubcommandFlags),
 	}
@@ -69,8 +69,8 @@ func (aclCmd *aclOnPremCommand) init() {
 	listCmd = &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka ACLs.",
-		Args: cobra.NoArgs,
-		RunE: pcmd.NewCLIRunE(aclCmd.list),
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(aclCmd.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the local ACLs for the Kafka cluster:",

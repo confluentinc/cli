@@ -154,10 +154,6 @@ define caasenv-authenticate
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
 endef
 
-.PHONY: fmt
-fmt:
-	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
-
 .PHONY: release-ci
 release-ci:
 ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
@@ -168,13 +164,23 @@ else
 	true
 endif
 
+.PHONY: fmt
+fmt:
+	@echo "Formatting..."
+	@go mod tidy
+	@echo "✅ go mod tidy"
+	@gofmt -s -w $(ALL_SRC)
+	@echo "✅ go fmt"
+
 .PHONY: lint
 lint:
 ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
 	@echo "Linting..."
-	@make lint-go && make lint-cli && make lint-installers
+	@make lint-go
+	@make lint-cli
+	@make lint-installers
 endif
 
 .PHONY: lint-go

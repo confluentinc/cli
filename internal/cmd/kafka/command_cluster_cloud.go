@@ -517,11 +517,11 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	if _, err := c.Context.FindKafkaCluster(cmd, clusterID); err != nil {
 		return err
 	}
-	
+
 	if err := c.Context.SetActiveKafkaCluster(cmd, clusterID); err != nil {
 		return err
 	}
-	
+
 	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
 	return nil
 }

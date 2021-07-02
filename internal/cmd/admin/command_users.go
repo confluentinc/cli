@@ -205,7 +205,7 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 	err := c.Client.User.Delete(context.Background(), &orgv1.User{
-		ResourceId:     resourceId,
+		ResourceId: resourceId,
 	})
 	if err != nil {
 		return err
