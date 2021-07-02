@@ -34,9 +34,9 @@ func catchMDSErrors(err error) error {
 	}
 	switch err.(type) {
 	case mds.GenericOpenAPIError:
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), err.(mds.GenericOpenAPIError).Body())
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err.(mds.GenericOpenAPIError).Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), err.(mdsv2alpha1.GenericOpenAPIError).Body())
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err.(mdsv2alpha1.GenericOpenAPIError).Body()))
 	}
 	return err
 }
