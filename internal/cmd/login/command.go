@@ -333,7 +333,7 @@ func (c *Command) isCCloudURL(url string) bool {
 	}
 
 	if c.isTest {
-		strings.Contains(url, testserver.TestCloudURL.Host)
+		return strings.Contains(url, testserver.TestCloudURL.Host)
 	}
 
 	return false
