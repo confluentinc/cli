@@ -32,13 +32,11 @@ func catchMDSErrors(err error) error {
 	if err == nil {
 		return nil
 	}
-	eV1, ok := err.(mds.GenericOpenAPIError)
-	if ok {
-		return Errorf(GenericOpenAPIErrorMsg, eV1.Error(), string(eV1.Body()))
-	}
-	eV2, ok := err.(mdsv2alpha1.GenericOpenAPIError)
-	if ok {
-		return Errorf(GenericOpenAPIErrorMsg, eV2.Error(), string(eV2.Body()))
+	switch err.(type) {
+	case mds.GenericOpenAPIError:
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), err.(mds.GenericOpenAPIError).Body())
+	case mdsv2alpha1.GenericOpenAPIError:
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), err.(mdsv2alpha1.GenericOpenAPIError).Body())
 	}
 	return err
 }
