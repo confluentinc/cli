@@ -28,13 +28,12 @@ const (
 	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
 	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization."
+	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// login command
-	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
-	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
-	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
-	NoURLFlagOrMdsEnvVarErrorMsg     = "no mds url passed"
-	NoURLFlagOrMdsEnvVarSuggestions  = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
+	NoEnvironmentFoundErrorMsg      = "no environment found for authenticated user"
+	NoURLFlagOrMdsEnvVarErrorMsg    = "no mds url passed"
+	NoURLFlagOrMdsEnvVarSuggestions = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -63,7 +62,7 @@ const (
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
 	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg 	  = "only --allow or --deny may be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
@@ -122,6 +121,7 @@ const (
 	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
 	ChooseRightEnvironmentSuggestions     = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`."
+	UnknownTopicErrorMsg = "unknown topic \"%s\""
 
 	// kafka topic commands
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
@@ -150,8 +150,9 @@ const (
 	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
-	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
-	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
+	NoServiceAccountErrorMsg       = "no service account found for KSQL cluster \"%s\""
+	APIKeyAndSecretBothRequired    = "both --api-key and --api-secret must be provided"
+	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -197,19 +198,18 @@ const (
 	ReleaseNotesVersionMismatchErrorMsg = "binary version (v%s) and latest release notes version (v%s) mismatch"
 
 	// auth package
-	NoReaderForCustomCertErrorMsg       = "no reader specified for reading custom certificates"
-	ReadCertErrorMsg                    = "failed to read certificate"
-	NoCertsAppendedErrorMsg             = "no certs appended, using system certs only"
-	WriteToNetrcFileErrorMsg            = "unable to write to netrc file \"%s\""
-	ResolvingNetrcFilepathErrorMsg      = "unable to resolve netrc filepath at \"%s\""
-	NetrcCLINameMissingErrorMsg         = "no CLI name specified for netrc credentials"
-	GetNetrcCredentialsFromFileErrorMsg = "unable to get credentials from netrc file \"%s\""
-	NetrcCredentialsNotFoundErrorMsg    = "login credentials not found in netrc file \"%s\""
-	CreateNetrcFileErrorMsg             = "unable to create netrc file \"%s\""
-	FailedToObtainedUserSSOErrorMsg     = "unable to obtain SSO info for user \"%s\""
-	NonSSOUserErrorMsg                  = "tried to obtain SSO token for non SSO user \"%s\""
-	NoCredentialsFoundErrorMsg          = "no credentials found"
-	NoURLEnvVarErrorMsg                 = "no URL env var"
+	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
+	ReadCertErrorMsg                 = "failed to read certificate"
+	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
+	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
+	NetrcCLINameMissingErrorMsg      = "no CLI name specified for netrc credentials"
+	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
+	CreateNetrcFileErrorMsg          = "unable to create netrc file \"%s\""
+	FailedToObtainedUserSSOErrorMsg  = "unable to obtain SSO info for user \"%s\""
+	NonSSOUserErrorMsg               = "tried to obtain SSO token for non SSO user \"%s\""
+	NoCredentialsFoundErrorMsg       = "no credentials found"
+	NoURLEnvVarErrorMsg              = "no URL env var"
+	InvalidInputFormatErrorMsg       = "\"%s\" is not of valid format for field \"%s\""
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
@@ -246,8 +246,6 @@ const (
 	PlatformNotFoundErrorMsg           = "platform \"%s\" not found"
 	NoNameCredentialErrorMsg           = "credential must have a name"
 	NoNamePlatformErrorMsg             = "platform must have a name"
-	ResolvingConfigPathErrorMsg        = "error resolving the config filepath at \"%s\" has occurred"
-	ResolvingConfigPathSuggestions     = "Try moving the config file to a different location."
 	UnspecifiedPlatformErrorMsg        = "context \"%s\" has corrupted platform"
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
@@ -305,7 +303,6 @@ const (
 	BrowserAuthTimedOutSuggestions     = "Try logging in again."
 	LoginFailedCallbackURLErrorMsg     = "authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail"
 	LoginFailedQueryStringErrorMsg     = "authentication callback URL did not contain code parameter in query string; login will fail"
-	ReadCallbackPageTemplateErrorMsg   = "could not read callback page template"
 	PastedInputErrorMsg                = "pasted input had invalid format"
 	LoginFailedStateParamErrorMsg      = "authentication code either did not contain a state parameter or the state parameter was invalid; login will fail"
 	OpenWebBrowserErrorMsg             = "unable to open web browser for authorization"
@@ -338,10 +335,9 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."
-	InvalidFlagValueWithWrappedErrorErrorMsg = "invalid value \"%s\" for flag `--%s`: %v"
+	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
+	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
+	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
 	CCloudBackendErrorPrefix           = "CCloud backend error"
@@ -374,7 +370,6 @@ const (
 	InternalServerErrorMsg            = "Internal server error"
 	UnknownErrorMsg                   = "Unknown error"
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket"
-	InvalidBootstrapServerErrorMsg    = "Invalid bootstrap server"
 	EmptyResponseMsg                  = "Empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionMsg            = "Unable to establish Kafka REST connection: %s: %s"
@@ -419,10 +414,10 @@ const (
 		"To create an API key, use `ccloud api-key create --resource %s`.\n" +
 		"To store an existing API key, use `ccloud api-key store --resource %s`."
 
-	//Flag parsing errors
+	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
 	ClusterFlagWithApiLoginErrorMsg     = "\"cluster\" flag should not be passed for API key context, cluster is inferred"
 
 	// Special error types
-	GenericOpenAPIErrorMsg = "Metadata Service backend error: %s: %s"
+	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
 )

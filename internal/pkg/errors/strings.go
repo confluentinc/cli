@@ -4,27 +4,24 @@ const (
 	//admin commands
 	DeletedUserMsg     = "Successfully deleted user %s."
 	EmailInviteSentMsg = "An email invitation has been sent to %s"
+
 	// api-key command
 	DeletedAPIKeyMsg = "Deleted API key \"%s\".\n"
 	StoredAPIKeyMsg  = "Stored API secret for API key \"%s\".\n"
 	UseAPIKeyMsg     = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg                   = "Logged in as \"%s\".\n"
-	LoggedInUsingEnvMsg             = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg                    = "You are now logged out."
-	WroteCredentialsToNetrcMsg      = "Wrote credentials to netrc file \"%s\"\n"
-	RemoveNetrcCredentialsMsg       = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
-	FailedRemoveNetrcCredentialsMsg = "Failed to remove credentials."
-	KafkaClusterDeletedMsg          = "Deleted Kafka cluster \"%s\".\n"
-	InvalidInputFormatMsg           = "\"%s\" is not of valid format for field \"%s\"."
-	StopNonInteractiveMsg           = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg                 = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
+	LoggedInAsMsg              = "Logged in as \"%s\".\n"
+	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg               = "You are now logged out."
+	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
+	RemoveNetrcCredentialsMsg  = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
+	KafkaClusterDeletedMsg     = "Deleted Kafka cluster \"%s\".\n"
+	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
-	EnvLoginFailedMsg = "Non-interactive login with environment variables failed: %s\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
-	NetrcLoginFailedMsg = "Non-interactive login with netrc failed: %s\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
@@ -51,19 +48,15 @@ const (
 	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
 
 	// kafka consumer-group commands
-	UnknownGroupMsg       = "Unknown Consumer Group: \"%s\".\n"
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
-	StartingProducerMsg    = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
-	StoppingConsumer       = "Stopping Consumer."
-	StartingConsumerMsg    = "Starting Kafka Consumer. Use Ctrl-C to exit."
-	CreatedTopicMsg        = "Created topic \"%s\".\n"
-	DeletedTopicMsg        = "Deleted topic \"%s\".\n"
-	UnknownTopicMsg        = "Unknown topic \"%s\".\n"
-	UpdateTopicConfigMsg   = "Updated the following configs for topic \"%s\":\n"
-	InvalidMirrorActionMsg = "Invalid mirror action \"%s\" provided.\n"
-	StoppedTopicMirrorMsg  = "Stopped mirroring for topic \"%s\".\n"
+	StartingProducerMsg  = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StoppingConsumer     = "Stopping Consumer."
+	StartingConsumerMsg  = "Starting Kafka Consumer. Use Ctrl-C to exit."
+	CreatedTopicMsg      = "Created topic \"%s\".\n"
+	DeletedTopicMsg      = "Deleted topic \"%s\".\n"
+	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
 
 	// kafka link commands
 	DryRunPrefix   = "[DRY RUN] "
@@ -85,7 +78,6 @@ const (
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
 	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `ccloud kafka cluster use %s`.\n"
-	KsqlDBNoServiceAccount    = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster.\n"
 
 	// local commands
 	AvailableServicesMsg       = "Available Services:\n%s\n"
@@ -149,8 +141,7 @@ const (
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
 		"%s\n\n\n"
-	PromptToDownloadQuestionMsg = "Do you want to download and install this update?"
-	InvalidChoiceMsg            = "%s is not a valid choice"
+	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"

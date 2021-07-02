@@ -351,7 +351,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	}
 
 	if cluster.ServiceAccountId == 0 {
-		return fmt.Errorf(errors.KsqlDBNoServiceAccount, args[0])
+		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, args[0])
 	}
 
 	serviceAccountId, err := c.getServiceAccount(cluster)

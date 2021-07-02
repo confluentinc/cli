@@ -29,6 +29,8 @@ var (
 	listCmd   *cobra.Command
 )
 
+type aclContextKey string
+
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	completableFlagChildren map[string][]*cobra.Command
@@ -317,7 +319,10 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	matchingBindingCount := 0
 	for _, acl := range acls {
 		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
-		resp, err := c.Client.Kafka.ListACLs(context.WithValue(context.Background(), "requestor", "delete"), cluster, convertToFilter(acl.ACLBinding))
+		var requester aclContextKey = "requester"
+		ctx := context.WithValue(context.Background(), requester, "delete")
+
+		resp, err := c.Client.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
 		if err != nil {
 			return err
 		}
