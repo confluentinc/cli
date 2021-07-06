@@ -1,5 +1,5 @@
   Id | Resource ID |         Email         | First Name | Last Name |   Status    
-+----+-------------+-----------------------+------------+-----------+------------+
+-----+-------------+-----------------------+------------+-----------+-------------
    1 | u11         | bstrauch@confluent.io | Brian      | Strauch   | Unverified  
    2 | u-17        | mtodzo@confluent.io   | Miles      | Todzo     | Unverified  
    3 | u-11aaa     | u-11aaa@confluent.io  |         11 | Aaa       | Unverified  

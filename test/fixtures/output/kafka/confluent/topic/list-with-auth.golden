@@ -1,5 +1,5 @@
 No session token found, please enter user credentials. To avoid being prompted, run "confluent login".
 Username: Password:    Name    
-+---------+
+-----------
   topic-1  
   topic-2  
