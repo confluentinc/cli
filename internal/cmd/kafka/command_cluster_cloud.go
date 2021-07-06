@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -11,9 +12,11 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/spf13/cobra"
+
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -21,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -69,6 +73,7 @@ const (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	logger              *log.Logger
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 	analyticsClient     analytics.Client
@@ -94,7 +99,7 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client, logger *log.Logger) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
@@ -104,6 +109,7 @@ func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Clien
 		AuthenticatedStateFlagCommand: cliCmd,
 		prerunner:                     prerunner,
 		analyticsClient:               analyticsClient,
+		logger:                        logger,
 	}
 	cmd.init()
 	return cmd
@@ -166,7 +172,9 @@ func (c *clusterCommand) init() {
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
+			return c.update(cmd, args, form.NewPrompt(os.Stdin))
+		}),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Change a cluster's name and expand its CKU count:",
@@ -187,7 +195,6 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
-
 	useCmd := &cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
@@ -470,7 +477,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
-func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
@@ -495,6 +502,11 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	} else {
 		req.Name = currentCluster.Name
 	}
+
+	if !isDedicated(currentCluster) && cmd.Flags().Changed("cku") {
+		return errors.New(errors.CKUOnlyForDedicatedErrorMsg)
+	}
+
 	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
@@ -506,12 +518,40 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 		// Cluster can't be resized while it's provisioning or being expanded already.
 		// Name _can_ be changed during these times, though.
-		if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
-			return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-		} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
-			return errors.New(errors.KafkaClusterExpandingErrorMsg)
+		if int32(cku) != currentCluster.Cku {
+			if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
+				return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+			} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
+				return errors.New(errors.KafkaClusterExpandingErrorMsg)
+			} else if currentCluster.Status == schedv1.ClusterStatus_SHRINKING {
+				return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+			}
 		}
 
+		// Shrink
+		if 1 == 1 {
+			//if int32(cku) < currentCluster.Cku {
+			load := 100
+			metricsResponse, err := c.Client.MetricsApi.QueryV2(
+				context.Background(), "cloud", loadMetricQueryFor(currentCluster.Id), "")
+			if metricsResponse != nil && len(metricsResponse.Result) == 1 {
+				load = int(math.Round(metricsResponse.Result[0].Value)) // the return value is a double
+			} else {
+				c.logger.Warn("Could not retrieve Kafka Cluster Metrics: ", err)
+				utils.Println(cmd, "Unable to obtain load on the cluster, proceed with shrinking the cluster?")
+				ok, err := verifyShrink(cmd, prompt)
+				if !ok || err != nil {
+					return err
+				}
+			}
+			if load > 0 {
+				utils.Println(cmd, "Load is too high, and also, what are you doing on slack over the weekend?")
+				ok, err := verifyShrink(cmd, prompt)
+				if !ok || err != nil {
+					return err
+				}
+			}
+		}
 		req.Cku = int32(cku)
 	}
 	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
@@ -519,6 +559,21 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
 	return outputKafkaClusterDescription(cmd, updatedCluster)
+}
+
+func verifyShrink(cmd *cobra.Command, prompt form.Prompt) (bool, error) {
+	f := form.New(
+		form.Field{ID: "proceed", Prompt: "Proceed?", IsYesOrNo: true},
+	)
+	if err := f.Prompt(cmd, prompt); err != nil {
+		utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
+		return false, errors.New(errors.FailedToReadConfirmationErrorMsg)
+	}
+	if !f.Responses["proceed"].(bool) {
+		utils.Println(cmd, "Not proceeding with kafka shrink")
+		return false, nil
+	}
+	return true, nil
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -645,6 +700,23 @@ func isExpanding(cluster *schedv1.KafkaCluster) bool {
 func isShrinking(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_SHRINKING ||
 		(cluster.PendingCku < cluster.Cku && cluster.PendingCku != 0)
+}
+
+func loadMetricQueryFor(clusterId string) *ccloud.MetricsApiRequest {
+	return &ccloud.MetricsApiRequest{
+		Aggregations: []ccloud.ApiAggregation{
+			{
+				Metric: "io.confluent.kafka.server/broker_load/broker_load_percent",
+			},
+		},
+		Filter: ccloud.ApiFilter{
+			Field: "resource.kafka.id",
+			Op:    "EQ",
+			Value: clusterId,
+		},
+		Granularity: "PT1M",
+		Intervals:   []string{"PT1M/now-2m|m"},
+	}
 }
 
 func (c *clusterCommand) Cmd() *cobra.Command {
