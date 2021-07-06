@@ -22,31 +22,29 @@ const (
 )
 
 type command struct {
-	Command          *cobra.Command
-	RootCmd          *cobra.Command
-	cliName          string
-	config           *v3.Config
-	configLoadingErr error
-	prerunner        pcmd.PreRunner
-	completer        *completer.ShellCompleter
-	analytics        analytics.Client
-	logger           *log.Logger
-	jwtValidator     pcmd.JWTValidator
+	Command      *cobra.Command
+	RootCmd      *cobra.Command
+	cliName      string
+	config       *v3.Config
+	prerunner    pcmd.PreRunner
+	completer    *completer.ShellCompleter
+	analytics    analytics.Client
+	logger       *log.Logger
+	jwtValidator pcmd.JWTValidator
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config, configLoadingErr error,
+func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config,
 	completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
-		RootCmd:          rootCmd,
-		config:           config,
-		configLoadingErr: configLoadingErr,
-		cliName:          cliName,
-		prerunner:        prerunner,
-		completer:        completer,
-		logger:           logger,
-		analytics:        analytics,
-		jwtValidator:     jwtValidator,
+		RootCmd:      rootCmd,
+		config:       config,
+		cliName:      cliName,
+		prerunner:    prerunner,
+		completer:    completer,
+		logger:       logger,
+		analytics:    analytics,
+		jwtValidator: jwtValidator,
 	}
 
 	cliCmd.init()
@@ -63,10 +61,6 @@ func (c *command) init() {
 }
 
 func (c *command) shell(cmd *cobra.Command, args []string) error {
-	if c.config == nil {
-		return c.configLoadingErr
-	}
-
 	// remove shell command from the shell
 	c.RootCmd.RemoveCommand(c.Command)
 

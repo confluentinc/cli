@@ -82,16 +82,17 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
-	logger := log.New()
-	cfg, configLoadingErr := loadConfig(cliName, logger)
-	if cfg != nil {
-		cfg.Logger = logger
-		cfg.IsTest = isTest
+	isCloud := cfg.IsCloud()
+	isOnPrem := cfg.IsOnPrem()
+
+	cliName := "confluent"
+	if isCloud {
+		cliName = "ccloud"
 	}
 
-	isCloud := cfg.IsCloud()
+	logger := log.New()
 
-	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
+	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck, logger)
 
 	analyticsClient := getAnalyticsClient(isTest, pversion.CLIName, cfg, ver.Version, logger)
@@ -124,7 +125,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	// Shell Completion
 	shellCompleter := completer.NewShellCompleter(cli)
 	var serverCompleter completer.ServerSideCompleter
-	if cliName == "ccloud" {
+	if isCloud {
 		serverCompleter = shellCompleter.ServerSideCompleter
 	}
 
@@ -137,23 +138,24 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(version.New(cliName, prerunner, ver))
-
-	if cfg == nil || !cfg.DisableUpdates {
+	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	if cliName == "confluent" {
+	if isOnPrem {
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(local.New(prerunner))
 		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	} else if cliName == "ccloud" {
+	}
+
+	if isCloud {
 		cli.AddCommand(admin.New(prerunner, isTest))
 		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 	}
 
 	// If a user uses an API key to log in, don't allow the remaining commands.
-	if cliName == "ccloud" && isAPIKeyLogin {
+	if isCloud && isAPIKeyLogin {
 		return command
 	}
 
@@ -161,7 +163,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
 
-	if cliName == "ccloud" {
+	if isCloud {
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 		connectorCmd := connector.New(cliName, prerunner, analyticsClient)
 		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
@@ -181,7 +183,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(prompt.New(cliName, prerunner, &ps1.Prompt{}, logger))
 		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, logger, analyticsClient, jwtValidator))
+		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, shellCompleter, logger, analyticsClient, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	}
 
@@ -199,9 +201,6 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 }
 
 func isAPIKeyCredential(cfg *v3.Config) bool {
-	if cfg == nil {
-		return false
-	}
 	ctx := cfg.Context()
 	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
 }
@@ -225,12 +224,13 @@ func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	}
 }
 
-func LoadConfig() (*v3.Config, error) {
+func LoadConfig(isTest bool) (*v3.Config, error) {
 	cfg := v3.New(&pconfig.Params{
 		CLIName:    cliName,
 		Logger:     log.New(),
 		MetricSink: metric.NewSink(),
 	})
+	cfg.IsTest = isTest
 
 	return load.LoadAndMigrate(cfg)
 }

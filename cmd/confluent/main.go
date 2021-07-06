@@ -30,7 +30,11 @@ func main() {
 
 	version := pversion.NewVersion(version, commit, date, host)
 
+<<<<<<< Updated upstream
 	cfg, err := cmd.LoadConfig()
+=======
+	cfg, err := cmd.LoadConfig(isTest)
+>>>>>>> Stashed changes
 	if err != nil {
 		panic(err)
 	}
