@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // This deprecated package is being used in https://github.com/confluentinc/cc-structs
 
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
