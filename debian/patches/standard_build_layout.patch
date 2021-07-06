@@ -1,4 +1,4 @@
---- cli/Makefile	2021-07-06 09:42:30.000000000 -0500
+--- cli/Makefile	2021-07-06 09:54:49.000000000 -0500
 +++ debian/Makefile	2021-06-14 14:30:29.000000000 -0500
 @@ -1,258 +1,130 @@
 -SHELL           := /bin/bash
@@ -269,7 +269,7 @@
  
 -.PHONY: lint-go
 -lint-go:
--	@golangci-lint run --skip-dirs internal/pkg/analytics
+-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
 -	@echo "✅ golangci-lint"
 -
 -.PHONY: lint-cli
