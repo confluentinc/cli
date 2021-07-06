@@ -62,9 +62,11 @@ type command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *command {
+func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *command {
 	cli := &cobra.Command{
-		Use:               cliName,
+		Use:               pversion.CLIName,
+		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
+		Long:              "Manage your Confluent Cloud or Confluent Platform.",
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
@@ -76,17 +78,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
 
-	if cliName == "ccloud" {
-		cli.Short = "Confluent Cloud CLI."
-		cli.Long = "Manage your Confluent Cloud."
-	} else {
-		cli.Short = "Confluent CLI."
-		cli.Long = "Manage your Confluent Platform."
-	}
-
 	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.GetFullCLIName(cliName)))
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
 	logger := log.New()
 	cfg, configLoadingErr := loadConfig(cliName, logger)
@@ -98,9 +92,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	isCloud := cfg.IsCloud()
 
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
-	updateClient := update.NewClient(cliName, disableUpdateCheck, logger)
+	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck, logger)
 
-	analyticsClient := getAnalyticsClient(isTest, cliName, cfg, ver.Version, logger)
+	analyticsClient := getAnalyticsClient(isTest, pversion.CLIName, cfg, ver.Version, logger)
 	authTokenHandler := pauth.NewAuthTokenHandler(logger)
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -115,7 +109,6 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		CCloudClientFactory:     ccloudClientFactory,
 		CLIName:                 cliName,
 		Config:                  cfg,
-		ConfigLoadingError:      configLoadingErr,
 		FlagResolver:            flagResolver,
 		IsTest:                  isTest,
 		JWTValidator:            jwtValidator,
@@ -232,10 +225,10 @@ func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	}
 }
 
-func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
+func LoadConfig() (*v3.Config, error) {
 	cfg := v3.New(&pconfig.Params{
 		CLIName:    cliName,
-		Logger:     logger,
+		Logger:     log.New(),
 		MetricSink: metric.NewSink(),
 	})
 

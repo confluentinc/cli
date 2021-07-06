@@ -11,6 +11,10 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -23,9 +27,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -44,7 +45,6 @@ const DoNotTrack = "do-not-track-analytics"
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                  *v3.Config
-	ConfigLoadingError      error
 	UpdateClient            update.Client
 	CLIName                 string
 	Logger                  *log.Logger
@@ -269,20 +269,10 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 					r.Logger.Debug(analyticsError.Error())
 				}
 			}
-		} else {
-			if isAuthOrConfigCommands(cmd) {
-				return r.ConfigLoadingError
-			}
 		}
 		LabelRequiredFlags(cmd)
 		return nil
 	}
-}
-
-func isAuthOrConfigCommands(cmd *cobra.Command) bool {
-	return strings.Contains(cmd.CommandPath(), "login") ||
-		strings.Contains(cmd.CommandPath(), "logout") ||
-		strings.Contains(cmd.CommandPath(), "config")
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {
@@ -302,9 +292,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		if r.Config == nil {
-			return r.ConfigLoadingError
-		}
 		err = r.setAuthenticatedContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
@@ -526,9 +513,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		if err != nil {
 			return err
 		}
-		if r.Config == nil {
-			return r.ConfigLoadingError
-		}
+
 		err = r.setAuthenticatedWithMDSContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
@@ -731,9 +716,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if err != nil {
 			return err
 		}
-		if r.Config == nil {
-			return r.ConfigLoadingError
-		}
+
 		ctx, err := command.Config.Context(cmd)
 		if err != nil {
 			return err

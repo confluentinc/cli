@@ -4,9 +4,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/confluentinc/bincover"
 	"github.com/spf13/viper"
 
-	"github.com/confluentinc/bincover"
 	"github.com/confluentinc/cli/internal/cmd"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -17,7 +17,6 @@ var (
 	commit  = ""
 	date    = ""
 	host    = ""
-	cliName = "confluent"
 	isTest  = "false"
 )
 
@@ -29,14 +28,18 @@ func main() {
 		panic(err)
 	}
 
-	version := pversion.NewVersion(cliName, version, commit, date, host)
+	version := pversion.NewVersion(version, commit, date, host)
 
-	cli := cmd.NewConfluentCommand(cliName, isTest, version)
+	cfg, err := cmd.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	cli := cmd.NewConfluentCommand(cfg, isTest, version)
 
 	if err := cli.Execute(os.Args[1:]); err != nil {
 		if isTest {
 			bincover.ExitCode = 1
-			return
 		} else {
 			os.Exit(1)
 		}
