@@ -82,6 +82,7 @@ require (
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
+	golang.org/x/tools v0.1.3
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect

@@ -37,7 +37,8 @@ deps:
 	export GOPRIVATE=github.com/confluentinc && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
-	go get github.com/mitchellh/golicense@v0.2.0
+	go get github.com/mitchellh/golicense@v0.2.0 && \
+	go get golang.org/x/tools/cmd/goimports@v0.1.3
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
@@ -154,6 +155,10 @@ define caasenv-authenticate
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
 endef
 
+.PHONY: fmt
+fmt:
+	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
+
 .PHONY: release-ci
 release-ci:
 ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
@@ -163,14 +168,6 @@ else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 else
 	true
 endif
-
-.PHONY: fmt
-fmt:
-	@echo "Formatting..."
-	@go mod tidy
-	@echo "✅ go mod tidy"
-	@gofmt -s -w $(ALL_SRC)
-	@echo "✅ go fmt"
 
 .PHONY: lint
 lint:
