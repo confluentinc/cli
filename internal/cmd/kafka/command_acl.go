@@ -18,6 +18,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -28,8 +29,6 @@ var (
 	deleteCmd *cobra.Command
 	listCmd   *cobra.Command
 )
-
-type aclContextKey string
 
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
@@ -319,8 +318,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	matchingBindingCount := 0
 	for _, acl := range acls {
 		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
-		var requester aclContextKey = "requester"
-		ctx := context.WithValue(context.Background(), requester, "delete")
+		ctx := context.WithValue(context.Background(), kafka.Requester, "delete")
 
 		resp, err := c.Client.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
 		if err != nil {

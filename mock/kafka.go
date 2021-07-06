@@ -10,6 +10,8 @@ import (
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 )
 
 // Compile-time check interface adherence
@@ -88,8 +90,8 @@ func (m *Kafka) UpdateTopic(_ context.Context, _ *schedv1.KafkaCluster, topic *s
 func (m *Kafka) ListACLs(ctx context.Context, _ *schedv1.KafkaCluster, filter *schedv1.ACLFilter) ([]*schedv1.ACLBinding, error) {
 	// Testing DeleteACLs calls List, then Delete, but only sends the expected message once;
 	// so for now we want to ignore assertions about List while testing Delete
-	if requester, ok := ctx.Value("requester").(string); ok {
-		if requester == "delete" {
+	if val, ok := ctx.Value(kafka.Requester).(string); ok {
+		if val == "delete" {
 			return nil, nil
 		}
 	}
