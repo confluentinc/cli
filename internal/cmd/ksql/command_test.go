@@ -16,6 +16,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -32,7 +33,7 @@ const (
 	keySecretString   = "secret"
 	serviceAcctID     = int32(123)
 	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
-+------------------+------------+------------------+------------------+------------------------------+----------+
+-------------------+------------+------------------+------------------+------------------------------+-----------
   User:123         | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL   
   User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL   
   User:123         | ALLOW      | CREATE           | TOPIC            | pksqlc-abcde                 | PREFIXED  

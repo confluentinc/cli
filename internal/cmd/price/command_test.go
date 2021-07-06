@@ -46,7 +46,7 @@ func TestList(t *testing.T) {
 
 	want := strings.Join([]string{
 		"      Metric     | Cluster Type | Availability | Network Type |    Price      ",
-		"+----------------+--------------+--------------+--------------+--------------+",
+		"-----------------+--------------+--------------+--------------+---------------",
 		"  Connect record | Basic        | Single zone  | Internet     | $1.00 USD/GB  ",
 	}, "\n")
 
@@ -82,7 +82,7 @@ func TestListLegacyClusterTypes(t *testing.T) {
 
 	want := strings.Join([]string{
 		"      Metric     |   Cluster Type    | Availability | Network Type |    Price      ",
-		"+----------------+-------------------+--------------+--------------+--------------+",
+		"-----------------+-------------------+--------------+--------------+---------------",
 		"  Connect record | Legacy - Standard | Single zone  | Internet     | $1.00 USD/GB  ",
 	}, "\n")
 
