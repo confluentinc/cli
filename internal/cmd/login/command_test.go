@@ -891,6 +891,7 @@ func TestIsCCloudURL_True(t *testing.T) {
 		"confluent.cloud",
 		"confluent.cloud:8090",
 		"https://confluent.cloud",
+		"https://confluent.cloud/",
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",

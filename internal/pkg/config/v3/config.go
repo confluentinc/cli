@@ -431,7 +431,7 @@ func (c *Config) IsCloud() bool {
 	}
 
 	for _, hostname := range CCloudHostnames {
-		if strings.HasSuffix(ctx.PlatformName, hostname) {
+		if strings.Contains(ctx.PlatformName, hostname) {
 			return true
 		}
 	}
