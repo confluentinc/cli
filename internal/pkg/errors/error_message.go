@@ -117,7 +117,7 @@ const (
 	InvalidTypeFlagSuggestions            = "Allowed values for `--type` flag are: %s, %s, %s."
 	NameOrCKUFlagErrorMsg                 = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                  = "`--name` flag value must not be emtpy"
-	KafkaClusterNotExistsErrorMsg         = "kafka cluster \"%s\" not found"
+	KafkaClusterNotFoundErrorMsg          = "kafka cluster \"%s\" not found"
 	KafkaClusterStillProvisioningErrorMsg = "Your cluster is still provisioning, so it can't be updated yet.  Please retry in a few minutes."
 	KafkaClusterUpdateFailedSuggestions   = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
