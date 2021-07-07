@@ -4,11 +4,12 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
 // TestCloudURL is used to hardcode a specific port (1024) so tests can identify CCloud URLs
-const TestCloudURL = "127.0.0.1:1024"
+var TestCloudURL = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
 
 // TestBackend consists of the servers for necessary mocked backend services
 // Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined
@@ -56,7 +57,7 @@ func newTestCloudServer(handler http.Handler) *httptest.Server {
 	}
 
 	// Create a new listener with the hardcoded port
-	l, err := net.Listen("tcp", TestCloudURL)
+	l, err := net.Listen("tcp", TestCloudURL.Host)
 	if err != nil {
 		panic(err)
 	}

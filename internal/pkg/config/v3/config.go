@@ -6,16 +6,18 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"strings"
 
 	"github.com/blang/semver"
 	"github.com/google/uuid"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -24,7 +26,8 @@ const (
 )
 
 var (
-	Version = semver.MustParse("3.0.0")
+	Version         = semver.MustParse("3.0.0")
+	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
 )
 
 // Config represents the CLI configuration.
@@ -39,6 +42,7 @@ type Config struct {
 	ContextStates          map[string]*v2.ContextState `json:"context_states,omitempty"`
 	CurrentContext         string                      `json:"current_context"`
 	AnonymousId            string                      `json:"anonymous_id,omitempty"`
+	IsTest                 bool                        `json:"-"`
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
@@ -411,7 +415,34 @@ func (c *Config) ResetAnonymousId() error {
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, "confluent"))
 	}
 	return c.Filename, nil
+}
+
+func (c *Config) IsCloud() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+
+	if c.IsTest {
+		return ctx.PlatformName == testserver.TestCloudURL.String()
+	}
+
+	for _, hostname := range CCloudHostnames {
+		if strings.Contains(ctx.PlatformName, hostname) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Config) IsOnPrem() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+
+	return ctx.PlatformName != "" && !c.IsCloud()
 }

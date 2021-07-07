@@ -9,9 +9,9 @@ kafka_cluster_context:
         hi:
           api_key: hi
           api_secret: my-secret
-      bootstrap_servers: boot-test.com
+      bootstrap_servers: http://127.0.0.1:1024
       id: anonymous-id
       name: anonymous-cluster
 name: my-context
-platform: boot-test.com
+platform: http://127.0.0.1:1024
 schema_registry_clusters: {}

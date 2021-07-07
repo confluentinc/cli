@@ -23,21 +23,21 @@ var (
 
 type contextCommand struct {
 	*pcmd.CLICommand
-	cliName   string
+	isCloud   bool
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
 
 // NewContext returns the Cobra contextCommand for `config context`.
-func NewContext(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func NewContext(isCloud bool, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "context",
 			Short: "Manage config contexts.",
 		}, prerunner)
 	cmd := &contextCommand{
-		cliName:    cliName,
 		CLICommand: cliCmd,
+		isCloud:    isCloud,
 		prerunner:  prerunner,
 		analytics:  analytics,
 	}
@@ -71,17 +71,11 @@ func (c *contextCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.current),
 	}
-	var usernameFlagUsage string
-	if c.cliName == "ccloud" {
-		usernameFlagUsage = "Returns email if logged in, and returns API key if API key context."
-	} else {
-		usernameFlagUsage = "Returns username."
-	}
-	currentCmd.Flags().Bool("username", false, usernameFlagUsage)
+	currentCmd.Flags().Bool("username", false, "Return username, email, or API key based on context.")
 	currentCmd.Flags().SortFlags = false
 	c.AddCommand(currentCmd)
 
-	if c.cliName == "ccloud" {
+	if c.isCloud {
 		getCmd := &cobra.Command{
 			Use:   "get <id or no argument for current context>",
 			Short: "Get a config context parameter.",

@@ -22,6 +22,9 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -35,8 +38,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	cliMock "github.com/confluentinc/cli/mock"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 )
 
 const (
@@ -887,13 +888,15 @@ func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
 
 func TestIsCCloudURL_True(t *testing.T) {
 	for _, url := range []string{
-		"devel.cpdev.cloud",
-		"stag.cpdev.cloud",
 		"confluent.cloud",
 		"confluent.cloud:8090",
 		"https://confluent.cloud",
+		"https://confluent.cloud/",
+		"devel.cpdev.cloud",
+		"stag.cpdev.cloud",
+		"premium-oryx.gcp.priv.cpdev.cloud",
 	} {
-		c := &Command{isTest: true}
+		c := new(Command)
 		require.True(t, c.isCCloudURL(url), url+" should return true")
 	}
 }
@@ -904,7 +907,7 @@ func TestIsCCloudURL_False(t *testing.T) {
 		"example.com:8090",
 		"https://example.com",
 	} {
-		c := &Command{isTest: true}
+		c := new(Command)
 		require.False(t, c.isCCloudURL(url), url+" should return false")
 	}
 }

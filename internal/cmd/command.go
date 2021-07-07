@@ -92,7 +92,10 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	cfg, configLoadingErr := loadConfig(cliName, logger)
 	if cfg != nil {
 		cfg.Logger = logger
+		cfg.IsTest = isTest
 	}
+
+	isCloud := cfg.IsCloud()
 
 	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
 	updateClient := update.NewClient(cliName, disableUpdateCheck, logger)
@@ -136,7 +139,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 
 	cli.AddCommand(auditlog.New(cliName, prerunner))
 	cli.AddCommand(completion.New(cli, cliName))
-	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
+	cli.AddCommand(config.New(isCloud, prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
