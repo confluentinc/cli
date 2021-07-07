@@ -1,4 +1,5 @@
-Error: Kafka cluster "lkc-unknown" not found
+Error: kafka cluster "lkc-unknown" not found
 
 Suggestions:
-    To list Kafka clusters, use `ccloud kafka cluster list`.
+    Ensure the cluster ID you entered is valid.
+    Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`.
