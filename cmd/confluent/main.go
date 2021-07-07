@@ -5,14 +5,14 @@ import (
 	"strconv"
 
 	"github.com/confluentinc/bincover"
-	"github.com/spf13/viper"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
+// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
 var (
-	// Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
 	version = "v0.0.0"
 	commit  = ""
 	date    = ""
@@ -21,23 +21,18 @@ var (
 )
 
 func main() {
-	viper.AutomaticEnv()
+	cfg, err := cmd.LoadConfig()
+	if err != nil {
+		cobra.CheckErr(err)
+	}
 
 	isTest, err := strconv.ParseBool(isTest)
 	if err != nil {
 		panic(err)
 	}
+	cfg.IsTest = isTest
 
 	version := pversion.NewVersion(version, commit, date, host)
-
-<<<<<<< Updated upstream
-	cfg, err := cmd.LoadConfig()
-=======
-	cfg, err := cmd.LoadConfig(isTest)
->>>>>>> Stashed changes
-	if err != nil {
-		panic(err)
-	}
 
 	cli := cmd.NewConfluentCommand(cfg, isTest, version)
 

@@ -283,9 +283,15 @@ func (c *Command) saveLoginToNetrc(cmd *cobra.Command, credentials *pauth.Creden
 	}
 
 	if save {
-		if err := c.netrcHandler.WriteNetrcCredentials(c.Config.CLIName, credentials.IsSSO, c.Config.Config.Context().Name, credentials.Username, credentials.Password); err != nil {
+		cliName := "confluent"
+		if c.Config.IsCloud() {
+			cliName = "ccloud"
+		}
+
+		if err := c.netrcHandler.WriteNetrcCredentials(cliName, credentials.IsSSO, c.Config.Config.Context().Name, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
+
 		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, c.netrcHandler.GetFileName())
 	}
 

@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  ccloud kafka cluster create <name> [flags]
+  confluent kafka cluster create <name> [flags]
 
 Examples:
 Create a new dedicated cluster that uses a customer-managed encryption key in AWS:

@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  ccloud kafka topic create <topic> [flags]
+  confluent kafka topic create <topic> [flags]
 
 Examples:
 Create a topic named ``my_topic`` with default options.

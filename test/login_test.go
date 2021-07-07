@@ -31,12 +31,6 @@ var (
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
 		{
-			name:        "error if not authenticated",
-			args:        "kafka topic create integ",
-			fixture:     "err-not-authenticated.golden",
-			wantErrCode: 1,
-		},
-		{
 			name:        "error if no active kafka",
 			args:        "kafka topic create integ",
 			fixture:     "err-no-kafka.golden",

@@ -14,10 +14,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/bincover"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/bincover"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -145,42 +145,6 @@ func (s *CLITestSuite) TearDownSuite() {
 	// Merge coverage profiles.
 	_ = covCollector.TearDown()
 	s.TestBackend.Close()
-}
-
-func (s *CLITestSuite) TestConfluentHelp() {
-	var tests []CLITest
-	if runtime.GOOS == "windows" {
-		tests = []CLITest{
-			{name: "no args", fixture: "confluent-help-flag-windows.golden"},
-			{args: "help", fixture: "confluent-help-windows.golden"},
-			{args: "--help", fixture: "confluent-help-flag-windows.golden"},
-			{args: "version", fixture: "confluent-version.golden", regex: true},
-		}
-	} else {
-		tests = []CLITest{
-			{name: "no args", fixture: "confluent-help-flag.golden"},
-			{args: "help", fixture: "confluent-help.golden"},
-			{args: "--help", fixture: "confluent-help-flag.golden"},
-			{args: "version", fixture: "confluent-version.golden", regex: true},
-		}
-	}
-
-	for _, tt := range tests {
-		s.runConfluentTest(tt)
-	}
-}
-
-func (s *CLITestSuite) TestCcloudHelp() {
-	tests := []CLITest{
-		{name: "no args", fixture: "help-flag-fail.golden"},
-		{args: "help", fixture: "help.golden"},
-		{args: "--help", fixture: "help-flag.golden"},
-		{args: "version", fixture: "version.golden", regex: true},
-	}
-
-	for _, tt := range tests {
-		s.runCcloudTest(tt)
-	}
 }
 
 func (s *CLITestSuite) TestCcloudErrors() {

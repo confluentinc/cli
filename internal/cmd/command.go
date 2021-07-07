@@ -7,6 +7,7 @@ import (
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/confluentinc/cli/internal/cmd/api-key"
@@ -63,6 +64,8 @@ type command struct {
 }
 
 func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *command {
+	viper.AutomaticEnv()
+
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
 		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
@@ -82,11 +85,9 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
-	isCloud := cfg.IsCloud()
-	isOnPrem := cfg.IsOnPrem()
-
+	// TODO: Remove once unification is complete
 	cliName := "confluent"
-	if isCloud {
+	if cfg.IsCloud() {
 		cliName = "ccloud"
 	}
 
@@ -125,7 +126,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	// Shell Completion
 	shellCompleter := completer.NewShellCompleter(cli)
 	var serverCompleter completer.ServerSideCompleter
-	if isCloud {
+	if cfg.IsCloud() {
 		serverCompleter = shellCompleter.ServerSideCompleter
 	}
 
@@ -133,29 +134,30 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 
 	cli.AddCommand(auditlog.New(cliName, prerunner))
 	cli.AddCommand(completion.New(cli, cliName))
-	cli.AddCommand(config.New(isCloud, prerunner, analyticsClient))
+	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(version.New(cliName, prerunner, ver))
+
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
 
-	if isOnPrem {
+	if cfg.IsOnPrem() {
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(local.New(prerunner))
 		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 
-	if isCloud {
+	if cfg.IsCloud() {
 		cli.AddCommand(admin.New(prerunner, isTest))
 		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 	}
 
 	// If a user uses an API key to log in, don't allow the remaining commands.
-	if isCloud && isAPIKeyLogin {
+	if cfg.IsCloud() && isAPIKeyLogin {
 		return command
 	}
 
@@ -163,7 +165,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
 
-	if isCloud {
+	if cfg.IsCloud() {
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 		connectorCmd := connector.New(cliName, prerunner, analyticsClient)
 		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
@@ -224,13 +226,11 @@ func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	}
 }
 
-func LoadConfig(isTest bool) (*v3.Config, error) {
+func LoadConfig() (*v3.Config, error) {
 	cfg := v3.New(&pconfig.Params{
-		CLIName:    cliName,
 		Logger:     log.New(),
 		MetricSink: metric.NewSink(),
 	})
-	cfg.IsTest = isTest
 
 	return load.LoadAndMigrate(cfg)
 }

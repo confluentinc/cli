@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -21,8 +23,6 @@ var (
 	dicFile = flag.String("dic-file", "", "hunspell .dic file")
 
 	vocab *gospell.GoSpell
-
-	cliNames = []string{"confluent", "ccloud"}
 
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
@@ -145,10 +145,10 @@ var rules = []linter.Rule{
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret", "mirror"),
@@ -233,9 +233,22 @@ func main() {
 		Debug:     *debug,
 	}
 
+	configs := []*v3.Config{
+		{
+			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
+			CurrentContext: "cloud",
+			IsTest:         true,
+		},
+		{
+			Contexts:       map[string]*v3.Context{"on-prem": {PlatformName: "https://example.com"}},
+			CurrentContext: "on-prem",
+			IsTest:         true,
+		},
+	}
+
 	var issues *multierror.Error
-	for _, cliName := range cliNames {
-		cli := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName})
+	for _, cfg := range configs {
+		cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
 		if err := l.Lint(cli.Command); err != nil {
 			issues = multierror.Append(issues, err)
 		}

@@ -24,7 +24,7 @@ const (
 )
 
 func NewVersion(version, commit, buildDate, buildHost string) *Version {
-	support := "https://confluent.io; support@confluent.io"
+	dashDelimitedName := strings.ReplaceAll(FullCLIName, " ", "-")
 
 	return &Version{
 		Binary:    CLIName,
@@ -33,8 +33,8 @@ func NewVersion(version, commit, buildDate, buildHost string) *Version {
 		Commit:    commit,
 		BuildDate: buildDate,
 		BuildHost: buildHost,
-		UserAgent: fmt.Sprintf("%s/%s (%s)", strings.ReplaceAll(FullCLIName, " ", "-"), version, support),
-		ClientID:  fmt.Sprintf("%s_%s", strings.ReplaceAll(FullCLIName, " ", "-"), version),
+		UserAgent: fmt.Sprintf("%s/%s (https://confluent.io; support@confluent.io)", dashDelimitedName, version),
+		ClientID:  fmt.Sprintf("%s_%s", dashDelimitedName, version),
 	}
 }
 

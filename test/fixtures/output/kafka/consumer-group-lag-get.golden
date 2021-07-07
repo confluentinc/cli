@@ -1,7 +1,7 @@
 Get consumer lag for a Kafka topic partition consumed by a consumer group.
 
 Usage:
-  ccloud kafka consumer-group lag get <consumer-group> [flags]
+  confluent kafka consumer-group lag get <consumer-group> [flags]
 
 Examples:
 Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.
