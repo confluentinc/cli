@@ -128,7 +128,7 @@ func (c *command) addContext(name string, bootstrapURL string, apiKey string, ap
 	}
 	platform := &v2.Platform{Server: bootstrapURL}
 	// Inject credential and platforms name for now, until users can provide custom names.
-	platform.Name = strings.TrimSuffix(platform.Server, "https://")
+	platform.Name = strings.TrimPrefix(platform.Server, "https://")
 	// Hardcoded for now, since username/password isn't implemented yet.
 	credential := &v2.Credential{
 		Username:       "",
