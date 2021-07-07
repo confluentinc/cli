@@ -6,16 +6,17 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/blang/semver"
 	"github.com/google/uuid"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -26,7 +27,7 @@ const (
 
 var (
 	Version         = semver.MustParse("3.0.0")
-	CCloudHostnames = []string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}
+	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
 )
 
 // Config represents the CLI configuration.
@@ -429,7 +430,12 @@ func (c *Config) IsCloud() bool {
 		return ctx.PlatformName == testserver.TestCloudURL.String()
 	}
 
-	return utils.Contains(CCloudHostnames, ctx.PlatformName)
+	for _, hostname := range CCloudHostnames {
+		if strings.HasSuffix(ctx.PlatformName, hostname) {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Config) IsOnPrem() bool {

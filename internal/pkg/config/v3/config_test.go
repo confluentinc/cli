@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"testing"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -1063,12 +1063,19 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 }
 
 func TestConfig_IsCloud_True(t *testing.T) {
-	for _, platform := range []string{"devel.cpdev.cloud", "stag.cpdev.cloud", "confluent.cloud"} {
+	platforms := []string{
+		"devel.cpdev.cloud",
+		"stag.cpdev.cloud",
+		"confluent.cloud",
+		"premium-oryx.gcp.priv.cpdev.cloud",
+	}
+
+	for _, platform := range platforms {
 		config := &Config{
 			Contexts:       map[string]*Context{"context": {PlatformName: platform}},
 			CurrentContext: "context",
 		}
-		require.True(t, config.IsCloud())
+		require.True(t, config.IsCloud(), platform+" should be true")
 	}
 }
 
