@@ -185,6 +185,7 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
+
 	useCmd := &cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
@@ -450,13 +451,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
+	clusterID := args[0]
 	req := &schedv1.KafkaCluster{
 		AccountId: c.EnvironmentId(),
-		Id:        args[0],
+		Id:        clusterID,
 	}
 	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.ChooseRightEnvironmentSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
@@ -515,13 +517,13 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
 	if _, err := c.Context.FindKafkaCluster(cmd, clusterID); err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
-	
+
 	if err := c.Context.SetActiveKafkaCluster(cmd, clusterID); err != nil {
 		return err
 	}
-	
+
 	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
 	return nil
 }
