@@ -127,7 +127,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		credentials.Password = refreshToken
 	}
 
-	if err := c.saveLoginToNetrc(cmd, credentials); err != nil {
+	if err := c.saveLoginToNetrc(cmd, true, credentials); err != nil {
 		return err
 	}
 
@@ -203,7 +203,7 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	err = c.saveLoginToNetrc(cmd, credentials)
+	err = c.saveLoginToNetrc(cmd, false, credentials)
 	if err != nil {
 		return err
 	}
@@ -276,19 +276,14 @@ func (c *Command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (c *Command) saveLoginToNetrc(cmd *cobra.Command, credentials *pauth.Credentials) error {
+func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
 	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 
 	if save {
-		cliName := "confluent"
-		if c.Config.IsCloud() {
-			cliName = "ccloud"
-		}
-
-		if err := c.netrcHandler.WriteNetrcCredentials(cliName, credentials.IsSSO, c.Config.Config.Context().Name, credentials.Username, credentials.Password); err != nil {
+		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().Name, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
 

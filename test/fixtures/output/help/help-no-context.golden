@@ -12,7 +12,7 @@ Available Commands:
   kafka           Manage Apache Kafka.
   ksql            Manage ksqlDB applications.
   login           Log in to Confluent Cloud or Confluent Platform.
-  logout          Log out of Confluent Platform.
+  logout          Log out of Confluent Cloud or Confluent Platform.
   schema-registry Manage Schema Registry.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.
