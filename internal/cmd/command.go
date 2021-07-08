@@ -133,7 +133,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
 	cli.AddCommand(auditlog.New(cliName, prerunner))
-	cli.AddCommand(completion.New(cli, cliName))
+	cli.AddCommand(completion.New(cli))
 	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
