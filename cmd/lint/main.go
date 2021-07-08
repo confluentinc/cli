@@ -48,10 +48,6 @@ var (
 		//only on children of kafka acl commands
 		linter.ExcludeCommand("kafka acl"),
 	}
-	confluentClusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("confluent kafka topic"),
-		linter.ExcludeCommand("kafka topic"),
-	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
 	}
