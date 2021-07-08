@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,6 +11,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -92,6 +94,9 @@ func TestHelp_OnPrem(t *testing.T) {
 	commands := []string{
 		"audit-log", "cluster", "completion", "config", "connect", "help", "iam", "kafka", "ksql", "local", "login",
 		"logout", "schema-registry", "secret", "update", "version",
+	}
+	if runtime.GOOS == "windows" {
+		commands = utils.Remove(commands, "local")
 	}
 
 	for _, command := range commands {
