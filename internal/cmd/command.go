@@ -66,7 +66,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
 		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
-		Long:              "Manage your Confluent Cloud or Confluent Platform.",
+		Long:              fmt.Sprintf("Manage your %s.", cfg.FullContextName()),
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}

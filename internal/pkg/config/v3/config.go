@@ -445,3 +445,13 @@ func (c *Config) IsOnPrem() bool {
 
 	return ctx.PlatformName != "" && !c.IsCloud()
 }
+
+func (c *Config) FullContextName() string {
+	if c.IsCloud() {
+		return "Confluent Cloud"
+	}
+	if c.IsOnPrem() {
+		return "Confluent Platform"
+	}
+	return "Confluent Cloud or Confluent Platform"
+}
