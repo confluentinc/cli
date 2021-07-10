@@ -27,8 +27,10 @@ func TestHelp_NoContext(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"audit-log", "completion", "config", "help", "iam", "kafka", "ksql", "login", "logout", "schema-registry",
-		"update", "version",
+		"completion", "config", "help", "kafka", "local", "login", "logout", "update", "version",
+	}
+	if runtime.GOOS == "windows" {
+		commands = utils.Remove(commands, "local")
 	}
 
 	for _, command := range commands {

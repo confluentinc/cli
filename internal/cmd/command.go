@@ -120,49 +120,36 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 
 	command := &command{Command: cli, Analytics: analyticsClient, logger: logger}
 
-	// Shell Completion
-	shellCompleter := completer.NewShellCompleter(cli)
 	var serverCompleter completer.ServerSideCompleter
+	shellCompleter := completer.NewShellCompleter(cli)
 	if cfg.IsCloud() {
 		serverCompleter = shellCompleter.ServerSideCompleter
 	}
 
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
-	cli.AddCommand(auditlog.New(cliName, prerunner))
+	// No-login commands
 	cli.AddCommand(completion.New(cli, cliName))
 	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
-	cli.AddCommand(version.New(cliName, prerunner, ver))
-
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
-
-	if cfg.IsOnPrem() {
-		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
-		cli.AddCommand(connect.New(prerunner))
-		cli.AddCommand(local.New(prerunner))
-		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	}
+	cli.AddCommand(version.New(cliName, prerunner, ver))
 
 	if cfg.IsCloud() {
 		cli.AddCommand(admin.New(prerunner, isTest))
+		cli.AddCommand(auditlog.New(cliName, prerunner))
 		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
-	}
 
-	// If a user uses an API key to log in, don't allow the remaining commands.
-	if cfg.IsCloud() && isAPIKeyLogin {
-		return command
-	}
+		// If a user logs in with an API key, don't allow the remaining commands.
+		if isAPIKeyLogin {
+			return command
+		}
 
-	cli.AddCommand(iam.New(cliName, prerunner))
-	cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
-	cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
-
-	if cfg.IsCloud() {
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 		connectorCmd := connector.New(cliName, prerunner, analyticsClient)
 		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
@@ -179,11 +166,24 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(connectorCatalogCmd.Command)
 		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(prompt.New(cliName, prerunner, &ps1.Prompt{}, logger))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
 		cli.AddCommand(serviceAccountCmd.Command)
 		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, shellCompleter, logger, analyticsClient, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
+	}
+
+	if cfg.IsOnPrem() {
+		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
+		cli.AddCommand(connect.New(prerunner))
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
+		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 
 	return command
