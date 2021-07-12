@@ -38,7 +38,7 @@ it'll be easiest for you if you use an environment variable rather than try to e
 
 ::
 
-  export {{.CLIName | ToUpper}}_PROMPT_FMT='({{"{{"}}color "blue" "{{.CLIName}}"{{"}}"}}|{{"{{"}}color "red" "%E"{{"}}"}}:{{"{{"}}color "cyan" "%K"{{"}}"}})'
+  export {{.CLIName | ToUpper}}_PROMPT_FMT='({{color "blue" "{{.CLIName}}"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
   export PS1="\$({{.CLIName}} prompt -f '${{.CLIName | ToUpper}}_PROMPT_FMT') $PS1"
 
 To make this permanent, you must add it to your bash or zsh profile.
@@ -48,31 +48,31 @@ Formats
 
 '{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
-* '%C' or {{"{{"}}.ContextName{{"}}"}}
+* '%C' or {{.ContextName}}
 
   The name of the current context in use. E.g., "dev-app1", "stag-dc1", "prod"
 
-* '%e' or {{"{{"}}.EnvironmentId{{"}}"}}
+* '%e' or {{.EnvironmentId}}
 
   The ID of the current environment in use. E.g., "a-4567"
 
-* '%E' or {{"{{"}}.EnvironmentName{{"}}"}}
+* '%E' or {{.EnvironmentName}}
 
   The name of the current environment in use. E.g., "default", "prod-team1"
 
-* '%k' or {{"{{"}}.KafkaClusterId{{"}}"}}
+* '%k' or {{.KafkaClusterId}}
 
   The ID of the current Kafka cluster in use. E.g., "lkc-abc123"
 
-* '%K' or {{"{{"}}.KafkaClusterName{{"}}"}}
+* '%K' or {{.KafkaClusterName}}
 
   The name of the current Kafka cluster in use. E.g., "prod-us-west-2-iot"
 
-* '%a' or {{"{{"}}.KafkaAPIKey{{"}}"}}
+* '%a' or {{.KafkaAPIKey}}
 
   The current Kafka API key in use. E.g., "ABCDEF1234567890"
 
-* '%u' or {{"{{"}}.UserName{{"}}"}}
+* '%u' or {{.UserName}}
 
   The current user or credentials in use. E.g., "joe@montana.com"
 
@@ -81,21 +81,21 @@ Colors
 
 There are special functions used for controlling colors.
 
-* {{"{{"}}color "<color>" "some text"{{"}}"}}
-* {{"{{"}}fgcolor "<color>" "some text"{{"}}"}}
-* {{"{{"}}bgcolor "<color>" "some text"{{"}}"}}
-* {{"{{"}}colorattr "<attr>" "some text"{{"}}"}}
+* {{color "<color>" "some text"}}
+* {{fgcolor "<color>" "some text"}}
+* {{bgcolor "<color>" "some text"}}
+* {{colorattr "<attr>" "some text"}}
 
 Available colors: black, red, green, yellow, blue, magenta, cyan, white
 Available attributes: bold, underline, invert (swaps the fg/bg colors)
 
 Examples:
 
-* {{"{{"}}color "red" "some text" | colorattr "bold" | bgcolor "blue"{{"}}"}}
-* {{"{{"}}color "red"{{"}}"}} some text here {{"{{"}}resetcolor{{"}}"}}
+* {{color "red" "some text" | colorattr "bold" | bgcolor "blue"}}
+* {{color "red"}} some text here {{resetcolor}}
 
 You can also mix format tokens and/or data in the same line
-* {{"{{"}}color "cyan" "%E"{{"}}"}} {{"{{"}}color "blue" .KafkaClusterId{{"}}"}}
+* {{color "cyan" "%E"}} {{color "blue" .KafkaClusterId}}
 
 Notes:
 
@@ -128,7 +128,7 @@ func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.GetFullCLIName(cliName)),
-		Long:  strings.ReplaceAll(longDescriptionTemplate, "{{.CLIName}}", cliName),
+		Long:  parseTemplate(longDescriptionTemplate, cliName),
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
@@ -198,6 +198,12 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	}
 
 	return nil
+}
+
+func parseTemplate(template, cliName string) string {
+	template = strings.ReplaceAll(template, "{{.CLIName}}", cliName)
+	template = strings.ReplaceAll(template, "{{.CLIName | ToUpper}}", strings.ToUpper(cliName))
+	return template
 }
 
 // mustParseTemplate will panic if text can't be parsed or executed
