@@ -8,7 +8,6 @@ Available Commands:
   config      Modify the CLI configuration.
   help        Help about any command
   kafka       Manage Apache Kafka.
-  local       Manage a local Confluent Platform development environment.
   login       Log in to Confluent Cloud or Confluent Platform.
   logout      Log out of Confluent Platform.
   update      Update the Confluent CLI.

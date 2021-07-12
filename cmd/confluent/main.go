@@ -6,6 +6,7 @@ import (
 
 	"github.com/confluentinc/bincover"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -21,6 +22,8 @@ var (
 )
 
 func main() {
+	viper.AutomaticEnv()
+
 	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		cobra.CheckErr(err)
