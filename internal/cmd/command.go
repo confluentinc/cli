@@ -66,7 +66,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
 		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
-		Long:              fmt.Sprintf("Manage your %s.", cfg.FullContextName()),
+		Long:              getLongDescription(cfg),
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
@@ -230,4 +230,16 @@ func LoadConfig() (*v3.Config, error) {
 	})
 
 	return load.LoadAndMigrate(cfg)
+}
+
+func getLongDescription(cfg *v3.Config) string {
+	if cfg.IsCloud() {
+		return "Manage your Confluent Cloud."
+	}
+
+	if cfg.IsOnPrem() {
+		return "Manage your Confluent Platform."
+	}
+
+	return "Manage your Confluent Cloud or Confluent Platform. Log in to see all available commands."
 }
