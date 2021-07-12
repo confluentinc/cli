@@ -142,7 +142,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 
 	if cfg.IsCloud() {
 		cli.AddCommand(admin.New(prerunner, isTest))
-		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(auditlog.New(cfg, prerunner))
 		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 
 		// If a user logs in with an API key, don't allow the remaining commands.
@@ -177,7 +177,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	if cfg.IsOnPrem() {
-		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(auditlog.New(cfg, prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
 		cli.AddCommand(iam.New(cliName, prerunner))

@@ -41,5 +41,6 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 			TopicName:        "confluent-audit-log-events",
 		}
 	}
-	return New("ccloud", climock.NewPreRunnerMock(client, nil, nil, cfg))
+
+	return New(cfg, climock.NewPreRunnerMock(client, nil, nil, cfg))
 }

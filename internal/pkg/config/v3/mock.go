@@ -10,6 +10,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -53,7 +54,7 @@ func AuthenticatedCloudConfigMock() *Config {
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
 		username:       mockEmail,
-		url:            MockUserResourceId,
+		url:            testserver.TestCloudURL.String(),
 		envId:          MockEnvironmentId,
 		orgId:          mockOrganizationId,
 		orgResourceId:  MockOrgResourceId,
@@ -201,9 +202,9 @@ func createPlatform(name, server string) *v2.Platform {
 func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *v1.AuthConfig {
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
-			Id:             userId,
-			Email:          email,
-			ResourceId:     userResourceId,
+			Id:         userId,
+			Email:      email,
+			ResourceId: userResourceId,
 		},
 		Account: &orgv1.Account{Id: envId},
 		Organization: &orgv1.Organization{
@@ -263,6 +264,7 @@ func setUpConfig(conf *Config, ctx *Context, platform *v2.Platform, credential *
 	conf.Contexts[ctx.Name] = ctx
 	conf.Contexts[ctx.Name].Config = conf
 	conf.CurrentContext = ctx.Name
+	conf.IsTest = true
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
