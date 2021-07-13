@@ -189,7 +189,7 @@ func printExamples(buf *bytes.Buffer, cmd *cobra.Command) {
 
 			buf.WriteString("  " + line + "\n")
 			isInsideCodeBlock = true
-		} else {
+		} else if line != "" {
 			// This line contains a description.
 			buf.WriteString("\n" + line + "\n")
 			isInsideCodeBlock = false
