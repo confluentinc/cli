@@ -4,7 +4,7 @@ Usage:
   confluent iam rolebinding list [flags]
 
 Examples:
-Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:
+Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
 ::
 

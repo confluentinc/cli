@@ -3,7 +3,7 @@ Usage:
   ccloud kafka topic describe <topic> [flags]
 
 Examples:
-Describe the ``my_topic`` topic.
+Describe the `my_topic` topic.
 
 ::
 

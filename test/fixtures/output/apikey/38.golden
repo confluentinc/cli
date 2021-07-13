@@ -3,7 +3,7 @@ Usage:
   ccloud api-key create [flags]
 
 Examples:
-Create an API key for service account with resource ID ``sa-lqv3mm`` for cluster ``lkc-xyz``
+Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`
 
 ::
 

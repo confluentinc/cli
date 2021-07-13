@@ -190,7 +190,8 @@ func printExamples(buf *bytes.Buffer, cmd *cobra.Command) {
 			buf.WriteString("  " + line + "\n")
 			isInsideCodeBlock = true
 		} else if line != "" {
-			// This line contains a description.
+			// This line contains a description. Use double backticks for .rst code blocks.
+			line = strings.ReplaceAll(line, "`", "``")
 			buf.WriteString("\n" + line + "\n")
 			isInsideCodeBlock = false
 		}
