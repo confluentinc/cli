@@ -82,13 +82,7 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 
 	printWarnings(buf, cmd, depth)
 
-	desc := cmd.Short
-	if cmd.Long != "" {
-		desc = cmd.Long
-	}
-	buf.WriteString("Description\n")
-	buf.WriteString("~~~~~~~~~~~\n\n")
-	buf.WriteString(desc + "\n\n")
+	printDescription(buf, cmd)
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
@@ -142,6 +136,19 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 	}
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+func printDescription(buf *bytes.Buffer, cmd *cobra.Command) {
+	buf.WriteString("Description\n")
+	buf.WriteString("~~~~~~~~~~~\n\n")
+
+	desc := cmd.Short
+	if cmd.Long != "" {
+		desc = cmd.Long
+	}
+
+	desc = strings.ReplaceAll(desc, "`", "``")
+	buf.WriteString(desc + "\n\n")
 }
 
 func printFlags(buf *bytes.Buffer, cmd *cobra.Command) error {
