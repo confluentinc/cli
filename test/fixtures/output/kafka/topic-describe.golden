@@ -5,11 +5,7 @@ Usage:
 Examples:
 Describe the `my_topic` topic.
 
-::
-
-  ccloud kafka topic describe my_topic
-
-
+  $ ccloud kafka topic describe my_topic
 
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
