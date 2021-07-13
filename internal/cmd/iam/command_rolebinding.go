@@ -182,7 +182,7 @@ func (c *rolebindingCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a role binding for the client permitting it produce to the topic users.",
-				Code: "confluent iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+				Code: c.cliName + " iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
 			},
 		),
 	}
