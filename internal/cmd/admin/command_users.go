@@ -46,7 +46,7 @@ var (
 	}
 )
 
-var AuthMethod_name_human = map[flowv1.AuthMethod]string{
+var authMethodFormats = map[flowv1.AuthMethod]string{
 	0: "Unknown",
 	1: "Username/Password",
 	2: "SSO",
@@ -109,15 +109,9 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	users, err := c.Client.User.List(context.Background())
+	userId, err := c.getUserIdwithResourceId(resourceId)
 	if err != nil {
 		return err
-	}
-	var userId int32
-	for _, user := range users {
-		if user.ResourceId == resourceId {
-			userId = user.Id
-		}
 	}
 
 	// Avoid panics if new types of statuses are added in the future
@@ -129,10 +123,9 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	var authMethods []string
 	if userProfile.GetAuthConfig() != nil {
 		for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-			authMethods = append(authMethods, AuthMethod_name_human[method])
+			authMethods = append(authMethods, authMethodFormats[method])
 		}
 	}
-	authenticationMethod := strings.Join(authMethods, ", ")
 
 	return output.DescribeObject(cmd, &userStruct{
 		Id:                   userId,
@@ -141,7 +134,7 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		FirstName:            userProfile.FirstName,
 		LastName:             userProfile.LastName,
 		Status:               userStatus,
-		AuthenticationMethod: authenticationMethod,
+		AuthenticationMethod: strings.Join(authMethods, ", "),
 	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
@@ -184,10 +177,9 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		var authMethods []string
 		if userProfile.GetAuthConfig() != nil {
 			for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-				authMethods = append(authMethods, AuthMethod_name_human[method])
+				authMethods = append(authMethods, authMethodFormats[method])
 			}
 		}
-		authenticationMethod := strings.Join(authMethods, ", ")
 
 		outputWriter.AddElement(&userStruct{
 			Id:                   user.Id,
@@ -196,7 +188,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 			FirstName:            userProfile.FirstName,
 			LastName:             userProfile.LastName,
 			Status:               userStatus,
-			AuthenticationMethod: authenticationMethod,
+			AuthenticationMethod: strings.Join(authMethods, ", "),
 		})
 	}
 	return outputWriter.Out()
@@ -251,4 +243,18 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	utils.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
 	return nil
+}
+
+func (c userCommand) getUserIdwithResourceId(resourceId string) (int32, error) {
+	var userId int32
+	users, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	for _, user := range users {
+		if user.ResourceId == resourceId {
+			userId = user.Id
+		}
+	}
+	return userId, nil
 }
