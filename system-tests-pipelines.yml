@@ -103,16 +103,17 @@ jobs:
     displayName: checkout cc-system-tests
   
   - bash: |
+      make show-cpd
+    displayName: show cc-cpd.mk variables
+  
+  - bash: |
       make cpd-priv-create-if-missing
     env:
+      CPD_CR_ARGS: -v --deploy=false --pool-name ci --pool-tag random
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
     displayName: create cpd cluster
-  
-  - bash: |
-      make show-cpd
-    displayName: show cc-cpd.mk variables
 
   - bash: |
       make cpd-deploy-local
