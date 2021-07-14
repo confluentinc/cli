@@ -109,7 +109,7 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	userId, err := c.getUserIdwithResourceId(resourceId)
+	userId, err := c.getUserIdWithResourceId(resourceId)
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c userCommand) getUserIdwithResourceId(resourceId string) (int32, error) {
+func (c userCommand) getUserIdWithResourceId(resourceId string) (int32, error) {
 	var userId int32
 	users, err := c.Client.User.List(context.Background())
 	if err != nil {
