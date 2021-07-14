@@ -17,24 +17,26 @@ import (
 )
 
 var (
-	listFields    = []string{"Id", "ResourceId", "Email", "FirstName", "LastName", "Status"}
-	humanLabels   = []string{"Id", "Resource ID", "Email", "First Name", "Last Name", "Status"}
+	listFields    = []string{"Id", "ResourceId", "Email", "FirstName", "LastName", "Status", "AuthenticationMethod"}
+	humanLabels   = []string{"Id", "Resource ID", "Email", "First Name", "Last Name", "Status", "Authentication Method"}
 	humanLabelMap = map[string]string{
-		"Id":         "Id",
-		"ResourceId": "Resource ID",
-		"Email":      "Email",
-		"FirstName":  "First Name",
-		"LastName":   "Last Name",
-		"Status":     "Status",
+		"Id":                   "Id",
+		"ResourceId":           "Resource ID",
+		"Email":                "Email",
+		"FirstName":            "First Name",
+		"LastName":             "Last Name",
+		"Status":               "Status",
+		"AuthenticationMethod": "Authentication Method",
 	}
-	structuredLabels   = []string{"id", "resource_id", "email", "first_name", "last_name", "status"}
+	structuredLabels   = []string{"id", "resource_id", "email", "first_name", "last_name", "status", "authentication_method"}
 	structuredLabelMap = map[string]string{
-		"Id":         "id",
-		"ResourceId": "resource_id",
-		"Email":      "email",
-		"FirstName":  "first_name",
-		"LastName":   "last_name",
-		"Status":     "status",
+		"Id":                   "id",
+		"ResourceId":           "resource_id",
+		"Email":                "email",
+		"FirstName":            "first_name",
+		"LastName":             "last_name",
+		"Status":               "status",
+		"AuthenticationMethod": "authentication_method",
 	}
 	statusMap = map[flowv1.UserStatus]string{
 		flowv1.UserStatus_USER_STATUS_UNKNOWN:     "Unknown",
@@ -44,17 +46,24 @@ var (
 	}
 )
 
+var AuthMethod_name_human = map[flowv1.AuthMethod]string{
+	0: "Unknown",
+	1: "Username/Password",
+	2: "SSO",
+}
+
 type userCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
 type userStruct struct {
-	Id         int32
-	ResourceId string
-	Email      string
-	FirstName  string
-	LastName   string
-	Status     string
+	Id                   int32
+	ResourceId           string
+	Email                string
+	FirstName            string
+	LastName             string
+	Status               string
+	AuthenticationMethod string
 }
 
 func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -93,25 +102,44 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	if !validFormat {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
-	user, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{
+	userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{
 		ResourceId: resourceId,
 	})
 	if err != nil {
 		return err
 	}
 
+	users, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return err
+	}
+	var userId int32
+	for _, user := range users {
+		if user.ResourceId == resourceId {
+			userId = user.Id
+		}
+	}
+
 	// Avoid panics if new types of statuses are added in the future
 	userStatus := "Unknown"
-	if val, ok := statusMap[user.UserStatus]; ok {
+	if val, ok := statusMap[userProfile.UserStatus]; ok {
 		userStatus = val
 	}
 
+	var authMethods []string
+	for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
+		authMethods = append(authMethods, AuthMethod_name_human[method])
+	}
+	authenticationMethod := strings.Join(authMethods, ", ")
+
 	return output.DescribeObject(cmd, &userStruct{
-		ResourceId: user.ResourceId,
-		Email:      user.Email,
-		FirstName:  user.FirstName,
-		LastName:   user.LastName,
-		Status:     userStatus,
+		Id:                   userId,
+		ResourceId:           userProfile.ResourceId,
+		Email:                userProfile.Email,
+		FirstName:            userProfile.FirstName,
+		LastName:             userProfile.LastName,
+		Status:               userStatus,
+		AuthenticationMethod: authenticationMethod,
 	}, listFields, humanLabelMap, structuredLabelMap)
 }
 
@@ -151,13 +179,20 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 			userStatus = val
 		}
 
+		var authMethods []string
+		for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
+			authMethods = append(authMethods, AuthMethod_name_human[method])
+		}
+		authenticationMethod := strings.Join(authMethods, ", ")
+
 		outputWriter.AddElement(&userStruct{
-			Id:         user.Id,
-			ResourceId: userProfile.ResourceId,
-			Email:      userProfile.Email,
-			FirstName:  userProfile.FirstName,
-			LastName:   userProfile.LastName,
-			Status:     userStatus,
+			Id:                   user.Id,
+			ResourceId:           userProfile.ResourceId,
+			Email:                userProfile.Email,
+			FirstName:            userProfile.FirstName,
+			LastName:             userProfile.LastName,
+			Status:               userStatus,
+			AuthenticationMethod: authenticationMethod,
 		})
 	}
 	return outputWriter.Out()
@@ -205,7 +240,7 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 	err := c.Client.User.Delete(context.Background(), &orgv1.User{
-		ResourceId:     resourceId,
+		ResourceId: resourceId,
 	})
 	if err != nil {
 		return err
