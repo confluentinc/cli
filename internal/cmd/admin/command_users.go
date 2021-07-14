@@ -127,8 +127,10 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	var authMethods []string
-	for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-		authMethods = append(authMethods, AuthMethod_name_human[method])
+	if userProfile.GetAuthConfig() != nil {
+		for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
+			authMethods = append(authMethods, AuthMethod_name_human[method])
+		}
 	}
 	authenticationMethod := strings.Join(authMethods, ", ")
 
@@ -180,8 +182,10 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		var authMethods []string
-		for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-			authMethods = append(authMethods, AuthMethod_name_human[method])
+		if userProfile.GetAuthConfig() != nil {
+			for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
+				authMethods = append(authMethods, AuthMethod_name_human[method])
+			}
 		}
 		authenticationMethod := strings.Join(authMethods, ", ")
 
