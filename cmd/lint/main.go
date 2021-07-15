@@ -13,7 +13,6 @@ import (
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -230,14 +229,12 @@ func main() {
 			CurrentContext: "no context",
 		},
 		{
-			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
+			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: v3.CCloudHostnames[0]}},
 			CurrentContext: "cloud",
-			IsTest:         true,
 		},
 		{
 			Contexts:       map[string]*v3.Context{"on-prem": {PlatformName: "https://example.com"}},
 			CurrentContext: "on-prem",
-			IsTest:         true,
 		},
 	}
 
