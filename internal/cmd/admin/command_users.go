@@ -47,9 +47,9 @@ var (
 )
 
 var authMethodFormats = map[flowv1.AuthMethod]string{
-	0: "Unknown",
-	1: "Username/Password",
-	2: "SSO",
+	flowv1.AuthMethod_AUTH_METHOD_UNKNOWN:      "Unknown",
+	flowv1.AuthMethod_AUTH_METHOD_USERNAME_PWD: "Username/Password",
+	flowv1.AuthMethod_AUTH_METHOD_SSO:          "SSO",
 }
 
 type userCommand struct {

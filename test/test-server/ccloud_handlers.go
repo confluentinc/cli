@@ -712,7 +712,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 		}
 		if userId != "u-0" {
 			authConfig := &flowv1.AuthConfig{
-				AllowedAuthMethods: []flowv1.AuthMethod{1, 2},
+				AllowedAuthMethods: []flowv1.AuthMethod{flowv1.AuthMethod_AUTH_METHOD_USERNAME_PWD, flowv1.AuthMethod_AUTH_METHOD_SSO},
 			}
 			res = flowv1.GetUserProfileReply{
 				User: &flowv1.UserProfile{
