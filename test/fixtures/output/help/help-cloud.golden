@@ -23,6 +23,7 @@ Available Commands:
   price             See Confluent Cloud pricing information.
   prompt            Print Confluent Cloud CLI context for your terminal prompt.
   schema-registry   Manage Schema Registry.
+  secret            Manage secrets for Confluent Platform.
   service-account   Manage service accounts.
   shell             Run the ccloud shell.
   signup            Sign up for Confluent Cloud.

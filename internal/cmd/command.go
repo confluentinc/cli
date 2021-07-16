@@ -135,6 +135,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
+	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
@@ -183,7 +184,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(iam.New(cliName, prerunner))
 		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
-		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	}
 
 	return command

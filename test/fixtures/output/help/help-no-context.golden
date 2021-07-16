@@ -11,6 +11,7 @@ Available Commands:
   local       Manage a local Confluent Platform development environment.
   login       Log in to Confluent Cloud or Confluent Platform.
   logout      Log out of Confluent Platform.
+  secret      Manage secrets for Confluent Platform.
   update      Update the Confluent CLI.
   version     Show version of the Confluent CLI.
 
