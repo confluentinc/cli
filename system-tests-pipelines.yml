@@ -70,7 +70,6 @@ jobs:
       make install-vault
     displayName: install vault
   
-
   - bash: |
       export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
       . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
@@ -101,18 +100,18 @@ jobs:
   - bash: |
       make checkout-cc-system-tests
     displayName: checkout cc-system-tests
-  
+      
   - bash: |
-      $(CPD_PATH) pool new -v --from-pool=false --deploy=false --pool-name ci
+      make show-cpd
+    displayName: show cc-cpd.mk variables
+
+  - bash: |
+      $(BIN_PATH)/cpd pool new -v --from-pool=false --deploy=false --pool-name ci
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
     displayName: create cpd cluster
-  
-  - bash: |
-      make show-cpd
-    displayName: show cc-cpd.mk variables
 
   - bash: |
       make cpd-deploy-local
