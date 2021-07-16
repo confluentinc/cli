@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -36,6 +38,18 @@ func TestHandleError(t *testing.T) {
 			name:    "dynamic message",
 			err:     &UnconfiguredAPISecretError{APIKey: "MYKEY", ClusterID: "lkc-mine"},
 			want:    fmt.Sprintf(NoAPISecretStoredErrorMsg, "MYKEY", "lkc-mine"),
+			wantErr: true,
+		},
+		{
+			name:	 "mds v1 backend error",
+			err:	 mdsv1.GenericOpenAPIError{},
+			want:	 fmt.Sprintf(GenericOpenAPIErrorMsg, "", ""),
+			wantErr: true,
+		},
+		{
+			name:	 "mds v2 backend error",
+			err:	 mdsv2alpha1.GenericOpenAPIError{},
+			want:	 fmt.Sprintf(GenericOpenAPIErrorMsg, "", ""),
 			wantErr: true,
 		},
 	}
