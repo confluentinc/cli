@@ -90,6 +90,10 @@ jobs:
     displayName: try to inject secrets and setup docker and helm
   
   - bash: |
+      make gcloud-install
+    displayName: Install gcloud
+  
+  - bash: |
       make cpd-update
     displayName: Download CPD
   
@@ -102,6 +106,7 @@ jobs:
     displayName: show cc-cpd.mk variables
 
   - bash: |
+      rm $(where gcloud)
       $(BIN_PATH)/cpd pool new -v --from-pool=false --deploy=false --pool-name ci
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
