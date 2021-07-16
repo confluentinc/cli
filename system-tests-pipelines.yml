@@ -74,6 +74,9 @@ jobs:
   - bash: |
       export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
       . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
+      echo $(VAULT_ADDR)
+      echo $(VAULT_ROLE_ID)
+      echo $(VAULT_SECRET_ID)
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
       . vault-sem-get-secret netrc
