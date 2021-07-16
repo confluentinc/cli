@@ -103,9 +103,9 @@ jobs:
     displayName: checkout cc-system-tests
   
   - bash: |
-      echo $(Build.BuildId)
       make cpd-priv-create-if-missing
     env:
+      CPD_CR_ARGS: --from-pool=false --deploy=false --pool-name ci
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
