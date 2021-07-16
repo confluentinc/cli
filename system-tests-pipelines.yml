@@ -106,7 +106,7 @@ jobs:
     displayName: show cc-cpd.mk variables
 
   - bash: |
-      rm $(which gcloud)
+      sudo rm $(which gcloud)
       $(BIN_PATH)/cpd pool new -v --from-pool=false --deploy=false --pool-name ci
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
