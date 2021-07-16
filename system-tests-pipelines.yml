@@ -104,6 +104,7 @@ jobs:
   
   - bash: |
       make cpd-priv-create-if-missing
+      echo $(Build.BuildId)
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
