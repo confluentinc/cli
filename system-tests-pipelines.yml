@@ -74,7 +74,6 @@ jobs:
   - bash: |
       export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
       . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
-      cat $(vaultsecrets.secureFilePath)
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
       . vault-sem-get-secret netrc
@@ -104,6 +103,7 @@ jobs:
     displayName: checkout cc-system-tests
   
   - bash: |
+      printenv
       make cpd-priv-create-if-missing
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
