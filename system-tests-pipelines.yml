@@ -103,8 +103,8 @@ jobs:
     displayName: checkout cc-system-tests
   
   - bash: |
-      make cpd-priv-create-if-missing
       echo $(Build.BuildId)
+      make cpd-priv-create-if-missing
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
