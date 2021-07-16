@@ -103,7 +103,7 @@ jobs:
     displayName: checkout cc-system-tests
   
   - bash: |
-      printenv
+      . $(vaultsecrets.secureFilePath)
       make cpd-priv-create-if-missing
     env:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
