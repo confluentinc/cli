@@ -106,6 +106,7 @@ jobs:
     displayName: Get environment variables for cc-system-tests
 
   - bash: |
+      export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath)
       . mk-include/bin/vault-setup
       . $($(BIN_PATH)/vault kv get -field=script v1/ci/kv/semaphore2/cc-system-tests)
