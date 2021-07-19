@@ -64,7 +64,6 @@ jobs:
       echo "include ./mk-include/cc-helm.mk" >> Makefile
       echo "include ./mk-include/cc-cpd.mk" >> Makefile
       echo "include ./mk-files/cli-cpd.mk" >> Makefile
-      cat Makefile
     displayName: clone mk-include and include in Makefile
   
   - bash: |
@@ -106,6 +105,7 @@ jobs:
       . $(vaultsecrets.secureFilePath)
       make cpd-priv-create-if-missing
     env:
+      CPD_CR_ARGS: "--pool-name ci"
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
@@ -115,11 +115,6 @@ jobs:
       make show-cpd
     displayName: show cc-cpd.mk variables
 
-  - bash: |
-      cat Makefile
-      make cpd-deploy-local
-    displayName: cpd deploy
-  
   - bash: |
       make cpd-priv-testenv || make cpd-debug-and-err
     displayName: cpd priv testenv
