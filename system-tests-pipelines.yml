@@ -121,6 +121,9 @@ jobs:
     displayName: cpd deploy
   
   - bash: |
+      echo $(BIN_PATH)/cpd
+      kubectl config current-context
+      $(BIN_PATH)/cpd debug --id `kubectl config current-context`
       make cpd-priv-testenv || make cpd-debug-and-err
     displayName: cpd priv testenv
   
