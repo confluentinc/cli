@@ -64,6 +64,7 @@ jobs:
       echo "include ./mk-include/cc-helm.mk" >> Makefile
       echo "include ./mk-include/cc-cpd.mk" >> Makefile
       echo "include ./mk-files/cli-cpd.mk" >> Makefile
+      cat Makefile
     displayName: clone mk-include and include in Makefile
   
   - bash: |
@@ -115,14 +116,12 @@ jobs:
     displayName: show cc-cpd.mk variables
 
   - bash: |
+      cat Makefile
       make cpd-deploy-local
     displayName: cpd deploy
   
   - bash: |
-      echo $(wildcard .halyard/*.yaml)
       make cpd-priv-testenv || make cpd-debug-and-err
-    env:
-      CPD_GATING_VIA_HALYARD: "true"
     displayName: cpd priv testenv
   
   - bash: |
