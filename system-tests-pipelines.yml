@@ -4,10 +4,10 @@ jobs:
   timeoutInMinutes: 150
 
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: "ubuntu-18.04"
   
   variables:
-    IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
+    IMAGE_NAME: DUMMY_IMAGE_NAME # mk-include/docker.mk requires an image name (not needed for CLI system tests)
     CI: "true"
     BIN_PATH: $(Agent.BuildDirectory)
   
@@ -36,7 +36,7 @@ jobs:
   - task: DownloadSecureFile@1
     name: vaultsecrets
     inputs:
-      secureFile: 'vault_secrets'
+      secureFile: "vault_secrets"
     displayName: Securely download vault environment variables (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
   
   - bash: make deps
@@ -47,7 +47,7 @@ jobs:
   
   - task: GoTool@0
     inputs:
-      version: '1.15.7'
+      version: "1.15.7"
     displayName: Use Go 1.15.7 for cc-system-tests
   
   - bash: |
@@ -62,7 +62,7 @@ jobs:
     displayName: Add mk-include targets to Makefile
   
   - bash: make install-vault
-    displayName: Install Vault
+    displayName: Install vault
   
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
@@ -87,7 +87,7 @@ jobs:
     displayName: Install gcloud
   
   - bash: make cpd-update
-    displayName: Download CPD
+    displayName: Install cpd
   
   - bash: make checkout-cc-system-tests
     displayName: Check out cc-system-tests
@@ -104,15 +104,17 @@ jobs:
 
   - bash: make cpd-priv-testenv || make cpd-debug-and-err
     displayName: Get environment variables for cc-system-tests
-  
+
   - bash: |
+      . $(vaultsecrets.secureFilePath)
+      . mk-include/bin/vault-setup
       . $($(BIN_PATH)/vault kv get -field=script v1/ci/kv/semaphore2/cc-system-tests)
-      . $($(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces)
+      $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
       make system-test-init-env || make cpd-debug-and-err
     env:
       CREATE_KAFKA_CLUSTERS: "true"
       SKIP_SETUP_S3_BUCKET_FOR_CONNECT: "true"
-    displayName: make init-env
+    displayName: Initialize CPD environment
   
   - bash: make replace-cli-binary
     displayName: Replace CLI binary
