@@ -119,6 +119,7 @@ jobs:
     displayName: cpd deploy
   
   - bash: |
+      echo $(wildcard .halyard/*.yaml)
       make cpd-priv-testenv || make cpd-debug-and-err
     env:
       CPD_GATING_VIA_HALYARD: "true"
