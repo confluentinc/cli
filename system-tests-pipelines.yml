@@ -21,7 +21,7 @@ jobs:
   - template: azure-pipelines-templates/setup-secrets.yml
 
   - template: azure-pipelines-templates/setup-go.yml
-      
+  
   - bash: |
       echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
       echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
@@ -36,30 +36,43 @@ jobs:
       mkdir -p ${GOROOT}\bin
     displayName: Set up the Go workspace
   
+  - script: |
+      make deps
+    displayName: make deps
+  
+  - script: |
+      make build
+    displayName: make build
+  
+  - task: GoTool@0
+    inputs:
+      version: '1.15.7'
+    displayName: Switch to Go 1.15.7 for cc-system-tests
+  
   - task: DownloadSecureFile@1
     name: vaultsecrets
-    displayName: Securely download secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
+    displayName: Securely download vault environment variables (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
     inputs:
       secureFile: 'vault_secrets'
   
   - bash: |
+      echo "include ./mk-files/cli-cpd.mk" >> Makefile
       git clone git@github.com:confluentinc/cc-mk-include.git mk-include
       echo "include ./mk-include/cc-begin.mk" >> Makefile
-      echo "include ./mk-include/cc-end.mk" >> Makefile
       echo "include ./mk-include/cc-docker.mk" >> Makefile
       echo "include ./mk-include/cc-vault.mk" >> Makefile
       echo "include ./mk-include/cc-helm.mk" >> Makefile
       echo "include ./mk-include/cc-cpd.mk" >> Makefile
-      echo "include ./mk-files/cli-cpd.mk" >> Makefile
-    displayName: clone mk-include and include in Makefile
+      echo "include ./mk-include/cc-end.mk" >> Makefile
+    displayName: Add mk-include targets to Makefile
   
   - bash: |
       make install-vault
-    displayName: install vault
+    displayName: Install vault
   
   - bash: |
       export PATH="$(BIN_PATH):$PATH" # export path where vault is loaded to
-      . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
+      . $(vaultsecrets.secureFilePath) # export VAULT_ADDR, VAULT_ROLE_ID, and VAULT_SECRET_ID
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
       . vault-sem-get-secret netrc
@@ -74,7 +87,7 @@ jobs:
       make docker-login-ci
       make helm-setup-ci
       make helm-update-repo
-    displayName: try to inject secrets and setup docker and helm
+    displayName: Inject Vault secrets and setup docker and helm
   
   - bash: |
       make gcloud-install
@@ -86,7 +99,7 @@ jobs:
   
   - bash: |
       make checkout-cc-system-tests
-    displayName: checkout cc-system-tests
+    displayName: Checkout cc-system-tests
   
   - bash: |
       . $(vaultsecrets.secureFilePath)
@@ -96,21 +109,8 @@ jobs:
       AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
       AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
-    displayName: create cpd cluster
-
-  - script: |
-      make deps
-    displayName: make deps
+    displayName: Create CPD cluster
   
-  - script: |
-      make build
-    displayName: make build
-  
-  - task: GoTool@0
-    inputs:
-      version: '1.15.7'
-    displayName: Switch to Go 1.15.7 for cc-system-tests
-
   - bash: |
       make show-cpd
     displayName: show cc-cpd.mk variables
