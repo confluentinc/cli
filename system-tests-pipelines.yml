@@ -121,7 +121,7 @@ jobs:
   - bash: |
       make cpd-priv-testenv || make cpd-debug-and-err
     env:
-      CPD_GATING_VIA_HALYARD: true
+      CPD_GATING_VIA_HALYARD: "true"
     displayName: cpd priv testenv
   
   - bash: |
