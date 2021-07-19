@@ -65,6 +65,7 @@ jobs:
     displayName: Install Vault
   
   - bash: |
+      export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath) # export VAULT_ADDR, VAULT_ROLE_ID, and VAULT_SECRET_ID
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
