@@ -9,45 +9,40 @@ jobs:
   variables:
     IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
     CI: "true"
-    BIN_PATH: "$(Agent.BuildDirectory)"
+    PATH: "$(Agent.BuildDirectory):$(PATH)"
   
   steps:
     
   - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
-    displayName: Helm installer
     inputs:
       helmVersionToInstall: 3.3.4
+    displayName: Install Helm
  
   - template: azure-pipelines-templates/setup-secrets.yml
 
   - template: azure-pipelines-templates/setup-go.yml
   
   - bash: |
-      echo "##vso[task.setvariable variable=GOROOT]$(BIN_PATH)/go"
-      echo "##vso[task.setvariable variable=GOPATH]$(BIN_PATH)/gopath"
-      echo "##vso[task.setvariable variable=GOBIN]$(BIN_PATH)/go/bin"
-      echo "##vso[task.setvariable variable=modulePath]$(BIN_PATH)/go/src/github.com/$(build.repository.name)"
-    displayName: Configure custom Go environment
-  
-  - script: |
-      echo '##vso[task.prependpath]$(GOROOT)/bin'
-      echo '##vso[task.prependpath]$(GOPATH)/bin'
+      echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
+      echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
+      echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
+      echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
+      echo "##vso[task.prependpath]$(GOROOT)/bin"
+      echo "##vso[task.prependpath]$(GOPATH)/bin"
       mkdir -p ${GOPATH}\bin
       mkdir -p ${GOROOT}\bin
-    displayName: Set up the Go workspace
+    displayName: Set up Go environment and workspace
   
   - task: DownloadSecureFile@1
     name: vaultsecrets
-    displayName: Securely download vault environment variables (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
     inputs:
       secureFile: 'vault_secrets'
+    displayName: Securely download vault environment variables (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
   
-  - script: |
-      make deps
+  - bash: make deps
     displayName: Download Go dependencies
   
-  - script: |
-      make build
+  - bash: make build
     displayName: Build CLI binary
   
   - task: GoTool@0
@@ -66,12 +61,10 @@ jobs:
       echo "include ./mk-include/cc-end.mk" >> Makefile
     displayName: Add mk-include targets to Makefile
   
-  - bash: |
-      make install-vault
+  - bash: make install-vault
     displayName: Install Vault
   
   - bash: |
-      export PATH="$(BIN_PATH):$PATH" # export path where vault is loaded to
       . $(vaultsecrets.secureFilePath) # export VAULT_ADDR, VAULT_ROLE_ID, and VAULT_SECRET_ID
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
@@ -89,59 +82,45 @@ jobs:
       make helm-update-repo
     displayName: Inject Vault secrets, set up Docker and Helm
   
-  - bash: |
-      make gcloud-install
+  - bash: make gcloud-install
     displayName: Install gcloud
   
-  - bash: |
-      make cpd-update
+  - bash: make cpd-update
     displayName: Download CPD
   
-  - bash: |
-      make checkout-cc-system-tests
-    displayName: Checkout cc-system-tests
+  - bash: make checkout-cc-system-tests
+    displayName: Check out cc-system-tests
   
   - bash: |
       . $(vaultsecrets.secureFilePath)
       make cpd-priv-create-if-missing
     env:
+      AZURE_PIPELINES: "true"
+      AZURE_PIPELINES_JOB_ID: $(Build.BuildId)
+      AZURE_PIPELINES_PROJECT_NAME: "cli"
       CPD_CR_ARGS: "--pool-name ci"
-      AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
-      AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
-      AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
     displayName: Create CPD cluster
 
-  - bash: |
-      make cpd-priv-testenv || make cpd-debug-and-err
+  - bash: make cpd-priv-testenv || make cpd-debug-and-err
     displayName: Get environment variables for cc-system-tests
   
   - bash: |
-      eval $(vault kv get -field=script v1/ci/kv/semaphore2/cc-system-tests)
-    displayName: Get secret environment variables for cc-system-tests from Vault
-
-  - bash: |
-      $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
-    displayName: Inject Credentials into CPD
-  
-  - bash: |
+      . $(vault kv get -field=script v1/ci/kv/semaphore2/cc-system-tests)
+      cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
       make system-test-init-env || make cpd-debug-and-err
     env:
       CREATE_KAFKA_CLUSTERS: "true"
       SKIP_SETUP_S3_BUCKET_FOR_CONNECT: "true"
     displayName: make init-env
   
-  - bash: |
-      make replace-cli-binary
+  - bash: make replace-cli-binary
     displayName: Replace CLI binary
   
-  - bash: |
-      make run-system-tests || make cpd-debug-and-err
+  - bash: make run-system-tests || make cpd-debug-and-err
     env:
       GO_TEST_PACKAGE_ARGS: "./test/cli/..."
-      TESTS_TO_RUN: "Test"
     displayName: Run system tests
   
-  - bash: |
-      make cpd-destroy
+  - bash: make cpd-destroy
     condition: always()
     displayName: Free CPD
