@@ -1,79 +1,47 @@
 jobs:
 - job: system_test
-  displayName: cli system-tests
-  timeoutInMinutes: 150
+  displayName: CLI System Tests
+  timeoutInMinutes: 150 # 2h30m
 
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: "ubuntu-18.04"
   
   variables:
-    IMAGE_NAME: DUMMY_IMAGE_NAME # dummy image name to stop mk-include/docker.mk from crashing as it requires image name (not needed for CLI system tests)
+    IMAGE_NAME: DUMMY_IMAGE_NAME # mk-include/docker.mk requires an image name (not needed for CLI system tests)
     CI: "true"
-    BIN_PATH: "$(Agent.BuildDirectory)"
+    BIN_PATH: $(Agent.BuildDirectory)
   
   steps:
-    
-  - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
-    displayName: Helm installer
-    inputs:
-      helmVersionToInstall: 3.3.4
- 
+  
   - template: azure-pipelines-templates/setup-secrets.yml
 
-  - template: azure-pipelines-templates/setup-go.yml
-      
-  - bash: |
-      echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
-      echo "##vso[task.setvariable variable=GOPATH]$(Agent.BuildDirectory)/gopath"
-      echo "##vso[task.setvariable variable=GOBIN]$(Agent.BuildDirectory)/go/bin"
-      echo "##vso[task.setvariable variable=modulePath]$(Agent.BuildDirectory)/go/src/github.com/$(build.repository.name)"
-    displayName: Properly configure our custom Go environment
-  
-  - script: |
-      echo '##vso[task.prependpath]$(GOROOT)/bin'
-      echo '##vso[task.prependpath]$(GOPATH)/bin'
-      mkdir -p ${GOPATH}\bin
-      mkdir -p ${GOROOT}\bin
-    displayName: Set up the Go workspace
-  
-  - task: DownloadSecureFile@1
-    name: vaultsecrets
-    displayName: Securely download secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
-    inputs:
-      secureFile: 'vault_secrets'
-  
-  - script: |
-      make deps
-    displayName: make deps
-  
-  - script: |
-      make build
-    displayName: make build
-  
-  - task: GoTool@0
-    inputs:
-      version: '1.15.7'
-    displayName: Switch to Go 1.15.7 for cc-system-tests
-  
   - bash: |
       git clone git@github.com:confluentinc/cc-mk-include.git mk-include
       echo "include ./mk-include/cc-begin.mk" >> Makefile
-      echo "include ./mk-include/cc-end.mk" >> Makefile
-      echo "include ./mk-include/cc-docker.mk" >> Makefile
-      echo "include ./mk-include/cc-vault.mk" >> Makefile
-      echo "include ./mk-include/cc-helm.mk" >> Makefile
       echo "include ./mk-include/cc-cpd.mk" >> Makefile
+      echo "include ./mk-include/cc-docker.mk" >> Makefile
+      echo "include ./mk-include/cc-helm.mk" >> Makefile
+      echo "include ./mk-include/cc-vault.mk" >> Makefile
       echo "include ./mk-files/cli-cpd.mk" >> Makefile
-    displayName: clone mk-include and include in Makefile
-  
-  - bash: |
-      make install-vault
-    displayName: install vault
-  
+    displayName: Add mk-include targets to Makefile
 
+  - bash: make install-vault
+    displayName: Install vault
+
+  - task: DownloadSecureFile@1
+    name: vaultsecrets
+    inputs:
+      secureFile: "vault_secrets"
+    displayName: Securely download Vault environment variables
+  
+  - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
+    inputs:
+      helmVersionToInstall: 3.3.4
+    displayName: Install helm
+  
   - bash: |
-      export PATH="$(BIN_PATH):$PATH" #export path where vault is loaded to
-      . $(vaultsecrets.secureFilePath) # export secrets for vault login (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
+      export PATH="$(BIN_PATH):$PATH"
+      . $(vaultsecrets.secureFilePath) # export VAULT_ADDR, VAULT_ROLE_ID, and VAULT_SECRET_ID
       . mk-include/bin/vault-setup
       . vault-sem-get-secret ssh_id_rsa
       . vault-sem-get-secret netrc
@@ -88,54 +56,77 @@ jobs:
       make docker-login-ci
       make helm-setup-ci
       make helm-update-repo
-    displayName: try to inject secrets and setup docker and helm
+    displayName: Inject Vault secrets, set up Docker and Helm
   
-  - bash: |
-      make gcloud-install
+  - bash: make gcloud-install
     displayName: Install gcloud
   
-  - bash: |
-      make cpd-update
-    displayName: Download CPD
+  - bash: make cpd-update
+    displayName: Install cpd
   
   - bash: |
-      make checkout-cc-system-tests
-    displayName: checkout cc-system-tests
-  
-  - bash: |
+      . $(vaultsecrets.secureFilePath)
       make cpd-priv-create-if-missing
     env:
-      AZURE_PIPELINES: "true" # IMPORTANT: for cpd leakage check
-      AZURE_PIPELINES_JOB_ID: $(Build.BuildId) # IMPORTANT: for cpd leakage check
-      AZURE_PIPELINES_PROJECT_NAME: "cli" # IMPORTANT: for cpd leakage check
-    displayName: create cpd cluster
+      AZURE_PIPELINES: "true"
+      AZURE_PIPELINES_JOB_ID: $(Build.BuildId)
+      AZURE_PIPELINES_PROJECT_NAME: "cli"
+      CPD_CR_ARGS: "--pool-name ci"
+    displayName: Create CPD cluster
+  
+  - template: azure-pipelines-templates/setup-go.yml
   
   - bash: |
-      make show-cpd
-    displayName: show cc-cpd.mk variables
+      echo "##vso[task.setvariable variable=GOROOT]$(BIN_PATH)/go"
+      echo "##vso[task.setvariable variable=GOPATH]$(BIN_PATH)/gopath"
+      echo "##vso[task.setvariable variable=GOBIN]$(BIN_PATH)/go/bin"
+      echo "##vso[task.setvariable variable=modulePath]$(BIN_PATH)/go/src/github.com/$(build.repository.name)"
+      echo "##vso[task.prependpath]$(GOROOT)/bin"
+      echo "##vso[task.prependpath]$(GOPATH)/bin"
+      mkdir -p ${GOPATH}\bin
+      mkdir -p ${GOROOT}\bin
+    displayName: Set up Go environment and workspace
+  
+  - bash: make deps
+    displayName: Download Go dependencies
+  
+  - bash: make build
+    displayName: Build CLI binary
+  
+  - task: GoTool@0
+    inputs:
+      version: "1.15.7"
+    displayName: Use Go 1.15.7 for cc-system-tests
+    
+  - bash: make checkout-cc-system-tests
+    displayName: Check out cc-system-tests
+  
+  - bash: |
+      export PATH="$(BIN_PATH):$PATH"
+      . $(vaultsecrets.secureFilePath)
+      . mk-include/bin/vault-setup
+      . $($(BIN_PATH)/vault kv get -field=script v1/ci/kv/semaphore2/cc-system-tests)
+      $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
+    displayName: Get secret environment variables for cc-system-tests from Vault
+  
+  - bash: make cpd-priv-testenv || make cpd-debug-and-err
+    displayName: Get environment variables for cc-system-tests
 
   - bash: |
-      make cpd-deploy-local
-    displayName: cpd deploy
+      make system-test-init-env || make cpd-debug-and-err
+    env:
+      CREATE_KAFKA_CLUSTERS: "true"
+      SKIP_SETUP_S3_BUCKET_FOR_CONNECT: "true"
+    displayName: Initialize CPD environment
   
-  - bash: |
-      make cpd-priv-testenv || make cpd-debug-and-err
-    displayName: cpd priv testenv
-  
-  - bash: |
-      CREATE_KAFKA_CLUSTERS=true SKIP_SETUP_S3_BUCKET_FOR_CONNECT=true make system-test-init-env || make cpd-debug-and-err
-    displayName: make init-env
-  
-  - bash: |
-      make replace-cli-binary
+  - bash: make replace-cli-binary
     displayName: Replace CLI binary
-  
-  - bash: |
-      GO_TEST_PACKAGE_ARGS=./test/cli/... TESTS_TO_RUN=Test make run-system-tests || make cpd-debug-and-err
+
+  - bash: make run-system-tests
+    env:
+      GO_TEST_PACKAGE_ARGS: "./test/cli/..."
     displayName: Run system tests
   
-  - bash: |
-      make cpd-destroy
+  - bash: make cpd-destroy
     condition: always()
     displayName: Free CPD
-  
