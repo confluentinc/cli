@@ -18,10 +18,11 @@ jobs:
   - bash: |
       git clone git@github.com:confluentinc/cc-mk-include.git mk-include
       echo "include ./mk-include/cc-begin.mk" >> Makefile
-      echo "include ./mk-include/cc-docker.mk" >> Makefile
-      echo "include ./mk-include/cc-vault.mk" >> Makefile
-      echo "include ./mk-include/cc-helm.mk" >> Makefile
       echo "include ./mk-include/cc-cpd.mk" >> Makefile
+      echo "include ./mk-include/cc-docker.mk" >> Makefile
+      echo "include ./mk-include/cc-go.mk" >> Makefile
+      echo "include ./mk-include/cc-helm.mk" >> Makefile
+      echo "include ./mk-include/cc-vault.mk" >> Makefile
       echo "include ./mk-files/cli-cpd.mk" >> Makefile
     displayName: Add mk-include targets to Makefile
 
@@ -122,7 +123,7 @@ jobs:
   - bash: make replace-cli-binary
     displayName: Replace CLI binary
 
-  - bash: make run-system-tests || make cpd-debug-and-err
+  - bash: make run-system-tests
     env:
       GO_TEST_PACKAGE_ARGS: "./test/cli/..."
     displayName: Run system tests
