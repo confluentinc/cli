@@ -56,17 +56,6 @@ jobs:
       make helm-setup-ci
       make helm-update-repo
     displayName: Inject Vault secrets, set up Docker and Helm
-  
-  - bash: |
-      curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-      unzip awscli-bundle.zip
-      sudo ./awscli-bundle/install -i $(BIN_PATH)/aws
-    displayName: Install aws
-  
-  - bash: |
-      $(BIN_PATH)/aws configure get aws_access_key_id
-      $(BIN_PATH)/aws configure get aws_secret_access_key
-    displayName: Test
 
   - bash: make gcloud-install
     displayName: Install gcloud
@@ -134,8 +123,6 @@ jobs:
 
   - bash: make run-system-tests
     env:
-      CONNECT_AWS_ACCESS_KEY_ID: $($(BIN_PATH)/aws configure get aws_access_key_id)
-      CONNECT_AWS_SECRET_ACCESS_KEY: $($(BIN_PATH)/aws configure get aws_secret_access_key)
       GO_TEST_PACKAGE_ARGS: "./test/cli/..."
     displayName: Run system tests
   
