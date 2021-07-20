@@ -7,11 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
 )
@@ -29,8 +27,6 @@ type command struct {
 	configLoadingErr error
 	prerunner        pcmd.PreRunner
 	completer        *completer.ShellCompleter
-	analytics        analytics.Client
-	logger           *log.Logger
 	jwtValidator     pcmd.JWTValidator
 }
 
