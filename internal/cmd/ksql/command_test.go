@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	ksqlClusterID     = "lksqlc-12345"
-	physicalClusterID = "pksqlc-zxcvb"
-	outputTopicPrefix = "pksqlc-abcde"
-	keyString         = "key"
-	keySecretString   = "secret"
-	serviceAcctID     = int32(123)
-	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
+	ksqlClusterID         = "lksqlc-12345"
+	physicalClusterID     = "pksqlc-zxcvb"
+	outputTopicPrefix     = "pksqlc-abcde"
+	keyString             = "key"
+	keySecretString       = "secret"
+	serviceAcctID         = int32(123)
+	serviceAcctResourceID = "sa-12345"
+	expectedACLs          = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
 +------------------+------------+------------------+------------------+------------------------------+----------+
   User:123         | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL   
   User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL   
@@ -91,6 +92,7 @@ func (suite *KSQLTestSuite) SetupSuite() {
 		ServiceAccount: true,
 		ServiceName:    "KSQL." + ksqlClusterID,
 		Id:             serviceAcctID,
+		ResourceId:     serviceAcctResourceID,
 	}
 }
 

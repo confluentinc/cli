@@ -17,10 +17,9 @@ import (
 )
 
 var (
-	listFields    = []string{"Id", "ResourceId", "Email", "FirstName", "LastName", "Status", "AuthenticationMethod"}
-	humanLabels   = []string{"Id", "Resource ID", "Email", "First Name", "Last Name", "Status", "Authentication Method"}
+	listFields    = []string{"ResourceId", "Email", "FirstName", "LastName", "Status", "AuthenticationMethod"}
+	humanLabels   = []string{"Resource ID", "Email", "First Name", "Last Name", "Status", "Authentication Method"}
 	humanLabelMap = map[string]string{
-		"Id":                   "Id",
 		"ResourceId":           "Resource ID",
 		"Email":                "Email",
 		"FirstName":            "First Name",
@@ -28,9 +27,8 @@ var (
 		"Status":               "Status",
 		"AuthenticationMethod": "Authentication Method",
 	}
-	structuredLabels   = []string{"id", "resource_id", "email", "first_name", "last_name", "status", "authentication_method"}
+	structuredLabels   = []string{"resource_id", "email", "first_name", "last_name", "status", "authentication_method"}
 	structuredLabelMap = map[string]string{
-		"Id":                   "id",
 		"ResourceId":           "resource_id",
 		"Email":                "email",
 		"FirstName":            "first_name",
@@ -57,7 +55,6 @@ type userCommand struct {
 }
 
 type userStruct struct {
-	Id                   int32
 	ResourceId           string
 	Email                string
 	FirstName            string
@@ -109,11 +106,6 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	userId, err := c.getUserIdWithResourceId(resourceId)
-	if err != nil {
-		return err
-	}
-
 	// Avoid panics if new types of statuses are added in the future
 	userStatus := "Unknown"
 	if val, ok := statusMap[userProfile.UserStatus]; ok {
@@ -128,7 +120,6 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	return output.DescribeObject(cmd, &userStruct{
-		Id:                   userId,
 		ResourceId:           userProfile.ResourceId,
 		Email:                userProfile.Email,
 		FirstName:            userProfile.FirstName,
@@ -182,7 +173,6 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		outputWriter.AddElement(&userStruct{
-			Id:                   user.Id,
 			ResourceId:           userProfile.ResourceId,
 			Email:                userProfile.Email,
 			FirstName:            userProfile.FirstName,
@@ -243,18 +233,4 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	utils.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
 	return nil
-}
-
-func (c userCommand) getUserIdWithResourceId(resourceId string) (int32, error) {
-	var userId int32
-	users, err := c.Client.User.List(context.Background())
-	if err != nil {
-		return 0, err
-	}
-	for _, user := range users {
-		if user.ResourceId == resourceId {
-			userId = user.Id
-		}
-	}
-	return userId, nil
 }
