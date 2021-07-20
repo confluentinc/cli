@@ -20,7 +20,7 @@ jobs:
       echo "include ./mk-include/cc-begin.mk" >> Makefile
       echo "include ./mk-include/cc-cpd.mk" >> Makefile
       echo "include ./mk-include/cc-docker.mk" >> Makefile
-      echo "include ./mk-include/cc-go.mk" >> Makefile
+      sed -i '1s/^/include ./mk-include/cc-go.mk\n/' Makefile # Prepending avoids target conflicts
       echo "include ./mk-include/cc-helm.mk" >> Makefile
       echo "include ./mk-include/cc-vault.mk" >> Makefile
       echo "include ./mk-files/cli-cpd.mk" >> Makefile
