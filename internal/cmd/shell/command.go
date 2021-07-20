@@ -36,7 +36,7 @@ type command struct {
 
 // NewShellCmd returns the Cobra command for the shell.
 func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config, configLoadingErr error,
-	completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client, jwtValidator pcmd.JWTValidator) *cobra.Command {
+	completer *completer.ShellCompleter, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
 		RootCmd:          rootCmd,
 		config:           config,
@@ -44,8 +44,6 @@ func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName strin
 		cliName:          cliName,
 		prerunner:        prerunner,
 		completer:        completer,
-		logger:           logger,
-		analytics:        analytics,
 		jwtValidator:     jwtValidator,
 	}
 
@@ -71,7 +69,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	c.RootCmd.RemoveCommand(c.Command)
 
 	// add shell only quit command
-	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config, c.logger, c.analytics))
+	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config))
 
 	msg := errors.AlreadyAuthenticatedMsg
 	if cmd.Annotations == nil {
@@ -91,7 +89,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
-	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, c.logger, c.analytics, opts...)
+	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, opts...)
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt.Prompt, c.config, c.jwtValidator))
 	if err := livePrefixOpt(cliPrompt.Prompt); err != nil {
 		// This returns nil in the go-prompt implementation.
