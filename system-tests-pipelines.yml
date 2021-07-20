@@ -100,7 +100,12 @@ jobs:
   - bash: make checkout-cc-system-tests
     displayName: Check out cc-system-tests
   
-  - bash: $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
+  - bash: |
+      export PATH="$(BIN_PATH):$PATH"
+      . $(vaultsecrets.secureFilePath)
+      . mk-include/bin/vault-setup
+      . vault-sem-get-secret cc-system-tests
+      $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
     displayName: Inject Docker credentials into CPD
   
   - bash: make cpd-priv-testenv || make cpd-debug-and-err
