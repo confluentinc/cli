@@ -62,9 +62,11 @@ type command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *command {
+func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *command {
 	cli := &cobra.Command{
-		Use:               cliName,
+		Use:               pversion.CLIName,
+		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
+		Long:              getLongDescription(cfg),
 		Version:           ver.Version,
 		DisableAutoGenTag: true,
 	}
@@ -76,31 +78,22 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
 	})
 
-	if cliName == "ccloud" {
-		cli.Short = "Confluent Cloud CLI."
-		cli.Long = "Manage your Confluent Cloud."
-	} else {
-		cli.Short = "Confluent CLI."
-		cli.Long = "Manage your Confluent Platform."
-	}
-
 	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.GetFullCLIName(cliName)))
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
-	logger := log.New()
-	cfg, configLoadingErr := loadConfig(cliName, logger)
-	if cfg != nil {
-		cfg.Logger = logger
-		cfg.IsTest = isTest
+	// TODO: Remove once unification is complete
+	cliName := "confluent"
+	if cfg.IsCloud() {
+		cliName = "ccloud"
 	}
 
-	isCloud := cfg.IsCloud()
+	logger := log.New()
 
-	disableUpdateCheck := cfg != nil && (cfg.DisableUpdates || cfg.DisableUpdateCheck)
-	updateClient := update.NewClient(cliName, disableUpdateCheck, logger)
+	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
+	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck, logger)
 
-	analyticsClient := getAnalyticsClient(isTest, cliName, cfg, ver.Version, logger)
+	analyticsClient := getAnalyticsClient(isTest, pversion.CLIName, cfg, ver.Version, logger)
 	authTokenHandler := pauth.NewAuthTokenHandler(logger)
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -115,7 +108,6 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		CCloudClientFactory:     ccloudClientFactory,
 		CLIName:                 cliName,
 		Config:                  cfg,
-		ConfigLoadingError:      configLoadingErr,
 		FlagResolver:            flagResolver,
 		IsTest:                  isTest,
 		JWTValidator:            jwtValidator,
@@ -128,47 +120,37 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 
 	command := &command{Command: cli, Analytics: analyticsClient, logger: logger}
 
-	// Shell Completion
-	shellCompleter := completer.NewShellCompleter(cli)
 	var serverCompleter completer.ServerSideCompleter
-	if cliName == "ccloud" {
+	shellCompleter := completer.NewShellCompleter(cli)
+	if cfg.IsCloud() {
 		serverCompleter = shellCompleter.ServerSideCompleter
 	}
 
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
-	cli.AddCommand(auditlog.New(cliName, prerunner))
+	// No-login commands
 	cli.AddCommand(completion.New(cli, cliName))
-	cli.AddCommand(config.New(isCloud, prerunner, analyticsClient))
+	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
-	cli.AddCommand(version.New(cliName, prerunner, ver))
-
-	if cfg == nil || !cfg.DisableUpdates {
+	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
+	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
 	}
+	cli.AddCommand(version.New(cliName, prerunner, ver))
 
-	if cliName == "confluent" {
-		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
-		cli.AddCommand(connect.New(prerunner))
-		cli.AddCommand(local.New(prerunner))
-		cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	} else if cliName == "ccloud" {
+	if cfg.IsCloud() {
 		cli.AddCommand(admin.New(prerunner, isTest))
+		cli.AddCommand(auditlog.New(cliName, prerunner))
 		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
-	}
 
-	// If a user uses an API key to log in, don't allow the remaining commands.
-	if cliName == "ccloud" && isAPIKeyLogin {
-		return command
-	}
+		// If a user logs in with an API key, don't allow the remaining commands.
+		if isAPIKeyLogin {
+			return command
+		}
 
-	cli.AddCommand(iam.New(cliName, prerunner))
-	cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
-	cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
-
-	if cliName == "ccloud" {
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 		connectorCmd := connector.New(cliName, prerunner, analyticsClient)
 		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
@@ -185,11 +167,23 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(connectorCatalogCmd.Command)
 		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(prompt.New(cliName, prerunner, &ps1.Prompt{}, logger))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
 		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, logger, analyticsClient, jwtValidator))
+		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, shellCompleter, logger, analyticsClient, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
+	}
+
+	if cfg.IsOnPrem() {
+		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
+		cli.AddCommand(connect.New(prerunner))
+		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
+		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
 	}
 
 	return command
@@ -206,9 +200,6 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 }
 
 func isAPIKeyCredential(cfg *v3.Config) bool {
-	if cfg == nil {
-		return false
-	}
 	ctx := cfg.Context()
 	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
 }
@@ -232,12 +223,23 @@ func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	}
 }
 
-func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
+func LoadConfig() (*v3.Config, error) {
 	cfg := v3.New(&pconfig.Params{
-		CLIName:    cliName,
-		Logger:     logger,
+		Logger:     log.New(),
 		MetricSink: metric.NewSink(),
 	})
 
 	return load.LoadAndMigrate(cfg)
+}
+
+func getLongDescription(cfg *v3.Config) string {
+	if cfg.IsCloud() {
+		return "Manage your Confluent Cloud."
+	}
+
+	if cfg.IsOnPrem() {
+		return "Manage your Confluent Platform."
+	}
+
+	return "Manage your Confluent Cloud or Confluent Platform. Log in to see all available commands."
 }

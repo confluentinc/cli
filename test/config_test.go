@@ -11,7 +11,7 @@ func (s *CLITestSuite) TestConfig() {
 		{args: "config context current", fixture: "config/1.golden"},
 		{args: "config context current --username", fixture: "config/15.golden"},
 		{args: "config context list", fixture: "config/2.golden"},
-		{args: fmt.Sprintf("init my-context --kafka-auth --bootstrap %s --api-key hi --api-secret @test/fixtures/input/apisecret1.txt", s.TestBackend.GetCloudUrl()), fixture: "config/3.golden"},
+		{args: fmt.Sprintf("init my-context --kafka-auth --bootstrap %s --api-key hi --api-secret @test/fixtures/input/apisecret1.txt", s.TestBackend.GetCloudUrl()), fixture: "config/3.golden", login: "default"},
 		{args: "config context set my-context --kafka-cluster anonymous-id", fixture: "config/4.golden"},
 		{args: "config context list", fixture: "config/5.golden"},
 		{args: "config context get my-context", fixture: "config/6.golden"},

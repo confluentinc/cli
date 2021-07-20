@@ -18,18 +18,23 @@ type Version struct {
 	ClientID  string // kafka
 }
 
-func NewVersion(cliName, version, commit, buildDate, buildHost string) *Version {
-	name := GetFullCLIName(cliName)
-	support := getSupport(cliName)
+const (
+	CLIName     = "confluent"
+	FullCLIName = "Confluent CLI"
+)
+
+func NewVersion(version, commit, buildDate, buildHost string) *Version {
+	dashDelimitedName := strings.ReplaceAll(FullCLIName, " ", "-")
+
 	return &Version{
-		Binary:    cliName,
-		Name:      name,
+		Binary:    CLIName,
+		Name:      FullCLIName,
 		Version:   version,
 		Commit:    commit,
 		BuildDate: buildDate,
 		BuildHost: buildHost,
-		UserAgent: fmt.Sprintf("%s/%s (%s)", strings.ReplaceAll(name, " ", "-"), version, support),
-		ClientID:  fmt.Sprintf("%s_%s", strings.ReplaceAll(name, " ", "-"), version),
+		UserAgent: fmt.Sprintf("%s/%s (https://confluent.io; support@confluent.io)", dashDelimitedName, version),
+		ClientID:  fmt.Sprintf("%s_%s", dashDelimitedName, version),
 	}
 }
 
@@ -63,11 +68,4 @@ func GetFullCLIName(cliName string) string {
 		return "Confluent Cloud CLI"
 	}
 	return "Confluent CLI"
-}
-
-func getSupport(cliName string) string {
-	if cliName == "ccloud" {
-		return "https://confluent.cloud; support@confluent.io"
-	}
-	return "https://confluent.io; support@confluent.io"
 }

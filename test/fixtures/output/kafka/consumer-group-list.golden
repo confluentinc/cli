@@ -1,7 +1,7 @@
 List Kafka consumer groups.
 
 Usage:
-  ccloud kafka consumer-group list [flags]
+  confluent kafka consumer-group list [flags]
 
 Examples:
 List all consumer groups.

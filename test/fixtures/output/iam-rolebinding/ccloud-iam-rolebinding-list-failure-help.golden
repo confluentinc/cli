@@ -1,6 +1,6 @@
 Error: unknown flag: --cluster
 Usage:
-  ccloud iam rolebinding list [flags]
+  confluent iam rolebinding list [flags]
 
 Examples:
 To list the role bindings for current user:

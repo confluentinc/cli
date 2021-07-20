@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/doc"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -24,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	cli := cmd.NewConfluentCommand(cliName, true, &version.Version{})
+	cli := cmd.NewConfluentCommand(&v3.Config{}, true, &version.Version{})
 
 	root := path.Join(".", "docs")
 

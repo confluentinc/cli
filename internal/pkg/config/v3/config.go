@@ -9,9 +9,8 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
-	"github.com/google/uuid"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/google/uuid"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -426,8 +425,8 @@ func (c *Config) IsCloud() bool {
 		return false
 	}
 
-	if c.IsTest {
-		return ctx.PlatformName == testserver.TestCloudURL.String()
+	if c.IsTest && ctx.PlatformName == testserver.TestCloudURL.String() {
+		return true
 	}
 
 	for _, hostname := range CCloudHostnames {

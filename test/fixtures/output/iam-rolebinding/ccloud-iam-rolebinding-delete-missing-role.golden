@@ -1,6 +1,6 @@
 Error: required flag(s) "role" not set
 Usage:
-  ccloud iam rolebinding delete [flags]
+  confluent iam rolebinding delete [flags]
 
 Flags:
       --role string            REQUIRED: Role name of the existing role binding.

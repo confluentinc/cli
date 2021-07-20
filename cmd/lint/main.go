@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/client9/gospell"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -21,8 +21,6 @@ var (
 	dicFile = flag.String("dic-file", "", "hunspell .dic file")
 
 	vocab *gospell.GoSpell
-
-	cliNames = []string{"confluent", "ccloud"}
 
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
@@ -47,10 +45,6 @@ var (
 		linter.ExcludeCommand("kafka topic"),
 		//only on children of kafka acl commands
 		linter.ExcludeCommand("kafka acl"),
-	}
-	confluentClusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("confluent kafka topic"),
-		linter.ExcludeCommand("kafka topic"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
@@ -121,10 +115,6 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagType("cluster", "string"), ccloudClusterScopedCommands...),
 	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), ccloudClusterScopedCommands...),
-	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
-	linter.Filter(linter.RequireFlag("url", true), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
@@ -145,10 +135,10 @@ var rules = []linter.Rule{
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret", "mirror"),
@@ -233,15 +223,28 @@ func main() {
 		Debug:     *debug,
 	}
 
-	var issues *multierror.Error
-	for _, cliName := range cliNames {
-		cli := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName})
+	// Lint all three subsets of commands: no context, cloud, and on-prem
+	configs := []*v3.Config{
+		{
+			CurrentContext: "no context",
+		},
+		{
+			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: v3.CCloudHostnames[0]}},
+			CurrentContext: "cloud",
+		},
+		{
+			Contexts:       map[string]*v3.Context{"on-prem": {PlatformName: "https://example.com"}},
+			CurrentContext: "on-prem",
+		},
+	}
+
+	code := 0
+	for _, cfg := range configs {
+		cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
 		if err := l.Lint(cli.Command); err != nil {
-			issues = multierror.Append(issues, err)
+			fmt.Printf("For context \"%s\", %v", cfg.CurrentContext, err)
+			code = 1
 		}
 	}
-	if issues.ErrorOrNil() != nil {
-		fmt.Println(issues)
-		os.Exit(1)
-	}
+	os.Exit(code)
 }

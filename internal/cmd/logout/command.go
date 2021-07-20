@@ -54,7 +54,7 @@ func (a *Command) logout(cmd *cobra.Command, _ []string) error {
 		if a.Config.Logger != nil {
 			level = a.Config.Logger.GetLevel()
 		}
-		username, err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
+		username, err := a.netrcHandler.RemoveNetrcCredentials(a.cliName, a.Config.Config.Context().Name)
 		if err == nil {
 			if level >= log.WARN {
 				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())
