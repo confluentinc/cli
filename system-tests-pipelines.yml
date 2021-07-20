@@ -58,6 +58,12 @@ jobs:
     displayName: Inject Vault secrets, set up Docker and Helm
   
   - bash: |
+      curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+      unzip awscli-bundle.zip
+      sudo ./awscli-bundle/install -i $(BIN_PATH)/aws
+    displayName: Install aws
+  
+  - bash: |
       $(BIN_PATH)/aws configure get aws_access_key_id
       $(BIN_PATH)/aws configure get aws_secret_access_key
     displayName: Test
