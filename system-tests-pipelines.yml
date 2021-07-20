@@ -116,7 +116,6 @@ jobs:
       make system-test-init-env || make cpd-debug-and-err
     env:
       CREATE_KAFKA_CLUSTERS: "true"
-      SKIP_SETUP_S3_BUCKET_FOR_CONNECT: "true"
     displayName: Initialize CPD environment
   
   - bash: make replace-cli-binary
