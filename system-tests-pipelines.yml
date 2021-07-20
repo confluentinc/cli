@@ -1,7 +1,7 @@
 jobs:
 - job: system_test
   displayName: CLI System Tests
-  timeoutInMinutes: 150
+  timeoutInMinutes: 150 # 2h30m
 
   pool:
     vmImage: "ubuntu-18.04"
@@ -101,9 +101,6 @@ jobs:
   - bash: make checkout-cc-system-tests
     displayName: Check out cc-system-tests
   
-  - bash: make replace-cli-binary
-    displayName: Replace CLI binary
-  
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath)
@@ -122,6 +119,9 @@ jobs:
       SKIP_SETUP_S3_BUCKET_FOR_CONNECT: "true"
     displayName: Initialize CPD environment
   
+  - bash: make replace-cli-binary
+    displayName: Replace CLI binary
+
   - bash: make run-system-tests || make cpd-debug-and-err
     env:
       GO_TEST_PACKAGE_ARGS: "./test/cli/..."
