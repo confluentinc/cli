@@ -58,11 +58,8 @@ jobs:
     displayName: Inject Vault secrets, set up Docker and Helm
   
   - bash: |
-      echo $CONNECT_AWS_ACCESS_KEY_ID
-      echo $CONNECT_AWS_SECRET_ACCESS_KEY
-    env:
-      CONNECT_AWS_ACCESS_KEY_ID: $($(BIN_PATH)/aws configure get aws_access_key_id)
-      CONNECT_AWS_SECRET_ACCESS_KEY: $($(BIN_PATH)/aws configure get aws_secret_access_key)
+      $(BIN_PATH)/aws configure get aws_access_key_id
+      $(BIN_PATH)/aws configure get aws_secret_access_key
     displayName: Test
 
   - bash: make gcloud-install
