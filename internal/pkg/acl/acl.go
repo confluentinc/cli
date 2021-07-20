@@ -353,8 +353,12 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 	}
 
 	for _, aclData := range aclGetResp.Data {
-		UserId := aclData.Principal[5:]
-		idp, _ := strconv.Atoi(UserId)
+		var resourceId string
+		if aclData.Principal != "" {
+			UserId := aclData.Principal[5:]
+			idp, _ := strconv.Atoi(UserId)
+			resourceId = IdMap[int32(idp)]
+		}
 		record := &struct {
 			ServiceAccountId string
 			Permission       string
@@ -363,7 +367,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 			Name             string
 			Type             string
 		}{
-			IdMap[int32(idp)],
+			resourceId,
 			string(aclData.Permission),
 			string(aclData.Operation),
 			string(aclData.ResourceType),
@@ -391,8 +395,12 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	}
 
 	for _, binding := range bindingsObj {
-		UserId := binding.Entry.Principal[5:]
-		idp, _ := strconv.Atoi(UserId)
+		var resourceId string
+		if binding.Entry.Principal != "" {
+			UserId := binding.Entry.Principal[5:]
+			idp, _ := strconv.Atoi(UserId)
+			resourceId = IdMap[int32(idp)]
+		}
 		record := &struct {
 			ServiceAccountId string
 			Permission       string
@@ -401,7 +409,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 			Name             string
 			Type             string
 		}{
-			IdMap[int32(idp)],
+			resourceId,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
 			binding.Pattern.ResourceType.String(),

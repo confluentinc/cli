@@ -187,7 +187,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	validFormat := strings.HasPrefix(args[0], "sa-")
 	if !validFormat {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{
 		ResourceId:         args[0],
@@ -205,7 +205,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	validFormat := strings.HasPrefix(args[0], "sa-")
 	if !validFormat {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{
 		ResourceId: args[0],
