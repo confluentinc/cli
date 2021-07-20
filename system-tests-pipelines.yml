@@ -37,7 +37,7 @@ jobs:
   - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
     inputs:
       helmVersionToInstall: 3.3.4
-    displayName: Install Helm
+    displayName: Install helm
   
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
@@ -97,16 +97,13 @@ jobs:
     inputs:
       version: "1.15.7"
     displayName: Use Go 1.15.7 for cc-system-tests
+    
+  - bash: make checkout-cc-system-tests
+    displayName: Check out cc-system-tests
   
   - bash: make replace-cli-binary
     displayName: Replace CLI binary
   
-  - bash: make checkout-cc-system-tests
-    displayName: Check out cc-system-tests
-  
-  - bash: make cpd-priv-testenv || make cpd-debug-and-err
-    displayName: Get environment variables for cc-system-tests
-
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath)
@@ -114,6 +111,9 @@ jobs:
       . $($(BIN_PATH)/vault kv get -field=script v1/ci/kv/semaphore2/cc-system-tests)
       $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
     displayName: Get secret environment variables for cc-system-tests from Vault
+  
+  - bash: make cpd-priv-testenv || make cpd-debug-and-err
+    displayName: Get environment variables for cc-system-tests
 
   - bash: |
       make system-test-init-env || make cpd-debug-and-err
