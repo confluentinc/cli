@@ -22,6 +22,7 @@ import (
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -40,6 +41,7 @@ type KafkaClusterTestSuite struct {
 	envMetadataMock *ccsdkmock.EnvironmentMetadata
 	analyticsOutput []segment.Message
 	analyticsClient analytics.Client
+	logger 			*log.Logger
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
@@ -90,7 +92,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 		EnvironmentMetadata: suite.envMetadataMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := NewClusterCommand(prerunner, suite.analyticsClient)
+	cmd := NewClusterCommand(prerunner, suite.analyticsClient, suite.logger)
 	return cmd
 }
 

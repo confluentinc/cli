@@ -3,15 +3,15 @@ package kafka
 import (
 	"bufio"
 	"fmt"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	logger "log"
 	_nethttp "net/http"
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -157,6 +157,20 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 		return nil, "", err
 	}
 	return kafkaREST, kafkaClusterConfig.ID, nil
+}
+
+
+func validateClusterResizeInProgress(cku int32, currentCluster *schedv1.KafkaCluster) error {
+	if cku != currentCluster.Cku {
+		if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
+			return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+		} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
+			return errors.New(errors.KafkaClusterExpandingErrorMsg)
+		} else if currentCluster.Status == schedv1.ClusterStatus_SHRINKING {
+			return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+		}
+	}
+	return nil
 }
 
 func camelToSnake(camels []string) []string {
