@@ -13,6 +13,8 @@ jobs:
   
   steps:
   
+  - template: azure-pipelines-templates/setup-secrets.yml
+
   - bash: |
       git clone git@github.com:confluentinc/cc-mk-include.git mk-include
       echo "include ./mk-include/cc-begin.mk" >> Makefile
@@ -23,16 +25,14 @@ jobs:
       echo "include ./mk-files/cli-cpd.mk" >> Makefile
     displayName: Add mk-include targets to Makefile
 
-  - template: azure-pipelines-templates/setup-secrets.yml
+  - bash: make install-vault
+    displayName: Install vault
 
   - task: DownloadSecureFile@1
     name: vaultsecrets
     inputs:
       secureFile: "vault_secrets"
-    displayName: Securely download vault environment variables (VAULT_ADDR, VAULT_ROLE_ID, VAULT_SECRET_ID)
-  
-  - bash: make install-vault
-    displayName: Install vault
+    displayName: Securely download Vault environment variables
   
   - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
     inputs:
