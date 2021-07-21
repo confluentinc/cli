@@ -25,7 +25,7 @@ const longDescription = "Initialize and set a current context."
 
 func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cobraCmd := &cobra.Command{
-		Use:   "init <context-name>",
+		Use:   "init \"<context-name>\"",
 		Short: "Initialize a context.",
 		Long:  longDescription,
 		Args:  cobra.ExactArgs(1),
