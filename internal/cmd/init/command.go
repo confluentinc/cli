@@ -12,6 +12,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -25,10 +26,16 @@ const longDescription = "Initialize and set a current context."
 
 func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cobraCmd := &cobra.Command{
-		Use:   "init \"<context-name>\"",
+		Use:   "init <context-name>",
 		Short: "Initialize a context.",
 		Long:  longDescription,
 		Args:  cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Initialize and set a current context of name \"new context\":",
+				Code: `ccloud init "new context" --kafka-auth`,
+			},
+		),
 	}
 	cliCmd := pcmd.NewAnonymousCLICommand(cobraCmd, prerunner)
 	cobraCmd.PersistentPreRunE = pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
