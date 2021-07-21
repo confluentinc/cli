@@ -32,7 +32,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient a
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Initialize and set a current context of name \"new context\":",
+				Text: `Initialize and set a current context of name "new context":`,
 				Code: `ccloud init "new context" --kafka-auth`,
 			},
 		),
