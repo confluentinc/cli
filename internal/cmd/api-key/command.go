@@ -191,7 +191,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
-	saId, err := cmd.Flags().GetString("service-account")
+	serviceAccountID, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -207,16 +207,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	allUsers := append(serviceAccounts, users...)
 
 	userId := int32(0)
-	if saId != "" { // if user inputs resource ID, get corresponding numeric ID
-		validFormat := strings.HasPrefix(saId, "sa-")
+	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
+		validFormat := strings.HasPrefix(serviceAccountID, "sa-")
 		if !validFormat {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
-		userIdMap, err := c.mapResourceIdToUserId(allUsers)
-		if err != nil {
-			return err
-		}
-		userId = userIdMap[saId]
+		userIdMap := c.mapResourceIdToUserId(allUsers)
+		userId = userIdMap[serviceAccountID]
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -241,10 +238,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(users)
-	resourceIdMap, err := c.mapUserIdToResourceId(allUsers)
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(allUsers)
 
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
@@ -366,7 +360,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	saId, err := cmd.Flags().GetString("service-account")
+	serviceAccountID, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -377,7 +371,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	key := &schedv1.ApiKey{
-		UserResourceId: saId,
+		UserResourceId: serviceAccountID,
 		Description:    description,
 		AccountId:      c.EnvironmentId(),
 	}
@@ -657,9 +651,8 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 }
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
-	saId := key.UserResourceId
-	if saId != "" { // it has a service-account flag
-		validFormat := strings.HasPrefix(saId, "sa-")
+	if key.UserResourceId != "" { // it has a service-account flag
+		validFormat := strings.HasPrefix(key.UserResourceId, "sa-")
 		if !validFormat {
 			return nil, errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
@@ -668,7 +661,7 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 			return key, err
 		}
 		for _, user := range users {
-			if saId == user.ResourceId {
+			if key.UserResourceId == user.ResourceId {
 				key.UserId = user.Id
 			}
 		}
@@ -676,18 +669,18 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 	return key, nil
 }
 
-func (c *command) mapUserIdToResourceId(users []*orgv1.User) (map[int32]string, error) {
+func (c *command) mapUserIdToResourceId(users []*orgv1.User) map[int32]string {
 	idMap := make(map[int32]string)
 	for _, user := range users {
 		idMap[user.Id] = user.ResourceId
 	}
-	return idMap, nil
+	return idMap
 }
 
-func (c *command) mapResourceIdToUserId(users []*orgv1.User) (map[string]int32, error) {
+func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
 	}
-	return idMap, nil
+	return idMap
 }

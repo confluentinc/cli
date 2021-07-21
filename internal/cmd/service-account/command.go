@@ -185,8 +185,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validFormat := strings.HasPrefix(args[0], "sa-")
-	if !validFormat {
+	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{
@@ -203,13 +202,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	validFormat := strings.HasPrefix(args[0], "sa-")
-	if !validFormat {
+	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	user := &orgv1.User{
-		ResourceId: args[0],
-	}
+	user := &orgv1.User{ResourceId: args[0]}
 	err := c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return err
