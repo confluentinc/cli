@@ -7,7 +7,6 @@ import (
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/confluentinc/cli/internal/cmd/api-key"
@@ -64,8 +63,6 @@ type command struct {
 }
 
 func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *command {
-	viper.AutomaticEnv()
-
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
 		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
