@@ -213,7 +213,6 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 | Region       | us-central1   |
 | Status       | PROVISIONING  |
 | Endpoint     |               |
-| ApiEndpoint  |               |
 | RestEndpoint |               |
 | ClusterSize  |             0 |
 +--------------+---------------+
