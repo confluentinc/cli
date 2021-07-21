@@ -153,7 +153,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 		connectorCmd := connector.New(prerunner, analyticsClient)
-		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
+		connectorCatalogCmd := connectorcatalog.New(prerunner)
 		environmentCmd := environment.New(cliName, prerunner, analyticsClient)
 		serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
