@@ -26,6 +26,11 @@ func main() {
 		cobra.CheckErr(err)
 	}
 
+	cfg, err := cmd.LoadConfig()
+	if err != nil {
+		cobra.CheckErr(err)
+	}
+
 	isTest, err := strconv.ParseBool(isTest)
 	if err != nil {
 		panic(err)

@@ -8,13 +8,11 @@ import (
 	"strings"
 
 	"github.com/client9/gospell"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -225,28 +223,28 @@ func main() {
 		Debug:     *debug,
 	}
 
+	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v3.Config{
 		{
-			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
+			CurrentContext: "no context",
+		},
+		{
+			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: v3.CCloudHostnames[0]}},
 			CurrentContext: "cloud",
-			IsTest:         true,
 		},
 		{
 			Contexts:       map[string]*v3.Context{"on-prem": {PlatformName: "https://example.com"}},
 			CurrentContext: "on-prem",
-			IsTest:         true,
 		},
 	}
 
-	var issues *multierror.Error
+	code := 0
 	for _, cfg := range configs {
 		cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
 		if err := l.Lint(cli.Command); err != nil {
-			issues = multierror.Append(issues, err)
+			fmt.Printf("For context \"%s\", %v", cfg.CurrentContext, err)
+			code = 1
 		}
 	}
-	if issues.ErrorOrNil() != nil {
-		fmt.Println(issues)
-		os.Exit(1)
-	}
+	os.Exit(code)
 }
