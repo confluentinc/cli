@@ -26,7 +26,7 @@ Available Commands:
   service-account   Manage service accounts.
   shell             Run the ccloud shell.
   signup            Sign up for Confluent Cloud.
-  update            Update the Confluent Cloud CLI.
+  update            Update the Confluent CLI.
   version           Show version of the Confluent CLI.
 
 Flags:

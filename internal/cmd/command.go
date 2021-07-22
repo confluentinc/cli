@@ -137,7 +137,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	if !cfg.DisableUpdates {
-		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
+		cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
 	}
 	cli.AddCommand(version.New(prerunner, ver))
 
