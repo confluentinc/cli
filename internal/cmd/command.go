@@ -131,7 +131,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	// No-login commands
 	cli.AddCommand(completion.New(cli, cliName))
 	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
-	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)

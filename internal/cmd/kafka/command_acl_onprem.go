@@ -1,12 +1,13 @@
 package kafka
 
 import (
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 )
 
 var (

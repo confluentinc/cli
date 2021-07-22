@@ -10,6 +10,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -53,7 +54,7 @@ func AuthenticatedCloudConfigMock() *Config {
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
 		username:       mockEmail,
-		url:            MockUserResourceId,
+		url:            testserver.TestCloudURL.String(),
 		envId:          MockEnvironmentId,
 		orgId:          mockOrganizationId,
 		orgResourceId:  MockOrgResourceId,
@@ -164,6 +165,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
+	conf.IsTest = true
 
 	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
 	if err != nil {

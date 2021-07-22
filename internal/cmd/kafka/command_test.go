@@ -659,7 +659,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf),
+	cmd := New(conf, false, cliMock.NewPreRunnerMock(client, nil, nil, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
@@ -1172,7 +1172,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		}
 		return nil, nil
 	})
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
+	cmd := New(conf, false, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd

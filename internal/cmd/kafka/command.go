@@ -5,6 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
@@ -19,7 +20,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
+func New(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
 	serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
@@ -34,36 +35,46 @@ func New(isAPIKeyLogin bool, cliName string, prerunner pcmd.PreRunner, logger *l
 		serverCompleter: serverCompleter,
 		analyticsClient: analyticsClient,
 	}
-	cmd.init(isAPIKeyLogin, cliName)
+	cmd.init(cfg, isAPIKeyLogin)
 	return cmd.Command
 }
 
-func (c *command) init(isAPIKeyLogin bool, cliName string) {
-	if cliName == "ccloud" {
+func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
+	if cfg.IsCloud() {
 		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
 		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
 		// and that doesn't trigger completion.
 		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 		c.serverCompleter.AddCommand(topicCmd)
+		
 		if isAPIKeyLogin {
 			return
 		}
-		groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
-		c.AddCommand(groupCmd.Command)
-		c.serverCompleter.AddCommand(groupCmd)
-		c.serverCompleter.AddCommand(groupCmd.lagCmd)
-		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		c.AddCommand(clusterCmd.Command)
-		c.serverCompleter.AddCommand(clusterCmd)
+
 		aclCmd := NewACLCommand(c.prerunner)
+		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
+		groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
+
 		c.AddCommand(aclCmd.Command)
-		c.serverCompleter.AddCommand(aclCmd)
-		c.AddCommand(NewRegionCommand(c.prerunner))
+		c.AddCommand(clusterCmd.Command)
+		c.AddCommand(groupCmd.Command)
 		c.AddCommand(NewLinkCommand(c.prerunner))
 		c.AddCommand(NewMirrorCommand(c.prerunner))
-	} else {
+		c.AddCommand(NewRegionCommand(c.prerunner))
+
+		c.serverCompleter.AddCommand(aclCmd)
+		c.serverCompleter.AddCommand(clusterCmd)
+		c.serverCompleter.AddCommand(groupCmd)
+		c.serverCompleter.AddCommand(groupCmd.lagCmd)
+		
+		return
+	}
+
+	// These on-prem commands can also be run without logging in.
+	c.AddCommand(NewAclCommandOnPrem(c.prerunner))
+	c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
+
+	if cfg.IsOnPrem() {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
-		c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
-		c.AddCommand(NewAclCommandOnPrem(c.prerunner))
 	}
 }
