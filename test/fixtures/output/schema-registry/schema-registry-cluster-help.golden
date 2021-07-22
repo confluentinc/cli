@@ -1,4 +1,4 @@
-Manage Schema Registry cluster.
+Manage Schema Registry clusters.
 
 Usage:
   confluent schema-registry cluster [command]
