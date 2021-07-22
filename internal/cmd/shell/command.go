@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -24,7 +25,6 @@ const (
 type command struct {
 	Command      *cobra.Command
 	RootCmd      *cobra.Command
-	cliName      string
 	config       *v3.Config
 	prerunner    pcmd.PreRunner
 	completer    *completer.ShellCompleter
@@ -34,12 +34,11 @@ type command struct {
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config,
+func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, config *v3.Config,
 	completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
 		RootCmd:      rootCmd,
 		config:       config,
-		cliName:      cliName,
 		prerunner:    prerunner,
 		completer:    completer,
 		logger:       logger,
@@ -54,7 +53,7 @@ func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName strin
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "shell",
-		Short: fmt.Sprintf("Run the %s shell.", c.cliName),
+		Short: fmt.Sprintf("Run the %s shell.", version.CLIName),
 		RunE:  pcmd.NewCLIRunE(c.shell),
 		Args:  cobra.NoArgs,
 	}
@@ -81,7 +80,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	}
 
 	// run the shell
-	fmt.Printf(errors.ShellWelcomeMsg, c.cliName, msg)
+	fmt.Printf(errors.ShellWelcomeMsg, version.CLIName, msg)
 	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
@@ -114,5 +113,5 @@ func prefixState(jwtValidator pcmd.JWTValidator, config *v3.Config) (text string
 	if err := jwtValidator.Validate(config.Context()); err == nil {
 		prefixColor = candyAppleGreen
 	}
-	return fmt.Sprintf("%s > ", config.CLIName), prefixColor
+	return fmt.Sprintf("%s > ", version.CLIName), prefixColor
 }
