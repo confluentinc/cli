@@ -116,7 +116,7 @@ func (c *clusterCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
-	listCmd.Flags().Bool("all", false, "List clusters of all environments.")
+	listCmd.Flags().Bool("all", false, "List clusters across all environments.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
