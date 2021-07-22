@@ -6,29 +6,19 @@ Usage:
 Examples:
 To list the role bindings for current user:
 
-::
-
-  iam rolebinding list --current-user
+  $ ccloud iam rolebinding list --current-user
 
 To list the role bindings for a specific principal:
 
-::
-
-  iam rolebinding list --principal User:frodo
+  $ ccloud iam rolebinding list --principal User:frodo
 
 To list the role bindings for a specific principal, filtered to a specific role:
 
-::
-
-  iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa
+  $ ccloud iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa
 
 To list the principals bound to a specific role:
 
-::
-
-  iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa
-
-
+  $ ccloud iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa
 
 Flags:
       --principal string       Principal whose rolebindings should be listed.
