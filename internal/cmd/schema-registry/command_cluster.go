@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type describeDisplay struct {
@@ -49,11 +50,11 @@ type clusterCommand struct {
 	analyticsClient analytics.Client
 }
 
-func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+func NewClusterCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
-			Short: "Manage Schema Registry cluster.",
+			Short: "Manage Schema Registry clusters.",
 		}, prerunner, ClusterSubcommandFlags)
 	clusterCmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
@@ -61,11 +62,11 @@ func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk
 		logger:                        logger,
 		analyticsClient:               analyticsClient,
 	}
-	clusterCmd.init(cliName)
+	clusterCmd.init()
 	return clusterCmd.Command
 }
 
-func (c *clusterCommand) init(cliName string) {
+func (c *clusterCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "enable",
 		Short: "Enable Schema Registry for this environment.",
@@ -74,7 +75,7 @@ func (c *clusterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Enable Schema Registry, using Google Cloud Platform in the US:",
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", cliName),
+				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", version.CLIName),
 			},
 		),
 	}
@@ -104,7 +105,7 @@ func (c *clusterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update top level compatibility or mode of Schema Registry.",
-				Code: fmt.Sprintf("%s schema-registry cluster update --compatibility=BACKWARD\n%s schema-registry cluster update --mode=READWRITE", cliName, cliName),
+				Code: fmt.Sprintf("%s schema-registry cluster update --compatibility=BACKWARD\n%s schema-registry cluster update --mode=READWRITE", version.CLIName, version.CLIName),
 			},
 		),
 	}
