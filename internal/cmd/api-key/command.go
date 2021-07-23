@@ -209,15 +209,19 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	allUsers := append(serviceAccounts, users...)
 
 	userId := int32(0)
-	if serviceAccountId != "" && isResourceId(serviceAccountId) { // if user inputs resource ID, get corresponding numeric ID
-		userIdMap, err := c.mapResourceIdToUserId(allUsers)
-		if err != nil {
-			return err
+	serviceAccount := false
+	if serviceAccountId != "" {
+		serviceAccount = true
+		if isResourceId(serviceAccountId) { // if user inputs resource ID, get corresponding numeric ID
+			userIdMap, err := c.mapResourceIdToUserId(allUsers)
+			if err != nil {
+				return err
+			}
+			userId = userIdMap[serviceAccountId]
+		} else { // if user inputs numeric ID, convert it to int32
+			userIdp, _ := strconv.Atoi(serviceAccountId)
+			userId = int32(userIdp)
 		}
-		userId = userIdMap[serviceAccountId]
-	} else { // if user inputs numeric ID, convert it to int32
-		userIdp, _ := strconv.Atoi(serviceAccountId)
-		userId = int32(userIdp)
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -230,7 +234,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 		userId = c.State.Auth.User.Id
 	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId, ServiceAccount: serviceAccount})
 	if err != nil {
 		return err
 	}
