@@ -34,7 +34,7 @@ func (suite *ReleaseNotesBuilderTestSuite) SetupSuite() {
 		bugFixes:    []string{},
 	}
 	suite.noNewFeatureContent = &ReleaseNotesContent{
-		newFeatures: nil,
+		newFeatures: []string{},
 		bugFixes:    bugFixList,
 	}
 	suite.noChangeContent = &ReleaseNotesContent{
@@ -43,47 +43,39 @@ func (suite *ReleaseNotesBuilderTestSuite) SetupSuite() {
 	}
 }
 
-func (suite *ReleaseNotesBuilderTestSuite) TestS3CCloud() {
-	suite.runTest("S3 CCloud", "s3_ccloud", s3CCloudReleaseNotesBuilderParams)
+func (suite *ReleaseNotesBuilderTestSuite) TestS3() {
+	suite.runTest("s3", s3ReleaseNotesBuilderParams)
 }
 
-func (suite *ReleaseNotesBuilderTestSuite) TestS3Confluent() {
-	suite.runTest("S3 Confluent", "s3_confluent", s3ConfluentReleaseNotesBuilderParams)
+func (suite *ReleaseNotesBuilderTestSuite) TestDocs() {
+	suite.runTest("docs", docsReleaseNotesBuilderParmas)
 }
 
-func (suite *ReleaseNotesBuilderTestSuite) TestDocsCCloud() {
-	suite.runTest("Docs CCloud", "docs_ccloud", docsCCloudReleaseNotesBuilderParams)
-}
-
-func (suite *ReleaseNotesBuilderTestSuite) TestDocsConfluent() {
-	suite.runTest("Docs Confluent", "docs_confluent", docsConfluentReleaseNotesBuilderParmas)
-}
-
-func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, outputFilePrefix string, releaseNotesBuilderParams *ReleaseNotesBuilderParams) {
+func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, releaseNotesBuilderParams *ReleaseNotesBuilderParams) {
 	tests := []struct {
 		name     string
 		content  *ReleaseNotesContent
 		wantFile string
 	}{
 		{
-			name:     fmt.Sprintf("%s basics release notes", testNamePrefix),
+			name:     fmt.Sprintf("%s new features and bug fixes", testNamePrefix),
 			content:  suite.newFeatureAndBugFixContent,
-			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_both", outputFilePrefix),
+			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_both", testNamePrefix),
 		},
 		{
 			name:     fmt.Sprintf("%s no bug fixes", testNamePrefix),
 			content:  suite.noBugFixContent,
-			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_bug", outputFilePrefix),
+			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_bug_fixes", testNamePrefix),
 		},
 		{
 			name:     fmt.Sprintf("%s no new features", testNamePrefix),
 			content:  suite.noNewFeatureContent,
-			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_new_feature", outputFilePrefix),
+			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_new_features", testNamePrefix),
 		},
 		{
-			name:     fmt.Sprintf("%s no change", testNamePrefix),
+			name:     fmt.Sprintf("%s no changes", testNamePrefix),
 			content:  suite.noChangeContent,
-			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_change", outputFilePrefix),
+			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_changes", testNamePrefix),
 		},
 	}
 	for _, tt := range tests {

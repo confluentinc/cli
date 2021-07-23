@@ -1,6 +1,7 @@
 package release_notes
 
 import (
+	_ "embed"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,12 +11,8 @@ import (
 )
 
 const (
-	bothNewFeaturesTitle      = "New Features for Both CLIs"
-	bothBugFixesTitle         = "Bug Fixes for Both CLIs"
-	ccloudNewFeaturesTitle    = "CCloud New Features"
-	ccloudBugFixesTitle       = "CCloud Bug Fixes"
-	confluentNewFeaturesTitle = "Confluent New Features"
-	confluentBugFixesTitle    = "Confluent Bug Fixes"
+	newFeaturesTitle = "New Features"
+	bugFixesTitle    = "Bug Fixes"
 
 	prepFileName = "./release-notes/prep"
 	placeHolder  = "<PLACEHOLDER>"
@@ -34,14 +31,7 @@ func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	}
 	defer f.Close()
 	mergedPRs := getMergedPRs(prevVersion)
-	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs,
-		bothNewFeaturesTitle,
-		bothBugFixesTitle,
-		ccloudNewFeaturesTitle,
-		ccloudBugFixesTitle,
-		confluentNewFeaturesTitle,
-		confluentBugFixesTitle,
-	)
+	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs, newFeaturesTitle, bugFixesTitle)
 	_, err = io.WriteString(f, prepFile)
 	return err
 }

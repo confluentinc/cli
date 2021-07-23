@@ -1,11 +1,9 @@
-# Confluent Cloud CLI
+# Confluent CLI
 
 [![Build Status](https://dev.azure.com/confluentinc/cli/_apis/build/status/confluentinc.cli?branchName=master)](https://dev.azure.com/confluentinc/cli/_build/latest?definitionId=1&branchName=master)
 ![Release](release.svg)
 
-This is the v2 Confluent *Cloud CLI*. It also serves as the backbone for the Confluent "*Converged CLI*" efforts.
-In particular, the repository also contains all of the code for the on-prem "*Confluent CLI*", which is also built
-as part of the repo's build process.
+The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -24,7 +22,7 @@ as part of the repo's build process.
   - [Build Other Platforms](#build-other-platforms)
   - [URLS](#urls)
   - [Releasing a New CLI Version](#releasing-a-new-cli-version)
-- [Installers](#installers)
+- [Installer](#installer)
 - [Documentation](#documentation)
   - [README](#readme)
   - [Reference Docs](#reference-docs)
@@ -53,10 +51,6 @@ You can download a tarball with the binaries. These are both on Github releases 
 
 The simplest way to install cross platform is with this one-liner:
 
-    curl -sL https://cnfl.io/ccloud-cli | sh
-
-Or for the on-prem binary (while these are separate binaries):
-
     curl -sL https://cnfl.io/cli | sh
 
 It'll install in `./bin` by default.
@@ -65,19 +59,17 @@ It'll install in `./bin` by default.
 
 You can also install to a specific directory. For example, install to `/usr/local/bin` by running:
 
-    curl -sL https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+    curl -sL https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
 
 #### Install Version
 
 You can list all available versions:
 
-    curl -sL https://cnfl.io/ccloud-cli | sh -s -- -l
-
     curl -sL https://cnfl.io/cli | sh -s -- -l
 
 And install a particular version if you desire:
 
-    curl -sL https://cnfl.io/ccloud-cli | sudo sh -s -- v0.64.0
+    curl -sL https://cnfl.io/cli | sudo sh -s -- v0.64.0
 
 This downloads a binary tarball from S3 compiled for your distro and installs it.
 
@@ -87,33 +79,32 @@ You can download a binary tarball from S3.
 
 To list all available versions:
 
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
 
 To list all available packages for a version:
 
     VERSION=v0.95.0 # or latest
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=ccloud-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
 
 To download a tarball for your OS and architecture:
 
     VERSION=v0.95.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=ccloud_${VERSION}_${OS}_${ARCH}.tar.gz
-    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/ccloud-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
+    FILE=confluent_${VERSION}_${OS}_${ARCH}.tar.gz
+    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI:
 
     tar -xzvf ${FILE}
-    sudo mv ccloud/ccloud /usr/local/bin
+    sudo mv confluent/confluent /usr/local/bin
 
 ### Building From Source
 
 ```
 $ make deps
 $ make build
-$ dist/ccloud/ccloud_$(go env GOOS)_$(go env GOARCH)/ccloud -h # for cloud CLI
-$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h # for on-prem Confluent CLI
+$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 ```
 
 If `make deps` fails with an "unknown revision" error, you probably need to put your username and a
@@ -174,7 +165,7 @@ Here's the basic file structure:
 
 Things under `internal/cmd` are commands, things under `internal/pkg` are packages to be used by commands.
 
-When you add a new command or resource, assuming its already in the SDK, you generally just need to create
+When you add a new command or resource, assuming it's already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 
 ### Build Other Platforms
@@ -227,26 +218,25 @@ Note: you can verify whether a macOS binary is signed and notarized correctly
 by running `spctl -a -vvv -t install <binary name>`.  If all is good, you
 should see output like
 ```
-dist/ccloud/ccloud_darwin_amd64/ccloud: accepted
+dist/confluent/confluent_darwin_amd64/confluent: accepted
 source=Notarized Developer ID
 origin=Developer ID Application: Confluent, Inc. (RTSX8FNWR2)
 ```
 
-## Installers
+## Installer
 
-This repo contains installers for [install-ccloud.sh](./install-ccloud.sh) and
-[install-confluent.sh](./install-confluent.sh). These were based on installers
+This repo contains an [install.sh](installer script). It was
 generated by [godownloader](https://github.com/goreleaser/godownloader) and
 manually modified to download from S3 instead of GitHub. In turn, godownloader
 relies on portable shell functions from [shlib](https://github.com/client9/shlib).
 
-Although they've been manually modified, they're fairly clean and simple bash scripts.
-The major modifications include
+Although it's been manually modified, it's a fairly clean and simple bash script.
+The major modifications include:
 * reworked `github_release` into `s3_release` function
 * updated `TARBALL_URL` and `CHECKSUM_URL` to point to S3 instead of GitHub API
-* added a new `-l` flag to list versions from S3, since we can't link to our (private) github repo
+* added a new `-l` flag to list versions from S3, since we can't link to our (private) GitHub repo
 * extracted a `BINARY` variable instead of having binary names hardcoded in `execute`
-* updated version/tag handling of the `v` prefix; its expected in GitHub and inconsistently used in S3
+* updated version/tag handling of the `v` prefix; it's expected in GitHub and inconsistently used in S3
 * updated the usage message, logging, and file comments a bit
 
 ## Documentation
@@ -263,7 +253,7 @@ Then run this to update the Table of Contents:
 
 ### Reference Docs
 
-The CLI command [reference docs](https://docs.confluent.io/current/cloud/cli/command-reference/index.html)
+The CLI [command reference docs](https://docs.confluent.io/confluent-cli/current/command-reference/index.html)
 are programmatically generated from the Cobra commands in this repo.
 
 Just run:
@@ -273,7 +263,7 @@ Just run:
 Cheat sheet:
 ```
 	cli := &cobra.Command{
-		Use:               cliName,
+		Use:               "command-name",
 		Short:             "This is a short description",
 		Long:              "This is a longer synopsis",
 	}
@@ -285,7 +275,7 @@ The CLI is tested with a combination of unit tests and integration tests
 (backed by mocks). These are both contained within this repo.
 
 We also have end-to-end system tests for
-* ccloud-only functionality - [cc-system-tests](https://github.com/confluentinc/cc-system-tests/blob/master/test/cli_test.go)
+* cloud-only functionality - [cc-system-tests](https://github.com/confluentinc/cc-system-tests/blob/master/test/cli_test.go)
 * on-prem-only functionality - [muckrake](https://github.com/confluentinc/muckrake) (TODO: fix link to CLI tests)
 
 To run all tests
@@ -367,13 +357,13 @@ INT_TEST_ARGS is can also be used with `make test` target, if you want to filter
 ### Command Overview
 Commands in the CLI follow the following syntax:
 
-`ccloud/confluent <resource> [subresource] <standard-verb> [args]`
+`confluent <resource> [subresource] <standard-verb> [args]`
 
-We'll be implementing a `ccloud config file show <num-times>` command that outputs the config file of the CLI a specified number of times. For example, `ccloud config file 3` might output:
+We'll be implementing a `confluent config file show <num-times>` command that outputs the config file of the CLI a specified number of times. For example, `confluent config file 3` might output:
 ```
-~/.ccloud/config.json
-~/.ccloud/config.json
-~/.ccloud/config.json
+~/.confluent/config.json
+~/.confluent/config.json
+~/.confluent/config.json
 ```
 
 ### Creating the command file
@@ -397,19 +387,17 @@ import (
 
 type fileCommand struct {
 	*pcmd.CLICommand
-	cliName   string
 	prerunner pcmd.PreRunner
 	analytics analytics.Client
 }
 
-func NewFileCommand(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func NewFileCommand(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "file",
 			Short: "Manage the config file.",
 		}, prerunner)
 	cmd := &fileCommand{
-		cliName:    cliName,
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
 		analytics:  analytics,
@@ -456,16 +444,15 @@ This function is named after the verb component of the command, `show`. It does 
 See [error.md](errors.md) for details.
 
 ### Registering the Command
-We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.cliName, c.prerunner, c.analytics))`.
+We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.prerunner, c.analytics))`.
 
-With an entirely new command, we would also need to register it with the base top-level command (`ccloud` and/or `confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
+With an entirely new command, we would also need to register it with the base top-level command (`confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
 
 ### Building
-To build both binaries, we run `make build`. After this, we can run our command either of the following ways, and see that they (hopefully) work!
+To build the CLI binary, we run `make build`. After this, we can run our command in the following way, and see that it (hopefully) works!
 
 ```
-dist/ccloud/ccloud_<platform>/ccloud config file show 3
-dist/confluent/confluent_<platform>/confluent config file show 3
+dist/confluent/confluent_<platform>_<arch>/confluent config file show 3
 ```
 
 ### Integration Testing
@@ -479,14 +466,14 @@ func (s *CLITestSuite) TestFileCommands() {
 	tests := []CLITest{
 		{name: "succeed if showing existing config file", args: "config file show 3", fixture: "file1.golden"},
 	}
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T(), "confluent")
 
 	for _, tt := range tests {
 		if tt.name == "" {
 			tt.name = tt.args
 		}
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runConfluentTest(tt)
 	}
 }
 ```

@@ -11,18 +11,16 @@ import (
 )
 
 func Test_Docs_Update_Handler(t *testing.T) {
-	newReleaseNotes := `|ccloud| CLI v1.2.0 Release Notes
-=================================
+	newReleaseNotes := `|confluent-cli| v1.2.0 Release Notes
+====================================
 
 New Features
 ------------------------
-- 1.2 cloud feature
-- 1.2 both feat
+- v1.2.0 feature
 
 Bug Fixes
 ------------------------
-- 1.2 cloud bug
-- 1.2 two both bugs`
+- v1.2.0 bug`
 
 	if runtime.GOOS == "windows" {
 		newReleaseNotes = strings.ReplaceAll(newReleaseNotes, "\n", "\r\n")
@@ -35,7 +33,7 @@ Bug Fixes
 		wantFile        string
 	}{
 		{
-			name:            "basics release notes",
+			name:            "basic release notes",
 			newReleaseNotes: newReleaseNotes,
 			docsFile:        "test_files/release-notes.rst",
 			wantFile:        "test_files/output/docs_update_handler_output",
@@ -43,7 +41,7 @@ Bug Fixes
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			docsUpdateHandler := NewDocsUpdateHandler(ccloudDocsPageHeader, tt.docsFile)
+			docsUpdateHandler := NewDocsUpdateHandler(docsPageHeader, tt.docsFile)
 			docs, err := docsUpdateHandler.getUpdatedDocsPage(tt.newReleaseNotes)
 			require.NoError(t, err)
 			want, err := readTestFile(tt.wantFile)

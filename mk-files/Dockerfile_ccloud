@@ -1,9 +1,0 @@
-FROM alpine:latest
-
-RUN apk update --no-cache && \
-    apk add --no-cache curl
-
-RUN curl -L --http1.1 https://cnfl.io/ccloud-cli | sh -s -- -b .
-
-RUN chmod +x ccloud
-

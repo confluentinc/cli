@@ -1,32 +1,27 @@
-.. _ccloud-release-notes:
+.. _cli-release-notes:
 
-==========================
-|ccloud| CLI Release Notes
-==========================
+=============================
+|confluent-cli| Release Notes
+=============================
 
-|ccloud| CLI v1.1.0 Release Notes
-=================================
-
-New Features
-----------------------------
-- ver 2 cloud feat
-- ver 2 both feat
-
-Bug Fixes
-----------------------------
-- ver 2 cloud bug
-- ver two both bugs
-
-|ccloud| CLI v1.0.0 Release Notes
-=================================
+|confluent-cli| v1.1.0 Release Notes
+====================================
 
 New Features
 ----------------------------
-- cloud feat
-- both feat
-
+- v1.1.0 feature
 
 Bug Fixes
 ----------------------------
-- cloud bug
-- both bug
+- v1.1.0 bug
+
+|confluent-cli| v1.0.0 Release Notes
+====================================
+
+New Features
+----------------------------
+- v1.0.0 feature
+
+Bug Fixes
+----------------------------
+- v1.0.0 bug
