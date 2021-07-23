@@ -1,4 +1,4 @@
---- cli/Makefile	2021-07-23 13:51:21.000000000 -0500
+--- cli/Makefile	2021-07-23 14:29:58.000000000 -0500
 +++ debian/Makefile	2021-07-21 22:31:30.000000000 -0500
 @@ -1,209 +1,130 @@
 -SHELL           := /bin/bash
@@ -246,7 +246,7 @@
 -	@binary="confluent" ; \
 -	echo Licenses for $${binary} binary ; \
 -	[ -t 0 ] && args="" || args="-plain" ; \
--	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary}
+-	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} || true
 -
 -.PHONY: coverage-unit
 -coverage-unit:
