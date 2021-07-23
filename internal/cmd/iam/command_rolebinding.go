@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -66,7 +67,7 @@ type rolebindingOptions struct {
 
 type rolebindingCommand struct {
 	*cmd.AuthenticatedStateFlagCommand
-	cliName string
+	cfg *v3.Config
 }
 
 type listDisplay struct {
@@ -79,29 +80,31 @@ type listDisplay struct {
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
+func NewRolebindingCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 	cobraRolebindingCmd := &cobra.Command{
 		Use:   "rolebinding",
 		Short: "Manage RBAC and IAM role bindings.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *cmd.AuthenticatedStateFlagCommand
-	if cliName == "confluent" {
+	if cfg.IsOnPrem() {
 		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRolebindingCmd, prerunner, RolebindingSubcommandFlags)
 	} else {
 		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRolebindingCmd, prerunner, nil)
 	}
 	roleBindingCmd := &rolebindingCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		cliName:                       cliName,
+		cfg:                           cfg,
 	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
 }
 
 func (c *rolebindingCommand) init() {
+	isCloud := c.cfg.IsCloud()
+
 	var example string
-	if c.cliName == "ccloud" {
+	if isCloud {
 		example = examples.BuildExampleString(
 			examples.Example{
 				Text: "To list the role bindings for current user:",
@@ -157,7 +160,7 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("principal", "", "Principal whose rolebindings should be listed.")
 	listCmd.Flags().Bool("current-user", false, "Show rolebindings belonging to current user.")
 	listCmd.Flags().String("role", "", "List rolebindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
-	if c.cliName == "ccloud" {
+	if isCloud {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of rolebinding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding listings.")
 		listCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
@@ -188,7 +191,7 @@ func (c *rolebindingCommand) init() {
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	if c.cliName == "ccloud" {
+	if isCloud {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding create.")
 		createCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
@@ -215,7 +218,7 @@ func (c *rolebindingCommand) init() {
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
-	if c.cliName == "ccloud" {
+	if isCloud {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding delete.")
 		deleteCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
@@ -520,7 +523,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if c.cliName == "ccloud" {
+	if c.cfg.IsCloud() {
 		return c.ccloudList(cmd, options)
 	} else {
 		return c.confluentList(cmd, options)
@@ -727,9 +730,11 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		return nil, err
 	}
 
+	isCloud := c.cfg.IsCloud()
+
 	resource := ""
 	prefix := false
-	if c.cliName != "ccloud" {
+	if !isCloud {
 		resource, err = cmd.Flags().GetString("resource")
 		if err != nil {
 			return nil, err
@@ -741,7 +746,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	if err != nil {
 		return nil, err
 	}
-	if c.cliName == "ccloud" {
+	if isCloud {
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
@@ -763,7 +768,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 
 	scope := &mds.MdsScope{}
 	scopeV2 := &mdsv2alpha1.Scope{}
-	if c.cliName != "ccloud" {
+	if !isCloud {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
 		scopeV2, err = c.parseAndValidateScopeV2(cmd)
@@ -833,8 +838,10 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	isCloud := c.cfg.IsCloud()
+
 	var resp *http.Response
-	if c.cliName == "ccloud" {
+	if isCloud {
 		resp, err = c.ccloudCreate(options)
 	} else {
 		resp, err = c.confluentCreate(options)
@@ -847,7 +854,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
-	if c.cliName == "ccloud" {
+	if isCloud {
 		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
@@ -926,8 +933,10 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	isCloud := c.cfg.IsCloud()
+
 	var resp *http.Response
-	if c.cliName == "ccloud" {
+	if isCloud {
 		resp, err = c.ccloudDelete(options)
 	} else {
 		resp, err = c.confluentDelete(options)
@@ -941,7 +950,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
-	if c.cliName == "ccloud" {
+	if isCloud {
 		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
@@ -955,7 +964,7 @@ func check(err error) {
 }
 
 func (c *rolebindingCommand) createContext() context.Context {
-	if c.cliName == "ccloud" {
+	if c.cfg.IsCloud() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.AuthToken())
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())

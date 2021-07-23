@@ -194,7 +194,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New("confluent", mock2.NewPreRunnerMock(nil, mdsClient, nil, suite.conf))
+	return New(suite.conf, mock2.NewPreRunnerMock(nil, mdsClient, nil, suite.conf))
 }
 
 func TestAclTestSuite(t *testing.T) {
@@ -420,24 +420,4 @@ func (suite *ACLTestSuite) TestMdsDefaults() {
 
 	err = cmd.Execute()
 	assert.Nil(suite.T(), err)
-}
-
-func (suite *ACLTestSuite) TestMdsHandleErrorNotLoggedIn() {
-	expect := make(chan interface{})
-	oldContext := suite.conf.CurrentContext
-	suite.conf.CurrentContext = ""
-	cmd := suite.newMockIamCmd(expect, "")
-	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-
-	for _, aclCmd := range []string{"list", "create", "delete"} {
-		cmd.SetArgs([]string{"acl", aclCmd, "--kafka-cluster-id", "testcluster"})
-		go func() {
-			expect <- nil
-		}()
-		err := cmd.Execute()
-		assert.NotNil(suite.T(), err)
-		expectedError := (&errors.NotLoggedInError{CLIName: suite.conf.CLIName}).UserFacingError()
-		assert.Equal(suite.T(), errors.GetErrorStringWithSuggestions(expectedError), errors.GetErrorStringWithSuggestions(err))
-	}
-	suite.conf.CurrentContext = oldContext
 }

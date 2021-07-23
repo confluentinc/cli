@@ -167,7 +167,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(connectorCatalogCmd.Command)
 		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
-		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(iam.New(cfg, prerunner))
 		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(prompt.New(cliName, prerunner, &ps1.Prompt{}, logger))
@@ -181,7 +181,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(auditlog.New(cliName, prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
-		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(iam.New(cfg, prerunner))
 		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
 	}
