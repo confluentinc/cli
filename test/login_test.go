@@ -88,13 +88,13 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
-			ccloudTestBin,
+			testBin,
 		},
 		{
 			"confluent",
 			"netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
-			confluentTestBin,
+			testBin,
 		},
 	}
 
@@ -158,14 +158,14 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 			"ccloud",
 			"netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
-			ccloudTestBin,
+			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
 			"confluent",
 			"netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
-			confluentTestBin,
+			testBin,
 		},
 	}
 
@@ -217,7 +217,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 	}
 
 	env := []string{auth.CCloudEmailDeprecatedEnvVar + "=" + ssoTestEmail}
-	cmd := exec.Command(binaryPath(s.T(), ccloudTestBin), []string{"login", "--save", "-vvv", "--url", ssoTestLoginUrl, "--no-browser"}...)
+	cmd := exec.Command(binaryPath(s.T(), testBin), []string{"login", "--save", "-vvv", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 
 	cliStdOut, err := cmd.StdoutPipe()

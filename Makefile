@@ -78,7 +78,7 @@ run:
 
 .PHONY: build
 build:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
+	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -90,24 +90,24 @@ build-integ-nonrace:
 	binary="confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
-		    -X $(RESOLVED_PATH).commit=$(REF) \
-		    -X $(RESOLVED_PATH).host=$(HOSTNAME) \
-    		-X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION) \
-		    -X $(RESOLVED_PATH).isTest=true" \
-		    -tags testrunmain -coverpkg=./... -c -o $${binexe}
+		-X $(RESOLVED_PATH).commit=$(REF) \
+		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o $${binexe}
 
 .PHONY: build-integ-race
 build-integ-race:
 	binary="confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
-		    -X $(RESOLVED_PATH).commit=$(REF) \
-		    -X $(RESOLVED_PATH).host=$(HOSTNAME) \
-    		-X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION) \
-		    -X $(RESOLVED_PATH).isTest=true" \
-		    -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+		-X $(RESOLVED_PATH).commit=$(REF) \
+		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
@@ -150,15 +150,8 @@ ifeq ($(shell uname),Darwin)
 else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
-	make lint-go && \
-	make lint-cli && \
-	make lint-installer
+	make lint-go && make lint-cli
 endif
-
-.PHONY: lint-installer
-## Lints the CLI installation scripts
-lint-installer:
-	@diff install.sh | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses

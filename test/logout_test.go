@@ -39,28 +39,28 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 			"ccloud",
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
 			cloudUrl,
-			ccloudTestBin,
+			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
 			"confluent",
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
 			mdsUrl,
-			confluentTestBin,
+			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
 			"ccloud",
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
 			cloudUrl,
-			ccloudTestBin,
+			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
 			"confluent",
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
 			mdsUrl,
-			confluentTestBin,
+			testBin,
 		},
 	}
 	for _, tt := range tests {
@@ -116,14 +116,14 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 			"ccloud",
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
 			cloudUrl,
-			ccloudTestBin,
+			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
 			"confluent",
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
 			mdsUrl,
-			confluentTestBin,
+			testBin,
 		},
 	}
 	for _, tt := range tests {

@@ -253,8 +253,8 @@ Then run this to update the Table of Contents:
 
 ### Reference Docs
 
-The CLI [command reference docs](https://docs.confluent.io/confluent-cli/current/command-reference/index.html)
-are programmatically generated from the Cobra commands in this repo.
+The [Confluent CLI Command Reference](https://docs.confluent.io/confluent-cli/current/command-reference/index.html)
+is programmatically generated from the Cobra commands in this repo.
 
 Just run:
 
@@ -378,11 +378,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/analytics"
+    pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 )
 
 type fileCommand struct {

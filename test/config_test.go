@@ -50,7 +50,7 @@ func (s *CLITestSuite) TestConfig_CloudAndOnPrem() {
 	resetConfiguration(s.T(), "confluent")
 
 	for _, tt := range tests {
-		out := runCommand(s.T(), ccloudTestBin, env, tt.args, 0)
+		out := runCommand(s.T(), testBin, env, tt.args, 0)
 		s.validateTestOutput(tt, s.T(), out)
 	}
 }

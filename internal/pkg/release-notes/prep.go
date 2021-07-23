@@ -1,7 +1,6 @@
 package release_notes
 
 import (
-	_ "embed"
 	"fmt"
 	"io"
 	"io/ioutil"

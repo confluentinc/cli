@@ -1,6 +1,6 @@
---- cli/Makefile	2021-07-23 11:22:00.000000000 -0500
+--- cli/Makefile	2021-07-23 13:14:35.000000000 -0500
 +++ debian/Makefile	2021-07-21 22:31:30.000000000 -0500
-@@ -1,216 +1,130 @@
+@@ -1,209 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -105,7 +105,7 @@
 -
 -.PHONY: build
 -build:
--	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
+-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
 -
 -.PHONY: build-integ
 -build-integ:
@@ -117,24 +117,24 @@
 -	binary="confluent_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 -	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
--		    -X $(RESOLVED_PATH).commit=$(REF) \
--		    -X $(RESOLVED_PATH).host=$(HOSTNAME) \
--    		-X $(RESOLVED_PATH).date=$(DATE) \
--		    -X $(RESOLVED_PATH).version=$(VERSION) \
--		    -X $(RESOLVED_PATH).isTest=true" \
--		    -tags testrunmain -coverpkg=./... -c -o $${binexe}
+-		-X $(RESOLVED_PATH).commit=$(REF) \
+-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+-		-X $(RESOLVED_PATH).date=$(DATE) \
+-		-X $(RESOLVED_PATH).version=$(VERSION) \
+-		-X $(RESOLVED_PATH).isTest=true" \
+-		-tags testrunmain -coverpkg=./... -c -o $${binexe}
 -
 -.PHONY: build-integ-race
 -build-integ-race:
 -	binary="confluent_test_race" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 -	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
--		    -X $(RESOLVED_PATH).commit=$(REF) \
--		    -X $(RESOLVED_PATH).host=$(HOSTNAME) \
--    		-X $(RESOLVED_PATH).date=$(DATE) \
--		    -X $(RESOLVED_PATH).version=$(VERSION) \
--		    -X $(RESOLVED_PATH).isTest=true" \
--		    -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+-		-X $(RESOLVED_PATH).commit=$(REF) \
+-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+-		-X $(RESOLVED_PATH).date=$(DATE) \
+-		-X $(RESOLVED_PATH).version=$(VERSION) \
+-		-X $(RESOLVED_PATH).isTest=true" \
+-		-tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 -
 -# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 -# then assuming caas.sh lives here should be fine
@@ -235,16 +235,10 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	make lint-go && \
--	make lint-cli && \
--	make lint-installer
--endif
--
--.PHONY: lint-installer
--## Lints the CLI installation scripts
--lint-installer:
--	@diff install.sh | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
--
+-	make lint-go && make lint-cli
++	RPM_RELEASE_ID=$(REVISION)
+ endif
+ 
 -.PHONY: lint-licenses
 -## Scan and validate third-party dependency licenses
 -lint-licenses: build
@@ -299,9 +293,6 @@
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
 -	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
-+	RPM_RELEASE_ID=$(REVISION)
-+endif
-+
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<

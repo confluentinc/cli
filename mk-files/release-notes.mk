@@ -64,7 +64,7 @@ define print-publish-release-notes-next-steps
 	@echo "NEXT STEPS"
 	@echo "===================="
 	@echo
-	@echo "- Find PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs-confluent-cli and merge it after getting approvals."
+	@echo "- Find the PR named 'New release notes for $(BUMPED_VERSION)' in confluentinc/docs-confluent-cli and merge it after getting approvals."
 	@echo
 	@echo "- Check release notes file in s3 confluent.cloud/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/"
 	@echo
