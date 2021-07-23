@@ -9,7 +9,7 @@ Available Commands:
   help        Help about any command
   kafka       Manage Apache Kafka.
   login       Log in to Confluent Cloud or Confluent Platform.
-  logout      Log out of Confluent Platform.
+  logout      Log out of Confluent Cloud or Confluent Platform.
   secret      Manage secrets for Confluent Platform.
   update      Update the Confluent CLI.
   version     Show version of the Confluent CLI.

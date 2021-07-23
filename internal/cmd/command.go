@@ -134,7 +134,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
+	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
