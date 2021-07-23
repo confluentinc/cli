@@ -199,25 +199,27 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	var allClusters []*schedv1.KafkaCluster
 	listAllClusters, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
+	var clusters []*schedv1.KafkaCluster
 	if listAllClusters {
 		environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
 		if err != nil {
 			return err
 		}
+
 		for _, env := range environments {
-			clusters, err := pkafka.ListKafkaClusters(c.Client, env.Id)
+			clustersOfEnv, err := pkafka.ListKafkaClusters(c.Client, env.Id)
 			if err != nil {
 				return err
 			}
-			allClusters = append(allClusters, clusters...)
+
+			clusters = append(clusters, clustersOfEnv...)
 		}
 	} else {
-		allClusters, err = pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+		clusters, err = pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
 		if err != nil {
 			return err
 		}
@@ -226,7 +228,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, cluster := range allClusters {
+	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
 			if cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
