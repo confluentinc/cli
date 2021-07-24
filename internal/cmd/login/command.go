@@ -52,9 +52,9 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: "Log in to Confluent Cloud or using your email and password, or non-interactively using the ``CCLOUD_EMAIL`` and ``CCLOUD_PASSWORD`` environment variables.\n\n" +
-			"You can log in to Confluent Platform with your username and password, or non-interactively using ``CONFLUENT_USERNAME``, ``CONFLUENT_PASSWORD``, ``CONFLUENT_MDS_URL``, and ``CONFLUENT_CA_CERT_PATH``. In a non-interactive login, ``CONFLUENT_MDS_URL`` replaces the ``--url`` flag, and ``CONFLUENT_CA_CERT_PATH`` replaces the ``--ca-cert-path`` flag.\n\n" +
-			"Even with environment variables set, you can force an interactive login using the ``--prompt`` flag.",
+		Long: "Log in to Confluent Cloud or using your email and password, or non-interactively using the `CCLOUD_EMAIL` and `CCLOUD_PASSWORD` environment variables.\n\n" +
+			"You can log in to Confluent Platform with your username and password, or non-interactively using `CONFLUENT_USERNAME`, `CONFLUENT_PASSWORD`, `CONFLUENT_MDS_URL`, and `CONFLUENT_CA_CERT_PATH`. In a non-interactive login, `CONFLUENT_MDS_URL` replaces the `--url` flag, and `CONFLUENT_CA_CERT_PATH` replaces the `--ca-cert-path` flag.\n\n" +
+			"Even with environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args:              cobra.NoArgs,
 		RunE:              pcmd.NewCLIRunE(c.login),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),

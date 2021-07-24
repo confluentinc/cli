@@ -8,17 +8,11 @@ Usage:
 Examples:
 List all the ACLs for the specified Kafka cluster:
 
-::
-
-  confluent iam acl list --kafka-cluster-id <kafka-cluster-id>
+  $ confluent iam acl list --kafka-cluster-id <kafka-cluster-id>
 
 List all the ACLs for the specified cluster that include allow permissions for the user Jane:
 
-::
-
-  confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane
-
-
+  $ confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane
 
 Flags:
       --kafka-cluster-id string   Kafka cluster ID for scope of ACL commands.

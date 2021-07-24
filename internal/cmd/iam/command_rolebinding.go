@@ -108,42 +108,42 @@ func (c *rolebindingCommand) init() {
 		example = examples.BuildExampleString(
 			examples.Example{
 				Text: "To list the role bindings for current user:",
-				Code: "iam rolebinding list --current-user",
+				Code: "ccloud iam rolebinding list --current-user",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal:",
-				Code: "iam rolebinding list --principal User:frodo",
+				Code: "ccloud iam rolebinding list --principal User:frodo",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+				Code: "ccloud iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific role:",
-				Code: "iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+				Code: "ccloud iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
 			},
 		)
 	} else {
 		example = examples.BuildExampleString(
 			examples.Example{
-				Text: "Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
+				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
+				Code: "confluent iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal:",
-				Code: "iam rolebinding list --kafka-cluster-id $CID --principal User:frodo",
+				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
+				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific role:",
-				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite",
+				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific resource with a specific role:",
-				Code: "iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
+				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
 			},
 		)
 
@@ -185,7 +185,7 @@ func (c *rolebindingCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a role binding for the client permitting it produce to the topic users.",
-				Code: "confluent iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+				Code: c.cliName + " iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
 			},
 		),
 	}

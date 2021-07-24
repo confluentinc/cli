@@ -115,7 +115,7 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
+	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
 	if err != nil {
 		return err
 	}
@@ -183,10 +183,10 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
 	if err != nil {
 		if r.StatusCode == http.StatusNotFound {
-			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext())
+			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
 			if err != nil {
 				return err
 			}
