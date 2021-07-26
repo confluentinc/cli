@@ -7,10 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	printHeaderFunc = func(_ *cobra.Command) []string { return []string{"HEADER", ""} }
-	doNothingFunc   = func(_ *cobra.Command, _ []string) {}
-)
+var doNothingFunc = func(_ *cobra.Command, _ []string) {}
 
 func TestPrintIndexPage(t *testing.T) {
 	cmd := &cobra.Command{Use: "command"}
