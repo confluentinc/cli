@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -97,7 +98,7 @@ func printLink(cmd *cobra.Command) string {
 	if cmd.HasSubCommands() {
 		// Example: command/index
 		x := strings.Split(cmd.CommandPath(), " ")
-		return filepath.Join(x[len(x)-1], "index")
+		return path.Join(x[len(x)-1], "index")
 	} else {
 		return printRef(cmd)
 	}
