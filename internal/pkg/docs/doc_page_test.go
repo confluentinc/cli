@@ -298,7 +298,7 @@ func TestPrintGlobalFlags(t *testing.T) {
 func TestPrintFlagSet_NoFlags(t *testing.T) {
 	section, ok := printFlagSet(new(pflag.FlagSet))
 	require.False(t, ok)
-	require.Equal(t, []string{"No flags."}, section)
+	require.Equal(t, []string{"No flags.", ""}, section)
 }
 
 func TestPrintFlagSet(t *testing.T) {
@@ -321,7 +321,7 @@ func TestPrintExamplesSection_NoExamples(t *testing.T) {
 
 	rows, ok := printExamples(cmd)
 	require.False(t, ok)
-	require.Equal(t, []string{"No examples."}, rows)
+	require.Equal(t, []string{"No examples.", ""}, rows)
 }
 
 func TestPrintExamplesSection_TextOnly(t *testing.T) {

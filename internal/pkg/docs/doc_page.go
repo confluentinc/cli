@@ -120,7 +120,7 @@ func printGlobalFlags(cmd *cobra.Command) ([]string, bool) {
 
 func printFlagSet(flags *pflag.FlagSet) ([]string, bool) {
 	if !flags.HasAvailableFlags() {
-		return []string{"No flags."}, false
+		return []string{"No flags.", ""}, false
 	}
 
 	buf := new(bytes.Buffer)
@@ -137,7 +137,7 @@ func printFlagSet(flags *pflag.FlagSet) ([]string, bool) {
 
 func printExamples(cmd *cobra.Command) ([]string, bool) {
 	if cmd.Example == "" {
-		return []string{"No examples."}, false
+		return []string{"No examples.", ""}, false
 	}
 
 	var rows []string
