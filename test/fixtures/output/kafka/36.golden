@@ -10,6 +10,7 @@
 | Region            | us-west-2                              |
 | Status            | PROVISIONING                           |
 | Endpoint          | SASL_SSL://kafka-endpoint              |
+| ApiEndpoint       | http://kafka-api-url                   |
 | RestEndpoint      | http://kafka-rest-url                  |
 | ClusterSize       |                                      1 |
 | Encryption Key ID | abc123                                 |
