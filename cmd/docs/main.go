@@ -10,8 +10,8 @@ import (
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
-// nested in a hierarchical format. Commands may differ based on the login context found in the user's config file. We
-// use tabs to show differing cloud and on-prem commands on the same page.
+// nested in a hierarchical format. Commands may differ based on the login context found in the user's config file.
+// We use tabs to show differing cloud and on-prem commands on the same page.
 // This code is adapted from https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 
 func main() {
