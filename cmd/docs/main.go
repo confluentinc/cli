@@ -5,7 +5,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/doc"
+	"github.com/confluentinc/cli/internal/pkg/docs"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -22,24 +23,28 @@ func main() {
 	// Auto-generate documentation for cloud and on-prem commands.
 	configs := []*v3.Config{
 		{
-			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: v3.CCloudHostnames[0]}},
-			CurrentContext: "cloud",
+			Contexts:       map[string]*v3.Context{"Cloud": {PlatformName: v3.CCloudHostnames[0]}},
+			CurrentContext: "Cloud",
 		},
 		{
-			Contexts:       map[string]*v3.Context{"onprem": {PlatformName: "https://example.com"}},
-			CurrentContext: "onprem",
+			Contexts:       map[string]*v3.Context{"On-Prem": {PlatformName: "https://example.com"}},
+			CurrentContext: "On-Prem",
 		},
 	}
 
-	commands := make([]doc.Tab, len(configs))
+	tabs := make([]docs.Tab, len(configs))
 	for i, cfg := range configs {
-		commands[i] = doc.Tab{
-			Command: cmd.NewConfluentCommand(cfg, false, nil).Command,
+		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
+			Command: cmd.NewConfluentCommand(cfg, false, new(version.Version)).Command,
 		}
 	}
 
-	if err := doc.GenerateDocTree(commands, "docs", 0); err != nil {
+	if err := os.Mkdir("docs", os.ModePerm); err != nil {
+		panic(err)
+	}
+
+	if err := docs.GenerateDocTree(tabs, "docs", 0); err != nil {
 		panic(err)
 	}
 }

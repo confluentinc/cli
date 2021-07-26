@@ -1,4 +1,4 @@
-package doc
+package docs
 
 import (
 	"bytes"
@@ -18,51 +18,25 @@ import (
 func generateDocPage(tabs []Tab, dir string, depth int) error {
 	name := strings.ReplaceAll(tabs[0].Command.CommandPath(), " ", "_")
 	path := filepath.Join(dir, name+".rst")
-	page := printTabbedDocPage(tabs, depth)
-	return writeFile(path, page)
+	rows := printDocPage(tabs, depth)
+
+	return writeFile(path, strings.Join(rows, "\n"))
 }
 
-func printTabbedDocPage(tabs []Tab, depth int) string {
-	pages := make([]string, len(tabs))
-	for i, cmd := range tabs {
-		pages[i] = printDocPage(cmd.Command, depth)
-	}
-	return printTabbedPages(tabs, pages)
-}
+func printDocPage(tabs []Tab, depth int) []string {
+	cmd := tabs[0].Command
 
-func printDocPage(cmd *cobra.Command, depth int) string {
-	rows := flatten([][]string{
-		printHeader(cmd, "-"),
+	return flatten([][]string{
+		printHeader(cmd),
+		printTitle(cmd, "-"),
 		printWarnings(cmd, depth),
-		printDescription(cmd),
-		printUsage(cmd),
+		printTabbedSection("Description", printDescriptionAndUsage, tabs),
 		printNotes(cmd, depth),
-		printFlags(cmd),
-		printExamples(cmd),
-		printSeeAlso(cmd),
+		printTabbedSection("Flags", printFlags, tabs),
+		printTabbedSection("Global Flags", printGlobalFlags, tabs),
+		printTabbedSection("Examples", printExamples, tabs),
+		printSection("See Also", printSeeAlso(cmd)),
 	})
-
-	return strings.Join(rows, "\n")
-}
-
-func flatten(arrs [][]string) []string {
-	var flatArr []string
-	for _, arr := range arrs {
-		flatArr = append(flatArr, arr...)
-	}
-	return flatArr
-}
-
-func printHeader(cmd *cobra.Command, underline string) []string {
-	name := cmd.CommandPath()
-
-	return []string{
-		fmt.Sprintf(".. _%s:", printRef(cmd)),
-		"",
-		name,
-		strings.Repeat(underline, len(name)),
-		"",
-	}
 }
 
 func printWarnings(cmd *cobra.Command, depth int) []string {
@@ -81,8 +55,6 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 }
 
 func printSphinxBlock(key, val string, args map[string]string) []string {
-	// TODO: Make val optional
-
 	rows := []string{
 		fmt.Sprintf(".. %s:: %s", key, val),
 	}
@@ -100,23 +72,19 @@ func printSphinxBlock(key, val string, args map[string]string) []string {
 	return append(rows, "")
 }
 
-func printDescription(cmd *cobra.Command) []string {
-	return []string{
-		"Description",
-		"~~~~~~~~~~~",
-		"",
+func printDescriptionAndUsage(cmd *cobra.Command) ([]string, bool) {
+	// We need to manually add the -h flag, so the the usage line gets suffixed with "[flags]".
+	cmd.InitDefaultHelpFlag()
+
+	rows := []string{
 		printLongestDescription(cmd),
 		"",
-	}
-}
-
-func printUsage(cmd *cobra.Command) []string {
-	return []string{
 		"::",
 		"",
 		fmt.Sprintf("  %s", cmd.UseLine()),
 		"",
 	}
+	return rows, true
 }
 
 func printNotes(cmd *cobra.Command, depth int) []string {
@@ -140,44 +108,39 @@ func printNotes(cmd *cobra.Command, depth int) []string {
 	return rows
 }
 
-func printFlags(cmd *cobra.Command) []string {
+func printFlags(cmd *cobra.Command) ([]string, bool) {
 	pcmd.LabelRequiredFlags(cmd)
-
-	return flatten([][]string{
-		printFlagSet("Flags", cmd.NonInheritedFlags()),
-		printFlagSet("Global Flags", cmd.InheritedFlags()),
-	})
+	return printFlagSet(cmd.NonInheritedFlags())
 }
 
-func printFlagSet(title string, flags *pflag.FlagSet) []string {
+func printGlobalFlags(cmd *cobra.Command) ([]string, bool) {
+	pcmd.LabelRequiredFlags(cmd)
+	return printFlagSet(cmd.InheritedFlags())
+}
+
+func printFlagSet(flags *pflag.FlagSet) ([]string, bool) {
 	if !flags.HasAvailableFlags() {
-		return []string{}
+		return []string{"No flags."}, false
 	}
 
 	buf := new(bytes.Buffer)
 	flags.SetOutput(buf)
 	flags.PrintDefaults()
 
-	return []string{
-		title,
-		strings.Repeat("~", len(title)),
-		"",
+	rows := []string{
 		"::",
 		"",
 		buf.String(),
 	}
+	return rows, true
 }
 
-func printExamples(cmd *cobra.Command) []string {
+func printExamples(cmd *cobra.Command) ([]string, bool) {
 	if cmd.Example == "" {
-		return []string{}
+		return []string{"No examples."}, false
 	}
 
-	rows := []string{
-		"Examples",
-		"~~~~~~~~",
-	}
-
+	var rows []string
 	isInsideCodeBlock := false
 
 	for _, line := range strings.Split(cmd.Example, "\n") {
@@ -196,39 +159,22 @@ func printExamples(cmd *cobra.Command) []string {
 
 			isInsideCodeBlock = true
 		} else if line != "" {
-			// This line contains text. Use double backticks for .rst code snippets.
-			line = strings.ReplaceAll(line, "`", "``")
 			rows = append(rows, "")
-			rows = append(rows, line)
+			rows = append(rows, formatReST(line))
 
 			isInsideCodeBlock = false
 		}
 	}
 
-	return append(rows, "")
+	rows = rows[1:]
+	rows = append(rows, "")
+
+	return rows, true
 }
 
 func printSeeAlso(cmd *cobra.Command) []string {
-	var rows []string
-
-	if cmd.HasParent() {
-		rows = append(rows, fmt.Sprintf("* %s - %s", printSphinxRef(cmd.Parent()), cmd.Parent().Short))
-	}
-
-	for _, subcommand := range cmd.Commands() {
-		if subcommand.IsAvailableCommand() {
-			rows = append(rows, fmt.Sprintf("* %s - %s", printSphinxRef(subcommand), subcommand.Short))
-		}
-	}
-
-	sort.Strings(rows)
-
-	header := []string{
-		"See Also",
-		"~~~~~~~~",
+	return []string{
+		fmt.Sprintf("* %s - %s", printSphinxRef(cmd.Parent()), cmd.Parent().Short),
 		"",
 	}
-	rows = append(header, rows...)
-
-	return append(rows, "")
 }

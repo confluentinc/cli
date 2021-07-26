@@ -1,7 +1,6 @@
-package doc
+package docs
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -12,87 +11,125 @@ import (
 )
 
 func TestPrintDocPage(t *testing.T) {
-	cmd := &cobra.Command{
-		Use:   "command",
-		Short: "Command description.",
+	root1 := &cobra.Command{
+		Use:   "a",
+		Short: "Short description.",
+	}
+
+	root2 := &cobra.Command{
+		Use:   "a",
+		Short: "Short description.",
+	}
+
+	command1 := &cobra.Command{
+		Use:   "b",
+		Short: "Description of `b` 1.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Example of `command`.",
-				Code: "command",
+				Text: "Example of `b` 1.",
+				Code: "a b --flag 1",
 			},
 		),
+		Run: doNothingFunc,
 	}
-	cmd.Flags().String("flag", "", "Description of flag.")
-	subcommand := &cobra.Command{
-		Use:   "subcommand",
-		Short: "Description of subcommand.",
-		Run:   doNothingFunc,
+	command1.Flags().String("flag", "", "Description of flag 1.")
+
+	command2 := &cobra.Command{
+		Use:   "b",
+		Short: "Description of `b` 2.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Example of `b` 2.",
+				Code: "a b --flag 2",
+			},
+		),
+		Run: doNothingFunc,
+	}
+	command2.Flags().String("flag", "", "Description of flag 2.")
+
+	root1.AddCommand(command1)
+	root2.AddCommand(command2)
+
+	tabs := []Tab{
+		{Name: "Tab 1", Command: command1},
+		{Name: "Tab 2", Command: command2},
 	}
 
-	cmd.AddCommand(subcommand)
-
-	expected := strings.Join([]string{
-		".. _command-ref:",
+	expected := []string{
+		".. _a_b:",
 		"",
-		"command",
-		"-------",
+		"a b",
+		"---",
 		"",
 		"Description",
 		"~~~~~~~~~~~",
 		"",
-		"Command description.",
+		".. tabs::",
 		"",
-		"::",
-		"",
-		"  command [flags]",
-		"",
+		"   .. group-tab:: Tab 1",
+		"   ",
+		"      Description of ``b`` 1.",
+		"      ",
+		"      ::",
+		"      ",
+		"        a b [flags]",
+		"      ",
+		"   .. group-tab:: Tab 2",
+		"   ",
+		"      Description of ``b`` 2.",
+		"      ",
+		"      ::",
+		"      ",
+		"        a b [flags]",
+		"      ",
 		"Flags",
 		"~~~~~",
 		"",
-		"::",
+		".. tabs::",
 		"",
-		"      --flag string   Description of flag.",
-		"",
+		"   .. group-tab:: Tab 1",
+		"   ",
+		"      ::",
+		"      ",
+		"            --flag string   Description of flag 1.",
+		"        -h, --help          help for b",
+		"      ",
+		"   .. group-tab:: Tab 2",
+		"   ",
+		"      ::",
+		"      ",
+		"            --flag string   Description of flag 2.",
+		"        -h, --help          help for b",
+		"      ",
 		"Examples",
 		"~~~~~~~~",
 		"",
-		"Example of ``command``.",
+		".. tabs::",
 		"",
-		"::",
-		"",
-		"  command",
-		"",
+		"   .. group-tab:: Tab 1",
+		"   ",
+		"      Example of ``b`` 1.",
+		"      ",
+		"      ::",
+		"      ",
+		"        a b --flag 1",
+		"      ",
+		"   .. group-tab:: Tab 2",
+		"   ",
+		"      Example of ``b`` 2.",
+		"      ",
+		"      ::",
+		"      ",
+		"        a b --flag 2",
+		"      ",
 		"See Also",
 		"~~~~~~~~",
 		"",
-		"* :ref:`command_subcommand` - Description of subcommand.",
-		"",
-	}, "\n")
-
-	require.Equal(t, expected, printDocPage(cmd, 0))
-}
-
-func TestFlatten(t *testing.T) {
-	arrs := [][]string{
-		{"a", "b"},
-		{"c", "d"},
-	}
-
-	require.Equal(t, []string{"a", "b", "c", "d"}, flatten(arrs))
-}
-
-func TestPrintHeader(t *testing.T) {
-	cmd := &cobra.Command{Use: "command"}
-
-	expected := []string{
-		".. _command-ref:",
-		"",
-		"command",
-		"-------",
+		"* :ref:`a-ref` - Short description.",
 		"",
 	}
 
-	require.Equal(t, expected, printHeader(cmd, "-"))
+	require.Equal(t, expected, printDocPage(tabs, 1))
 }
 
 func TestPrintWarnings_NoWarnings(t *testing.T) {
@@ -140,31 +177,24 @@ func TestPrintSphinxBlock_Args(t *testing.T) {
 	require.Equal(t, expected, printSphinxBlock("key", "val", args))
 }
 
-func TestPrintDescription(t *testing.T) {
-	cmd := &cobra.Command{Short: "Command description."}
-
-	expected := []string{
-		"Description",
-		"~~~~~~~~~~~",
-		"",
-		"Command description.",
-		"",
+func TestPrintUsageAndDescription(t *testing.T) {
+	cmd := &cobra.Command{
+		Use:  "command",
+		Long: "Description of `command`.",
 	}
 
-	require.Equal(t, expected, printDescription(cmd))
-}
-
-func TestPrintUsage(t *testing.T) {
-	cmd := &cobra.Command{Use: "command"}
-
 	expected := []string{
+		"Description of ``command``.",
+		"",
 		"::",
 		"",
-		"  command",
+		"  command [flags]",
 		"",
 	}
 
-	require.Equal(t, expected, printUsage(cmd))
+	rows, ok := printDescriptionAndUsage(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
 func TestPrintNotes_NoNotes(t *testing.T) {
@@ -216,76 +246,85 @@ func TestPrintNotes_ConfluentSecret(t *testing.T) {
 	require.Equal(t, expected, printNotes(secret, 1))
 }
 
+func TestPrintFlags(t *testing.T) {
+	cmd := &cobra.Command{}
+	cmd.Flags().String("flag", "", "Flag description.")
+
+	expected := []string{
+		"::",
+		"",
+		"      --flag string   Flag description.\n",
+	}
+
+	section, ok := printFlags(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, section)
+}
+
 func TestPrintFlags_RequiredFlag(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.Flags().String("flag", "", "Flag description.")
 	require.NoError(t, cmd.MarkFlagRequired("flag"))
 
 	expected := []string{
-		"Flags",
-		"~~~~~",
-		"",
 		"::",
 		"",
 		"      --flag string   REQUIRED: Flag description.\n",
 	}
 
-	require.Equal(t, expected, printFlags(cmd))
+	section, ok := printFlags(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, section)
 }
 
-func TestPrintFlags(t *testing.T) {
+func TestPrintGlobalFlags(t *testing.T) {
 	a := &cobra.Command{}
 	a.PersistentFlags().String("global-flag", "", "Global flag description.")
-
 	b := &cobra.Command{}
-	b.Flags().String("local-flag", "", "Local flag description.")
 
 	a.AddCommand(b)
 
 	expected := []string{
-		"Flags",
-		"~~~~~",
-		"",
-		"::",
-		"",
-		"      --local-flag string   Local flag description.\n",
-		"Global Flags",
-		"~~~~~~~~~~~~",
-		"",
 		"::",
 		"",
 		"      --global-flag string   Global flag description.\n",
 	}
 
-	require.Equal(t, expected, printFlags(b))
+	rows, ok := printGlobalFlags(b)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
 func TestPrintFlagSet_NoFlags(t *testing.T) {
-	require.Empty(t, printFlagSet("", &pflag.FlagSet{}))
+	section, ok := printFlagSet(new(pflag.FlagSet))
+	require.False(t, ok)
+	require.Equal(t, []string{"No flags."}, section)
 }
 
 func TestPrintFlagSet(t *testing.T) {
-	flags := &pflag.FlagSet{}
+	flags := new(pflag.FlagSet)
 	flags.String("flag", "", "Flag description.")
 
 	expected := []string{
-		"Flags",
-		"~~~~~",
-		"",
 		"::",
 		"",
 		"      --flag string   Flag description.\n",
 	}
 
-	require.Equal(t, expected, printFlagSet("Flags", flags))
+	rows, ok := printFlagSet(flags)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
-func TestPrintExamples_NoExamples(t *testing.T) {
+func TestPrintExamplesSection_NoExamples(t *testing.T) {
 	cmd := &cobra.Command{}
-	require.Empty(t, printExamples(cmd))
+
+	rows, ok := printExamples(cmd)
+	require.False(t, ok)
+	require.Equal(t, []string{"No examples."}, rows)
 }
 
-func TestPrintExamples_TextOnly(t *testing.T) {
+func TestPrintExamplesSection_TextOnly(t *testing.T) {
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{Text: "Text-only example."},
@@ -293,35 +332,16 @@ func TestPrintExamples_TextOnly(t *testing.T) {
 	}
 
 	expected := []string{
-		"Examples",
-		"~~~~~~~~",
-		"",
 		"Text-only example.",
 		"",
 	}
 
-	require.Equal(t, expected, printExamples(cmd))
+	rows, ok := printExamples(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
-func TestPrintExamples_TextWithCodeSnippet(t *testing.T) {
-	cmd := &cobra.Command{
-		Example: examples.BuildExampleString(
-			examples.Example{Text: "Text with a `code snippet`."},
-		),
-	}
-
-	expected := []string{
-		"Examples",
-		"~~~~~~~~",
-		"",
-		"Text with a ``code snippet``.",
-		"",
-	}
-
-	require.Equal(t, expected, printExamples(cmd))
-}
-
-func TestPrintExamples_CodeOnly(t *testing.T) {
+func TestPrintExamplesSection_CodeOnly(t *testing.T) {
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{Code: "command subcommand"},
@@ -329,19 +349,18 @@ func TestPrintExamples_CodeOnly(t *testing.T) {
 	}
 
 	expected := []string{
-		"Examples",
-		"~~~~~~~~",
-		"",
 		"::",
 		"",
 		"  command subcommand",
 		"",
 	}
 
-	require.Equal(t, expected, printExamples(cmd))
+	rows, ok := printExamples(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
-func TestPrintExamples_DoubleCodeBlock(t *testing.T) {
+func TestPrintExamplesSection_DoubleCodeBlock(t *testing.T) {
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{Code: "command subcommand"},
@@ -350,9 +369,6 @@ func TestPrintExamples_DoubleCodeBlock(t *testing.T) {
 	}
 
 	expected := []string{
-		"Examples",
-		"~~~~~~~~",
-		"",
 		"::",
 		"",
 		"  command subcommand",
@@ -360,10 +376,12 @@ func TestPrintExamples_DoubleCodeBlock(t *testing.T) {
 		"",
 	}
 
-	require.Equal(t, expected, printExamples(cmd))
+	rows, ok := printExamples(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
-func TestPrintExamples_FullExample(t *testing.T) {
+func TestPrintExamplesSection_FullExample(t *testing.T) {
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -374,9 +392,6 @@ func TestPrintExamples_FullExample(t *testing.T) {
 	}
 
 	expected := []string{
-		"Examples",
-		"~~~~~~~~",
-		"",
 		"Example of ``command subcommand``.",
 		"",
 		"::",
@@ -385,10 +400,12 @@ func TestPrintExamples_FullExample(t *testing.T) {
 		"",
 	}
 
-	require.Equal(t, expected, printExamples(cmd))
+	rows, ok := printExamples(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
-func TestPrintExamples_TwoExamples(t *testing.T) {
+func TestPrintExamplesSection_TwoExamples(t *testing.T) {
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -403,9 +420,6 @@ func TestPrintExamples_TwoExamples(t *testing.T) {
 	}
 
 	expected := []string{
-		"Examples",
-		"~~~~~~~~",
-		"",
 		"Example of ``command subcommand``.",
 		"",
 		"::",
@@ -420,23 +434,19 @@ func TestPrintExamples_TwoExamples(t *testing.T) {
 		"",
 	}
 
-	require.Equal(t, expected, printExamples(cmd))
+	rows, ok := printExamples(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, rows)
 }
 
-func TestSeeAlso(t *testing.T) {
+func TestPrintSeeAlso(t *testing.T) {
 	a := &cobra.Command{Use: "a", Short: "Description of A."}
 	b := &cobra.Command{Use: "b"}
-	c := &cobra.Command{Use: "c", Short: "Description of C.", Run: doNothingFunc}
 
 	a.AddCommand(b)
-	b.AddCommand(c)
 
 	expected := []string{
-		"See Also",
-		"~~~~~~~~",
-		"",
 		"* :ref:`a-ref` - Description of A.",
-		"* :ref:`a_b_c` - Description of C.",
 		"",
 	}
 

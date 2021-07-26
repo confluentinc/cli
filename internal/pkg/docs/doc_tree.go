@@ -1,4 +1,4 @@
-package doc
+package docs
 
 import (
 	"os"
@@ -10,19 +10,15 @@ import (
 func GenerateDocTree(tabs []Tab, dir string, depth int) error {
 	if tabs[0].Command.HasSubCommands() {
 		// This command has subcommands. Create a new directory and add an index page.
+		// We assume that if one tab's command has subcommands, they all have subcommands.
 		name := tabs[0].Command.Name()
-		path := filepath.Join(dir, name)
+		dir = filepath.Join(dir, name)
 
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		if err := os.Mkdir(dir, os.ModePerm); err != nil {
 			return err
 		}
 
-		printIndexHeaderFunc := printIndexHeader
-		if depth == 0 {
-			printIndexHeaderFunc = printRootIndexHeader
-		}
-
-		if err := generateIndexPage(tabs, dir, printIndexHeaderFunc); err != nil {
+		if err := generateIndexPage(tabs, dir); err != nil {
 			return err
 		}
 
@@ -37,9 +33,10 @@ func GenerateDocTree(tabs []Tab, dir string, depth int) error {
 			}
 		}
 
-		for name, tabs := range tabsByName {
-			dir = filepath.Join(dir, name)
-			return GenerateDocTree(tabs, dir, depth+1)
+		for _, tabs := range tabsByName {
+			if err := GenerateDocTree(tabs, dir, depth+1); err != nil {
+				return err
+			}
 		}
 
 		return nil
