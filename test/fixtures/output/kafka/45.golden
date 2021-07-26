@@ -10,6 +10,7 @@
 | Region             | us-west-2                   |
 | Status             | SHRINKING                   |
 | Endpoint           | SASL_SSL://kafka-endpoint   |
+| ApiEndpoint        | http://kafka-api-url        |
 | RestEndpoint       |                             |
 | ClusterSize        |                           2 |
 | PendingClusterSize |                           1 |
