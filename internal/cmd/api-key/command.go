@@ -439,6 +439,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		Id:             userKey.Id,
 		Key:            apiKey,
 		AccountId:      c.EnvironmentId(),
+		UserId:         userKey.UserId,
 		UserResourceId: userKey.UserResourceId,
 	}
 
