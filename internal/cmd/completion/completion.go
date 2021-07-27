@@ -13,12 +13,12 @@ import (
 
 const longDescriptionTemplate = `Use this command to print the output Shell completion
 code for the specified shell (Bash/Zsh only). The shell code must be evaluated to provide
-interactive completion of ` + "``{{.CLIName}}``" + ` commands.
+interactive completion of ` + "`{{.CLIName}}`" + ` commands.
 
 Install Bash completions on macOS:
   #.  Install Homebrew (https://brew.sh/).
 
-  #. Install Bash completions using the ` + "``homebrew``" + ` command:
+  #. Install Bash completions using the ` + "`homebrew`" + ` command:
   
      ::
      
@@ -43,24 +43,24 @@ Install Bash completions on Linux:
 
         sudo apt-get install bash-completion
 
-  #. Set the ` + "``{{.CLIName}} completion``" + ` code for Bash to a file that's sourced on login:
+  #. Set the ` + "`{{.CLIName}} completion`" + ` code for Bash to a file that's sourced on login:
   
      ::
      
         {{.CLIName}} completion bash > /etc/bash_completion.d/{{.CLIName}}
 
-  #. Load the ` + "``{{.CLIName}} completion``" + ` code for Bash into the current shell:
+  #. Load the ` + "`{{.CLIName}} completion`" + ` code for Bash into the current shell:
   
      ::
   
         source /etc/bash_completion.d/{{.CLIName}}
 
-  #. Add the source command above to your ` + "``~/.bashrc``" + ` or ` + "``~/.bash_profile``" + ` to enable completions for new terminals.
+  #. Add the source command above to your ` + "`~/.bashrc`" + ` or ` + "`~/.bash_profile`" + ` to enable completions for new terminals.
 
 Install Zsh completions:
-  Zsh looks for completion functions in the directories listed in the ` + "``fpath``" + ` shell variable.
+  Zsh looks for completion functions in the directories listed in the ` + "`fpath`" + ` shell variable.
 
-  #. Put the ` + "``{{.CLIName}} completion``" + ` code for Zsh into a file in one the ` + "``fpath``" + ` directories, preferably one of the functions directories. For example:
+  #. Put the ` + "`{{.CLIName}} completion`" + ` code for Zsh into a file in one the ` + "`fpath`" + ` directories, preferably one of the functions directories. For example:
 
      ::
 
@@ -72,9 +72,9 @@ Install Zsh completions:
      
         autoload -U compinit && compinit
 
-  #. Add the autoload command in your ` + "``~/.zshrc``" + ` to enable completions for new terminals. If you encounter error messages about insecure files, you can resolve by running the ` + "``chown``" + ` command to change the ` + "``_{{.CLIName}}``" + ` file to the same ` + "``user:group``" + ` as the other files in ` + "``${fpath[1]}/``" + `.
+  #. Add the autoload command in your ` + "`~/.zshrc`" + ` to enable completions for new terminals. If you encounter error messages about insecure files, you can resolve by running the ` + "`chown`" + ` command to change the ` + "`_{{.CLIName}}`" + ` file to the same ` + "`user:group`" + ` as the other files in ` + "`${fpath[1]}/`" + `.
 
-  #. To update your completion scripts after updating the CLI, run ` + "``{{.CLIName}} completion <bash|zsh>``" + ` again and overwrite the file initially created above.
+  #. To update your completion scripts after updating the CLI, run ` + "`{{.CLIName}} completion <bash|zsh>`" + ` again and overwrite the file initially created above.
 `
 
 type completionCommand struct {

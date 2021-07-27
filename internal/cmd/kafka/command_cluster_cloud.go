@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/c-bata/go-prompt"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -115,6 +116,7 @@ func (c *clusterCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
+	listCmd.Flags().Bool("all", false, "List clusters across all environments.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -185,6 +187,7 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	c.AddCommand(deleteCmd)
+
 	useCmd := &cobra.Command{
 		Use:   "use <id>",
 		Short: "Make the Kafka cluster active for use in other commands.",
@@ -196,9 +199,30 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+	listAllClusters, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
+	}
+	var clusters []*schedv1.KafkaCluster
+	if listAllClusters {
+		environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
+		if err != nil {
+			return err
+		}
+
+		for _, env := range environments {
+			clustersOfEnv, err := pkafka.ListKafkaClusters(c.Client, env.Id)
+			if err != nil {
+				return err
+			}
+
+			clusters = append(clusters, clustersOfEnv...)
+		}
+	} else {
+		clusters, err = pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+		if err != nil {
+			return err
+		}
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
@@ -450,13 +474,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
+	clusterID := args[0]
 	req := &schedv1.KafkaCluster{
 		AccountId: c.EnvironmentId(),
-		Id:        args[0],
+		Id:        clusterID,
 	}
 	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.ChooseRightEnvironmentSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
@@ -515,7 +540,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
 	if _, err := c.Context.FindKafkaCluster(cmd, clusterID); err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 
 	if err := c.Context.SetActiveKafkaCluster(cmd, clusterID); err != nil {
