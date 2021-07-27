@@ -106,7 +106,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	IdMap, err := getUserIdMap(c.Client)
+	resourceIdByUserIdMap, err := getUserIdMap(c.Client)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, cmd.OutOrStdout(), IdMap)
+			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, cmd.OutOrStdout(), resourceIdByUserIdMap)
 		}
 	}
 
@@ -150,7 +150,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return aclutil.PrintACLsWithMap(cmd, resp, os.Stdout, IdMap)
+	return aclutil.PrintACLsWithMap(cmd, resp, os.Stdout, resourceIdByUserIdMap)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
@@ -163,7 +163,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	IdMap, err := getUserIdMap(c.Client)
+	resourceIdByUserIdMap, err := getUserIdMap(c.Client)
 	if err != nil {
 		return err
 	}
@@ -197,21 +197,21 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
+				_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, resourceIdByUserIdMap)
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
+					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, resourceIdByUserIdMap)
 				}
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
-					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
+					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, resourceIdByUserIdMap)
 				}
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
@@ -220,7 +220,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		if kafkaRestExists {
-			return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, IdMap)
+			return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, resourceIdByUserIdMap)
 		}
 	}
 
@@ -236,7 +236,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, IdMap)
+	return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, resourceIdByUserIdMap)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
@@ -419,7 +419,7 @@ func (c *aclCommand) Cmd() *cobra.Command {
 }
 
 func (c *aclCommand) ACLResourceIdtoNumericId(acl []*ACLConfiguration) error {
-	IdMap, err := getResourceIdMap(c.Client)
+	userIdByResourceIdMap, err := getResourceIdMap(c.Client)
 	if err != nil {
 		return err
 	}
@@ -428,7 +428,7 @@ func (c *aclCommand) ACLResourceIdtoNumericId(acl []*ACLConfiguration) error {
 			id := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
 			_, err := strconv.Atoi(id)
 			if err != nil { // it's a resource id
-				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(IdMap[id])) // translate into numeric ID
+				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(userIdByResourceIdMap[id])) // translate into numeric ID
 			}
 		}
 	}
