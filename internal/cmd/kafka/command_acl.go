@@ -163,10 +163,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	IdMap, err := getUserIdMap(c.Client)
-	if err != nil {
-		return err
-	}
 
 	var bindings []*schedv1.ACLBinding
 	for _, acl := range acls {
@@ -197,21 +193,21 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
+				_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
+					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
-					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
+					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
 				}
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
@@ -220,7 +216,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		if kafkaRestExists {
-			return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, IdMap)
+			return aclutil.PrintACLs(cmd, bindings, os.Stdout)
 		}
 	}
 
@@ -236,7 +232,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, IdMap)
+	return aclutil.PrintACLs(cmd, bindings, os.Stdout)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
