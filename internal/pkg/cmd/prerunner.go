@@ -251,7 +251,10 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
 			return err
 		}
+
+		r.warnIfCCloud(cmd)
 		r.warnIfConfluentLocal(cmd)
+
 		if r.Config != nil {
 			ctx := command.Config.Context()
 			err := r.ValidateToken(cmd, command.Config)
@@ -884,6 +887,12 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 
 func isUpdateCommand(cmd *cobra.Command) bool {
 	return strings.Contains(cmd.CommandPath(), "update")
+}
+
+func (r *PreRun) warnIfCCloud(cmd *cobra.Command) {
+	if r.CLIName == "ccloud" {
+		utils.ErrPrintln(cmd, errors.CCloudDeprecationMsg)
+	}
 }
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {

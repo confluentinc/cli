@@ -208,6 +208,11 @@ func printExamples(buf *bytes.Buffer, cmd *cobra.Command) {
 }
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
+	if strings.HasPrefix(cmd.CommandPath(), "ccloud") {
+		warning := "The Confluent Cloud CLI is scheduled for deprecation. All Confluent Cloud features have been moved to the :confluent-cli:`Confluent CLI|index.html`"
+		buf.WriteString(sphinxBlock("important", warning, nil))
+	}
+
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		include := strings.Repeat("../", depth) + "includes/cli.rst"
 		args := map[string]string{

@@ -122,7 +122,8 @@ const (
 	NotifyUpdateMsg        = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
 		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
-	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
+	CCloudDeprecationMsg = "The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.\nFor more details: https://docs.confluent.io/ccloud-cli/current/index.html\n"
+	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"
