@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/google/go-cmp/cmp"
@@ -17,6 +18,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -41,7 +43,9 @@ type KafkaClusterTestSuite struct {
 	envMetadataMock *ccsdkmock.EnvironmentMetadata
 	analyticsOutput []segment.Message
 	analyticsClient analytics.Client
-	logger 			*log.Logger
+	metricsApi      *ccsdkmock.MetricsApi
+	//usageLimits     *ccsdkmock. TODO
+	logger          *log.Logger
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
@@ -84,13 +88,28 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.metricsApi = &ccsdkmock.MetricsApi{
+		QueryV2Func: func(ctx context.Context, view string, query *ccloud.MetricsApiRequest, jwt string) (*ccloud.MetricsApiQueryReply, error) {
+			return &ccloud.MetricsApiQueryReply{
+				Result: []ccloud.ApiData{
+					{
+						Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
+						Value:     0.0,
+						Labels:    map[string]interface{}{"metric.topic": "test-topic"},
+					},
+				},
+			}, nil
+		},
+	}
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 	client := &ccloud.Client{
 		Kafka:               suite.kafkaMock,
 		EnvironmentMetadata: suite.envMetadataMock,
+		MetricsApi:          suite.metricsApi,
 	}
+	suite.logger = log.New()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
 	cmd := NewClusterCommand(prerunner, suite.analyticsClient, suite.logger)
 	return cmd
@@ -229,6 +248,48 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 	req.Equal("xyz", kafkaMock.CreateCalls()[0].Config.EncryptionKeyId)
 	req.Equal(int32(1), kafkaMock.CreateCalls()[0].Config.Cku)
 	req.Equal(corev1.Sku_DEDICATED, kafkaMock.CreateCalls()[0].Config.Deployment.Sku)
+	req.False(suite.metricsApi.QueryV2Called())
+}
+
+func (suite *KafkaClusterTestSuite) TestClusterShrinkChecksMetrics() {
+	req := require.New(suite.T())
+	mockKafkaCluster := &schedv1.KafkaCluster{
+		Id:              "lkc-xyz",
+		Name:            "gcp-byok-test",
+		Region:          "us-central1",
+		ServiceProvider: "gcp",
+		Deployment: &schedv1.Deployment{
+			Sku: corev1.Sku_DEDICATED,
+		},
+		Cku:    3,
+		Status: schedv1.ClusterStatus_UP,
+	}
+	suite.kafkaMock = &ccsdkmock.Kafka{
+		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
+			return mockKafkaCluster, nil
+		},
+		UpdateFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+			return &schedv1.KafkaCluster{
+				Id:              "lkc-xyz",
+				Name:            "gcp-byok-test",
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+				Deployment: &schedv1.Deployment{
+					Sku: corev1.Sku_DEDICATED,
+				},
+				Cku:        3,
+				PendingCku: 2,
+			}, nil
+		},
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+			return mockKafkaCluster, nil
+		},
+	}
+	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	args := []string{"update", clusterName, "--cku", "2"}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	req.Nil(err)
+	req.True(suite.metricsApi.QueryV2Called())
 }
 
 func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {

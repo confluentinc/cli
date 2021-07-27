@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"time"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 var (
@@ -10,10 +11,10 @@ var (
 	queryRetryMinWaitTimeDefault = 100 * time.Millisecond
 	queryRetryMaxWaitTimeDefault = 1 * time.Second
 	queryNumRetriesDefault       = 2
-	latestLookbackWindow = "PT15M"
-	threeDayLookbackWindow = "PT3D"
-	hourGranularity = "PT1H"
-	minuteGranularity = "PT1M"
+	latestLookbackWindow         = "PT15M"
+	threeDayLookbackWindow       = "PT3D"
+	hourGranularity              = "PT1H"
+	minuteGranularity            = "PT1M"
 )
 
 func getMetricsOptions(isLatestMetric bool) (string, string) {
@@ -40,11 +41,11 @@ func clusterLoadMetricQuery(clusterId string, isLatestMetric bool) *ccloud.Metri
 			Value: clusterId,
 		},
 		Granularity: granularity,
-		Lookback: lookback,
+		Lookback:    lookback,
 	}
 }
 
-func partitionCountMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest{
+func partitionCountMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
 	granularity, lookback := getMetricsOptions(isLatestMetric)
 	return &ccloud.MetricsApiRequest{
 		Aggregations: []ccloud.ApiAggregation{
@@ -58,6 +59,24 @@ func partitionCountMetricQuery(clusterId string, isLatestMetric bool) *ccloud.Me
 			Value: clusterId,
 		},
 		Granularity: granularity,
-		Lookback: lookback,
+		Lookback:    lookback,
+	}
+}
+
+func storageBytesMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
+	granularity, lookback := getMetricsOptions(isLatestMetric)
+	return &ccloud.MetricsApiRequest{
+		Aggregations: []ccloud.ApiAggregation{
+			{
+				Metric: "io.confluent.kafka.server/retained_bytes",
+			},
+		},
+		Filter: ccloud.ApiFilter{
+			Field: "resource.kafka.id",
+			Op:    "EQ",
+			Value: clusterId,
+		},
+		Granularity: granularity,
+		Lookback:    lookback,
 	}
 }

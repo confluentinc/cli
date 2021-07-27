@@ -3,15 +3,17 @@ package kafka
 import (
 	"bufio"
 	"fmt"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	logger "log"
 	_nethttp "net/http"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/cobra"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -159,17 +161,19 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
-
-func validateClusterResizeInProgress(cku int32, currentCluster *schedv1.KafkaCluster) error {
-	if cku != currentCluster.Cku {
-		if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
-			return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-		} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
-			return errors.New(errors.KafkaClusterExpandingErrorMsg)
-		} else if currentCluster.Status == schedv1.ClusterStatus_SHRINKING {
-			return errors.New(errors.KafkaClusterShrinkingErrorMsg)
-		}
+func isClusterResizeInProgress(cku int32, currentCluster *schedv1.KafkaCluster) error {
+	fmt.Println("here3")
+	if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
+		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+	} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
+		return errors.New(errors.KafkaClusterExpandingErrorMsg)
+	} else if currentCluster.Status == schedv1.ClusterStatus_SHRINKING {
+		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+	} else if currentCluster.Status == schedv1.ClusterStatus_DELETING || currentCluster.Status == schedv1.ClusterStatus_DELETED {
+		return errors.New(errors.KafkaClusterDeletingErrorMsg)
+		fmt.Println("here4")
 	}
+	fmt.Println("here5")
 	return nil
 }
 
