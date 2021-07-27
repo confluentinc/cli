@@ -54,6 +54,10 @@ func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]s
 		}
 	}
 
+	if title == "" {
+		return rows
+	}
+
 	return printSection(title, rows)
 }
 

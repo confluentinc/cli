@@ -30,7 +30,7 @@ func printDocPage(tabs []Tab, depth int) []string {
 		printHeader(cmd),
 		printTitle(cmd, "-"),
 		printWarnings(cmd, depth),
-		printTabbedSection("Description", printDescriptionAndUsage, tabs),
+		printTabbedSection("", printDescriptionAndUsage, tabs),
 		printNotes(cmd, depth),
 		printTabbedSection("Flags", printFlags, tabs),
 		printTabbedSection("Global Flags", printGlobalFlags, tabs),

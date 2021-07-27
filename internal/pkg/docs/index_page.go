@@ -30,7 +30,7 @@ func printIndexPage(tabs []Tab) []string {
 		printHeader(cmd),
 		printTitle(cmd, "="),
 		printTableOfContents(tabs),
-		printTabbedSection("Description", printDescription, tabs),
+		printTabbedSection("", printDescription, tabs),
 		printTabbedSection("Subcommands", printSubcommands, tabs),
 	})
 }
