@@ -79,45 +79,45 @@ func (suite *ConnectTestSuite) SetupSuite() {
 
 func (suite *ConnectTestSuite) SetupTest() {
 	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+		DescribeFunc: func(_ context.Context, _ *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
-		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+		ListFunc: func(_ context.Context, _ *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
 			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
 	suite.connectMock = &ccsdkmock.Connect{
-		CreateFunc: func(arg0 context.Context, arg1 *schedv1.ConnectorConfig) (connector *opv1.ConnectorInfo, e error) {
+		CreateFunc: func(_ context.Context, _ *schedv1.ConnectorConfig) (*opv1.ConnectorInfo, error) {
 			return suite.connectorInfo, nil
 		},
-		UpdateFunc: func(arg0 context.Context, arg1 *schedv1.ConnectorConfig) (info *opv1.ConnectorInfo, e error) {
+		UpdateFunc: func(_ context.Context, _ *schedv1.ConnectorConfig) (*opv1.ConnectorInfo, error) {
 			return suite.connectorInfo, nil
 		},
-		PauseFunc: func(arg0 context.Context, arg1 *schedv1.Connector) error {
+		PauseFunc: func(_ context.Context, _ *schedv1.Connector) error {
 			return nil
 		},
-		ResumeFunc: func(arg0 context.Context, arg1 *schedv1.Connector) error {
+		ResumeFunc: func(_ context.Context, _ *schedv1.Connector) error {
 			return nil
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *schedv1.Connector) error {
+		DeleteFunc: func(_ context.Context, _ *schedv1.Connector) error {
 			return nil
 		},
-		ListWithExpansionsFunc: func(arg0 context.Context, arg1 *schedv1.Connector, arg2 string) (expansions map[string]*opv1.ConnectorExpansion, e error) {
+		ListWithExpansionsFunc: func(_ context.Context, _ *schedv1.Connector, _ string) (map[string]*opv1.ConnectorExpansion, error) {
 			return map[string]*opv1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
 		},
-		GetExpansionByIdFunc: func(arg0 context.Context, arg1 *schedv1.Connector) (expansion *opv1.ConnectorExpansion, e error) {
+		GetExpansionByIdFunc: func(_ context.Context, _ *schedv1.Connector) (*opv1.ConnectorExpansion, error) {
 			return suite.connectorExpansion, nil
 		},
-		GetExpansionByNameFunc: func(ctx context.Context, connector *schedv1.Connector) (expansion *opv1.ConnectorExpansion, e error) {
+		GetExpansionByNameFunc: func(_ context.Context, _ *schedv1.Connector) (*opv1.ConnectorExpansion, error) {
 			return suite.connectorExpansion, nil
 		},
-		GetFunc: func(arg0 context.Context, arg1 *schedv1.Connector) (connector *opv1.ConnectorInfo, e error) {
+		GetFunc: func(_ context.Context, _ *schedv1.Connector) (*opv1.ConnectorInfo, error) {
 			return suite.connectorInfo, nil
 		},
-		ValidateFunc: func(arg0 context.Context, arg1 *schedv1.ConnectorConfig) (connector *opv1.ConfigInfos, e error) {
+		ValidateFunc: func(_ context.Context, _ *schedv1.ConnectorConfig) (*opv1.ConfigInfos, error) {
 			return &opv1.ConfigInfos{Configs: []*opv1.Configs{{Value: &opv1.ConfigValue{Value: "abc", Errors: []string{"new error"}}}}}, errors.New("config.name")
 		},
-		GetPluginsFunc: func(arg0 context.Context, arg1 *schedv1.Connector, arg2 string) (infos []*opv1.ConnectorPluginInfo, e error) {
+		GetPluginsFunc: func(_ context.Context, _ *schedv1.Connector, _ string) ([]*opv1.ConnectorPluginInfo, error) {
 			return []*opv1.ConnectorPluginInfo{
 				{
 					Class: "test-plugin",
@@ -332,7 +332,7 @@ func (suite *ConnectTestSuite) TestCatalogList() {
 	cmd.SetArgs([]string{"catalog", "list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	req.True(suite.connectMock.GetPluginsCalled())
 	retVal := suite.connectMock.GetPluginsCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
@@ -343,7 +343,7 @@ func (suite *ConnectTestSuite) TestCatalogDescribeConnector() {
 	cmd.SetArgs([]string{"catalog", "describe", pluginType})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	req.True(suite.connectMock.ValidateCalled())
 	retVal := suite.connectMock.ValidateCalls()[0]
 	req.Equal(retVal.Arg1.Plugin, pluginType)
