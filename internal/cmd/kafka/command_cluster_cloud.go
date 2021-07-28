@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/c-bata/go-prompt"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -115,6 +116,7 @@ func (c *clusterCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
+	listCmd.Flags().Bool("all", false, "List clusters across all environments.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -197,9 +199,30 @@ func (c *clusterCommand) init() {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+	listAllClusters, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
+	}
+	var clusters []*schedv1.KafkaCluster
+	if listAllClusters {
+		environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
+		if err != nil {
+			return err
+		}
+
+		for _, env := range environments {
+			clustersOfEnv, err := pkafka.ListKafkaClusters(c.Client, env.Id)
+			if err != nil {
+				return err
+			}
+
+			clusters = append(clusters, clustersOfEnv...)
+		}
+	} else {
+		clusters, err = pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+		if err != nil {
+			return err
+		}
 	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {

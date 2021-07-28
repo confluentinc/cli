@@ -165,6 +165,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 		MetricSink: nil,
 		Logger:     log.New(),
 	})
+	conf.IsTest = true
 
 	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
 	if err != nil {

@@ -54,7 +54,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can specify only one of the following flags per command invocation: ``cluster``, ``consumer-group``, ``topic``, or ``transactional-id``. For example, for a consumer to read a topic, you need to grant ``READ`` and ``DESCRIBE`` both on the ``consumer-group`` and the ``topic`` resources, issuing two separate commands:",
+				Text: "You can specify only one of the following flags per command invocation: `cluster`, `consumer-group`, `topic`, or `transactional-id`. For example, for a consumer to read a topic, you need to grant `READ` and `DESCRIBE` both on the `consumer-group` and the `topic` resources, issuing two separate commands:",
 				Code: "ccloud kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1\nccloud kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic '*'",
 			},
 		),
@@ -163,6 +163,10 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	IdMap, err := getUserIdMap(c.Client)
+	if err != nil {
+		return err
+	}
 
 	var bindings []*schedv1.ACLBinding
 	for _, acl := range acls {
@@ -193,21 +197,21 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
 				}
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
-					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+					_ = aclutil.PrintACLsWithMap(cmd, bindings[:i], os.Stdout, IdMap)
 				}
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
@@ -216,7 +220,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		if kafkaRestExists {
-			return aclutil.PrintACLs(cmd, bindings, os.Stdout)
+			return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, IdMap)
 		}
 	}
 
@@ -232,7 +236,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLs(cmd, bindings, os.Stdout)
+	return aclutil.PrintACLsWithMap(cmd, bindings, os.Stdout, IdMap)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {

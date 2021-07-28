@@ -3,7 +3,7 @@ Usage:
   confluent kafka consumer-group lag list <consumer-group> [flags]
 
 Examples:
-List all consumer lags for consumers in the ``my_consumer_group`` consumer-group.
+List all consumer lags for consumers in the `my_consumer_group` consumer-group.
 
 ::
 

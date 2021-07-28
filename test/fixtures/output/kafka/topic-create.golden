@@ -3,13 +3,9 @@ Usage:
   confluent kafka topic create <topic> [flags]
 
 Examples:
-Create a topic named ``my_topic`` with default options.
+Create a topic named `my_topic` with default options.
 
-::
-
-  ccloud kafka topic create my_topic
-
-
+  $ ccloud kafka topic create my_topic
 
 Flags:
       --partitions int32     Number of topic partitions. (default 6)

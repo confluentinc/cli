@@ -80,8 +80,8 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
+	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -92,9 +92,9 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 			ServiceAccountId string
 			Permission       string
 			Operation        string
-			Resource         string
-			Name             string
-			Type             string
+			ResourceType     string
+			ResourceName     string
+			PatternType      string
 		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
@@ -345,8 +345,8 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"UserId", "ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"user_id", "service_account_id", "permission", "operation", "resource", "name", "type"}
+	aclListFields := []string{"Principal", "ServiceAccountId", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "service_account_id", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -363,13 +363,13 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 			}
 		}
 		record := &struct {
-			UserId           string
+			Principal        string
 			ServiceAccountId string
 			Permission       string
 			Operation        string
-			Resource         string
-			Name             string
-			Type             string
+			ResourceType     string
+			ResourceName     string
+			PatternType      string
 		}{
 			aclData.Principal,
 			resourceId,
@@ -392,8 +392,8 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"UserId", "ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"user_id", "service_account_id", "permission", "operation", "resource", "name", "type"}
+	aclListFields := []string{"Principal", "ServiceAccountId", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "service_account_id", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -410,13 +410,13 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 			}
 		}
 		record := &struct {
-			UserId           string
+			Principal        string
 			ServiceAccountId string
 			Permission       string
 			Operation        string
-			Resource         string
-			Name             string
-			Type             string
+			ResourceType     string
+			ResourceName     string
+			PatternType      string
 		}{
 			binding.Entry.Principal,
 			resourceId,

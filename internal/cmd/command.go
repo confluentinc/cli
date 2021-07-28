@@ -134,7 +134,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
+	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	if !cfg.DisableUpdates {
 		cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
@@ -167,13 +167,13 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(connectorCatalogCmd.Command)
 		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
-		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(iam.New(cfg, prerunner))
 		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(price.New(prerunner))
 		cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
 		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, logger, analyticsClient, jwtValidator))
+		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	}
 
@@ -181,7 +181,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(auditlog.New(cfg, prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
-		cli.AddCommand(iam.New(cliName, prerunner))
+		cli.AddCommand(iam.New(cfg, prerunner))
 		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 	}
