@@ -18,12 +18,14 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
 	connectorID   = "lcc-123"
 	connectorName = "myTestConnector"
+	pluginType    = "DummyPlugin"
 )
 
 type ConnectTestSuite struct {
@@ -111,6 +113,17 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 		GetFunc: func(arg0 context.Context, arg1 *schedv1.Connector) (connector *opv1.ConnectorInfo, e error) {
 			return suite.connectorInfo, nil
+		},
+		ValidateFunc: func(arg0 context.Context, arg1 *schedv1.ConnectorConfig) (connector *opv1.ConfigInfos, e error) {
+			return &opv1.ConfigInfos{Configs: []*opv1.Configs{{Value: &opv1.ConfigValue{Value: "abc", Errors: []string{"new error"}}}}}, errors.New("config.name")
+		},
+		GetPluginsFunc: func(arg0 context.Context, arg1 *schedv1.Connector, arg2 string) (infos []*opv1.ConnectorPluginInfo, e error) {
+			return []*opv1.ConnectorPluginInfo{
+				{
+					Class: "test-plugin",
+					Type:  "source",
+				},
+			}, nil
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
@@ -312,6 +325,28 @@ func (suite *ConnectTestSuite) TestServerCompletableChildren() {
 	for i, expectedChild := range expectedChildren {
 		req.Contains(completableChildren[i].CommandPath(), expectedChild)
 	}
+}
+
+func (suite *ConnectTestSuite) TestCatalogList() {
+	cmd := suite.newCmd()
+	cmd.SetArgs([]string{"catalog", "list"})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.connectMock.GetPluginsCalled())
+	retVal := suite.connectMock.GetPluginsCalls()[0]
+	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+}
+
+func (suite *ConnectTestSuite) TestCatalogDescribeConnector() {
+	cmd := suite.newCmd()
+	cmd.SetArgs([]string{"catalog", "describe", pluginType})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.connectMock.ValidateCalled())
+	retVal := suite.connectMock.ValidateCalls()[0]
+	req.Equal(retVal.Arg1.Plugin, pluginType)
 }
 
 func TestConnectTestSuite(t *testing.T) {

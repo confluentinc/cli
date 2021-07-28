@@ -1,4 +1,4 @@
-package connectorcatalog
+package connector
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type command struct {
+type catalogCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
 }
@@ -31,18 +31,18 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner) *command {
-	cmd := &command{
+func NewCatalogCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &catalogCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
-			Use:   "connector-catalog",
+			Use:   "catalog",
 			Short: "Catalog of connectors and their configurations.",
 		}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
-	return cmd
+	return cmd.Command
 }
 
-func (c *command) init(cliName string) {
+func (c *catalogCommand) init(cliName string) {
 	describeCmd := &cobra.Command{
 		Use:   "describe <connector-type>",
 		Short: "Describe a connector plugin type.",
@@ -77,7 +77,7 @@ func (c *command) init(cliName string) {
 	c.completableChildren = []*cobra.Command{describeCmd}
 }
 
-func (c *command) list(cmd *cobra.Command, _ []string) error {
+func (c *catalogCommand) list(cmd *cobra.Command, _ []string) error {
 	outputWriter, err := output.NewListOutputWriter(cmd, catalogFields, catalogFields, catalogStructureLabels)
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (c *command) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, error) {
+func (c *catalogCommand) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (c *command) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, error) {
 	return plugins, nil
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *catalogCommand) describe(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
@@ -148,11 +148,11 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	return errors.Errorf(errors.InvalidCloudErrorMsg)
 }
 
-func (c *command) Cmd() *cobra.Command {
+func (c *catalogCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *command) ServerComplete() []prompt.Suggest {
+func (c *catalogCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
 	catalog, err := c.getCatalog(c.Command)
 	if err != nil {
@@ -167,6 +167,6 @@ func (c *command) ServerComplete() []prompt.Suggest {
 	return suggestions
 }
 
-func (c *command) ServerCompletableChildren() []*cobra.Command {
+func (c *catalogCommand) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
 }

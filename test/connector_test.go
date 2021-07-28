@@ -30,3 +30,21 @@ func (s *CLITestSuite) TestConnector() {
 		s.runCcloudTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestConnectorCatalog() {
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	tests := []CLITest{
+		{args: "connector catalog --help", fixture: "connector/connector-catalog-help.golden"},
+		{args: "connector catalog describe GcsSink --cluster lkc-123 -o json", fixture: "connector/connector-catalog-describe-json.golden"},
+		{args: "connector catalog describe GcsSink --cluster lkc-123 -o yaml", fixture: "connector/connector-catalog-describe-yaml.golden"},
+		{args: "connector catalog describe GcsSink --cluster lkc-123", fixture: "connector/connector-catalog-describe.golden"},
+		{args: "connector catalog list --cluster lkc-123 -o json", fixture: "connector/connector-catalog-list-json.golden"},
+		{args: "connector catalog list --cluster lkc-123 -o yaml", fixture: "connector/connector-catalog-list-yaml.golden"},
+		{args: "connector catalog list --cluster lkc-123", fixture: "connector/connector-catalog-list.golden"},
+	}
+
+	for _, tt := range tests {
+		tt.login = "default"
+		s.runCcloudTest(tt)
+	}
+}

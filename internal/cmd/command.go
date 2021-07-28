@@ -9,14 +9,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	"github.com/confluentinc/cli/internal/cmd/api-key"
-	"github.com/confluentinc/cli/internal/cmd/audit-log"
+	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
-	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init"
@@ -27,9 +26,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -168,18 +167,15 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	if cliName == "ccloud" {
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 		connectorCmd := connector.New(cliName, prerunner, analyticsClient)
-		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
 		environmentCmd := environment.New(cliName, prerunner, analyticsClient)
 		serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
 		serverCompleter.AddCommand(apiKeyCmd)
 		serverCompleter.AddCommand(connectorCmd)
-		serverCompleter.AddCommand(connectorCatalogCmd)
 		serverCompleter.AddCommand(environmentCmd)
 		serverCompleter.AddCommand(serviceAccountCmd)
 
 		cli.AddCommand(apiKeyCmd.Command)
-		cli.AddCommand(connectorCatalogCmd.Command)
 		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
 		cli.AddCommand(price.New(prerunner))

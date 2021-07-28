@@ -181,6 +181,7 @@ func (c *command) init(cliName string) {
 
 	if cliName == "ccloud" {
 		c.AddCommand(NewEventCommand(c.prerunner))
+		c.AddCommand(NewCatalogCommand(cliName, c.prerunner))
 	}
 
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
