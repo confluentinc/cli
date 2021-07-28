@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/c-bata/go-prompt"
+	segment "github.com/segmentio/analytics-go"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -15,9 +15,7 @@ import (
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	segment "github.com/segmentio/analytics-go"
-
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -116,7 +114,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ConnectTestSuite) newCmd() *command {
@@ -127,7 +125,7 @@ func (suite *ConnectTestSuite) newCmd() *command {
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"pause", connectorID}))
+	cmd.SetArgs([]string{"pause", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -138,7 +136,7 @@ func (suite *ConnectTestSuite) TestPauseConnector() {
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"resume", connectorID}))
+	cmd.SetArgs([]string{"resume", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -149,8 +147,8 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
-	args := append([]string{"delete", connectorID})
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	args := []string{"delete", connectorID}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
@@ -161,7 +159,7 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 
 func (suite *ConnectTestSuite) TestListConnectors() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"list"}))
+	cmd.SetArgs([]string{"list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -172,7 +170,7 @@ func (suite *ConnectTestSuite) TestListConnectors() {
 
 func (suite *ConnectTestSuite) TestDescribeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"describe", connectorID}))
+	cmd.SetArgs([]string{"describe", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -183,8 +181,8 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"})
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -196,8 +194,8 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"})
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -209,7 +207,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"}))
+	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-new.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -219,7 +217,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"}))
+	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connector-config-malformed-old.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -229,7 +227,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connector-config.yaml"}))
+	cmd.SetArgs([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connector-config.yaml"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

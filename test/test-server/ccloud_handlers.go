@@ -364,6 +364,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 			apiKey.Created = keyTimestamp
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
+				apiKey.UserResourceId = "u-44ddd"
 			} else {
 				apiKey.UserId = req.ApiKey.UserId
 			}
@@ -610,6 +611,7 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 				buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
 				buildUser(4, "u-22bbb@confluent.io", "22", "Bbb", "u-22bbb"),
 				buildUser(5, "u-33ccc@confluent.io", "33", "Ccc", "u-33ccc"),
+				buildUser(23, "mhe@confluent.io", "Muwei", "He", "u-44ddd"),
 			}
 			userId := r.URL.Query().Get("id")
 			if userId != "" {
@@ -678,6 +680,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
 			buildUser(4, "u-22bbb@confluent.io", "22", "Bbb", "u-22bbb"),
 			buildUser(5, "u-33ccc@confluent.io", "33", "Ccc", "u-33ccc"),
+			buildUser(23, "mhe@confluent.io", "Muwei", "He", "u-44ddd"),
 		}
 		var user *orgv1.User
 		switch userId {
@@ -695,6 +698,8 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			user = users[3]
 		case "u-33ccc":
 			user = users[4]
+		case "u-44ddd":
+			user = users[5]
 		default:
 			res = flowv1.GetUserProfileReply{
 				User: &flowv1.UserProfile{
@@ -706,6 +711,9 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			}
 		}
 		if userId != "u-0" {
+			authConfig := &flowv1.AuthConfig{
+				AllowedAuthMethods: []flowv1.AuthMethod{flowv1.AuthMethod_AUTH_METHOD_USERNAME_PWD, flowv1.AuthMethod_AUTH_METHOD_SSO},
+			}
 			res = flowv1.GetUserProfileReply{
 				User: &flowv1.UserProfile{
 					Email:      user.Email,
@@ -713,6 +721,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 					LastName:   user.LastName,
 					ResourceId: user.ResourceId,
 					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
+					AuthConfig: authConfig,
 				},
 			}
 		}
@@ -752,7 +761,6 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 
@@ -760,7 +768,6 @@ func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *h
 func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 
@@ -768,7 +775,6 @@ func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWrite
 func (c *CloudRouter) HandleConnectorResume(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 
@@ -901,7 +907,6 @@ func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWrite
 func (c *CloudRouter) HandleConnectUpdate(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-		return
 	}
 }
 

@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	notfoundError = fmt.Errorf("User not found")
+	errNotFound = fmt.Errorf("user not found")
 )
 
 const (
@@ -91,7 +91,7 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 					ResourceId: v3.MockUserResourceId,
 				}, nil
 			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
-				return nil, notfoundError
+				return nil, errNotFound
 			} else {
 				return &v1.User{
 					Email:      arg1.ResourceId + "@email.com",
@@ -140,7 +140,7 @@ var roleBindingListTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
-		err:  notfoundError,
+		err:  errNotFound,
 	},
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
@@ -328,7 +328,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
-		err:  notfoundError,
+		err:  errNotFound,
 	},
 	{
 		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},

@@ -5,22 +5,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 	cmdPkg "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 )
 
 const (
-	testToken      = "y0ur.jwt.T0kEn"
-	promptUser     = "prompt-user@confluent.io"
+	testToken  = "y0ur.jwt.T0kEn"
+	promptUser = "prompt-user@confluent.io"
 )
 
 func TestSignupSuccess(t *testing.T) {
@@ -29,6 +29,49 @@ func TestSignupSuccess(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
+			"Confluent",
+			"password",
+			"y",
+			"y",
+			"y",
+		),
+		"A verification email has been sent to bstrauch@confluent.io.",
+		"Success! Welcome to Confluent Cloud.",
+	)
+}
+
+func TestSignupBadCountryCode(t *testing.T) {
+	testSignup(t,
+		mock.NewPromptMock(
+			"bstrauch@confluent.io",
+			"Brian",
+			"Strauch",
+			"ZZ",
+			"US",
+			"y",
+			"Confluent",
+			"password",
+			"y",
+			"y",
+			"y",
+		),
+		"A verification email has been sent to bstrauch@confluent.io.",
+		"Success! Welcome to Confluent Cloud.",
+	)
+}
+
+func TestSignupRejectCountryCode(t *testing.T) {
+	testSignup(t,
+		mock.NewPromptMock(
+			"bstrauch@confluent.io",
+			"Brian",
+			"Strauch",
+			"CH",
+			"n",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"y",
@@ -46,6 +89,8 @@ func TestSignupRejectTOS(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"n", // Reject TOS
@@ -64,6 +109,8 @@ func TestSignupRejectPrivacyPolicy(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"y",
@@ -82,6 +129,8 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 			"bstrauch@confluent.io",
 			"Brian",
 			"Strauch",
+			"US",
+			"y",
 			"Confluent",
 			"password",
 			"y",
@@ -116,7 +165,7 @@ func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 func newCmd(conf *v3.Config) *command {
 	client := mockCcloudClient()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	auth := &sdkMock.Auth{
+	auth := &ccloudmock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
 		},
@@ -131,7 +180,7 @@ func newCmd(conf *v3.Config) *command {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
+	user := &ccloudmock.User{
 		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
 			return &orgv1.User{
 				Email: promptUser,

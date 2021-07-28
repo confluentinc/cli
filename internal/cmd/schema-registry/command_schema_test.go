@@ -1,4 +1,4 @@
-package schema_registry
+package schemaregistry
 
 import (
 	"context"
@@ -88,7 +88,7 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 
 func (suite *SchemaTestSuite) TestDescribeById() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "describe", "123"}))
+	cmd.SetArgs([]string{"schema", "describe", "123"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -100,7 +100,7 @@ func (suite *SchemaTestSuite) TestDescribeById() {
 
 func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", "all"}))
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -112,7 +112,7 @@ func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 
 func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", versionString}))
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -125,7 +125,7 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 
 func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"}))
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -139,7 +139,7 @@ func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
 
 func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName, "--version", versionString}))
+	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName, "--version", versionString})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -152,7 +152,7 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 
 func (suite *SchemaTestSuite) TestDescribeByBothSubjectVersionAndId() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName, "--version", versionString, "123"}))
+	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName, "--version", versionString, "123"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -160,7 +160,7 @@ func (suite *SchemaTestSuite) TestDescribeByBothSubjectVersionAndId() {
 
 func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "describe", "--subject", subjectName}))
+	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -168,7 +168,7 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingVersion() {
 
 func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingSubject() {
 	cmd := suite.newCMD()
-	cmd.SetArgs(append([]string{"schema", "describe", "--version", versionString}))
+	cmd.SetArgs([]string{"schema", "describe", "--version", versionString})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)

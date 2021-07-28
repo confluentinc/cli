@@ -82,13 +82,7 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 
 	printWarnings(buf, cmd, depth)
 
-	desc := cmd.Short
-	if cmd.Long != "" {
-		desc = cmd.Long
-	}
-	buf.WriteString("Description\n")
-	buf.WriteString("~~~~~~~~~~~\n\n")
-	buf.WriteString(desc + "\n\n")
+	printDescription(buf, cmd)
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
@@ -96,8 +90,12 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 
 	printTips(buf, cmd, depth)
 
-	if err := printOptions(buf, cmd); err != nil {
+	if err := printFlags(buf, cmd); err != nil {
 		return err
+	}
+
+	if len(cmd.Example) > 0 {
+		printExamples(buf, cmd)
 	}
 
 	if hasSeeAlso(cmd) {
@@ -140,7 +138,20 @@ func GenReST(cmd *cobra.Command, w io.Writer, linkHandler func(string) string, d
 	return err
 }
 
-func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
+func printDescription(buf *bytes.Buffer, cmd *cobra.Command) {
+	buf.WriteString("Description\n")
+	buf.WriteString("~~~~~~~~~~~\n\n")
+
+	desc := cmd.Short
+	if cmd.Long != "" {
+		desc = cmd.Long
+	}
+
+	desc = strings.ReplaceAll(desc, "`", "``")
+	buf.WriteString(desc + "\n\n")
+}
+
+func printFlags(buf *bytes.Buffer, cmd *cobra.Command) error {
 	pcmd.LabelRequiredFlags(cmd)
 
 	flags := cmd.NonInheritedFlags()
@@ -163,13 +174,37 @@ func printOptions(buf *bytes.Buffer, cmd *cobra.Command) error {
 		buf.WriteString("\n")
 	}
 
-	if len(cmd.Example) > 0 {
-		buf.WriteString("Examples\n")
-		buf.WriteString("~~~~~~~~\n\n")
-		buf.WriteString(cmd.Example)
+	return nil
+}
+
+func printExamples(buf *bytes.Buffer, cmd *cobra.Command) {
+	buf.WriteString("Examples\n")
+	buf.WriteString("~~~~~~~~\n")
+
+	isInsideCodeBlock := false
+
+	for _, line := range strings.Split(cmd.Example, "\n") {
+		if strings.HasPrefix(line, "  ") {
+			// This line contains code. Write a "::" if this is start of a code block
+			if !isInsideCodeBlock {
+				buf.WriteString("\n::\n\n")
+			}
+
+			// Strip the tab and shell prompt
+			line = strings.TrimPrefix(line, "  ")
+			line = strings.TrimPrefix(line, "$ ")
+
+			buf.WriteString("  " + line + "\n")
+			isInsideCodeBlock = true
+		} else if line != "" {
+			// This line contains a description. Use double backticks for .rst code blocks.
+			line = strings.ReplaceAll(line, "`", "``")
+			buf.WriteString("\n" + line + "\n")
+			isInsideCodeBlock = false
+		}
 	}
 
-	return nil
+	buf.WriteString("\n")
 }
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
@@ -190,12 +225,12 @@ func printTips(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	}
 
 	if strings.HasPrefix(cmd.CommandPath(), "confluent secret") {
-		tip := fmt.Sprintf("For examples, see :platform:`Secrets Usage Examples|security/secrets.html#secrets-examples`.")
+		tip := "For examples, see :platform:`Secrets Usage Examples|security/secrets.html#secrets-examples`."
 		buf.WriteString(sphinxBlock("tip", tip, nil))
 	}
 
 	if cmd.CommandPath() == "confluent iam rolebinding create" {
-		note := fmt.Sprintf("If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`.")
+		note := "If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`."
 		buf.WriteString(sphinxBlock("note", note, nil))
 	}
 }
@@ -210,7 +245,7 @@ func sphinxBlock(key, val string, args map[string]string) string {
 	str.WriteString(fmt.Sprintf(".. %s:: %s\n", key, val))
 
 	var keys []string
-	for key, _ := range args {
+	for key := range args {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)

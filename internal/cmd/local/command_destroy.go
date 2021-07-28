@@ -18,7 +18,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "If you run the ``confluent local destroy`` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
+					Text: "If you run the `confluent local destroy` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
 					Code: "confluent local destroy",
 				},
 			),

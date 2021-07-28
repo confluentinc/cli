@@ -150,12 +150,20 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 	return versions, nil
 }
 
-func (r *PublicRepo) GetLatestReleaseNotesVersion() (*version.Version, error) {
-	availableVersions, err := r.GetAvailableReleaseNotesVersions()
+func (r *PublicRepo) GetLatestReleaseNotesVersions(currentVersion string) (version.Collection, error) {
+	versions, err := r.GetAvailableReleaseNotesVersions()
 	if err != nil {
 		return nil, errors.Wrapf(err, errors.GetReleaseNotesVersionsErrorMsg)
 	}
-	return availableVersions[len(availableVersions)-1], nil
+
+	current, err := version.NewVersion(currentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	idx := sort.Search(len(versions), func(i int) bool { return versions[i].GreaterThan(current) })
+
+	return versions[idx:], nil
 }
 
 func (r *PublicRepo) GetAvailableReleaseNotesVersions() (version.Collection, error) {

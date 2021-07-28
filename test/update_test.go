@@ -21,12 +21,12 @@ func (s *CLITestSuite) TestUpdate() {
 	oldConfig, err := ioutil.ReadFile(configFile)
 	require.NoError(s.T(), err)
 	defer func() {
-		err := ioutil.WriteFile(configFile, oldConfig, 600)
+		err := ioutil.WriteFile(configFile, oldConfig, 0600)
 		require.NoError(s.T(), err)
 	}()
 
 	// Reset the config to a known empty state
-	err = ioutil.WriteFile(configFile, []byte(`{}`), 600)
+	err = ioutil.WriteFile(configFile, []byte(`{}`), 0600)
 	require.NoError(s.T(), err)
 
 	tests := []CLITest{

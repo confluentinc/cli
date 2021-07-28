@@ -2,6 +2,7 @@ package sso
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"net"
 	"net/http"
@@ -9,10 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/cc-utils-public/local"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
+
+//go:embed sso_callback.html
+var ssoCallbackHTML string
 
 /*
 authServer is an HTTP server embedded in the CLI to serve callback requests for SSO logins.
@@ -78,21 +80,16 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	return s.bgErr
 }
 
-// CallbackHandler serves the route /callback
-func (s *authServer) callbackHandler(rw http.ResponseWriter, request *http.Request) {
-	states, ok := request.URL.Query()["state"]
+// callbackHandler serves the route /callback
+func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
+	states, ok := r.URL.Query()["state"]
 	if !(ok && states[0] == s.State.SSOProviderState) {
 		s.bgErr = errors.New(errors.LoginFailedCallbackURLErrorMsg)
 	}
 
-	rawCallbackFile, err := local.Asset("assets/sso_callback.html")
-	if err != nil {
-		s.bgErr = errors.New(errors.ReadCallbackPageTemplateErrorMsg)
-		fmt.Fprintf(rw, "could not read callback page template, see CLI terminal for more details")
-	}
-	fmt.Fprintf(rw, string(rawCallbackFile))
+	fmt.Fprintln(w, ssoCallbackHTML)
 
-	codes, ok := request.URL.Query()["code"]
+	codes, ok := r.URL.Query()["code"]
 	if ok {
 		s.State.SSOProviderAuthenticationCode = codes[0]
 	} else {

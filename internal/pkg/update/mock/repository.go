@@ -15,8 +15,8 @@ type Repository struct {
 	lockGetLatestBinaryVersion sync.Mutex
 	GetLatestBinaryVersionFunc func(name string) (*github_com_hashicorp_go_version.Version, error)
 
-	lockGetLatestReleaseNotesVersion sync.Mutex
-	GetLatestReleaseNotesVersionFunc func() (*github_com_hashicorp_go_version.Version, error)
+	lockGetLatestReleaseNotesVersions sync.Mutex
+	GetLatestReleaseNotesVersionsFunc func(currentVersion string) (github_com_hashicorp_go_version.Collection, error)
 
 	lockGetAvailableBinaryVersions sync.Mutex
 	GetAvailableBinaryVersionsFunc func(name string) (github_com_hashicorp_go_version.Collection, error)
@@ -34,7 +34,8 @@ type Repository struct {
 		GetLatestBinaryVersion []struct {
 			Name string
 		}
-		GetLatestReleaseNotesVersion []struct {
+		GetLatestReleaseNotesVersions []struct {
+			CurrentVersion string
 		}
 		GetAvailableBinaryVersions []struct {
 			Name string
@@ -90,38 +91,42 @@ func (m *Repository) GetLatestBinaryVersionCalls() []struct {
 	return m.calls.GetLatestBinaryVersion
 }
 
-// GetLatestReleaseNotesVersion mocks base method by wrapping the associated func.
-func (m *Repository) GetLatestReleaseNotesVersion() (*github_com_hashicorp_go_version.Version, error) {
-	m.lockGetLatestReleaseNotesVersion.Lock()
-	defer m.lockGetLatestReleaseNotesVersion.Unlock()
+// GetLatestReleaseNotesVersions mocks base method by wrapping the associated func.
+func (m *Repository) GetLatestReleaseNotesVersions(currentVersion string) (github_com_hashicorp_go_version.Collection, error) {
+	m.lockGetLatestReleaseNotesVersions.Lock()
+	defer m.lockGetLatestReleaseNotesVersions.Unlock()
 
-	if m.GetLatestReleaseNotesVersionFunc == nil {
-		panic("mocker: Repository.GetLatestReleaseNotesVersionFunc is nil but Repository.GetLatestReleaseNotesVersion was called.")
+	if m.GetLatestReleaseNotesVersionsFunc == nil {
+		panic("mocker: Repository.GetLatestReleaseNotesVersionsFunc is nil but Repository.GetLatestReleaseNotesVersions was called.")
 	}
 
 	call := struct {
-	}{}
+		CurrentVersion string
+	}{
+		CurrentVersion: currentVersion,
+	}
 
-	m.calls.GetLatestReleaseNotesVersion = append(m.calls.GetLatestReleaseNotesVersion, call)
+	m.calls.GetLatestReleaseNotesVersions = append(m.calls.GetLatestReleaseNotesVersions, call)
 
-	return m.GetLatestReleaseNotesVersionFunc()
+	return m.GetLatestReleaseNotesVersionsFunc(currentVersion)
 }
 
-// GetLatestReleaseNotesVersionCalled returns true if GetLatestReleaseNotesVersion was called at least once.
-func (m *Repository) GetLatestReleaseNotesVersionCalled() bool {
-	m.lockGetLatestReleaseNotesVersion.Lock()
-	defer m.lockGetLatestReleaseNotesVersion.Unlock()
+// GetLatestReleaseNotesVersionsCalled returns true if GetLatestReleaseNotesVersions was called at least once.
+func (m *Repository) GetLatestReleaseNotesVersionsCalled() bool {
+	m.lockGetLatestReleaseNotesVersions.Lock()
+	defer m.lockGetLatestReleaseNotesVersions.Unlock()
 
-	return len(m.calls.GetLatestReleaseNotesVersion) > 0
+	return len(m.calls.GetLatestReleaseNotesVersions) > 0
 }
 
-// GetLatestReleaseNotesVersionCalls returns the calls made to GetLatestReleaseNotesVersion.
-func (m *Repository) GetLatestReleaseNotesVersionCalls() []struct {
+// GetLatestReleaseNotesVersionsCalls returns the calls made to GetLatestReleaseNotesVersions.
+func (m *Repository) GetLatestReleaseNotesVersionsCalls() []struct {
+	CurrentVersion string
 } {
-	m.lockGetLatestReleaseNotesVersion.Lock()
-	defer m.lockGetLatestReleaseNotesVersion.Unlock()
+	m.lockGetLatestReleaseNotesVersions.Lock()
+	defer m.lockGetLatestReleaseNotesVersions.Unlock()
 
-	return m.calls.GetLatestReleaseNotesVersion
+	return m.calls.GetLatestReleaseNotesVersions
 }
 
 // GetAvailableBinaryVersions mocks base method by wrapping the associated func.
@@ -283,9 +288,9 @@ func (m *Repository) Reset() {
 	m.lockGetLatestBinaryVersion.Lock()
 	m.calls.GetLatestBinaryVersion = nil
 	m.lockGetLatestBinaryVersion.Unlock()
-	m.lockGetLatestReleaseNotesVersion.Lock()
-	m.calls.GetLatestReleaseNotesVersion = nil
-	m.lockGetLatestReleaseNotesVersion.Unlock()
+	m.lockGetLatestReleaseNotesVersions.Lock()
+	m.calls.GetLatestReleaseNotesVersions = nil
+	m.lockGetLatestReleaseNotesVersions.Unlock()
 	m.lockGetAvailableBinaryVersions.Lock()
 	m.calls.GetAvailableBinaryVersions = nil
 	m.lockGetAvailableBinaryVersions.Unlock()

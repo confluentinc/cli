@@ -125,7 +125,7 @@ func StructuredOutput(format string, obj interface{}) error {
 	} else {
 		return NewInvalidOutputFormatFlagError(format)
 	}
-	_, err := fmt.Fprintf(os.Stdout, string(b))
+	_, err := fmt.Fprint(os.Stdout, string(b))
 	return err
 }
 
@@ -141,7 +141,7 @@ func StructuredOutputForCommand(cmd *cobra.Command, format string, obj interface
 	} else {
 		return NewInvalidOutputFormatFlagError(format)
 	}
-	_, err := fmt.Fprintf(cmd.OutOrStdout(), string(b))
+	_, err := fmt.Fprint(cmd.OutOrStdout(), string(b))
 	return err
 }
 

@@ -37,8 +37,8 @@ func (c *migrateCmd) init() {
 		Use:   "config",
 		Short: "Migrate legacy audit log configurations.",
 		Long: "Migrate legacy audit log configurations. " +
-			"Use ``--combine`` to read in multiple Kafka broker ``server.properties`` files, " +
-			"combine the values of their ``confluent.security.event.router.config`` properties, " +
+			"Use `--combine` to read in multiple Kafka broker `server.properties` files, " +
+			"combine the values of their `confluent.security.event.router.config` properties, " +
 			"and output a combined configuration suitable for centralized audit log " +
 			"management. This is sent to standard output along with any warnings to standard error.",
 		RunE: c.migrate,
@@ -89,7 +89,7 @@ func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
 
 			routerConfig, ok := propertyFile.Get("confluent.security.event.router.config")
 			if !ok {
-				fmt.Println(fmt.Sprintf("Ignoring property file %s because it does not contain a router configuration.", filePath))
+				fmt.Printf("Ignoring property file %s because it does not contain a router configuration.\n", filePath)
 				continue
 			}
 			clusterConfigs[clusterId] = routerConfig

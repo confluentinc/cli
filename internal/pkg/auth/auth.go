@@ -183,3 +183,10 @@ func GenerateContextName(username string, url string, caCertPath string) string 
 func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
+
+func GetRemoteAPIName(cliName string) string {
+	if cliName == "ccloud" {
+		return "Confluent Cloud"
+	}
+	return "Confluent Platform"
+}

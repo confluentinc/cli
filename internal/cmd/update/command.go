@@ -3,6 +3,7 @@ package update
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-version"
@@ -28,11 +29,10 @@ const (
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (update.Client, error) {
-	objectKey, err := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
-	if err != nil {
-		return nil, err
-	}
+func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
+	// The following function will never err, since "_" is a valid separator.
+	objectKey, _ := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
+
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:          S3BinRegion,
 		S3BinBucket:          S3BinBucket,
@@ -49,7 +49,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) (upd
 		CheckInterval: CheckInterval,
 		Logger:        logger,
 		Out:           os.Stdout,
-	}), nil
+	})
 }
 
 type command struct {
@@ -128,7 +128,8 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getReleaseNotes(latestBinaryVersion string) string {
-	latestReleaseNotesVersion, releaseNotes, err := c.client.GetLatestReleaseNotes()
+	latestReleaseNotesVersion, allReleaseNotes, err := c.client.GetLatestReleaseNotes(c.version.Version)
+
 	var errMsg string
 	if err != nil {
 		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
@@ -141,12 +142,14 @@ func (c *command) getReleaseNotes(latestBinaryVersion string) string {
 			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
+
 	if errMsg != "" {
 		c.logger.Debugf(errMsg)
 		c.analyticsClient.SetSpecialProperty(analytics.ReleaseNotesErrorPropertiesKeys, errMsg)
 		return ""
 	}
-	return releaseNotes
+
+	return strings.Join(allReleaseNotes, "\n")
 }
 
 func sameVersionCheck(v1 string, v2 string) (bool, error) {

@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -35,7 +34,7 @@ func GetPagePropertyValue(segmentMsg segment.Message, key string) (interface{}, 
 	}
 	val, ok := page.Properties[key]
 	if !ok {
-		return "", errors.New(fmt.Sprintf("key %s does not exist in properties map", key))
+		return "", fmt.Errorf("key %s does not exist in properties map", key)
 	}
 	return val, nil
 }

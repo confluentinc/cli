@@ -8,11 +8,7 @@ Usage:
 Examples:
 Delete an ACL that granted the specified user access to the Test topic in the specified cluster:
 
-::
-
-  confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test
-
-
+  $ confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test
 
 Flags:
       --kafka-cluster-id string   Kafka cluster ID for scope of ACL commands.

@@ -61,7 +61,7 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 			return "", ErrUnexpectedStdinPipe
 		}
 
-		_, err = fmt.Fprintf(r.Out, prompt)
+		_, err = fmt.Fprint(r.Out, prompt)
 		if err != nil {
 			return "", err
 		}

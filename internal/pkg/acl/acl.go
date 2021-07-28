@@ -2,20 +2,21 @@ package acl
 
 import (
 	"fmt"
+	"io"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/antihax/optional"
+	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"io"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 type AclRequestDataWithError struct {
@@ -26,10 +27,10 @@ type AclRequestDataWithError struct {
 	Host         string
 	Operation    kafkarestv3.AclOperation
 	Permission   kafkarestv3.AclPermission
-	Errors error
+	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []krsdk.AclData, writer io.Writer, aclListFields, aclListStructuredRenames []string) error {
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, aclListFields, aclListStructuredRenames []string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -43,16 +44,16 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []krsdk.AclDa
 	for _, aclData := range aclGetResp {
 		record := &struct { //TODO remove KafkaAPI field names and move to only Kafka REST ones
 			ServiceAccountId string
-			Principal		 string
+			Principal        string
 			Permission       string
 			Operation        string
-			Host			 string
+			Host             string
 			Resource         string
-			ResourceType	 string
+			ResourceType     string
 			Name             string
-			ResourceName	 string
+			ResourceName     string
 			Type             string
-			PatternType		 string
+			PatternType      string
 		}{
 			aclData.Principal,
 			aclData.Principal,
@@ -210,7 +211,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 	}
 }
 
-func setAclRequestPermission(conf *AclRequestDataWithError, permission krsdk.AclPermission) {
+func setAclRequestPermission(conf *AclRequestDataWithError, permission kafkarestv3.AclPermission) {
 	if conf.Permission != "" {
 		conf.Errors = multierror.Append(conf.Errors, errors.Errorf(errors.OnlySetAllowOrDenyErrorMsg))
 	}
@@ -246,10 +247,10 @@ func convertToFlags(operations ...interface{}) string {
 
 	for _, v := range operations {
 		// clean the resources that don't map directly to flag name
-		if v == krsdk.ACLRESOURCETYPE_GROUP {
+		if v == kafkarestv3.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == krsdk.ACLRESOURCETYPE_CLUSTER {
+		if v == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
 		s := fmt.Sprintf("%v", v)
@@ -281,9 +282,9 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	return aclConfiguration
 }
 
-func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersClusterIdAclsPostOpts {
-	var opts krsdk.ClustersClusterIdAclsPostOpts
-	requestData := krsdk.CreateAclRequestData{
+func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsPostOpts {
+	var opts kafkarestv3.ClustersClusterIdAclsPostOpts
+	requestData := kafkarestv3.CreateAclRequestData{
 		ResourceType: acl.ResourceType,
 		ResourceName: acl.ResourceName,
 		PatternType:  acl.PatternType,
@@ -298,8 +299,8 @@ func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersCl
 
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
-func AclRequestToListAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersClusterIdAclsGetOpts {
-	opts := krsdk.ClustersClusterIdAclsGetOpts{
+func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsGetOpts {
+	opts := kafkarestv3.ClustersClusterIdAclsGetOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
 		PatternType:  optional.NewInterface(acl.PatternType),
@@ -311,8 +312,8 @@ func AclRequestToListAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersClus
 	return &opts
 }
 
-func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersClusterIdAclsDeleteOpts {
-	opts := krsdk.ClustersClusterIdAclsDeleteOpts{
+func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsDeleteOpts {
+	opts := kafkarestv3.ClustersClusterIdAclsDeleteOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
 		PatternType:  optional.NewInterface(acl.PatternType),
@@ -324,8 +325,8 @@ func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *krsdk.ClustersCl
 	return &opts
 }
 
-func CreateAclRequestDataToAclData(data *AclRequestDataWithError) krsdk.AclData {
-	aclData := krsdk.AclData{
+func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.AclData {
+	aclData := kafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,
 		PatternType:  data.PatternType,
@@ -337,7 +338,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) krsdk.AclData 
 	return aclData
 }
 
-func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp krsdk.AclDataList, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, IdMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

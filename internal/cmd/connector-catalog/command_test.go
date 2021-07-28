@@ -1,4 +1,4 @@
-package connector_catalog
+package connectorcatalog
 
 import (
 	"context"
@@ -81,7 +81,7 @@ func (suite *CatalogTestSuite) newCmd() *command {
 
 func (suite *CatalogTestSuite) TestCatalogList() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"list"}))
+	cmd.SetArgs([]string{"list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -92,7 +92,7 @@ func (suite *CatalogTestSuite) TestCatalogList() {
 
 func (suite *CatalogTestSuite) TestCatalogDescribeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs(append([]string{"describe", pluginType}))
+	cmd.SetArgs([]string{"describe", pluginType})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

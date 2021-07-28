@@ -3,37 +3,25 @@ Usage:
   confluent iam rolebinding list [flags]
 
 Examples:
-Only use the ``--resource`` flag when specifying a ``--role`` with no ``--principal`` specified. If specifying a ``--principal``, then the ``--resource`` flag is ignored. To list role bindings for a specific role on an identified resource:
+Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
-::
-
-  iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic
+  $ confluent iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic
 
 To list the role bindings for a specific principal:
 
-::
-
-  iam rolebinding list --kafka-cluster-id $CID --principal User:frodo
+  $ confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo
 
 To list the role bindings for a specific principal, filtered to a specific role:
 
-::
-
-  iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead
+  $ confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead
 
 To list the principals bound to a specific role:
 
-::
-
-  iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite
+  $ confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite
 
 To list the principals bound to a specific resource with a specific role:
 
-::
-
-  iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties
-
-
+  $ confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties
 
 Flags:
       --principal string                    Principal whose rolebindings should be listed.

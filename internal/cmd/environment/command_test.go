@@ -11,12 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
-	test_utils "github.com/confluentinc/cli/internal/cmd/utils"
+	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -71,7 +69,7 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = test_utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
+	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *EnvironmentTestSuite) newCmd() *command {
@@ -92,8 +90,8 @@ func (suite *EnvironmentTestSuite) newCmd() *command {
 
 func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	cmd := suite.newCmd()
-	args := append([]string{"create", environmentName})
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	args := []string{"create", environmentName}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.CreateCalled())
@@ -103,8 +101,8 @@ func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	cmd := suite.newCmd()
-	args := append([]string{"delete", environmentID})
-	err := test_utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	args := []string{"delete", environmentID}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.DeleteCalled())

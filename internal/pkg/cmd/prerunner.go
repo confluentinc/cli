@@ -7,30 +7,25 @@ import (
 	"os"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/form"
-
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -430,11 +425,11 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		enabled, restEndpoint, err := kafkaRestIsEnabled(ctx, cliCmd)
+		restEndpoint, err := getKafkaRestEndpoint(ctx, cliCmd)
 		if err != nil {
 			return nil, err
 		}
-		if enabled {
+		if restEndpoint != "" {
 			result := &KafkaREST{}
 			result.Client, err = createKafkaRESTClient(restEndpoint)
 			if err != nil {
@@ -448,7 +443,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			result.Context = context.WithValue(context.Background(), krsdk.ContextAccessToken, bearerToken)
+			result.Context = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken)
 			return result, nil
 		}
 		return nil, nil
@@ -457,38 +452,36 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func kafkaRestIsEnabled(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (bool, string, error) {
-	return false, "", nil
-	//if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-	//	return false, "", nil
-	//}
-	//clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
-	//if err != nil {
-	//	return false, "", err
-	//}
-	//if clusterConfig.RestEndpoint != "" {
-	//	return true, clusterConfig.RestEndpoint, nil
-	//}
-	//// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
-	//// potentially remove this once Rest Proxy is enabled across prod
-	//client := NewContextClient(ctx)
-	//kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
-	//if err != nil {
-	//	return false, "", err
-	//}
-	//// no need to update the config if it's still empty
-	//if kafkaCluster.RestEndpoint == "" {
-	//	return false, "", nil
-	//}
-	//// update config to have updated cluster if rest endpoint is no longer ""
-	//refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
-	//ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
-	//err = ctx.Save() //should we fail on this error or log and continue?
-	//if err != nil {
-	//	return false, "", err
-	//}
-	//return kafkaCluster.RestEndpoint != "", kafkaCluster.RestEndpoint, nil
-
+func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
+	if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") == "" {
+		return "", nil
+	}
+	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
+	if err != nil {
+		return "", err
+	}
+	if clusterConfig.RestEndpoint != "" {
+		return clusterConfig.RestEndpoint, nil
+	}
+	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
+	// potentially remove this once Rest Proxy is enabled across prod
+	client := NewContextClient(ctx)
+	kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
+	if err != nil {
+		return "", err
+	}
+	// no need to update the config if it's still empty
+	if kafkaCluster.RestEndpoint == "" {
+		return "", nil
+	}
+	// update config to have updated cluster if rest endpoint is no longer ""
+	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
+	err = ctx.Save() //should we fail on this error or log and continue?
+	if err != nil {
+		return "", err
+	}
+	return kafkaCluster.RestEndpoint, nil
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
@@ -653,11 +646,13 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 // Initializes a default KafkaRestClient
 func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		// pass mds token as bearer token otherwise use http basic auth
+		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
-		var useMdsToken bool     // pass mds token as bearer token otherwise use http basic auth
-		useMdsToken = err == nil // no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
+		useMdsToken := err == nil
+
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-			cfg := krsdk.NewConfiguration()
+			cfg := kafkarestv3.NewConfiguration()
 			restFlags, err := r.FlagResolver.ResolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
@@ -666,7 +661,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
-			client := krsdk.NewAPIClient(cfg)
+			client := kafkarestv3.NewAPIClient(cfg)
 			if restFlags.noAuth || restFlags.clientCertPath != "" { // credentials not needed for mTLS auth
 				return &KafkaREST{
 					Client:  client,
@@ -676,7 +671,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			var restContext context.Context
 			if useMdsToken && !restFlags.prompt {
 				r.Logger.Debug("found mds token to use as bearer")
-				restContext = context.WithValue(context.Background(), krsdk.ContextAccessToken, command.AuthToken())
+				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
 					utils.Println(cmd, errors.MDSTokenNotFoundMsg)
@@ -688,7 +683,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				if err := f.Prompt(command.Command, form.NewPrompt(os.Stdin)); err != nil {
 					return nil, err
 				}
-				restContext = context.WithValue(context.Background(), krsdk.ContextBasicAuth, krsdk.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
+				restContext = context.WithValue(context.Background(), kafkarestv3.ContextBasicAuth, kafkarestv3.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
 			}
 			return &KafkaREST{
 				Client:  client,
@@ -884,7 +879,7 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
-	if isUpdateCommand(cmd) {
+	if isUpdateCommand(cmd) || r.IsTest {
 		return nil
 	}
 	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)

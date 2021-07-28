@@ -2,7 +2,6 @@ package auditlog
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -190,7 +189,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 		var spec mds.AuditLogConfigSpec
 		err := json.Unmarshal([]byte(auditConfig), &spec)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf(warn.MalformedConfigError, clusterId, err.Error()))
+			return nil, fmt.Errorf(warn.MalformedConfigError, clusterId, err.Error())
 		}
 		clusterAuditLogConfigSpecs[clusterId] = &spec
 	}
