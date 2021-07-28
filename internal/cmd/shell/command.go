@@ -57,7 +57,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	c.RootCmd.RemoveCommand(c.Command)
 
 	// add shell only quit command
-	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config))
+	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner))
 
 	msg := errors.AlreadyAuthenticatedMsg
 	if cmd.Annotations == nil {

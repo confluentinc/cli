@@ -54,7 +54,8 @@ func NewClusterCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logg
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "cluster",
-			Short: "Manage a Schema Registry cluster.",
+			Short: "Manage Schema Registry cluster.",
+			Long:  "Manage the Schema Registry cluster for the current environment.",
 		}, prerunner, ClusterSubcommandFlags)
 	clusterCmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
