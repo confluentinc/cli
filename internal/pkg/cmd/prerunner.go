@@ -275,6 +275,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 				return r.ConfigLoadingError
 			}
 		}
+		LabelRequiredFlags(cmd)
 		return nil
 	}
 }

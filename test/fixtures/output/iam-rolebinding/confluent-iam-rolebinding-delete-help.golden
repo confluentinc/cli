@@ -4,8 +4,8 @@ Usage:
   confluent iam rolebinding delete [flags]
 
 Flags:
-      --role string                         Role name of the existing role binding.
-      --principal string                    Qualified principal name associated with the role binding.
+      --role string                         REQUIRED: Role name of the existing role binding.
+      --principal string                    REQUIRED: Qualified principal name associated with the role binding.
       --prefix                              Whether the provided resource name is treated as a prefix pattern.
       --resource string                     Qualified resource name associated with the role binding.
       --kafka-cluster-id string             Kafka cluster ID for the role binding.

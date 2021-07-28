@@ -15,7 +15,7 @@ List all the ACLs for the specified cluster that include allow permissions for t
   $ confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane
 
 Flags:
-      --kafka-cluster-id string   Kafka cluster ID for scope of ACL commands.
+      --kafka-cluster-id string   REQUIRED: Kafka cluster ID for scope of ACL commands.
       --allow                     ACL permission to allow access.
       --deny                      ACL permission to restrict access to resource.
       --principal string          Principal for this operation with User: or Group: prefix.
