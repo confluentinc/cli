@@ -4,6 +4,7 @@ Usage:
   ccloud connector [command]
 
 Available Commands:
+  catalog     Catalog of connectors and their configurations.
   create      Create a connector.
   delete      Delete a connector.
   describe    Describe a connector.
