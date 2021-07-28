@@ -80,8 +80,8 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -89,12 +89,12 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 
 	for _, binding := range bindingsObj {
 		record := &struct {
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			ResourceType     string
-			ResourceName     string
-			PatternType      string
+			Principal    string
+			Permission   string
+			Operation    string
+			ResourceType string
+			ResourceName string
+			PatternType  string
 		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
