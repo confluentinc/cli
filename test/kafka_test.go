@@ -94,7 +94,7 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka topic describe", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe.golden", wantErrCode: 1},
 		{args: "kafka topic describe topic1", login: "default", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-describe-success.golden"},
-		//	{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/rp-topic-describe-success.golden"},
+		{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/rp-topic-describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"} },
 		//	{args: "kafka topic describe topic-exist --output json", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-json-success.golden"},
 		{args: "kafka topic describe topic1 --cluster lkc-create-topic-kafka-api", login: "default", fixture: "kafka/topic-describe-not-found.golden", wantErrCode: 1},
 		//	{args: "kafka topic describe topic2", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic2-describe-not-found.golden", wantErrCode: 1},
