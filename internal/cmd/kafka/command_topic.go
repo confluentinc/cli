@@ -486,10 +486,15 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData.PartitionCount = len(partitionsResp.Data)
 			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
 			replicaStatusDataList, httpResp, err := kafkaREST.Client.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(kafkaREST.Context, lkc, topicName)
-			partitionIdToPartitionData := make(map[int32]partitionData)
+			if err != nil {
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			} else if replicaStatusDataList.Data == nil {
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
+			}
+			partitionIdToData := make(map[int32]partitionData)
 			for _, replica := range replicaStatusDataList.Data {
-				if _, ok := partitionIdToPartitionData[replica.PartitionId]; !ok {
-					partitionIdToPartitionData[replica.PartitionId] = partitionData{
+				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
+					partitionIdToData[replica.PartitionId] = partitionData{
 						TopicName: 	 replica.TopicName,
 						PartitionId: replica.PartitionId,
 						ReplicaBrokerIds: []int32{replica.BrokerId},
@@ -497,27 +502,27 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 					}
 				} else {
-					tmpPartitionData := partitionIdToPartitionData[replica.PartitionId]
-					tmpPartitionData.ReplicaBrokerIds = append(partitionIdToPartitionData[replica.PartitionId].ReplicaBrokerIds, replica.BrokerId)
-					partitionIdToPartitionData[replica.PartitionId] = tmpPartitionData
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.ReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].ReplicaBrokerIds, replica.BrokerId)
+					partitionIdToData[replica.PartitionId] = tmp
 				}
 				if replica.IsLeader {
-					tmpPartitionData := partitionIdToPartitionData[replica.PartitionId]
-					tmpPartitionData.LeaderBrokerId = replica.BrokerId
-					partitionIdToPartitionData[replica.PartitionId] = tmpPartitionData
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.LeaderBrokerId = replica.BrokerId
+					partitionIdToData[replica.PartitionId] = tmp
 				}
 				if replica.IsInIsr {
-					tmpPartitionData := partitionIdToPartitionData[replica.PartitionId]
-					tmpPartitionData.InSyncReplicaBrokerIds = append(partitionIdToPartitionData[replica.PartitionId].InSyncReplicaBrokerIds, replica.BrokerId)
-					partitionIdToPartitionData[replica.PartitionId] = tmpPartitionData
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.InSyncReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].InSyncReplicaBrokerIds, replica.BrokerId)
+					partitionIdToData[replica.PartitionId] = tmp
 				}
 			}
 
-			for i, partitionResp := range partitionsResp.Data {
+			for i, data := range partitionsResp.Data {
 				if i == 0 {
-					topicData.ReplicationFactor = len(partitionIdToPartitionData[partitionResp.PartitionId].ReplicaBrokerIds)
+					topicData.ReplicationFactor = len(partitionIdToData[data.PartitionId].ReplicaBrokerIds)
 				}
-				topicData.Partitions[i] = partitionIdToPartitionData[partitionResp.PartitionId]
+				topicData.Partitions[i] = partitionIdToData[data.PartitionId]
 			}
 
 			// Get topic config

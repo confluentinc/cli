@@ -349,7 +349,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPReplicaStatus(t *testing.T) func(http
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			// if topic exists
 			if topicName != "topic-exist" {
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
