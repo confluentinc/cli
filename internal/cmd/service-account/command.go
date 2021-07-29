@@ -95,7 +95,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a service account named `DemoServiceAccount`.",
-				Code: `ccloud service-account create DemoServiceAccount --description "This is a demo service account."`,
+				Code: `confluent service-account create DemoServiceAccount --description "This is a demo service account."`,
 			},
 		),
 	}
@@ -113,7 +113,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update the description of a service account with resource ID `sa-lqv3mm`",
-				Code: `ccloud service-account update sa-lqv3mm --description "Update demo service account information."`,
+				Code: `confluent service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
 	}
@@ -130,7 +130,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a service account with resource ID `sa-lqv3mm`",
-				Code: "ccloud service-account delete sa-lqv3mm",
+				Code: "confluent service-account delete sa-lqv3mm",
 			},
 		),
 	}
