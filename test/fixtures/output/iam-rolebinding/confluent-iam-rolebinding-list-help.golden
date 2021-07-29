@@ -35,7 +35,7 @@ Flags:
       --connect-cluster-id string           Kafka Connect cluster ID for scope of rolebinding listings.
       --cluster-name string                 Cluster name to uniquely identify the cluster for rolebinding listings.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
-      --context string                      CLI Context name.
+      --context string                      CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

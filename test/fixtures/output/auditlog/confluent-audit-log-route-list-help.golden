@@ -5,7 +5,7 @@ Usage:
 
 Flags:
   -r, --resource string   REQUIRED: The Confluent resource name (CRN) that is the subject of the query.
-      --context string    CLI Context name.
+      --context string    CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -25,7 +25,7 @@ Flags:
                                   operations on the topics that start with that prefix, depending on whether
                                   the --prefix option was also passed.
       --prefix                    Set to match all resource names prefixed with this value.
-      --context string            CLI Context name.
+      --context string            CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
