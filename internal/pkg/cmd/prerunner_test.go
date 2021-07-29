@@ -266,54 +266,50 @@ func TestPreRun_TokenExpires(t *testing.T) {
 func Test_UpdateToken(t *testing.T) {
 	tests := []struct {
 		name      string
-		cliName   string
+		isCloud   bool
 		authToken string
 	}{
 		{
 			name:      "ccloud expired token",
-			cliName:   "ccloud",
+			isCloud:   true,
 			authToken: expiredAuthTokenForDevCloud,
 		},
 		{
 			name:      "ccloud empty token",
-			cliName:   "ccloud",
+			isCloud:   true,
 			authToken: "",
 		},
 		{
 			name:      "ccloud invalid token",
-			cliName:   "ccloud",
+			isCloud:   true,
 			authToken: "jajajajaja",
 		},
 		{
 			name:      "ccloud jwt with no exp claim",
-			cliName:   "ccloud",
+			isCloud:   true,
 			authToken: jwtWithNoExp,
 		},
 		{
 			name:      "confluent expired token",
-			cliName:   "confluent",
 			authToken: expiredAuthTokenForDevCloud,
 		},
 		{
 			name:      "confluent empty token",
-			cliName:   "confluent",
 			authToken: "",
 		},
 		{
 			name:      "confluent invalid token",
-			cliName:   "confluent",
 			authToken: "jajajajaja",
 		},
 		{
 			name:      "confluent jwt with no exp claim",
-			cliName:   "confluent",
 			authToken: jwtWithNoExp,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg *v3.Config
-			if tt.cliName == "ccloud" {
+			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
 				cfg = v3.AuthenticatedConfluentConfigMock()
@@ -365,7 +361,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 	tests := []struct {
 		name          string
-		cliName       string
+		isCloud       bool
 		envVarChecked bool
 		netrcChecked  bool
 		wantErr       bool
@@ -374,7 +370,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}{
 		{
 			name:          "CCloud no env var credentials but successful login from netrc",
-			cliName:       "ccloud",
+			isCloud:       true,
 			envVarReturn:  credentialsFuncReturnValues{nil, nil},
 			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
@@ -382,7 +378,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "Confluent no env var credentials but successful login from netrc",
-			cliName:       "confluent",
 			envVarReturn:  credentialsFuncReturnValues{nil, nil},
 			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
 			envVarChecked: true,
@@ -390,7 +385,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "CCloud successful login from env var",
-			cliName:       "ccloud",
+			isCloud:       true,
 			envVarReturn:  credentialsFuncReturnValues{ccloudCreds, nil},
 			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
@@ -398,7 +393,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "Confluent successful login from env var",
-			cliName:       "confluent",
 			envVarReturn:  credentialsFuncReturnValues{confluentCreds, nil},
 			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
 			envVarChecked: true,
@@ -406,7 +400,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "CCloud env var failed but netrc succeeds",
-			cliName:       "ccloud",
+			isCloud:       true,
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
 			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
 			envVarChecked: true,
@@ -414,7 +408,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "Confluent env var failed but netrc succeeds",
-			cliName:       "confluent",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
 			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
 			envVarChecked: true,
@@ -422,7 +415,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "CCloud failed non-interactive login",
-			cliName:       "ccloud",
+			isCloud:       true,
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
 			netrcReturn:   credentialsFuncReturnValues{nil, errors.New("NETRC FAILED")},
 			envVarChecked: true,
@@ -431,7 +424,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 		{
 			name:          "Confluent failed non-interactive login",
-			cliName:       "confluent",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
 			netrcReturn:   credentialsFuncReturnValues{nil, errors.New("NETRC FAILED")},
 			envVarChecked: true,
@@ -442,7 +434,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg *v3.Config
-			if tt.cliName == "ccloud" {
+			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
 				cfg = v3.AuthenticatedConfluentConfigMock()
@@ -515,7 +507,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
 			var rootCmd *pcmd.AuthenticatedCLICommand
-			if tt.cliName == "ccloud" {
+			if tt.isCloud {
 				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
 			} else {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
@@ -524,7 +516,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			out, err := pcmd.ExecuteCommand(rootCmd.Command)
 
-			if tt.cliName == "ccloud" {
+			if tt.isCloud {
 				require.Equal(t, tt.envVarChecked, ccloudEnvVarCalled)
 				require.Equal(t, tt.netrcChecked, ccloudNetrcCalled)
 				require.False(t, confluentEnvVarCalled)
@@ -551,21 +543,20 @@ func TestPrerun_AutoLogin(t *testing.T) {
 func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {
 		name    string
-		cliName string
+		isCloud bool
 	}{
 		{
 			name:    "ccloud logged in user",
-			cliName: "ccloud",
+			isCloud: true,
 		},
 		{
-			name:    "confluent logged in user",
-			cliName: "confluent",
+			name: "confluent logged in user",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var cfg *v3.Config
-			if tt.cliName == "ccloud" {
+			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
 				cfg = v3.AuthenticatedConfluentConfigMock()
@@ -597,7 +588,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
 			var rootCmd *pcmd.AuthenticatedCLICommand
-			if tt.cliName == "ccloud" {
+			if tt.isCloud {
 				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
 			} else {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
