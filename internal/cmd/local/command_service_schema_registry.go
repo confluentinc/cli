@@ -55,13 +55,12 @@ func NewSchemaRegistryACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	c.Command.RunE = pcmd.NewCLIRunE(c.runSchemaRegistryACLCommand)
-	for flag, val := range defaultValues {
-		switch val := val.(type) {
-		case bool:
-			c.Flags().BoolP(flag, shorthands[flag], val, usages[flag])
-		case string:
-			c.Flags().StringP(flag, shorthands[flag], val, usages[flag])
-		}
+
+	for _, flag := range []string{"add", "list", "remove"} {
+		c.Flags().BoolP(flag, shorthands[flag], false, usages[flag])
+	}
+	for _, flag := range []string{"operation", "principal", "subject", "topic"} {
+		c.Flags().StringP(flag, shorthands[flag], "", usages[flag])
 	}
 	c.Flags().SortFlags = false
 
