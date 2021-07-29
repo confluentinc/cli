@@ -82,9 +82,9 @@ const (
 	ACLsNotFoundMsg          = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
-	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `ccloud ksql app describe`."
+	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
 	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"
-	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `ccloud kafka cluster use %s`.\n"
+	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 	KsqlDBNoServiceAccount    = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster.\n"
 
 	// local commands
@@ -129,13 +129,13 @@ const (
 	APIKeysMapAutofixMsg = "There are malformed API key secret pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
 		"The issues are the following: %s.\n" +
 		"Deleting the malformed entries.\n" +
-		"You can re-add the API key secret pair with `ccloud api-key store --resource %s`\n"
+		"You can re-add the API key secret pair with `confluent api-key store --resource %s`\n"
 	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n" +
 		"Removing current API key setting for the resource.\n" +
-		"You can re-add the API key with `ccloud api-key store --resource %s'` and then set current API key with `ccloud api-key use`.\n"
+		"You can re-add the API key with `confluent api-key store --resource %s'` and then set current API key with `confluent api-key use`.\n"
 
 	// feedback package
-	FeedbackNudgeMsg = "\nDid you know you can use the `ccloud feedback` command to send the team feedback?\n" +
+	FeedbackNudgeMsg = "\nDid you know you can use the `confluent feedback` command to send the team feedback?\n" +
 		"Let us know if the CLI is meeting your needs, or what we can do to improve it.\n"
 
 	// sso package

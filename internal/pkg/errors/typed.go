@@ -6,13 +6,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	cliDownLoadLink = map[string]string{
-		"confluent": "https://docs.confluent.io/current/cli/installing.html",
-		"ccloud":    "https://docs.confluent.io/current/cloud/cli/install.html",
-	}
-)
-
 type CLITypedError interface {
 	error
 	UserFacingError() error
@@ -125,6 +118,5 @@ func (e *UpdateClientError) Error() string {
 
 func (e *UpdateClientError) UserFacingError() error {
 	errMsg := fmt.Sprintf(prefixFormat, UpdateClientFailurePrefix, e.errorMsg)
-	suggestionsMsg := fmt.Sprintf(UpdateClientFailureSuggestions, cliDownLoadLink[e.cliName])
-	return NewErrorWithSuggestions(errMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(errMsg, UpdateClientFailureSuggestions)
 }
