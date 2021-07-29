@@ -18,43 +18,24 @@ type CLITypedError interface {
 	UserFacingError() error
 }
 
-type NotLoggedInError struct {
-	CLIName string
-}
+type NotLoggedInError struct{}
 
 func (e *NotLoggedInError) Error() string {
-	return e.CLIName
+	return NotLoggedInErrorMsg
 }
 
 func (e *NotLoggedInError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(NotLoggedInSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(NotLoggedInErrorMsg, NotLoggedInSuggestions)
 }
 
-type SRNotAuthenticatedError struct {
-	CLIName string
-}
+type SRNotAuthenticatedError struct{}
 
 func (e *SRNotAuthenticatedError) Error() string {
-	return e.CLIName
+	return SRNotAuthenticatedErrorMsg
 }
 
 func (e *SRNotAuthenticatedError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(SRNotAuthenticatedSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, suggestionsMsg)
-}
-
-type NoContextError struct {
-	CLIName string
-}
-
-func (e *NoContextError) Error() string {
-	return e.CLIName
-}
-
-func (e *NoContextError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(NotLoggedInSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, SRNotAuthenticatedSuggestions)
 }
 
 type KafkaClusterNotFoundError struct {

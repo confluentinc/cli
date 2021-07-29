@@ -272,7 +272,7 @@ func (d *DynamicContext) AuthenticatedState(cmd *cobra.Command) (*v2.ContextStat
 		return nil, err
 	}
 	if !hasLogin {
-		return nil, &errors.NotLoggedInError{CLIName: d.Config.CLIName}
+		return nil, new(errors.NotLoggedInError)
 	}
 	return d.State, nil
 }
@@ -323,10 +323,10 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 
 func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error) {
 	if d.State == nil || d.State.Auth == nil {
-		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
+		return "", new(errors.NotLoggedInError)
 	}
 	if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
-		return "", &errors.NotLoggedInError{CLIName: d.Config.CLIName}
+		return "", new(errors.NotLoggedInError)
 	}
 	return d.State.Auth.Account.Id, nil
 }

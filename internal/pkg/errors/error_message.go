@@ -391,29 +391,27 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
-	ccloudAvoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `ccloud login --save`."
-	avoidTimeoutGeneralSuggestion     = "To avoid session timeouts, you can save credentials to netrc file by logging in with `--save` flag."
-	NotLoggedInErrorMsg               = "not logged in"
-	NotLoggedInSuggestions            = "You must be logged in to run this command.\n" +
-		avoidTimeoutWithCLINameSuggestion
-	SRNotAuthenticatedErrorMsg    = "not logged in, and no Schema Registry endpoint specified"
+	avoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg    = "not logged in"
+	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
+		avoidTimeoutSuggestion
+	SRNotAuthenticatedErrorMsg    = "not logged in, or no Schema Registry endpoint specified"
 	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `ccloud login` to run this command.\n" +
-		avoidTimeoutWithCLINameSuggestion
+		avoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
-		avoidTimeoutGeneralSuggestion
+		avoidTimeoutSuggestion
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
-		avoidTimeoutGeneralSuggestion
+		avoidTimeoutSuggestion
 	InvalidEmailErrorMsg    = "user \"%s\" not found"
 	InvalidEmailSuggestions = "Check the email credential.\n" +
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
-		ccloudAvoidTimeoutSuggestion
+		avoidTimeoutSuggestion
 	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
 	InvalidLoginErrorMsg          = "incorrect email or password"
-	CCloudInvalidLoginSuggestions = ccloudAvoidTimeoutSuggestion
+	CCloudInvalidLoginSuggestions = avoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
 	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +

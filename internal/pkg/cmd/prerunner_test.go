@@ -88,7 +88,6 @@ var (
 
 func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
-		CLIName: "ccloud",
 		Config:  v3.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
 		Logger:  log.New(),
@@ -331,7 +330,6 @@ func Test_UpdateToken(t *testing.T) {
 			}
 
 			r := getPreRunBase()
-			r.CLIName = tt.cliName
 			r.Config = cfg
 			r.LoginCredentialsManager = mockLoginCredentialsManager
 
@@ -453,7 +451,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			require.NoError(t, err)
 
 			r := getPreRunBase()
-			r.CLIName = tt.cliName
 			r.Config = cfg
 			r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
 				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
@@ -593,7 +590,6 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			}
 
 			r := getPreRunBase()
-			r.CLIName = tt.cliName
 			r.Config = cfg
 			r.LoginCredentialsManager = mockLoginCredentialsManager
 
@@ -654,7 +650,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			name:           "not logged in user",
 			config:         userNotLoggedIn,
 			errMsg:         errors.NotLoggedInErrorMsg,
-			suggestionsMsg: fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"),
+			suggestionsMsg: errors.NotLoggedInSuggestions,
 		},
 		{
 			name:           "username context corrupted auth token",
@@ -695,7 +691,6 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := getPreRunBase()
-			r.CLIName = "ccloud"
 			r.Config = tt.config
 
 			root := &cobra.Command{

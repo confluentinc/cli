@@ -46,7 +46,6 @@ const DoNotTrack = "do-not-track-analytics"
 type PreRun struct {
 	Config                  *v3.Config
 	UpdateClient            update.Client
-	CLIName                 string
 	Logger                  *log.Logger
 	Analytics               analytics.Client
 	FlagResolver            FlagResolver
@@ -247,7 +246,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			return err
 		}
 		r.Logger.Flush()
-		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
+		if err := r.notifyIfUpdateAvailable(cmd, command.Version.Version); err != nil {
 			return err
 		}
 		r.warnIfConfluentLocal(cmd)
@@ -295,7 +294,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		err = r.setAuthenticatedContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
-			_, isNoContextError := err.(*errors.NoContextError)
+			_, isNoContextError := err.(*errors.NotLoggedInError)
 			if isNotLoggedInError || isNoContextError {
 				// Attempt Prerun auto login
 				autoLoginErr := r.ccloudAutoLogin(cmd)
@@ -343,7 +342,7 @@ func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand
 		return err
 	}
 	if ctx == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
 	cliCommand.State, err = ctx.AuthenticatedState(cobraCommand)
@@ -373,7 +372,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
 	url := pauth.CCloudURL
 	netrcFilterParams := netrc.NetrcMachineParams{
-		CLIName: r.CLIName,
+		CLIName: "ccloud", // Use "ccloud" to maintain compatability with older versions
 		URL:     url,
 	}
 	credentials, err := pauth.GetLoginCredentials(
@@ -517,7 +516,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		err = r.setAuthenticatedWithMDSContext(cmd, command)
 		if err != nil {
 			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
-			_, isNoContextError := err.(*errors.NoContextError)
+			_, isNoContextError := err.(*errors.NotLoggedInError)
 			if isNotLoggedInError || isNoContextError {
 				// Attempt Prerun auto login
 				autoLoginErr := r.confluentAutoLogin(cmd)
@@ -542,11 +541,8 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cobraCommand *cobra.Command, cli
 	if err != nil {
 		return err
 	}
-	if ctx == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
-	}
-	if !ctx.HasMDSLogin() {
-		return &errors.NotLoggedInError{CLIName: r.CLIName}
+	if ctx == nil || !ctx.HasMDSLogin() {
+		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
 	cliCommand.State = ctx.State
@@ -722,7 +718,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return err
 		}
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: r.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
 		var clusterId string
@@ -779,14 +775,14 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 
 func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error {
 	if config == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	ctx, err := config.Context(cmd)
 	if err != nil {
 		return err
 	}
 	if ctx == nil {
-		return &errors.NoContextError{CLIName: r.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	err = r.JWTValidator.Validate(ctx.Context)
 	if err == nil {
@@ -825,8 +821,13 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 }
 
 func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
+	cliName := "confluent"
+	if r.Config.IsCloud() {
+		cliName = "ccloud"
+	}
+
 	params := netrc.NetrcMachineParams{
-		CLIName: r.CLIName,
+		CLIName: cliName, // Use cliName to maintain compatability with older versions.
 		CtxName: ctx.Name,
 	}
 	credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params))
@@ -835,7 +836,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 	}
 
 	var token string
-	if r.CLIName == "ccloud" {
+	if r.Config.IsCloud() {
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
 		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 		if err != nil {
@@ -861,11 +862,11 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available
-func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
+func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) error {
 	if isUpdateCommand(cmd) || r.IsTest {
 		return nil
 	}
-	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
+	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(version.CLIName, currentVersion, false)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
 		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
@@ -876,7 +877,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, curren
 		if !strings.HasPrefix(latestVersion, "v") {
 			latestVersion = "v" + latestVersion
 		}
-		utils.ErrPrintf(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
+		utils.ErrPrintf(cmd, errors.NotifyUpdateMsg, version.CLIName, currentVersion, latestVersion, version.CLIName)
 	}
 	return nil
 }
