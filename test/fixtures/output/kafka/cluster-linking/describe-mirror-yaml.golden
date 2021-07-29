@@ -1,18 +1,21 @@
-- LinkName: link-1
+- LastSourceFetchOffset: "1293009"
+  LinkName: link-1
   MirrorStatus: active
   MirrorTopicName: dest-topic-1
   Partition: "0"
   PartitionMirrorLag: "142857"
   SourceTopicName: src-topic-1
   StatusTimeMs: "111111111"
-- LinkName: link-1
+- LastSourceFetchOffset: "28340404"
+  LinkName: link-1
   MirrorStatus: active
   MirrorTopicName: dest-topic-1
   Partition: "1"
   PartitionMirrorLag: "285714"
   SourceTopicName: src-topic-1
   StatusTimeMs: "111111111"
-- LinkName: link-1
+- LastSourceFetchOffset: "5739304"
+  LinkName: link-1
   MirrorStatus: active
   MirrorTopicName: dest-topic-1
   Partition: "2"

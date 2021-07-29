@@ -1,20 +1,24 @@
 - ErrorCode: ""
   ErrorMessage: ""
+  LastSourceFetchOffset: "1293009"
   MirrorTopicName: dest-topic-1
   Partition: "0"
   PartitionMirrorLag: "142857"
 - ErrorCode: ""
   ErrorMessage: ""
+  LastSourceFetchOffset: "28340404"
   MirrorTopicName: dest-topic-1
   Partition: "1"
   PartitionMirrorLag: "285714"
 - ErrorCode: ""
   ErrorMessage: ""
+  LastSourceFetchOffset: "5739304"
   MirrorTopicName: dest-topic-1
   Partition: "2"
   PartitionMirrorLag: "571428"
 - ErrorCode: "401"
   ErrorMessage: Not authorized
+  LastSourceFetchOffset: "-1"
   MirrorTopicName: dest-topic-1
   Partition: "-1"
   PartitionMirrorLag: "-1"

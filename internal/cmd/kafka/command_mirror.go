@@ -24,8 +24,8 @@ const (
 
 var (
 	listMirrorOutputFields     = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	describeMirrorOutputFields = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	alterMirrorOutputFields    = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	describeMirrorOutputFields = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"}
+	alterMirrorOutputFields    = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"}
 )
 
 type listMirrorWrite struct {
@@ -39,21 +39,23 @@ type listMirrorWrite struct {
 }
 
 type describeMirrorWrite struct {
-	LinkName           string
-	MirrorTopicName    string
-	SourceTopicName    string
-	MirrorStatus       string
-	StatusTimeMs       int64
-	Partition          int32
-	PartitionMirrorLag int64
+	LinkName              string
+	MirrorTopicName       string
+	SourceTopicName       string
+	MirrorStatus          string
+	StatusTimeMs          int64
+	Partition             int32
+	PartitionMirrorLag    int64
+	LastSourceFetchOffset int64
 }
 
 type alterMirrorWrite struct {
-	MirrorTopicName    string
-	Partition          int32
-	ErrorMessage       string
-	ErrorCode          string
-	PartitionMirrorLag int64
+	MirrorTopicName       string
+	Partition             int32
+	ErrorMessage          string
+	ErrorCode             string
+	PartitionMirrorLag    int64
+	LastSourceFetchOffset int64
 }
 
 type mirrorCommand struct {
@@ -332,6 +334,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			StatusTimeMs:       mirror.StateTimeMs,
 			Partition:          partitionLag.Partition,
 			PartitionMirrorLag: partitionLag.Lag,
+			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
 
@@ -606,6 +609,7 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 				ErrorMessage:       errMsg,
 				ErrorCode:          code,
 				PartitionMirrorLag: -1,
+				LastSourceFetchOffset: -1,
 			})
 			continue
 		}
@@ -617,6 +621,7 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 				ErrorMessage:       errMsg,
 				ErrorCode:          code,
 				PartitionMirrorLag: partitionLag.Lag,
+				LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 			})
 		}
 	}
