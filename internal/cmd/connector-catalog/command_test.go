@@ -75,8 +75,7 @@ func (suite *CatalogTestSuite) SetupTest() {
 
 func (suite *CatalogTestSuite) newCmd() *command {
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
-	cmd := New("ccloud", prerunner)
-	return cmd
+	return New(prerunner)
 }
 
 func (suite *CatalogTestSuite) TestCatalogList() {

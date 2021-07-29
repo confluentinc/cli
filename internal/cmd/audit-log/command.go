@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with audit logs.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:   "audit-log",
@@ -29,14 +30,14 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 		CLICommand: cliCmd,
 		prerunner:  prerunner,
 	}
-	cmd.init(cliName)
+	cmd.init(cfg)
 	return cmd.Command
 }
 
-func (c *command) init(cliName string) {
-	if cliName == "ccloud" {
+func (c *command) init(cfg *v3.Config) {
+	if cfg.IsCloud() {
 		c.AddCommand(NewDescribeCommand(c.prerunner))
-	} else if cliName == "confluent" {
+	} else {
 		c.AddCommand(NewMigrateCommand(c.prerunner))
 		c.AddCommand(NewConfigCommand(c.prerunner))
 		c.AddCommand(NewRouteCommand(c.prerunner))

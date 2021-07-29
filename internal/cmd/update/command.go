@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/update/s3"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	cliVersion "github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -54,8 +54,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) upda
 
 type command struct {
 	Command *cobra.Command
-	cliName string
-	version *cliVersion.Version
+	version *pversion.Version
 	logger  *log.Logger
 	client  update.Client
 	// for testing
@@ -63,10 +62,8 @@ type command struct {
 }
 
 // New returns the command for the built-in updater.
-func New(cliName string, logger *log.Logger, version *cliVersion.Version,
-	client update.Client, analytics analytics.Client) *cobra.Command {
+func New(logger *log.Logger, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
 	cmd := &command{
-		cliName:         cliName,
 		version:         version,
 		logger:          logger,
 		client:          client,
@@ -79,7 +76,7 @@ func New(cliName string, logger *log.Logger, version *cliVersion.Version,
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "update",
-		Short: fmt.Sprintf("Update the %s.", cliVersion.GetFullCLIName(c.cliName)),
+		Short: fmt.Sprintf("Update the %s.", pversion.FullCLIName),
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.update),
 	}
@@ -93,9 +90,9 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
 	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
-	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
+	updateAvailable, latestVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
+		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, pversion.CLIName)
 	}
 
 	if !updateAvailable {
@@ -111,7 +108,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes) {
+	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes) {
 		return nil
 	}
 
@@ -119,10 +116,10 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
+	if err := c.client.UpdateBinary(pversion.CLIName, latestVersion, oldBin); err != nil {
+		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, pversion.CLIName)
 	}
-	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
+	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, pversion.CLIName)
 
 	return nil
 }

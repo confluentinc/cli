@@ -15,6 +15,7 @@ import (
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
@@ -119,7 +120,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 
 func (suite *ConnectTestSuite) newCmd() *command {
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
-	cmd := New("ccloud", prerunner, suite.analyticsClient)
+	cmd := New(prerunner, suite.analyticsClient)
 	return cmd
 }
 
