@@ -29,7 +29,7 @@ func printIndexPage(tabs []Tab) []string {
 	return flatten([][]string{
 		printHeader(cmd),
 		printTitle(cmd, "="),
-		printTabbedSection("", printDescription, tabs),
+		printTabbedSection("Description", printDescription, tabs),
 		printTableOfContents(tabs),
 		printTabbedSection("Subcommands", printSubcommands, tabs),
 	})
@@ -97,8 +97,7 @@ func printTableOfContents(tabs []Tab) []string {
 func printLink(cmd *cobra.Command) string {
 	if cmd.HasSubCommands() {
 		// Example: command/index
-		x := strings.Split(cmd.CommandPath(), " ")
-		return path.Join(x[len(x)-1], "index")
+		return path.Join(cmd.Name(), "index")
 	} else {
 		return printRef(cmd)
 	}
