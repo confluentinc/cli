@@ -470,7 +470,6 @@ func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusG
 	}, nil, nil
 }
 
-
 // Compile-time check interface adherence
 var _ krsdk.ConfigsApi = (*Configs)(nil)
 
