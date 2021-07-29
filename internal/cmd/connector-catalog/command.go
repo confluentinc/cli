@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -31,18 +32,18 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner) *command {
+func New(prerunner pcmd.PreRunner) *command {
 	cmd := &command{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
 			Use:   "connector-catalog",
 			Short: "Catalog of connectors and their configurations.",
 		}, prerunner, SubcommandFlags),
 	}
-	cmd.init(cliName)
+	cmd.init()
 	return cmd
 }
 
-func (c *command) init(cliName string) {
+func (c *command) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe <connector-type>",
 		Short: "Describe a connector plugin type.",
@@ -51,7 +52,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe required connector configuration parameters for a specific connector plugin.",
-				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name>", cliName),
+				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name>", version.CLIName),
 			},
 		),
 	}
@@ -67,7 +68,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List connectors in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector-catalog list", cliName),
+				Code: fmt.Sprintf("%s connector-catalog list", version.CLIName),
 			},
 		),
 	}

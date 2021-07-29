@@ -19,12 +19,12 @@ type command struct {
 	prompt          form.Prompt
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
 	prompt := form.NewPrompt(os.Stdin)
-	return NewFeedbackCmdWithPrompt(cliName, prerunner, analytics, prompt)
+	return NewFeedbackCmdWithPrompt(prerunner, analytics, prompt)
 }
 
-func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, prompt form.Prompt) *cobra.Command {
+func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, analyticsClient analytics.Client, prompt form.Prompt) *cobra.Command {
 	c := command{
 		analyticsClient: analyticsClient,
 		prompt:          prompt,
@@ -32,7 +32,7 @@ func NewFeedbackCmdWithPrompt(cliName string, prerunner pcmd.PreRunner, analytic
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
-			Short: fmt.Sprintf("Submit feedback about the %s.", version.GetFullCLIName(cliName)),
+			Short: fmt.Sprintf("Submit feedback about the %s.", version.FullCLIName),
 			Args:  cobra.NoArgs,
 			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
 		}, prerunner)

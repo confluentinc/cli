@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
@@ -115,26 +116,26 @@ type promptCommand struct {
 }
 
 // Returns the Cobra command for the PS1 prompt.
-func New(cliName string, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+func New(cfg *v3.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		ps1:    ps1,
 		logger: logger,
 	}
-	cmd.init(cliName, prerunner)
+	cmd.init(cfg, prerunner)
 	return cmd.Command
 }
 
-func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
+func (c *promptCommand) init(cfg *v3.Config, prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
-		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.GetFullCLIName(cliName)),
-		Long:  parseTemplate(longDescriptionTemplate, cliName),
+		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),
+		Long:  parseTemplate(longDescriptionTemplate, version.CLIName),
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
 	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
-	defaultFormat := `({{color "blue" "ccloud"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
-	if cliName == "confluent" {
+	defaultFormat := `({{color "blue" "confluent"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
+	if cfg.IsOnPrem() {
 		defaultFormat = `({{color "blue" "confluent"}}|{{color "cyan" "%K"}})`
 	}
 	promptCmd.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")

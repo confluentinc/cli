@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const longDescriptionTemplate = `Use this command to print the output Shell completion
@@ -83,19 +84,19 @@ type completionCommand struct {
 }
 
 // New returns the Cobra command for shell completion.
-func New(rootCmd *cobra.Command, cliName string) *cobra.Command {
+func New(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &completionCommand{
 		rootCmd: rootCmd,
 	}
-	cmd.init(cliName)
+	cmd.init()
 	return cmd.Command
 }
 
-func (c *completionCommand) init(cliName string) {
+func (c *completionCommand) init() {
 	c.Command = &cobra.Command{
 		Use:   "completion <shell>",
 		Short: "Print shell completion code.",
-		Long:  getLongDescription(cliName),
+		Long:  getLongDescription(),
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.completion),
 	}
@@ -113,10 +114,10 @@ func (c *completionCommand) completion(cmd *cobra.Command, args []string) error 
 	return err
 }
 
-func getLongDescription(cliName string) string {
+func getLongDescription() string {
 	t := template.Must(template.New("longDescription").Parse(longDescriptionTemplate))
 	buf := new(bytes.Buffer)
-	data := map[string]interface{}{"CLIName": cliName}
+	data := map[string]interface{}{"CLIName": pversion.CLIName}
 	if err := t.Execute(buf, data); err != nil {
 		// We're okay with this since its definitely a development error; should never happen to users
 		panic(err)

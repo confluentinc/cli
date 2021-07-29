@@ -265,6 +265,7 @@ func setUpConfig(conf *Config, ctx *Context, platform *v2.Platform, credential *
 	conf.Contexts[ctx.Name] = ctx
 	conf.Contexts[ctx.Name].Config = conf
 	conf.CurrentContext = ctx.Name
+	conf.IsTest = true
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}

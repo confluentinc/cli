@@ -6,21 +6,19 @@ import (
 	"os"
 
 	"github.com/c-bata/go-prompt"
-
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
-	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -61,7 +59,7 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cmd := &command{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
@@ -71,11 +69,11 @@ func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 		prerunner:       prerunner,
 		analyticsClient: analyticsClient,
 	}
-	cmd.init(cliName)
+	cmd.init()
 	return cmd
 }
 
-func (c *command) init(cliName string) {
+func (c *command) init() {
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a connector.",
@@ -84,7 +82,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector describe <id>\n%s connector describe <id> --cluster <cluster-id>", cliName, cliName),
+				Code: fmt.Sprintf("%s connector describe <id>\n%s connector describe <id> --cluster <cluster-id>", version.CLIName, version.CLIName),
 			},
 		),
 	}
@@ -100,7 +98,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List connectors in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector list\n%s connector list --cluster <cluster-id>", cliName, cliName),
+				Code: fmt.Sprintf("%s connector list\n%s connector list --cluster <cluster-id>", version.CLIName, version.CLIName),
 			},
 		),
 	}
@@ -116,7 +114,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector create --config <file>\n%s connector create --cluster <cluster-id> --config <file>", cliName, cliName),
+				Code: fmt.Sprintf("%s connector create --config <file>\n%s connector create --cluster <cluster-id> --config <file>", version.CLIName, version.CLIName),
 			},
 		),
 	}
@@ -134,7 +132,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector delete --config <file>\n%s connector delete --cluster <cluster-id> --config <file>", cliName, cliName),
+				Code: fmt.Sprintf("%s connector delete --config <file>\n%s connector delete --cluster <cluster-id> --config <file>", version.CLIName, version.CLIName),
 			},
 		),
 	}
@@ -159,7 +157,7 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector pause --config <file>\n%s connector pause --cluster <cluster-id> --config <file>", cliName, cliName),
+				Code: fmt.Sprintf("%s connector pause --config <file>\n%s connector pause --cluster <cluster-id> --config <file>", version.CLIName, version.CLIName),
 			},
 		),
 	}
@@ -173,15 +171,13 @@ func (c *command) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Resume a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector resume --config <file>\n%s connector resume --cluster <cluster-id> --config <file>", cliName, cliName),
+				Code: fmt.Sprintf("%s connector resume --config <file>\n%s connector resume --cluster <cluster-id> --config <file>", version.CLIName, version.CLIName),
 			},
 		),
 	}
 	c.AddCommand(resumeCmd)
 
-	if cliName == "ccloud" {
-		c.AddCommand(NewEventCommand(c.prerunner))
-	}
+	c.AddCommand(NewEventCommand(c.prerunner))
 
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
 	c.completableFlagChildren = map[string][]*cobra.Command{
