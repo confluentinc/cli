@@ -29,8 +29,8 @@ func printIndexPage(tabs []Tab) []string {
 	return flatten([][]string{
 		printHeader(cmd),
 		printTitle(cmd, "="),
-		printTableOfContents(tabs),
 		printTabbedSection("", printDescription, tabs),
+		printTableOfContents(tabs),
 		printTabbedSection("Subcommands", printSubcommands, tabs),
 	})
 }
