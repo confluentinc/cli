@@ -2,12 +2,12 @@ package kafka
 
 import (
 	"context"
-	"os"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+	"os"
 	"regexp"
 	"strings"
 )

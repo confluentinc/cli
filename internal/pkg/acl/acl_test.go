@@ -45,7 +45,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "fake", "--principal", "User:Alice", "--cluster-scope", "--transactional-id", "123"},
 			expectedAcl: AclRequestDataWithError{
-				Errors:       multierror.Append(errors.New("Invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
+				Errors: multierror.Append(errors.New("Invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
 					convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 						kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID))),
 			},
@@ -53,7 +53,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "READ", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
 			expectedAcl: AclRequestDataWithError{
-				Errors:       multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
+				Errors: multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
 			},
 		},
 	}
@@ -84,7 +84,7 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
 			},
 			expectedAcl: AclRequestDataWithError{
-				PatternType: kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
 			},
