@@ -376,7 +376,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		AccountId:      c.EnvironmentId(),
 	}
 
-	key, err = c.completeKeyUserId(key) // get corresponding numeric/resource ID if the cmd has a service-account flag
+	key, err = c.completeKeyUserId(key) // get corresponding numeric ID if the cmd has a service-account flag
 	if err != nil {
 		return err
 	}
