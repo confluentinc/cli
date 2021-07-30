@@ -425,8 +425,7 @@ func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasG
 	}, nil, nil
 }
 
-type ReplicaStatus struct {
-}
+type ReplicaStatus struct{}
 
 func NewReplicaStatusMock() *ReplicaStatus {
 	return &ReplicaStatus{}
