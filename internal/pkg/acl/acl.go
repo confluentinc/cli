@@ -345,8 +345,8 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"Principal", "ServiceAccountId", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "service_account_id", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -363,16 +363,14 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 			}
 		}
 		record := &struct {
-			Principal        string
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			ResourceType     string
-			ResourceName     string
-			PatternType      string
+			Principal    string
+			Permission   string
+			Operation    string
+			ResourceType string
+			ResourceName string
+			PatternType  string
 		}{
-			aclData.Principal,
-			resourceId,
+			"User:" + resourceId,
 			string(aclData.Permission),
 			string(aclData.Operation),
 			string(aclData.ResourceType),
@@ -392,8 +390,8 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"Principal", "ServiceAccountId", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "service_account_id", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -410,16 +408,14 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 			}
 		}
 		record := &struct {
-			Principal        string
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			ResourceType     string
-			ResourceName     string
-			PatternType      string
+			Principal    string
+			Permission   string
+			Operation    string
+			ResourceType string
+			ResourceName string
+			PatternType  string
 		}{
-			binding.Entry.Principal,
-			resourceId,
+			"User:" + resourceId,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
 			binding.Pattern.ResourceType.String(),
