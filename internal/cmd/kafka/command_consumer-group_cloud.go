@@ -118,8 +118,8 @@ type lagCommand struct {
 type lagSummaryStruct struct {
 	ClusterId         string
 	ConsumerGroupId   string
-	TotalLag          int32
-	MaxLag            int32
+	TotalLag          int64
+	MaxLag            int64
 	MaxLagConsumerId  string
 	MaxLagInstanceId  string
 	MaxLagClientId    string
@@ -130,9 +130,9 @@ type lagSummaryStruct struct {
 type lagDataStruct struct {
 	ClusterId       string
 	ConsumerGroupId string
-	Lag             int32
-	LogEndOffset    int32
-	CurrentOffset   int32
+	Lag             int64
+	LogEndOffset    int64
+	CurrentOffset   int64
 	ConsumerId      string
 	InstanceId      string
 	ClientId        string

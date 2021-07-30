@@ -1,5 +1,6 @@
 [
   {
+    "LastSourceFetchOffset": "1293009",
     "LinkName": "link-1",
     "MirrorStatus": "active",
     "MirrorTopicName": "dest-topic-1",
@@ -9,6 +10,7 @@
     "StatusTimeMs": "111111111"
   }, 
   {
+    "LastSourceFetchOffset": "28340404",
     "LinkName": "link-1",
     "MirrorStatus": "active",
     "MirrorTopicName": "dest-topic-1",
@@ -18,6 +20,7 @@
     "StatusTimeMs": "111111111"
   }, 
   {
+    "LastSourceFetchOffset": "5739304",
     "LinkName": "link-1",
     "MirrorStatus": "active",
     "MirrorTopicName": "dest-topic-1",
