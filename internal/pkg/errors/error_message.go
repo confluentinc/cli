@@ -18,10 +18,10 @@ const (
 	RefuseToOverrideSecretErrorMsg      = "refusing to overwrite existing secret for API Key \"%s\""
 	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg             = "unable to set active API key"
-	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store %s <secret>`."
+	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
-	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `ccloud kafka cluster use` command."
-	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`."
+	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `confluent kafka cluster use` command."
+	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -30,11 +30,7 @@ const (
 	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization."
 
 	// login command
-	UnableToSaveUserAuthErrorMsg     = "unable to save user authentication"
-	NoEnvironmentFoundErrorMsg       = "no environment found for authenticated user"
-	NotUsernameAuthenticatedErrorMsg = "user not username authenticated has no access to ccloud client"
-	NoURLFlagOrMdsEnvVarErrorMsg     = "no mds url passed"
-	NoURLFlagOrMdsEnvVarSuggestions  = "Use the `--url` flag or set the \"CONFLUENT_MDS_URL\" environment variable."
+	NoEnvironmentFoundErrorMsg = "no environment found for authenticated user"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -55,7 +51,7 @@ const (
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
-	EnvNotFoundSuggestions = "List available environments with `ccloud environment list`."
+	EnvNotFoundSuggestions = "List available environments with `confluent environment list`."
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
 	EnvRefreshErrorMsg     = "unable to save user auth while refreshing environment list"
 
@@ -97,7 +93,7 @@ const (
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
 	// kafka cluster commands
-	ListTopicSuggestions                  = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
+	ListTopicSuggestions                  = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
 	FailedToRenderKeyPolicyErrorMsg       = "BYOK error: failed to render key policy"
 	FailedToReadConfirmationErrorMsg      = "BYOK error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg             = "BYOK error: please authorize the key for the accounts (%s)x"
@@ -106,9 +102,9 @@ const (
 	BYOKSupportErrorMsg                   = "BYOK is available on AWS and GCP."
 	CKUMoreThanZeroErrorMsg               = "`--cku` value must be greater than 0"
 	CloudRegionNotAvailableErrorMsg       = "\"%s\" is not an available region for \"%s\""
-	CloudRegionNotAvailableSuggestions    = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
+	CloudRegionNotAvailableSuggestions    = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg     = "\"%s\" is not an available cloud provider"
-	CloudProviderNotAvailableSuggestions  = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
+	CloudProviderNotAvailableSuggestions  = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
 	TopicNotExistsErrorMsg                = "topic \"%s\" does not exist"
 	TopicNotExistsSuggestions             = ListTopicSuggestions
 	InvalidAvailableFlagErrorMsg          = "invalid value \"%s\" for `--availability` flag"
@@ -122,7 +118,7 @@ const (
 	KafkaClusterUpdateFailedSuggestions   = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
 	ChooseRightEnvironmentSuggestions     = "Ensure the cluster ID you entered is valid.\n" +
-		"Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`."
+		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 
 	// kafka topic commands
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
@@ -134,7 +130,7 @@ const (
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
 	TopicExistsSuggestions               = ListTopicSuggestions
 	NoAPISecretStoredOrPassedMsg         = "no API secret for API key \"%s\" of resource \"%s\" passed via flag or stored in local CLI state"
-	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `ccloud api-key store %s --resource %s`."
+	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
 	PassedSecretButNotKeySuggestions     = "Use the \"api-key\" flag to specify an API key."
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
@@ -189,7 +185,7 @@ const (
 	UpdateClientFailurePrefix      = "update client failure"
 	UpdateClientFailureSuggestions = "Please submit a support ticket.\n" +
 		"In the meantime, see link for other ways to download the latest CLI version:\n" +
-		"%s"
+		"https://docs.confluent.io/current/cli/installing.html"
 	ReadingYesFlagErrorMsg              = "error reading `--yes` flag as bool"
 	CheckingForUpdateErrorMsg           = "error checking for updates"
 	UpdateBinaryErrorMsg                = "error updating CLI binary"
@@ -215,11 +211,11 @@ const (
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
 	InvalidAPIKeyErrorMsg     = "invalid API key \"%s\" for resource \"%s\""
-	InvalidAPIKeySuggestions  = "To list API key that belongs to resource \"%s\", use `ccloud api-key list --resource %s`.\n" +
-		"To create new API key for resource \"%s\", use `ccloud api-key create --resource %s`."
+	InvalidAPIKeySuggestions  = "To list API key that belongs to resource \"%s\", use `confluent api-key list --resource %s`.\n" +
+		"To create new API key for resource \"%s\", use `confluent api-key create --resource %s`."
 	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
 	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
-		"You can enable Schema Registry for this environment with `ccloud schema-registry cluster enable`."
+		"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`."
 	EnvironmentNotFoundErrorMsg = "environment \"%s\" not found in context \"%s\""
 	MalformedJWTNoExprErrorMsg  = "malformed JWT claims: no expiration"
 
@@ -351,25 +347,25 @@ const (
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
 	ResourceNotFoundErrorMsg           = "resource \"%s\" not found"
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
-		"To list Kafka clusters, use `ccloud kafka cluster list`.\n" +
-		"To check schema-registry cluster info, use `ccloud schema-registry cluster describe`.\n" +
-		"To list KSQL clusters, use `ccloud ksql app list`."
+		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
+		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
+		"To list KSQL clusters, use `confluent ksql app list`."
 	KafkaNotFoundErrorMsg             = "Kafka cluster \"%s\" not found"
-	KafkaNotFoundSuggestions          = "To list Kafka clusters, use `ccloud kafka cluster list`."
-	KSQLNotFoundSuggestions           = "To list KSQL clusters, use `ccloud ksql app list`."
-	SRNotFoundSuggestions             = "Check the schema-registry cluster ID with `ccloud schema-registry cluster describe`."
+	KafkaNotFoundSuggestions          = "To list Kafka clusters, use `confluent kafka cluster list`."
+	KSQLNotFoundSuggestions           = "To list KSQL clusters, use `confluent ksql app list`."
+	SRNotFoundSuggestions             = "Check the schema-registry cluster ID with `confluent schema-registry cluster describe`."
 	KafkaNotReadyErrorMsg             = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions          = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg           = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions        = "You must pass `--cluster` flag with the command or set an active kafka in your context with `ccloud kafka cluster use`."
+	NoKafkaSelectedSuggestions        = "You must pass `--cluster` flag with the command or set an active kafka in your context with `confluent kafka cluster use`."
 	UnableToConnectToKafkaErrorMsg    = "unable to connect to Kafka cluster"
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
 		"Also verify that the correct API secret is stored for the API key.\n" +
-		"If the API secret is incorrect, override with `ccloud api-key store %s --resource %s --force`.\n" +
-		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `ccloud api-key list`)."
+		"If the API secret is incorrect, override with `confluent api-key store %s --resource %s --force`.\n" +
+		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `confluent api-key list`)."
 	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
-	NoAPISecretStoredSuggestions = "Store the API secret with `ccloud api-key store %s --resource %s`."
+	NoAPISecretStoredSuggestions = "Store the API secret with `confluent api-key store %s --resource %s`."
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "Internal server error"
@@ -391,34 +387,32 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	avoidTimeoutWithCLINameSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `%s login --save`."
-	ccloudAvoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `ccloud login --save`."
-	avoidTimeoutGeneralSuggestion     = "To avoid session timeouts, you can save credentials to netrc file by logging in with `--save` flag."
-	NotLoggedInErrorMsg               = "not logged in"
-	NotLoggedInSuggestions            = "You must be logged in to run this command.\n" +
-		avoidTimeoutWithCLINameSuggestion
-	SRNotAuthenticatedErrorMsg    = "not logged in, and no Schema Registry endpoint specified"
-	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `ccloud login` to run this command.\n" +
-		avoidTimeoutWithCLINameSuggestion
+	avoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg    = "not logged in"
+	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
+		avoidTimeoutSuggestion
+	SRNotAuthenticatedErrorMsg    = "not logged in, or no Schema Registry endpoint specified"
+	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+		avoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
-		avoidTimeoutGeneralSuggestion
+		avoidTimeoutSuggestion
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
-		avoidTimeoutGeneralSuggestion
+		avoidTimeoutSuggestion
 	InvalidEmailErrorMsg    = "user \"%s\" not found"
 	InvalidEmailSuggestions = "Check the email credential.\n" +
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
-		ccloudAvoidTimeoutSuggestion
+		avoidTimeoutSuggestion
 	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
 	InvalidLoginErrorMsg          = "incorrect email or password"
-	CCloudInvalidLoginSuggestions = ccloudAvoidTimeoutSuggestion
+	CCloudInvalidLoginSuggestions = avoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
-	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `ccloud api-key use <API_KEY> --resource %s`.\n" +
+	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
-		"To create an API key, use `ccloud api-key create --resource %s`.\n" +
-		"To store an existing API key, use `ccloud api-key store --resource %s`."
+		"To create an API key, use `confluent api-key create --resource %s`.\n" +
+		"To store an existing API key, use `confluent api-key store --resource %s`."
 
 	//Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"

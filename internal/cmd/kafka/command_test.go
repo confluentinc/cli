@@ -655,7 +655,7 @@ func TestDefaults2(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return nil, &errors.NotLoggedInError{CLIName: "ccloud"}
+			return nil, new(errors.NotLoggedInError)
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
@@ -670,7 +670,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	want := errors.NotLoggedInErrorMsg
 	require.Error(t, err)
 	require.Equal(t, want, err.Error())
-	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
+	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, errors.NotLoggedInSuggestions)
 }
 
 /*************** TEST command_links ***************/

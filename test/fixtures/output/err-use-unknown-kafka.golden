@@ -2,4 +2,4 @@ Error: kafka cluster "lkc-unknown" not found
 
 Suggestions:
     Ensure the cluster ID you entered is valid.
-    Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`.
+    Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`.

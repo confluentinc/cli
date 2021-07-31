@@ -82,12 +82,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
-	// TODO: Remove once unification is complete
-	cliName := "confluent"
-	if cfg.IsCloud() {
-		cliName = "ccloud"
-	}
-
 	logger := log.New()
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
@@ -106,7 +100,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		Analytics:               analyticsClient,
 		AuthTokenHandler:        authTokenHandler,
 		CCloudClientFactory:     ccloudClientFactory,
-		CLIName:                 cliName,
 		Config:                  cfg,
 		FlagResolver:            flagResolver,
 		IsTest:                  isTest,

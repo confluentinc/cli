@@ -78,7 +78,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return err
 		}
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
 		command.State, err = ctx.AuthenticatedState(cmd)
@@ -101,11 +101,11 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return err
 		}
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
 		if !ctx.HasMDSLogin() {
-			return &errors.NotLoggedInError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.State = ctx.State
 		return nil
@@ -123,7 +123,7 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra
 			return err
 		}
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
 		return nil

@@ -28,12 +28,12 @@ import (
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -731,8 +731,8 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 
 	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
 	if err != nil {
-		if err.Error() == "ccloud" {
-			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+		if err.Error() == errors.NotLoggedInErrorMsg {
+			return nil, new(errors.SRNotAuthenticatedError)
 		} else {
 			return nil, err
 		}
@@ -959,8 +959,8 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		// Only initialize client and context when schema is specified.
 		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
 		if err != nil {
-			if err.Error() == "ccloud" {
-				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+			if err.Error() == errors.NotLoggedInErrorMsg {
+				return new(errors.SRNotAuthenticatedError)
 			} else {
 				return err
 			}
