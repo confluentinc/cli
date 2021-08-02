@@ -389,16 +389,15 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 		CLIName: r.CLIName,
 		URL:     url,
 	}
+	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd, client),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
 		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
 		return "", nil, err
 	}
-
-	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 	if err != nil {
 		return "", nil, err

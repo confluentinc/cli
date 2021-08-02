@@ -52,7 +52,7 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 }
 
 type LoginCredentialsManager interface {
-	GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
+	GetCCloudCredentialsFromEnvVar(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error)
 	GetCCloudCredentialsFromPrompt(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error)
 	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
 	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
@@ -77,23 +77,28 @@ func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Pro
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromEnvVar(cmd *cobra.Command, client *ccloud.Client) func() (*Credentials, error) {
 	envVars := environmentVariables{
 		username:           CCloudEmailEnvVar,
 		password:           CCloudPasswordEnvVar,
 		deprecatedUsername: CCloudEmailDeprecatedEnvVar,
 		deprecatedPassword: CCloudPasswordDeprecatedEnvVar,
 	}
-	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
+	return h.getCredentialsFromEnvVarFunc(cmd, envVars, client)
 }
 
-func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Command, envVars environmentVariables) func() (*Credentials, error) {
+// Pass nil client for Confluent credentials and SSO check will be skipped
+func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Command, envVars environmentVariables, client *ccloud.Client) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		email, password := h.getEnvVarCredentials(cmd, envVars.username, envVars.password)
+		if client != nil && isSSOUser(email, client) {
+			h.logger.Debug("Entered email belongs to an SSO user.")
+			return &Credentials{Username: email, IsSSO: true}, nil
+		}
 		if len(email) == 0 {
 			email, password = h.getEnvVarCredentials(cmd, envVars.deprecatedUsername, envVars.deprecatedPassword)
 		}
-		if len(email) == 0 {
+		if len(password) == 0 {
 			h.logger.Debug("Did not find full credential set from environment variables")
 			return nil, nil
 		}
@@ -108,7 +113,7 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(cmd *cobra.Command, u
 	}
 	password := os.Getenv(passwordEnvVar)
 	if len(password) == 0 {
-		return "", ""
+		return user, ""
 	}
 	if h.logger.GetLevel() >= log.WARN {
 		utils.ErrPrintf(cmd, errors.FoundEnvCredMsg, user, userEnvVar, passwordEnvVar)
@@ -123,7 +128,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cob
 		deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
 		deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
 	}
-	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
+	return h.getCredentialsFromEnvVarFunc(cmd, envVars, nil)
 }
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
@@ -175,11 +180,6 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromPrompt(cmd *cob
 }
 
 func (h *LoginCredentialsManagerImpl) promptForUser(cmd *cobra.Command, userField string) string {
-	if email := os.Getenv(CCloudEmailEnvVar); len(email) > 0 && userField == "Email" {
-		h.logger.Debugf("Using email \"%s\" found from env var \"%s\"", email, CCloudEmailEnvVar)
-		return email
-	}
-
 	f := form.New(form.Field{ID: userField, Prompt: userField})
 	if err := f.Prompt(cmd, h.prompt); err != nil {
 		return ""
@@ -223,7 +223,7 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 			deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
 			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
 		}
-		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
+		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars, nil)()
 		if err != nil {
 			return nil, err
 		}
