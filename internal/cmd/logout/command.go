@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -17,26 +18,32 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	cliName         string
+	cfg             *v3.Config
 	analyticsClient analytics.Client
 	netrcHandler    netrc.NetrcHandler
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *Command {
+func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *Command {
 	logoutCmd := &Command{
-		cliName:         cliName,
+		cfg:             cfg,
 		analyticsClient: analyticsClient,
 		netrcHandler:    netrcHandler,
 	}
-	logoutCmd.init(cliName, prerunner)
+	logoutCmd.init(prerunner)
 	return logoutCmd
 }
 
-func (a *Command) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := pauth.GetRemoteAPIName(cliName)
+func (a *Command) init(prerunner pcmd.PreRunner) {
+	context := "Confluent Cloud or Confluent Platform"
+	if a.cfg.IsCloud() {
+		context = "Confluent Cloud"
+	} else if a.cfg.IsOnPrem() {
+		context = "Confluent Platform"
+	}
+
 	logoutCmd := &cobra.Command{
 		Use:   "logout",
-		Short: fmt.Sprintf("Log out of %s.", remoteAPIName),
+		Short: fmt.Sprintf("Log out of %s.", context),
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(a.logout),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
@@ -54,7 +61,8 @@ func (a *Command) logout(cmd *cobra.Command, _ []string) error {
 		if a.Config.Logger != nil {
 			level = a.Config.Logger.GetLevel()
 		}
-		username, err := a.netrcHandler.RemoveNetrcCredentials(a.cliName, a.Config.Config.Context().Name)
+
+		username, err := a.netrcHandler.RemoveNetrcCredentials(a.cfg.IsCloud(), a.Config.Config.Context().Name)
 		if err == nil {
 			if level >= log.WARN {
 				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())

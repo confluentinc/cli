@@ -10,6 +10,7 @@ import (
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 )
 
 /*
@@ -31,9 +32,11 @@ func catchMDSErrors(err error) error {
 	if err == nil {
 		return nil
 	}
-	e, ok := err.(mds.GenericOpenAPIError)
-	if ok {
-		return Errorf(GenericOpenAPIErrorMsg, e.Error(), string(e.Body()))
+	switch err2 := err.(type) {
+	case mds.GenericOpenAPIError:
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+	case mdsv2alpha1.GenericOpenAPIError:
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	}
 	return err
 }

@@ -655,11 +655,11 @@ func TestDefaults2(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return nil, &errors.NotLoggedInError{CLIName: "ccloud"}
+			return nil, new(errors.NotLoggedInError)
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf),
+	cmd := New(conf, false, cliMock.NewPreRunnerMock(client, nil, nil, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
@@ -670,7 +670,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	want := errors.NotLoggedInErrorMsg
 	require.Error(t, err)
 	require.Equal(t, want, err.Error())
-	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
+	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, errors.NotLoggedInSuggestions)
 }
 
 /*************** TEST command_links ***************/
@@ -1172,7 +1172,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		}
 		return nil, nil
 	})
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
+	cmd := New(conf, false, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
 		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd

@@ -7,13 +7,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -24,26 +23,19 @@ const (
 type command struct {
 	Command      *cobra.Command
 	RootCmd      *cobra.Command
-	cliName      string
 	config       *v3.Config
 	prerunner    pcmd.PreRunner
 	completer    *completer.ShellCompleter
-	analytics    analytics.Client
-	logger       *log.Logger
 	jwtValidator pcmd.JWTValidator
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config,
-	completer *completer.ShellCompleter, logger *log.Logger, analytics analytics.Client, jwtValidator pcmd.JWTValidator) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, config *v3.Config, completer *completer.ShellCompleter, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
 		RootCmd:      rootCmd,
 		config:       config,
-		cliName:      cliName,
 		prerunner:    prerunner,
 		completer:    completer,
-		logger:       logger,
-		analytics:    analytics,
 		jwtValidator: jwtValidator,
 	}
 
@@ -54,7 +46,7 @@ func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName strin
 func (c *command) init() {
 	c.Command = &cobra.Command{
 		Use:   "shell",
-		Short: fmt.Sprintf("Run the %s shell.", c.cliName),
+		Short: fmt.Sprintf("Run the %s shell.", version.CLIName),
 		RunE:  pcmd.NewCLIRunE(c.shell),
 		Args:  cobra.NoArgs,
 	}
@@ -65,7 +57,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	c.RootCmd.RemoveCommand(c.Command)
 
 	// add shell only quit command
-	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config, c.logger, c.analytics))
+	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner))
 
 	msg := errors.AlreadyAuthenticatedMsg
 	if cmd.Annotations == nil {
@@ -81,11 +73,11 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	}
 
 	// run the shell
-	fmt.Printf(errors.ShellWelcomeMsg, c.cliName, msg)
+	fmt.Printf(errors.ShellWelcomeMsg, version.CLIName, msg)
 	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
-	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, c.config, c.logger, c.analytics, opts...)
+	cliPrompt := prompt.NewShellPrompt(c.RootCmd, c.completer, opts...)
 	livePrefixOpt := goprompt.OptionLivePrefix(livePrefixFunc(cliPrompt.Prompt, c.config, c.jwtValidator))
 	if err := livePrefixOpt(cliPrompt.Prompt); err != nil {
 		// This returns nil in the go-prompt implementation.
@@ -114,5 +106,5 @@ func prefixState(jwtValidator pcmd.JWTValidator, config *v3.Config) (text string
 	if err := jwtValidator.Validate(config.Context()); err == nil {
 		prefixColor = candyAppleGreen
 	}
-	return fmt.Sprintf("%s > ", config.CLIName), prefixColor
+	return fmt.Sprintf("%s > ", version.CLIName), prefixColor
 }

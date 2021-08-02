@@ -201,7 +201,7 @@ func (c *Config) APIName() string {
 // Context returns the current Context object.
 func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
-		return nil, &errors.NoContextError{CLIName: c.CLIName}
+		return nil, new(errors.NotLoggedInError)
 	}
 	context, err := c.FindContext(c.CurrentContext)
 	if err != nil {
@@ -234,7 +234,7 @@ func (c *Config) SchemaRegistryCluster() (*SchemaRegistryCluster, error) {
 		return nil, err
 	}
 	if c.Auth == nil || c.Auth.Account == nil {
-		return nil, &errors.NotLoggedInError{CLIName: c.CLIName}
+		return nil, new(errors.NotLoggedInError)
 	}
 	sr := context.SchemaRegistryClusters[c.Auth.Account.Id]
 	if sr == nil {
@@ -283,10 +283,10 @@ func (c *Config) CheckLogin() error {
 	switch credType {
 	case Username:
 		if c.AuthToken == "" && (c.Auth == nil || c.Auth.Account == nil || c.Auth.Account.Id == "") {
-			return &errors.NotLoggedInError{CLIName: c.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 	case APIKey:
-		return &errors.NotLoggedInError{CLIName: c.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	return nil
 }

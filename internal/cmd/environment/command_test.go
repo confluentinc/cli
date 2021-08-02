@@ -14,6 +14,7 @@ import (
 	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -85,7 +86,7 @@ func (suite *EnvironmentTestSuite) newCmd() *command {
 		MDSClient:    nil,
 		Config:       suite.conf,
 	}
-	return New("ccloud", prerunner, suite.analyticsClient)
+	return New(prerunner, suite.analyticsClient)
 }
 
 func (suite *EnvironmentTestSuite) TestCreateEnvironment() {

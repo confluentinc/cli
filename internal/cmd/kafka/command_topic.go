@@ -28,12 +28,12 @@ import (
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -176,7 +176,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(h.consume),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Consume items from the ``my_topic`` topic and press ``Ctrl+C`` to exit.",
+				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",
 				Code: "ccloud kafka topic consume -b my_topic",
 			},
 		),
@@ -215,7 +215,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named ``my_topic`` with default options.",
+				Text: "Create a topic named `my_topic` with default options.",
 				Code: "ccloud kafka topic create my_topic",
 			},
 		),
@@ -234,7 +234,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the ``my_topic`` topic.",
+				Text: "Describe the `my_topic` topic.",
 				Code: "ccloud kafka topic describe my_topic",
 			},
 		),
@@ -250,7 +250,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
+				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
 				Code: `ccloud kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),
@@ -267,7 +267,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
+				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
 				Code: "ccloud kafka topic delete my_topic\nccloud kafka topic delete my_topic_avro",
 			},
 		),
@@ -731,8 +731,8 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject strin
 
 	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
 	if err != nil {
-		if err.Error() == "ccloud" {
-			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+		if err.Error() == errors.NotLoggedInErrorMsg {
+			return nil, new(errors.SRNotAuthenticatedError)
 		} else {
 			return nil, err
 		}
@@ -959,8 +959,8 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		// Only initialize client and context when schema is specified.
 		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
 		if err != nil {
-			if err.Error() == "ccloud" {
-				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
+			if err.Error() == errors.NotLoggedInErrorMsg {
+				return new(errors.SRNotAuthenticatedError)
 			} else {
 				return err
 			}

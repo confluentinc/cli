@@ -119,13 +119,13 @@ var (
 	}
 	mockNetrcHandler = &pmock.MockNetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(cliName string, isSSO bool, ctxName, username, password string) error {
+		WriteNetrcCredentialsFunc: func(isCloud bool, isSSO bool, ctxName, username, password string) error {
 			return nil
 		},
-		RemoveNetrcCredentialsFunc: func(cliName string, ctxName string) (string, error) {
+		RemoveNetrcCredentialsFunc: func(isCloud bool, ctxName string) (string, error) {
 			return "", nil
 		},
-		CheckCredentialExistFunc: func(cliName string, ctxName string) (bool, error) {
+		CheckCredentialExistFunc: func(isCloud bool, ctxName string) (bool, error) {
 			return false, nil
 		},
 	}
@@ -724,7 +724,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg.CLIName, cfg, mockNetrcHandler)
+		logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
 		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)
@@ -847,8 +847,8 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *re
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cliName string, cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v3.Config) {
-	logoutCmd := logout.New(cliName, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
+func newLogoutCmd(cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v3.Config) {
+	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
 	return logoutCmd, cfg
 }
 

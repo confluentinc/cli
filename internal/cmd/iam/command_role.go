@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -28,7 +29,7 @@ var (
 
 type roleCommand struct {
 	*cmd.AuthenticatedStateFlagCommand
-	cliName string
+	cfg *v3.Config
 }
 
 type prettyRole struct {
@@ -37,28 +38,28 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
+func NewRoleCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 	cobraRoleCmd := &cobra.Command{
 		Use:   "role",
 		Short: "Manage RBAC and IAM roles.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
 	var cliCmd *cmd.AuthenticatedStateFlagCommand
-	if cliName == "confluent" {
+	if cfg.IsOnPrem() {
 		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRoleCmd, prerunner, RoleSubcommandFlags)
 	} else {
 		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
 	}
 	roleCmd := &roleCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
-		cliName:                       cliName,
+		cfg:                           cfg,
 	}
 	roleCmd.init()
 	return roleCmd.Command
 }
 
 func (c *roleCommand) createContext() context.Context {
-	if c.cliName == "ccloud" {
+	if c.cfg.IsCloud() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
@@ -114,7 +115,7 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext())
+	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
 	if err != nil {
 		return err
 	}
@@ -139,7 +140,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
-	if c.cliName == "ccloud" {
+	if c.cfg.IsCloud() {
 		return c.ccloudList(cmd)
 	} else {
 		return c.confluentList(cmd)
@@ -182,10 +183,10 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
 	if err != nil {
 		if r.StatusCode == http.StatusNotFound {
-			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext())
+			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
 			if err != nil {
 				return err
 			}
@@ -220,7 +221,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	if c.cliName == "ccloud" {
+	if c.cfg.IsCloud() {
 		return c.ccloudDescribe(cmd, role)
 	} else {
 		return c.confluentDescribe(cmd, role)

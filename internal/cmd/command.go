@@ -82,12 +82,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
-	// TODO: Remove once unification is complete
-	cliName := "confluent"
-	if cfg.IsCloud() {
-		cliName = "ccloud"
-	}
-
 	logger := log.New()
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
@@ -106,7 +100,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		Analytics:               analyticsClient,
 		AuthTokenHandler:        authTokenHandler,
 		CCloudClientFactory:     ccloudClientFactory,
-		CLIName:                 cliName,
 		Config:                  cfg,
 		FlagResolver:            flagResolver,
 		IsTest:                  isTest,
@@ -129,21 +122,21 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
 	// No-login commands
-	cli.AddCommand(completion.New(cli, cliName))
+	cli.AddCommand(completion.New(cli))
 	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
-	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
+	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	if !cfg.DisableUpdates {
-		cli.AddCommand(update.New(cliName, logger, ver, updateClient, analyticsClient))
+		cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
 	}
-	cli.AddCommand(version.New(cliName, prerunner, ver))
+	cli.AddCommand(version.New(prerunner, ver))
 
 	if cfg.IsCloud() {
 		cli.AddCommand(admin.New(prerunner, isTest))
-		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(auditlog.New(cfg, prerunner))
 		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 
 		// If a user logs in with an API key, don't allow the remaining commands.
@@ -152,9 +145,9 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		}
 
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-		connectorCmd := connector.New(cliName, prerunner, analyticsClient)
-		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
-		environmentCmd := environment.New(cliName, prerunner, analyticsClient)
+		connectorCmd := connector.New(prerunner, analyticsClient)
+		connectorCatalogCmd := connectorcatalog.New(prerunner)
+		environmentCmd := environment.New(prerunner, analyticsClient)
 		serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
 		serverCompleter.AddCommand(apiKeyCmd)
@@ -167,23 +160,23 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(connectorCatalogCmd.Command)
 		cli.AddCommand(connectorCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
-		cli.AddCommand(iam.New(cliName, prerunner))
-		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
+		cli.AddCommand(iam.New(cfg, prerunner))
+		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(price.New(prerunner))
-		cli.AddCommand(prompt.New(cliName, prerunner, &ps1.Prompt{}, logger))
-		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
+		cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
+		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, shellCompleter, logger, analyticsClient, jwtValidator))
+		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	}
 
 	if cfg.IsOnPrem() {
-		cli.AddCommand(auditlog.New(cliName, prerunner))
+		cli.AddCommand(auditlog.New(cfg, prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 		cli.AddCommand(connect.New(prerunner))
-		cli.AddCommand(iam.New(cliName, prerunner))
-		cli.AddCommand(ksql.New(cliName, prerunner, serverCompleter, analyticsClient))
-		cli.AddCommand(schemaregistry.New(cliName, prerunner, nil, logger, analyticsClient))
+		cli.AddCommand(iam.New(cfg, prerunner))
+		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
+		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 	}
 
 	return command

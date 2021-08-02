@@ -12,12 +12,12 @@ func TestBuildExampleString(t *testing.T) {
 			Text: "Text",
 			Code: "Code",
 		},
+		Example{
+			Text: "Text",
+			Code: "confluent",
+		},
 	)
 
-	want := "Text\n\n::\n\n  Code\n\n"
-	require.Equal(t, got, want)
-}
-
-func TestTab(t *testing.T) {
-	require.Equal(t, tab("A\nB"), "  A\n  B")
+	want := "Text\n\n  Code\n\nText\n\n  $ confluent"
+	require.Equal(t, want, got)
 }

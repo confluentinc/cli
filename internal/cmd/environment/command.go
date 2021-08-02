@@ -31,11 +31,11 @@ var (
 )
 
 // New returns the Cobra command for `environment`.
-func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "environment",
-			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
+			Short: "Manage and select Confluent Cloud environments.",
 		}, prerunner, SubcommandFlags)
 	cmd := &command{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.init()

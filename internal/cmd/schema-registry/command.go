@@ -3,6 +3,7 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -19,7 +20,7 @@ type command struct {
 	analyticsClient analytics.Client
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "schema-registry",
@@ -32,15 +33,15 @@ func New(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 		prerunner:               prerunner,
 		analyticsClient:         analyticsClient,
 	}
-	cmd.init(cliName)
+	cmd.init(cfg)
 	return cmd.Command
 }
 
-func (c *command) init(cliName string) {
-	if cliName == "ccloud" {
-		c.AddCommand(NewClusterCommand(cliName, c.prerunner, c.srClient, c.logger, c.analyticsClient))
-		c.AddCommand(NewSubjectCommand(cliName, c.prerunner, c.srClient))
-		c.AddCommand(NewSchemaCommand(cliName, c.prerunner, c.srClient))
+func (c *command) init(cfg *v3.Config) {
+	if cfg.IsCloud() {
+		c.AddCommand(NewClusterCommand(c.prerunner, c.srClient, c.logger, c.analyticsClient))
+		c.AddCommand(NewSubjectCommand(c.prerunner, c.srClient))
+		c.AddCommand(NewSchemaCommand(c.prerunner, c.srClient))
 	} else {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}

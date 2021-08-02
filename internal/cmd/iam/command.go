@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 type command struct {
@@ -12,9 +13,9 @@ type command struct {
 }
 
 // New returns the default command object for interacting with RBAC.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	var cliCmd *pcmd.AuthenticatedCLICommand
-	if cliName == "confluent" {
+	if cfg.IsOnPrem() {
 		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
 				Use:   "iam",
@@ -35,10 +36,10 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
-	c.AddCommand(NewRoleCommand(cliName, c.prerunner))
-	c.AddCommand(NewRolebindingCommand(cliName, c.prerunner))
-	if cliName != "ccloud" {
-		c.AddCommand(NewACLCommand(cliName, c.prerunner))
+	c.AddCommand(NewRoleCommand(cfg, c.prerunner))
+	c.AddCommand(NewRolebindingCommand(cfg, c.prerunner))
+	if cfg.IsOnPrem() {
+		c.AddCommand(NewACLCommand(c.prerunner))
 	}
 
 	return c.Command

@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type schemaCommand struct {
@@ -22,7 +23,7 @@ type schemaCommand struct {
 	srClient *srsdk.APIClient
 }
 
-func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSchemaCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:   "schema",
@@ -32,11 +33,11 @@ func NewSchemaCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.
 		AuthenticatedStateFlagCommand: cliCmd,
 		srClient:                      srClient,
 	}
-	schemaCmd.init(cliName)
+	schemaCmd.init()
 	return schemaCmd.Command
 }
 
-func (c *schemaCommand) init(cliName string) {
+func (c *schemaCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "create --subject <subject> --schema <schema-file> --type <schema-type> --refs <ref-file>",
 		Short: "Create a schema.",
@@ -45,7 +46,7 @@ func (c *schemaCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema:",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", cliName),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", version.CLIName),
 			},
 			examples.Example{
 				Text: "Where schemafilepath may include these contents:",
@@ -84,7 +85,7 @@ func (c *schemaCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
-				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", cliName),
+				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", version.CLIName),
 			},
 		),
 	}
@@ -104,11 +105,11 @@ func (c *schemaCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID:",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337", cliName),
+				Code: fmt.Sprintf("%s schema-registry schema describe 1337", version.CLIName),
 			},
 			examples.Example{
 				Text: "Describe the schema by both subject and version:",
-				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", cliName),
+				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", version.CLIName),
 			},
 		),
 	}

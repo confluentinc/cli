@@ -6,9 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 type Quotation int
@@ -98,13 +95,11 @@ func TestPromptExecutorFunc(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			commandCalled := false
 			cli := newTestCommandWithExpectedFlag(t, tt.expectedFlag, &commandCalled)
-			config := v3.AuthenticatedCloudConfigMock()
 			command := &instrumentedCommand{
-				Command:   cli,
-				analytics: cliMock.NewDummyAnalyticsMock(),
+				Command: cli,
 			}
 			shellPrompt := &ShellPrompt{RootCmd: command}
-			executorFunc := promptExecutorFunc(config, shellPrompt)
+			executorFunc := promptExecutorFunc(shellPrompt)
 			var format string
 			switch tt.quoteType {
 			case NO_QUOTES:

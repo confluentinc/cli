@@ -36,7 +36,7 @@ func Test_prefixState(t *testing.T) {
 					return cfg
 				}(),
 			},
-			wantText:  "ccloud > ",
+			wantText:  "confluent > ",
 			wantColor: candyAppleGreen,
 		},
 		{
@@ -44,7 +44,7 @@ func Test_prefixState(t *testing.T) {
 			args: args{
 				config: v3.UnauthenticatedCloudConfigMock(),
 			},
-			wantText:  "ccloud > ",
+			wantText:  "confluent > ",
 			wantColor: watermelonRed,
 		},
 	}

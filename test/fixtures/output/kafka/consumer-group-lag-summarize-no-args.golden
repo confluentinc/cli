@@ -3,7 +3,7 @@ Usage:
   confluent kafka consumer-group lag summarize <consumer-group> [flags]
 
 Examples:
-Summarize the lag for the ``my_consumer_group`` consumer-group.
+Summarize the lag for the `my_consumer_group` consumer-group.
 
 ::
 
