@@ -43,15 +43,6 @@ var (
 	humanDescribeLinkConfigFields         = camelToSpaced(describeLinkConfigFields)
 )
 
-type keyValueDisplay struct {
-	Key   string
-	Value string
-}
-
-type LinkWriterKafkaApi struct {
-	LinkName string
-}
-
 type LinkTopicWriter struct {
 	LinkName        string
 	TopicName       string
