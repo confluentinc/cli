@@ -1,4 +1,4 @@
-package signup
+package cloudsignup
 
 var countryCodes = map[string]string{
 	"AF": "Afghanistan",

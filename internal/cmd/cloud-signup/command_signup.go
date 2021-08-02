@@ -1,4 +1,4 @@
-package signup
+package cloudsignup
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 	c := &command{
 		pcmd.NewAnonymousCLICommand(
 			&cobra.Command{
-				Use:   "signup",
+				Use:   "cloud-signup",
 				Short: "Sign up for Confluent Cloud.",
 				Args:  cobra.NoArgs,
 			},
@@ -46,7 +46,7 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 	c.Flags().SortFlags = false
 
-	c.RunE = pcmd.NewCLIRunE(c.signupRunE)
+	c.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
 
 	return c
 }
@@ -55,7 +55,7 @@ func (c *command) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *command) signupRunE(cmd *cobra.Command, _ []string) error {
+func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
