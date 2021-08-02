@@ -485,37 +485,44 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData.TopicName = topicName
 			topicData.PartitionCount = len(partitionsResp.Data)
 			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
+			replicaStatusDataList, httpResp, err := kafkaREST.Client.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(kafkaREST.Context, lkc, topicName)
+			if err != nil {
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			} else if replicaStatusDataList.Data == nil {
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
+			}
+			partitionIdToData := make(map[int32]partitionData)
+			for _, replica := range replicaStatusDataList.Data {
+				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
+					partitionIdToData[replica.PartitionId] = partitionData{
+						TopicName: 	 replica.TopicName,
+						PartitionId: replica.PartitionId,
+						ReplicaBrokerIds: []int32{replica.BrokerId},
+						InSyncReplicaBrokerIds: []int32{},
 
-			// For each partition, get replicas
-			for i, partitionResp := range partitionsResp.Data {
-				partitionData := partitionData{
-					TopicName:   topicName,
-					PartitionId: partitionResp.PartitionId,
-				}
-
-				replicasResp, httpResp, err := kafkaREST.Client.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(kafkaREST.Context, lkc, topicName, partitionResp.PartitionId)
-				if err != nil {
-					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-				} else if replicasResp.Data == nil {
-					return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
-				}
-
-				partitionData.ReplicaBrokerIds = make([]int32, len(replicasResp.Data))
-				partitionData.InSyncReplicaBrokerIds = make([]int32, 0)
-				for j, replicaResp := range replicasResp.Data {
-					if replicaResp.IsLeader {
-						partitionData.LeaderBrokerId = replicaResp.BrokerId
 					}
-					partitionData.ReplicaBrokerIds[j] = replicaResp.BrokerId
-					if replicaResp.IsInSync {
-						partitionData.InSyncReplicaBrokerIds = append(partitionData.InSyncReplicaBrokerIds, replicaResp.BrokerId)
-					}
+				} else {
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.ReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].ReplicaBrokerIds, replica.BrokerId)
+					partitionIdToData[replica.PartitionId] = tmp
 				}
+				if replica.IsLeader {
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.LeaderBrokerId = replica.BrokerId
+					partitionIdToData[replica.PartitionId] = tmp
+				}
+				if replica.IsInIsr {
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.InSyncReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].InSyncReplicaBrokerIds, replica.BrokerId)
+					partitionIdToData[replica.PartitionId] = tmp
+				}
+			}
 
+			for i, data := range partitionsResp.Data {
 				if i == 0 {
-					topicData.ReplicationFactor = len(replicasResp.Data)
+					topicData.ReplicationFactor = len(partitionIdToData[data.PartitionId].ReplicaBrokerIds)
 				}
-				topicData.Partitions[i] = partitionData
+				topicData.Partitions[i] = partitionIdToData[data.PartitionId]
 			}
 
 			// Get topic config
@@ -539,7 +546,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err

@@ -27,6 +27,7 @@ const (
 	rpTopics            = "/kafka/v3/clusters/{cluster}/topics"
 	rpPartitions        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
 	rpPartitionReplicas = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
+	rpReplicaStatus		= "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
 	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 	rpConfigsAlter      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
 	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
@@ -96,6 +97,7 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpPartitions, r.HandleKafkaRPPartitions(t))
 	r.HandleFunc(rpTopicConfigs, r.HandleKafkaRPTopicConfigs(t))
 	r.HandleFunc(rpPartitionReplicas, r.HandleKafkaRPPartitionReplicas(t))
+	r.HandleFunc(rpReplicaStatus, r.HandleKafkaRPReplicaStatus(t))
 	r.HandleFunc(rpConfigsAlter, r.HandleKafkaRPConfigsAlter(t))
 	r.HandleFunc(rpTopic, r.HandleKafkaRPTopic(t))
 	r.HandleFunc(rpLink, r.HandleKafkaRPLink(t))
