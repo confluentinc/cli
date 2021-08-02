@@ -47,7 +47,7 @@ def job = {
                             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                             echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
                             make deps
-                            make build-confluent
+                            make build
                             cd dist/confluent
                             targz=$(ls *.tar.gz| head -1)
                             nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz

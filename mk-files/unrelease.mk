@@ -42,7 +42,6 @@ delete-release-notes:
 	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(caasenv-authenticate); $(call delete-release-folder,release-notes); fi
 
 define delete-release-folder
-	aws s3 rm $(S3_BUCKET_PATH)/ccloud-cli/$1/$(CLEAN_VERSION) --recursive; \
 	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/$1/$(CLEAN_VERSION) --recursive
 endef
 
@@ -51,15 +50,14 @@ restore-latest-archives: restore-latest-archives-warn
 	make copy-prod-archives-to-stag-latest
 	$(caasenv-authenticate); \
 	$(call copy-stag-content-to-prod,archives,latest)
-	@echo "Verifying latest archives with: make test-installers"
-	make test-installers
+	@echo "Verifying latest archives with: make test-installer"
+	make test-installer
 
 .PHONY: copy-prod-archives-to-stag-latest
 copy-prod-archives-to-stag-latest:
 	$(call copy-archives-files-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
 	$(call copy-archives-checksums-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
-	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) ARCHIVES_VERSION="" make test-installers 
-
+	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) ARCHIVES_VERSION="" make test-installer
 
 .PHONY: restore-latest-archives-warn
 restore-latest-archives-warn:

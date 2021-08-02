@@ -1,8 +1,8 @@
 SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
-MASTER_BRANCH   ?= master
-RELEASE_BRANCH  ?= master
+MAIN_BRANCH     ?= main
+RELEASE_BRANCH  ?= main
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -22,7 +22,6 @@ S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
 S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
-
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
@@ -33,8 +32,6 @@ generate:
 
 .PHONY: deps
 deps:
-	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
-	export GOPRIVATE=github.com/confluentinc && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/mitchellh/golicense@v0.2.0
@@ -56,33 +53,21 @@ show-args:
 
 #
 # START DEVELOPMENT HELPERS
-# Usage: make run-ccloud -- version
-#        make run-ccloud -- --version
+# Usage: make run -- version
+#        make run -- --version
 #
 
-# If the first argument is "run-ccloud"...
-ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run-ccloud"
+# If the first argument is "run"...
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   # ...and turn them into do-nothing targets
   $(eval $(RUN_ARGS):;@:)
 endif
 
-# If the first argument is "run-confluent"...
-ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run-confluent"
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  # ...and turn them into do-nothing targets
-  $(eval $(RUN_ARGS):;@:)
-endif
-
-.PHONY: run-ccloud
-run-ccloud:
-	 @go run -ldflags '-buildmode=exe -X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
-
-.PHONY: run-confluent
-run-confluent:
-	 @go run -ldflags '-buildmode=exe -X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
+.PHONY: run
+run:
+	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
@@ -90,16 +75,7 @@ run-confluent:
 
 .PHONY: build
 build:
-	make build-ccloud
-	make build-confluent
-
-.PHONY: build-ccloud
-build-ccloud:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
-
-.PHONY: build-confluent
-build-confluent:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
+	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -108,45 +84,27 @@ build-integ:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	make build-integ-ccloud-nonrace
-	make build-integ-confluent-nonrace
-
-.PHONY: build-integ-ccloud-nonrace
-build-integ-ccloud-nonrace:
-	binary="ccloud_test" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
-	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
-
-.PHONY: build-integ-confluent-nonrace
-build-integ-confluent-nonrace:
 	binary="confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
-		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
+	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+		-X $(RESOLVED_PATH).commit=$(REF) \
+		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o $${binexe}
 
 .PHONY: build-integ-race
 build-integ-race:
-	make build-integ-ccloud-race
-	make build-integ-confluent-race
-
-.PHONY: build-integ-ccloud-race
-build-integ-ccloud-race:
-	binary="ccloud_test_race" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
-	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
-
-.PHONY: build-integ-confluent-race
-build-integ-confluent-race:
 	binary="confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
-		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+		-X $(RESOLVED_PATH).commit=$(REF) \
+		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
@@ -189,26 +147,17 @@ ifeq ($(shell uname),Darwin)
 else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
-	make lint-go && \
-	make lint-cli && \
-	make lint-installers
+	make lint-go && make lint-cli
 endif
-
-.PHONY: lint-installers
-## Lints the CLI installation scripts
-lint-installers:
-	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@for binary in ccloud confluent; do \
-		echo Licenses for $${binary} binary ; \
-		[ -t 0 ] && args="" || args="-plain" ; \
-		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
-		echo ; \
-	done
+	@binary="confluent" ; \
+	echo Licenses for $${binary} binary ; \
+	[ -t 0 ] && args="" || args="-plain" ; \
+	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} || true
 
 .PHONY: coverage-unit
 coverage-unit:
@@ -232,7 +181,6 @@ coverage-integ:
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
       endif
 
-
 .PHONY: test-prep
 test-prep: lint
       ifdef CI
@@ -240,7 +188,7 @@ test-prep: lint
       endif
 
 .PHONY: test
-test: test-prep coverage-unit coverage-integ test-installers
+test: test-prep coverage-unit coverage-integ test-installer
 
 .PHONY: unit-test
 unit-test: test-prep coverage-unit

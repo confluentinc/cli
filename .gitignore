@@ -1,9 +1,8 @@
 bin/
 dist/
+docs/
 legal/
-
-# We auto-publish these to github.com/confluentinc/docs via CI and don't want them stored in this repo
-docs/**/*.rst
+release-notes/
 
 .semaphore-cache/
 git-setup-semaphore.sh
@@ -32,16 +31,9 @@ terraform.d
 .netrc
 
 coverage.txt
-ccloud_test
 confluent_test
 integ_coverage.txt
 unit_coverage.txt
-/ccloud
 *.sw*
 .vscode
 **/*.DS_Store
-release-notes/prep
-release-notes/ccloud/latest-release.rst
-release-notes/confluent/latest-release.rst
-release-notes/ccloud/release-notes.rst
-release-notes/confluent/release-notes.rst

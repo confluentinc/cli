@@ -7,7 +7,7 @@ VERSION_POST ?=
 # Auto bump by default
 BUMP ?= auto
 # If on master branch bump the minor by default
-ifeq ($(RELEASE_BRANCH),$(MASTER_BRANCH))
+ifeq ($(RELEASE_BRANCH),$(MAIN_BRANCH))
 DEFAULT_BUMP ?= minor
 # Else bump the patch by default
 else
