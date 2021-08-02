@@ -44,7 +44,7 @@ type KafkaClusterTestSuite struct {
 	analyticsOutput []segment.Message
 	analyticsClient analytics.Client
 	metricsApi      *ccsdkmock.MetricsApi
-	//usageLimits     *ccsdkmock. TODO
+	usageLimits     *ccsdkmock.UsageLimits
 	logger          *log.Logger
 }
 
@@ -101,6 +101,28 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
+	suite.usageLimits = &ccsdkmock.UsageLimits{
+		GetUsageLimitsFunc: func(ctx context.Context, cloud schedv1.Provider_Cloud) (*schedv1.GetUsageLimitsReply, error) {
+			return &schedv1.GetUsageLimitsReply{UsageLimits: &corev1.UsageLimits{
+				TierLimits: map[string]*corev1.TierFixedLimits{
+					"BASIC": {
+						PartitionLimits: &corev1.KafkaPartitionLimits{},
+						ClusterLimits:   &corev1.KafkaClusterLimits{},
+					},
+				},
+				CkuLimits: map[uint32]*corev1.CKULimits{
+					uint32(1): {
+						NumBrokers: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 5}},
+						Storage: &corev1.IntegerUsageLimit{
+							Limit: &corev1.IntegerUsageLimit_Value{Value: 500},
+							Unit:  corev1.LimitUnit_GB,
+						},
+						NumPartitions: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 2000}},
+					},
+				},
+			}}, nil
+		},
+	}
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
@@ -108,6 +130,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 		Kafka:               suite.kafkaMock,
 		EnvironmentMetadata: suite.envMetadataMock,
 		MetricsApi:          suite.metricsApi,
+		UsageLimits:         suite.usageLimits,
 	}
 	suite.logger = log.New()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
@@ -255,11 +278,12 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkChecksMetrics() {
 	req := require.New(suite.T())
 	mockKafkaCluster := &schedv1.KafkaCluster{
 		Id:              "lkc-xyz",
-		Name:            "gcp-byok-test",
+		Name:            "gcp-shrink-test",
 		Region:          "us-central1",
 		ServiceProvider: "gcp",
 		Deployment: &schedv1.Deployment{
-			Sku: corev1.Sku_DEDICATED,
+			Sku:      corev1.Sku_DEDICATED,
+			Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
 		},
 		Cku:    3,
 		Status: schedv1.ClusterStatus_UP,
@@ -271,11 +295,12 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkChecksMetrics() {
 		UpdateFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return &schedv1.KafkaCluster{
 				Id:              "lkc-xyz",
-				Name:            "gcp-byok-test",
+				Name:            "gcp-shrink-test",
 				Region:          "us-central1",
 				ServiceProvider: "gcp",
 				Deployment: &schedv1.Deployment{
-					Sku: corev1.Sku_DEDICATED,
+					Sku:      corev1.Sku_DEDICATED,
+					Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
 				},
 				Cku:        3,
 				PendingCku: 2,

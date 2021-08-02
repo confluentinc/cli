@@ -532,7 +532,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		}
 		// Cluster can't be resized while it's provisioning or being expanded already.
 		// Name _can_ be changed during these times, though.
-		err = isClusterResizeInProgress(int32(cku), currentCluster)
+		err = isClusterResizeInProgress(currentCluster)
 		if err != nil {
 			return currentCluster.Cku, err
 		}
@@ -540,11 +540,12 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		if int32(cku) < currentCluster.Cku {
 			// metrics api auth via jwt
 			fmt.Println("here4")
-			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(int32(cku), currentCluster, true)
+			ctx := context.Background()
+			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(int32(cku), currentCluster, true, ctx)
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
 				return currentCluster.Cku, errors.Wrap(err, "Could not shrink cluster: ")
 			}
-			shouldPrompt, err := c.validateKafkaClusterMetrics(int32(cku), currentCluster, false)
+			shouldPrompt, err := c.validateKafkaClusterMetrics(int32(cku), currentCluster, false, nil)
 			fmt.Println("here6", shouldPrompt, errFromSmallWindowMetrics)
 			if err != nil {
 				if errFromSmallWindowMetrics != nil {
@@ -564,8 +565,10 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 	return currentCluster.Cku, nil
 }
 
-func (c *clusterCommand) validateKafkaClusterMetrics(cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool) (bool, error) {
+func (c *clusterCommand) validateKafkaClusterMetrics(cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool, ctx context.Context) (bool, error) {
 	var window string
+	var partitionCountPerCku int32
+	var storageLimitPerCku int32
 	if isLatestMetric {
 		window = "15 minutes"
 	} else {
@@ -574,7 +577,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(cku int32, currentCluster *
 	c.logger.Info("Here1", isLatestMetric)
 	// Get Cluster Load Metric
 	clusterLoadResponse, err := c.Client.MetricsApi.QueryV2(
-		context.Background(), "cloud", clusterLoadMetricQuery(currentCluster.Id, isLatestMetric), "")
+		ctx, "cloud", clusterLoadMetricQuery(currentCluster.Id, isLatestMetric), "")
 	if err != nil || clusterLoadResponse == nil || len(clusterLoadResponse.Result) == 0 {
 		c.logger.Warn("Could not retrieve Cluster Load Metrics: ", err)
 		return false, errors.New("Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes.")
@@ -587,7 +590,12 @@ func (c *clusterCommand) validateKafkaClusterMetrics(cku int32, currentCluster *
 		}
 	}
 	// Get Partition Count Metric
-	partitionCountPerCku, storageLimitPerCku, err := c.getUsageLimitPerCku(currentCluster.Deployment.Provider.Cloud)
+	if currentCluster.Deployment.Provider == nil {
+		partitionCountPerCku, storageLimitPerCku, err = c.getUsageLimitPerCku(schedv1.Provider_UNKNOWN)
+	} else {
+		partitionCountPerCku, storageLimitPerCku, err = c.getUsageLimitPerCku(currentCluster.Deployment.Provider.Cloud)
+	}
+
 	if err != nil {
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")

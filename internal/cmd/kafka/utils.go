@@ -161,7 +161,7 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
-func isClusterResizeInProgress(cku int32, currentCluster *schedv1.KafkaCluster) error {
+func isClusterResizeInProgress(currentCluster *schedv1.KafkaCluster) error {
 	fmt.Println("here3")
 	if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
