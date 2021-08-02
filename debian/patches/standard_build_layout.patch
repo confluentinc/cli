@@ -1,10 +1,10 @@
---- cli/Makefile	2021-07-23 14:29:58.000000000 -0500
-+++ debian/Makefile	2021-07-21 22:31:30.000000000 -0500
-@@ -1,209 +1,130 @@
+--- cli/Makefile	2021-08-02 15:19:10.000000000 -0600
++++ debian/Makefile	2021-07-21 21:31:30.000000000 -0600
+@@ -1,205 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
--MASTER_BRANCH   ?= main
+-MAIN_BRANCH     ?= main
 -RELEASE_BRANCH  ?= main
 -
 -include ./mk-files/dockerhub.mk
@@ -26,13 +26,13 @@
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 +SHELL=/bin/bash
  
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
-+endif
- 
 -.PHONY: clean
 -clean:
 -	rm -rf $(shell pwd)/dist
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
++endif
++
 +export PACKAGE_TITLE=cli
 +export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
 +export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
@@ -54,8 +54,6 @@
 -
 -.PHONY: deps
 -deps:
--	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
--	export GOPRIVATE=github.com/confluentinc && \
 -	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 -	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 -	go get github.com/mitchellh/golicense@v0.2.0
@@ -97,7 +95,7 @@
 -
 -.PHONY: run
 -run:
--	 @go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
+-	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
 -
 -#
 -# END DEVELOPMENT HELPERS
@@ -105,7 +103,7 @@
 -
 -.PHONY: build
 -build:
--	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
+-	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
 -
 -.PHONY: build-integ
 -build-integ:
@@ -190,17 +188,20 @@
 +		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
 +		chmod 755 $${filepath} ; \
 +	done
-+
-+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
  
 -cmd/lint/en_US.dic:
 -	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
-+	chown -R root:root $(DESTDIR)$(PREFIX)
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
  
 -.PHONY: lint-cli
 -lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
 -	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
++	chown -R root:root $(DESTDIR)$(PREFIX)
+ 
+-.PHONY: lint-go
+-lint-go:
+-	@golangci-lint run --timeout=10m
 +clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -211,10 +212,7 @@
 +	git reset --hard HEAD
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
 +endif
- 
--.PHONY: lint-go
--lint-go:
--	@golangci-lint run --timeout=10m
++
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
  
 -.PHONY: lint
@@ -269,7 +267,6 @@
 -	@# Run integration tests.
 -	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
 -      endif
--
 -
 -.PHONY: test-prep
 -test-prep: lint

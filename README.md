@@ -260,15 +260,6 @@ Just run:
 
     $ make docs
 
-Cheat sheet:
-```
-	cli := &cobra.Command{
-		Use:               "command-name",
-		Short:             "This is a short description",
-		Long:              "This is a longer synopsis",
-	}
-```
-
 ## Testing
 
 The CLI is tested with a combination of unit tests and integration tests

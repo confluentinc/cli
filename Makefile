@@ -1,7 +1,7 @@
 SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
-MASTER_BRANCH   ?= main
+MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
 
 include ./mk-files/dockerhub.mk
@@ -22,7 +22,6 @@ S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
 S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
-
 .PHONY: clean
 clean:
 	rm -rf $(shell pwd)/dist
@@ -33,8 +32,6 @@ generate:
 
 .PHONY: deps
 deps:
-	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
-	export GOPRIVATE=github.com/confluentinc && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/mitchellh/golicense@v0.2.0
@@ -70,7 +67,7 @@ endif
 
 .PHONY: run
 run:
-	 @go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
+	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
@@ -78,7 +75,7 @@ run:
 
 .PHONY: build
 build:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
+	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -183,7 +180,6 @@ coverage-integ:
 	@# Run integration tests.
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
       endif
-
 
 .PHONY: test-prep
 test-prep: lint

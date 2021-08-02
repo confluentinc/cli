@@ -1,9 +1,8 @@
 bin/
 dist/
+docs/
 legal/
-
-# We auto-publish these to github.com/confluentinc/docs via CI and don't want them stored in this repo
-docs/**/*.rst
+release-notes/
 
 .semaphore-cache/
 git-setup-semaphore.sh
@@ -38,6 +37,3 @@ unit_coverage.txt
 *.sw*
 .vscode
 **/*.DS_Store
-release-notes/prep
-release-notes/confluent/latest-release.rst
-release-notes/confluent/release-notes.rst
