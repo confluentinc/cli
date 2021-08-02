@@ -33,7 +33,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient a
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Initialize and set a current context of name "new context":`,
-				Code: `ccloud init "new context" --kafka-auth`,
+				Code: `confluent init "new context" --kafka-auth`,
 			},
 		),
 	}

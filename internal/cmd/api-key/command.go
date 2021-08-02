@@ -88,7 +88,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List the API keys that belong to service account with resource ID `sa-lqv3mm` on cluster `lkc-xyz`",
-				Code: `ccloud api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
+				Code: `confluent api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
 			},
 		),
 	}
@@ -107,7 +107,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`",
-				Code: `ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
+				Code: `confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
 			},
 		),
 	}

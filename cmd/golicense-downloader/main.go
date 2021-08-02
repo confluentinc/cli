@@ -30,12 +30,6 @@ const (
 	licenseIndexFilename = "licenses.txt"
 )
 
-var (
-	licenseDir = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
-	noticeDir  = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
-	configFile = pflag.StringP("config-file", "F", "", "File from which to read golicense-downloader configuration")
-)
-
 type Config struct {
 	DepOverrides map[string]string `json:"depOverrides"`
 }
@@ -57,6 +51,12 @@ type License struct {
 }
 
 func main() {
+	var (
+		licenseDir = pflag.StringP("licenses-dir", "l", "./legal/licenses", "Directory in which to write licenses")
+		noticeDir  = pflag.StringP("notices-dir", "n", "./legal/notices", "Directory in which to write notices")
+		configFile = pflag.StringP("config-file", "F", "", "File from which to read golicense-downloader configuration")
+	)
+
 	// Parse and validate flags
 	pflag.Parse()
 

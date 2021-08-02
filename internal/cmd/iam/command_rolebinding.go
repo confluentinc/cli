@@ -109,19 +109,19 @@ func (c *rolebindingCommand) init() {
 		example = examples.BuildExampleString(
 			examples.Example{
 				Text: "To list the role bindings for current user:",
-				Code: "ccloud iam rolebinding list --current-user",
+				Code: "confluent iam rolebinding list --current-user",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal:",
-				Code: "ccloud iam rolebinding list --principal User:frodo",
+				Code: "confluent iam rolebinding list --principal User:frodo",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "ccloud iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+				Code: "confluent iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific role:",
-				Code: "ccloud iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+				Code: "confluent iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
 			},
 		)
 	} else {

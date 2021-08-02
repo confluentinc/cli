@@ -5,7 +5,7 @@ Usage:
 Examples:
 Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`
 
-  $ ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm
+  $ confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm
 
 Flags:
       --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.

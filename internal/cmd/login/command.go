@@ -52,9 +52,9 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: "Log in to Confluent Cloud or using your email and password, or non-interactively using the `CCLOUD_EMAIL` and `CCLOUD_PASSWORD` environment variables.\n\n" +
+		Long: "Log in to Confluent Cloud using your email and password, or non-interactively using the `CCLOUD_EMAIL` and `CCLOUD_PASSWORD` environment variables.\n\n" +
 			"You can log in to Confluent Platform with your username and password, or non-interactively using `CONFLUENT_USERNAME`, `CONFLUENT_PASSWORD`, `CONFLUENT_MDS_URL`, and `CONFLUENT_CA_CERT_PATH`. In a non-interactive login, `CONFLUENT_MDS_URL` replaces the `--url` flag, and `CONFLUENT_CA_CERT_PATH` replaces the `--ca-cert-path` flag.\n\n" +
-			"Even with environment variables set, you can force an interactive login using the `--prompt` flag.",
+			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args:              cobra.NoArgs,
 		RunE:              pcmd.NewCLIRunE(c.login),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
@@ -62,9 +62,9 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 
 	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
 	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
-	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
+	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
+	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
 	loginCmd.Flags().SortFlags = false
 
 	c.CLICommand = pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
