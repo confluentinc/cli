@@ -36,6 +36,10 @@ var templateFuncs = template.FuncMap{
 	"eq":                      cobra.Eq,
 }
 
+func WriteHelpTemplate(cmd *cobra.Command) error {
+	return tmpl(cmd.OutOrStderr(), cmd.HelpTemplate(), cmd)
+}
+
 // tmpl executes the given template text on data, writing the result to w.
 func tmpl(w io.Writer, text string, data interface{}) error {
 	t := template.New("top")

@@ -69,11 +69,9 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		DisableAutoGenTag: true,
 	}
 
-	cli.SetUsageFunc(func(cmd *cobra.Command) error {
-		return help.ResolveReST(cmd.UsageTemplate(), cmd)
-	})
 	cli.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
-		_ = help.ResolveReST(cmd.HelpTemplate(), cmd)
+		pcmd.LabelRequiredFlags(cmd)
+		_ = help.WriteHelpTemplate(cmd)
 	})
 
 	if cliName == "ccloud" {
