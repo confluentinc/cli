@@ -1166,6 +1166,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			restMock.ConfigsApi = cliMock.NewConfigsMock()
 			restMock.ClusterLinkingApi = cliMock.NewClusterLinkingMock(kafkaRestExpect)
 			restMock.ConsumerGroupApi = cliMock.NewConsumerGroupMock(kafkaRestExpect)
+			restMock.ReplicaStatusApi = cliMock.NewReplicaStatusMock()
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
 			return kafkaREST, nil
