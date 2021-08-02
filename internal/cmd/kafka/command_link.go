@@ -2,11 +2,9 @@ package kafka
 
 // TODO: wrap all link / mirror commands with kafka rest error
 import (
-	"context"
 	"fmt"
 
 	"github.com/antihax/optional"
-	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -34,16 +32,15 @@ const (
 )
 
 var (
-	keyValueFieldsCamel           = []string{"Key", "Value"}
-	keyValueFieldsUnderscore      = []string{"key", "value"}
-	linkFieldsWithTopicCamel      = []string{"LinkName", "TopicName", "SourceClusterId"}
-	linkFieldsWithTopicUnderscore = []string{"link_name", "topic_name", "source_cluster_id"}
-	linkFieldsCamel               = []string{"LinkName", "SourceClusterId"}
-	linkFieldsUnderscore          = []string{"link_name", "source_cluster_id"}
-	linkFieldsKafkaApiCamel       = []string{"LinkName"}
-	linkFieldsKafkaApiUnderscore  = []string{"link_name"}
-	linkConfigFieldsCamel         = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
-	linkConfigFieldsUnderscore    = []string{"config_name", "config_value", "read_only", "sensitive", "source", "synonyms"}
+	listLinkFieldsIncludeTopics           = []string{"LinkName", "TopicName", "SourceClusterId"}
+	structuredListLinkFieldsIncludeTopics = camelToSnake(listLinkFieldsIncludeTopics)
+	humanListLinkFieldsIncludeTopics      = camelToSpaced(listLinkFieldsIncludeTopics)
+	listLinkFields                        = []string{"LinkName", "SourceClusterId"}
+	structuredListLinkFields              = camelToSnake(listLinkFields)
+	humanListLinkFields                   = camelToSpaced(listLinkFields)
+	describeLinkConfigFields              = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
+	structuredDescribeLinkConfigFields    = camelToSnake(describeLinkConfigFields)
+	humanDescribeLinkConfigFields         = camelToSpaced(describeLinkConfigFields)
 )
 
 type keyValueDisplay struct {
@@ -209,9 +206,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api
-		fmt.Println("Kafka REST is not enabled")
-		return c.listWithKafkaApi(cmd, includeTopics)
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -227,7 +222,10 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 	if includeTopics {
 		outputWriter, err := output.NewListOutputWriter(
-			cmd, linkFieldsWithTopicCamel, linkFieldsWithTopicCamel, linkFieldsWithTopicUnderscore)
+			cmd,
+			listLinkFieldsIncludeTopics,
+			humanListLinkFieldsIncludeTopics,
+			structuredListLinkFieldsIncludeTopics)
 		if err != nil {
 			return err
 		}
@@ -254,7 +252,8 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 		return outputWriter.Out()
 	} else {
-		outputWriter, err := output.NewListOutputWriter(cmd, linkFieldsCamel, linkFieldsCamel, linkFieldsUnderscore)
+		outputWriter, err := output.NewListOutputWriter(
+			cmd, listLinkFields, humanListLinkFields, structuredListLinkFields)
 		if err != nil {
 			return err
 		}
@@ -264,53 +263,6 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 				LinkName:        link.LinkName,
 				SourceClusterId: link.SourceClusterId,
 			})
-		}
-
-		return outputWriter.Out()
-	}
-}
-
-// Will be deprecated soon
-func (c *linkCommand) listWithKafkaApi(cmd *cobra.Command, includeTopics bool) error {
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.Client.Kafka.ListLinks(context.Background(), cluster, includeTopics)
-	if err != nil {
-		return err
-	}
-
-	if includeTopics {
-		outputWriter, err := output.NewListOutputWriter(
-			cmd, linkFieldsWithTopicCamel, linkFieldsWithTopicCamel, linkFieldsWithTopicUnderscore)
-		if err != nil {
-			return err
-		}
-
-		for _, link := range resp.Links {
-			if len(link.Topics) > 0 {
-				for _, topic := range link.Topics {
-					outputWriter.AddElement(
-						&LinkTopicWriter{LinkName: link.LinkName, TopicName: topic})
-				}
-			} else {
-				outputWriter.AddElement(
-					&LinkTopicWriter{LinkName: link.LinkName, TopicName: ""})
-			}
-		}
-
-		return outputWriter.Out()
-	} else {
-		outputWriter, err := output.NewListOutputWriter(
-			cmd, linkFieldsKafkaApiCamel, linkFieldsKafkaApiCamel, linkFieldsKafkaApiUnderscore)
-		if err != nil {
-			return err
-		}
-
-		for _, link := range resp.Links {
-			outputWriter.AddElement(&LinkWriterKafkaApi{LinkName: link.LinkName})
 		}
 
 		return outputWriter.Out()
@@ -384,9 +336,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api
-		fmt.Println("Kafka REST is not enabled")
-		return c.createWithKafkaApi(cmd, linkName, configMap, skipValidatingLink, validateOnly)
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -418,40 +368,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return handleOpenApiError(httpResp, err, kafkaREST)
 }
 
-// Will be deprecated soon
-func (c *linkCommand) createWithKafkaApi(
-	cmd *cobra.Command, linkName string, configMap map[string]string, skipValidatingLink bool, validateOnly bool) error {
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
-	if err != nil {
-		return err
-	}
-
-	sourceLink := &linkv1.ClusterLink{
-		LinkName:  linkName,
-		ClusterId: "",
-		Configs:   configMap,
-	}
-	createOptions := &linkv1.CreateLinkOptions{ValidateLink: !skipValidatingLink, ValidateOnly: validateOnly}
-	err = c.Client.Kafka.CreateLink(context.Background(), cluster, sourceLink, createOptions)
-
-	if err == nil {
-		msg := errors.CreatedLinkMsg
-		if validateOnly {
-			msg = errors.DryRunPrefix + msg
-		}
-		utils.Printf(cmd, msg, linkName)
-	}
-
-	return err
-}
-
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api
-		fmt.Println("Kafka REST is not enabled")
-		return c.deleteWithKafkaApi(cmd, linkName)
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -467,29 +388,11 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	return handleOpenApiError(httpResp, err, kafkaREST)
 }
 
-// Will be deprecated soon
-func (c *linkCommand) deleteWithKafkaApi(cmd *cobra.Command, linkName string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
-	if err != nil {
-		return err
-	}
-
-	deletionOptions := &linkv1.DeleteLinkOptions{}
-	err = c.Client.Kafka.DeleteLink(context.Background(), cluster, linkName, deletionOptions)
-	if err == nil {
-		utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
-	}
-
-	return err
-}
-
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api
-		fmt.Println("Kafka REST is not enabled")
-		return c.describeWithKafkaApi(cmd, linkName)
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -504,7 +407,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, linkConfigFieldsCamel, linkConfigFieldsCamel, linkConfigFieldsUnderscore)
+		cmd, describeLinkConfigFields, humanDescribeLinkConfigFields, structuredDescribeLinkConfigFields)
 	if err != nil {
 		return err
 	}
@@ -536,33 +439,6 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-// Will be deprecated soon
-func (c *linkCommand) describeWithKafkaApi(cmd *cobra.Command, link string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.Client.Kafka.DescribeLink(context.Background(), cluster, link)
-	if err != nil {
-		return err
-	}
-
-	outputWriter, err := output.NewListOutputWriter(
-		cmd, keyValueFieldsCamel, keyValueFieldsCamel, keyValueFieldsUnderscore)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range resp.Properties {
-		outputWriter.AddElement(&keyValueDisplay{
-			Key:   k,
-			Value: v,
-		})
-	}
-	return outputWriter.Out()
-}
-
 func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
@@ -581,9 +457,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api
-		fmt.Println("Kafka REST is not enabled")
-		return c.updateWithKafkaApi(cmd, linkName, configsMap)
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -605,25 +479,4 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	return handleOpenApiError(httpResp, err, kafkaREST)
-}
-
-// Will be deprecated soon
-func (c *linkCommand) updateWithKafkaApi(cmd *cobra.Command, linkName string, configMap map[string]string) error {
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
-	if err != nil {
-		return err
-	}
-
-	config := &linkv1.LinkProperties{
-		Properties: configMap,
-	}
-	alterOptions := &linkv1.AlterLinkOptions{}
-	err = c.Client.Kafka.AlterLink(context.Background(), cluster, linkName, config, alterOptions)
-
-	if err != nil {
-		return err
-	}
-
-	utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)
-	return nil
 }
