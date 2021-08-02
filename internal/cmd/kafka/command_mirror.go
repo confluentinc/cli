@@ -23,9 +23,12 @@ const (
 )
 
 var (
-	listMirrorOutputFields     = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	describeMirrorOutputFields = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	alterMirrorOutputFields    = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	listMirrorOutputFieldsCamel          = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	listMirrorOutputFieldsUnderscore     = []string{"link_name", "mirror_topic_name", "num_partition", "max_per_partition_mirror_lag", "source_topic_name", "mirror_status", "status_time_ms"}
+	describeMirrorOutputFieldsCamel      = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	describeMirrorOutputFieldsUnderscore = []string{"link_name", "mirror_topic_name", "partition", "partition_mirror_lag", "source_topic_name", "mirror_status", "status_time_ms"}
+	alterMirrorOutputFieldsCamel         = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	alterMirrorOutputFieldsUnderscore    = []string{"mirror_topic_name", "partition", "partition_mirror_lag", "error_message", "error_code"}
 )
 
 type listMirrorWrite struct {
@@ -262,7 +265,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, listMirrorOutputFields, listMirrorOutputFields, listMirrorOutputFields)
+		cmd, listMirrorOutputFieldsCamel, listMirrorOutputFieldsCamel, listMirrorOutputFieldsUnderscore)
 	if err != nil {
 		return err
 	}
@@ -318,7 +321,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, describeMirrorOutputFields, describeMirrorOutputFields, describeMirrorOutputFields)
+		cmd, describeMirrorOutputFieldsCamel, describeMirrorOutputFieldsCamel, describeMirrorOutputFieldsUnderscore)
 	if err != nil {
 		return err
 	}
@@ -581,7 +584,7 @@ func (c *mirrorCommand) createWithKafkaApi(
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, alterMirrorOutputFields, alterMirrorOutputFields, alterMirrorOutputFields)
+		cmd, alterMirrorOutputFieldsCamel, alterMirrorOutputFieldsCamel, alterMirrorOutputFieldsUnderscore)
 	if err != nil {
 		return err
 	}

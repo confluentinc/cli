@@ -34,11 +34,16 @@ const (
 )
 
 var (
-	keyValueFields      = []string{"Key", "Value"}
-	linkFieldsWithTopic = []string{"LinkName", "TopicName", "SourceClusterId"}
-	linkFields          = []string{"LinkName", "SourceClusterId"}
-	linkFieldsKafkaApi  = []string{"LinkName"}
-	linkConfigFields    = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
+	keyValueFieldsCamel           = []string{"Key", "Value"}
+	keyValueFieldsUnderscore      = []string{"key", "value"}
+	linkFieldsWithTopicCamel      = []string{"LinkName", "TopicName", "SourceClusterId"}
+	linkFieldsWithTopicUnderscore = []string{"link_name", "topic_name", "source_cluster_id"}
+	linkFieldsCamel               = []string{"LinkName", "SourceClusterId"}
+	linkFieldsUnderscore          = []string{"link_name", "source_cluster_id"}
+	linkFieldsKafkaApiCamel       = []string{"LinkName"}
+	linkFieldsKafkaApiUnderscore  = []string{"link_name"}
+	linkConfigFieldsCamel         = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
+	linkConfigFieldsUnderscore    = []string{"config_name", "config_value", "read_only", "sensitive", "source", "synonyms"}
 )
 
 type keyValueDisplay struct {
@@ -222,7 +227,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 	if includeTopics {
 		outputWriter, err := output.NewListOutputWriter(
-			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+			cmd, linkFieldsWithTopicCamel, linkFieldsWithTopicCamel, linkFieldsWithTopicUnderscore)
 		if err != nil {
 			return err
 		}
@@ -249,7 +254,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 
 		return outputWriter.Out()
 	} else {
-		outputWriter, err := output.NewListOutputWriter(cmd, linkFields, linkFields, linkFields)
+		outputWriter, err := output.NewListOutputWriter(cmd, linkFieldsCamel, linkFieldsCamel, linkFieldsUnderscore)
 		if err != nil {
 			return err
 		}
@@ -279,7 +284,7 @@ func (c *linkCommand) listWithKafkaApi(cmd *cobra.Command, includeTopics bool) e
 
 	if includeTopics {
 		outputWriter, err := output.NewListOutputWriter(
-			cmd, linkFieldsWithTopic, linkFieldsWithTopic, linkFieldsWithTopic)
+			cmd, linkFieldsWithTopicCamel, linkFieldsWithTopicCamel, linkFieldsWithTopicUnderscore)
 		if err != nil {
 			return err
 		}
@@ -298,7 +303,8 @@ func (c *linkCommand) listWithKafkaApi(cmd *cobra.Command, includeTopics bool) e
 
 		return outputWriter.Out()
 	} else {
-		outputWriter, err := output.NewListOutputWriter(cmd, linkFieldsKafkaApi, linkFieldsKafkaApi, linkFieldsKafkaApi)
+		outputWriter, err := output.NewListOutputWriter(
+			cmd, linkFieldsKafkaApiCamel, linkFieldsKafkaApiCamel, linkFieldsKafkaApiUnderscore)
 		if err != nil {
 			return err
 		}
@@ -497,7 +503,8 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, kafkaREST)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, linkConfigFields, linkConfigFields, linkConfigFields)
+	outputWriter, err := output.NewListOutputWriter(
+		cmd, linkConfigFieldsCamel, linkConfigFieldsCamel, linkConfigFieldsUnderscore)
 	if err != nil {
 		return err
 	}
@@ -541,7 +548,8 @@ func (c *linkCommand) describeWithKafkaApi(cmd *cobra.Command, link string) erro
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, keyValueFields, keyValueFields, keyValueFields)
+	outputWriter, err := output.NewListOutputWriter(
+		cmd, keyValueFieldsCamel, keyValueFieldsCamel, keyValueFieldsUnderscore)
 	if err != nil {
 		return err
 	}
