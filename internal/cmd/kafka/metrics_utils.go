@@ -1,38 +1,40 @@
 package kafka
 
 import (
-	"time"
+	"context"
+	"fmt"
+	"math"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
-	queryTimeoutDefault          = 180 * time.Second
-	queryRetryMinWaitTimeDefault = 100 * time.Millisecond
-	queryRetryMaxWaitTimeDefault = 1 * time.Second
-	queryNumRetriesDefault       = 2
-	latestLookbackWindow         = "PT15M"
-	threeDayLookbackWindow       = "PT3D"
-	hourGranularity              = "PT1H"
-	minuteGranularity            = "PT1M"
+	ClusterLoadMetricName  = "io.confluent.kafka.server/cluster_load_percent"
+	PartitionMetricName    = "io.confluent.kafka.server/partition_count"
+	StorageMetricName      = "io.confluent.kafka.server/retained_bytes"
+	latestLookbackWindow   = "PT15M"
+	threeDayLookbackWindow = "PT3D"
+	hourGranularity        = "PT1H"
+	minuteGranularity      = "PT1M"
 )
 
-func getMetricsOptions(isLatestMetric bool) (string, string) {
+func getMetricsOptions(isLatestMetric bool) (string, string, int32) {
 	if isLatestMetric {
 		// Return latest metric in a 15 minute window
-		return minuteGranularity, latestLookbackWindow
+		return minuteGranularity, latestLookbackWindow, 1
 	} else {
 		// Default to return max metric over a three day window
-		return hourGranularity, threeDayLookbackWindow
+		return hourGranularity, threeDayLookbackWindow, 1000
 	}
 }
-
-func clusterLoadMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
-	granularity, lookback := getMetricsOptions(isLatestMetric)
+func getMetricsApiRequest(metricName string, clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
+	granularity, lookback, limit := getMetricsOptions(isLatestMetric)
 	return &ccloud.MetricsApiRequest{
 		Aggregations: []ccloud.ApiAggregation{
 			{
-				Metric: "io.confluent.kafka.server/broker_load/cluster_load_percent",
+				Metric: metricName,
+				Agg:    "SUM",
 			},
 		},
 		Filter: ccloud.ApiFilter{
@@ -42,41 +44,131 @@ func clusterLoadMetricQuery(clusterId string, isLatestMetric bool) *ccloud.Metri
 		},
 		Granularity: granularity,
 		Lookback:    lookback,
+		Limit:       limit,
 	}
 }
 
-func partitionCountMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
-	granularity, lookback := getMetricsOptions(isLatestMetric)
-	return &ccloud.MetricsApiRequest{
-		Aggregations: []ccloud.ApiAggregation{
-			{
-				Metric: "io.confluent.kafka.server/partition_count",
-			},
-		},
-		Filter: ccloud.ApiFilter{
-			Field: "resource.kafka.id",
-			Op:    "EQ",
-			Value: clusterId,
-		},
-		Granularity: granularity,
-		Lookback:    lookback,
+func maxApiDataValue(metricsData []ccloud.ApiData) ccloud.ApiData {
+	max := metricsData[0]
+	for _, value := range metricsData {
+		if value.Value > max.Value {
+			max = value
+		}
 	}
+	return max
 }
 
-func storageBytesMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
-	granularity, lookback := getMetricsOptions(isLatestMetric)
-	return &ccloud.MetricsApiRequest{
-		Aggregations: []ccloud.ApiAggregation{
-			{
-				Metric: "io.confluent.kafka.server/retained_bytes",
-			},
-		},
-		Filter: ccloud.ApiFilter{
-			Field: "resource.kafka.id",
-			Op:    "EQ",
-			Value: clusterId,
-		},
-		Granularity: granularity,
-		Lookback:    lookback,
+func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bool) error {
+	// Get Cluster Load Metric
+	clusterLoadResponse, err := c.Client.MetricsApi.QueryV2(
+		context.Background(), "cloud", getMetricsApiRequest(ClusterLoadMetricName, clusterId, isLatestMetric), "")
+	if err != nil || clusterLoadResponse == nil || len(clusterLoadResponse.Result) == 0 {
+		fmt.Println(err)
+		c.logger.Warn("Could not retrieve Cluster Load Metrics: ", err)
+		return errors.New("Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes.")
 	}
+	if isLatestMetric {
+		latestClusterLoad := clusterLoadResponse.Result[len(clusterLoadResponse.Result)-1].Value
+		timestamp := clusterLoadResponse.Result[len(clusterLoadResponse.Result)-1].Timestamp
+		if latestClusterLoad > 0.7 {
+			return errors.Errorf("Cluster Load was %f percent at %s in the last 15 mins", latestClusterLoad*100, timestamp.Format("2006-01-02 15:04:05"))
+		}
+	} else {
+		maxClusterLoad := maxApiDataValue(clusterLoadResponse.Result)
+		if maxClusterLoad.Value > 0.7 {
+			return errors.Errorf("Cluster Load was %f percent at %s in the last 3 days", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.Format("2006-01-02 15:04:05"))
+		}
+	}
+	return nil
 }
+
+func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartitionCount int32, isLatestMetric bool) error {
+	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
+		context.Background(), "cloud", getMetricsApiRequest(PartitionMetricName, clusterId, isLatestMetric), "")
+	fmt.Sprintf("partition metrics %v", partitionMetricsResponse)
+	if err != nil || partitionMetricsResponse == nil || len(partitionMetricsResponse.Result) == 0 {
+		fmt.Println(err)
+		return errors.New("Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes.")
+	}
+	if isLatestMetric {
+		latestPartitionCount := int32(math.Round(partitionMetricsResponse.Result[len(partitionMetricsResponse.Result)-1].Value))
+		timestamp := partitionMetricsResponse.Result[len(partitionMetricsResponse.Result)-1].Timestamp
+		if latestPartitionCount > requiredPartitionCount {
+			return fmt.Errorf("partition count was %d at %s in the last %s. Recommended partition count is less than %d for %d CKU", latestPartitionCount, timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount)
+		}
+	} else {
+		maxPartitionCount := maxApiDataValue(partitionMetricsResponse.Result)
+		if int32(maxPartitionCount.Value) > requiredPartitionCount {
+			return fmt.Errorf("recommended partition count is less than %f. Partition count was %f at %s in the last 3 days. ", maxPartitionCount.Value, maxPartitionCount.Timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount)
+		}
+	}
+	return nil
+}
+
+func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageLimit int32, isLatestMetric bool) error {
+	storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
+		context.Background(), "cloud", getMetricsApiRequest(StorageMetricName, clusterId, isLatestMetric), "")
+	fmt.Sprintf("storage metrics %v", storageMetricsResponse)
+	if err != nil || storageMetricsResponse == nil || len(storageMetricsResponse.Result) == 0 {
+		fmt.Println(err)
+		return errors.New("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes.")
+	}
+	if isLatestMetric {
+		latestStorageBytes := int32(math.Round(storageMetricsResponse.Result[len(storageMetricsResponse.Result)-1].Value))
+		timestamp := storageMetricsResponse.Result[len(storageMetricsResponse.Result)-1].Timestamp
+		if latestStorageBytes > requiredStorageLimit {
+			return fmt.Errorf("storage used was %d at %s in the last 15 minutes. Recommended storage is less than %d for %d CKU", latestStorageBytes, timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit)
+		}
+	} else {
+		maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
+		if int32(maxStorageLimit.Value) > requiredStorageLimit {
+			return fmt.Errorf("storage used was %d at %s in the last 3 days. Recommended storage is less than %d for %d CKU", maxStorageLimit.Value, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit)
+		}
+	}
+	return nil
+}
+
+//func clusterLoadMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
+//
+//	getMetricsApiRequest("io.confluent.kafka.server/cluster_load_percent", )
+//	return &ccloud.MetricsApiRequest{
+//		Aggregations: []ccloud.ApiAggregation{
+//			{
+//				Metric: "io.confluent.kafka.server/cluster_load_percent",
+//			},
+//		},
+//		Filter: ccloud.ApiFilter{
+//			Field: "resource.kafka.id",
+//			Op:    "EQ",
+//			Value: clusterId,
+//		},
+//		Granularity: granularity,
+//		Lookback:    lookback,
+//		Limit: limit,
+//	}
+//}
+//
+//func partitionCountMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
+//	granularity, lookback, limit := getMetricsOptions(isLatestMetric)
+//	return
+//}
+//
+//func storageBytesMetricQuery(clusterId string, isLatestMetric bool) *ccloud.MetricsApiRequest {
+//	granularity, lookback := getMetricsOptions(isLatestMetric)
+//	return &ccloud.MetricsApiRequest{
+//		Aggregations: []ccloud.ApiAggregation{
+//			{
+//				Metric: "io.confluent.kafka.server/retained_bytes",
+//				Agg:    "SUM",
+//			},
+//		},
+//		Filter: ccloud.ApiFilter{
+//			Field: "resource.kafka.id",
+//			Op:    "EQ",
+//			Value: clusterId,
+//		},
+//		GroupBy:     []string{"metric.label.cluster_id"},
+//		Granularity: granularity,
+//		Lookback:    lookback,
+//	}
+//}

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -527,7 +526,8 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		// Durability Checks
 		if currentCluster.Durability == schedv1.Durability_HIGH && cku <= 1 {
 			return currentCluster.Cku, errors.New(errors.CKUMoreThanOneErrorMsg)
-		} else if cku <= 0 {
+		}
+		if cku <= 0 {
 			return currentCluster.Cku, errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
 		// Cluster can't be resized while it's provisioning or being expanded already.
@@ -540,16 +540,15 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		if int32(cku) < currentCluster.Cku {
 			// metrics api auth via jwt
 			fmt.Println("here4")
-			ctx := context.Background()
-			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(int32(cku), currentCluster, true, ctx)
+			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, true)
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
-				return currentCluster.Cku, errors.Wrap(err, "Could not shrink cluster: ")
+				return currentCluster.Cku, errors.Wrap(errFromSmallWindowMetrics, "Could not shrink cluster: ")
 			}
-			shouldPrompt, err := c.validateKafkaClusterMetrics(int32(cku), currentCluster, false, nil)
-			fmt.Println("here6", shouldPrompt, errFromSmallWindowMetrics)
-			if err != nil {
+			shouldPrompt, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(nil, int32(cku), currentCluster, false)
+			fmt.Println("here6", shouldPrompt, errFromLargeWindowMetrics)
+			if errFromLargeWindowMetrics != nil {
 				if errFromSmallWindowMetrics != nil {
-					err = fmt.Errorf("%v \n\n %v", errFromSmallWindowMetrics.Error(), err.Error())
+					err = fmt.Errorf("%v \n\n %v", errFromSmallWindowMetrics.Error(), errFromLargeWindowMetrics.Error())
 				}
 				ok, err := confirmShrink(cmd, prompt, err)
 				if !ok || err != nil {
@@ -565,67 +564,44 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 	return currentCluster.Cku, nil
 }
 
-func (c *clusterCommand) validateKafkaClusterMetrics(cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool, ctx context.Context) (bool, error) {
-	var window string
-	var partitionCountPerCku int32
-	var storageLimitPerCku int32
-	if isLatestMetric {
-		window = "15 minutes"
-	} else {
-		window = "3 days"
-	}
-	c.logger.Info("Here1", isLatestMetric)
-	// Get Cluster Load Metric
-	clusterLoadResponse, err := c.Client.MetricsApi.QueryV2(
-		ctx, "cloud", clusterLoadMetricQuery(currentCluster.Id, isLatestMetric), "")
-	if err != nil || clusterLoadResponse == nil || len(clusterLoadResponse.Result) == 0 {
-		c.logger.Warn("Could not retrieve Cluster Load Metrics: ", err)
-		return false, errors.New("Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes.")
-	} else {
-		c.logger.Info("Here2")
-		maxClusterLoad := clusterLoadResponse.Result[len(clusterLoadResponse.Result)-1].Value
-		timestamp := clusterLoadResponse.Result[len(clusterLoadResponse.Result)-1].Timestamp
-		if maxClusterLoad > 0.7 {
-			return true, errors.New(fmt.Sprintf("Cluster Load was %f at %s in the last %s", maxClusterLoad*100, timestamp.Format("2006-01-02 15:04:05"), window))
-		}
-	}
-	// Get Partition Count Metric
-	if currentCluster.Deployment.Provider == nil {
-		partitionCountPerCku, storageLimitPerCku, err = c.getUsageLimitPerCku(schedv1.Provider_UNKNOWN)
-	} else {
-		partitionCountPerCku, storageLimitPerCku, err = c.getUsageLimitPerCku(currentCluster.Deployment.Provider.Cloud)
-	}
-
+func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool) (bool, error) {
+	// Get usage limits
+	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(nil, currentCluster, cku)
 	if err != nil {
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
 	}
-	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
-		context.Background(), "cloud", partitionCountMetricQuery(currentCluster.Id, isLatestMetric), "")
-	if err != nil || partitionMetricsResponse == nil || len(partitionMetricsResponse.Result) == 0 {
-		return false, errors.New("Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes.")
-	} else {
-		currentPartitionCount := int32(math.Round(partitionMetricsResponse.Result[len(partitionMetricsResponse.Result)-1].Value))
-		timestamp := partitionMetricsResponse.Result[len(partitionMetricsResponse.Result)-1].Timestamp
-		if currentPartitionCount > (partitionCountPerCku * cku) {
-			return !isLatestMetric, errors.New(fmt.Sprintf("Partition count was %d at %s in the last %s. Recommended partition count is less than %d for %d CKU", currentPartitionCount, timestamp.Format("2006-01-02 15:04:05"), window, partitionCountPerCku*cku, cku))
+	fmt.Sprintf("usage limits %d %d", requiredPartitionCount, requiredStorageLimit)
+	errorMessage := errors.New("Shrink Validation Error:")
+	shouldPrompt := true
+	// Get Cluster Load Metric
+	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
+	if isValidLoadErr != nil {
+		errorMessage = errors.Wrap(errorMessage, isValidLoadErr.Error())
+		if isLatestMetric {
+			shouldPrompt = false
 		}
 	}
-	// Validate storage metric
+	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric)
+	if isValidPartitionCountErr != nil {
+		errorMessage = errors.Wrap(errorMessage, isValidLoadErr.Error())
+		shouldPrompt = false
+		if isLatestMetric {
+			shouldPrompt = false
+		}
+	}
+	var isValidStorageLimitErr error
+	isValidStorageLimitErr = nil
 	if !currentCluster.InfiniteStorage {
-		storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
-			context.Background(), "cloud", storageBytesMetricQuery(currentCluster.Id, isLatestMetric), "")
-		if err != nil || storageMetricsResponse == nil || len(storageMetricsResponse.Result) == 0 {
-			return false, errors.New("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes.")
-		} else {
-			currentStorageBytes := int32(math.Round(storageMetricsResponse.Result[len(storageMetricsResponse.Result)-1].Value))
-			timestamp := storageMetricsResponse.Result[len(storageMetricsResponse.Result)-1].Timestamp
-			if currentStorageBytes > (storageLimitPerCku * cku) {
-				return !isLatestMetric, errors.New(fmt.Sprintf("Storage used was %d at %s in the last %s. Recommended storage is less than %d for %d CKU", currentStorageBytes, timestamp.Format("2006-01-02 15:04:05"), window, storageLimitPerCku*cku, cku))
-			}
+		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric)
+		if isValidStorageLimitErr != nil {
+			errorMessage = errors.Wrap(errorMessage, isValidStorageLimitErr.Error())
 		}
 	}
-	return false, nil
+	if isValidStorageLimitErr == nil && isValidLoadErr == nil && isValidPartitionCountErr == nil {
+		return false, nil
+	}
+	return shouldPrompt, errorMessage
 }
 
 func confirmShrink(cmd *cobra.Command, prompt form.Prompt, validationError error) (bool, error) {
@@ -765,13 +741,20 @@ func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
 }
 
-func (c *clusterCommand) getUsageLimitPerCku(cloud schedv1.Provider_Cloud) (int32, int32, error) {
-	usageReply, err := c.Client.UsageLimits.GetUsageLimits(context.Background(), cloud)
+func (c *clusterCommand) getUsageLimit(ctx context.Context, currentCluster *schedv1.KafkaCluster, cku int32) (int32, int32, error) {
+	var cloud schedv1.Provider_Cloud
+	if currentCluster.Deployment == nil || currentCluster.Deployment.Provider == nil {
+		cloud = schedv1.Provider_UNKNOWN
+	} else {
+		cloud = currentCluster.Deployment.Provider.Cloud
+	}
+
+	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx, cloud)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "Could not retrieve partition count usage limits. Please try again or contact support.")
 	}
-	partitionCount := usageReply.UsageLimits.GetCkuLimits()[1].GetNumPartitions().GetValue()
-	storageLimit := usageReply.UsageLimits.GetCkuLimits()[1].Storage.GetValue()
+	partitionCount := usageReply.UsageLimits.GetCkuLimits()[1].GetNumPartitions().GetValue() * cku
+	storageLimit := usageReply.UsageLimits.GetCkuLimits()[1].Storage.GetValue() * cku
 	return partitionCount, storageLimit, nil
 }
 
