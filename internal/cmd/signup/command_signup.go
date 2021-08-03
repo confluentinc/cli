@@ -19,6 +19,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+
+	countryCodesRef "github.com/confluentinc/country-code/codes"
 )
 
 type command struct {
@@ -101,7 +103,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return err
 		}
 		countryCode = strings.ToUpper(fCountrycode.Responses["country"].(string))
-		if country, ok := countryCodes[countryCode]; ok {
+		if country, ok := countryCodesRef.CountryCodes[countryCode]; ok {
 			f := form.New(
 				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", countryCode, country), IsYesOrNo: true},
 			)
