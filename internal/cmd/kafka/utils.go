@@ -162,13 +162,16 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 }
 
 func isClusterResizeInProgress(currentCluster *schedv1.KafkaCluster) error {
-	if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
+	switch currentCluster.Status {
+	case schedv1.ClusterStatus_PROVISIONING:
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-	} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
+	case schedv1.ClusterStatus_EXPANDING:
 		return errors.New(errors.KafkaClusterExpandingErrorMsg)
-	} else if currentCluster.Status == schedv1.ClusterStatus_SHRINKING {
+	case schedv1.ClusterStatus_SHRINKING:
 		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
-	} else if currentCluster.Status == schedv1.ClusterStatus_DELETING || currentCluster.Status == schedv1.ClusterStatus_DELETED {
+	case schedv1.ClusterStatus_DELETING:
+		return errors.New(errors.KafkaClusterDeletingErrorMsg)
+	case schedv1.ClusterStatus_DELETED:
 		return errors.New(errors.KafkaClusterDeletingErrorMsg)
 	}
 	return nil

@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-var (
+const (
 	ClusterLoadMetricName  = "io.confluent.kafka.server/cluster_load_percent"
 	PartitionMetricName    = "io.confluent.kafka.server/partition_count"
 	StorageMetricName      = "io.confluent.kafka.server/retained_bytes"

@@ -572,7 +572,6 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
 	if isValidPartitionCountErr != nil {
 		errorMessage = errors.Wrap(isValidPartitionCountErr, errorMessage.Error())
-		shouldPrompt = false
 		if isLatestMetric {
 			shouldPrompt = false
 		}
@@ -600,9 +599,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 }
 
 func confirmShrink(cmd *cobra.Command, prompt form.Prompt, validationError error) (bool, error) {
-	f := form.New(
-		form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: \n %s\n. Do you want to proceed with shrinking your kafka cluster?", validationError), IsYesOrNo: true},
-	)
+	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that:\n %s\n. Do you want to proceed with shrinking your kafka cluster?", validationError), IsYesOrNo: true})
 	if err := f.Prompt(cmd, prompt); err != nil {
 		utils.ErrPrintln(cmd, errors.FailedToReadClusterResizeConfirmationErrorMsg)
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
