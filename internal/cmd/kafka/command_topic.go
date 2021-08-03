@@ -1082,7 +1082,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Println(cmd, "\nConfiguration\n ")
+	utils.Println(cmd, "Configuration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
