@@ -36,6 +36,9 @@ const (
 	regionId    = "us-west-2"
 )
 
+var shouldError bool
+var shouldPrompt bool
+
 type KafkaClusterTestSuite struct {
 	suite.Suite
 	conf            *v3.Config
@@ -90,11 +93,30 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 	suite.metricsApi = &ccsdkmock.MetricsApi{
 		QueryV2Func: func(ctx context.Context, view string, query *ccloud.MetricsApiRequest, jwt string) (*ccloud.MetricsApiQueryReply, error) {
+			if query.Aggregations[0].Metric != ClusterLoadMetricName {
+				value := 10.0
+				if shouldError {
+					value = 5000
+				}
+				return &ccloud.MetricsApiQueryReply{
+					Result: []ccloud.ApiData{
+						{
+							Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
+							Value:     value,
+							Labels:    map[string]interface{}{"metric.topic": "test-topic"},
+						},
+					},
+				}, nil
+			}
+			value := 0.1
+			if shouldPrompt {
+				value = 0.8
+			}
 			return &ccloud.MetricsApiQueryReply{
 				Result: []ccloud.ApiData{
 					{
 						Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
-						Value:     0.0,
+						Value:     value,
 						Labels:    map[string]interface{}{"metric.topic": "test-topic"},
 					},
 				},
@@ -274,7 +296,7 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 	req.False(suite.metricsApi.QueryV2Called())
 }
 
-func (suite *KafkaClusterTestSuite) TestClusterShrinkChecksMetrics() {
+func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	req := require.New(suite.T())
 	mockKafkaCluster := &schedv1.KafkaCluster{
 		Id:              "lkc-xyz",
@@ -310,11 +332,60 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkChecksMetrics() {
 			return mockKafkaCluster, nil
 		},
 	}
+	// Set variable for Metrics API mock
+	shouldError = false
+	shouldPrompt = true
 	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
 	args := []string{"update", clusterName, "--cku", "2"}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
-	req.Nil(err)
+	req.Contains(err.Error(), "Cluster resize error: failed to read your confirmation")
 	req.True(suite.metricsApi.QueryV2Called())
+}
+
+func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
+	req := require.New(suite.T())
+	mockKafkaCluster := &schedv1.KafkaCluster{
+		Id:              "lkc-xyz",
+		Name:            "gcp-shrink-test",
+		Region:          "us-central1",
+		ServiceProvider: "gcp",
+		Deployment: &schedv1.Deployment{
+			Sku:      corev1.Sku_DEDICATED,
+			Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
+		},
+		Cku:    3,
+		Status: schedv1.ClusterStatus_UP,
+	}
+	suite.kafkaMock = &ccsdkmock.Kafka{
+		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
+			return mockKafkaCluster, nil
+		},
+		UpdateFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+			return &schedv1.KafkaCluster{
+				Id:              "lkc-xyz",
+				Name:            "gcp-shrink-test",
+				Region:          "us-central1",
+				ServiceProvider: "gcp",
+				Deployment: &schedv1.Deployment{
+					Sku:      corev1.Sku_DEDICATED,
+					Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
+				},
+				Cku:        3,
+				PendingCku: 2,
+			}, nil
+		},
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+			return mockKafkaCluster, nil
+		},
+	}
+	// Set variable for Metrics API mock
+	shouldError = true
+	shouldPrompt = false
+	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	args := []string{"update", clusterName, "--cku", "2"}
+	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	req.True(suite.metricsApi.QueryV2Called())
+	req.Contains(err.Error(), "Cluster Shrink Validation Error")
 }
 
 func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {

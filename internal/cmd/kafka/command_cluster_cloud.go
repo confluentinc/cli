@@ -539,13 +539,11 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		//If shrink
 		if int32(cku) < currentCluster.Cku {
 			// metrics api auth via jwt
-			fmt.Println("here4")
 			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, true)
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
-				return currentCluster.Cku, errors.Wrap(errFromSmallWindowMetrics, "Could not shrink cluster: ")
+				return currentCluster.Cku, errFromSmallWindowMetrics
 			}
-			shouldPrompt, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(nil, int32(cku), currentCluster, false)
-			fmt.Println("here6", shouldPrompt, errFromLargeWindowMetrics)
+			shouldPrompt, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, false)
 			if errFromLargeWindowMetrics != nil {
 				if errFromSmallWindowMetrics != nil {
 					err = fmt.Errorf("%v \n\n %v", errFromSmallWindowMetrics.Error(), errFromLargeWindowMetrics.Error())
@@ -556,7 +554,6 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 				} else {
 					return int32(cku), nil
 				}
-				fmt.Println("here7")
 			}
 		}
 		return int32(cku), nil
@@ -566,25 +563,16 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 
 func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool) (bool, error) {
 	// Get usage limits
-	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(nil, currentCluster, cku)
+	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, currentCluster, cku)
 	if err != nil {
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
 	}
-	fmt.Sprintf("usage limits %d %d", requiredPartitionCount, requiredStorageLimit)
-	errorMessage := errors.New("Shrink Validation Error:")
+	errorMessage := errors.Errorf("Cluster Shrink Validation Error ")
 	shouldPrompt := true
-	// Get Cluster Load Metric
-	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
-	if isValidLoadErr != nil {
-		errorMessage = errors.Wrap(errorMessage, isValidLoadErr.Error())
-		if isLatestMetric {
-			shouldPrompt = false
-		}
-	}
-	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric)
+	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
 	if isValidPartitionCountErr != nil {
-		errorMessage = errors.Wrap(errorMessage, isValidLoadErr.Error())
+		errorMessage = errors.Wrap(isValidPartitionCountErr, errorMessage.Error())
 		shouldPrompt = false
 		if isLatestMetric {
 			shouldPrompt = false
@@ -593,10 +581,18 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	var isValidStorageLimitErr error
 	isValidStorageLimitErr = nil
 	if !currentCluster.InfiniteStorage {
-		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric)
+		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
 		if isValidStorageLimitErr != nil {
-			errorMessage = errors.Wrap(errorMessage, isValidStorageLimitErr.Error())
+			errorMessage = errors.Wrap(isValidStorageLimitErr, errorMessage.Error())
+			if isLatestMetric {
+				shouldPrompt = false
+			}
 		}
+	}
+	// Get Cluster Load Metric
+	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
+	if isValidLoadErr != nil {
+		errorMessage = errors.Wrap(isValidLoadErr, errorMessage.Error())
 	}
 	if isValidStorageLimitErr == nil && isValidLoadErr == nil && isValidPartitionCountErr == nil {
 		return false, nil
@@ -608,7 +604,6 @@ func confirmShrink(cmd *cobra.Command, prompt form.Prompt, validationError error
 	f := form.New(
 		form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: \n %s\n. Do you want to proceed with shrinking your kafka cluster?", validationError), IsYesOrNo: true},
 	)
-	fmt.Println("here8")
 	if err := f.Prompt(cmd, prompt); err != nil {
 		utils.ErrPrintln(cmd, errors.FailedToReadClusterResizeConfirmationErrorMsg)
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)

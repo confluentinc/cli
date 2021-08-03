@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -71,18 +72,18 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 		latestClusterLoad := clusterLoadResponse.Result[len(clusterLoadResponse.Result)-1].Value
 		timestamp := clusterLoadResponse.Result[len(clusterLoadResponse.Result)-1].Timestamp
 		if latestClusterLoad > 0.7 {
-			return errors.Errorf("Cluster Load was %f percent at %s in the last 15 mins", latestClusterLoad*100, timestamp.Format("2006-01-02 15:04:05"))
+			return fmt.Errorf("\nCluster Load was %f percent at %s in the last 15 mins.\nRecommended cluster load should be less than 70 percent", latestClusterLoad*100, timestamp.Format("2006-01-02 15:04:05"))
 		}
 	} else {
 		maxClusterLoad := maxApiDataValue(clusterLoadResponse.Result)
 		if maxClusterLoad.Value > 0.7 {
-			return errors.Errorf("Cluster Load was %f percent at %s in the last 3 days", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.Format("2006-01-02 15:04:05"))
+			return fmt.Errorf("\nCluster Load was %f percent at %s in the last 3 days. \nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.Format("2006-01-02 15:04:05"))
 		}
 	}
 	return nil
 }
 
-func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartitionCount int32, isLatestMetric bool) error {
+func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartitionCount int32, isLatestMetric bool, cku int32) error {
 	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(PartitionMetricName, clusterId, isLatestMetric), "")
 	fmt.Sprintf("partition metrics %v", partitionMetricsResponse)
@@ -94,18 +95,18 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 		latestPartitionCount := int32(math.Round(partitionMetricsResponse.Result[len(partitionMetricsResponse.Result)-1].Value))
 		timestamp := partitionMetricsResponse.Result[len(partitionMetricsResponse.Result)-1].Timestamp
 		if latestPartitionCount > requiredPartitionCount {
-			return fmt.Errorf("partition count was %d at %s in the last %s. Recommended partition count is less than %d for %d CKU", latestPartitionCount, timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount)
+			return fmt.Errorf("partition count was %d at %s in the last 15 min.\nRecommended partition count is less than %d for %d cku", latestPartitionCount, timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount, cku)
 		}
 	} else {
 		maxPartitionCount := maxApiDataValue(partitionMetricsResponse.Result)
 		if int32(maxPartitionCount.Value) > requiredPartitionCount {
-			return fmt.Errorf("recommended partition count is less than %f. Partition count was %f at %s in the last 3 days. ", maxPartitionCount.Value, maxPartitionCount.Timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount)
+			return fmt.Errorf("partition count was %f at %s in the last 3 days.\nRecommended partition count is less than %d for %d cku", maxPartitionCount.Value, maxPartitionCount.Timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount, cku)
 		}
 	}
 	return nil
 }
 
-func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageLimit int32, isLatestMetric bool) error {
+func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageLimit int32, isLatestMetric bool, cku int32) error {
 	storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(StorageMetricName, clusterId, isLatestMetric), "")
 	fmt.Sprintf("storage metrics %v", storageMetricsResponse)
@@ -117,12 +118,12 @@ func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageL
 		latestStorageBytes := int32(math.Round(storageMetricsResponse.Result[len(storageMetricsResponse.Result)-1].Value))
 		timestamp := storageMetricsResponse.Result[len(storageMetricsResponse.Result)-1].Timestamp
 		if latestStorageBytes > requiredStorageLimit {
-			return fmt.Errorf("storage used was %d at %s in the last 15 minutes. Recommended storage is less than %d for %d CKU", latestStorageBytes, timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit)
+			return fmt.Errorf("storage used was %d at %s in the last 15 minutes. Recommended storage is less than %d for %d CKU", latestStorageBytes, timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
 		}
 	} else {
 		maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
 		if int32(maxStorageLimit.Value) > requiredStorageLimit {
-			return fmt.Errorf("storage used was %d at %s in the last 3 days. Recommended storage is less than %d for %d CKU", maxStorageLimit.Value, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit)
+			return fmt.Errorf("storage used was %f at %s in the last 3 days. Recommended storage is less than %d for %d CKU", maxStorageLimit.Value, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
 		}
 	}
 	return nil
