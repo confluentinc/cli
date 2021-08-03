@@ -24,7 +24,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.80
-	github.com/confluentinc/country-code v0.0.0-20210803231044-1b3d1982f6e6 // indirect
+	github.com/confluentinc/country-code v0.0.0-20210803232651-93cff968d835
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
