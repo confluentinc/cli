@@ -85,7 +85,6 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartitionCount int32, isLatestMetric bool, cku int32) error {
 	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(PartitionMetricName, clusterId, isLatestMetric), "")
-	fmt.Sprintf("partition metrics %v", partitionMetricsResponse)
 	if err != nil || partitionMetricsResponse == nil || len(partitionMetricsResponse.Result) == 0 {
 		return errors.New("Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes.")
 	}
@@ -107,7 +106,6 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageLimit int32, isLatestMetric bool, cku int32) error {
 	storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(StorageMetricName, clusterId, isLatestMetric), "")
-	fmt.Sprintf("storage metrics %v", storageMetricsResponse)
 	if err != nil || storageMetricsResponse == nil || len(storageMetricsResponse.Result) == 0 {
 		return errors.New("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes.")
 	}
