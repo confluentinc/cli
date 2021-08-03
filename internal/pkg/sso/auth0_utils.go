@@ -2,6 +2,15 @@ package sso
 
 import "strings"
 
+var (
+	auth0ClientIds = map[string]string{
+		"prod":  "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH",
+		"stag":  "Lk2u2MHszzpmmiJ1LetzZw3ur41nqLrw",
+		"devel": "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA",
+		"cpd":   "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb",
+	}
+)
+
 func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
 	if baseUrl == "" {
 		baseUrl = "https://confluent.cloud"
@@ -20,16 +29,5 @@ func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
 		return ""
 	}
 
-	switch env {
-	case "prod":
-		return "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH"
-	case "stag":
-		return "Lk2u2MHszzpmmiJ1LetzZw3ur41nqLrw"
-	case "devel":
-		return "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA"
-	case "cpd":
-		return "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb"
-	default:
-		return ""
-	}
+	return auth0ClientIds[env]
 }
