@@ -10,12 +10,11 @@ import (
 	"text/template"
 
 	"github.com/c-bata/go-prompt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
