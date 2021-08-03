@@ -118,8 +118,8 @@ type lagCommand struct {
 type lagSummaryStruct struct {
 	ClusterId         string
 	ConsumerGroupId   string
-	TotalLag          int32
-	MaxLag            int32
+	TotalLag          int64
+	MaxLag            int64
 	MaxLagConsumerId  string
 	MaxLagInstanceId  string
 	MaxLagClientId    string
@@ -130,9 +130,9 @@ type lagSummaryStruct struct {
 type lagDataStruct struct {
 	ClusterId       string
 	ConsumerGroupId string
-	Lag             int32
-	LogEndOffset    int32
-	CurrentOffset   int32
+	Lag             int64
+	LogEndOffset    int64
+	CurrentOffset   int64
 	ConsumerId      string
 	InstanceId      string
 	ClientId        string
@@ -180,7 +180,7 @@ func (g *groupCommand) init() {
 		RunE:  pcmd.NewCLIRunE(g.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the ``my_consumer_group`` consumer group.",
+				Text: "Describe the `my_consumer_group` consumer group.",
 				Code: "ccloud kafka consumer-group describe my_consumer_group",
 			},
 		),
@@ -350,7 +350,7 @@ func (lagCmd *lagCommand) init() {
 		RunE:  pcmd.NewCLIRunE(lagCmd.summarizeLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Summarize the lag for the ``my_consumer_group`` consumer-group.",
+				Text: "Summarize the lag for the `my_consumer_group` consumer-group.",
 				Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
 			},
 		),
@@ -367,7 +367,7 @@ func (lagCmd *lagCommand) init() {
 		RunE:  pcmd.NewCLIRunE(lagCmd.listLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all consumer lags for consumers in the ``my_consumer_group`` consumer-group.",
+				Text: "List all consumer lags for consumers in the `my_consumer_group` consumer-group.",
 				Code: "ccloud kafka consumer-group lag list my_consumer_group",
 			},
 		),
@@ -385,7 +385,7 @@ func (lagCmd *lagCommand) init() {
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get the consumer lag for topic ``my_topic`` partition ``0`` consumed by consumer-group ``my_consumer_group``.",
+				Text: "Get the consumer lag for topic `my_topic` partition `0` consumed by consumer-group `my_consumer_group`.",
 				Code: "ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0",
 			},
 		),
