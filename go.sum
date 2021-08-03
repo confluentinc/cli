@@ -283,11 +283,14 @@ github.com/confluentinc/cc-structs/kafka/core v0.753.0 h1:hVygK30o8gjFc8iPT/0P1+
 github.com/confluentinc/cc-structs/kafka/core v0.753.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
 github.com/confluentinc/cc-structs/kafka/flow v0.753.0 h1:2WQI/6f5P6TX+PvzpOMEwA5Mg5FFEk4zhBA0nETrMUc=
 github.com/confluentinc/cc-structs/kafka/flow v0.753.0/go.mod h1:SkBZeCw6j3FEstbJXcIDTuo6LLW87PxAJIVRU82/Fb8=
+github.com/confluentinc/cc-structs/kafka/flow v0.812.0 h1:xKuhIEyG1sWQ68KzYQ3QLYgaV4v9wOSS9l8vw6V1p7o=
+github.com/confluentinc/cc-structs/kafka/flow v0.812.0/go.mod h1:LtQOBBWg2gDpmVwCZ+xqzJUPMN7/3rqWtUI2SQCO/C4=
 github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 h1:4GadALf+CNNcIvnDKj7Lhc15tAFWExg4RDMe7JqGqKo=
 github.com/confluentinc/cc-structs/kafka/metrics v0.753.0/go.mod h1:clmdyh3waKvMqXZMxFZH6c0FKc3WdwmEcErqPAdEWLI=
 github.com/confluentinc/cc-structs/kafka/org v0.410.0/go.mod h1:cHFmFDME3PjKTkK9B4kvNuar2gzhaUdHGbp1gljkC44=
 github.com/confluentinc/cc-structs/kafka/org v0.719.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.753.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
+github.com/confluentinc/cc-structs/kafka/org v0.776.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.812.0 h1:OrSOFbAWm0iDAMAOnrAYkxHSXOAR5XQWOgnNrmJDusY=
 github.com/confluentinc/cc-structs/kafka/org v0.812.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/product/core v0.405.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
@@ -301,6 +304,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.560.0/go.mod h1:ObI7Nx0HE/
 github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0tD5DmCox4cTTTaq/LwEd+tCd8D7sHSMbI=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0 h1:g8WvOEaHV6w9Wk65Nz7QdGAzVhxADn85BLOtFPZwfy0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0/go.mod h1:kVPBJEDa1rPfaw3GcSFYCr9LuT/YzzwSmgsEOMW4bVQ=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0 h1:ClW6rSIOZvn41+VreGHnkHxTDBFJXt70Z1xjN2+9H34=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
 github.com/confluentinc/cc-structs/kafka/util v0.408.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
@@ -318,6 +323,8 @@ github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjc
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=
 github.com/confluentinc/cire-obelisk v0.285.0 h1:G6Rp7t2HjunL8bkjjcuxGg5xHlGMM+UghFX6+gwrgYM=
 github.com/confluentinc/cire-obelisk v0.285.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
+github.com/confluentinc/cire-obelisk v0.299.0 h1:DKth61Vxb/1f49RX5vZvTzRO7SndV0PXF6YuU/6YYao=
+github.com/confluentinc/cire-obelisk v0.299.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
 github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9/go.mod h1:MUrc101nfomW+4pCJKUAiWFsmUTfFwMnXpBxFd6gEqk=
 github.com/confluentinc/crn v0.1.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/events v0.0.0-20200410230739-3f254df71881/go.mod h1:80TdvWyMqf/wqxlNrQFY2y9o8yKQX/guxW1HB4mHz2A=

@@ -17,10 +17,10 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
 	github.com/confluentinc/cc-structs/kafka/core v0.753.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.753.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.812.0
 	github.com/confluentinc/cc-structs/kafka/org v0.812.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.80
@@ -98,5 +98,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v1 => ../ccloud-sdk-go
 
 go 1.16

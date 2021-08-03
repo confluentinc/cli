@@ -21,22 +21,18 @@ var (
 	ssoConfigs = map[string]ssoConfig{
 		"cpd": {
 			ssoProviderDomain:     "login-cpd.confluent-dev.io",
-			ssoProviderClientID:   "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb",
 			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
 		},
 		"devel": {
 			ssoProviderDomain:     "login.confluent-dev.io",
-			ssoProviderClientID:   "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
 		},
 		"stag": {
 			ssoProviderDomain:     "login-stag.confluent-dev.io",
-			ssoProviderClientID:   "Lk2u2MHszzpmmiJ1LetzZw3ur41nqLrw",
 			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
 		},
 		"prod": {
 			ssoProviderDomain:     "login.confluent.io",
-			ssoProviderClientID:   "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH",
 			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
 		},
 	}
@@ -91,7 +87,7 @@ func newState(authURL string, noBrowser bool, logger *log.Logger) (*authState, e
 	state.logger = logger
 	state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint
 	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
-	state.SSOProviderClientID = ssoConfigs[env].ssoProviderClientID
+	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
 	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
 
 	if !noBrowser {

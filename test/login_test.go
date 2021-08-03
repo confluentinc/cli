@@ -331,8 +331,8 @@ func parseSsoAuthUrlFromOutput(output []byte) string {
 }
 
 func (s *CLITestSuite) ssoAuthenticateViaBrowser(authUrl string) string {
-	opts := chromedp.DefaultExecAllocatorOptions[:] // uncomment to disable headless mode and see the actual browser
-	//chromedp.Flag("headless", false),
+	opts := chromedp.DefaultExecAllocatorOptions[:]
+	//opts = append(opts, chromedp.Flag("headless", false))  // uncomment to disable headless mode and see the actual browser
 
 	var err error
 	var taskCtx context.Context
