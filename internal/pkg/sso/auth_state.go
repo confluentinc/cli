@@ -40,7 +40,6 @@ var (
 
 type ssoConfig struct {
 	ssoProviderDomain     string
-	ssoProviderClientID   string
 	ssoProviderIdentifier string
 }
 
