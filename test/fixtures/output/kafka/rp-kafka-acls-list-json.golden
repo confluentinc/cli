@@ -5,6 +5,7 @@
     "permission": "ALLOW",
     "resource": "TOPIC",
     "service_account_id": "",
-    "type": ""
+    "type": "",
+    "user_id": "User:Alice"
   }
 ]

@@ -1,3 +1,3 @@
-  ServiceAccountId | Permission | Operation | Resource |         Name          | Type  
-+------------------+------------+-----------+----------+-----------------------+------+
-  User:Alice       | ALLOW      | READ      | TOPIC    | test-rest-proxy-topic |       
+    UserId   | ServiceAccountId | Permission | Operation | Resource |         Name          | Type  
++------------+------------------+------------+-----------+----------+-----------------------+------+
+  User:Alice |                  | ALLOW      | READ      | TOPIC    | test-rest-proxy-topic |       
