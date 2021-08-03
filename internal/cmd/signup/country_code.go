@@ -196,7 +196,6 @@ var countryCodes = map[string]string{
 	"GS": "South Georgia and the South Sandwich Islands",
 	"ES": "Spain",
 	"LK": "Sri Lanka",
-	"SD": "Sudan",
 	"SR": "Suriname",
 	"SJ": "Svalbard and Jan Mayen",
 	"SZ": "Eswatini",
