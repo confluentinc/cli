@@ -71,11 +71,8 @@ type partitionDescribeDisplay struct {
 }
 
 type structuredDescribeDisplay struct {
-	TopicName         string                     `json:"topic_name" yaml:"topic_name"`
-	PartitionCount    int                        `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int                        `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
-	Config            map[string]string          `json:"config" yaml:"config"`
+	TopicName string            `json:"topic_name" yaml:"topic_name"`
+	Config    map[string]string `json:"config" yaml:"config"`
 }
 
 type partitionData struct {
@@ -1070,19 +1067,8 @@ func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
 }
 
 func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
-	utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
-		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
-
-	var partitions [][]string
-	titleRow := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-	for _, partition := range resp.Partitions {
-		partitions = append(partitions, printer.ToRow(getPartitionDisplay(partition, resp.Name), titleRow))
-	}
-
-	printer.RenderCollectionTable(partitions, titleRow)
-
 	var entries [][]string
-	titleRow = []string{"Name", "Value"}
+	titleRow := []string{"Name", "Value"}
 	for _, entry := range resp.Config {
 		record := &struct {
 			Name  string
@@ -1104,14 +1090,6 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 func printStructuredTopicDescription(resp *schedv1.TopicDescription, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
-	structuredDisplay.PartitionCount = len(resp.Partitions)
-	structuredDisplay.ReplicationFactor = len(resp.Partitions[0].Replicas)
-
-	var partitionList []partitionDescribeDisplay
-	for _, partition := range resp.Partitions {
-		partitionList = append(partitionList, *getPartitionDisplay(partition, resp.Name))
-	}
-	structuredDisplay.Partitions = partitionList
 
 	for _, entry := range resp.Config {
 		structuredDisplay.Config[entry.Name] = entry.Value
