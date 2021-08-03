@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
@@ -425,7 +426,8 @@ func (c *aclCommand) ACLResourceIdtoNumericId(acl []*ACLConfiguration) error {
 	}
 	for i := 0; i < len(acl); i++ {
 		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
-			id := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
+			principal := acl[i].ACLBinding.Entry.Principal // extract service account id
+			id := strings.Split(principal, ":")[1]
 			_, err := strconv.Atoi(id)
 			if err != nil { // it's a resource id
 				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(userIdByResourceIdMap[id])) // translate into numeric ID
