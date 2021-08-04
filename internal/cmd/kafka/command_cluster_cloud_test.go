@@ -385,7 +385,7 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 	args := []string{"update", clusterName, "--cku", "2"}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req.True(suite.metricsApi.QueryV2Called())
-	req.Contains(err.Error(), "Cluster Shrink Validation Error")
+	req.Contains(err.Error(), "cluster shrink validation error")
 }
 
 func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {

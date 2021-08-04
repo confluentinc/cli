@@ -540,12 +540,12 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 			// metrics api auth via jwt
 			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, true)
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
-				return currentCluster.Cku, errFromSmallWindowMetrics
+				return currentCluster.Cku, fmt.Errorf("cluster shrink validation error: %v", errFromSmallWindowMetrics)
 			}
-			shouldPrompt, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, false)
+			_, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, false)
 			if errFromLargeWindowMetrics != nil {
 				if errFromSmallWindowMetrics != nil {
-					err = fmt.Errorf("%v \n\n %v", errFromSmallWindowMetrics.Error(), errFromLargeWindowMetrics.Error())
+					err = fmt.Errorf("cluster shrink validation error:\n%v\n%v", errFromSmallWindowMetrics.Error(), errFromLargeWindowMetrics.Error())
 				}
 				ok, err := confirmShrink(cmd, prompt, err)
 				if !ok || err != nil {
@@ -561,36 +561,38 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 }
 
 func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool) (bool, error) {
+	var window string
+	if isLatestMetric {
+		window = "15 min"
+	} else {
+		window = "3 days"
+	}
 	// Get usage limits
 	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, currentCluster, cku)
 	if err != nil {
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
 	}
-	errorMessage := errors.Errorf("Cluster Shrink Validation Error ")
+	errorMessage := errors.Errorf("\n\nLooking at metrics in the last %s window:", window)
 	shouldPrompt := true
 	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
 	if isValidPartitionCountErr != nil {
-		errorMessage = errors.Wrap(isValidPartitionCountErr, errorMessage.Error())
-		if isLatestMetric {
-			shouldPrompt = false
-		}
+		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidPartitionCountErr.Error())
+		shouldPrompt = false
 	}
 	var isValidStorageLimitErr error
 	isValidStorageLimitErr = nil
 	if !currentCluster.InfiniteStorage {
 		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
 		if isValidStorageLimitErr != nil {
-			errorMessage = errors.Wrap(isValidStorageLimitErr, errorMessage.Error())
-			if isLatestMetric {
-				shouldPrompt = false
-			}
+			errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidStorageLimitErr.Error())
+			shouldPrompt = false
 		}
 	}
 	// Get Cluster Load Metric
 	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
 	if isValidLoadErr != nil {
-		errorMessage = errors.Wrap(isValidLoadErr, errorMessage.Error())
+		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidLoadErr)
 	}
 	if isValidStorageLimitErr == nil && isValidLoadErr == nil && isValidPartitionCountErr == nil {
 		return false, nil
