@@ -492,11 +492,10 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			for _, replica := range replicaStatusDataList.Data {
 				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
 					partitionIdToData[replica.PartitionId] = partitionData{
-						TopicName: 	 replica.TopicName,
-						PartitionId: replica.PartitionId,
-						ReplicaBrokerIds: []int32{replica.BrokerId},
+						TopicName:              replica.TopicName,
+						PartitionId:            replica.PartitionId,
+						ReplicaBrokerIds:       []int32{replica.BrokerId},
 						InSyncReplicaBrokerIds: []int32{},
-
 					}
 				} else {
 					tmp := partitionIdToData[replica.PartitionId]
