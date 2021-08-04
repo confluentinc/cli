@@ -520,7 +520,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		}
 		// Ensure the cluster is a Dedicated Cluster
 		if !isDedicated(currentCluster) {
-			return currentCluster.Cku, errors.New(errors.ClusterResizeNotSupported)
+			return currentCluster.Cku, errors.Errorf("error updating kafka cluster: %v", errors.ClusterResizeNotSupported)
 		}
 		// Durability Checks
 		if currentCluster.Durability == schedv1.Durability_HIGH && cku <= 1 {
@@ -542,12 +542,16 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
 				return currentCluster.Cku, fmt.Errorf("cluster shrink validation error: %v", errFromSmallWindowMetrics)
 			}
+			promptMessage := ""
+			if shouldPrompt {
+				promptMessage = fmt.Sprintf("\n%v\n", errFromSmallWindowMetrics)
+			}
 			_, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, false)
 			if errFromLargeWindowMetrics != nil {
-				if errFromSmallWindowMetrics != nil {
-					err = fmt.Errorf("cluster shrink validation error:\n%v\n%v", errFromSmallWindowMetrics.Error(), errFromLargeWindowMetrics.Error())
-				}
-				ok, err := confirmShrink(cmd, prompt, err)
+				promptMessage += fmt.Sprintf("\n%v\n", errFromLargeWindowMetrics)
+			}
+			if promptMessage != "" {
+				ok, err := confirmShrink(cmd, prompt, promptMessage)
 				if !ok || err != nil {
 					return currentCluster.Cku, err
 				} else {
@@ -600,8 +604,8 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	return shouldPrompt, errorMessage
 }
 
-func confirmShrink(cmd *cobra.Command, prompt form.Prompt, validationError error) (bool, error) {
-	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that:\n %s\n. Do you want to proceed with shrinking your kafka cluster?", validationError), IsYesOrNo: true})
+func confirmShrink(cmd *cobra.Command, prompt form.Prompt, promptMessage string) (bool, error) {
+	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that:\n %s\n. Do you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
 	if err := f.Prompt(cmd, prompt); err != nil {
 		utils.ErrPrintln(cmd, errors.FailedToReadClusterResizeConfirmationErrorMsg)
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)

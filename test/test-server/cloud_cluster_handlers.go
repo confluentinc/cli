@@ -61,6 +61,33 @@ func (c *CloudRouter) HandleKafkaClusterCreate(t *testing.T) func(w http.Respons
 	}
 }
 
+// Handler for: "/api/usage_limits"
+func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		usageLimitsReply := &schedv1.GetUsageLimitsReply{UsageLimits: &productv1.UsageLimits{
+			TierLimits: map[string]*productv1.TierFixedLimits{
+				"BASIC": {
+					PartitionLimits: &productv1.KafkaPartitionLimits{},
+					ClusterLimits:   &productv1.KafkaClusterLimits{},
+				},
+			},
+			CkuLimits: map[uint32]*productv1.CKULimits{
+				uint32(1): {
+					NumBrokers: &productv1.IntegerUsageLimit{Limit: &productv1.IntegerUsageLimit_Value{Value: 5}},
+					Storage: &productv1.IntegerUsageLimit{
+						Limit: &productv1.IntegerUsageLimit_Value{Value: 500},
+						Unit:  productv1.LimitUnit_GB,
+					},
+				},
+			},
+		}}
+		b, err := utilv1.MarshalJSONToBytes(usageLimitsReply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/api/clusters/{id}"
 func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -336,7 +363,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w htt
 					NetworkIngress:  50,
 					NetworkEgress:   150,
 					Storage:         30000,
-					Status:          schedv1.ClusterStatus_SHRINKING,
+					Status:          schedv1.ClusterStatus_UP,
 					ServiceProvider: "aws",
 					Region:          "us-west-2",
 					Endpoint:        "SASL_SSL://kafka-endpoint",

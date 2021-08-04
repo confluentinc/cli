@@ -43,6 +43,7 @@ const (
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
+	usageLimits         = "/api/usage_limits"
 )
 
 type CloudRouter struct {
@@ -84,6 +85,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addUserRoutes(t)
 	c.addConnectorsRoutes(t)
 	c.addV2AlphaRoutes(t)
+	c.addUsageLimitRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -149,4 +151,8 @@ func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {
 	c.HandleFunc(connectorPlugins, c.HandlePlugins(t))
 	c.HandleFunc(connectCatalog, c.HandleConnectCatalog(t))
 	c.HandleFunc(connectorUpdate, c.HandleConnectUpdate(t))
+}
+
+func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
+	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
 }

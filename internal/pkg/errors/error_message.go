@@ -107,7 +107,7 @@ const (
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP."
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupported                     = "Cluster Resize is not support on Non-Dedicated clusters."
+	ClusterResizeNotSupported                     = "Cluster resize is support only on dedicated clusters."
 	CloudRegionNotAvailableErrorMsg               = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
