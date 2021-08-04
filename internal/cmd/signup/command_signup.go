@@ -20,7 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
-	countryCodesRef "github.com/confluentinc/country-code/codes"
+	countryCodesRef "github.com/confluentinc/country-code"
 )
 
 type command struct {

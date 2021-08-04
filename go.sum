@@ -319,10 +319,8 @@ github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM
 github.com/confluentinc/cire-obelisk v0.285.0 h1:G6Rp7t2HjunL8bkjjcuxGg5xHlGMM+UghFX6+gwrgYM=
 github.com/confluentinc/cire-obelisk v0.285.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
 github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9/go.mod h1:MUrc101nfomW+4pCJKUAiWFsmUTfFwMnXpBxFd6gEqk=
-github.com/confluentinc/country-code v0.0.0-20210803231044-1b3d1982f6e6 h1:jkzI70nD+BWo3UmGoQr3FHoNq+r6DzCuzkDQwpNg0wY=
-github.com/confluentinc/country-code v0.0.0-20210803231044-1b3d1982f6e6/go.mod h1:cekf6CAFcJ5dgUTxV+dtFs4SppMsCpW0oQ3eCPkDrVs=
-github.com/confluentinc/country-code v0.0.0-20210803232651-93cff968d835 h1:cTaHwNOoXwWX7v5lPKNpo1sWASLLyZyWEMjjB62P8cs=
-github.com/confluentinc/country-code v0.0.0-20210803232651-93cff968d835/go.mod h1:26ApYInElJ+UZcbKLwleMS/bJpXjh+hGaXcpK9/+HJ0=
+github.com/confluentinc/country-code v0.0.0-20210804175746-08538042788c h1:GoD+px9S/IgEQtE2FrYdGkYCk0I8J4D6oQKmLJE3UdQ=
+github.com/confluentinc/country-code v0.0.0-20210804175746-08538042788c/go.mod h1:26ApYInElJ+UZcbKLwleMS/bJpXjh+hGaXcpK9/+HJ0=
 github.com/confluentinc/crn v0.1.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/events v0.0.0-20200410230739-3f254df71881/go.mod h1:80TdvWyMqf/wqxlNrQFY2y9o8yKQX/guxW1HB4mHz2A=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
