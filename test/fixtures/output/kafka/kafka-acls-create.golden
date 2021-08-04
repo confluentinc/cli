@@ -1,0 +1,4 @@
+  ServiceAccountId | Permission | Operation | Resource |     Name     |  Type    
++------------------+------------+-----------+----------+--------------+---------+
+  User:0           | ALLOW      | READ      | TOPIC    | 'test-topic' | LITERAL  
+  User:0           | ALLOW      | DESCRIBE  | TOPIC    | 'test-topic' | LITERAL  

@@ -105,7 +105,6 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 				ResourceId: v3.MockUserResourceId,
 			}}, nil
 		},
-		CheckEmailFunc: nil,
 	}
 	client := &ccloud.Client{
 		User: userMock,
@@ -201,7 +200,6 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(
 		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {
 			return <-mockeddListUserResult, nil
 		},
-		CheckEmailFunc: nil,
 	}
 	client := &ccloud.Client{
 		User: userMock,

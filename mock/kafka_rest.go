@@ -4,8 +4,9 @@ import (
 	"context"
 	nethttp "net/http"
 
-	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 // Compile-time check interface adherence

@@ -3,11 +3,12 @@ package auth
 
 import (
 	"context"
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	"github.com/confluentinc/cli/internal/pkg/sso"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -156,7 +157,7 @@ func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.
 	return func() (*Credentials, error) {
 		utils.Println(cmd, "Enter your Confluent Cloud credentials:")
 		email := h.promptForUser(cmd, "Email")
-		if isSSOUser(email, client) {
+		if h.isSSOUser(email, client) {
 			h.logger.Debug("Entered email belongs to an SSO user.")
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
@@ -199,12 +200,18 @@ func (h *LoginCredentialsManagerImpl) promptForPassword(cmd *cobra.Command) stri
 	return f.Responses[passwordField].(string)
 }
 
-func isSSOUser(email string, cloudClient *ccloud.Client) bool {
-	userSSO, err := cloudClient.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
+func (h *LoginCredentialsManagerImpl) isSSOUser(email string, cloudClient *ccloud.Client) bool {
+	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(cloudClient.BaseURL)
+	h.logger.Debugf("cloudClient.BaseURL: %s", cloudClient.BaseURL)
+	h.logger.Debugf("auth0ClientId: %s", auth0ClientId)
+	loginRealmReply, err := cloudClient.User.LoginRealm(context.Background(),
+		&flowv1.GetLoginRealmRequest{
+			Email: email,
+			ClientId: auth0ClientId,
+		})
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
-	// If Auth0ConnectionName is blank ("local" user) still prompt for password
-	if err == nil && userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
+	if err == nil && loginRealmReply.IsSso {
 		return true
 	}
 	return false

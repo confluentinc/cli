@@ -27,7 +27,7 @@ const (
 	rpTopics            = "/kafka/v3/clusters/{cluster}/topics"
 	rpPartitions        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
 	rpPartitionReplicas = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-	rpReplicaStatus		= "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
+	rpReplicaStatus     = "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
 	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 	rpConfigsAlter      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
 	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
