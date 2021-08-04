@@ -487,8 +487,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
 			replicaStatusDataList, httpResp, err := kafkaREST.Client.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(kafkaREST.Context, lkc, topicName)
 			if err != nil {
-				fmt.Println(err)
-				fmt.Println(kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp))
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			} else if replicaStatusDataList.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
