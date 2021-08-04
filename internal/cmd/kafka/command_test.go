@@ -1144,7 +1144,6 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 					},
 				}, nil
 			},
-			CheckEmailFunc: nil,
 		},
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
