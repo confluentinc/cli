@@ -476,7 +476,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
 
 			topicData := &topicData{}
-
+			topicData.TopicName = topicName
 			// Get topic config
 			configsResp, httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(kafkaREST.Context, lkc, topicName)
 			if err != nil {
@@ -999,7 +999,8 @@ func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
-	utils.Print(cmd, "Configuration\n\n")
+	utils.Printf(cmd, "Topic: %s\n", topicData.TopicName)
+	utils.Print(cmd, "\nConfiguration\n\n")
 	configsTableLabels := []string{"Name", "Value"}
 	configsTableEntries := make([][]string, len(topicData.Configs))
 	i := 0
@@ -1018,6 +1019,7 @@ func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
 }
 
 func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
+	utils.Printf(cmd, "Topic: %s\n", resp.Name)
 	var entries [][]string
 	titleRow := []string{"Name", "Value"}
 	for _, entry := range resp.Config {
@@ -1033,7 +1035,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Print(cmd, "Configuration\n\n")
+	utils.Print(cmd, "\nConfiguration\n\n")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
