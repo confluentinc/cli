@@ -739,7 +739,6 @@ func (c *clusterCommand) getUsageLimit(ctx context.Context, currentCluster *sche
 	} else {
 		cloud = currentCluster.Deployment.Provider.Cloud
 	}
-
 	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx, cloud)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "Could not retrieve partition count usage limits. Please try again or contact support.")
