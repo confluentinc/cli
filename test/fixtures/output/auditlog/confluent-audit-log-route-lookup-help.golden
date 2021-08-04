@@ -4,7 +4,7 @@ Usage:
   confluent audit-log route lookup <crn> [flags]
 
 Flags:
-      --context string   CLI Context name.
+      --context string   CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

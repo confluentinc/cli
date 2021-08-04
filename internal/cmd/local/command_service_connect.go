@@ -48,15 +48,15 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "Print the current configuration of a connector named ``s3-sink``:",
+					Text: "Print the current configuration of a connector named `s3-sink`:",
 					Code: "confluent local services connect connector config s3-sink",
 				},
 				examples.Example{
-					Text: "Configure a connector named ``wikipedia-file-source`` by passing its configuration properties in JSON format.",
+					Text: "Configure a connector named `wikipedia-file-source` by passing its configuration properties in JSON format.",
 					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.json",
 				},
 				examples.Example{
-					Text: "Configure a connector named ``wikipedia-file-source`` by passing its configuration properties as Java properties.",
+					Text: "Configure a connector named `wikipedia-file-source` by passing its configuration properties as Java properties.",
 					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.properties",
 				},
 			),
@@ -193,7 +193,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "Load a predefined connector called ``s3-sink``:",
+					Text: "Load a predefined connector called `s3-sink`:",
 					Code: "confluent local load s3-sink",
 				},
 			),
@@ -268,7 +268,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.ExactArgs(1),
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "Unload a predefined connector called ``s3-sink``:",
+					Text: "Unload a predefined connector called `s3-sink`:",
 					Code: "confluent local unload s3-sink",
 				},
 			),

@@ -8,11 +8,7 @@ import (
 	flag "github.com/spf13/pflag"
 	shellparser "mvdan.cc/sh/v3/shell"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/feedback"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
@@ -25,13 +21,10 @@ type ShellPrompt struct {
 	*goprompt.Prompt
 	RootCmd *instrumentedCommand
 	completer.Completer
-	Config *v3.Config
 }
 
 type instrumentedCommand struct {
 	*cobra.Command
-	analytics analytics.Client
-	logger    *log.Logger
 }
 
 // Slice and array flags need to get reset;
@@ -69,9 +62,8 @@ func resetArrayAndSliceFlags(c *cobra.Command) error {
 	return nil
 }
 
-func (c *instrumentedCommand) Execute(cliName string, args []string) error {
+func (c *instrumentedCommand) Execute(args []string) error {
 	var err error
-	c.analytics.SetStartTime()
 	if c.Command.HasFlags() {
 		err = resetArrayAndSliceFlags(c.Command)
 		if err != nil {
@@ -81,31 +73,23 @@ func (c *instrumentedCommand) Execute(cliName string, args []string) error {
 	c.Command.SetArgs(args)
 	err = c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
-	analytics.SendAnalyticsAndLog(c.Command, args, err, c.analytics, c.logger)
-	feedback.HandleFeedbackNudge(cliName, args)
 	return err
 }
 
-func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, cfg *v3.Config, logger *log.Logger, analytics analytics.Client, opts ...goprompt.Option) *ShellPrompt {
+func NewShellPrompt(rootCmd *cobra.Command, compl completer.Completer, opts ...goprompt.Option) *ShellPrompt {
 	shell := &ShellPrompt{
 		Completer: compl,
-		RootCmd: &instrumentedCommand{
-			Command:   rootCmd,
-			analytics: analytics,
-			logger:    logger,
-		},
-		Config: cfg,
+		RootCmd:   &instrumentedCommand{Command: rootCmd},
 	}
-	prompt := goprompt.New(promptExecutorFunc(cfg, shell), shell.Complete, opts...)
-	shell.Prompt = prompt
+	shell.Prompt = goprompt.New(promptExecutorFunc(shell), shell.Complete, opts...)
 
 	return shell
 }
 
-func promptExecutorFunc(cfg *v3.Config, shell *ShellPrompt) func(string) {
+func promptExecutorFunc(shell *ShellPrompt) func(string) {
 	return func(in string) {
 		promptArgs, _ := shellparser.Fields(in, func(string) string { return "" })
-		_ = shell.RootCmd.Execute(cfg.CLIName, promptArgs)
+		_ = shell.RootCmd.Execute(promptArgs)
 	}
 }
 

@@ -1,7 +1,7 @@
 - host: '*'
   operation: READ
-  pattern_type: ""
+  pattern_type: LITERAL
   permission: ALLOW
-  principal: User:Alice
-  resource_name: test-rest-proxy-topic
+  principal: User:sa-123
+  resource_name: test-topic
   resource_type: TOPIC

@@ -193,7 +193,15 @@ func (suite *APITestSuite) SetupTest() {
 				},
 			}, nil
 		},
-		CheckEmailFunc: nil,
+		ListFunc: func(_ context.Context) ([]*v1.User, error) {
+			return []*v1.User{
+				{
+					Id:          serviceAccountId,
+					ResourceId:  userResourceId,
+					ServiceName: serviceAccountName,
+				},
+			}, nil
+		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)

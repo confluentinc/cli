@@ -3,13 +3,9 @@ Usage:
   ccloud api-key create [flags]
 
 Examples:
-Create an API key for service account with resource ID ``sa-lqv3mm`` for cluster ``lkc-xyz``
+Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`
 
-::
-
-  ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm 
-
-
+  $ ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm
 
 Flags:
       --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.
@@ -17,7 +13,7 @@ Flags:
       --description string       Description of API key.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
       --environment string       Environment ID.
-      --context string           CLI Context name.
+      --context string           CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -109,23 +109,11 @@ func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *h
 	}
 }
 
-// Handler for: "/api/check_email/{email}"
-func (c *CloudRouter) HandleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+// Handler for: "/api/login/realm"
+func (c *CloudRouter) HandleLoginRealm(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := require.New(t)
-		vars := mux.Vars(r)
-		email := vars["email"]
-		reply := &orgv1.GetUserReply{}
-		switch email {
-		case "cody@confluent.io":
-			reply.User = &orgv1.User{
-				Email: "cody@confluent.io",
-			}
-		case "already-exists@confluent.io":
-			reply.User = &orgv1.User{
-				Id: 1,
-			}
-		}
+		reply := &flowv1.GetLoginRealmReply{}
 		b, err := utilv1.MarshalJSONToBytes(reply)
 		req.NoError(err)
 		_, err = io.WriteString(w, string(b))
@@ -364,6 +352,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 			apiKey.Created = keyTimestamp
 			if req.ApiKey.UserId == 0 {
 				apiKey.UserId = 23
+				apiKey.UserResourceId = "u-44ddd"
 			} else {
 				apiKey.UserId = req.ApiKey.UserId
 			}
@@ -610,6 +599,7 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 				buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
 				buildUser(4, "u-22bbb@confluent.io", "22", "Bbb", "u-22bbb"),
 				buildUser(5, "u-33ccc@confluent.io", "33", "Ccc", "u-33ccc"),
+				buildUser(23, "mhe@confluent.io", "Muwei", "He", "u-44ddd"),
 			}
 			userId := r.URL.Query().Get("id")
 			if userId != "" {
@@ -678,6 +668,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
 			buildUser(4, "u-22bbb@confluent.io", "22", "Bbb", "u-22bbb"),
 			buildUser(5, "u-33ccc@confluent.io", "33", "Ccc", "u-33ccc"),
+			buildUser(23, "mhe@confluent.io", "Muwei", "He", "u-44ddd"),
 		}
 		var user *orgv1.User
 		switch userId {
@@ -695,6 +686,8 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			user = users[3]
 		case "u-33ccc":
 			user = users[4]
+		case "u-44ddd":
+			user = users[5]
 		default:
 			res = flowv1.GetUserProfileReply{
 				User: &flowv1.UserProfile{
@@ -706,6 +699,9 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			}
 		}
 		if userId != "u-0" {
+			authConfig := &orgv1.AuthConfig{
+				AllowedAuthMethods: []orgv1.AuthMethod{orgv1.AuthMethod_AUTH_METHOD_USERNAME_PWD, orgv1.AuthMethod_AUTH_METHOD_SSO},
+			}
 			res = flowv1.GetUserProfileReply{
 				User: &flowv1.UserProfile{
 					Email:      user.Email,
@@ -713,6 +709,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 					LastName:   user.LastName,
 					ResourceId: user.ResourceId,
 					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
+					AuthConfig: authConfig,
 				},
 			}
 		}

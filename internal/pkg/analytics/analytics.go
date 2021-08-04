@@ -365,7 +365,8 @@ func (a *ClientObj) getCloudUserInfo() (userId, organizationId, email string) {
 	}
 	user := a.config.Context().State.Auth.User
 	userId = strconv.Itoa(int(user.Id))
-	organizationId = strconv.Itoa(int(user.OrganizationId))
+	org := a.config.Context().State.Auth.Organization
+	organizationId = strconv.Itoa(int(org.Id))
 	email = user.Email
 	return userId, organizationId, email
 }

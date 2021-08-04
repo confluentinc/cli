@@ -52,8 +52,8 @@ jobs:
   
   - task: GoTool@0
     inputs:
-      version: '1.12.7'
-    displayName: Switch to Go 1.12.7 for cc-system-tests
+      version: '1.15.7'
+    displayName: Switch to Go 1.15.7 for cc-system-tests
   
   - bash: |
       git clone git@github.com:confluentinc/cc-mk-include.git mk-include

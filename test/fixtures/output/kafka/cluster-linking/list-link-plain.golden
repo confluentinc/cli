@@ -1,4 +1,4 @@
-  LinkName | SourceClusterId  
-+----------+-----------------+
-  link-1   | cluster-1        
-  link-2   | cluster-1        
+  Link Name | Source Cluster Id  
++-----------+-------------------+
+  link-1    | cluster-1          
+  link-2    | cluster-1          

@@ -11,6 +11,10 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -23,9 +27,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -424,11 +425,11 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		enabled, restEndpoint, err := kafkaRestIsEnabled(ctx, cliCmd)
+		restEndpoint, err := getKafkaRestEndpoint(ctx, cliCmd)
 		if err != nil {
 			return nil, err
 		}
-		if enabled {
+		if restEndpoint != "" {
 			result := &KafkaREST{}
 			result.Client, err = createKafkaRESTClient(restEndpoint)
 			if err != nil {
@@ -451,38 +452,36 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func kafkaRestIsEnabled(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (bool, string, error) {
-	return false, "", nil
-	//if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-	//	return false, "", nil
-	//}
-	//clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
-	//if err != nil {
-	//	return false, "", err
-	//}
-	//if clusterConfig.RestEndpoint != "" {
-	//	return true, clusterConfig.RestEndpoint, nil
-	//}
-	//// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
-	//// potentially remove this once Rest Proxy is enabled across prod
-	//client := NewContextClient(ctx)
-	//kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
-	//if err != nil {
-	//	return false, "", err
-	//}
-	//// no need to update the config if it's still empty
-	//if kafkaCluster.RestEndpoint == "" {
-	//	return false, "", nil
-	//}
-	//// update config to have updated cluster if rest endpoint is no longer ""
-	//refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
-	//ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
-	//err = ctx.Save() //should we fail on this error or log and continue?
-	//if err != nil {
-	//	return false, "", err
-	//}
-	//return kafkaCluster.RestEndpoint != "", kafkaCluster.RestEndpoint, nil
-
+func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
+	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
+		return "", nil
+	}
+	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
+	if err != nil {
+		return "", err
+	}
+	if clusterConfig.RestEndpoint != "" {
+		return clusterConfig.RestEndpoint, nil
+	}
+	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
+	// potentially remove this once Rest Proxy is enabled across prod
+	client := NewContextClient(ctx)
+	kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
+	if err != nil {
+		return "", err
+	}
+	// no need to update the config if it's still empty
+	if kafkaCluster.RestEndpoint == "" {
+		return "", nil
+	}
+	// update config to have updated cluster if rest endpoint is no longer ""
+	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
+	err = ctx.Save() //should we fail on this error or log and continue?
+	if err != nil {
+		return "", err
+	}
+	return kafkaCluster.RestEndpoint, nil
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.

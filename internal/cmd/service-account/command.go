@@ -94,7 +94,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a service account named ``DemoServiceAccount``.",
+				Text: "Create a service account named `DemoServiceAccount`.",
 				Code: `ccloud service-account create DemoServiceAccount --description "This is a demo service account."`,
 			},
 		),
@@ -112,7 +112,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of a service account with resource ID ``sa-lqv3mm``",
+				Text: "Update the description of a service account with resource ID `sa-lqv3mm`",
 				Code: `ccloud service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
@@ -129,7 +129,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete a service account with resource ID ``sa-lqv3mm``",
+				Text: "Delete a service account with resource ID `sa-lqv3mm`",
 				Code: "ccloud service-account delete sa-lqv3mm",
 			},
 		),
@@ -165,7 +165,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	user := &orgv1.User{
 		ServiceName:        name,
 		ServiceDescription: description,
-		OrganizationId:     c.State.Auth.User.OrganizationId,
 		ServiceAccount:     true,
 	}
 	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)

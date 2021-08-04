@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --environment string   Environment ID.
-      --context string       CLI Context name.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

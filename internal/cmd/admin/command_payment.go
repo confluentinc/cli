@@ -52,7 +52,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
+	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (c *command) update(cmd *cobra.Command, prompt form.Prompt) error {
 		return err
 	}
 
-	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
+	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	if c.isTest {
 		stripe.Key = keys.StripeTestKey
 	} else {
