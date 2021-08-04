@@ -487,6 +487,8 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
 			replicaStatusDataList, httpResp, err := kafkaREST.Client.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(kafkaREST.Context, lkc, topicName)
 			if err != nil {
+				fmt.Println(err)
+				fmt.Println(kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp))
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			} else if replicaStatusDataList.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
@@ -495,11 +497,10 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			for _, replica := range replicaStatusDataList.Data {
 				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
 					partitionIdToData[replica.PartitionId] = partitionData{
-						TopicName: 	 replica.TopicName,
-						PartitionId: replica.PartitionId,
-						ReplicaBrokerIds: []int32{replica.BrokerId},
+						TopicName:              replica.TopicName,
+						PartitionId:            replica.PartitionId,
+						ReplicaBrokerIds:       []int32{replica.BrokerId},
 						InSyncReplicaBrokerIds: []int32{},
-
 					}
 				} else {
 					tmp := partitionIdToData[replica.PartitionId]
@@ -544,7 +545,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			return output.StructuredOutput(outputOption, topicData)
 		}
 	}
-
 	// Kafka REST is not available, fallback to KafkaAPI
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
@@ -1102,7 +1102,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Println(cmd, "\nConfiguration\n ")
+	utils.Println(cmd, "\nConfiguration\n")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
