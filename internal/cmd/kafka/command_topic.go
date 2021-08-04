@@ -84,11 +84,8 @@ type partitionData struct {
 }
 
 type topicData struct {
-	TopicName         string            `json:"topic_name" yaml:"topic_name"`
-	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []partitionData   `json:"partitions" yaml:"partitions"`
-	Configs           map[string]string `json:"config" yaml:"config"`
+	TopicName string            `json:"topic_name" yaml:"topic_name"`
+	Configs   map[string]string `json:"config" yaml:"config"`
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
@@ -456,7 +453,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
+		_, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -479,47 +476,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
 
 			topicData := &topicData{}
-			topicData.TopicName = topicName
-			topicData.PartitionCount = len(partitionsResp.Data)
-			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
-			replicaStatusDataList, httpResp, err := kafkaREST.Client.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(kafkaREST.Context, lkc, topicName)
-			if err != nil {
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-			} else if replicaStatusDataList.Data == nil {
-				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
-			}
-			partitionIdToData := make(map[int32]partitionData)
-			for _, replica := range replicaStatusDataList.Data {
-				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
-					partitionIdToData[replica.PartitionId] = partitionData{
-						TopicName:              replica.TopicName,
-						PartitionId:            replica.PartitionId,
-						ReplicaBrokerIds:       []int32{replica.BrokerId},
-						InSyncReplicaBrokerIds: []int32{},
-					}
-				} else {
-					tmp := partitionIdToData[replica.PartitionId]
-					tmp.ReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].ReplicaBrokerIds, replica.BrokerId)
-					partitionIdToData[replica.PartitionId] = tmp
-				}
-				if replica.IsLeader {
-					tmp := partitionIdToData[replica.PartitionId]
-					tmp.LeaderBrokerId = replica.BrokerId
-					partitionIdToData[replica.PartitionId] = tmp
-				}
-				if replica.IsInIsr {
-					tmp := partitionIdToData[replica.PartitionId]
-					tmp.InSyncReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].InSyncReplicaBrokerIds, replica.BrokerId)
-					partitionIdToData[replica.PartitionId] = tmp
-				}
-			}
-
-			for i, data := range partitionsResp.Data {
-				if i == 0 {
-					topicData.ReplicationFactor = len(partitionIdToData[data.PartitionId].ReplicaBrokerIds)
-				}
-				topicData.Partitions[i] = partitionIdToData[data.PartitionId]
-			}
 
 			// Get topic config
 			configsResp, httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(kafkaREST.Context, lkc, topicName)
@@ -1043,16 +999,7 @@ func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
-	utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
-		topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
-	partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-	partitionsTableEntries := make([][]string, topicData.PartitionCount)
-	for i, partition := range topicData.Partitions {
-		partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
-	}
-	printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
-
-	utils.Print(cmd, "\nConfiguration\n\n")
+	utils.Print(cmd, "Configuration\n\n")
 	configsTableLabels := []string{"Name", "Value"}
 	configsTableEntries := make([][]string, len(topicData.Configs))
 	i := 0
@@ -1086,7 +1033,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Print(cmd, "\nConfiguration\n\n")
+	utils.Print(cmd, "Configuration\n\n")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
