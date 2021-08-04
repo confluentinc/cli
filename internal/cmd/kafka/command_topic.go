@@ -540,7 +540,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			return output.StructuredOutput(outputOption, topicData)
 		}
 	}
-
 	// Kafka REST is not available, fallback to KafkaAPI
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
@@ -1087,7 +1086,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Println(cmd, "Configuration\n ")
+	utils.Print(cmd, "\nConfiguration\n\n")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }

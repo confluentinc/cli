@@ -66,13 +66,7 @@ var (
 			}, nil
 		},
 	}
-	mockUser = &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: "",
-			}, nil
-		},
-	}
+	mockUser = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -148,13 +142,7 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: envUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -203,13 +191,7 @@ func TestLoginSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 
 	suite := []struct {
 		cliName string
@@ -682,13 +664,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 
 	suite := []struct {
 		cliName string

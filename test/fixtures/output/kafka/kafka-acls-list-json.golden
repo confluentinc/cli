@@ -1,10 +1,11 @@
 [
   {
-    "name": "test-rest-proxy-topic",
+    "name": "test-topic",
     "operation": "READ",
     "permission": "ALLOW",
     "resource": "TOPIC",
     "service_account_id": "",
-    "type": ""
+    "type": "LITERAL",
+    "user_id": "User:sa-123"
   }
 ]
