@@ -1048,26 +1048,6 @@ func printStructuredTopicDescription(resp *schedv1.TopicDescription, format stri
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func getPartitionDisplay(partition *schedv1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
-	var replicas []uint32
-	for _, replica := range partition.Replicas {
-		replicas = append(replicas, replica.Id)
-	}
-
-	var isr []uint32
-	for _, replica := range partition.Isr {
-		isr = append(isr, replica.Id)
-	}
-
-	return &partitionDescribeDisplay{
-		Topic:     topicName,
-		Partition: partition.Partition,
-		Leader:    partition.Leader.Id,
-		Replicas:  replicas,
-		ISR:       isr,
-	}
-}
-
 func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.TopicDescription, error) {
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
