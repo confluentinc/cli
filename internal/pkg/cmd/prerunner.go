@@ -454,7 +454,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 }
 
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") == "" {
+	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", nil
 	}
 	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
