@@ -75,14 +75,6 @@ type structuredDescribeDisplay struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-type partitionData struct {
-	TopicName              string  `json:"topic" yaml:"topic"`
-	PartitionId            int32   `json:"partition" yaml:"partition"`
-	LeaderBrokerId         int32   `json:"leader" yaml:"leader"`
-	ReplicaBrokerIds       []int32 `json:"replicas" yaml:"replicas"`
-	InSyncReplicaBrokerIds []int32 `json:"isr" yaml:"isr"`
-}
-
 type topicData struct {
 	TopicName string            `json:"topic_name" yaml:"topic_name"`
 	Configs   map[string]string `json:"config" yaml:"config"`
