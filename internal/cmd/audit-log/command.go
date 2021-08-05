@@ -22,9 +22,10 @@ type command struct {
 func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
-			Use:   "audit-log",
-			Short: "Manage audit log configuration.",
-			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
+			Use:         "audit-log",
+			Short:       "Manage audit log configuration.",
+			Long:        "Manage which auditable events are logged, and where the event logs are sent.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 		}, prerunner)
 	cmd := &command{
 		CLICommand: cliCmd,
@@ -35,7 +36,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) init(cfg *v3.Config) {
-	if cfg.IsCloud() {
+	if cfg.IsCloudLogin() {
 		c.AddCommand(NewDescribeCommand(c.prerunner))
 	} else {
 		c.AddCommand(NewMigrateCommand(c.prerunner))

@@ -117,6 +117,10 @@ func (c *Context) Save() error {
 }
 
 func (c *Context) HasMDSLogin() bool {
+	if c.Credential == nil {
+		return false
+	}
+
 	credType := c.Credential.CredentialType
 	switch credType {
 	case v2.Username:

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	"github.com/confluentinc/cli/internal/cmd/api-key"
+	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/audit-log"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
@@ -111,75 +111,56 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		Version:                 ver,
 	}
 
-	command := &command{Command: cli, Analytics: analyticsClient, logger: logger}
-
 	var serverCompleter completer.ServerSideCompleter
 	shellCompleter := completer.NewShellCompleter(cli)
-	if cfg.IsCloud() {
-		serverCompleter = shellCompleter.ServerSideCompleter
-	}
-
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
-	// No-login commands
-	cli.AddCommand(completion.New(cli))
-	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
-	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
-	cli.AddCommand(local.New(prerunner))
-	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
-	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	if !cfg.DisableUpdates {
-		cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
-	}
-	cli.AddCommand(version.New(prerunner, ver))
+	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
+	connectorCmd := connector.New(prerunner, analyticsClient)
+	connectorCatalogCmd := connectorcatalog.New(prerunner)
+	environmentCmd := environment.New(prerunner, analyticsClient)
+	serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
-	if cfg.IsCloud() {
-		cli.AddCommand(admin.New(prerunner, isTest))
-		cli.AddCommand(auditlog.New(cfg, prerunner))
-		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
-
-		// If a user logs in with an API key, don't allow the remaining commands.
-		if isAPIKeyLogin {
-			return command
-		}
-
-		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-		connectorCmd := connector.New(prerunner, analyticsClient)
-		connectorCatalogCmd := connectorcatalog.New(prerunner)
-		environmentCmd := environment.New(prerunner, analyticsClient)
-		serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
+	if cfg.IsCloudLogin() {
+		serverCompleter = shellCompleter.ServerSideCompleter
 
 		serverCompleter.AddCommand(apiKeyCmd)
 		serverCompleter.AddCommand(connectorCmd)
 		serverCompleter.AddCommand(connectorCatalogCmd)
 		serverCompleter.AddCommand(environmentCmd)
 		serverCompleter.AddCommand(serviceAccountCmd)
-
-		cli.AddCommand(apiKeyCmd.Command)
-		cli.AddCommand(connectorCatalogCmd.Command)
-		cli.AddCommand(connectorCmd.Command)
-		cli.AddCommand(environmentCmd.Command)
-		cli.AddCommand(iam.New(cfg, prerunner))
-		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
-		cli.AddCommand(price.New(prerunner))
-		cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
-		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
-		cli.AddCommand(serviceAccountCmd.Command)
-		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
-		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	}
 
-	if cfg.IsOnPrem() {
-		cli.AddCommand(auditlog.New(cfg, prerunner))
-		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
-		cli.AddCommand(connect.New(prerunner))
-		cli.AddCommand(iam.New(cfg, prerunner))
-		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
-		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
-	}
+	cli.AddCommand(admin.New(prerunner, isTest))
+	cli.AddCommand(apiKeyCmd.Command)
+	cli.AddCommand(auditlog.New(cfg, prerunner))
+	cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
+	cli.AddCommand(completion.New(cli))
+	cli.AddCommand(config.New(cfg.IsCloudLogin(), prerunner, analyticsClient))
+	cli.AddCommand(connect.New(prerunner))
+	cli.AddCommand(connectorCatalogCmd.Command)
+	cli.AddCommand(connectorCmd.Command)
+	cli.AddCommand(environmentCmd.Command)
+	cli.AddCommand(iam.New(cfg, prerunner))
+	cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
+	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
+	cli.AddCommand(local.New(prerunner))
+	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
+	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
+	cli.AddCommand(price.New(prerunner))
+	cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
+	cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
+	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
+	cli.AddCommand(serviceAccountCmd.Command)
+	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
+	cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
+	cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
+	cli.AddCommand(version.New(prerunner, ver))
 
-	return command
+	hideAndErrIfMissingRunRequirement(cli, cfg)
+
+	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
 }
 
 func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
@@ -226,13 +207,26 @@ func LoadConfig() (*v3.Config, error) {
 }
 
 func getLongDescription(cfg *v3.Config) string {
-	if cfg.IsCloud() {
+	switch {
+	case cfg.IsCloudLogin():
 		return "Manage your Confluent Cloud."
-	}
-
-	if cfg.IsOnPrem() {
+	case cfg.IsOnPremLogin():
 		return "Manage your Confluent Platform."
+	default:
+		return "Manage your Confluent Cloud or Confluent Platform. Log in to see all available commands."
+	}
+}
+
+// hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement; for example, an on-prem command
+// shouldn't be used by a cloud user.
+func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) {
+	if err := pcmd.ErrIfMissingRunRequirement(cmd, cfg); err != nil {
+		cmd.Hidden = true
+		cmd.SilenceUsage = true
+		cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
 	}
 
-	return "Manage your Confluent Cloud or Confluent Platform. Log in to see all available commands."
+	for _, subcommand := range cmd.Commands() {
+		hideAndErrIfMissingRunRequirement(subcommand, cfg)
+	}
 }

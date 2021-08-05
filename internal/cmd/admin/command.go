@@ -9,9 +9,10 @@ import (
 func New(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 	c := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
-			Use:   "admin",
-			Short: "Perform administrative tasks for the current organization.",
-			Args:  cobra.NoArgs,
+			Use:         "admin",
+			Short:       "Perform administrative tasks for the current organization.",
+			Args:        cobra.NoArgs,
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		},
 		prerunner,
 	)

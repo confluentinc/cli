@@ -75,10 +75,11 @@ func New(logger *log.Logger, version *pversion.Version, client update.Client, an
 
 func (c *command) init() {
 	c.Command = &cobra.Command{
-		Use:   "update",
-		Short: fmt.Sprintf("Update the %s.", pversion.FullCLIName),
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:         "update",
+		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.update),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireUpdatesEnabled},
 	}
 	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().SortFlags = false

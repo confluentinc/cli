@@ -88,7 +88,7 @@ func NewRolebindingCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Comma
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *cmd.AuthenticatedStateFlagCommand
-	if cfg.IsOnPrem() {
+	if cfg.IsOnPremLogin() {
 		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRolebindingCmd, prerunner, RolebindingSubcommandFlags)
 	} else {
 		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRolebindingCmd, prerunner, nil)
@@ -102,7 +102,7 @@ func NewRolebindingCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Comma
 }
 
 func (c *rolebindingCommand) init() {
-	isCloud := c.cfg.IsCloud()
+	isCloud := c.cfg.IsCloudLogin()
 
 	var example string
 	if isCloud {
@@ -524,7 +524,7 @@ func (c *rolebindingCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if c.cfg.IsCloud() {
+	if c.cfg.IsCloudLogin() {
 		return c.ccloudList(cmd, options)
 	} else {
 		return c.confluentList(cmd, options)
@@ -731,7 +731,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		return nil, err
 	}
 
-	isCloud := c.cfg.IsCloud()
+	isCloud := c.cfg.IsCloudLogin()
 
 	resource := ""
 	prefix := false
@@ -839,7 +839,7 @@ func (c *rolebindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCloud := c.cfg.IsCloud()
+	isCloud := c.cfg.IsCloudLogin()
 
 	var resp *http.Response
 	if isCloud {
@@ -934,7 +934,7 @@ func (c *rolebindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCloud := c.cfg.IsCloud()
+	isCloud := c.cfg.IsCloudLogin()
 
 	var resp *http.Response
 	if isCloud {
@@ -965,7 +965,7 @@ func check(err error) {
 }
 
 func (c *rolebindingCommand) createContext() context.Context {
-	if c.cfg.IsCloud() {
+	if c.cfg.IsCloudLogin() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.AuthToken())
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())

@@ -31,7 +31,7 @@ import (
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
-	Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error
+	Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
 	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
@@ -39,8 +39,6 @@ type PreRunner interface {
 	ParseFlagsIntoContext(cmd *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	AnonymousParseFlagsIntoContext(cmd *CLICommand) func(*cobra.Command, []string) error
 }
-
-const DoNotTrack = "do-not-track-analytics"
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
@@ -138,7 +136,7 @@ func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, f
 		NewAnonymousCLICommand(command, prerunner),
 		flagMap,
 	}
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd.CLICommand), prerunner.AnonymousParseFlagsIntoContext(cmd.CLICommand))
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd.CLICommand, false), prerunner.AnonymousParseFlagsIntoContext(cmd.CLICommand))
 	cmd.Command = command
 	return cmd
 }
@@ -146,8 +144,6 @@ func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, f
 func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
 		CLICommand: NewCLICommand(command, prerunner),
-		Context:    nil,
-		State:      nil,
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(cmd))
 	cmd.Command = command
@@ -167,7 +163,7 @@ func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner, flagMap
 
 func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	cmd := NewCLICommand(command, prerunner)
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd))
+	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd, false))
 	cmd.Command = command
 	return cmd
 }
@@ -232,46 +228,115 @@ func CanCompleteCommand(cmd *cobra.Command) bool {
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
-func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		// Wait for a potential auto-login in the Authenticated PreRun function before checking run requirements.
+		if !willAuthenticate {
+			if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
+				return err
+			}
+		}
+
 		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
 			r.Analytics.TrackCommand(cmd, args)
 		}
-		err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver)
-		if err != nil {
+
+		if err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver); err != nil {
 			return err
 		}
-		command.Version = r.Version
+
 		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
 			return err
 		}
 		r.Logger.Flush()
+
+		command.Version = r.Version
 		if err := r.notifyIfUpdateAvailable(cmd, command.Version.Version); err != nil {
 			return err
 		}
+
 		r.warnIfConfluentLocal(cmd)
+
 		if r.Config != nil {
 			ctx, err := command.Config.Context(cmd)
 			if err != nil {
 				return err
 			}
+
 			err = r.ValidateToken(cmd, command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
-				err := ctx.DeleteUserAuth()
-				if err != nil {
+				if err := ctx.DeleteUserAuth(); err != nil {
 					return err
 				}
 				utils.ErrPrintln(cmd, errors.TokenExpiredMsg)
-				analyticsError := r.Analytics.SessionTimedOut()
-				if analyticsError != nil {
-					r.Logger.Debug(analyticsError.Error())
+				if err := r.Analytics.SessionTimedOut(); err != nil {
+					r.Logger.Debug(err.Error())
 				}
 			}
 		}
+
 		LabelRequiredFlags(cmd)
+
 		return nil
 	}
+}
+
+// ErrIfMissingRunRequirement returns an error when a command doesn't meet a requirement;
+// for example, an on-prem command shouldn't be used by a cloud user.
+func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) error {
+	if cmd == nil {
+		return nil
+	}
+
+	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
+		switch requirement {
+		case RequireNonAPIKeyCloudLogin:
+			if !(cfg.CredentialType() != v2.APIKey && cfg.IsCloudLogin()) {
+				return errors.NewErrorWithSuggestions(
+					"you must log in to Confluent Cloud with a username and password to run this command",
+					`Log in with "confluent login"`,
+				)
+			}
+		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
+			if !(cfg.CredentialType() != v2.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
+				return errors.NewErrorWithSuggestions(
+					"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to run this command",
+					`Log in with "confluent login" or "confluent login --url <mds-url>"`,
+				)
+			}
+		case RequireCloudLogin:
+			if !cfg.IsCloudLogin() {
+				return errors.NewErrorWithSuggestions(
+					"you must log in to Confluent Cloud to run this command",
+					`Log in with "confluent login"`,
+				)
+			}
+		case RequireCloudLoginOrOnPremLogin:
+			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
+				return errors.NewErrorWithSuggestions(
+					"you must log in to run this command",
+					`Log in with "confluent login"`,
+				)
+			}
+		case RequireOnPremLogin:
+			if !cfg.IsOnPremLogin() {
+				return errors.NewErrorWithSuggestions(
+					"you must log in to Confluent Platform run this command",
+					`Log in with "confluent login --url <mds-url>"`,
+				)
+			}
+		case RequireUpdatesEnabled:
+			if cfg.DisableUpdates {
+				return errors.NewErrorWithSuggestions(
+					"you must enable updates to run this command",
+					`In ~/.confluent/config.json, set "disable_updates": false`,
+				)
+			}
+		}
+	}
+
+	return ErrIfMissingRunRequirement(cmd.Parent(), cfg)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {
@@ -286,35 +351,30 @@ func LabelRequiredFlags(cmd *cobra.Command) {
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 
-		err = r.setAuthenticatedContext(cmd, command)
-		if err != nil {
-			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
-			_, isNoContextError := err.(*errors.NotLoggedInError)
-			if isNotLoggedInError || isNoContextError {
-				// Attempt Prerun auto login
-				autoLoginErr := r.ccloudAutoLogin(cmd)
-				if autoLoginErr != nil {
-					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
-					return err
-				}
-				err = r.setAuthenticatedContext(cmd, command)
-				if err != nil {
-					return err
+		if err := r.setAuthenticatedContext(cmd, command); err != nil {
+			if _, ok := err.(*errors.NotLoggedInError); ok {
+				if err := r.ccloudAutoLogin(cmd); err != nil {
+					r.Logger.Debugf("Auto login failed: %s", err.Error())
+				} else {
+					_ = r.setAuthenticatedContext(cmd, command)
 				}
 			} else {
 				return err
 			}
 		}
 
-		err = r.ValidateToken(cmd, command.Config)
-		if err != nil {
+		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 			return err
 		}
+
+		if err := r.ValidateToken(cmd, command.Config); err != nil {
+			return err
+		}
+
 		return r.setCCloudClient(command)
 	}
 }
@@ -370,10 +430,9 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 }
 
 func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
-	url := pauth.CCloudURL
 	netrcFilterParams := netrc.NetrcMachineParams{
 		CLIName: "ccloud", // Use "ccloud" to maintain compatability with older versions
-		URL:     url,
+		URL:     pauth.CCloudURL,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
@@ -508,30 +567,28 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 
-		err = r.setAuthenticatedWithMDSContext(cmd, command)
-		if err != nil {
-			_, isNotLoggedInError := err.(*errors.NotLoggedInError)
-			_, isNoContextError := err.(*errors.NotLoggedInError)
-			if isNotLoggedInError || isNoContextError {
-				// Attempt Prerun auto login
-				autoLoginErr := r.confluentAutoLogin(cmd)
-				if autoLoginErr != nil {
-					r.Logger.Debugf("Prerun auto login failed: %s", autoLoginErr.Error())
+		if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
+			if _, ok := err.(*errors.NotLoggedInError); ok {
+				if autoLoginErr := r.confluentAutoLogin(cmd); autoLoginErr != nil {
+					r.Logger.Debugf("Auto login failed: %s", autoLoginErr.Error())
 					return err
 				}
-				err = r.setAuthenticatedWithMDSContext(cmd, command)
-				if err != nil {
+				if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
 					return err
 				}
 			} else {
 				return err
 			}
 		}
+
+		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
+			return err
+		}
+
 		return r.ValidateToken(cmd, command.Config)
 	}
 }
@@ -708,8 +765,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := r.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 
@@ -721,29 +777,32 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
+
 		var clusterId string
 		if command.Context.Credential.CredentialType == v2.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		} else if command.Context.Credential.CredentialType == v2.Username {
-			err := r.ValidateToken(cmd, command.Config)
-			if err != nil {
+			if err := r.ValidateToken(cmd, command.Config); err != nil {
 				return err
 			}
+
 			client, err := r.createCCloudClient(ctx, cmd, command.Version)
 			if err != nil {
 				return err
 			}
 			ctx.client = client
 			command.Config.Client = client
-			err = ctx.ParseFlagsIntoContext(cmd, command.Config.Client)
-			if err != nil {
+
+			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err
 			}
+
 			cluster, err := ctx.GetKafkaClusterForCommand(cmd)
 			if err != nil {
 				return err
 			}
 			clusterId = cluster.ID
+
 			key, secret, err := ctx.KeyAndSecretFlags(cmd)
 			if err != nil {
 				return err
@@ -761,14 +820,15 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		} else {
 			panic("Invalid Credential Type")
 		}
+
 		hasAPIKey, err := ctx.HasAPIKey(cmd, clusterId)
 		if err != nil {
 			return err
 		}
 		if !hasAPIKey {
-			err = &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
-			return err
+			return &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
 		}
+
 		return nil
 	}
 }
@@ -822,7 +882,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 
 func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
 	cliName := "confluent"
-	if r.Config.IsCloud() {
+	if r.Config.IsCloudLogin() {
 		cliName = "ccloud"
 	}
 
@@ -836,7 +896,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 	}
 
 	var token string
-	if r.Config.IsCloud() {
+	if r.Config.IsCloudLogin() {
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
 		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 		if err != nil {

@@ -15,8 +15,9 @@ type command struct {
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
-			Use:   "connect",
-			Short: "Manage Connect.",
+			Use:         "connect",
+			Short:       "Manage Connect.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		},
 		prerunner)
 	cmd := &command{

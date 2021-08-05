@@ -40,8 +40,9 @@ const descriptionLength = 128
 func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
-			Use:   "service-account",
-			Short: `Manage service accounts.`,
+			Use:         "service-account",
+			Short:       `Manage service accounts.`,
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner)
 	cmd := &command{
 		AuthenticatedCLICommand: cliCmd,

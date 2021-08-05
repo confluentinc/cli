@@ -35,8 +35,9 @@ var (
 func New(prerunner pcmd.PreRunner) *command {
 	cmd := &command{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
-			Use:   "connector-catalog",
-			Short: "Catalog of connectors and their configurations.",
+			Use:         "connector-catalog",
+			Short:       "Catalog of connectors and their configurations.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, SubcommandFlags),
 	}
 	cmd.init()

@@ -62,7 +62,7 @@ func (c *contextCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.use),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			c.analytics.SetCommandType(analytics.ContextUse)
-			return c.prerunner.Anonymous(c.CLICommand)(cmd, args)
+			return c.prerunner.Anonymous(c.CLICommand, false)(cmd, args)
 		},
 	})
 	currentCmd := &cobra.Command{

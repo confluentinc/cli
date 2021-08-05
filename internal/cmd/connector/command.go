@@ -63,8 +63,9 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cmd := &command{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
-				Use:   "connector",
-				Short: "Manage Kafka Connect.",
+				Use:         "connector",
+				Short:       "Manage Kafka Connect.",
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 			}, prerunner, SubcommandFlags),
 		prerunner:       prerunner,
 		analyticsClient: analyticsClient,

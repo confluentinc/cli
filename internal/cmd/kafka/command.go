@@ -40,13 +40,13 @@ func New(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *l
 }
 
 func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
-	if cfg.IsCloud() {
+	if cfg.IsCloudLogin() {
 		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
 		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
 		// and that doesn't trigger completion.
 		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 		c.serverCompleter.AddCommand(topicCmd)
-		
+
 		if isAPIKeyLogin {
 			return
 		}
@@ -66,7 +66,7 @@ func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
 		c.serverCompleter.AddCommand(clusterCmd)
 		c.serverCompleter.AddCommand(groupCmd)
 		c.serverCompleter.AddCommand(groupCmd.lagCmd)
-		
+
 		return
 	}
 
@@ -74,7 +74,7 @@ func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
 	c.AddCommand(NewAclCommandOnPrem(c.prerunner))
 	c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
 
-	if cfg.IsOnPrem() {
+	if cfg.IsOnPremLogin() {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}
 }
