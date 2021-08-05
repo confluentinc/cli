@@ -64,9 +64,10 @@ type mirrorCommand struct {
 func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:    "mirror",
-			Short:  "Manages cluster linking mirror topics.",
-			Hidden: true,
+			Use:         "mirror",
+			Short:       "Manages cluster linking mirror topics.",
+			Hidden:      true,
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		},
 		prerunner, MirrorSubcommandFlags)
 	cmd := &mirrorCommand{

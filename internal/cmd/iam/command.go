@@ -37,11 +37,9 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
+	c.AddCommand(NewACLCommand(c.prerunner))
 	c.AddCommand(NewRoleCommand(cfg, c.prerunner))
 	c.AddCommand(NewRolebindingCommand(cfg, c.prerunner))
-	if cfg.IsOnPremLogin() {
-		c.AddCommand(NewACLCommand(c.prerunner))
-	}
 
 	return c.Command
 }

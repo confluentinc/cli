@@ -38,8 +38,9 @@ type aclCommand struct {
 func NewACLCommand(prerunner pcmd.PreRunner) *aclCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "acl",
-			Short: "Manage Kafka ACLs.",
+			Use:         "acl",
+			Short:       "Manage Kafka ACLs.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, AclSubcommandFlags)
 	cmd := &aclCommand{AuthenticatedStateFlagCommand: cliCmd}
 	cmd.init()

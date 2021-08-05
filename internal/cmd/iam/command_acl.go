@@ -36,11 +36,12 @@ func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *aclCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a Kafka ACL.",
-		Long:  "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		Use:         "create",
+		Short:       "Create a Kafka ACL.",
+		Long:        "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.create),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",

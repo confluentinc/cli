@@ -24,8 +24,9 @@ type subjectCommand struct {
 func NewSubjectCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "subject",
-			Short: "Manage Schema Registry subjects.",
+			Use:         "subject",
+			Short:       "Manage Schema Registry subjects.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, SubjectSubcommandFlags)
 	subjectCmd := &subjectCommand{
 		AuthenticatedStateFlagCommand: cliCmd,

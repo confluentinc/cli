@@ -73,9 +73,10 @@ type linkCommand struct {
 func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:    "link",
-			Short:  "Manages inter-cluster links.",
-			Hidden: true,
+			Use:         "link",
+			Short:       "Manages inter-cluster links.",
+			Hidden:      true,
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		},
 		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{

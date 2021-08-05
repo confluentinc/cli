@@ -97,8 +97,9 @@ type describeStruct struct {
 func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Kafka clusters.",
+			Use:         "cluster",
+			Short:       "Manage Kafka clusters.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, ClusterSubcommandFlags)
 	cmd := &clusterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,

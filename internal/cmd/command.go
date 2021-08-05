@@ -113,6 +113,11 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 
 	var serverCompleter completer.ServerSideCompleter
 	shellCompleter := completer.NewShellCompleter(cli)
+	if cfg.IsCloudLogin() {
+		serverCompleter = shellCompleter.ServerSideCompleter
+	}
+
+	// TODO: Remove?
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
@@ -121,19 +126,9 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	environmentCmd := environment.New(prerunner, analyticsClient)
 	serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
-	if cfg.IsCloudLogin() {
-		serverCompleter = shellCompleter.ServerSideCompleter
-
-		serverCompleter.AddCommand(apiKeyCmd)
-		serverCompleter.AddCommand(connectorCmd)
-		serverCompleter.AddCommand(connectorCatalogCmd)
-		serverCompleter.AddCommand(environmentCmd)
-		serverCompleter.AddCommand(serviceAccountCmd)
-	}
-
 	cli.AddCommand(admin.New(prerunner, isTest))
 	cli.AddCommand(apiKeyCmd.Command)
-	cli.AddCommand(auditlog.New(cfg, prerunner))
+	cli.AddCommand(auditlog.New(prerunner))
 	cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 	cli.AddCommand(completion.New(cli))
 	cli.AddCommand(config.New(cfg.IsCloudLogin(), prerunner, analyticsClient))
@@ -158,6 +153,15 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
 	cli.AddCommand(version.New(prerunner, ver))
 
+	if cfg.IsCloudLogin() {
+		serverCompleter.AddCommand(apiKeyCmd)
+		serverCompleter.AddCommand(connectorCmd)
+		serverCompleter.AddCommand(connectorCatalogCmd)
+		serverCompleter.AddCommand(environmentCmd)
+		serverCompleter.AddCommand(serviceAccountCmd)
+	}
+
+	// TODO: Move to help function if update and any other commands use Anonymous PreRun
 	hideAndErrIfMissingRunRequirement(cli, cfg)
 
 	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
@@ -217,8 +221,8 @@ func getLongDescription(cfg *v3.Config) string {
 	}
 }
 
-// hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement; for example, an on-prem command
-// shouldn't be used by a cloud user.
+// hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement and errs if a user attempts to use it;
+// for example, an on-prem command shouldn't be used by a cloud user.
 func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) {
 	if err := pcmd.ErrIfMissingRunRequirement(cmd, cfg); err != nil {
 		cmd.Hidden = true

@@ -36,11 +36,12 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 }
 
 func (c *command) init(cfg *v3.Config) {
+	clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
+
+	c.AddCommand(clusterCmd.Command)
+	c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+
 	if cfg.IsCloudLogin() {
-		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		c.AddCommand(clusterCmd.Command)
 		c.serverCompleter.AddCommand(clusterCmd)
-	} else {
-		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}
 }

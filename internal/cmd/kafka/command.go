@@ -40,32 +40,31 @@ func New(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *l
 }
 
 func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
+	groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
+
+	c.AddCommand(groupCmd.Command)
+	c.AddCommand(NewRegionCommand(c.prerunner))
+	c.AddCommand(NewLinkCommand(c.prerunner))
+	c.AddCommand(NewMirrorCommand(c.prerunner))
+
 	if cfg.IsCloudLogin() {
-		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
-		// Order matters here. If we add to the server-side completer first then the command doesn't have a parent
-		// and that doesn't trigger completion.
-		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
-		c.serverCompleter.AddCommand(topicCmd)
+		c.serverCompleter.AddCommand(groupCmd)
+		c.serverCompleter.AddCommand(groupCmd.lagCmd)
+	}
 
-		if isAPIKeyLogin {
-			return
-		}
-
+	// TODO: Combine
+	if cfg.IsCloudLogin() {
 		aclCmd := NewACLCommand(c.prerunner)
 		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
+		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
 
 		c.AddCommand(aclCmd.Command)
 		c.AddCommand(clusterCmd.Command)
-		c.AddCommand(groupCmd.Command)
-		c.AddCommand(NewLinkCommand(c.prerunner))
-		c.AddCommand(NewMirrorCommand(c.prerunner))
-		c.AddCommand(NewRegionCommand(c.prerunner))
+		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 
 		c.serverCompleter.AddCommand(aclCmd)
 		c.serverCompleter.AddCommand(clusterCmd)
-		c.serverCompleter.AddCommand(groupCmd)
-		c.serverCompleter.AddCommand(groupCmd.lagCmd)
+		c.serverCompleter.AddCommand(topicCmd)
 
 		return
 	}
