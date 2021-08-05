@@ -82,7 +82,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	)
 
 	fCountrycode := form.New(
-		form.Field{ID: "country", Prompt: "Two-letter country code (https://github.com/confluentinc/country-code/blob/master/country_code.go)", Regex: "^[a-zA-Z]{2}$"},
+		form.Field{ID: "country", Prompt: "Two-letter country code (https://github.com/confluentinc/countrycode/blob/master/codes.go)", Regex: "^[a-zA-Z]{2}$"},
 	)
 
 	fOrgPswdTosPri := form.New(
