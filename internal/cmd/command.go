@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"os"
 
 	"github.com/jonboulle/clockwork"
@@ -101,7 +102,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cliName, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 
 	prerunner := &pcmd.PreRun{
@@ -235,4 +236,12 @@ func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
 	})
 
 	return load.LoadAndMigrate(cfg)
+}
+
+func getCloudClient(cliName string, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
+	var client *ccloud.Client
+	if cliName == "ccloud" {
+		client = ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+	}
+	return client
 }
