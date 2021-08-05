@@ -62,14 +62,6 @@ type authenticatedTopicCommand struct {
 	completableChildren []*cobra.Command
 }
 
-type partitionDescribeDisplay struct {
-	Topic     string   `json:"topic" yaml:"topic"`
-	Partition uint32   `json:"partition" yaml:"partition"`
-	Leader    uint32   `json:"leader" yaml:"leader"`
-	Replicas  []uint32 `json:"replicas" yaml:"replicas"`
-	ISR       []uint32 `json:"isr" yaml:"isr"`
-}
-
 type structuredDescribeDisplay struct {
 	TopicName string            `json:"topic_name" yaml:"topic_name"`
 	Config    map[string]string `json:"config" yaml:"config"`
