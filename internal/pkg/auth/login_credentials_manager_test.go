@@ -146,6 +146,9 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 		Params: params,
 		User: &sdkMock.User{
 			LoginRealmFunc: func(ctx context.Context, req *flowv1.GetLoginRealmRequest) (*flowv1.GetLoginRealmReply, error){
+				if req.Email == "test+sso@confluent.io" {
+					return &flowv1.GetLoginRealmReply{IsSso: true, Realm: "ccloud-local"}, nil
+				}
 				return &flowv1.GetLoginRealmReply{IsSso: false, Realm: "ccloud-local"}, nil
 			},
 		},
@@ -189,6 +192,11 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 	creds, err := suite.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.require.Nil(creds)
+
+	suite.require.NoError(os.Setenv(CCloudEmailEnvVar, "test+sso@confluent.io"))
+	creds, err  = suite.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{})()
+	suite.require.NoError(err)
+	suite.compareCredentials(&Credentials{Username: "test+sso@confluent.io", IsSSO: true, Password: ""}, creds)
 
 	suite.setCCloudEnvironmentVariables()
 	creds, err = suite.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{})()
