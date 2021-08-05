@@ -4,16 +4,17 @@ Usage:
   confluent [command]
 
 Available Commands:
-  completion  Print shell completion code.
-  config      Modify the CLI configuration.
-  help        Help about any command
-  kafka       Manage Apache Kafka.
-  local       Manage a local Confluent Platform development environment.
-  login       Log in to Confluent Cloud or Confluent Platform.
-  logout      Log out of Confluent Cloud or Confluent Platform.
-  secret      Manage secrets for Confluent Platform.
-  update      Update the Confluent CLI.
-  version     Show version of the Confluent CLI.
+  completion        Print shell completion code.
+  config            Modify the CLI configuration.
+  help              Help about any command
+  iam               Manage RBAC and IAM permissions.
+  kafka             Manage Apache Kafka.
+  local             Manage a local Confluent Platform development environment.
+  login             Log in to Confluent Cloud or Confluent Platform.
+  logout            Log out of Confluent Cloud or Confluent Platform.
+  secret            Manage secrets for Confluent Platform.
+  update            Update the Confluent CLI.
+  version           Show version of the Confluent CLI.
 
 Flags:
   -h, --help            Show help for this command.
