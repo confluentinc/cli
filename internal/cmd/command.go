@@ -117,9 +117,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		serverCompleter = shellCompleter.ServerSideCompleter
 	}
 
-	// TODO: Remove?
-	isAPIKeyLogin := isAPIKeyCredential(cfg)
-
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 	connectorCmd := connector.New(prerunner, analyticsClient)
 	connectorCatalogCmd := connectorcatalog.New(prerunner)
@@ -138,7 +135,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(environmentCmd.Command)
 	cli.AddCommand(iam.New(cfg, prerunner))
 	cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
-	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(kafka.New(cfg, isAPIKeyCredential(cfg), prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
@@ -161,7 +158,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		serverCompleter.AddCommand(serviceAccountCmd)
 	}
 
-	// TODO: Move to help function if update and any other commands use Anonymous PreRun
 	hideAndErrIfMissingRunRequirement(cli, cfg)
 
 	return &command{Command: cli, Analytics: analyticsClient, logger: logger}

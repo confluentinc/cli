@@ -19,33 +19,20 @@ type clusterCommandOnPrem struct {
 	prerunner pcmd.PreRunner
 }
 
-// NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
-		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Schema Registry clusters.",
-		},
-		prerunner, OnPremClusterSubcommandFlags)
-	cmd := &clusterCommandOnPrem{
-		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:                     prerunner,
+func newListCommand(c *clusterCommandOnPrem) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "list",
+		Short:       "List registered Schema Registry clusters.",
+		Long:        "List Schema Registry clusters that are registered with the MDS cluster registry.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.list),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	cmd.init()
-	return cmd.Command
-}
 
-func (c *clusterCommandOnPrem) init() {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List registered Schema Registry clusters.",
-		Long:  "List Schema Registry clusters that are registered with the MDS cluster registry.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
-	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
-	c.AddCommand(listCmd)
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	cmd.Flags().SortFlags = false
+
+	return cmd
 }
 
 func (c *clusterCommandOnPrem) createContext() context.Context {
