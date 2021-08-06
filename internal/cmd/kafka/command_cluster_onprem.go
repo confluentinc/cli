@@ -14,28 +14,7 @@ import (
 
 var kafkaClusterTypeName = "kafka-cluster"
 
-type clusterCommandOnPrem struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
-}
-
-// NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
-		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Kafka clusters.",
-		},
-		prerunner, OnPremClusterSubcommandFlags)
-	cmd := &clusterCommandOnPrem{
-		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:                     prerunner,
-	}
-	cmd.init()
-	return cmd.Command
-}
-
-func (c *clusterCommandOnPrem) init() {
+func (c *clusterCommand) onPremInit() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List registered Kafka clusters.",
@@ -48,11 +27,11 @@ func (c *clusterCommandOnPrem) init() {
 	c.AddCommand(listCmd)
 }
 
-func (c *clusterCommandOnPrem) createContext() context.Context {
+func (c *clusterCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 	clustertype := &mds.ClusterRegistryListOpts{
 		ClusterType: optional.NewString(kafkaClusterTypeName),
 	}

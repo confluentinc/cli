@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 
 	"github.com/c-bata/go-prompt"
 
@@ -57,6 +58,7 @@ type hasAPIKeyTopicCommand struct {
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	prerunner           pcmd.PreRunner
 	logger              *log.Logger
 	clientID            string
 	completableChildren []*cobra.Command
@@ -95,30 +97,47 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
-	command := &cobra.Command{
+func NewTopicCommand(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
+
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner, ProduceAndConsumeFlags),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
 	}
+
 	hasAPIKeyCmd.init()
 	kafkaTopicCommand := &kafkaTopicCommand{
 		hasAPIKeyTopicCommand: hasAPIKeyCmd,
 	}
+
 	if !isAPIKeyLogin {
-		authenticatedCmd := &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, TopicSubcommandFlags),
+		flagMap := OnPremTopicSubcommandFlags
+		if cfg.IsCloudLogin() {
+			flagMap = TopicSubcommandFlags
+		}
+
+		c := &authenticatedTopicCommand{
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, flagMap),
+			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
 		}
-		authenticatedCmd.init()
-		kafkaTopicCommand.authenticatedTopicCommand = authenticatedCmd
+
+		if cfg.IsCloudLogin() {
+			c.init()
+		} else {
+			c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+			c.onPremInit()
+		}
+
+		kafkaTopicCommand.authenticatedTopicCommand = c
 	}
+
 	return kafkaTopicCommand
 }
 
@@ -155,10 +174,11 @@ func (k *kafkaTopicCommand) ServerCompletableChildren() []*cobra.Command {
 
 func (h *hasAPIKeyTopicCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "produce <topic>",
-		Short: "Produce messages to a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(h.produce),
+		Use:         "produce <topic>",
+		Short:       "Produce messages to a Kafka topic.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(h.produce),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -170,10 +190,11 @@ func (h *hasAPIKeyTopicCommand) init() {
 	h.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "consume <topic>",
-		Short: "Consume messages from a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(h.consume),
+		Use:         "consume <topic>",
+		Short:       "Consume messages from a Kafka topic.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(h.consume),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",

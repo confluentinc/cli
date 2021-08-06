@@ -14,12 +14,7 @@ import (
 
 var clusterType = "schema-registry-cluster"
 
-type clusterCommandOnPrem struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
-}
-
-func newListCommand(c *clusterCommandOnPrem) *cobra.Command {
+func (c *clusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List registered Schema Registry clusters.",
@@ -35,11 +30,11 @@ func newListCommand(c *clusterCommandOnPrem) *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommandOnPrem) createContext() context.Context {
+func (c *clusterCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	schemaClustertype := &mds.ClusterRegistryListOpts{
 		ClusterType: optional.NewString(clusterType),
 	}

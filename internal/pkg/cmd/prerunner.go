@@ -93,10 +93,7 @@ type HasAPIKeyCLICommand struct {
 
 func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	cmd := &AuthenticatedCLICommand{
-		CLICommand:        NewCLICommand(command, prerunner),
-		Context:           nil,
-		State:             nil,
-		KafkaRESTProvider: nil,
+		CLICommand: NewCLICommand(command, prerunner),
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
 	cmd.Command = command
@@ -153,7 +150,6 @@ func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunn
 func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *HasAPIKeyCLICommand {
 	cmd := &HasAPIKeyCLICommand{
 		CLICommand:      NewCLICommand(command, prerunner),
-		Context:         nil,
 		subcommandFlags: flagMap,
 	}
 	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(cmd))
@@ -762,7 +758,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
+		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
 			return err
 		}
 

@@ -221,9 +221,10 @@ func getLongDescription(cfg *v3.Config) string {
 // for example, an on-prem command shouldn't be used by a cloud user.
 func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) {
 	if err := pcmd.ErrIfMissingRunRequirement(cmd, cfg); err != nil {
+		cmd.Args = cobra.NoArgs // TODO: Try to delete?
 		cmd.Hidden = true
-		cmd.SilenceUsage = true
 		cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
+		cmd.SilenceUsage = true
 	}
 
 	for _, subcommand := range cmd.Commands() {

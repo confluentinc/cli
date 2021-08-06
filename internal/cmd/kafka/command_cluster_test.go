@@ -17,6 +17,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -90,7 +91,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
 		EnvironmentMetadata: suite.envMetadataMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := NewClusterCommand(prerunner, suite.analyticsClient)
+	cmd := NewClusterCommand(conf, prerunner, suite.analyticsClient)
 	return cmd
 }
 

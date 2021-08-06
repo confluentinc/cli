@@ -16,6 +16,7 @@ import (
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -35,16 +36,27 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(prerunner pcmd.PreRunner) *aclCommand {
-	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-		&cobra.Command{
-			Use:         "acl",
-			Short:       "Manage Kafka ACLs.",
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		}, prerunner, AclSubcommandFlags)
-	cmd := &aclCommand{AuthenticatedStateFlagCommand: cliCmd}
-	cmd.init()
-	return cmd
+func NewACLCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *aclCommand {
+	cmd := &cobra.Command{
+		Use:   "acl",
+		Short: "Manage Kafka ACLs.",
+	}
+
+	flagMap := OnPremTopicSubcommandFlags
+	if cfg.IsCloudLogin() {
+		flagMap = AclSubcommandFlags
+	}
+
+	c := &aclCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, flagMap)}
+
+	if cfg.IsCloudLogin() {
+		c.init()
+	} else {
+		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+		c.onPremInit()
+	}
+
+	return c
 }
 
 func (c *aclCommand) init() {

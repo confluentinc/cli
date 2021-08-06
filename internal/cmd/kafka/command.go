@@ -40,40 +40,24 @@ func New(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *l
 }
 
 func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
+	aclCmd := NewACLCommand(cfg, c.prerunner)
+	clusterCmd := NewClusterCommand(cfg, c.prerunner, c.analyticsClient)
 	groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
+	topicCmd := NewTopicCommand(cfg, isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
 
-	c.AddCommand(groupCmd.Command)
-	c.AddCommand(NewRegionCommand(c.prerunner))
 	c.AddCommand(NewLinkCommand(c.prerunner))
 	c.AddCommand(NewMirrorCommand(c.prerunner))
+	c.AddCommand(NewRegionCommand(c.prerunner))
+	c.AddCommand(aclCmd.Command)
+	c.AddCommand(clusterCmd.Command)
+	c.AddCommand(groupCmd.Command)
+	c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 
 	if cfg.IsCloudLogin() {
-		c.serverCompleter.AddCommand(groupCmd)
-		c.serverCompleter.AddCommand(groupCmd.lagCmd)
-	}
-
-	// TODO: Combine
-	if cfg.IsCloudLogin() {
-		aclCmd := NewACLCommand(c.prerunner)
-		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		topicCmd := NewTopicCommand(isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
-
-		c.AddCommand(aclCmd.Command)
-		c.AddCommand(clusterCmd.Command)
-		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
-
 		c.serverCompleter.AddCommand(aclCmd)
 		c.serverCompleter.AddCommand(clusterCmd)
+		c.serverCompleter.AddCommand(groupCmd)
+		c.serverCompleter.AddCommand(groupCmd.lagCmd)
 		c.serverCompleter.AddCommand(topicCmd)
-
-		return
-	}
-
-	// These on-prem commands can also be run without logging in.
-	c.AddCommand(NewAclCommandOnPrem(c.prerunner))
-	c.AddCommand(NewTopicCommandOnPrem(c.prerunner))
-
-	if cfg.IsOnPremLogin() {
-		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}
 }

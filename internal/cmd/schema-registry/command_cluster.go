@@ -46,6 +46,7 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	prerunner       pcmd.PreRunner
 	logger          *log.Logger
 	srClient        *srsdk.APIClient
 	analyticsClient analytics.Client
@@ -64,31 +65,28 @@ func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk
 		cmd.Short = "Manage Schema Registry clusters."
 	}
 
-	cloudCommand := &clusterCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags),
-		srClient:                      srClient,
-		logger:                        logger,
-		analyticsClient:               analyticsClient,
+	c := &clusterCommand{
+		prerunner:       prerunner,
+		srClient:        srClient,
+		logger:          logger,
+		analyticsClient: analyticsClient,
 	}
-
-	onPremCommand := &clusterCommandOnPrem{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags),
-		prerunner:                     prerunner,
-	}
-
-	cmd.AddCommand(newEnableCommand(cloudCommand))
-	cmd.AddCommand(newDescribeCommand(cloudCommand))
-	cmd.AddCommand(newUpdateCommand(cloudCommand))
-	cmd.AddCommand(newListCommand(onPremCommand))
 
 	if cfg.IsCloudLogin() {
-		return cloudCommand.Command
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
 	} else {
-		return onPremCommand.Command
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
 	}
+
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(c.newEnableCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newUpdateCommand())
+
+	return c.Command
 }
 
-func newEnableCommand(c *clusterCommand) *cobra.Command {
+func (c *clusterCommand) newEnableCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "enable",
 		Short:       "Enable Schema Registry for this environment.",
@@ -114,7 +112,7 @@ func newEnableCommand(c *clusterCommand) *cobra.Command {
 	return cmd
 }
 
-func newDescribeCommand(c *clusterCommand) *cobra.Command {
+func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe the Schema Registry cluster for this environment.",
@@ -129,7 +127,7 @@ func newDescribeCommand(c *clusterCommand) *cobra.Command {
 	return cmd
 }
 
-func newUpdateCommand(c *clusterCommand) *cobra.Command {
+func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
 		Short:       "Update global mode or compatibility of Schema Registry.",
