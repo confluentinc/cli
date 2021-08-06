@@ -7,7 +7,6 @@ Available Commands:
   completion        Print shell completion code.
   config            Modify the CLI configuration.
   help              Help about any command
-  iam               Manage RBAC and IAM permissions.
   kafka             Manage Apache Kafka.
   local             Manage a local Confluent Platform development environment.
   login             Log in to Confluent Cloud or Confluent Platform.

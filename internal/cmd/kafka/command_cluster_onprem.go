@@ -8,24 +8,10 @@ import (
 	"github.com/spf13/cobra"
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var kafkaClusterTypeName = "kafka-cluster"
-
-func (c *clusterCommand) onPremInit() {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List registered Kafka clusters.",
-		Long:  "List Kafka clusters that are registered with the MDS cluster registry.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
-	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
-	c.AddCommand(listCmd)
-}
 
 func (c *clusterCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)

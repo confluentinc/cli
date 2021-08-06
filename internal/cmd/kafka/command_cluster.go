@@ -102,34 +102,35 @@ func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	flagMap := ClusterSubcommandFlags
-	if cfg.IsOnPremLogin() {
-		flagMap = OnPremClusterSubcommandFlags
-	}
-
 	c := &clusterCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, flagMap),
-		prerunner:                     prerunner,
-		analyticsClient:               analyticsClient,
+		prerunner:       prerunner,
+		analyticsClient: analyticsClient,
+	}
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
 	}
 
-	if cfg.IsCloudLogin() {
-		c.init()
-	} else {
-		c.onPremInit()
-	}
+	c.init(cfg)
 
 	return c
 }
 
-func (c *clusterCommand) init() {
+func (c *clusterCommand) init(cfg *v3.Config) {
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka clusters.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Use:  "list",
+		Args: cobra.NoArgs,
 	}
-	listCmd.Flags().Bool("all", false, "List clusters across all environments.")
+	if cfg.IsCloudLogin() {
+		listCmd.Short = "List Kafka clusters."
+		listCmd.RunE = pcmd.NewCLIRunE(c.list)
+		listCmd.Flags().Bool("all", false, "List clusters across all environments.")
+	} else {
+		listCmd.Short = "List registered Kafka clusters."
+		listCmd.Long = "List Kafka clusters that are registered with the MDS cluster registry."
+		listCmd.RunE = pcmd.NewCLIRunE(c.onPremList)
+	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
