@@ -290,42 +290,42 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) error {
 		case RequireNonAPIKeyCloudLogin:
 			if !(cfg.CredentialType() != v2.APIKey && cfg.IsCloudLogin()) {
 				return errors.NewErrorWithSuggestions(
-					"you must log in to Confluent Cloud with a username and password to run this command",
+					"you must log in to Confluent Cloud with a username and password to use this command",
 					`Log in with "confluent login"`,
 				)
 			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
 			if !(cfg.CredentialType() != v2.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
 				return errors.NewErrorWithSuggestions(
-					"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to run this command",
+					"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
 					`Log in with "confluent login" or "confluent login --url <mds-url>"`,
 				)
 			}
 		case RequireCloudLogin:
 			if !cfg.IsCloudLogin() {
 				return errors.NewErrorWithSuggestions(
-					"you must log in to Confluent Cloud to run this command",
+					"you must log in to Confluent Cloud to use this command",
 					`Log in with "confluent login"`,
 				)
 			}
 		case RequireCloudLoginOrOnPremLogin:
 			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
 				return errors.NewErrorWithSuggestions(
-					"you must log in to run this command",
+					"you must log in to use this command",
 					`Log in with "confluent login"`,
 				)
 			}
 		case RequireOnPremLogin:
 			if !cfg.IsOnPremLogin() {
 				return errors.NewErrorWithSuggestions(
-					"you must log in to Confluent Platform run this command",
+					"you must log in to Confluent Platform to use this command",
 					`Log in with "confluent login --url <mds-url>"`,
 				)
 			}
 		case RequireUpdatesEnabled:
 			if cfg.DisableUpdates {
 				return errors.NewErrorWithSuggestions(
-					"you must enable updates to run this command",
+					"you must enable updates to use this command",
 					`In ~/.confluent/config.json, set "disable_updates": false`,
 				)
 			}
