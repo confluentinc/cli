@@ -1,7 +1,6 @@
 package price
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -27,18 +26,22 @@ var (
 	}
 
 	formatMetric = map[string]string{
-		"ConnectCapacity":   "Connect capacity",
-		"ConnectNumRecords": "Connect record",
-		"ConnectNumTasks":   "Connect task",
-		"ConnectThroughput": "Connect throughput",
-		"KSQLNumCSUs":       "ksqlDB capacity",
-		"KafkaBase":         "Kafka base price",
-		"KafkaCKUUnit":      "CKU unit price",
-		"KafkaNetworkRead":  "Kafka read",
-		"KafkaNetworkWrite": "Kafka write",
-		"KafkaNumCKUs":      "CKU price",
-		"KafkaPartition":    "Kafka partition",
-		"KafkaStorage":      "Kafka storage",
+		"ConnectCapacity":       "Connect capacity",
+		"ConnectNumRecords":     "Connect record",
+		"ConnectNumTasks":       "Connect task",
+		"ConnectThroughput":     "Connect throughput",
+		"KSQLNumCSUs":           "ksqlDB capacity",
+		"KafkaBase":             "Kafka base price",
+		"KafkaCKUUnit":          "CKU unit price",
+		"KafkaNetworkRead":      "Kafka read",
+		"KafkaNetworkWrite":     "Kafka write",
+		"KafkaNumCKUs":          "CKU price",
+		"KafkaPartition":        "Kafka partition",
+		"KafkaStorage":          "Kafka storage",
+		"ClusterLinkingBase":    "Cluster linking base",
+		"ClusterLinkingPerLink": "Cluster linking per-link",
+		"ClusterLinkingRead":    "Cluster linking read",
+		"ClusterLinkingWrite":   "Cluster linking write",
 	}
 
 	formatClusterType = map[string]string{
@@ -136,7 +139,12 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	// Only kafka price is supported by the CLI now
 	product := "kafka"
-	res, err := c.Client.Billing.GetPriceTable(context.Background(), org, product)
+	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(nil, org, product)
+	if err != nil {
+		return err
+	}
+	product = "cluster-link"
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(nil, org, product)
 	if err != nil {
 		return err
 	}
@@ -146,16 +154,25 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	table, err := filterTable(command, res.PriceTable)
+	kafkaTable, err := filterTable(command, kafkaPricesReply.PriceTable)
 	if err != nil {
 		return err
 	}
-
-	if len(table) == 0 {
+	if len(kafkaTable) == 0 {
 		return fmt.Errorf("no results found")
 	}
 
-	for metric, val := range table {
+	clusterLinkTable, err := filterTable(command, clusterLinkPricesReply.PriceTable)
+	if err != nil {
+		return err
+	}
+	// Merge cluster link price table into kafka table
+	// Kafka metrics and cluster link metrics will not have overlap
+	for metrics, val := range clusterLinkTable {
+		kafkaTable[metrics] = val
+	}
+
+	for metric, val := range kafkaTable {
 		for key, price := range val.Prices {
 			args := strings.Split(key, ":")
 			availability := args[2]
@@ -183,7 +200,6 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 		}
 	}
 	w.StableSort()
-
 	return w.Out()
 }
 
