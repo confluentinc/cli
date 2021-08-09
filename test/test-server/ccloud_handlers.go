@@ -110,23 +110,11 @@ func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *h
 	}
 }
 
-// Handler for: "/api/check_email/{email}"
-func (c *CloudRouter) HandleCheckEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+// Handler for: "/api/login/realm"
+func (c *CloudRouter) HandleLoginRealm(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := require.New(t)
-		vars := mux.Vars(r)
-		email := vars["email"]
-		reply := &orgv1.GetUserReply{}
-		switch email {
-		case "cody@confluent.io":
-			reply.User = &orgv1.User{
-				Email: "cody@confluent.io",
-			}
-		case "already-exists@confluent.io":
-			reply.User = &orgv1.User{
-				Id: 1,
-			}
-		}
+		reply := &flowv1.GetLoginRealmReply{}
 		b, err := utilv1.MarshalJSONToBytes(reply)
 		req.NoError(err)
 		_, err = io.WriteString(w, string(b))
@@ -738,8 +726,8 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 			}
 		}
 		if userId != "u-0" {
-			authConfig := &flowv1.AuthConfig{
-				AllowedAuthMethods: []flowv1.AuthMethod{flowv1.AuthMethod_AUTH_METHOD_USERNAME_PWD, flowv1.AuthMethod_AUTH_METHOD_SSO},
+			authConfig := &orgv1.AuthConfig{
+				AllowedAuthMethods: []orgv1.AuthMethod{orgv1.AuthMethod_AUTH_METHOD_USERNAME_PWD, orgv1.AuthMethod_AUTH_METHOD_SSO},
 			}
 			res = flowv1.GetUserProfileReply{
 				User: &flowv1.UserProfile{

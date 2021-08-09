@@ -4,8 +4,9 @@ import (
 	"context"
 	nethttp "net/http"
 
-	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
 )
 
 // Compile-time check interface adherence
@@ -420,6 +421,50 @@ func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasG
 				IsLeader:    true,
 				IsInSync:    true,
 				Broker:      krsdk.Relationship{},
+			},
+		},
+	}, nil, nil
+}
+
+type ReplicaStatus struct{}
+
+func NewReplicaStatusMock() *ReplicaStatus {
+	return &ReplicaStatus{}
+}
+
+func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(ctx context.Context, clusterId string, topicName string, partitionId int32) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
+	return krsdk.ReplicaStatusDataList{
+		Kind:     "",
+		Metadata: krsdk.ResourceCollectionMetadata{},
+		Data: []krsdk.ReplicaStatusData{
+			{
+				Kind:        "",
+				Metadata:    krsdk.ResourceMetadata{},
+				ClusterId:   clusterId,
+				TopicName:   topicName,
+				PartitionId: partitionId,
+				BrokerId:    42,
+				IsLeader:    true,
+				IsInIsr:     true,
+			},
+		},
+	}, nil, nil
+}
+
+func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(ctx context.Context, clusterId string, topicName string) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
+	return krsdk.ReplicaStatusDataList{
+		Kind:     "",
+		Metadata: krsdk.ResourceCollectionMetadata{},
+		Data: []krsdk.ReplicaStatusData{
+			{
+				Kind:        "",
+				Metadata:    krsdk.ResourceMetadata{},
+				ClusterId:   clusterId,
+				TopicName:   topicName,
+				PartitionId: 0,
+				BrokerId:    42,
+				IsLeader:    true,
+				IsInIsr:     true,
 			},
 		},
 	}, nil, nil

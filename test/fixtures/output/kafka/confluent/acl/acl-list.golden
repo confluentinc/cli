@@ -1,3 +1,3 @@
-  Principal  | Permission | Operation | Host | ResourceType |     ResourceName      | PatternType  
-+------------+------------+-----------+------+--------------+-----------------------+-------------+
-  User:Alice | ALLOW      | READ      | *    | TOPIC        | test-rest-proxy-topic |              
+   Principal  | Permission | Operation | Host | ResourceType | ResourceName | PatternType  
++-------------+------------+-----------+------+--------------+--------------+-------------+
+  User:sa-123 | ALLOW      | READ      | *    | TOPIC        | test-topic   | LITERAL      

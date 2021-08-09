@@ -10,7 +10,7 @@ Flags:
       --api-secret string    Secret for the Kafka API key (recommended).
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
-      --context string       CLI Context name.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
