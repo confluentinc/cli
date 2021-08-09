@@ -78,6 +78,7 @@ func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter
 						Limit: &productv1.IntegerUsageLimit_Value{Value: 500},
 						Unit:  productv1.LimitUnit_GB,
 					},
+					NumPartitions: &productv1.IntegerUsageLimit{Limit: &productv1.IntegerUsageLimit_Value{Value: 2000}},
 				},
 			},
 		}}

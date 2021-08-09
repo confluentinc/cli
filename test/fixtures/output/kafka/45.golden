@@ -1,6 +1,17 @@
-Error: cluster shrink validation error: 
-
-Looking at metrics in the last 15 min window: 
- Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes. 
- Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes. 
- Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes.
++--------------------+-----------------------------+
+| Id                 | lkc-update-dedicated-shrink |
+| Name               | lkc-update-dedicated-shrink |
+| Type               | DEDICATED                   |
+| Ingress            |                          50 |
+| Egress             |                         150 |
+| Storage            |                       30000 |
+| Provider           | aws                         |
+| Availability       | single-zone                 |
+| Region             | us-west-2                   |
+| Status             | SHRINKING                   |
+| Endpoint           | SASL_SSL://kafka-endpoint   |
+| ApiEndpoint        | http://kafka-api-url        |
+| RestEndpoint       |                             |
+| ClusterSize        |                           2 |
+| PendingClusterSize |                           1 |
++--------------------+-----------------------------+

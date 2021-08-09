@@ -571,6 +571,10 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	} else {
 		window = "3 days"
 	}
+	token := ""
+	if c.AuthenticatedStateFlagCommand.State != nil {
+		token = c.AuthenticatedStateFlagCommand.State.AuthToken
+	}
 	// Get usage limits
 	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, cku)
 	if err != nil {
@@ -579,7 +583,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	}
 	errorMessage := errors.Errorf("\n\nLooking at metrics in the last %s window:", window)
 	shouldPrompt := true
-	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
+	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku, token)
 	if isValidPartitionCountErr != nil {
 		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidPartitionCountErr.Error())
 		shouldPrompt = false
@@ -587,14 +591,14 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	var isValidStorageLimitErr error
 	isValidStorageLimitErr = nil
 	if !currentCluster.InfiniteStorage {
-		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
+		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku, token)
 		if isValidStorageLimitErr != nil {
 			errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidStorageLimitErr.Error())
 			shouldPrompt = false
 		}
 	}
 	// Get Cluster Load Metric
-	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
+	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric, token)
 	if isValidLoadErr != nil {
 		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidLoadErr)
 	}
