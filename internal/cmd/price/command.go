@@ -144,7 +144,7 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 		return err
 	}
 	product = "cluster-link"
-	clPricesReply, err := c.Client.Billing.GetPriceTable(nil, org, product)
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(nil, org, product)
 	if err != nil {
 		return err
 	}
@@ -162,13 +162,13 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 		return fmt.Errorf("no results found")
 	}
 
-	clTable, err := filterTable(command, clPricesReply.PriceTable)
+	clusterLinkTable, err := filterTable(command, clusterLinkPricesReply.PriceTable)
 	if err != nil {
 		return err
 	}
 	// Merge cluster link price table into kafka table
 	// Kafka metrics and cluster link metrics will not have overlap
-	for metrics, val := range clTable {
+	for metrics, val := range clusterLinkTable {
 		kafkaTable[metrics] = val
 	}
 

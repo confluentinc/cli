@@ -106,7 +106,7 @@ func mockSingleRowCommand() *cobra.Command {
 	}, exampleMetric, exampleUnit)
 }
 
-func mockPriceCommand(prices map[string]float64, metricsName string, metricsUnit string) *cobra.Command {
+func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string) *cobra.Command {
 	client := &ccloud.Client{
 		Billing: &ccloudmock.Billing{
 			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization, _ string) (*billingv1.PriceTable, error) {
@@ -132,7 +132,7 @@ func TestFormatPrice(t *testing.T) {
 	require.Equal(t, "$1.234 USD/GB", formatPrice(1.234, "GB"))
 }
 
-func TestClusterLinkPrice(t *testing.T) {
+func TestPrice_ClusterLink(t *testing.T) {
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
 	}, "ClusterLinkingBase", "Hour")
