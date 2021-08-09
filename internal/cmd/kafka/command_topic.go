@@ -69,7 +69,7 @@ type structuredDescribeDisplay struct {
 
 type topicData struct {
 	TopicName string            `json:"topic_name" yaml:"topic_name"`
-	Configs   map[string]string `json:"config" yaml:"config"`
+	Config    map[string]string `json:"config" yaml:"config"`
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
@@ -468,9 +468,9 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			} else if configsResp.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
 			}
-			topicData.Configs = make(map[string]string)
+			topicData.Config = make(map[string]string)
 			for _, config := range configsResp.Data {
-				topicData.Configs[config.Name] = *config.Value
+				topicData.Config[config.Name] = *config.Value
 			}
 
 			if outputOption == output.Human.String() {
@@ -986,9 +986,9 @@ func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
 	utils.Printf(cmd, "Topic: %s\n", topicData.TopicName)
 	utils.Print(cmd, "\nConfiguration\n\n")
 	configsTableLabels := []string{"Name", "Value"}
-	configsTableEntries := make([][]string, len(topicData.Configs))
+	configsTableEntries := make([][]string, len(topicData.Config))
 	i := 0
-	for name, value := range topicData.Configs {
+	for name, value := range topicData.Config {
 		configsTableEntries[i] = printer.ToRow(&struct {
 			name  string
 			value string
