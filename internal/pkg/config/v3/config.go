@@ -379,7 +379,7 @@ func (c *Config) CredentialType() v2.CredentialType {
 	if ctx == nil {
 		return v2.None
 	}
-	if c.Context().Credential != nil && c.Context().Credential.CredentialType == v2.APIKey {
+	if ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey {
 		return v2.APIKey
 	}
 	if c.HasLogin() {

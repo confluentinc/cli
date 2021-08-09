@@ -10,6 +10,7 @@ import (
 	"github.com/client9/gospell"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -240,6 +241,7 @@ func main() {
 
 	code := 0
 	for _, cfg := range configs {
+		cfg.BaseConfig = &config.BaseConfig{Params: new(config.Params)}
 		cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
 		if err := l.Lint(cli.Command); err != nil {
 			fmt.Printf("For context \"%s\", %v", cfg.CurrentContext, err)
