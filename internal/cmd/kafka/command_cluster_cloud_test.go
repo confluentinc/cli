@@ -124,7 +124,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 		},
 	}
 	suite.usageLimits = &ccsdkmock.UsageLimits{
-		GetUsageLimitsFunc: func(ctx context.Context, cloud schedv1.Provider_Cloud) (*schedv1.GetUsageLimitsReply, error) {
+		GetUsageLimitsFunc: func(ctx context.Context, provider ...string) (*schedv1.GetUsageLimitsReply, error) {
 			return &schedv1.GetUsageLimitsReply{UsageLimits: &corev1.UsageLimits{
 				TierLimits: map[string]*corev1.TierFixedLimits{
 					"BASIC": {

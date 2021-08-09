@@ -572,7 +572,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 		window = "3 days"
 	}
 	// Get usage limits
-	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, currentCluster, cku)
+	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, cku)
 	if err != nil {
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
@@ -738,14 +738,8 @@ func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
 }
 
-func (c *clusterCommand) getUsageLimit(ctx context.Context, currentCluster *schedv1.KafkaCluster, cku int32) (int32, int32, error) {
-	var cloud schedv1.Provider_Cloud
-	if currentCluster.Deployment == nil || currentCluster.Deployment.Provider == nil {
-		cloud = schedv1.Provider_UNKNOWN
-	} else {
-		cloud = currentCluster.Deployment.Provider.Cloud
-	}
-	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx, cloud)
+func (c *clusterCommand) getUsageLimit(ctx context.Context, cku int32) (int32, int32, error) {
+	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "Could not retrieve partition count usage limits. Please try again or contact support.")
 	}

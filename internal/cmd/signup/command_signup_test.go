@@ -206,7 +206,7 @@ func mockCcloudClient() *ccloud.Client {
 				return "", nil
 			},
 		},
-		User: &ccloudmock.User{},
+		User:   &ccloudmock.User{},
 		Params: &ccloud.Params{BaseURL: "http://baseurl.com"},
 	}
 }

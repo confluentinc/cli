@@ -3,7 +3,9 @@ package auth
 
 import (
 	"context"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -65,7 +67,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
 	loginRealmReply, err := client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
-			Email: email,
+			Email:    email,
 			ClientId: auth0ClientId,
 		})
 	if err != nil {

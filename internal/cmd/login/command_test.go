@@ -67,7 +67,7 @@ var (
 			}, nil
 		},
 	}
-	mockUser = &sdkMock.User{}
+	mockUser                    = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {

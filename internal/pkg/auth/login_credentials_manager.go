@@ -3,9 +3,11 @@ package auth
 
 import (
 	"context"
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/confluentinc/cli/internal/pkg/sso"
 	"os"
+
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+
+	"github.com/confluentinc/cli/internal/pkg/sso"
 
 	"github.com/spf13/cobra"
 
@@ -218,7 +220,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email string) bool {
 	h.logger.Debugf("auth0ClientId: %s", auth0ClientId)
 	loginRealmReply, err := h.client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
-			Email: email,
+			Email:    email,
 			ClientId: auth0ClientId,
 		})
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious

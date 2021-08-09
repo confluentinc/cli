@@ -44,6 +44,8 @@ const (
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
 	usageLimits         = "/api/usage_limits"
+	accessTokens        = "/api/access_tokens"
+	metricsApi          = "/v2/metrics/cloud/query"
 )
 
 type CloudRouter struct {
@@ -86,6 +88,8 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addConnectorsRoutes(t)
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
+	//c.addAccessTokenRoutes(t)
+	c.addMetricsQueryRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -155,4 +159,12 @@ func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {
 
 func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
+}
+
+//func (c *CloudRouter) addAccessTokenRoutes(t *testing.T) {
+//	c.HandleFunc(accessTokens, c.HandleAccessTokens(t))
+//}
+
+func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
+	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
 }
