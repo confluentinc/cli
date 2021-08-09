@@ -13,7 +13,7 @@ import (
 const (
 	sessions            = "/api/sessions"
 	me                  = "/api/me"
-	checkEmail          = "/api/check_email/{email}"
+	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
 	apiKey              = "/api/api_keys/{key}"
@@ -70,7 +70,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t))
-	c.HandleFunc(checkEmail, c.HandleCheckEmail(t))
+	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))

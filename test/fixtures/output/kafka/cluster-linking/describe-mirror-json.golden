@@ -1,29 +1,29 @@
 [
   {
-    "LinkName": "link-1",
-    "MirrorStatus": "active",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "0",
-    "PartitionMirrorLag": "142857",
-    "SourceTopicName": "src-topic-1",
-    "StatusTimeMs": "111111111"
+    "link_name": "link-1",
+    "mirror_status": "active",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "0",
+    "partition_mirror_lag": "142857",
+    "source_topic_name": "src-topic-1",
+    "status_time_ms": "111111111"
   }, 
   {
-    "LinkName": "link-1",
-    "MirrorStatus": "active",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "1",
-    "PartitionMirrorLag": "285714",
-    "SourceTopicName": "src-topic-1",
-    "StatusTimeMs": "111111111"
+    "link_name": "link-1",
+    "mirror_status": "active",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "1",
+    "partition_mirror_lag": "285714",
+    "source_topic_name": "src-topic-1",
+    "status_time_ms": "111111111"
   }, 
   {
-    "LinkName": "link-1",
-    "MirrorStatus": "active",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "2",
-    "PartitionMirrorLag": "571428",
-    "SourceTopicName": "src-topic-1",
-    "StatusTimeMs": "111111111"
+    "link_name": "link-1",
+    "mirror_status": "active",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "2",
+    "partition_mirror_lag": "571428",
+    "source_topic_name": "src-topic-1",
+    "status_time_ms": "111111111"
   }
 ]

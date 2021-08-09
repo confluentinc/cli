@@ -130,13 +130,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 	suite := []struct {
 		cliName string
 		args    []string

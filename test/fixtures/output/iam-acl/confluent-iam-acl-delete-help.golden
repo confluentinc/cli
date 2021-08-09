@@ -11,12 +11,12 @@ Delete an ACL that granted the specified user access to the Test topic in the sp
   $ confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test
 
 Flags:
-      --kafka-cluster-id string   Kafka cluster ID for scope of ACL commands.
+      --kafka-cluster-id string   REQUIRED: Kafka cluster ID for scope of ACL commands.
       --allow                     ACL permission to allow access.
       --deny                      ACL permission to restrict access to resource.
-      --principal string          Principal for this operation with User: or Group: prefix.
-      --host string               Set host for access. Only IP addresses are supported. (default "*")
-      --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.
+      --host string               REQUIRED: Set host for access. Only IP addresses are supported. (default "*")
+      --operation string          REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --cluster-scope             Set the cluster resource. With this option the ACL grants
                                   access to the provided operations on the Kafka cluster itself.
       --consumer-group string     Set the Consumer Group resource.
@@ -25,7 +25,7 @@ Flags:
                                   operations on the topics that start with that prefix, depending on whether
                                   the --prefix option was also passed.
       --prefix                    Set to match all resource names prefixed with this value.
-      --context string            CLI Context name.
+      --context string            CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
