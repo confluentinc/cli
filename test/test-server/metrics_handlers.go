@@ -2,6 +2,7 @@ package test_server
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 	"time"
@@ -22,6 +23,7 @@ func (c *CloudRouter) HandleMetricsQuery(t *testing.T) func(w http.ResponseWrite
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		err := json.NewEncoder(w).Encode(response)
+		require.NoError(t, err)
 	}
 }
