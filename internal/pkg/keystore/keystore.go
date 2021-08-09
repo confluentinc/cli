@@ -13,7 +13,7 @@ import (
 type KeyStore interface {
 	HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error)
 	StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error
-	DeleteAPIKey(key string, cmd *cobra.Command) error
+	DeleteAPIKey(key string) error
 }
 
 type ConfigKeyStore struct {
