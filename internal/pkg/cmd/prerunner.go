@@ -340,8 +340,7 @@ func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cm
 
 func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		ctx := command.Config.Context()
-		return ctx.ParseFlagsIntoContext(cmd, nil)
+		return command.Config.Context().ParseFlagsIntoContext(cmd, nil)
 	}
 }
 
