@@ -2,10 +2,11 @@ package test_server
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 )
