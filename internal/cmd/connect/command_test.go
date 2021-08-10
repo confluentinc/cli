@@ -1,4 +1,4 @@
-package connector
+package connect
 
 import (
 	"context"
@@ -327,9 +327,9 @@ func (suite *ConnectTestSuite) TestServerCompletableChildren() {
 	}
 }
 
-func (suite *ConnectTestSuite) TestCatalogList() {
+func (suite *ConnectTestSuite) TestPluginList() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"catalog", "list"})
+	cmd.SetArgs([]string{"plugin", "list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -338,9 +338,9 @@ func (suite *ConnectTestSuite) TestCatalogList() {
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
 }
 
-func (suite *ConnectTestSuite) TestCatalogDescribeConnector() {
+func (suite *ConnectTestSuite) TestPluginDescribeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"catalog", "describe", pluginType})
+	cmd.SetArgs([]string{"plugin", "describe", pluginType})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)

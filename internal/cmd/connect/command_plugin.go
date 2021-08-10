@@ -1,4 +1,4 @@
-package connector
+package connect
 
 import (
 	"context"
@@ -15,43 +15,43 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type catalogCommand struct {
+type pluginCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	completableChildren []*cobra.Command
 }
 
-type catalogDisplay struct {
+type pluginDisplay struct {
 	PluginName string
 	Type       string
 }
 
 var (
-	catalogFields          = []string{"PluginName", "Type"}
-	catalogStructureLabels = []string{"plugin_name", "type"}
+	pluginFields          = []string{"PluginName", "Type"}
+	pluginStructureLabels = []string{"plugin_name", "type"}
 )
 
 // New returns the default command object for interacting with Connect.
-func NewCatalogCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
-	cmd := &catalogCommand{
+func NewPluginCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &pluginCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
-			Use:   "catalog",
-			Short: "Catalog of connectors and their configurations.",
+			Use:   "plugin",
+			Short: "Catalog of plugins and their configurations.",
 		}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
 	return cmd.Command
 }
 
-func (c *catalogCommand) init(cliName string) {
+func (c *pluginCommand) init(cliName string) {
 	describeCmd := &cobra.Command{
-		Use:   "describe <connector-type>",
+		Use:   "describe <plugin-type>",
 		Short: "Describe a connector plugin type.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe required connector configuration parameters for a specific connector plugin.",
-				Code: fmt.Sprintf("%s connector-catalog describe <plugin-name>", cliName),
+				Code: fmt.Sprintf("%s connect plugin describe <plugin-name>", cliName),
 			},
 		),
 	}
@@ -67,7 +67,7 @@ func (c *catalogCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List connectors in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connector-catalog list", cliName),
+				Code: fmt.Sprintf("%s connect plugin list", cliName),
 			},
 		),
 	}
@@ -77,22 +77,22 @@ func (c *catalogCommand) init(cliName string) {
 	c.completableChildren = []*cobra.Command{describeCmd}
 }
 
-func (c *catalogCommand) list(cmd *cobra.Command, _ []string) error {
-	outputWriter, err := output.NewListOutputWriter(cmd, catalogFields, catalogFields, catalogStructureLabels)
+func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
+	outputWriter, err := output.NewListOutputWriter(cmd, pluginFields, pluginFields, pluginStructureLabels)
 	if err != nil {
 		return err
 	}
-	catalog, err := c.getCatalog(cmd)
+	plugin, err := c.getPlugin(cmd)
 	if err != nil {
 		return err
 	}
-	for _, conn := range catalog {
+	for _, conn := range plugin {
 		outputWriter.AddElement(conn)
 	}
 	return outputWriter.Out()
 }
 
-func (c *catalogCommand) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, error) {
+func (c *pluginCommand) getPlugin(cmd *cobra.Command) ([]*pluginDisplay, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return nil, err
@@ -101,9 +101,9 @@ func (c *catalogCommand) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, erro
 	if err != nil {
 		return nil, err
 	}
-	var plugins []*catalogDisplay
+	var plugins []*pluginDisplay
 	for _, conn := range connectorInfo {
-		plugins = append(plugins, &catalogDisplay{
+		plugins = append(plugins, &pluginDisplay{
 			PluginName: conn.Class,
 			Type:       conn.Type,
 		})
@@ -111,7 +111,7 @@ func (c *catalogCommand) getCatalog(cmd *cobra.Command) ([]*catalogDisplay, erro
 	return plugins, nil
 }
 
-func (c *catalogCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
@@ -148,17 +148,17 @@ func (c *catalogCommand) describe(cmd *cobra.Command, args []string) error {
 	return errors.Errorf(errors.InvalidCloudErrorMsg)
 }
 
-func (c *catalogCommand) Cmd() *cobra.Command {
+func (c *pluginCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *catalogCommand) ServerComplete() []prompt.Suggest {
+func (c *pluginCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	catalog, err := c.getCatalog(c.Command)
+	plugin, err := c.getPlugin(c.Command)
 	if err != nil {
 		return suggestions
 	}
-	for _, conn := range catalog {
+	for _, conn := range plugin {
 		suggestions = append(suggestions, prompt.Suggest{
 			Text:        conn.PluginName,
 			Description: conn.Type,
@@ -167,6 +167,6 @@ func (c *catalogCommand) ServerComplete() []prompt.Suggest {
 	return suggestions
 }
 
-func (c *catalogCommand) ServerCompletableChildren() []*cobra.Command {
+func (c *pluginCommand) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
 }
