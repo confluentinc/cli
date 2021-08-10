@@ -23,9 +23,15 @@ const (
 )
 
 var (
-	listMirrorOutputFields     = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	describeMirrorOutputFields = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
-	alterMirrorOutputFields    = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	listMirrorFields               = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	structuredListMirrorFields     = camelToSnake(listMirrorFields)
+	humanListMirrorFields          = camelToSpaced(listMirrorFields)
+	describeMirrorFields           = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	structuredDescribeMirrorFields = camelToSnake(describeMirrorFields)
+	humanDescribeMirrorFields      = camelToSpaced(describeMirrorFields)
+	alterMirrorFields              = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	structuredAlterMirrorFields    = camelToSnake(alterMirrorFields)
+	humanAlterMirrorFields         = camelToSpaced(alterMirrorFields)
 )
 
 type listMirrorWrite struct {
@@ -66,7 +72,6 @@ func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:    "mirror",
 			Short:  "Manages cluster linking mirror topics.",
-			Hidden: true,
 		},
 		prerunner, MirrorSubcommandFlags)
 	cmd := &mirrorCommand{
@@ -89,7 +94,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.list,
 		Args:   cobra.NoArgs,
-		Hidden: true,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
@@ -109,7 +113,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.describe,
 		Args:   cobra.ExactArgs(1),
-		Hidden: true,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
@@ -129,7 +132,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.create,
 		Args:   cobra.ExactArgs(1),
-		Hidden: true,
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
@@ -150,7 +152,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.promote,
 		Args:   cobra.MinimumNArgs(1),
-		Hidden: true,
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -169,7 +170,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.failover,
 		Args:   cobra.MinimumNArgs(1),
-		Hidden: true,
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -188,7 +188,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.pause,
 		Args:   cobra.MinimumNArgs(1),
-		Hidden: true,
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -207,7 +206,6 @@ func (c *mirrorCommand) init() {
 		),
 		RunE:   c.resume,
 		Args:   cobra.MinimumNArgs(1),
-		Hidden: true,
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -262,7 +260,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, listMirrorOutputFields, listMirrorOutputFields, listMirrorOutputFields)
+		cmd, listMirrorFields, humanListMirrorFields, structuredListMirrorFields)
 	if err != nil {
 		return err
 	}
@@ -318,7 +316,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, describeMirrorOutputFields, describeMirrorOutputFields, describeMirrorOutputFields)
+		cmd, describeMirrorFields, humanDescribeMirrorFields, structuredDescribeMirrorFields)
 	if err != nil {
 		return err
 	}
@@ -581,7 +579,7 @@ func (c *mirrorCommand) createWithKafkaApi(
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
 	outputWriter, err := output.NewListOutputWriter(
-		cmd, alterMirrorOutputFields, alterMirrorOutputFields, alterMirrorOutputFields)
+		cmd, alterMirrorFields, humanAlterMirrorFields, structuredAlterMirrorFields)
 	if err != nil {
 		return err
 	}

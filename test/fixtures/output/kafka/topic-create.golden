@@ -14,7 +14,7 @@ Flags:
       --if-not-exists        Exit gracefully if topic already exists.
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
-      --context string       CLI Context name.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
