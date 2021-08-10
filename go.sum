@@ -321,6 +321,8 @@ github.com/confluentinc/cire-obelisk v0.285.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZB
 github.com/confluentinc/cire-obelisk v0.299.0 h1:DKth61Vxb/1f49RX5vZvTzRO7SndV0PXF6YuU/6YYao=
 github.com/confluentinc/cire-obelisk v0.299.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
 github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9/go.mod h1:MUrc101nfomW+4pCJKUAiWFsmUTfFwMnXpBxFd6gEqk=
+github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677 h1:J5RaWrvtNMx26YT5dvkkp0Hh/LAWRomK3Q2DMeKRMPk=
+github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677/go.mod h1:M1v2LPUtSndRkYwk0I8rIl8l0N4+eRYjbgUEhXxuQEw=
 github.com/confluentinc/crn v0.1.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/events v0.0.0-20200410230739-3f254df71881/go.mod h1:80TdvWyMqf/wqxlNrQFY2y9o8yKQX/guxW1HB4mHz2A=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=
@@ -917,8 +919,6 @@ github.com/lib/pq v1.3.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.9.0/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/linkedin/goavro/v2 v2.9.8 h1:jN50elxBsGBDGVDEKqUlDuU1cFwJ11K/yrJCBMe/7Wg=
 github.com/linkedin/goavro/v2 v2.9.8/go.mod h1:UgQUb2N/pmueQYH9bfqFioWxzYCZXSfF8Jw03O5sjqA=
-github.com/lithammer/dedent v1.1.0 h1:VNzHMVCBNG1j0fh3OrsFRkVUwStdDArbgBWoPAffktY=
-github.com/lithammer/dedent v1.1.0/go.mod h1:jrXYCQtgg0nJiN+StA2KgR7w6CiQNv9Fd/Z9BP0jIOc=
 github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e/go.mod h1:7rIyQOR62GCctdiQpZ/zOJlFyk6y+94wXzv6RNZgaR4=
 github.com/lyft/protoc-gen-star v0.4.10/go.mod h1:mE8fbna26u7aEA2QCVvvfBU/ZrPgocG1206xAFPcs94=
 github.com/lyft/protoc-gen-star v0.5.1/go.mod h1:9toiA3cC7z5uVbODF7kEQ91Xn7XNFkVUl+SrEe+ZORU=

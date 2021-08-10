@@ -73,10 +73,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return err
 		}
 		c.setClient(command)
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
+		ctx := command.Config.Context()
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
 		}
@@ -96,10 +93,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return err
 		}
 		c.setClient(command)
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
+		ctx := command.Config.Context()
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
 		}
@@ -118,10 +112,7 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra
 		if err != nil {
 			return err
 		}
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
+		ctx := command.Config.Context()
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
 		}
@@ -151,10 +142,7 @@ func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand)
 
 func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
+		ctx := command.Config.Context()
 		return ctx.ParseFlagsIntoContext(cmd, nil)
 	}
 }
