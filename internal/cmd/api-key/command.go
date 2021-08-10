@@ -448,7 +448,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
-	err = c.keystore.DeleteAPIKey(apiKey, cmd)
+	err = c.keystore.DeleteAPIKey(apiKey)
 	if err != nil {
 		return err
 	}

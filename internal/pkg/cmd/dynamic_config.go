@@ -56,11 +56,11 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	return NewDynamicContext(ctx, d.Resolver, d.Client), nil
 }
 
-//Returns active Context wrapped as a new DynamicContext instance
-func (d *DynamicConfig) Context(cmd *cobra.Command) (*DynamicContext, error) {
+// Context returns the active context as a DynamicContext object.
+func (d *DynamicConfig) Context() *DynamicContext {
 	ctx := d.Config.Context()
 	if ctx == nil {
-		return nil, nil
+		return nil
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client), nil
+	return NewDynamicContext(ctx, d.Resolver, d.Client)
 }
