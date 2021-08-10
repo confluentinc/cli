@@ -351,12 +351,17 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
+		var autoLoginErr error
+
 		if err := r.setAuthenticatedContext(cmd, command); err != nil {
 			if _, ok := err.(*errors.NotLoggedInError); ok {
-				if err := r.ccloudAutoLogin(cmd); err != nil {
-					r.Logger.Debugf("Auto login failed: %s", err.Error())
+				if err2 := r.ccloudAutoLogin(cmd); err2 != nil {
+					r.Logger.Debugf("Auto login failed: %v", err2)
+					autoLoginErr = err
 				} else {
-					_ = r.setAuthenticatedContext(cmd, command)
+					if err := r.setAuthenticatedContext(cmd, command); err != nil {
+						return err
+					}
 				}
 			} else {
 				return err
@@ -365,6 +370,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 			return err
+		}
+
+		if autoLoginErr != nil {
+			return autoLoginErr
 		}
 
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
@@ -567,12 +576,18 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return err
 		}
 
+		var autoLoginErr error
+
 		if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
 			if _, ok := err.(*errors.NotLoggedInError); ok {
-				if err := r.confluentAutoLogin(cmd); err != nil {
-					r.Logger.Debugf("Auto login failed: %s", err.Error())
+				if err2 := r.confluentAutoLogin(cmd); err2 != nil {
+					r.Logger.Debugf("Auto login failed: %v", err2)
+					autoLoginErr = err
+				} else {
+					if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
+						return err
+					}
 				}
-				_ = r.setAuthenticatedWithMDSContext(cmd, command)
 			} else {
 				return err
 			}
@@ -580,6 +595,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 			return err
+		}
+
+		if autoLoginErr != nil {
+			return autoLoginErr
 		}
 
 		return r.ValidateToken(cmd, command.Config)
