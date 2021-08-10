@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
@@ -94,8 +95,9 @@ func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageL
 		return errors.New("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes.")
 	}
 	maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
-	if int32(maxStorageLimit.Value) > requiredStorageLimit {
-		return fmt.Errorf("storage used was %f at %s. Recommended storage is less than %d for %d CKU", maxStorageLimit.Value, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
+	maxStorageLimitInGB := maxStorageLimit.Value * math.Pow10(-9)
+	if maxStorageLimitInGB > float64(requiredStorageLimit) {
+		return fmt.Errorf("storage used was %.2f at %s. Recommended storage is less than %d for %d CKU", maxStorageLimitInGB, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
 	}
 	return nil
 }
