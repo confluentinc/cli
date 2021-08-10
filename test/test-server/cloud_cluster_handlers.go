@@ -80,6 +80,14 @@ func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter
 					},
 					NumPartitions: &productv1.IntegerUsageLimit{Limit: &productv1.IntegerUsageLimit_Value{Value: 2000}},
 				},
+				uint32(2): {
+					NumBrokers: &productv1.IntegerUsageLimit{Limit: &productv1.IntegerUsageLimit_Value{Value: 5}},
+					Storage: &productv1.IntegerUsageLimit{
+						Limit: &productv1.IntegerUsageLimit_Value{Value: 1000},
+						Unit:  productv1.LimitUnit_GB,
+					},
+					NumPartitions: &productv1.IntegerUsageLimit{Limit: &productv1.IntegerUsageLimit_Value{Value: 4000}},
+				},
 			},
 		}}
 		b, err := utilv1.MarshalJSONToBytes(usageLimitsReply)

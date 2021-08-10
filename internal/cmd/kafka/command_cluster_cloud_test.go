@@ -133,13 +133,21 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 					},
 				},
 				CkuLimits: map[uint32]*corev1.CKULimits{
-					uint32(1): {
+					uint32(2): {
 						NumBrokers: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 5}},
 						Storage: &corev1.IntegerUsageLimit{
 							Limit: &corev1.IntegerUsageLimit_Value{Value: 500},
 							Unit:  corev1.LimitUnit_GB,
 						},
 						NumPartitions: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 2000}},
+					},
+					uint32(3): {
+						NumBrokers: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 5}},
+						Storage: &corev1.IntegerUsageLimit{
+							Limit: &corev1.IntegerUsageLimit_Value{Value: 1000},
+							Unit:  corev1.LimitUnit_GB,
+						},
+						NumPartitions: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 3000}},
 					},
 				},
 			}}, nil

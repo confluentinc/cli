@@ -45,6 +45,7 @@ const (
 	verifyEmail         = "/api/email_verifications"
 	usageLimits         = "/api/usage_limits"
 	metricsApi          = "/{version}/metrics/{view}/{query}"
+	accessTokens        = "/api/access_tokens"
 )
 
 type CloudRouter struct {
@@ -161,4 +162,5 @@ func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 
 func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
 	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
+	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
 }
