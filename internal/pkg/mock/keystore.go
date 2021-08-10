@@ -20,7 +20,7 @@ type KeyStore struct {
 	StoreAPIKeyFunc func(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error
 
 	lockDeleteAPIKey sync.Mutex
-	DeleteAPIKeyFunc func(key string, cmd *github_com_spf13_cobra.Command) error
+	DeleteAPIKeyFunc func(key string) error
 
 	calls struct {
 		HasAPIKey []struct {
@@ -35,7 +35,6 @@ type KeyStore struct {
 		}
 		DeleteAPIKey []struct {
 			Key string
-			Cmd *github_com_spf13_cobra.Command
 		}
 	}
 }
@@ -129,7 +128,7 @@ func (m *KeyStore) StoreAPIKeyCalls() []struct {
 }
 
 // DeleteAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) DeleteAPIKey(key string, cmd *github_com_spf13_cobra.Command) error {
+func (m *KeyStore) DeleteAPIKey(key string) error {
 	m.lockDeleteAPIKey.Lock()
 	defer m.lockDeleteAPIKey.Unlock()
 
@@ -139,15 +138,13 @@ func (m *KeyStore) DeleteAPIKey(key string, cmd *github_com_spf13_cobra.Command)
 
 	call := struct {
 		Key string
-		Cmd *github_com_spf13_cobra.Command
 	}{
 		Key: key,
-		Cmd: cmd,
 	}
 
 	m.calls.DeleteAPIKey = append(m.calls.DeleteAPIKey, call)
 
-	return m.DeleteAPIKeyFunc(key, cmd)
+	return m.DeleteAPIKeyFunc(key)
 }
 
 // DeleteAPIKeyCalled returns true if DeleteAPIKey was called at least once.
@@ -161,7 +158,6 @@ func (m *KeyStore) DeleteAPIKeyCalled() bool {
 // DeleteAPIKeyCalls returns the calls made to DeleteAPIKey.
 func (m *KeyStore) DeleteAPIKeyCalls() []struct {
 	Key string
-	Cmd *github_com_spf13_cobra.Command
 } {
 	m.lockDeleteAPIKey.Lock()
 	defer m.lockDeleteAPIKey.Unlock()

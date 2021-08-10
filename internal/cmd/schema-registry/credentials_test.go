@@ -15,10 +15,9 @@ func TestSrAuthFound(t *testing.T) {
 	cfg := mock.AuthenticatedDynamicConfigMock()
 	cmd := &cobra.Command{}
 
-	currCtx, err := cfg.Context(cmd)
-	req.NoError(err)
+	ctx := cfg.Context()
 
-	srCluster, err := currCtx.SchemaRegistryCluster(cmd)
+	srCluster, err := ctx.SchemaRegistryCluster(cmd)
 	req.NoError(err)
 
 	srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, false)
