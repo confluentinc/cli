@@ -19,6 +19,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+
+	"github.com/confluentinc/countrycode"
 )
 
 type command struct {
@@ -81,7 +83,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	)
 
 	fCountrycode := form.New(
-		form.Field{ID: "country", Prompt: "Two-letter country code (https://github.com/confluentinc/country-code/blob/master/country_code.go)", Regex: "^[a-zA-Z]{2}$"},
+		form.Field{ID: "country", Prompt: "Two-letter country code (https://github.com/confluentinc/countrycode/blob/master/codes.go)", Regex: "^[a-zA-Z]{2}$"},
 	)
 
 	fOrgPswdTosPri := form.New(
@@ -102,7 +104,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return err
 		}
 		countryCode = strings.ToUpper(fCountrycode.Responses["country"].(string))
-		if country, ok := countryCodes[countryCode]; ok {
+		if country, ok := countrycode.Codes[countryCode]; ok {
 			f := form.New(
 				form.Field{ID: "confirmation", Prompt: fmt.Sprintf("You entered %s for %s. Is that correct?", countryCode, country), IsYesOrNo: true},
 			)

@@ -321,6 +321,8 @@ github.com/confluentinc/cire-obelisk v0.285.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZB
 github.com/confluentinc/cire-obelisk v0.299.0 h1:DKth61Vxb/1f49RX5vZvTzRO7SndV0PXF6YuU/6YYao=
 github.com/confluentinc/cire-obelisk v0.299.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
 github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9/go.mod h1:MUrc101nfomW+4pCJKUAiWFsmUTfFwMnXpBxFd6gEqk=
+github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677 h1:J5RaWrvtNMx26YT5dvkkp0Hh/LAWRomK3Q2DMeKRMPk=
+github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677/go.mod h1:M1v2LPUtSndRkYwk0I8rIl8l0N4+eRYjbgUEhXxuQEw=
 github.com/confluentinc/crn v0.1.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/events v0.0.0-20200410230739-3f254df71881/go.mod h1:80TdvWyMqf/wqxlNrQFY2y9o8yKQX/guxW1HB4mHz2A=
 github.com/confluentinc/go-editor v0.4.0 h1:5hMjKsKmIOmlu3Yyz8zDq66Qpdin8HSmRaMhqhxRf5Y=

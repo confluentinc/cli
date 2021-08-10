@@ -173,7 +173,7 @@ func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
-	context, err := c.context(cmd, args)
+	context, err := c.context(args)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (c *contextCommand) get(cmd *cobra.Command, args []string) error {
 }
 
 func (c *contextCommand) set(cmd *cobra.Command, args []string) error {
-	context, err := c.context(cmd, args)
+	context, err := c.context(args)
 	if err != nil {
 		return err
 	}
@@ -204,20 +204,20 @@ func (c *contextCommand) delete(cmd *cobra.Command, args []string) error {
 	return c.Config.Save()
 }
 
-func (c *contextCommand) context(cmd *cobra.Command, args []string) (*pcmd.DynamicContext, error) {
-	var context *pcmd.DynamicContext
+func (c *contextCommand) context(args []string) (*pcmd.DynamicContext, error) {
+	var ctx *pcmd.DynamicContext
 	var err error
 	if len(args) == 1 {
 		contextName := args[0]
-		context, err = c.Config.FindContext(contextName)
+		ctx, err = c.Config.FindContext(contextName)
 	} else {
-		context, err = c.Config.Context(cmd)
-		if context == nil {
+		ctx = c.Config.Context()
+		if ctx == nil {
 			err = new(errors.NotLoggedInError)
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	return context, nil
+	return ctx, nil
 }

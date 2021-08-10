@@ -256,12 +256,8 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		r.warnIfConfluentLocal(cmd)
 
 		if r.Config != nil {
-			ctx, err := command.Config.Context(cmd)
-			if err != nil {
-				return err
-			}
-
-			err = r.ValidateToken(cmd, command.Config)
+			ctx := command.Config.Context()
+			err := r.ValidateToken(cmd, command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				if err := ctx.DeleteUserAuth(); err != nil {
@@ -338,25 +334,24 @@ func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cm
 
 func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
-		return ctx.ParseFlagsIntoContext(cmd, nil)
+		return command.Config.Context().ParseFlagsIntoContext(cmd, nil)
 	}
 }
 
 func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand *AuthenticatedCLICommand) error {
-	ctx, err := cliCommand.Config.Context(cobraCommand)
-	if err != nil {
-		return err
-	}
+	ctx := cliCommand.Config.Context()
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
-	cliCommand.State, err = ctx.AuthenticatedState(cobraCommand)
-	return err
+
+	state, err := ctx.AuthenticatedState(cobraCommand)
+	if err != nil {
+		return err
+	}
+	cliCommand.State = state
+
+	return nil
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
@@ -403,10 +398,8 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 }
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx, err := cliCmd.Config.Context(cliCmd.Command)
-	if err != nil {
-		return err
-	}
+	ctx := cliCmd.Config.Context()
+
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
 	if err != nil {
 		return err
@@ -416,10 +409,8 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		ctx, err := cliCmd.Config.Context(cliCmd.Command)
-		if err != nil {
-			return nil, err
-		}
+		ctx := cliCmd.Config.Context()
+
 		restEndpoint, err := getKafkaRestEndpoint(ctx, cliCmd)
 		if err != nil {
 			return nil, err
@@ -523,13 +514,13 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		var autoLoginErr error
 
-		if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
+		if err := r.setAuthenticatedWithMDSContext(command); err != nil {
 			if _, ok := err.(*errors.NotLoggedInError); ok {
 				if err2 := r.confluentAutoLogin(cmd); err2 != nil {
 					r.Logger.Debugf("Auto login failed: %v", err2)
 					autoLoginErr = err
 				} else {
-					if err := r.setAuthenticatedWithMDSContext(cmd, command); err != nil {
+					if err := r.setAuthenticatedWithMDSContext(command); err != nil {
 						return err
 					}
 				}
@@ -550,11 +541,8 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 	}
 }
 
-func (r *PreRun) setAuthenticatedWithMDSContext(cobraCommand *cobra.Command, cliCommand *AuthenticatedCLICommand) error {
-	ctx, err := cliCommand.Config.Context(cobraCommand)
-	if err != nil {
-		return err
-	}
+func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLICommand) error {
+	ctx := cliCommand.Config.Context()
 	if ctx == nil || !ctx.HasMDSLogin() {
 		return new(errors.NotLoggedInError)
 	}
@@ -603,10 +591,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, *p
 }
 
 func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx, err := cliCmd.Config.Context(cliCmd.Command)
-	if err != nil {
-		return err
-	}
+	ctx := cliCmd.Config.Context()
 	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 	return nil
 }
@@ -726,10 +711,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			return err
 		}
 
-		ctx, err := command.Config.Context(cmd)
-		if err != nil {
-			return err
-		}
+		ctx := command.Config.Context()
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
 		}
@@ -794,14 +776,11 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 	if config == nil {
 		return new(errors.NotLoggedInError)
 	}
-	ctx, err := config.Context(cmd)
-	if err != nil {
-		return err
-	}
+	ctx := config.Context()
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	err = r.JWTValidator.Validate(ctx.Context)
+	err := r.JWTValidator.Validate(ctx.Context)
 	if err == nil {
 		return nil
 	}

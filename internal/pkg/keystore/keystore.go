@@ -13,7 +13,7 @@ import (
 type KeyStore interface {
 	HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error)
 	StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error
-	DeleteAPIKey(key string, cmd *cobra.Command) error
+	DeleteAPIKey(key string) error
 }
 
 type ConfigKeyStore struct {
@@ -21,10 +21,7 @@ type ConfigKeyStore struct {
 }
 
 func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error) {
-	ctx, err := c.Config.Context(cmd)
-	if err != nil {
-		return false, err
-	}
+	ctx := c.Config.Context()
 	if ctx == nil {
 		return false, new(errors.NotLoggedInError)
 	}
@@ -38,10 +35,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
 func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
-	ctx, err := c.Config.Context(cmd)
-	if err != nil {
-		return err
-	}
+	ctx := c.Config.Context()
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
@@ -56,14 +50,11 @@ func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd 
 	return c.Config.Save()
 }
 
-func (c *ConfigKeyStore) DeleteAPIKey(key string, cmd *cobra.Command) error {
-	context, err := c.Config.Context(cmd)
-	if err != nil {
-		return err
-	}
-	if context == nil {
+func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
+	ctx := c.Config.Context()
+	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	context.KafkaClusterContext.DeleteAPIKey(key)
+	ctx.KafkaClusterContext.DeleteAPIKey(key)
 	return c.Config.Save()
 }
