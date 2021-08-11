@@ -4,10 +4,10 @@ import "strings"
 
 var (
 	auth0ClientIds = map[string]string{
-		"prod":  "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH",
-		"stag":  "Lk2u2MHszzpmmiJ1LetzZw3ur41nqLrw",
-		"devel": "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA",
-		"cpd":   "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb",
+		"prod":  "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
+		"stag":  "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
+		"devel": "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
+		"cpd":   "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
 	}
 )
 
