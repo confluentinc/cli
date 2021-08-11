@@ -34,10 +34,9 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 	c := &command{
 		pcmd.NewAnonymousCLICommand(
 			&cobra.Command{
-				Use:         "signup",
-				Short:       "Sign up for Confluent Cloud.",
-				Args:        cobra.NoArgs,
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+				Use:   "signup",
+				Short: "Sign up for Confluent Cloud.",
+				Args:  cobra.NoArgs,
 			},
 			prerunner,
 		),

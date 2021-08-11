@@ -97,7 +97,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		if !ctx.HasMDSLogin() {
+		if !ctx.HasBasicMDSLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.State = ctx.State

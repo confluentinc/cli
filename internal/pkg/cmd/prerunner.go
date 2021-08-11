@@ -537,7 +537,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLICommand) error {
 	ctx := cliCommand.Config.Context()
-	if ctx == nil || !ctx.HasMDSLogin() {
+	if ctx == nil || !ctx.HasBasicMDSLogin() {
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx

@@ -16,9 +16,8 @@ type command struct {
 func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
 	cmd := &command{
 		StateFlagCommand: pcmd.NewAnonymousStateFlagCommand(&cobra.Command{
-			Use:         "cluster",
-			Short:       "Retrieve metadata about Confluent Platform clusters.",
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+			Use:   "cluster",
+			Short: "Retrieve metadata about Confluent Platform clusters.",
 		}, prerunner, SubcommandFlags),
 		prerunner:  prerunner,
 		metaClient: metaClient,

@@ -374,29 +374,37 @@ func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
 }
 
+// CredentialType returns the credential type used in the current context: API key, username & password, or neither.
 func (c *Config) CredentialType() v2.CredentialType {
-	ctx := c.Context()
-	if ctx == nil {
-		return v2.None
-	}
-	if ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey {
+	if c.hasAPIKeyLogin() {
 		return v2.APIKey
 	}
-	if c.HasLogin() {
+
+	if c.HasBasicLogin() {
 		return v2.Username
 	}
+
 	return v2.None
 }
 
-func (c *Config) HasLogin() bool {
+// hasAPIKeyLogin returns true if the user has valid API Key credentials.
+func (c *Config) hasAPIKeyLogin() bool {
+	ctx := c.Context()
+	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
+}
+
+// HasBasicLogin returns true if the user has valid username & password credentials.
+func (c *Config) HasBasicLogin() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
 	}
-	if c.CLIName == "ccloud" {
-		return ctx.hasCCloudLogin()
+
+	if c.IsCloudLogin() {
+		return ctx.hasBasicCloudLogin()
+	} else {
+		return ctx.HasBasicMDSLogin()
 	}
-	return ctx.HasMDSLogin()
 }
 
 func (c *Config) ResetAnonymousId() error {

@@ -141,11 +141,11 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(price.New(prerunner))
 	cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
 	cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
-	cli.AddCommand(secret.New(flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
+	cli.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	cli.AddCommand(serviceAccountCmd.Command)
 	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 	cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
-	cli.AddCommand(update.New(logger, ver, updateClient, analyticsClient))
+	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cli.AddCommand(version.New(prerunner, ver))
 
 	if cfg.IsCloudLogin() {
@@ -219,10 +219,13 @@ func getLongDescription(cfg *v3.Config) string {
 // for example, an on-prem command shouldn't be used by a cloud user.
 func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) {
 	if err := pcmd.ErrIfMissingRunRequirement(cmd, cfg); err != nil {
-		cmd.Args = cobra.NoArgs
 		cmd.Hidden = true
-		cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
-		cmd.SilenceUsage = true
+
+		// Show err for internal commands. Leaf commands will err in the PreRun function.
+		if cmd.HasSubCommands() {
+			cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
+			cmd.SilenceUsage = true
+		}
 	}
 
 	for _, subcommand := range cmd.Commands() {

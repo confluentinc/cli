@@ -33,10 +33,11 @@ func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	registerCmd := &registryCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
-				Use:   "register",
-				Short: "Register cluster.",
-				Long:  "Register cluster with the MDS cluster registry.",
-				Args:  cobra.NoArgs,
+				Use:         "register",
+				Short:       "Register cluster.",
+				Long:        "Register cluster with the MDS cluster registry.",
+				Args:        cobra.NoArgs,
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 			},
 			prerunner),
 	}
@@ -60,10 +61,11 @@ func NewUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	unregisterCmd := &registryCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
-				Use:   "unregister",
-				Short: "Unregister cluster.",
-				Long:  "Unregister cluster from the MDS cluster registry.",
-				Args:  cobra.NoArgs,
+				Use:         "unregister",
+				Short:       "Unregister cluster.",
+				Long:        "Unregister cluster from the MDS cluster registry.",
+				Args:        cobra.NoArgs,
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 			},
 			prerunner),
 	}
