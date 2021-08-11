@@ -97,7 +97,7 @@ func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageL
 	maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
 	maxStorageLimitInGB := maxStorageLimit.Value * math.Pow10(-9)
 	if maxStorageLimitInGB > float64(requiredStorageLimit) {
-		return fmt.Errorf("storage used was %.2f at %s. Recommended storage is less than %d for %d CKU", maxStorageLimitInGB, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
+		return fmt.Errorf("storage used was %.5f at %s. Recommended storage is less than %d for %d CKU", maxStorageLimitInGB, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
 	}
 	return nil
 }

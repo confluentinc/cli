@@ -584,7 +584,6 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 		shouldPrompt = false
 	}
 	var isValidStorageLimitErr error
-	isValidStorageLimitErr = nil
 	if !currentCluster.InfiniteStorage {
 		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
 		if isValidStorageLimitErr != nil {
@@ -606,7 +605,6 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 func confirmShrink(cmd *cobra.Command, prompt form.Prompt, promptMessage string) (bool, error) {
 	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that:\n %s\n. Do you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
 	if err := f.Prompt(cmd, prompt); err != nil {
-		utils.ErrPrintln(cmd, errors.FailedToReadClusterResizeConfirmationErrorMsg)
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
 	}
 	if !f.Responses["proceed"].(bool) {
@@ -739,7 +737,7 @@ func isExpanding(cluster *schedv1.KafkaCluster) bool {
 
 func (c *clusterCommand) getUsageLimit(ctx context.Context, cku uint32) (int32, int32, error) {
 	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx)
-	if err != nil {
+	if err != nil || usageReply.UsageLimits == nil || len(usageReply.UsageLimits.GetCkuLimits()) == 0 || usageReply.UsageLimits.GetCkuLimits()[cku] == nil {
 		return 0, 0, errors.Wrap(err, "Could not retrieve partition count usage limits. Please try again or contact support.")
 	}
 	partitionCount := usageReply.UsageLimits.GetCkuLimits()[cku].GetNumPartitions().GetValue()

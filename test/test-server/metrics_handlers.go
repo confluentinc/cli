@@ -2,7 +2,6 @@ package test_server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -35,9 +34,7 @@ func (c *CloudRouter) HandleJwtToken(t *testing.T) func(w http.ResponseWriter, r
 		type CreateOAuthTokenReply struct {
 			Token string `json:"token"`
 		}
-		b, err := json.Marshal(&CreateOAuthTokenReply{Token: "OAUTH_TOKEN"})
-		require.NoError(t, err)
-		_, err = fmt.Fprint(w, string(b))
+		err := json.NewEncoder(w).Encode(&CreateOAuthTokenReply{Token: "OAUTH_TOKEN"})
 		require.NoError(t, err)
 	}
 }
