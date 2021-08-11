@@ -20,10 +20,9 @@ func NewListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	listCmd := &listCommand{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(
 			&cobra.Command{
-				Use:         "list",
-				Short:       "List registered clusters.",
-				Long:        "List clusters that are registered with the MDS cluster registry.",
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+				Use:   "list",
+				Short: "List registered clusters.",
+				Long:  "List clusters that are registered with the MDS cluster registry.",
 			},
 			prerunner),
 	}

@@ -18,6 +18,7 @@ Available Commands:
   logout            Log out of Confluent Platform.
   schema-registry   Manage Schema Registry.
   secret            Manage secrets for Confluent Platform.
+  signup            Sign up for Confluent Cloud.
   update            Update the Confluent CLI.
   version           Show version of the Confluent CLI.
 
