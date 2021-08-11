@@ -66,8 +66,8 @@ type linkCommand struct {
 func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:    "link",
-			Short:  "Manages inter-cluster links.",
+			Use:   "link",
+			Short: "Manages inter-cluster links.",
 		},
 		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{
@@ -88,8 +88,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link list",
 			},
 		),
-		RunE:   c.list,
-		Args:   cobra.NoArgs,
+		RunE: c.list,
+		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -109,8 +109,8 @@ func (c *linkCommand) init() {
 					"--source-bootstrap-server myhost:1234 --source-api-key abcde --source-api-secret 88888 \n",
 			},
 		),
-		RunE:   c.create,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.create,
+		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
 	createCmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
@@ -142,8 +142,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link delete my_link",
 			},
 		),
-		RunE:   c.delete,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.delete,
+		Args: cobra.ExactArgs(1),
 	}
 	c.AddCommand(deleteCmd)
 
@@ -156,8 +156,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link describe my_link",
 			},
 		),
-		RunE:   c.describe,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.describe,
+		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -173,8 +173,8 @@ func (c *linkCommand) init() {
 				Code: "ccloud kafka link update my_link --config-file ~/config.txt",
 			},
 		),
-		RunE:   c.update,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.update,
+		Args: cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
@@ -189,8 +189,11 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -319,8 +322,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	// Overriding the bootstrap server prop by the flag value
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -355,8 +361,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -375,8 +384,11 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -440,8 +452,11 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
