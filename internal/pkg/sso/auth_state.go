@@ -21,18 +21,22 @@ var (
 	ssoConfigs = map[string]ssoConfig{
 		"cpd": {
 			ssoProviderDomain:     "login-cpd.confluent-dev.io",
+			ssoProviderClientID:   "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
 			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
 		},
 		"devel": {
 			ssoProviderDomain:     "login.confluent-dev.io",
+			ssoProviderClientID:   "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
 		},
 		"stag": {
 			ssoProviderDomain:     "login-stag.confluent-dev.io",
+			ssoProviderClientID:   "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
 			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
 		},
 		"prod": {
 			ssoProviderDomain:     "login.confluent.io",
+			ssoProviderClientID:   "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
 			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
 		},
 	}
@@ -40,6 +44,7 @@ var (
 
 type ssoConfig struct {
 	ssoProviderDomain     string
+	ssoProviderClientID   string
 	ssoProviderIdentifier string
 }
 
