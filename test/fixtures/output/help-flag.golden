@@ -9,7 +9,7 @@ Available Commands:
   audit-log       Manage audit log configuration.
   completion      Print shell completion code.
   config          Modify the CLI configuration.
-  connector       Manage Kafka Connect.
+  connect         Manage Kafka Connect.
   environment     Manage and select ccloud environments.
   help            Help about any command
   iam             Manage RBAC and IAM permissions.
