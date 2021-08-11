@@ -56,11 +56,12 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				Metadata:     kafkarestv3.ResourceMetadata{},
 				ClusterId:    vars["cluster"],
 				ResourceType: "TOPIC",
-				ResourceName: "test-rest-proxy-topic",
+				ResourceName: "test-topic",
 				Operation:    "READ",
 				Permission:   "ALLOW",
 				Host:         "*",
-				Principal:    "User:Alice",
+				Principal:    "User:sa-123",
+				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
 			}}})
 			require.NoError(t, err)
 		case "POST":
@@ -101,7 +102,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
 					"cluster_id": "cluster-1",
-					"topic_name": "topic-1",
+					"topic_name": "topic1",
 					"is_internal": false,
 					"replication_factor": 3,
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
@@ -112,7 +113,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
 					"cluster_id": "cluster-1",
-					"topic_name": "topic-2",
+					"topic_name": "topic2",
 					"is_internal": true,
 					"replication_factor": 4,
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
@@ -339,6 +340,84 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
+func (r KafkaRestProxyRouter) HandleKafkaRPReplicaStatus(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		topicName := vars["topic"]
+		switch r.Method {
+		case http.MethodGet:
+			// if topic does not exist
+			if topicName != "topic-exist" {
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.ReplicaStatusDataList{
+				Kind:     "",
+				Metadata: kafkarestv3.ResourceCollectionMetadata{},
+				Data: []kafkarestv3.ReplicaStatusData{
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1001,
+						PartitionId: 0,
+						IsLeader:    true,
+						IsInIsr:     true,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1002,
+						PartitionId: 0,
+						IsInIsr:     true,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1003,
+						PartitionId: 0,
+						IsInIsr:     true,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1001,
+						PartitionId: 1,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1002,
+						PartitionId: 1,
+						IsLeader:    true,
+						IsInIsr:     true,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1003,
+						PartitionId: 1,
+						IsInIsr:     true,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1001,
+						PartitionId: 2,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1002,
+						PartitionId: 2,
+					},
+					{
+						TopicName:   "topic-exist",
+						BrokerId:    1003,
+						PartitionId: 2,
+						IsLeader:    true,
+						IsInIsr:     true,
+					},
+				},
+			})
+			require.NoError(t, err)
 		}
 	}
 }
@@ -994,8 +1073,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.Respon
 }
 
 type partitionOffsets struct {
-	currentOffset int32
-	logEndOffset  int32
+	currentOffset int64
+	logEndOffset  int64
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"

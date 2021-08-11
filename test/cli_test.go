@@ -203,7 +203,7 @@ func (s *CLITestSuite) TestUserAgent() {
 		cloudRouter := test_server.NewCloudRouter(t)
 		cloudRouter.HandleFunc("/api/sessions", compose(assertUserAgent(t, expected), cloudRouter.HandleLogin(t)))
 		cloudRouter.HandleFunc("/api/me", compose(assertUserAgent(t, expected), cloudRouter.HandleMe(t)))
-		cloudRouter.HandleFunc("/api/check_email/", compose(assertUserAgent(t, expected), cloudRouter.HandleCheckEmail(t)))
+		cloudRouter.HandleFunc("/api/login/realm", compose(assertUserAgent(t, expected), cloudRouter.HandleLoginRealm(t)))
 		cloudRouter.HandleFunc("/api/clusters/", compose(assertUserAgent(t, expected), cloudRouter.HandleKafkaClusterGetListDeleteDescribe(t)))
 		return test_server.NewCloudTestBackendFromRouters(cloudRouter, kafkaRouter)
 	}

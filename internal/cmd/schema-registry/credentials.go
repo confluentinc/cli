@@ -51,21 +51,19 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v0.APIKeyPair, sho
 func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
 
-	currCtx, err := cfg.Context(cmd)
-	if err != nil {
-		return nil, nil, err
-	}
+	ctx := cfg.Context()
 
 	srCluster := &v2.SchemaRegistryCluster{}
 	endpoint, _ := cmd.Flags().GetString("sr-endpoint")
 	if len(endpoint) == 0 {
-		srCluster, err = currCtx.SchemaRegistryCluster(cmd)
+		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
+		srCluster = cluster
 	}
 	// Check if --api-key and --api-secret flags were set, if so, insert them as the credentials for the sr cluster
-	key, secret, err := currCtx.KeyAndSecretFlags(cmd)
+	key, secret, err := ctx.KeyAndSecretFlags(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -92,15 +90,15 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 		srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
 		if len(endpoint) == 0 {
-			envId, err := currCtx.AuthenticatedEnvId(cmd)
+			envId, err := ctx.AuthenticatedEnvId(cmd)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			if srCluster, ok := currCtx.SchemaRegistryClusters[envId]; ok {
+			if srCluster, ok := ctx.SchemaRegistryClusters[envId]; ok {
 				srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 			} else {
-				ctxClient := pcmd.NewContextClient(currCtx)
+				ctxClient := pcmd.NewContextClient(ctx)
 				srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
 				if err != nil {
 					return nil, nil, err
@@ -127,7 +125,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 				Key:    srAuth.UserName,
 				Secret: srAuth.Password,
 			}
-			if err := currCtx.Save(); err != nil {
+			if err := ctx.Save(); err != nil {
 				return nil, nil, err
 			}
 		}

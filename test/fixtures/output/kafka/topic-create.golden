@@ -3,13 +3,9 @@ Usage:
   ccloud kafka topic create <topic> [flags]
 
 Examples:
-Create a topic named ``my_topic`` with default options.
+Create a topic named `my_topic` with default options.
 
-::
-
-  ccloud kafka topic create my_topic
-
-
+  $ ccloud kafka topic create my_topic
 
 Flags:
       --partitions int32     Number of topic partitions. (default 6)
@@ -18,7 +14,7 @@ Flags:
       --if-not-exists        Exit gracefully if topic already exists.
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
-      --context string       CLI Context name.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

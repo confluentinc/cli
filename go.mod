@@ -17,17 +17,18 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
 	github.com/confluentinc/cc-structs/kafka/core v0.753.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.753.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.812.0
 	github.com/confluentinc/cc-structs/kafka/org v0.812.0
-	github.com/confluentinc/cc-structs/kafka/product/core v0.719.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0
+	github.com/confluentinc/cc-structs/kafka/product/core v0.753.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.80
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.84
+	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.1
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.5
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.27
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
@@ -75,8 +76,8 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
-	github.com/tidwall/gjson v1.6.0
-	github.com/tidwall/pretty v1.0.0
+	github.com/tidwall/gjson v1.6.5
+	github.com/tidwall/pretty v1.0.2
 	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v1.1.0
 	github.com/xeipuuv/gojsonschema v1.2.0

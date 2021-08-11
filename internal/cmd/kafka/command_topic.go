@@ -176,7 +176,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(h.consume),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Consume items from the ``my_topic`` topic and press ``Ctrl+C`` to exit.",
+				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",
 				Code: "ccloud kafka topic consume -b my_topic",
 			},
 		),
@@ -215,7 +215,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named ``my_topic`` with default options.",
+				Text: "Create a topic named `my_topic` with default options.",
 				Code: "ccloud kafka topic create my_topic",
 			},
 		),
@@ -234,7 +234,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the ``my_topic`` topic.",
+				Text: "Describe the `my_topic` topic.",
 				Code: "ccloud kafka topic describe my_topic",
 			},
 		),
@@ -250,7 +250,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
+				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
 				Code: `ccloud kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),
@@ -267,7 +267,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
+				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
 				Code: "ccloud kafka topic delete my_topic\nccloud kafka topic delete my_topic_avro",
 			},
 		),
@@ -485,37 +485,43 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData.TopicName = topicName
 			topicData.PartitionCount = len(partitionsResp.Data)
 			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
-
-			// For each partition, get replicas
-			for i, partitionResp := range partitionsResp.Data {
-				partitionData := partitionData{
-					TopicName:   topicName,
-					PartitionId: partitionResp.PartitionId,
-				}
-
-				replicasResp, httpResp, err := kafkaREST.Client.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(kafkaREST.Context, lkc, topicName, partitionResp.PartitionId)
-				if err != nil {
-					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-				} else if replicasResp.Data == nil {
-					return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
-				}
-
-				partitionData.ReplicaBrokerIds = make([]int32, len(replicasResp.Data))
-				partitionData.InSyncReplicaBrokerIds = make([]int32, 0)
-				for j, replicaResp := range replicasResp.Data {
-					if replicaResp.IsLeader {
-						partitionData.LeaderBrokerId = replicaResp.BrokerId
+			replicaStatusDataList, httpResp, err := kafkaREST.Client.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(kafkaREST.Context, lkc, topicName)
+			if err != nil {
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			} else if replicaStatusDataList.Data == nil {
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
+			}
+			partitionIdToData := make(map[int32]partitionData)
+			for _, replica := range replicaStatusDataList.Data {
+				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
+					partitionIdToData[replica.PartitionId] = partitionData{
+						TopicName:              replica.TopicName,
+						PartitionId:            replica.PartitionId,
+						ReplicaBrokerIds:       []int32{replica.BrokerId},
+						InSyncReplicaBrokerIds: []int32{},
 					}
-					partitionData.ReplicaBrokerIds[j] = replicaResp.BrokerId
-					if replicaResp.IsInSync {
-						partitionData.InSyncReplicaBrokerIds = append(partitionData.InSyncReplicaBrokerIds, replicaResp.BrokerId)
-					}
+				} else {
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.ReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].ReplicaBrokerIds, replica.BrokerId)
+					partitionIdToData[replica.PartitionId] = tmp
 				}
+				if replica.IsLeader {
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.LeaderBrokerId = replica.BrokerId
+					partitionIdToData[replica.PartitionId] = tmp
+				}
+				if replica.IsInIsr {
+					tmp := partitionIdToData[replica.PartitionId]
+					tmp.InSyncReplicaBrokerIds = append(partitionIdToData[replica.PartitionId].InSyncReplicaBrokerIds, replica.BrokerId)
+					partitionIdToData[replica.PartitionId] = tmp
+				}
+			}
 
+			for i, data := range partitionsResp.Data {
 				if i == 0 {
-					topicData.ReplicationFactor = len(replicasResp.Data)
+					topicData.ReplicationFactor = len(partitionIdToData[data.PartitionId].ReplicaBrokerIds)
 				}
-				topicData.Partitions[i] = partitionData
+				topicData.Partitions[i] = partitionIdToData[data.PartitionId]
 			}
 
 			// Get topic config
@@ -537,9 +543,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			return output.StructuredOutput(outputOption, topicData)
 		}
 	}
-
 	// Kafka REST is not available, fallback to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err
@@ -1096,7 +1100,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Println(cmd, "\nConfiguration\n ")
+	utils.Print(cmd, "\nConfiguration\n\n")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
