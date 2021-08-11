@@ -11,20 +11,23 @@ type Example struct {
 }
 
 func BuildExampleString(examples ...Example) string {
-	str := strings.Builder{}
+	var str strings.Builder
 	for _, e := range examples {
 		str.WriteString(e.Text + "\n\n")
 		if e.Code != "" {
-			str.WriteString("::\n\n")
-			str.WriteString(tab(e.Code) + "\n\n")
+			str.WriteString(formatCodeBlock(e.Code) + "\n\n")
 		}
 	}
-	return str.String()
+	return strings.TrimSuffix(str.String(), "\n\n")
 }
 
-func tab(block string) string {
-	str := strings.Builder{}
-	for _, line := range strings.Split(block, "\n") {
+// formatCodeBlock prefixes each command with a "$" to represent a shell prompt
+func formatCodeBlock(lines string) string {
+	var str strings.Builder
+	for _, line := range strings.Split(lines, "\n") {
+		if strings.HasPrefix(line, "confluent") || strings.HasPrefix(line, "ccloud") {
+			line = "$ " + line
+		}
 		str.WriteString(fmt.Sprintf("  %s\n", line))
 	}
 	return strings.TrimSuffix(str.String(), "\n")

@@ -86,11 +86,11 @@ func (topicCmd *topicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(topicCmd.createTopic),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named ``my_topic`` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
+				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic create my_topic --url http://localhost:8082",
 			},
 			examples.Example{
-				Text: "Create a topic named ``my_topic_2`` with specified configuration parameters.",
+				Text: "Create a topic named `my_topic_2` with specified configuration parameters.",
 				Code: "confluent kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip",
 			}),
 	}
@@ -109,7 +109,7 @@ func (topicCmd *topicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(topicCmd.deleteTopic),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete the topic ``my_topic`` at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.",
+				Text: "Delete the topic `my_topic` at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.",
 				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
 			}),
 	}
@@ -124,7 +124,7 @@ func (topicCmd *topicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(topicCmd.updateTopicConfig),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the ``my_topic`` topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).",
+				Text: "Modify the `my_topic` topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).",
 				Code: "confluent kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
 			}),
 	}
@@ -141,7 +141,7 @@ func (topicCmd *topicCommand) init() {
 		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the ``my_topic`` topic at specified cluster (providing Kafka REST Proxy endpoint).",
+				Text: "Describe the `my_topic` topic at specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic describe my_topic --url http://localhost:8082",
 			},
 		),

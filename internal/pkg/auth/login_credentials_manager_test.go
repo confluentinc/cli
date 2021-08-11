@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"os"
 	"testing"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
@@ -139,12 +139,14 @@ type LoginCredentialsManagerTestSuite struct {
 }
 
 func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
+	params := &ccloud.Params{
+		BaseURL: "https://devel.cpdev.cloud",
+	}
 	suite.ccloudClient = &ccloud.Client{
+		Params: params,
 		User: &sdkMock.User{
-			CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-				return &orgv1.User{
-					Email: "",
-				}, nil
+			LoginRealmFunc: func(ctx context.Context, req *flowv1.GetLoginRealmRequest) (*flowv1.GetLoginRealmReply, error){
+				return &flowv1.GetLoginRealmReply{IsSso: false, Realm: "ccloud-local"}, nil
 			},
 		},
 	}

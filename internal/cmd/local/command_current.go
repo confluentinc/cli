@@ -17,11 +17,11 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "In Linux, running ``confluent local current`` should resemble the following:",
+					Text: "In Linux, running `confluent local current` should resemble the following:",
 					Code: "/tmp/confluent.SpBP4fQi",
 				},
 				examples.Example{
-					Text: "In macOS, running ``confluent local current`` should resemble the following:",
+					Text: "In macOS, running `confluent local current` should resemble the following:",
 					Code: "/var/folders/cs/1rndf6593qb3kb6r89h50vgr0000gp/T/confluent.000000",
 				},
 			),
