@@ -292,29 +292,26 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		var autoLoginErr error
-
-		if err := r.setAuthenticatedContext(cmd, command); err != nil {
-			if _, ok := err.(*errors.NotLoggedInError); ok {
-				if err2 := r.ccloudAutoLogin(cmd); err2 != nil {
-					r.Logger.Debugf("Auto login failed: %v", err2)
-					autoLoginErr = err
+		setContextErr := r.setAuthenticatedContext(cmd, command)
+		if setContextErr != nil {
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+				if err := r.ccloudAutoLogin(cmd); err != nil {
+					r.Logger.Debugf("Auto login failed: %v", err)
 				} else {
-					if err := r.setAuthenticatedContext(cmd, command); err != nil {
-						return err
-					}
+					setContextErr = r.setAuthenticatedWithMDSContext(command)
 				}
 			} else {
-				return err
+				return setContextErr
 			}
 		}
 
+		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 			return err
 		}
 
-		if autoLoginErr != nil {
-			return autoLoginErr
+		if setContextErr != nil {
+			return setContextErr
 		}
 
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
@@ -512,29 +509,26 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return err
 		}
 
-		var autoLoginErr error
-
-		if err := r.setAuthenticatedWithMDSContext(command); err != nil {
-			if _, ok := err.(*errors.NotLoggedInError); ok {
-				if err2 := r.confluentAutoLogin(cmd); err2 != nil {
-					r.Logger.Debugf("Auto login failed: %v", err2)
-					autoLoginErr = err
+		setContextErr := r.setAuthenticatedWithMDSContext(command)
+		if setContextErr != nil {
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+				if err := r.confluentAutoLogin(cmd); err != nil {
+					r.Logger.Debugf("Auto login failed: %v", err)
 				} else {
-					if err := r.setAuthenticatedWithMDSContext(command); err != nil {
-						return err
-					}
+					setContextErr = r.setAuthenticatedWithMDSContext(command)
 				}
 			} else {
-				return err
+				return setContextErr
 			}
 		}
 
+		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 			return err
 		}
 
-		if autoLoginErr != nil {
-			return autoLoginErr
+		if setContextErr != nil {
+			return setContextErr
 		}
 
 		return r.ValidateToken(cmd, command.Config)

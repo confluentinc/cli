@@ -159,6 +159,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
 		require.Contains(tt, output, errors.TokenExpiredMsg)
+		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
 	})
 
 	s.T().Run("malformed token", func(tt *testing.T) {

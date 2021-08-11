@@ -77,10 +77,11 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		command.State, err = ctx.AuthenticatedState(cmd)
+		state, err := ctx.AuthenticatedState(cmd)
 		if err != nil {
 			return err
 		}
+		command.State = state
 		return nil
 	}
 }
