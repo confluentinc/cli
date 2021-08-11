@@ -96,10 +96,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("connector-catalog describe"),
 		// skip connector event describe as it shows connector log events configuration for an org
 		linter.ExcludeCommandContains("connector event describe"),
-		// skip feedback command
 		linter.ExcludeCommand("feedback"),
-		// skip signup command
-		linter.ExcludeCommandContains("signup"),
+		linter.ExcludeCommandContains("cloud-signup"),
 		// config context commands
 		linter.ExcludeCommand("config context current"),
 		linter.ExcludeCommandContains("config context get"),

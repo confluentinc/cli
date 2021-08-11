@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   audit-log         Manage audit log configuration.
+  cloud-signup      Sign up for Confluent Cloud.
   cluster           Retrieve metadata about Confluent Platform clusters.
   completion        Print shell completion code.
   config            Modify the CLI configuration.

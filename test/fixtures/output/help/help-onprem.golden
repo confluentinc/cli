@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   audit-log         Manage audit log configuration.
+  cloud-signup      Sign up for Confluent Cloud.
   cluster           Retrieve metadata about Confluent Platform clusters.
   completion        Print shell completion code.
   config            Modify the CLI configuration.
@@ -18,7 +19,6 @@ Available Commands:
   logout            Log out of Confluent Platform.
   schema-registry   Manage Schema Registry.
   secret            Manage secrets for Confluent Platform.
-  signup            Sign up for Confluent Cloud.
   update            Update the Confluent CLI.
   version           Show version of the Confluent CLI.
 
