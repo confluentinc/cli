@@ -41,7 +41,6 @@ import (
 
 const (
 	defaultReplicationFactor  = 3
-	unspecifiedPartitionCount = -1
 )
 
 type kafkaTopicCommand struct {
