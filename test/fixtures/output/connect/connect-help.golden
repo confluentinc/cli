@@ -10,7 +10,7 @@ Available Commands:
   event       Manage Connect log events configuration.
   list        List connectors.
   pause       Pause a connector.
-  plugin      Catalog of plugins and their configurations.
+  plugin      Show plugins and their configurations.
   resume      Resume a connector.
   update      Update a connector configuration.
 

@@ -35,7 +35,7 @@ func NewPluginCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &pluginCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
 			Use:   "plugin",
-			Short: "Catalog of plugins and their configurations.",
+			Short: "Show plugins and their configurations.",
 		}, prerunner, SubcommandFlags),
 	}
 	cmd.init(cliName)
@@ -82,17 +82,17 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	plugin, err := c.getPlugin(cmd)
+	plugins, err := c.getPlugins(cmd)
 	if err != nil {
 		return err
 	}
-	for _, conn := range plugin {
+	for _, conn := range plugins {
 		outputWriter.AddElement(conn)
 	}
 	return outputWriter.Out()
 }
 
-func (c *pluginCommand) getPlugin(cmd *cobra.Command) ([]*pluginDisplay, error) {
+func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]*pluginDisplay, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return nil, err
@@ -154,11 +154,11 @@ func (c *pluginCommand) Cmd() *cobra.Command {
 
 func (c *pluginCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	plugin, err := c.getPlugin(c.Command)
+	plugins, err := c.getPlugins(c.Command)
 	if err != nil {
 		return suggestions
 	}
-	for _, conn := range plugin {
+	for _, conn := range plugins {
 		suggestions = append(suggestions, prompt.Suggest{
 			Text:        conn.PluginName,
 			Description: conn.Type,
