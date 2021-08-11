@@ -239,9 +239,8 @@ func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
 }
 
 func getCloudClient(cliName string, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
-	var client *ccloud.Client
 	if cliName == "ccloud" {
-		client = ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
-	return client
+	return nil
 }

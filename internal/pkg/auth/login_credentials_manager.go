@@ -97,7 +97,7 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Co
 	return func() (*Credentials, error) {
 		email, password := h.getEnvVarCredentials(cmd, envVars.username, envVars.password)
 		if h.isSSOUser(email) {
-			h.logger.Debug("Email found in CCLOUD_EMAIL belongs to an SSO user.")
+			h.logger.Debugf("CCLOUD_EMAIL=%s belongs to an SSO user.", email)
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
 		if len(email) == 0 {

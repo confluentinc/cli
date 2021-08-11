@@ -194,7 +194,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 	suite.require.Nil(creds)
 
 	suite.require.NoError(os.Setenv(CCloudEmailEnvVar, "test+sso@confluent.io"))
-	creds, err  = suite.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err = suite.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.compareCredentials(&Credentials{Username: "test+sso@confluent.io", IsSSO: true, Password: ""}, creds)
 
