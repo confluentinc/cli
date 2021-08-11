@@ -1,4 +1,4 @@
-package signup
+package cloudsignup
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	cmdPkg "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -23,8 +24,8 @@ const (
 	promptUser = "prompt-user@confluent.io"
 )
 
-func TestSignupSuccess(t *testing.T) {
-	testSignup(t,
+func TestCloudSignup_Success(t *testing.T) {
+	testCloudSignup(t,
 		mock.NewPromptMock(
 			"bstrauch@confluent.io",
 			"Brian",
@@ -42,8 +43,8 @@ func TestSignupSuccess(t *testing.T) {
 	)
 }
 
-func TestSignupBadCountryCode(t *testing.T) {
-	testSignup(t,
+func TestCloudSignup_BadCountryCode(t *testing.T) {
+	testCloudSignup(t,
 		mock.NewPromptMock(
 			"bstrauch@confluent.io",
 			"Brian",
@@ -62,8 +63,8 @@ func TestSignupBadCountryCode(t *testing.T) {
 	)
 }
 
-func TestSignupRejectCountryCode(t *testing.T) {
-	testSignup(t,
+func TestCloudSignup_RejectCountryCode(t *testing.T) {
+	testCloudSignup(t,
 		mock.NewPromptMock(
 			"bstrauch@confluent.io",
 			"Brian",
@@ -83,8 +84,8 @@ func TestSignupRejectCountryCode(t *testing.T) {
 	)
 }
 
-func TestSignupRejectTOS(t *testing.T) {
-	testSignup(t,
+func TestCloudSignup_RejectTOS(t *testing.T) {
+	testCloudSignup(t,
 		mock.NewPromptMock(
 			"bstrauch@confluent.io",
 			"Brian",
@@ -103,8 +104,8 @@ func TestSignupRejectTOS(t *testing.T) {
 	)
 }
 
-func TestSignupRejectPrivacyPolicy(t *testing.T) {
-	testSignup(t,
+func TestCloudSignup_RejectPrivacyPolicy(t *testing.T) {
+	testCloudSignup(t,
 		mock.NewPromptMock(
 			"bstrauch@confluent.io",
 			"Brian",
@@ -123,8 +124,8 @@ func TestSignupRejectPrivacyPolicy(t *testing.T) {
 	)
 }
 
-func TestSignupResendVerificationEmail(t *testing.T) {
-	testSignup(t,
+func TestCloudSignup_ResendVerificationEmail(t *testing.T) {
+	testCloudSignup(t,
 		mock.NewPromptMock(
 			"bstrauch@confluent.io",
 			"Brian",
@@ -144,17 +145,17 @@ func TestSignupResendVerificationEmail(t *testing.T) {
 	)
 }
 
-func testSignup(t *testing.T, prompt form.Prompt, expected ...string) {
+func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	cmd := &cobra.Command{}
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
-	signupCmd := newCmd(v3.AuthenticatedCloudConfigMock())
-	signupCmd.Config = &cmdPkg.DynamicConfig{
+	cloudSignupCmd := newCmd(v3.AuthenticatedCloudConfigMock())
+	cloudSignupCmd.Config = &cmdPkg.DynamicConfig{
 		Config: v3.UnauthenticatedCloudConfigMock(),
 	}
 
-	err := signupCmd.Signup(cmd, prompt, mockCcloudClient())
+	err := cloudSignupCmd.Signup(cmd, prompt, mockCcloudClient())
 	require.NoError(t, err)
 
 	for _, x := range expected {

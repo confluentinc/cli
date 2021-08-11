@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/audit-log"
+	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
@@ -31,7 +32,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
-	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -120,6 +120,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	isAPIKeyLogin := isAPIKeyCredential(cfg)
 
 	// No-login commands
+	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	cli.AddCommand(completion.New(cli))
 	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
@@ -165,7 +166,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 		cli.AddCommand(serviceAccountCmd.Command)
 		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
-		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	}
 
 	if cfg.IsOnPrem() {
