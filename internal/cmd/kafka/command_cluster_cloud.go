@@ -540,7 +540,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 			// metrics api auth via jwt
 			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, true)
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
-				return currentCluster.Cku, fmt.Errorf("cluster shrink validation error: %v", errFromSmallWindowMetrics)
+				return currentCluster.Cku, fmt.Errorf("cluster shrink validation error: \n%v", errFromSmallWindowMetrics)
 			}
 			promptMessage := ""
 			if shouldPrompt {
@@ -576,7 +576,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
 	}
-	errorMessage := errors.Errorf("\nLooking at metrics in the last %s window:", window)
+	errorMessage := errors.Errorf("Looking at metrics in the last %s window:", window)
 	shouldPrompt := true
 	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
 	if isValidPartitionCountErr != nil {

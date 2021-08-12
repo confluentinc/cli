@@ -51,21 +51,22 @@ func getMetricsApiRequest(metricName string, agg string, clusterId string, isLat
 }
 
 func maxApiDataValue(metricsData []ccloud.ApiData) ccloud.ApiData {
-	max := metricsData[0]
+	maxApiData := ccloud.ApiData{
+		Value: math.Inf(-1),
+	}
 	for _, value := range metricsData {
-		if value.Value > max.Value {
-			max = value
+		if value.Value > maxApiData.Value {
+			maxApiData = value
 		}
 	}
-	return max
+	return maxApiData
 }
 
 func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bool) error {
 	// Get Cluster Load Metric
 	clusterLoadResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(ClusterLoadMetricName, "MAX", clusterId, isLatestMetric), "")
-	if err != nil || clusterLoadResponse == nil || len(clusterLoadResponse.Result) == 0 {
-		c.logger.Warn("Could not retrieve Cluster Load Metrics: ", err)
+	if err != nil || clusterLoadResponse == nil {
 		return errors.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.Result)
@@ -78,10 +79,9 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartitionCount int32, isLatestMetric bool, cku int32) error {
 	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(PartitionMetricName, "SUM", clusterId, isLatestMetric), "")
-	if err != nil || partitionMetricsResponse == nil || len(partitionMetricsResponse.Result) == 0 {
+	if err != nil || partitionMetricsResponse == nil {
 		return errors.Errorf("could not retrieve partition count metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
-
 	maxPartitionCount := maxApiDataValue(partitionMetricsResponse.Result)
 	if int32(maxPartitionCount.Value) > requiredPartitionCount {
 		return fmt.Errorf("partition count was %f at %s.\nRecommended partition count is less than %d for %d cku", maxPartitionCount.Value, maxPartitionCount.Timestamp.In(time.Local), requiredPartitionCount, cku)
@@ -92,7 +92,7 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageLimit int32, isLatestMetric bool, cku int32) error {
 	storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(StorageMetricName, "SUM", clusterId, isLatestMetric), "")
-	if err != nil || storageMetricsResponse == nil || len(storageMetricsResponse.Result) == 0 {
+	if err != nil || storageMetricsResponse == nil {
 		return errors.Errorf("could not retrieve storage metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 	maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
