@@ -13,10 +13,11 @@ import (
 	"github.com/spf13/pflag"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 type AclRequestDataWithError struct {

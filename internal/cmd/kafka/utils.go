@@ -10,15 +10,17 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 func copyMap(inputMap map[string]string) map[string]string {
 	newMap := make(map[string]string)
@@ -159,11 +161,27 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
+func isClusterResizeInProgress(currentCluster *schedv1.KafkaCluster) error {
+	switch currentCluster.Status {
+	case schedv1.ClusterStatus_PROVISIONING:
+		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+	case schedv1.ClusterStatus_EXPANDING:
+		return errors.New(errors.KafkaClusterExpandingErrorMsg)
+	case schedv1.ClusterStatus_SHRINKING:
+		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+	case schedv1.ClusterStatus_DELETING:
+		return errors.New(errors.KafkaClusterDeletingErrorMsg)
+	case schedv1.ClusterStatus_DELETED:
+		return errors.New(errors.KafkaClusterDeletingErrorMsg)
+	}
+	return nil
+}
+
 func camelToSnake(camels []string) []string {
 	var ret []string
 	for _, camel := range camels {
 		snake := matchFirstCap.ReplaceAllString(camel, "${1}_${2}")
-		snake  = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+		snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
 		ret = append(ret, strings.ToLower(snake))
 	}
 	return ret
@@ -173,7 +191,7 @@ func camelToSpaced(camels []string) []string {
 	var ret []string
 	for _, camel := range camels {
 		snake := matchFirstCap.ReplaceAllString(camel, "${1} ${2}")
-		snake  = matchAllCap.ReplaceAllString(snake, "${1} ${2}")
+		snake = matchAllCap.ReplaceAllString(snake, "${1} ${2}")
 		ret = append(ret, snake)
 	}
 	return ret
