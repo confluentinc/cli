@@ -1,4 +1,4 @@
-package connector
+package connect
 
 import (
 	"github.com/spf13/cobra"
