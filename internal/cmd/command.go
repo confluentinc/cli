@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"os"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"

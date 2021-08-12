@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
@@ -65,11 +66,11 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 		context.Background(), "cloud", getMetricsApiRequest(ClusterLoadMetricName, "MAX", clusterId, isLatestMetric), "")
 	if err != nil || clusterLoadResponse == nil || len(clusterLoadResponse.Result) == 0 {
 		c.logger.Warn("Could not retrieve Cluster Load Metrics: ", err)
-		return errors.New("Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes.")
+		return errors.Errorf("Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes. err: %v", err)
 	}
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.Result)
 	if maxClusterLoad.Value > 0.7 {
-		return fmt.Errorf("\nCluster Load was %f percent at %s. \nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.Format("2006-01-02 15:04:05"))
+		return fmt.Errorf("\nCluster Load was %f percent at %s. \nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.In(time.Local))
 	}
 	return nil
 }
@@ -78,12 +79,12 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(PartitionMetricName, "SUM", clusterId, isLatestMetric), "")
 	if err != nil || partitionMetricsResponse == nil || len(partitionMetricsResponse.Result) == 0 {
-		return errors.Errorf("Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes. %v", err)
+		return errors.Errorf("Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes. err: %v", err)
 	}
 
 	maxPartitionCount := maxApiDataValue(partitionMetricsResponse.Result)
 	if int32(maxPartitionCount.Value) > requiredPartitionCount {
-		return fmt.Errorf("partition count was %f at %s.\nRecommended partition count is less than %d for %d cku", maxPartitionCount.Value, maxPartitionCount.Timestamp.Format("2006-01-02 15:04:05"), requiredPartitionCount, cku)
+		return fmt.Errorf("partition count was %f at %s.\nRecommended partition count is less than %d for %d cku", maxPartitionCount.Value, maxPartitionCount.Timestamp.In(time.Local), requiredPartitionCount, cku)
 	}
 	return nil
 }
@@ -92,12 +93,12 @@ func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageL
 	storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(StorageMetricName, "SUM", clusterId, isLatestMetric), "")
 	if err != nil || storageMetricsResponse == nil || len(storageMetricsResponse.Result) == 0 {
-		return errors.New("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes.")
+		return errors.Errorf("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes. err: %v", err)
 	}
 	maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
 	maxStorageLimitInGB := maxStorageLimit.Value * math.Pow10(-9)
 	if maxStorageLimitInGB > float64(requiredStorageLimit) {
-		return fmt.Errorf("storage used was %.5f at %s. Recommended storage is less than %d for %d CKU", maxStorageLimitInGB, maxStorageLimit.Timestamp.Format("2006-01-02 15:04:05"), requiredStorageLimit, cku)
+		return fmt.Errorf("storage used was %.5f at %s. Recommended storage is less than %d for %d CKU", maxStorageLimitInGB, maxStorageLimit.Timestamp.In(time.Local), requiredStorageLimit, cku)
 	}
 	return nil
 }

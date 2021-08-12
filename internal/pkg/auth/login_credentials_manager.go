@@ -73,7 +73,7 @@ type LoginCredentialsManagerImpl struct {
 	netrcHandler netrc.NetrcHandler
 	logger       *log.Logger
 	prompt       form.Prompt
-	client		 *ccloud.Client
+	client       *ccloud.Client
 }
 
 func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Prompt, logger *log.Logger, client *ccloud.Client) LoginCredentialsManager {
@@ -81,7 +81,7 @@ func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Pro
 		netrcHandler: netrcHandler,
 		logger:       logger,
 		prompt:       prompt,
-		client:		  client,
+		client:       client,
 	}
 }
 
