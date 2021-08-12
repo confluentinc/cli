@@ -96,8 +96,10 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
-	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key (recommended).")
+	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use.")
+	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
+	check(createCmd.MarkFlagRequired("api-key"))
+	check(createCmd.MarkFlagRequired("api-secret"))
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -183,8 +185,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			Key:    kafkaApiKey,
 			Secret: kafkaApiKeySecret,
 		}
-	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
-		return fmt.Errorf(errors.APIKeyAndSecretBothRequired)
 	} else {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
 	}
@@ -378,5 +378,11 @@ func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Com
 func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
 		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
+	}
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
 	}
 }

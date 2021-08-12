@@ -157,7 +157,6 @@ const (
 
 	// ksql commands
 	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
-	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
