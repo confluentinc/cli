@@ -576,7 +576,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 		c.logger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
 	}
-	errorMessage := errors.Errorf("\n\nLooking at metrics in the last %s window:", window)
+	errorMessage := errors.Errorf("\nLooking at metrics in the last %s window:", window)
 	shouldPrompt := true
 	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
 	if isValidPartitionCountErr != nil {
@@ -603,7 +603,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 }
 
 func confirmShrink(cmd *cobra.Command, prompt form.Prompt, promptMessage string) (bool, error) {
-	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that:\n %s\n. Do you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
+	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: %s\nDo you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
 	if err := f.Prompt(cmd, prompt); err != nil {
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
 	}
