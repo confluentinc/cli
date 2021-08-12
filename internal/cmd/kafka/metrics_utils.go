@@ -15,7 +15,7 @@ const (
 	PartitionMetricName    = "io.confluent.kafka.server/partition_count"
 	StorageMetricName      = "io.confluent.kafka.server/retained_bytes"
 	latestLookbackWindow   = "PT15M"
-	threeDayLookbackWindow = "PT3D"
+	threeDayLookbackWindow = "P3D"
 	hourGranularity        = "PT1H"
 	minuteGranularity      = "PT1M"
 )
