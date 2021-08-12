@@ -6,12 +6,11 @@ import (
 	"os"
 	"testing"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 

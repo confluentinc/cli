@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"

@@ -66,7 +66,7 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 		context.Background(), "cloud", getMetricsApiRequest(ClusterLoadMetricName, "MAX", clusterId, isLatestMetric), "")
 	if err != nil || clusterLoadResponse == nil || len(clusterLoadResponse.Result) == 0 {
 		c.logger.Warn("Could not retrieve Cluster Load Metrics: ", err)
-		return errors.Errorf("Could not retrieve cluster load metrics to validate request to shrink cluster. Please try again in a few minutes. err: %v", err)
+		return errors.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.Result)
 	if maxClusterLoad.Value > 0.7 {
@@ -79,7 +79,7 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 	partitionMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(PartitionMetricName, "SUM", clusterId, isLatestMetric), "")
 	if err != nil || partitionMetricsResponse == nil || len(partitionMetricsResponse.Result) == 0 {
-		return errors.Errorf("Could not retrieve partition count metrics to validate request to shrink cluster. Please try again in a few minutes. err: %v", err)
+		return errors.Errorf("could not retrieve partition count metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 
 	maxPartitionCount := maxApiDataValue(partitionMetricsResponse.Result)
@@ -93,7 +93,7 @@ func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageL
 	storageMetricsResponse, err := c.Client.MetricsApi.QueryV2(
 		context.Background(), "cloud", getMetricsApiRequest(StorageMetricName, "SUM", clusterId, isLatestMetric), "")
 	if err != nil || storageMetricsResponse == nil || len(storageMetricsResponse.Result) == 0 {
-		return errors.Errorf("Could not retrieve storage metrics to validate request to shrink cluster. Please try again in a few minutes. err: %v", err)
+		return errors.Errorf("could not retrieve storage metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 	maxStorageLimit := maxApiDataValue(storageMetricsResponse.Result)
 	maxStorageLimitInGB := maxStorageLimit.Value * math.Pow10(-9)
