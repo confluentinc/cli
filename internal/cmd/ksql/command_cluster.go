@@ -98,8 +98,8 @@ func (c *clusterCommand) init() {
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use.")
 	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
-	check(createCmd.MarkFlagRequired("api-key"))
-	check(createCmd.MarkFlagRequired("api-secret"))
+	_ = createCmd.MarkFlagRequired("api-key")
+	_ = createCmd.MarkFlagRequired("api-secret")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -378,11 +378,5 @@ func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Com
 func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
 		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
-	}
-}
-
-func check(err error) {
-	if err != nil {
-		panic(err)
 	}
 }

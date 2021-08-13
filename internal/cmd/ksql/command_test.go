@@ -277,9 +277,8 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKeyAndSecret() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("required flag(s) \"api-key\", \"api-secret\" not set", err.Error())
+	req.Equal(`required flag(s) "api-key", "api-secret" not set`, err.Error())
 }
-
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()
