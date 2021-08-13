@@ -91,7 +91,7 @@ func newState(authURL string, noBrowser bool, logger *log.Logger) (*authState, e
 	state.logger = logger
 	state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint
 	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
-	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
+	state.SSOProviderClientID = ssoConfigs[env].ssoProviderClientID
 	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
 
 	if !noBrowser {
