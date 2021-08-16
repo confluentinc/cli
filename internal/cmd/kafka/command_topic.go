@@ -1022,25 +1022,30 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 // validate that a topic exists before attempting to produce/consume messages
 func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+	logger.Tracef("validateTopic begins")
 	client, err := NewSaramaClient(cluster, clientID, beginning)
 	if err != nil {
+		logger.Tracef("validateTopic failed due to error initializing client")
 		return nil, err
 	}
 	topics, err := client.Topics()
 	if err != nil {
+		logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return nil, err
 	}
 	var foundTopic bool
 	for _, t := range topics {
+		logger.Tracef("validateTopic: found topic " + t)
 		if topic == t {
-			foundTopic = true
-			break
+			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
+		logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		client.Close()
 		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
 	}
+	logger.Tracef("validateTopic succeeded")
 	return client, nil
 }
 
