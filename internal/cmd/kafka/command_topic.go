@@ -20,9 +20,9 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/Shopify/sarama"
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	defaultReplicationFactor  = 3
+	defaultReplicationFactor = 3
 )
 
 type kafkaTopicCommand struct {
@@ -774,11 +774,21 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, false)
+
+	producer, err := NewProducer(cluster, h.clientID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create producer: %s\n", err)
+		os.Exit(1)
+	}
+	defer producer.Close()
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
 		return err
 	}
-	saramaClient.Close() //client is not resused for produce
+	err = validateTopic(adminClient, topic, cluster)
+	if err != nil {
+		return err
+	}
 
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
@@ -825,13 +835,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
-	InitSarama(h.logger)
-	producer, err := NewSaramaProducer(cluster, h.clientID)
-	if err != nil {
-		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
-		return err
-	}
-
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
 	// CCloud Kafka messageMaxBytes:
@@ -865,19 +868,19 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	// Prime reader
 	go scan()
 
-	var key sarama.Encoder
+	var key, valueString string
+	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		if len(data) == 0 {
 			go scan()
 			continue
 		}
-		var valueString string
 		if parseKey {
 			record := strings.SplitN(data, delim, 2)
 			valueString = strings.TrimSpace(record[len(record)-1])
 
 			if len(record) == 2 {
-				key = sarama.StringEncoder(strings.TrimSpace(record[0]))
+				key = strings.TrimSpace(record[0]) // sarama StringEncoder.
 			} else {
 				return errors.New(errors.MissingKeyErrorMsg)
 			}
@@ -889,10 +892,14 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			return err
 		}
 		encoded := append(metaInfo, encodedMessage...)
-		value := sarama.StringEncoder(string(encoded))
+		value := string(encoded) // sarama StringEncoder.
 
-		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
-		_, offset, err := producer.SendMessage(msg)
+		msg := &ckafka.Message{
+			TopicPartition: ckafka.TopicPartition{Topic: &topic, Partition: ckafka.PartitionAny},
+			Key:            []byte(key),
+			Value:          []byte(value),
+		}
+		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
 			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, topic, cluster.ID)
 			if isTopicNotExistError {
@@ -906,17 +913,25 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
-			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
 		}
 
 		// Reset key prior to reuse
-		key = nil
+		e := <-deliveryChan
+		m := e.(*ckafka.Message)
+		if m.TopicPartition.Error != nil { // catch all other errors
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+		} else {
+			fmt.Printf("Delivered message %v to topic %s [%d] at offset %v\n",
+				string(m.Value), *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+		}
+		key = ""
 		go scan()
 	}
+	close(deliveryChan)
 	if scanErr != nil {
 		return scanErr
 	}
-	return producer.Close()
+	return nil
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
@@ -932,10 +947,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, beginning)
 	if err != nil {
 		return err
 	}
@@ -958,7 +969,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
-
 		// Only initialize client and context when schema is specified.
 		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
 		if err != nil {
@@ -971,28 +981,21 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	} else {
 		srClient, ctx = nil, nil
 	}
+	fmt.Println("srClient, ctx", srClient, ctx)
 
-	InitSarama(h.logger)
-	consumer, err := NewSaramaConsumer(group, saramaClient)
+	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
+		fmt.Fprintf(os.Stderr, "Failed to create consumer: %s\n", err)
+		os.Exit(1)
+	}
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
 		return err
 	}
-
-	// Trap SIGINT to trigger a shutdown.
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		<-signals
-		utils.ErrPrintln(cmd, errors.StoppingConsumer)
-		consumer.Close()
-	}()
-
-	go func() {
-		for err := range consumer.Errors() {
-			utils.ErrPrintln(cmd, "ERROR", err)
-		}
-	}()
+	err = validateTopic(adminClient, topic, cluster)
+	if err != nil {
+		return err
+	}
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
@@ -1004,44 +1007,78 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	groupHandler := &GroupHandler{
-		SrClient:   srClient,
-		Ctx:        ctx,
-		Format:     valueFormat,
-		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
-	}
-	err = consumer.Consume(context.Background(), []string{topic}, groupHandler)
-	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
+	err = consumer.Subscribe(topic, nil)
+	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID) // should have been validated by err = validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
+	}
+	// start consuming msg
+	run := true
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for run {
+		select {
+		case <-signals: // Trap SIGINT to trigger a shutdown.
+			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			consumer.Close()
+			run = false
+		default:
+			ev := consumer.Poll(100)
+			if ev == nil {
+				continue
+			}
+			switch e := ev.(type) {
+			case *ckafka.Message:
+				if printKey {
+					key := e.Key
+					var keyString string
+					if len(key) == 0 {
+						keyString = "null"
+					} else {
+						keyString = string(key)
+					}
+					fmt.Printf("%s", keyString)
+				}
+
+				if delimiter != "" {
+					fmt.Printf("%s", delimiter)
+				}
+
+				fmt.Printf("%% Message on %s:\n%s\n",
+					e.TopicPartition, string(e.Value))
+
+				if e.Headers != nil {
+					fmt.Printf("%% Headers: %v\n", e.Headers)
+				}
+			case ckafka.Error:
+				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckafka.ErrAllBrokersDown {
+					run = false
+				}
+			}
+		}
 	}
 	err = os.RemoveAll(dir)
 	return err
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
-	client, err := NewSaramaClient(cluster, clientID, beginning)
+func validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+	metaData, err := client.GetMetadata(nil, true, 60*1000)
 	if err != nil {
-		return nil, err
-	}
-	topics, err := client.Topics()
-	if err != nil {
-		return nil, err
+		return err
 	}
 	var foundTopic bool
-	for _, t := range topics {
-		if topic == t {
+	for _, t := range metaData.Topics {
+		if topic == t.Topic {
 			foundTopic = true
 			break
 		}
 	}
 	if !foundTopic {
-		client.Close()
-		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
 	}
-	return client, nil
+	return nil
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
