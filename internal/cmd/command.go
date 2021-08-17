@@ -14,13 +14,12 @@ import (
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
-	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
 	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
+	"github.com/confluentinc/cli/internal/cmd/context"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
-	initcontext "github.com/confluentinc/cli/internal/cmd/init"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
@@ -122,7 +121,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	// No-login commands
 	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	cli.AddCommand(completion.New(cli))
-	cli.AddCommand(config.New(cfg.IsCloud(), prerunner, analyticsClient))
+	cli.AddCommand(context.New(prerunner, flagResolver))
 	cli.AddCommand(kafka.New(cfg, isAPIKeyLogin, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
@@ -136,7 +135,6 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	if cfg.IsCloud() {
 		cli.AddCommand(admin.New(prerunner, isTest))
 		cli.AddCommand(auditlog.New(cfg, prerunner))
-		cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 
 		// If a user logs in with an API key, don't allow the remaining commands.
 		if isAPIKeyLogin {
