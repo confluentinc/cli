@@ -40,6 +40,7 @@ func (s *CLITestSuite) TestContextDelete() {
 func (s *CLITestSuite) TestDescribe() {
 	tests := []CLITest{
 		{args: s.contextCreate("0")},
+		{args: "context use 0"},
 		{fixture: "context/describe/0.golden", args: "context describe"},
 		{fixture: "context/describe/1.golden", args: "context describe --api-key"},
 		{fixture: "context/describe/2.golden", args: "context describe --username", wantErrCode: 1},

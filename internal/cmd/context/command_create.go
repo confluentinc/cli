@@ -39,17 +39,17 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	bootstrap, err := c.parseStringFlag(cmd, "bootstrap", "Bootstrap URL: ", false, "Bootstrap URL")
+	bootstrap, err := c.parseStringFlag(cmd, "bootstrap", "Bootstrap URL: ", false)
 	if err != nil {
 		return err
 	}
 
-	apiKey, err := c.parseStringFlag(cmd, "api-key", "API Key: ", false, "API key")
+	apiKey, err := c.parseStringFlag(cmd, "api-key", "API Key: ", false)
 	if err != nil {
 		return err
 	}
 
-	apiSecret, err := c.parseStringFlag(cmd, "api-secret", "API Secret: ", true, "API secret")
+	apiSecret, err := c.parseStringFlag(cmd, "api-secret", "API Secret: ", true)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 // parseStringFlag gets the value of a flag, potentially via an interactive prompt.
-func (c *command) parseStringFlag(cmd *cobra.Command, name string, prompt string, secure bool, displayName string) (string, error) {
+func (c *command) parseStringFlag(cmd *cobra.Command, name, prompt string, secure bool) (string, error) {
 	str, err := cmd.Flags().GetString(name)
 	if err != nil {
 		return "", err
@@ -82,7 +82,7 @@ func (c *command) parseStringFlag(cmd *cobra.Command, name string, prompt string
 
 	val = strings.TrimSpace(val)
 	if len(val) == 0 {
-		return "", errors.Errorf(errors.CannotBeEmptyErrorMsg, displayName)
+		return "", errors.Errorf(errors.CannotBeEmptyErrorMsg, name)
 	}
 
 	return val, nil

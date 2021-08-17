@@ -8,8 +8,8 @@ Available Commands:
   cloud-signup    Sign up for Confluent Cloud.
   cluster         Retrieve metadata about Confluent Platform clusters.
   completion      Print shell completion code.
-  config          Modify the CLI configuration.
   connect         Manage Connect.
+  context         Manage contexts.
   help            Help about any command
   iam             Manage RBAC, ACL and IAM permissions.
   kafka           Manage Apache Kafka.
