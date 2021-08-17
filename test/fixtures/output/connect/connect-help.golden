@@ -1,11 +1,7 @@
 Manage Kafka Connect.
 
 Usage:
-<<<<<<< HEAD:test/fixtures/output/connector/connector-help.golden
-  confluent connector [command]
-=======
-  ccloud connect [command]
->>>>>>> 2.0:test/fixtures/output/connect/connect-help.golden
+  confluent connect [command]
 
 Available Commands:
   create      Create a connector.
@@ -22,8 +18,4 @@ Global Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-<<<<<<< HEAD:test/fixtures/output/connector/connector-help.golden
-Use "confluent connector [command] --help" for more information about a command.
-=======
-Use "ccloud connect [command] --help" for more information about a command.
->>>>>>> 2.0:test/fixtures/output/connect/connect-help.golden
+Use "confluent connect [command] --help" for more information about a command.

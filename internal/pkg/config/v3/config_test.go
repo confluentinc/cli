@@ -617,13 +617,17 @@ func TestConfig_getFilename(t *testing.T) {
 
 func TestConfig_AddContext(t *testing.T) {
 	filename := "/tmp/TestConfig_AddContext.json"
+
 	conf := AuthenticatedConfluentConfigMock()
 	conf.Filename = filename
 	context := conf.Context()
+	conf.CurrentContext = ""
+
 	noContextConf := AuthenticatedConfluentConfigMock()
 	noContextConf.Filename = filename
 	delete(noContextConf.Contexts, noContextConf.Context().Name)
 	noContextConf.CurrentContext = ""
+
 	type testStruct struct {
 		name                   string
 		config                 *Config
@@ -687,7 +691,7 @@ func TestConfig_AddContext(t *testing.T) {
 	os.Remove(filename)
 }
 
-func TestInitContext(t *testing.T) {
+func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
 		BaseConfig:    &config.BaseConfig{Params: new(config.Params)},
 		ContextStates: make(map[string]*v2.ContextState),
@@ -698,10 +702,13 @@ func TestInitContext(t *testing.T) {
 
 	err := cfg.CreateContext("context", "https://example.com", "api-key", "api-secret")
 	require.NoError(t, err)
-	require.Equal(t, "context", cfg.CurrentContext)
+	require.Equal(t, "context", cfg.Contexts["context"].Name)
+	require.Equal(t, "example.com", cfg.Contexts["context"].PlatformName)
+	require.Equal(t, "api-key", cfg.Contexts["context"].Credential.APIKeyPair.Key)
+	require.Equal(t, "api-secret", cfg.Contexts["context"].Credential.APIKeyPair.Secret)
 }
 
-func TestConfig_SetContext(t *testing.T) {
+func TestConfig_UseContext(t *testing.T) {
 	cfg := AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
 	cfg.CurrentContext = ""
@@ -738,7 +745,7 @@ func TestConfig_SetContext(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := tt.fields.Config
 			if err := c.UseContext(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("SetContext() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("UseContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
 				assert.Equal(t, tt.args.name, c.CurrentContext)
@@ -792,62 +799,16 @@ func TestConfig_FindContext(t *testing.T) {
 }
 
 func TestConfig_DeleteContext(t *testing.T) {
-	const contextName = "test-context"
-	type fields struct {
-		Contexts       map[string]*Context
-		CurrentContext string
+	c := &Config{
+		BaseConfig:     new(config.BaseConfig),
+		Contexts:       map[string]*Context{contextName: {Name: contextName}},
+		CurrentContext: contextName,
 	}
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name       string
-		fields     fields
-		args       args
-		wantErr    bool
-		wantConfig *Config
-	}{
-		{name: "succeed deleting existing current context",
-			fields: fields{
-				Contexts:       map[string]*Context{contextName: {Name: contextName}},
-				CurrentContext: contextName,
-			},
-			args:    args{name: contextName},
-			wantErr: false,
-			wantConfig: &Config{
-				Contexts:       map[string]*Context{},
-				CurrentContext: "",
-			},
-		},
-		{name: "succeed deleting existing context",
-			fields: fields{Contexts: map[string]*Context{
-				contextName:     {Name: contextName},
-				"other-context": {Name: "other-context"},
-			},
-				CurrentContext: "other-context",
-			},
-			args:    args{name: contextName},
-			wantErr: false,
-			wantConfig: &Config{
-				Contexts:       map[string]*Context{"other-context": {Name: "other-context"}},
-				CurrentContext: "other-context",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				Contexts:       tt.fields.Contexts,
-				CurrentContext: tt.fields.CurrentContext,
-			}
-			if err := c.DeleteContext(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("DeleteContext() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if !tt.wantErr {
-				assert.Equal(t, tt.wantConfig, c)
-			}
-		})
-	}
+
+	err := c.DeleteContext(contextName)
+	require.NoError(t, err)
+	require.Equal(t, make(map[string]*Context), c.Contexts)
+	require.Equal(t, "", c.CurrentContext)
 }
 
 func TestConfig_Context(t *testing.T) {
