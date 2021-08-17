@@ -9,14 +9,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	"github.com/confluentinc/cli/internal/cmd/api-key"
-	"github.com/confluentinc/cli/internal/cmd/audit-log"
-	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
+	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
+	"github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/connect"
-	"github.com/confluentinc/cli/internal/cmd/connector"
-	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/context"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
@@ -142,20 +140,17 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 		}
 
 		apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-		connectorCmd := connector.New(prerunner, analyticsClient)
-		connectorCatalogCmd := connectorcatalog.New(prerunner)
 		environmentCmd := environment.New(prerunner, analyticsClient)
+		connectCmd := connect.New(cfg, prerunner, analyticsClient)
 		serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
 		serverCompleter.AddCommand(apiKeyCmd)
-		serverCompleter.AddCommand(connectorCmd)
-		serverCompleter.AddCommand(connectorCatalogCmd)
+		serverCompleter.AddCommand(connectCmd)
 		serverCompleter.AddCommand(environmentCmd)
 		serverCompleter.AddCommand(serviceAccountCmd)
 
 		cli.AddCommand(apiKeyCmd.Command)
-		cli.AddCommand(connectorCatalogCmd.Command)
-		cli.AddCommand(connectorCmd.Command)
+		cli.AddCommand(connectCmd.Command)
 		cli.AddCommand(environmentCmd.Command)
 		cli.AddCommand(iam.New(cfg, prerunner))
 		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
@@ -169,7 +164,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	if cfg.IsOnPrem() {
 		cli.AddCommand(auditlog.New(cfg, prerunner))
 		cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
-		cli.AddCommand(connect.New(prerunner))
+		cli.AddCommand(connect.New(cfg, prerunner, analyticsClient).Command)
 		cli.AddCommand(iam.New(cfg, prerunner))
 		cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 		cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))

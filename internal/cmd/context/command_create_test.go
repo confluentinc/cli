@@ -19,7 +19,7 @@ func TestParseStringFlag(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.Flags().String("flag", "", "")
 
-	c := &initCommand{
+	c := &command{
 		CLICommand: &pcmd.CLICommand{Command: cmd},
 		resolver: &pcmd.FlagResolverImpl{
 			Out: new(bytes.Buffer),
@@ -30,7 +30,7 @@ func TestParseStringFlag(t *testing.T) {
 		},
 	}
 
-	out, err := c.parseStringFlag("flag", "", false, "")
+	out, err := c.parseStringFlag(cmd, "flag", "Flag: ", false)
 	require.NoError(t, err)
 	require.Equal(t, data, out)
 }
@@ -41,7 +41,7 @@ func TestParseStringFlag_ErrEmpty(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.Flags().String("flag", "", "")
 
-	c := &initCommand{
+	c := &command{
 		CLICommand: &pcmd.CLICommand{Command: cmd},
 		resolver: &pcmd.FlagResolverImpl{
 			Out: new(bytes.Buffer),
@@ -52,7 +52,7 @@ func TestParseStringFlag_ErrEmpty(t *testing.T) {
 		},
 	}
 
-	_, err := c.parseStringFlag("flag", "Flag: ", false, "")
+	_, err := c.parseStringFlag(cmd, "flag", "Flag: ", false)
 	require.Error(t, err)
 	require.Equal(t, fmt.Sprintf(errors.CannotBeEmptyErrorMsg, "flag"), err.Error())
 }

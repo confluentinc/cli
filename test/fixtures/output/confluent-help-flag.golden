@@ -5,7 +5,6 @@ Usage:
 
 Available Commands:
   audit-log       Manage audit log configuration.
-  cloud-signup    Sign up for Confluent Cloud.
   cluster         Retrieve metadata about Confluent Platform clusters.
   completion      Print shell completion code.
   config          Modify the CLI configuration.
@@ -15,7 +14,7 @@ Available Commands:
   kafka           Manage Apache Kafka.
   ksql            Manage ksqlDB applications.
   local           Manage a local Confluent Platform development environment.
-  login           Log in to Confluent Cloud or Confluent Platform.
+  login           Log in to Confluent Platform (required for RBAC).
   logout          Log out of Confluent Platform.
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
