@@ -901,12 +901,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		}
 		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
-			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, topic, cluster.ID)
-			if isTopicNotExistError {
-				scanErr = err
-				close(input)
-				break
-			}
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
@@ -1005,7 +999,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	err = consumer.Subscribe(topic, nil)
-	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID) // should have been validated by err = validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
 	}
