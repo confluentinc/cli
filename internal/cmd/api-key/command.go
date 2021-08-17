@@ -207,7 +207,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	allUsers := append(serviceAccounts, users...)
 
 	userId := int32(0)
+	serviceAccount := false
 	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
+		serviceAccount = true
 		validFormat := strings.HasPrefix(serviceAccountID, "sa-")
 		if !validFormat {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
@@ -226,7 +228,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 		userId = c.State.Auth.User.Id
 	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId, ServiceAccount: serviceAccountID})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId, ServiceAccount: serviceAccount})
 	if err != nil {
 		return err
 	}
