@@ -133,7 +133,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 
 func (suite *ConnectTestSuite) newCmd() *command {
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
-	cmd := New(prerunner, suite.analyticsClient)
+	cmd := New(suite.conf, prerunner, suite.analyticsClient)
 	return cmd
 }
 
