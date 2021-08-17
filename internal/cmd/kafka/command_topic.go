@@ -920,9 +920,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		m := e.(*ckafka.Message)
 		if m.TopicPartition.Error != nil { // catch all other errors
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
-		} else {
-			fmt.Printf("Delivered message %v to topic %s [%d] at offset %v\n",
-				string(m.Value), *m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
 		}
 		key = ""
 		go scan()
@@ -1044,8 +1041,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 					fmt.Printf("%s", delimiter)
 				}
 
-				fmt.Printf("%% Message on %s:\n%s\n",
-					e.TopicPartition, string(e.Value))
+				fmt.Printf("%s", string(e.Value))
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
