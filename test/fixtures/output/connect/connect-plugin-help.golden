@@ -1,0 +1,22 @@
+Show plugins and their configurations.
+
+Usage:
+<<<<<<< HEAD:test/fixtures/output/connector-catalog/connector-catalog-help.golden
+  confluent connector-catalog [command]
+=======
+  ccloud connect plugin [command]
+>>>>>>> 2.0:test/fixtures/output/connect/connect-plugin-help.golden
+
+Available Commands:
+  describe    Describe a connector plugin type.
+  list        List connector plugin types.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+<<<<<<< HEAD:test/fixtures/output/connector-catalog/connector-catalog-help.golden
+Use "confluent connector-catalog [command] --help" for more information about a command.
+=======
+Use "ccloud connect plugin [command] --help" for more information about a command.
+>>>>>>> 2.0:test/fixtures/output/connect/connect-plugin-help.golden
