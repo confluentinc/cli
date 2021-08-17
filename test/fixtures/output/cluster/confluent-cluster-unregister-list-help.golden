@@ -4,8 +4,8 @@ Usage:
   confluent cluster unregister [flags]
 
 Flags:
-      --cluster-name string   Cluster Name.
-      --context string        CLI Context name.
+      --cluster-name string   REQUIRED: Cluster Name.
+      --context string        CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

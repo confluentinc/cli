@@ -86,7 +86,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the API keys that belong to service account with resource ID ``sa-lqv3mm`` on cluster ``lkc-xyz``",
+				Text: "List the API keys that belong to service account with resource ID `sa-lqv3mm` on cluster `lkc-xyz`",
 				Code: `ccloud api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
 			},
 		),
@@ -105,8 +105,8 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an API key for service account with resource ID ``sa-lqv3mm`` for cluster ``lkc-xyz``",
-				Code: `ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm `,
+				Text: "Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`",
+				Code: `ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
 			},
 		),
 	}
@@ -226,7 +226,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 		userId = c.State.Auth.User.Id
 	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId})
+	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId, ServiceAccount: serviceAccountID})
 	if err != nil {
 		return err
 	}
@@ -427,6 +427,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		Id:             userKey.Id,
 		Key:            apiKey,
 		AccountId:      c.EnvironmentId(),
+		UserId:         userKey.UserId,
 		UserResourceId: userKey.UserResourceId,
 	}
 
@@ -435,7 +436,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
-	err = c.keystore.DeleteAPIKey(apiKey, cmd)
+	err = c.keystore.DeleteAPIKey(apiKey)
 	if err != nil {
 		return err
 	}
@@ -665,6 +666,8 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 				key.UserId = user.Id
 			}
 		}
+	} else {
+		key.ServiceAccount = false
 	}
 	return key, nil
 }

@@ -44,10 +44,10 @@ var (
 	}
 )
 
-var authMethodFormats = map[flowv1.AuthMethod]string{
-	flowv1.AuthMethod_AUTH_METHOD_UNKNOWN:      "Unknown",
-	flowv1.AuthMethod_AUTH_METHOD_USERNAME_PWD: "Username/Password",
-	flowv1.AuthMethod_AUTH_METHOD_SSO:          "SSO",
+var authMethodFormats = map[orgv1.AuthMethod]string{
+	orgv1.AuthMethod_AUTH_METHOD_UNKNOWN:      "Unknown",
+	orgv1.AuthMethod_AUTH_METHOD_USERNAME_PWD: "Username/Password",
+	orgv1.AuthMethod_AUTH_METHOD_SSO:          "SSO",
 }
 
 type userCommand struct {

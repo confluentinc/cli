@@ -62,36 +62,14 @@ type authenticatedTopicCommand struct {
 	completableChildren []*cobra.Command
 }
 
-type partitionDescribeDisplay struct {
-	Topic     string   `json:"topic" yaml:"topic"`
-	Partition uint32   `json:"partition" yaml:"partition"`
-	Leader    uint32   `json:"leader" yaml:"leader"`
-	Replicas  []uint32 `json:"replicas" yaml:"replicas"`
-	ISR       []uint32 `json:"isr" yaml:"isr"`
-}
-
 type structuredDescribeDisplay struct {
-	TopicName         string                     `json:"topic_name" yaml:"topic_name"`
-	PartitionCount    int                        `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int                        `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []partitionDescribeDisplay `json:"partitions" yaml:"partitions"`
-	Config            map[string]string          `json:"config" yaml:"config"`
-}
-
-type partitionData struct {
-	TopicName              string  `json:"topic" yaml:"topic"`
-	PartitionId            int32   `json:"partition" yaml:"partition"`
-	LeaderBrokerId         int32   `json:"leader" yaml:"leader"`
-	ReplicaBrokerIds       []int32 `json:"replicas" yaml:"replicas"`
-	InSyncReplicaBrokerIds []int32 `json:"isr" yaml:"isr"`
+	TopicName string            `json:"topic_name" yaml:"topic_name"`
+	Config    map[string]string `json:"config" yaml:"config"`
 }
 
 type topicData struct {
-	TopicName         string            `json:"topic_name" yaml:"topic_name"`
-	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []partitionData   `json:"partitions" yaml:"partitions"`
-	Configs           map[string]string `json:"config" yaml:"config"`
+	TopicName string            `json:"topic_name" yaml:"topic_name"`
+	Config    map[string]string `json:"config" yaml:"config"`
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
@@ -176,7 +154,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(h.consume),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Consume items from the ``my_topic`` topic and press ``Ctrl+C`` to exit.",
+				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",
 				Code: "ccloud kafka topic consume -b my_topic",
 			},
 		),
@@ -215,7 +193,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named ``my_topic`` with default options.",
+				Text: "Create a topic named `my_topic` with default options.",
 				Code: "ccloud kafka topic create my_topic",
 			},
 		),
@@ -234,7 +212,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the ``my_topic`` topic.",
+				Text: "Describe the `my_topic` topic.",
 				Code: "ccloud kafka topic describe my_topic",
 			},
 		),
@@ -250,7 +228,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the ``my_topic`` topic to have a retention period of 3 days (259200000 milliseconds).",
+				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
 				Code: `ccloud kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),
@@ -267,7 +245,7 @@ func (a *authenticatedTopicCommand) init() {
 		RunE:  pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete the topics ``my_topic`` and ``my_topic_avro``. Use this command carefully as data loss can occur.",
+				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
 				Code: "ccloud kafka topic delete my_topic\nccloud kafka topic delete my_topic_avro",
 			},
 		),
@@ -459,7 +437,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
+		_, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -483,41 +461,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 			topicData := &topicData{}
 			topicData.TopicName = topicName
-			topicData.PartitionCount = len(partitionsResp.Data)
-			topicData.Partitions = make([]partitionData, len(partitionsResp.Data))
-
-			// For each partition, get replicas
-			for i, partitionResp := range partitionsResp.Data {
-				partitionData := partitionData{
-					TopicName:   topicName,
-					PartitionId: partitionResp.PartitionId,
-				}
-
-				replicasResp, httpResp, err := kafkaREST.Client.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(kafkaREST.Context, lkc, topicName, partitionResp.PartitionId)
-				if err != nil {
-					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-				} else if replicasResp.Data == nil {
-					return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
-				}
-
-				partitionData.ReplicaBrokerIds = make([]int32, len(replicasResp.Data))
-				partitionData.InSyncReplicaBrokerIds = make([]int32, 0)
-				for j, replicaResp := range replicasResp.Data {
-					if replicaResp.IsLeader {
-						partitionData.LeaderBrokerId = replicaResp.BrokerId
-					}
-					partitionData.ReplicaBrokerIds[j] = replicaResp.BrokerId
-					if replicaResp.IsInSync {
-						partitionData.InSyncReplicaBrokerIds = append(partitionData.InSyncReplicaBrokerIds, replicaResp.BrokerId)
-					}
-				}
-
-				if i == 0 {
-					topicData.ReplicationFactor = len(replicasResp.Data)
-				}
-				topicData.Partitions[i] = partitionData
-			}
-
 			// Get topic config
 			configsResp, httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(kafkaREST.Context, lkc, topicName)
 			if err != nil {
@@ -525,9 +468,9 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			} else if configsResp.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
 			}
-			topicData.Configs = make(map[string]string)
+			topicData.Config = make(map[string]string)
 			for _, config := range configsResp.Data {
-				topicData.Configs[config.Name] = *config.Value
+				topicData.Config[config.Name] = *config.Value
 			}
 
 			if outputOption == output.Human.String() {
@@ -537,9 +480,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			return output.StructuredOutput(outputOption, topicData)
 		}
 	}
-
 	// Kafka REST is not available, fallback to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
 		return err
@@ -1042,20 +983,10 @@ func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
-	utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
-		topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
-	partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-	partitionsTableEntries := make([][]string, topicData.PartitionCount)
-	for i, partition := range topicData.Partitions {
-		partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
-	}
-	printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
-
-	utils.Print(cmd, "\nConfiguration\n\n")
 	configsTableLabels := []string{"Name", "Value"}
-	configsTableEntries := make([][]string, len(topicData.Configs))
+	configsTableEntries := make([][]string, len(topicData.Config))
 	i := 0
-	for name, value := range topicData.Configs {
+	for name, value := range topicData.Config {
 		configsTableEntries[i] = printer.ToRow(&struct {
 			name  string
 			value string
@@ -1070,19 +1001,8 @@ func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
 }
 
 func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
-	utils.Printf(cmd, "Topic: %s PartitionCount: %d ReplicationFactor: %d\n",
-		resp.Name, len(resp.Partitions), len(resp.Partitions[0].Replicas))
-
-	var partitions [][]string
-	titleRow := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-	for _, partition := range resp.Partitions {
-		partitions = append(partitions, printer.ToRow(getPartitionDisplay(partition, resp.Name), titleRow))
-	}
-
-	printer.RenderCollectionTable(partitions, titleRow)
-
 	var entries [][]string
-	titleRow = []string{"Name", "Value"}
+	titleRow := []string{"Name", "Value"}
 	for _, entry := range resp.Config {
 		record := &struct {
 			Name  string
@@ -1096,7 +1016,6 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Println(cmd, "\nConfiguration\n ")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }
@@ -1104,39 +1023,11 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 func printStructuredTopicDescription(resp *schedv1.TopicDescription, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
-	structuredDisplay.PartitionCount = len(resp.Partitions)
-	structuredDisplay.ReplicationFactor = len(resp.Partitions[0].Replicas)
-
-	var partitionList []partitionDescribeDisplay
-	for _, partition := range resp.Partitions {
-		partitionList = append(partitionList, *getPartitionDisplay(partition, resp.Name))
-	}
-	structuredDisplay.Partitions = partitionList
 
 	for _, entry := range resp.Config {
 		structuredDisplay.Config[entry.Name] = entry.Value
 	}
 	return output.StructuredOutput(format, structuredDisplay)
-}
-
-func getPartitionDisplay(partition *schedv1.TopicPartitionInfo, topicName string) *partitionDescribeDisplay {
-	var replicas []uint32
-	for _, replica := range partition.Replicas {
-		replicas = append(replicas, replica.Id)
-	}
-
-	var isr []uint32
-	for _, replica := range partition.Isr {
-		isr = append(isr, replica.Id)
-	}
-
-	return &partitionDescribeDisplay{
-		Topic:     topicName,
-		Partition: partition.Partition,
-		Leader:    partition.Leader.Id,
-		Replicas:  replicas,
-		ISR:       isr,
-	}
 }
 
 func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.TopicDescription, error) {

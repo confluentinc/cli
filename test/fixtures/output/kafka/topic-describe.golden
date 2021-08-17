@@ -3,19 +3,15 @@ Usage:
   ccloud kafka topic describe <topic> [flags]
 
 Examples:
-Describe the ``my_topic`` topic.
+Describe the `my_topic` topic.
 
-::
-
-  ccloud kafka topic describe my_topic
-
-
+  $ ccloud kafka topic describe my_topic
 
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
-      --context string       CLI Context name.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

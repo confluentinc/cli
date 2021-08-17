@@ -34,10 +34,10 @@ const (
 func TestRequireFlags(t *testing.T) {
 	var err error
 
-	_, err = cmd.ExecuteCommand(mockPriceCommand(nil), "list", "--cloud", exampleCloud)
+	_, err = cmd.ExecuteCommand(mockPriceCommand(nil, exampleMetric, exampleUnit), "list", "--cloud", exampleCloud)
 	require.Error(t, err)
 
-	_, err = cmd.ExecuteCommand(mockPriceCommand(nil), "list", "--region", exampleRegion)
+	_, err = cmd.ExecuteCommand(mockPriceCommand(nil, exampleMetric, exampleUnit), "list", "--region", exampleRegion)
 	require.Error(t, err)
 }
 
@@ -78,7 +78,7 @@ func TestListJSON(t *testing.T) {
 func TestListLegacyClusterTypes(t *testing.T) {
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleLegacyClusterType, exampleNetworkType}, ":"): examplePrice,
-	})
+	}, exampleMetric, exampleUnit)
 
 	want := strings.Join([]string{
 		"      Metric     |   Cluster Type    | Availability | Network Type |    Price      ",
@@ -94,7 +94,7 @@ func TestListLegacyClusterTypes(t *testing.T) {
 func TestOmitLegacyClusterTypes(t *testing.T) {
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleLegacyClusterType, exampleNetworkType}, ":"): examplePrice,
-	})
+	}, exampleMetric, exampleUnit)
 
 	_, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion)
 	require.Error(t, err)
@@ -103,16 +103,16 @@ func TestOmitLegacyClusterTypes(t *testing.T) {
 func mockSingleRowCommand() *cobra.Command {
 	return mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
-	})
+	}, exampleMetric, exampleUnit)
 }
 
-func mockPriceCommand(prices map[string]float64) *cobra.Command {
+func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string) *cobra.Command {
 	client := &ccloud.Client{
 		Billing: &ccloudmock.Billing{
 			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization, _ string) (*billingv1.PriceTable, error) {
 				table := &billingv1.PriceTable{
 					PriceTable: map[string]*billingv1.UnitPrices{
-						exampleMetric: {Unit: exampleUnit, Prices: prices},
+						metricsName: {Unit: metricsUnit, Prices: prices},
 					},
 				}
 				return table, nil
@@ -130,4 +130,20 @@ func TestFormatPrice(t *testing.T) {
 	require.Equal(t, "$1.20 USD/GB", formatPrice(1.2, "GB"))
 	require.Equal(t, "$1.23 USD/GB", formatPrice(1.23, "GB"))
 	require.Equal(t, "$1.234 USD/GB", formatPrice(1.234, "GB"))
+}
+
+func TestPrice_ClusterLink(t *testing.T) {
+	command := mockPriceCommand(map[string]float64{
+		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
+	}, "ClusterLinkingBase", "Hour")
+
+	want := strings.Join([]string{
+		"         Metric        | Cluster Type | Availability | Network Type |     Price       ",
+		"+----------------------+--------------+--------------+--------------+----------------+",
+		"  Cluster linking base | Basic        | Single zone  | Internet     | $1.00 USD/Hour  ",
+	}, "\n")
+
+	got, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion)
+	require.NoError(t, err)
+	require.Equal(t, want+"\n", got)
 }

@@ -7,6 +7,7 @@ import (
 	logger "log"
 	_nethttp "net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -15,6 +16,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 func copyMap(inputMap map[string]string) map[string]string {
 	newMap := make(map[string]string)
@@ -153,4 +157,24 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 		return nil, "", err
 	}
 	return kafkaREST, kafkaClusterConfig.ID, nil
+}
+
+func camelToSnake(camels []string) []string {
+	var ret []string
+	for _, camel := range camels {
+		snake := matchFirstCap.ReplaceAllString(camel, "${1}_${2}")
+		snake  = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+		ret = append(ret, strings.ToLower(snake))
+	}
+	return ret
+}
+
+func camelToSpaced(camels []string) []string {
+	var ret []string
+	for _, camel := range camels {
+		snake := matchFirstCap.ReplaceAllString(camel, "${1} ${2}")
+		snake  = matchAllCap.ReplaceAllString(snake, "${1} ${2}")
+		ret = append(ret, snake)
+	}
+	return ret
 }
