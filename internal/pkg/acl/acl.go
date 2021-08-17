@@ -354,12 +354,15 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 
 	for _, aclData := range aclGetResp.Data {
 		principal := aclData.Principal
-		var resourceId string
+		var resourceId, prefix string
 		if principal != "" {
-			UserId := principal[5:]
-			idp, err := strconv.Atoi(UserId)
+			prefix = strings.Split(principal, ":")[0]
+			userId := strings.Split(principal, ":")[1]
+			idp, err := strconv.Atoi(userId)
 			if err == nil {
 				resourceId = IdMap[int32(idp)]
+			} else {
+				resourceId = userId
 			}
 		}
 		record := &struct {
@@ -370,7 +373,7 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 			ResourceName string
 			PatternType  string
 		}{
-			"User:" + resourceId,
+			prefix + ":" + resourceId,
 			string(aclData.Permission),
 			string(aclData.Operation),
 			string(aclData.ResourceType),
@@ -399,12 +402,15 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 
 	for _, binding := range bindingsObj {
 		principal := binding.Entry.Principal
-		var resourceId string
+		var resourceId, prefix string
 		if principal != "" {
-			UserId := principal[5:]
-			idp, err := strconv.Atoi(UserId)
+			prefix = strings.Split(principal, ":")[0]
+			userId := strings.Split(principal, ":")[1]
+			idp, err := strconv.Atoi(userId)
 			if err == nil {
 				resourceId = IdMap[int32(idp)]
+			} else {
+				resourceId = userId
 			}
 		}
 		record := &struct {
@@ -415,7 +421,7 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 			ResourceName string
 			PatternType  string
 		}{
-			"User:" + resourceId,
+			prefix + ":" + resourceId,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
 			binding.Pattern.ResourceType.String(),
