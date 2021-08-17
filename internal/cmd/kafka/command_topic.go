@@ -774,7 +774,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, false)
+	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, false)
 	if err != nil {
 		return err
 	}
@@ -935,7 +935,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, beginning)
+	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, beginning)
 	if err != nil {
 		return err
 	}
@@ -1021,26 +1021,31 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+func (h *hasAPIKeyTopicCommand) validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+	h.logger.Tracef("validateTopic begins")
 	client, err := NewSaramaClient(cluster, clientID, beginning)
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error initializing client")
 		return nil, err
 	}
 	topics, err := client.Topics()
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return nil, err
 	}
 	var foundTopic bool
 	for _, t := range topics {
+		h.logger.Tracef("validateTopic: found topic " + t)
 		if topic == t {
-			foundTopic = true
-			break
+			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
+		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		client.Close()
 		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
 	}
+	h.logger.Tracef("validateTopic succeeded")
 	return client, nil
 }
 
