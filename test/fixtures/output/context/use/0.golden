@@ -1,0 +1,5 @@
+Error: not logged in
+
+Suggestions:
+    You must be logged in to run this command.
+    To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`.

@@ -687,6 +687,20 @@ func TestConfig_AddContext(t *testing.T) {
 	os.Remove(filename)
 }
 
+func TestInitContext(t *testing.T) {
+	cfg := &Config{
+		BaseConfig:    &config.BaseConfig{Params: new(config.Params)},
+		ContextStates: make(map[string]*v2.ContextState),
+		Contexts:      make(map[string]*Context),
+		Credentials:   make(map[string]*v2.Credential),
+		Platforms:     make(map[string]*v2.Platform),
+	}
+
+	err := cfg.CreateContext("context", "https://example.com", "api-key", "api-secret")
+	require.NoError(t, err)
+	require.Equal(t, "context", cfg.CurrentContext)
+}
+
 func TestConfig_SetContext(t *testing.T) {
 	cfg := AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
@@ -723,7 +737,7 @@ func TestConfig_SetContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := tt.fields.Config
-			if err := c.SetContext(tt.args.name); (err != nil) != tt.wantErr {
+			if err := c.UseContext(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("SetContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {

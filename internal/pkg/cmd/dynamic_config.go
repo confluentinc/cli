@@ -26,8 +26,7 @@ func NewDynamicConfig(config *v3.Config, resolver FlagResolver, client *ccloud.C
 func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, resolver FlagResolver) error {
 	d.Config = cfg
 	d.Resolver = resolver
-	err := d.ParseFlagsIntoConfig(cmd)
-	return err
+	return d.ParseFlagsIntoConfig(cmd)
 }
 
 // Parse "--context" flag value into config struct
@@ -37,14 +36,15 @@ func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error { //versi
 	if err != nil {
 		return err
 	}
+
 	if ctxName != "" {
-		_, err := d.FindContext(ctxName)
-		if err != nil {
+		if _, err := d.FindContext(ctxName); err != nil {
 			return err
 		}
 		d.Config.SetOverwrittenCurrContext(d.Config.CurrentContext)
 		d.Config.CurrentContext = ctxName
 	}
+
 	return nil
 }
 

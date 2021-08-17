@@ -1,0 +1,51 @@
+package context
+
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+)
+
+type command struct {
+	*pcmd.CLICommand
+	resolver pcmd.FlagResolver
+}
+
+func newCommand(cmd *cobra.Command, prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *command {
+	return &command{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		resolver:   resolver,
+	}
+}
+
+func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "context",
+		Short: "Manage contexts.",
+	}
+
+	c := newCommand(cmd, prerunner, resolver)
+
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newUseCommand())
+
+	return c.Command
+}
+
+// context retrieves either a specific context or the current context.
+func (c *command) context(args []string) (*pcmd.DynamicContext, error) {
+	if len(args) == 1 {
+		return c.Config.FindContext(args[0])
+	}
+
+	if ctx := c.Config.Context(); ctx != nil {
+		return ctx, nil
+	} else {
+		return nil, new(errors.NotLoggedInError)
+	}
+}
