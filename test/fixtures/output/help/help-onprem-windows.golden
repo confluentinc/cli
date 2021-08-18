@@ -4,24 +4,6 @@ Usage:
   confluent [command]
 
 Available Commands:
-<<<<<<< HEAD
-  audit-log         Manage audit log configuration.
-  cloud-signup      Sign up for Confluent Cloud.
-  cluster           Retrieve metadata about Confluent Platform clusters.
-  completion        Print shell completion code.
-  config            Modify the CLI configuration.
-  connect           Manage Connect.
-  help              Help about any command
-  iam               Manage RBAC, ACL and IAM permissions.
-  kafka             Manage Apache Kafka.
-  ksql              Manage ksqlDB applications.
-  login             Log in to Confluent Cloud or Confluent Platform.
-  logout            Log out of Confluent Platform.
-  schema-registry   Manage Schema Registry.
-  secret            Manage secrets for Confluent Platform.
-  update            Update the Confluent CLI.
-  version           Show version of the Confluent CLI.
-=======
   audit-log       Manage audit log configuration.
   cloud-signup    Sign up for Confluent Cloud.
   cluster         Retrieve metadata about Confluent Platform clusters.
@@ -38,7 +20,6 @@ Available Commands:
   secret          Manage secrets for Confluent Platform.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.
->>>>>>> main
 
 Flags:
   -h, --help            Show help for this command.
