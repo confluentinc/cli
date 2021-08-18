@@ -16,8 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
-	"github.com/confluentinc/cli/internal/cmd/connector"
-	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init"
@@ -28,9 +26,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
@@ -116,8 +114,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-	connectorCmd := connector.New(prerunner, analyticsClient)
-	connectorCatalogCmd := connectorcatalog.New(prerunner)
+	connectCmd := connect.New(cfg, prerunner, analyticsClient)
 	environmentCmd := environment.New(prerunner, analyticsClient)
 	serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
@@ -128,9 +125,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	cli.AddCommand(completion.New(cli))
 	cli.AddCommand(config.New(cfg.IsCloudLogin(), prerunner, analyticsClient))
-	cli.AddCommand(connect.New(prerunner))
-	cli.AddCommand(connectorCatalogCmd.Command)
-	cli.AddCommand(connectorCmd.Command)
+	cli.AddCommand(connectCmd.Command)
 	cli.AddCommand(environmentCmd.Command)
 	cli.AddCommand(iam.New(cfg, prerunner))
 	cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
@@ -150,8 +145,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 
 	if cfg.IsCloudLogin() {
 		serverCompleter.AddCommand(apiKeyCmd)
-		serverCompleter.AddCommand(connectorCmd)
-		serverCompleter.AddCommand(connectorCatalogCmd)
+		serverCompleter.AddCommand(connectCmd)
 		serverCompleter.AddCommand(environmentCmd)
 		serverCompleter.AddCommand(serviceAccountCmd)
 	}

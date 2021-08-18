@@ -1,7 +1,7 @@
 Manage Kafka Connect.
 
 Usage:
-  confluent connector [command]
+  confluent connect [command]
 
 Available Commands:
   create      Create a connector.
@@ -10,6 +10,7 @@ Available Commands:
   event       Manage Connect log events configuration.
   list        List connectors.
   pause       Pause a connector.
+  plugin      Show plugins and their configurations.
   resume      Resume a connector.
   update      Update a connector configuration.
 
@@ -17,4 +18,4 @@ Global Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent connector [command] --help" for more information about a command.
+Use "confluent connect [command] --help" for more information about a command.

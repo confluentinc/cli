@@ -1,4 +1,4 @@
-package connector
+package connect
 
 import (
 	"github.com/spf13/cobra"
@@ -40,8 +40,9 @@ func NewEventCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &eventCommand{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
-				Use:   "event",
-				Short: "Manage Connect log events configuration.",
+				Use:         "event",
+				Short:       "Manage Connect log events configuration.",
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 			},
 			prerunner,
 		),

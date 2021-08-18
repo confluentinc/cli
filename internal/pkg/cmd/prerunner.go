@@ -298,7 +298,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 				if err := r.ccloudAutoLogin(cmd); err != nil {
 					r.Logger.Debugf("Auto login failed: %v", err)
 				} else {
-					setContextErr = r.setAuthenticatedWithMDSContext(command)
+					setContextErr = r.setAuthenticatedContext(cmd, command)
 				}
 			} else {
 				return setContextErr
@@ -542,7 +542,8 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 	}
 	cliCommand.Context = ctx
 	cliCommand.State = ctx.State
-	return r.setConfluentClient(cliCommand)
+	r.setConfluentClient(cliCommand)
+	return nil
 }
 
 func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
@@ -584,10 +585,9 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, *p
 	return token, credentials, err
 }
 
-func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 	ctx := cliCmd.Config.Context()
 	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
-	return nil
 }
 
 func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
