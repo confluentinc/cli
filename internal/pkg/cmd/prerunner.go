@@ -294,12 +294,13 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		setContextErr := r.setAuthenticatedContext(cmd, command)
 		if setContextErr != nil {
-			_, ok := setContextErr.(*errors.NotLoggedInError)
-			if ok && !command.Config.IsOnPremLogin() {
-				if err := r.ccloudAutoLogin(cmd); err != nil {
-					r.Logger.Debugf("Auto login failed: %v", err)
-				} else {
-					setContextErr = r.setAuthenticatedContext(cmd, command)
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+				if !command.Config.IsOnPremLogin() {
+					if err := r.ccloudAutoLogin(cmd); err != nil {
+						r.Logger.Debugf("Auto login failed: %v", err)
+					} else {
+						setContextErr = r.setAuthenticatedContext(cmd, command)
+					}
 				}
 			} else {
 				return setContextErr
@@ -512,12 +513,13 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
-			_, ok := setContextErr.(*errors.NotLoggedInError)
-			if ok && !command.Config.IsCloudLogin() {
-				if err := r.confluentAutoLogin(cmd); err != nil {
-					r.Logger.Debugf("Auto login failed: %v", err)
-				} else {
-					setContextErr = r.setAuthenticatedWithMDSContext(command)
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+				if !command.Config.IsCloudLogin() {
+					if err := r.confluentAutoLogin(cmd); err != nil {
+						r.Logger.Debugf("Auto login failed: %v", err)
+					} else {
+						setContextErr = r.setAuthenticatedWithMDSContext(command)
+					}
 				}
 			} else {
 				return setContextErr
