@@ -44,9 +44,8 @@ func (s *CLITestSuite) TestDescribe() {
 		{fixture: "context/describe/0.golden", args: "context describe"},
 		{fixture: "context/describe/1.golden", args: "context describe --api-key"},
 		{fixture: "context/describe/2.golden", args: "context describe --username", wantErrCode: 1},
-		{fixture: "context/describe/3.golden", args: "context describe --api-key --username", wantErrCode: 1},
-		{fixture: "context/describe/4.golden", args: "context describe --api-key", login: "default", wantErrCode: 1},
-		{fixture: "context/describe/5.golden", args: "context describe --username", login: "default"},
+		{fixture: "context/describe/3.golden", args: "context describe --api-key", login: "default", wantErrCode: 1},
+		{fixture: "context/describe/4.golden", args: "context describe --username", login: "default"},
 	}
 
 	for _, tt := range tests {

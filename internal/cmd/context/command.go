@@ -12,20 +12,16 @@ type command struct {
 	resolver pcmd.FlagResolver
 }
 
-func newCommand(cmd *cobra.Command, prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *command {
-	return &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		resolver:   resolver,
-	}
-}
-
 func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "context",
 		Short: "Manage contexts.",
 	}
 
-	c := newCommand(cmd, prerunner, resolver)
+	c := &command{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		resolver:   resolver,
+	}
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
