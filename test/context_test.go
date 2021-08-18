@@ -38,6 +38,8 @@ func (s *CLITestSuite) TestContextDelete() {
 }
 
 func (s *CLITestSuite) TestDescribe() {
+	resetConfiguration(s.T(), "ccloud")
+
 	tests := []CLITest{
 		{args: s.contextCreate("0")},
 		{args: "context use 0"},

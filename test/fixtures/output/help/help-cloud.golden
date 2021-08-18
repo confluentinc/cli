@@ -14,7 +14,6 @@ Available Commands:
   environment     Manage and select Confluent Cloud environments.
   help            Help about any command
   iam             Manage RBAC and IAM permissions.
-  init            Initialize a context.
   kafka           Manage Apache Kafka.
   ksql            Manage ksqlDB applications.
   local           Manage a local Confluent Platform development environment.
