@@ -1027,14 +1027,13 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 					} else {
 						keyString = string(key)
 					}
-					fmt.Printf("%s", keyString)
+					_, err := fmt.Fprint(os.Stderr, keyString+delimiter)
+					if err != nil {
+						return err
+					}
 				}
 
-				if delimiter != "" {
-					fmt.Printf("%s", delimiter)
-				}
-
-				fmt.Printf("%s", string(e.Value))
+				fmt.Printf("%s\n", string(e.Value)) // deserialize the msg.
 
 				if e.Headers != nil {
 					fmt.Printf("%% Headers: %v\n", e.Headers)
