@@ -218,7 +218,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 
 func (suite *KSQLTestSuite) TestCreateKSQL() {
 	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID}
+	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString,  "--api-secret", keySecretString}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -255,7 +255,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both --api-key and --api-secret must be provided", err.Error())
+	req.Equal("required flag(s) \"api-key\" not set", err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
@@ -266,12 +266,23 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both --api-key and --api-secret must be provided", err.Error())
+	req.Equal("required flag(s) \"api-secret\" not set", err.Error())
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKeyAndSecret() {
+	cmd := suite.newCMD()
+	cmd.SetArgs([]string{"app", "create", ksqlClusterID})
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err)
+	req.False(suite.ksqlc.CreateCalled())
+	req.Equal(`required flag(s) "api-key", "api-secret" not set`, err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID, "--image", "foo"}
+	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
