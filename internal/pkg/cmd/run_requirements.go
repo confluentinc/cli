@@ -19,26 +19,28 @@ const (
 	RequireUpdatesEnabled                   = "updates-enabled"
 )
 
+const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
+
 var (
 	requireCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud to use this command",
-		`Log in with "confluent login"`,
+		"Log in with \"confluent login\".\n"+signupSuggestion,
 	)
 	requireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
 		"you must log in to use this command",
-		`Log in with "confluent login"`,
+		"Log in with \"confluent login\".\n"+signupSuggestion,
 	)
 	requireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password to use this command",
-		`Log in with "confluent login"`,
+		"Log in with \"confluent login\".\n"+signupSuggestion,
 	)
 	requireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		`Log in with "confluent login" or "confluent login --url <mds-url>"`,
+		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
 	)
 	requireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
-		`Log in with "confluent login --url <mds-url>"`,
+		`Log in with "confluent login --url <mds-url>".`,
 	)
 	requireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
 		"you must enable updates to use this command",
