@@ -98,10 +98,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("connect event describe"),
 		linter.ExcludeCommand("feedback"),
 		linter.ExcludeCommandContains("cloud-signup"),
-		// config context commands
-		linter.ExcludeCommand("config context current"),
-		linter.ExcludeCommandContains("config context get"),
-		linter.ExcludeCommandContains("config context set"),
+		linter.ExcludeCommandContains("context"),
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
