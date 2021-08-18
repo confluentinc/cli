@@ -24,10 +24,10 @@ var (
 	listMirrorFields               = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
 	structuredListMirrorFields     = camelToSnake(listMirrorFields)
 	humanListMirrorFields          = camelToSpaced(listMirrorFields)
-	describeMirrorFields           = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	describeMirrorFields           = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"}
 	structuredDescribeMirrorFields = camelToSnake(describeMirrorFields)
 	humanDescribeMirrorFields      = camelToSpaced(describeMirrorFields)
-	alterMirrorFields              = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	alterMirrorFields              = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"}
 	structuredAlterMirrorFields    = camelToSnake(alterMirrorFields)
 	humanAlterMirrorFields         = camelToSpaced(alterMirrorFields)
 )
@@ -43,21 +43,23 @@ type listMirrorWrite struct {
 }
 
 type describeMirrorWrite struct {
-	LinkName           string
-	MirrorTopicName    string
-	SourceTopicName    string
-	MirrorStatus       string
-	StatusTimeMs       int64
-	Partition          int32
-	PartitionMirrorLag int64
+	LinkName              string
+	MirrorTopicName       string
+	SourceTopicName       string
+	MirrorStatus          string
+	StatusTimeMs          int64
+	Partition             int32
+	PartitionMirrorLag    int64
+	LastSourceFetchOffset int64
 }
 
 type alterMirrorWrite struct {
-	MirrorTopicName    string
-	Partition          int32
-	ErrorMessage       string
-	ErrorCode          string
-	PartitionMirrorLag int64
+	MirrorTopicName       string
+	Partition             int32
+	ErrorMessage          string
+	ErrorCode             string
+	PartitionMirrorLag    int64
+	LastSourceFetchOffset int64
 }
 
 type mirrorCommand struct {
@@ -327,13 +329,14 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	for _, partitionLag := range mirror.MirrorLags {
 		outputWriter.AddElement(&describeMirrorWrite{
-			LinkName:           mirror.LinkName,
-			MirrorTopicName:    mirror.MirrorTopicName,
-			SourceTopicName:    mirror.SourceTopicName,
-			MirrorStatus:       string(mirror.MirrorStatus),
-			StatusTimeMs:       mirror.StateTimeMs,
-			Partition:          partitionLag.Partition,
-			PartitionMirrorLag: partitionLag.Lag,
+			LinkName:              mirror.LinkName,
+			MirrorTopicName:       mirror.MirrorTopicName,
+			SourceTopicName:       mirror.SourceTopicName,
+			MirrorStatus:          string(mirror.MirrorStatus),
+			StatusTimeMs:          mirror.StateTimeMs,
+			Partition:             partitionLag.Partition,
+			PartitionMirrorLag:    partitionLag.Lag,
+			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
 
@@ -585,22 +588,24 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 		// fatal error
 		if errMsg != "" {
 			outputWriter.AddElement(&alterMirrorWrite{
-				MirrorTopicName:    result.MirrorTopicName,
-				Partition:          -1,
-				ErrorMessage:       errMsg,
-				ErrorCode:          code,
-				PartitionMirrorLag: -1,
+				MirrorTopicName:       result.MirrorTopicName,
+				Partition:             -1,
+				ErrorMessage:          errMsg,
+				ErrorCode:             code,
+				PartitionMirrorLag:    -1,
+				LastSourceFetchOffset: -1,
 			})
 			continue
 		}
 
 		for _, partitionLag := range result.MirrorLags {
 			outputWriter.AddElement(&alterMirrorWrite{
-				MirrorTopicName:    result.MirrorTopicName,
-				Partition:          partitionLag.Partition,
-				ErrorMessage:       errMsg,
-				ErrorCode:          code,
-				PartitionMirrorLag: partitionLag.Lag,
+				MirrorTopicName:       result.MirrorTopicName,
+				Partition:             partitionLag.Partition,
+				ErrorMessage:          errMsg,
+				ErrorCode:             code,
+				PartitionMirrorLag:    partitionLag.Lag,
+				LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 			})
 		}
 	}

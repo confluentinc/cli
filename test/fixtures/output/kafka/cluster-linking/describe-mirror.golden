@@ -1,5 +1,5 @@
-  Link Name | Mirror Topic Name | Partition | Partition Mirror Lag | Source Topic Name | Mirror Status | Status Time Ms  
-+-----------+-------------------+-----------+----------------------+-------------------+---------------+----------------+
-  link-1    | dest-topic-1      |         0 |               142857 | src-topic-1       | active        |      111111111  
-  link-1    | dest-topic-1      |         1 |               285714 | src-topic-1       | active        |      111111111  
-  link-1    | dest-topic-1      |         2 |               571428 | src-topic-1       | active        |      111111111  
+  Link Name | Mirror Topic Name | Partition | Partition Mirror Lag | Source Topic Name | Mirror Status | Status Time Ms | Last Source Fetch Offset  
++-----------+-------------------+-----------+----------------------+-------------------+---------------+----------------+--------------------------+
+  link-1    | dest-topic-1      |         0 |               142857 | src-topic-1       | active        |      111111111 |                  1293009  
+  link-1    | dest-topic-1      |         1 |               285714 | src-topic-1       | active        |      111111111 |                 28340404  
+  link-1    | dest-topic-1      |         2 |               571428 | src-topic-1       | active        |      111111111 |                  5739304  
