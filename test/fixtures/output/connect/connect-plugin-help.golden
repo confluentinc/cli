@@ -1,7 +1,7 @@
-Catalog of connectors and their configurations.
+Show plugins and their configurations.
 
 Usage:
-  confluent connector-catalog [command]
+  confluent connect plugin [command]
 
 Available Commands:
   describe    Describe a connector plugin type.
@@ -11,4 +11,4 @@ Global Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent connector-catalog [command] --help" for more information about a command.
+Use "confluent connect plugin [command] --help" for more information about a command.

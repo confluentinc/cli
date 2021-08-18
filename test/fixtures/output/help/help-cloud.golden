@@ -4,30 +4,30 @@ Usage:
   confluent [command]
 
 Available Commands:
-  admin             Perform administrative tasks for the current organization.
-  api-key           Manage the API keys.
-  audit-log         Manage audit log configuration.
-  cloud-signup      Sign up for Confluent Cloud.
-  completion        Print shell completion code.
-  connector         Manage Kafka Connect.
-  connector-catalog Catalog of connectors and their configurations.
+  admin           Perform administrative tasks for the current organization.
+  api-key         Manage the API keys.
+  audit-log       Manage audit log configuration.
+  cloud-signup    Sign up for Confluent Cloud.
+  completion      Print shell completion code.
+  connect         Manage Kafka Connect.
   context           Manage contexts.
-  environment       Manage and select Confluent Cloud environments.
-  help              Help about any command
-  iam               Manage RBAC and IAM permissions.
-  kafka             Manage Apache Kafka.
-  ksql              Manage ksqlDB applications.
-  local             Manage a local Confluent Platform development environment.
-  login             Log in to Confluent Cloud or Confluent Platform.
-  logout            Log out of Confluent Cloud.
-  price             See Confluent Cloud pricing information.
-  prompt            Print Confluent CLI context for your terminal prompt.
-  schema-registry   Manage Schema Registry.
-  secret            Manage secrets for Confluent Platform.
-  service-account   Manage service accounts.
-  shell             Run the confluent shell.
-  update            Update the Confluent CLI.
-  version           Show version of the Confluent CLI.
+  environment     Manage and select Confluent Cloud environments.
+  help            Help about any command
+  iam             Manage RBAC and IAM permissions.
+  init            Initialize a context.
+  kafka           Manage Apache Kafka.
+  ksql            Manage ksqlDB applications.
+  local           Manage a local Confluent Platform development environment.
+  login           Log in to Confluent Cloud or Confluent Platform.
+  logout          Log out of Confluent Cloud.
+  price           See Confluent Cloud pricing information.
+  prompt          Print Confluent CLI context for your terminal prompt.
+  schema-registry Manage Schema Registry.
+  secret          Manage secrets for Confluent Platform.
+  service-account Manage service accounts.
+  shell           Run the confluent shell.
+  update          Update the Confluent CLI.
+  version         Show version of the Confluent CLI.
 
 Flags:
   -h, --help            Show help for this command.
