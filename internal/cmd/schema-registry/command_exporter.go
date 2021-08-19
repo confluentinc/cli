@@ -381,6 +381,9 @@ func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
 	}
 	if cmd.Flags().Lookup("config-file").Changed {
 		configFile, err := cmd.Flags().GetString("config-file")
+		if err != nil {
+			return err
+		}
 		configMap, err := readConfigsFromFile(configFile)
 		if err != nil {
 			return err
