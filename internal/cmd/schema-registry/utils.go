@@ -1,13 +1,17 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"io/ioutil"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/confluentinc/go-printer"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -33,6 +37,49 @@ func PrintVersions(versions []int32) {
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
 	printer.RenderCollectionTable(entries, titleRow)
+}
+
+func convertMapToString(m map[string]string) string {
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	}
+	return b.String()
+}
+
+func toMap(configs []string) (map[string]string, error) {
+	configMap := make(map[string]string)
+	for _, cfg := range configs {
+		pair := strings.SplitN(cfg, "=", 2)
+		if len(pair) < 2 {
+			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
+		}
+		configMap[pair[0]] = pair[1]
+	}
+	return configMap, nil
+}
+
+func readConfigsFromFile(configFile string) (map[string]string, error) {
+	if configFile == "" {
+		return map[string]string{}, nil
+	}
+
+	configContents, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create config map from the file
+	var configs []string
+	for _, s := range strings.Split(string(configContents), "\n") {
+		// Filter out blank lines
+		spaceTrimmed := strings.TrimSpace(s)
+		if s != "" && spaceTrimmed[0] != '#' {
+			configs = append(configs, spaceTrimmed)
+		}
+	}
+
+	return toMap(configs)
 }
 
 func RequireSubjectFlag(cmd *cobra.Command) {

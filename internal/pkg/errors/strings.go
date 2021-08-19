@@ -104,7 +104,14 @@ const (
 	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
 	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
+	CreatedExporterMsg                  = "Created schema exporter \"%s\".\n"
+	UpdatedExporterMsg                  = "Updated schema exporter \"%s\".\n"
+	PausedExporterMsg                   = "Paused schema exporter \"%s\".\n"
+	ResumedExporterMsg                  = "Resumed schema exporter \"%s\".\n"
+	ResetExporterMsg                    = "Reset schema exporter \"%s\".\n"
+	DeletedExporterMsg                  = "Deleted schema exporter \"%s\".\n"
 	NoSubjectsMsg                       = "No subjects"
+	NoExporterMsg                       = "No exporters"
 	SRCredsValidationFailedMsg          = "Failed to validate Schema Registry API key and secret."
 
 	// secret commands

@@ -183,6 +183,7 @@ const (
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	SchemaExporterNotFoundMsg    = "Schema exporter \"%s\" not found"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

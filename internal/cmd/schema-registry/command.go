@@ -41,6 +41,7 @@ func (c *command) init(cliName string) {
 		c.AddCommand(NewClusterCommand(cliName, c.prerunner, c.srClient, c.logger, c.analyticsClient))
 		c.AddCommand(NewSubjectCommand(cliName, c.prerunner, c.srClient))
 		c.AddCommand(NewSchemaCommand(cliName, c.prerunner, c.srClient))
+		c.AddCommand(NewExporterCommand(cliName, c.prerunner, c.srClient))
 	} else {
 		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}
