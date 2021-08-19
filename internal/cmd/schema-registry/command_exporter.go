@@ -18,7 +18,7 @@ type exporterCommand struct {
 	srClient *srsdk.APIClient
 }
 
-type describeInfoDisplay struct {
+type exporterInfoDisplay struct {
 	Name        string
 	Subjects    string
 	ContextType string
@@ -36,11 +36,7 @@ type exporterStatusDisplay struct {
 
 var (
 	describeInfoLabels              = []string{"Name", "Subjects", "ContextType", "Context", "Config"}
-	describeInfoHumanRenames        = map[string]string{}
-	describeInfoStructuredRenames   = map[string]string{}
 	describeStatusLabels            = []string{"Name", "State", "Offset", "Ts", "Trace"}
-	describeStatusHumanRenames      = map[string]string{}
-	describeStatusStructuredRenames = map[string]string{}
 )
 
 func NewExporterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
@@ -415,14 +411,14 @@ func (c *exporterCommand) describe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	data := &describeInfoDisplay{
+	data := &exporterInfoDisplay{
 		Name:        info.Name,
 		Subjects:    strings.Join(info.Subjects, ", "),
 		ContextType: info.ContextType,
 		Context:     info.Context,
 		Config:      convertMapToString(info.Config),
 	}
-	return output.DescribeObject(cmd, data, describeInfoLabels, describeInfoHumanRenames, describeInfoStructuredRenames)
+	return output.DescribeObject(cmd, data, describeInfoLabels, map[string]string{}, map[string]string{})
 }
 
 func (c *exporterCommand) getConfig(cmd *cobra.Command, _ []string) error {
@@ -473,7 +469,7 @@ func (c *exporterCommand) status(cmd *cobra.Command, _ []string) error {
 		Ts:     strconv.FormatInt(status.Ts, 10),
 		Trace:  status.Trace,
 	}
-	return output.DescribeObject(cmd, data, describeStatusLabels, describeStatusHumanRenames, describeStatusStructuredRenames)
+	return output.DescribeObject(cmd, data, describeStatusLabels, map[string]string{}, map[string]string{})
 }
 
 func (c *exporterCommand) pause(cmd *cobra.Command, _ []string) error {
