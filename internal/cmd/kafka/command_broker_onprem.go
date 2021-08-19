@@ -3,12 +3,14 @@ package kafka
 import (
 	"github.com/antihax/optional"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+	"net/http"
 	"sort"
 	"strconv"
 )
@@ -45,7 +47,7 @@ func (brokerCmd *brokerCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <broker>",
-		Args:  cobra.ExactArgs(1),
+		//Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.describe),
 		Short: "Describe a Kafka broker.",
 		Long:  "See broker configurations and partition-replica information for the spcified broker.",
@@ -53,6 +55,8 @@ func (brokerCmd *brokerCommand) init() {
 	}
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	describeCmd.Flags().Bool("all", false,"See cluster-wide broker configurations.")
+	describeCmd.Flags().Int32("broker", -1,"See configuration values for specific broker ID.")
 	describeCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(describeCmd)
 
@@ -110,13 +114,22 @@ type BrokerData struct {
 	ReplicaData      []kafkarestv3.ReplicaData      `json:"replica_data" yaml:"replica_data"`
 }
 
+type ConfigData struct {
+	Name        string              `json:"name"`
+	Value       *string             `json:"value,omitempty"`
+	IsDefault   bool                `json:"is_default"`
+	IsReadOnly  bool                `json:"is_read_only"`
+	IsSensitive bool                `json:"is_sensitive"`
+}
+
 func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) error {
-	brokerIdStr := args[0]
-	i, err := strconv.ParseInt(brokerIdStr, 10, 32)
+	// TODO config name flag
+	var err error
+	var resp *http.Response
+	brokerId, all, err := checkAllOrBrokerIdSpecified(cmd)
 	if err != nil {
 		return err
 	}
-	brokerId := int32(i)
 	format, err := cmd.Flags().GetString(output.FlagName)
 	restClient, restContext, err := initKafkaRest(brokerCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
@@ -127,20 +140,99 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 		return err
 	}
 	// Get Broker Configs
-	brokerConfigsResp, resp, err := restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+	var clusterConfig kafkarestv3.ClusterConfigDataList
+	var brokerConfig kafkarestv3.BrokerConfigDataList
+	var data []ConfigData
+	if all {
+		clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
+		if err != nil {
+			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		}
+		data = parseClusterConfigData(clusterConfig)
+	} else {
+		brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+		if err != nil {
+			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		}
+		data = parseBrokerConfigData(brokerConfig)
+	}
+
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name", "Value", "IsDefault", "IsReadOnly", "IsSensitive"}, []string{"Name", "Value", "Is Default", "Is Read Only", "Is Sensitive"}, []string{"name", "value", "is_default", "is_read_only", "is_sensitive"})
+
+	if err != nil {
+		return err
+	}
+	for _, entry := range data {
+		outputWriter.AddElement(entry)
+	}
+	return outputWriter.Out()
+
+
+	// TODO is this too much output?
 	// Get partition-replicas
-	partitionReplicaResp, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
+	//partitionReplicaResp, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
+	//if err != nil {
+	//	return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	//}
+	//brokerInfo := &BrokerData{
+	//	BrokerConfigData: brokerConfigsResp.Data,
+	//	//ReplicaData: 	  partitionReplicaResp.Data,
+	//}
+
+
+
+	//return output.StructuredOutputForCommand(cmd, format, data)
+}
+
+func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []ConfigData {
+	var configs []ConfigData
+	for _, data := range clusterConfig.Data {
+		config := ConfigData{
+			Name:        data.Name,
+			Value:       data.Value,
+			IsDefault:   data.IsDefault,
+			IsReadOnly:  data.IsReadOnly,
+			IsSensitive: data.IsSensitive,
+		}
+		configs = append(configs, config)
+	}
+	return configs
+}
+
+func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []ConfigData {
+	var configs []ConfigData
+	for _, data := range brokerConfig.Data {
+		config := ConfigData{
+			Name:        data.Name,
+			Value:       data.Value,
+			IsDefault:   data.IsDefault,
+			IsReadOnly:  data.IsReadOnly,
+			IsSensitive: data.IsSensitive,
+		}
+		configs = append(configs, config)
+	}
+	return configs
+}
+
+func checkAllOrBrokerIdSpecified(cmd *cobra.Command) (int32, bool, error) {
+	if cmd.Flags().Changed("all") && cmd.Flags().Changed("broker") {
+		return -1, false, errors.New("only specify one of these")
+	}
+	if !cmd.Flags().Changed("all") && !cmd.Flags().Changed("broker") {
+		return -1, false, errors.New("must specify one of these")
+	}
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return -1, false, err
 	}
-	brokerInfo := &BrokerData{
-		BrokerConfigData: brokerConfigsResp.Data,
-		ReplicaData: 	  partitionReplicaResp.Data,
+	brokerId, err := cmd.Flags().GetInt32("broker")
+	if err != nil {
+		return -1, false, err
 	}
-	return output.StructuredOutputForCommand(cmd, format, brokerInfo)
+	return brokerId, all, nil
 }
 
 func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error {
