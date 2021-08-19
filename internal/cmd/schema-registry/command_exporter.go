@@ -99,7 +99,6 @@ func (c *exporterCommand) init(cliName string) {
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("subjects")
 	_ = cmd.MarkFlagRequired("context-type")
-	_ = cmd.MarkFlagRequired("context")
 	_ = cmd.MarkFlagRequired("config-file")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -306,9 +305,12 @@ func (c *exporterCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	context, err := cmd.Flags().GetString("context")
-	if err != nil {
-		return err
+	context := "."
+	if contextType == "CUSTOM" {
+		context, err = cmd.Flags().GetString("context")
+		if err != nil {
+			return err
+		}
 	}
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
