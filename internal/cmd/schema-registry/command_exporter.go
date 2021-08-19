@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -36,7 +37,11 @@ type exporterStatusDisplay struct {
 
 var (
 	describeInfoLabels              = []string{"Name", "Subjects", "ContextType", "Context", "Config"}
+	describeInfoHumanRenames        = map[string]string{"ContextType": "Context Type", "Config": "Remote Schema Registry Configs"}
+	describeInfoStructuredRenames   = map[string]string{"Name": "name", "Subjects": "subjects", "ContextType": "context_type", "Context": "context", "Config": "config"}
 	describeStatusLabels            = []string{"Name", "State", "Offset", "Ts", "Trace"}
+	describeStatusHumanRenames      = map[string]string{"State": "Exporter State", "Offset": "Exporter Offset", "Ts": "Exporter Timestamp", "Trace": "Error Trace"}
+	describeStatusStructuredRenames = map[string]string{"Name": "name", "State": "state", "Offset": "offset", "Ts": "timestamp", "Trace": "trace"}
 )
 
 func NewExporterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
@@ -86,14 +91,15 @@ func (c *exporterCommand) init(cliName string) {
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().String("name", "", "The name of the exporter.")
-	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().String("subjects", "", "The subjects of the exporter.")
-	_ = cmd.MarkFlagRequired("subjects")
 	cmd.Flags().String("context-type", "", "The context type of the exporter.")
-	_ = cmd.MarkFlagRequired("context-type")
 	cmd.Flags().String("context", "", "The context of the exporter.")
-	_ = cmd.MarkFlagRequired("context")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
+
+	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("subjects")
+	_ = cmd.MarkFlagRequired("context-type")
+	_ = cmd.MarkFlagRequired("context")
 	_ = cmd.MarkFlagRequired("config-file")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -263,7 +269,7 @@ func (c *exporterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	exporters, _, err := srClient.DefaultApi.GetExporters(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if len(exporters) > 0 {
@@ -271,9 +277,9 @@ func (c *exporterCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		for _, l := range exporters {
+		for _, exporter := range exporters {
 			outputWriter.AddElement(&listDisplay{
-				Exporter: l,
+				Exporter: exporter,
 			})
 		}
 		return outputWriter.Out()
@@ -322,11 +328,12 @@ func (c *exporterCommand) create(cmd *cobra.Command, _ []string) error {
 		Context:     context,
 		Config:      configMap,
 	})
-
-	if err == nil {
-		utils.Printf(cmd, errors.CreatedExporterMsg, name)
+	if err != nil {
+		return err
 	}
-	return err
+
+	utils.Printf(cmd, errors.CreatedExporterMsg, name)
+	return nil
 }
 
 func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
@@ -340,7 +347,7 @@ func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
 	}
 	info, httpResponse, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
 		return err
@@ -353,11 +360,11 @@ func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
 		Config: info.Config,
 	}
 
-	if cmd.Flags().Lookup("context-type").Changed {
-		contextType, err := cmd.Flags().GetString("context-type")
-		if err != nil {
-			return err
-		}
+	contextType, err := cmd.Flags().GetString("context-type")
+	if err != nil {
+		return err
+	}
+	if contextType != "" {
 		updateRequest.ContextType = contextType
 		if contextType == "CUSTOM" {
 			context, err := cmd.Flags().GetString("context")
@@ -388,10 +395,12 @@ func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	_, _, err = srClient.DefaultApi.PutExporter(ctx, name, updateRequest)
-	if err == nil {
-		utils.Printf(cmd, errors.UpdatedExporterMsg, name)
+	if err != nil {
+		return err
 	}
-	return err
+
+	utils.Printf(cmd, errors.UpdatedExporterMsg, name)
+	return nil
 }
 
 func (c *exporterCommand) describe(cmd *cobra.Command, _ []string) error {
@@ -405,7 +414,7 @@ func (c *exporterCommand) describe(cmd *cobra.Command, _ []string) error {
 	}
 	info, httpResponse, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
 		return err
@@ -418,7 +427,7 @@ func (c *exporterCommand) describe(cmd *cobra.Command, _ []string) error {
 		Context:     info.Context,
 		Config:      convertMapToString(info.Config),
 	}
-	return output.DescribeObject(cmd, data, describeInfoLabels, map[string]string{}, map[string]string{})
+	return output.DescribeObject(cmd, data, describeInfoLabels, describeInfoHumanRenames, describeInfoStructuredRenames)
 }
 
 func (c *exporterCommand) getConfig(cmd *cobra.Command, _ []string) error {
@@ -437,7 +446,7 @@ func (c *exporterCommand) getConfig(cmd *cobra.Command, _ []string) error {
 
 	configs, httpResponse, err := srClient.DefaultApi.GetExporterConfig(ctx, name)
 	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
 		return err
@@ -456,7 +465,7 @@ func (c *exporterCommand) status(cmd *cobra.Command, _ []string) error {
 	}
 	status, httpResponse, err := srClient.DefaultApi.GetExporterStatus(ctx, name)
 	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
 		return err
@@ -469,7 +478,7 @@ func (c *exporterCommand) status(cmd *cobra.Command, _ []string) error {
 		Ts:     strconv.FormatInt(status.Ts, 10),
 		Trace:  status.Trace,
 	}
-	return output.DescribeObject(cmd, data, describeStatusLabels, map[string]string{}, map[string]string{})
+	return output.DescribeObject(cmd, data, describeStatusLabels, describeStatusHumanRenames, describeStatusStructuredRenames)
 }
 
 func (c *exporterCommand) pause(cmd *cobra.Command, _ []string) error {
@@ -483,14 +492,15 @@ func (c *exporterCommand) pause(cmd *cobra.Command, _ []string) error {
 	}
 
 	_, httpResponse, err := srClient.DefaultApi.PauseExporter(ctx, name)
-	if err == nil {
-		utils.Printf(cmd, errors.PausedExporterMsg, name)
-	} else {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+	if err != nil {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
+		return err
 	}
-	return err
+
+	utils.Printf(cmd, errors.PausedExporterMsg, name)
+	return nil
 }
 
 func (c *exporterCommand) resume(cmd *cobra.Command, _ []string) error {
@@ -504,14 +514,15 @@ func (c *exporterCommand) resume(cmd *cobra.Command, _ []string) error {
 	}
 
 	_, httpResponse, err := srClient.DefaultApi.ResumeExporter(ctx, name)
-	if err == nil {
-		utils.Printf(cmd, errors.ResumedExporterMsg, name)
-	} else {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+	if err != nil {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
+		return err
 	}
-	return err
+
+	utils.Printf(cmd, errors.ResumedExporterMsg, name)
+	return nil
 }
 
 func (c *exporterCommand) reset(cmd *cobra.Command, _ []string) error {
@@ -525,14 +536,15 @@ func (c *exporterCommand) reset(cmd *cobra.Command, _ []string) error {
 	}
 
 	_, httpResponse, err := srClient.DefaultApi.ResetExporter(ctx, name)
-	if err == nil {
-		utils.Printf(cmd, errors.ResetExporterMsg, name)
-	} else {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+	if err != nil {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
+		return err
 	}
-	return err
+
+	utils.Printf(cmd, errors.ResetExporterMsg, name)
+	return nil
 }
 
 func (c *exporterCommand) delete(cmd *cobra.Command, _ []string) error {
@@ -546,12 +558,13 @@ func (c *exporterCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	httpResponse, err := srClient.DefaultApi.DeleteExporter(ctx, name)
-	if err == nil {
-		utils.Printf(cmd, errors.DeletedExporterMsg, name)
-	} else {
-		if httpResponse != nil && httpResponse.StatusCode == 404 {
+	if err != nil {
+		if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 			return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
 		}
+		return err
 	}
-	return err
+
+	utils.Printf(cmd, errors.DeletedExporterMsg, name)
+	return nil
 }

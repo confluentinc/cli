@@ -2,14 +2,14 @@ package schemaregistry
 
 import (
 	"context"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	cliMock "github.com/confluentinc/cli/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -37,10 +37,10 @@ type ExporterTestSuite struct {
 func (suite *ExporterTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedCloudConfigMock()
 	suite.srMothershipMock = &mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
@@ -62,34 +62,34 @@ func (suite *ExporterTestSuite) SetupSuite() {
 func (suite *ExporterTestSuite) SetupTest() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			CreateExporterFunc: func(ctx context.Context, body srsdk.CreateExporterRequest) (srsdk.CreateExporterResponse, *http.Response, error) {
+			CreateExporterFunc: func(_ context.Context, _ srsdk.CreateExporterRequest) (srsdk.CreateExporterResponse, *http.Response, error) {
 				return srsdk.CreateExporterResponse{Name: exporterName}, nil, nil
 			},
-			GetExportersFunc: func(ctx context.Context) ([]string, *http.Response, error) {
+			GetExportersFunc: func(_ context.Context) ([]string, *http.Response, error) {
 				return []string{exporterName}, nil, nil
 			},
-			GetExporterInfoFunc: func(ctx context.Context, name string) (srsdk.ExporterInfo, *http.Response, error) {
+			GetExporterInfoFunc: func(_ context.Context, name string) (srsdk.ExporterInfo, *http.Response, error) {
 				return srsdk.ExporterInfo{Name: exporterName, Subjects: []string{subjectName}, ContextType: "AUTO", Config: map[string]string{}}, nil, nil
 			},
-			GetExporterStatusFunc: func(ctx context.Context, name string) (srsdk.ExporterStatus, *http.Response, error) {
+			GetExporterStatusFunc: func(_ context.Context, name string) (srsdk.ExporterStatus, *http.Response, error) {
 				return srsdk.ExporterStatus{Name: exporterName, State: "PAUSED", Offset: 0, Ts: 0, Trace: ""}, nil, nil
 			},
-			PutExporterFunc: func(ctx context.Context, name string, body srsdk.UpdateExporterRequest) (srsdk.UpdateExporterResponse, *http.Response, error) {
+			PutExporterFunc: func(_ context.Context, name string, _ srsdk.UpdateExporterRequest) (srsdk.UpdateExporterResponse, *http.Response, error) {
 				return srsdk.UpdateExporterResponse{Name: exporterName}, nil, nil
 			},
-			GetExporterConfigFunc: func(ctx context.Context, name string) (map[string]string, *http.Response, error) {
+			GetExporterConfigFunc: func(_ context.Context, name string) (map[string]string, *http.Response, error) {
 				return map[string]string{}, nil, nil
 			},
-			PauseExporterFunc: func(ctx context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
+			PauseExporterFunc: func(_ context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
 				return srsdk.UpdateExporterResponse{Name: exporterName}, nil, nil
 			},
-			ResumeExporterFunc: func(ctx context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
+			ResumeExporterFunc: func(_ context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
 				return srsdk.UpdateExporterResponse{Name: exporterName}, nil, nil
 			},
-			ResetExporterFunc: func(ctx context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
+			ResetExporterFunc: func(_ context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
 				return srsdk.UpdateExporterResponse{Name: exporterName}, nil, nil
 			},
-			DeleteExporterFunc: func(ctx context.Context, name string) (*http.Response, error) {
+			DeleteExporterFunc: func(_ context.Context, name string) (*http.Response, error) {
 				return nil, nil
 			},
 		},
@@ -100,22 +100,21 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.conf.Logger, cliMock.NewDummyAnalyticsMock())
-	return cmd
+	return New(suite.conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.conf.Logger, cliMock.NewDummyAnalyticsMock())
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
 	cmd := suite.newCMD()
 	req := require.New(suite.T())
 	dir, err := createTempDir()
-	req.Nil(err)
+	req.NoError(err)
 	configs := "key1=value1\nkey2=value2"
 	configPath := filepath.Join(dir, "config.txt")
 	req.NoError(ioutil.WriteFile(configPath, []byte(configs), 0644))
 	cmd.SetArgs([]string{"exporter", "create", "--name", exporterName, "--context-type", "AUTO",
 		"--context", contextName, "--subjects", subjectName, "--config-file", configPath})
 	err = cmd.Execute()
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.CreateExporterCalled())
 	req.NoError(os.RemoveAll(dir))
@@ -128,7 +127,7 @@ func (suite *ExporterTestSuite) TestListExporters() {
 	cmd.SetArgs([]string{"exporter", "list"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExportersCalled())
 }
@@ -138,7 +137,7 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 	cmd.SetArgs([]string{"exporter", "describe", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExporterInfoCalled())
 	retVal := apiMock.GetExporterInfoCalls()[0]
@@ -150,7 +149,7 @@ func (suite *ExporterTestSuite) TestStatusExporter() {
 	cmd.SetArgs([]string{"exporter", "status", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExporterStatusCalled())
 	retVal := apiMock.GetExporterStatusCalls()[0]
@@ -162,7 +161,7 @@ func (suite *ExporterTestSuite) TestUpdateExporter() {
 	cmd.SetArgs([]string{"exporter", "update", "--name", exporterName, "--context", contextName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.PutExporterCalled())
 	retVal := apiMock.PutExporterCalls()[0]
@@ -174,7 +173,7 @@ func (suite *ExporterTestSuite) TestGetExporterConfig() {
 	cmd.SetArgs([]string{"exporter", "get-config", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExporterConfigCalled())
 	retVal := apiMock.GetExporterConfigCalls()[0]
@@ -186,7 +185,7 @@ func (suite *ExporterTestSuite) TestPauseExporter() {
 	cmd.SetArgs([]string{"exporter", "pause", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.PauseExporterCalled())
 	retVal := apiMock.PauseExporterCalls()[0]
@@ -198,7 +197,7 @@ func (suite *ExporterTestSuite) TestResumeExporter() {
 	cmd.SetArgs([]string{"exporter", "resume", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ResumeExporterCalled())
 	retVal := apiMock.ResumeExporterCalls()[0]
@@ -210,7 +209,7 @@ func (suite *ExporterTestSuite) TestResetExporter() {
 	cmd.SetArgs([]string{"exporter", "reset", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ResetExporterCalled())
 	retVal := apiMock.ResetExporterCalls()[0]
@@ -222,7 +221,7 @@ func (suite *ExporterTestSuite) TestDeleteExporter() {
 	cmd.SetArgs([]string{"exporter", "delete", "--name", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Nil(err)
+	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.DeleteExporterCalled())
 	retVal := apiMock.DeleteExporterCalls()[0]
