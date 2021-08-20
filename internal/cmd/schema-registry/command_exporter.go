@@ -84,7 +84,7 @@ func (c *exporterCommand) init(cliName string) {
 			examples.Example{
 				Text: "Create new schema exporter.",
 				Code: fmt.Sprintf("%s schema-registry exporter create --name my_exporter"+
-					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context my_context"+
+					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context-name my_context"+
 					"--config-file ~/config.txt", cliName),
 			},
 		),
@@ -93,7 +93,7 @@ func (c *exporterCommand) init(cliName string) {
 	cmd.Flags().String("name", "", "The name of the exporter.")
 	cmd.Flags().String("subjects", "", "The subjects of the exporter.")
 	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
-	cmd.Flags().String("context", "", "The context of the exporter.")
+	cmd.Flags().String("context-name", "", "The context name of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
 
 	_ = cmd.MarkFlagRequired("name")
@@ -112,7 +112,7 @@ func (c *exporterCommand) init(cliName string) {
 			examples.Example{
 				Text: "Update information of new schema exporter.",
 				Code: fmt.Sprintf("%s schema-registry exporter update --name my_exporter"+
-					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context my_context", cliName),
+					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context-name my_context", cliName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
@@ -125,7 +125,7 @@ func (c *exporterCommand) init(cliName string) {
 	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().String("subjects", "", "The subjects of the exporter.")
 	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
-	cmd.Flags().String("context", "", "The context of the exporter.")
+	cmd.Flags().String("context-name", "", "The context name of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
 	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
@@ -307,7 +307,7 @@ func (c *exporterCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 	context := "."
 	if contextType == "CUSTOM" {
-		context, err = cmd.Flags().GetString("context")
+		context, err = cmd.Flags().GetString("context-name")
 		if err != nil {
 			return err
 		}
@@ -369,7 +369,7 @@ func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
 	if contextType != "" {
 		updateRequest.ContextType = contextType
 	}
-	context, err := cmd.Flags().GetString("context")
+	context, err := cmd.Flags().GetString("context-name")
 	if err != nil {
 		return err
 	}
