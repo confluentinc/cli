@@ -92,7 +92,7 @@ func (c *exporterCommand) init(cliName string) {
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().String("name", "", "The name of the exporter.")
 	cmd.Flags().String("subjects", "", "The subjects of the exporter.")
-	cmd.Flags().String("context-type", "", "The context type of the exporter.")
+	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context", "", "The context of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
 
@@ -124,7 +124,7 @@ func (c *exporterCommand) init(cliName string) {
 	cmd.Flags().String("name", "", "The name of the exporter.")
 	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().String("subjects", "", "The subjects of the exporter.")
-	cmd.Flags().String("context-type", "", "The context type of the exporter.")
+	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context", "", "The context of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
 	cmd.Flags().SortFlags = false
@@ -368,27 +368,27 @@ func (c *exporterCommand) update(cmd *cobra.Command, _ []string) error {
 	}
 	if contextType != "" {
 		updateRequest.ContextType = contextType
-		if contextType == "CUSTOM" {
-			context, err := cmd.Flags().GetString("context")
-			if err != nil {
-				return err
-			}
-			updateRequest.Context = context
-		}
 	}
-	if cmd.Flags().Lookup("subjects").Changed {
-		subjects, err := cmd.Flags().GetString("subjects")
-		if err != nil {
-			return err
-		}
+	context, err := cmd.Flags().GetString("context")
+	if err != nil {
+		return err
+	}
+	if context != "" {
+		updateRequest.Context = context
+	}
+	subjects, err := cmd.Flags().GetString("subjects")
+	if err != nil {
+		return err
+	}
+	if subjects != "" {
 		subjectList := strings.Split(subjects, ",")
 		updateRequest.Subjects = subjectList
 	}
-	if cmd.Flags().Lookup("config-file").Changed {
-		configFile, err := cmd.Flags().GetString("config-file")
-		if err != nil {
-			return err
-		}
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	if configFile != "" {
 		configMap, err := readConfigsFromFile(configFile)
 		if err != nil {
 			return err
