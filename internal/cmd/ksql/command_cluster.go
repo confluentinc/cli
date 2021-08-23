@@ -7,6 +7,7 @@ import (
 	"github.com/dghubble/sling"
 	"golang.org/x/oauth2"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -223,8 +224,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
-		err = errors.CatchKSQLNotFoundError(err, args[0])
-		return err
+		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -236,8 +236,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	// Check KSQL exists
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
-		err = errors.CatchKSQLNotFoundError(err, args[0])
-		return err
+		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
 	// terminate cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
@@ -255,14 +254,14 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
 		client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
-		request := make(map[string]interface{})
+		request := make(map[string][]string)
 		request["deleteTopicList"] = []string{".*"}
 		response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
 		if err != nil {
 			return err
 		}
 
-		if response.StatusCode != 200 {
+		if response.StatusCode != http.StatusOK {
 			body, err := ioutil.ReadAll(response.Body)
 			if err != nil {
 				return err
