@@ -28,12 +28,11 @@ type KafkaEnvContext struct {
 }
 
 func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig) *KafkaClusterContext {
-	if ctx.Config.CLIName == "ccloud" && ctx.Credential.CredentialType == v2.Username {
+	if ctx.Config.IsCloud() && ctx.Credential.CredentialType == v2.Username {
 		return newKafkaClusterEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	} else {
 		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	}
-
 }
 
 func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig, ctx *Context) *KafkaClusterContext {

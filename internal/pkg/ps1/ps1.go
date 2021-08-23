@@ -9,6 +9,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	templatecolor "github.com/confluentinc/cli/internal/pkg/template-color"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -139,7 +140,7 @@ var (
 			}
 		}
 		return map[string]interface{}{
-			"CLIName":          cfg.CLIName,
+			"CLIName":          pversion.CLIName,
 			"ContextName":      cfg.CurrentContext,
 			"AccountId":        accountID,
 			"AccountName":      accountName,

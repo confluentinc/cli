@@ -154,11 +154,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*login.Command, *v3.Config) {
-	cfg := v3.New(&config.Params{
-		CLIName:    cliName,
-		MetricSink: nil,
-		Logger:     nil,
-	})
+	cfg := v3.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if cliName == "confluent" {
 		mdsConfig := mds.NewConfiguration()

@@ -174,7 +174,6 @@ type ACLTestSuite struct {
 
 func (suite *ACLTestSuite) SetupSuite() {
 	suite.conf = v3.AuthenticatedOnPremConfigMock()
-	suite.conf.CLIName = "confluent"
 }
 
 func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
