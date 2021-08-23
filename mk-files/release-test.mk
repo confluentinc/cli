@@ -25,7 +25,6 @@ test-installer:
 verify-binary:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	@$(caasenv-authenticate) && \
-	binary="confluent"; \
 	for os in linux darwin windows alpine; do \
 		for arch in arm64 amd64 386; do \
 			if [ "$${os}" != "darwin" ] && [ "$${arch}" = "arm64" ] ; then \
@@ -41,7 +40,7 @@ verify-binary:
 			if [ "$${os}" = "windows" ] ; then \
 				suffix=".exe"; \
 			fi ; \
-			FILE=$(VERIFY_BIN_FOLDER)/$${binary}-cli/binaries/$(CLEAN_VERSION)/$${binary}_$(CLEAN_VERSION)_$${os}_$${arch}$${suffix}; \
+			FILE=$(VERIFY_BIN_FOLDER)/$(BINARY)-cli/binaries/$(CLEAN_VERSION)/$(BINARY)_$(CLEAN_VERSION)_$${os}_$${arch}$${suffix}; \
 			echo "Checking binary: $${FILE}"; \
 			aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; }; \
 		done; \

@@ -1,7 +1,7 @@
 List Schema Registry clusters that are registered with the MDS cluster registry.
 
 Usage:
-  confluent schema-registry cluster list [flags]
+  cflt schema-registry cluster list [flags]
 
 Flags:
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")

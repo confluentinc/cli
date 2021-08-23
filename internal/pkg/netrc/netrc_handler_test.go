@@ -40,26 +40,26 @@ const (
 )
 
 var (
-	ccloudMachine = &Machine{
+	cloudMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:" + ccloudLoginContext,
 		User:     ccloudLogin,
 		Password: mockPassword,
 		IsSSO:    false,
 	}
 
-	ccloudDiffURLMachine = &Machine{
+	cloudDiffURLMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:login-" + ccloudDiffLogin + "-" + ccloudDiffURL,
 		User:     ccloudDiffLogin,
 		Password: mockPassword,
 		IsSSO:    false,
 	}
-	ccloudSSOMachine = &Machine{
+	cloudSSOMachine = &Machine{
 		Name:     "confluent-cli:ccloud-sso-refresh-token:" + ccloudSSOContext,
 		User:     ccloudSSOLogin,
 		Password: refreshToken,
 		IsSSO:    true,
 	}
-	confluentMachine = &Machine{
+	onPremMachine = &Machine{
 		Name:     "confluent-cli:mds-username-password:" + mdsContext,
 		User:     mdsLogin,
 		Password: mockPassword,
@@ -89,7 +89,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 	}{
 		{
 			name: "mds context",
-			want: confluentMachine,
+			want: onPremMachine,
 			params: NetrcMachineParams{
 				CLIName: "confluent",
 				CtxName: mdsContext,
@@ -98,7 +98,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		},
 		{
 			name: "ccloud login context",
-			want: ccloudMachine,
+			want: cloudMachine,
 			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: ccloudLoginContext,
@@ -107,7 +107,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		},
 		{
 			name: "ccloud sso context",
-			want: ccloudSSOMachine,
+			want: cloudSSOMachine,
 			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				CtxName: ccloudSSOContext,
@@ -186,8 +186,8 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		file    string
 	}{
 		{
-			name: "ccloud login with url",
-			want: ccloudMachine,
+			name: "cloud login with url",
+			want: cloudMachine,
 			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				URL:     loginURL,
@@ -195,16 +195,16 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			file: netrcFilePath,
 		},
 		{
-			name: "ccloud login no url",
-			want: ccloudDiffURLMachine,
+			name: "cloud login no url",
+			want: cloudDiffURLMachine,
 			params: NetrcMachineParams{
 				CLIName: "ccloud",
 			},
 			file: netrcFilePath,
 		},
 		{
-			name: "confluent login with url",
-			want: confluentMachine,
+			name: "on-prem login with url",
+			want: onPremMachine,
 			params: NetrcMachineParams{
 				CLIName: "confluent",
 				URL:     loginURL,
@@ -212,8 +212,8 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			file: netrcFilePath,
 		},
 		{
-			name: "ccloud sso with url",
-			want: ccloudSSOMachine,
+			name: "cloud sso with url",
+			want: cloudSSOMachine,
 			params: NetrcMachineParams{
 				CLIName: "ccloud",
 				IsSSO:   true,

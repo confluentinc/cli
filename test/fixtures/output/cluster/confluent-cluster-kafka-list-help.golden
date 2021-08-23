@@ -1,7 +1,7 @@
 List Kafka clusters that are registered with the MDS cluster registry.
 
 Usage:
-  confluent kafka cluster list [flags]
+  cflt kafka cluster list [flags]
 
 Flags:
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")

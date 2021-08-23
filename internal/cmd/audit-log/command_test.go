@@ -104,7 +104,7 @@ type MockCall struct {
 }
 
 func (suite *AuditConfigTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedConfluentConfigMock()
+	suite.conf = v3.AuthenticatedOnPremConfigMock()
 }
 
 func (suite *AuditConfigTestSuite) TearDownSuite() {

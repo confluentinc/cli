@@ -1,11 +1,14 @@
 package local
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -13,15 +16,15 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "current",
 			Short: "Get the path of the current Confluent run.",
-			Long:  `Print the filesystem path of the data and logs of the services managed by the current "confluent local" command. If such a path does not exist, it will be created.`,
+			Long:  fmt.Sprintf(`Print the filesystem path of the data and logs of the services managed by the current "%s local" command. If such a path does not exist, it will be created.`, pversion.CLIName),
 			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "In Linux, running `confluent local current` should resemble the following:",
+					Text: fmt.Sprintf("In Linux, running `%s local current` should resemble the following:", pversion.CLIName),
 					Code: "/tmp/confluent.SpBP4fQi",
 				},
 				examples.Example{
-					Text: "In macOS, running `confluent local current` should resemble the following:",
+					Text: fmt.Sprintf("In macOS, running `%s local current` should resemble the following:", pversion.CLIName),
 					Code: "/var/folders/cs/1rndf6593qb3kb6r89h50vgr0000gp/T/confluent.000000",
 				},
 			),

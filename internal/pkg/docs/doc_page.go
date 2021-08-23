@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // generateDocPage creates a file which contains the command description, usage, flags, examples, and more.
@@ -42,7 +43,7 @@ func printDocPage(tabs []Tab, depth int) []string {
 func printWarnings(cmd *cobra.Command, depth int) []string {
 	var rows []string
 
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+	if strings.HasPrefix(cmd.CommandPath(), pversion.CLIName+" local") {
 		include := strings.Repeat("../", depth) + "includes/cli.rst"
 		args := map[string]string{
 			"start-after": "cli_limitations_start",
@@ -90,17 +91,17 @@ func printDescriptionAndUsage(cmd *cobra.Command) ([]string, bool) {
 func printNotes(cmd *cobra.Command, depth int) []string {
 	var rows []string
 
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+	if strings.HasPrefix(cmd.CommandPath(), pversion.CLIName+" local") {
 		include := strings.Repeat("../", depth) + "includes/path-set-cli.rst"
 		rows = append(rows, printSphinxBlock("include", include, nil)...)
 	}
 
-	if strings.HasPrefix(cmd.CommandPath(), "confluent secret") {
+	if strings.HasPrefix(cmd.CommandPath(), pversion.CLIName+" secret") {
 		tip := "For examples, see :platform:`Secrets Usage Examples|security/secrets.html#secrets-examples`."
 		rows = append(rows, printSphinxBlock("tip", tip, nil)...)
 	}
 
-	if cmd.CommandPath() == "confluent iam rolebinding create" {
+	if cmd.CommandPath() == pversion.CLIName+" iam rolebinding create" {
 		note := "If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`."
 		rows = append(rows, printSphinxBlock("note", note, nil)...)
 	}

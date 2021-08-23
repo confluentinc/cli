@@ -37,7 +37,7 @@ func main() {
 
 	version := pversion.NewVersion(version, commit, date, host)
 
-	cli := cmd.NewConfluentCommand(cfg, isTest, version)
+	cli := cmd.New(cfg, isTest, version)
 
 	if err := cli.Execute(os.Args[1:]); err != nil {
 		if isTest {

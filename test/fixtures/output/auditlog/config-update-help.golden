@@ -1,7 +1,7 @@
 Submits an audit-log configuration specification JSON object to the API.
 
 Usage:
-  confluent audit-log config update [flags]
+  cflt audit-log config update [flags]
 
 Flags:
       --file string      A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.

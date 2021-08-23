@@ -75,7 +75,7 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-func NewCorruptedConfigError(format string, contextName string, cliName string, configFile string, logger *log.Logger) CLITypedError {
+func NewCorruptedConfigError(format, contextName, configFile string, logger *log.Logger) CLITypedError {
 	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
@@ -86,7 +86,7 @@ func NewCorruptedConfigError(format string, contextName string, cliName string, 
 	// logging stack trace of the error use pkg/errors error type
 	logger.Debugf("%+v", errorWithStackTrace)
 	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
-	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile, cliName, cliName)
+	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
 	return e
 }
 
@@ -103,13 +103,12 @@ func (e *CorruptedConfigError) UserFacingError() error {
 	return NewErrorWithSuggestions(e.errorMsg, e.suggestionsMsg)
 }
 
-func NewUpdateClientWrapError(err error, errorMsg string, cliName string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error(), cliName: cliName}
+func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
+	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
 }
 
 type UpdateClientError struct {
 	errorMsg string
-	cliName  string
 }
 
 func (e *UpdateClientError) Error() string {

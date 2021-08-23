@@ -9,6 +9,6 @@ func (s *CLITestSuite) TestCCloudAuditLogDescribe() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runCloudTest(tt)
 	}
 }

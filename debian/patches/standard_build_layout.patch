@@ -1,5 +1,5 @@
---- cli/Makefile	2021-08-02 15:19:10.000000000 -0600
-+++ debian/Makefile	2021-07-21 21:31:30.000000000 -0600
+--- cli/Makefile	2021-08-19 15:27:55.000000000 -0600
++++ debian/Makefile	2021-08-19 15:27:55.000000000 -0600
 @@ -1,205 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -19,7 +19,7 @@
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
--RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
+-RESOLVED_PATH=github.com/confluentinc/cli/cmd/cflt
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
@@ -95,7 +95,7 @@
 -
 -.PHONY: run
 -run:
--	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
+-	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/cflt/main.go $(RUN_ARGS)
 -
 -#
 -# END DEVELOPMENT HELPERS
@@ -112,9 +112,9 @@
 -
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
--	binary="confluent_test" ; \
+-	binary="cflt_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+-	go test ./cmd/cflt -ldflags="-buildmode=exe -s -w \
 -		-X $(RESOLVED_PATH).commit=$(REF) \
 -		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 -		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -124,9 +124,9 @@
 -
 -.PHONY: build-integ-race
 -build-integ-race:
--	binary="confluent_test_race" ; \
+-	binary="cflt_test_race" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+-	go test ./cmd/cflt -ldflags="-buildmode=exe -s -w \
 -		-X $(RESOLVED_PATH).commit=$(REF) \
 -		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 -		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -177,22 +177,22 @@
 +	mkdir -p $(DESTDIR)$(DOCPATH)
 +	mkdir -p $(DESTDIR)$(SYSCONFDIR)
 +
-+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
++	cp packaging/cflt.sh $(DESTDIR)$(BINPATH)/cflt
++	chmod 755 $(DESTDIR)$(BINPATH)/cflt
 +
 +	cd $(DESTDIR)$(LIBPATH) ; \
 +	for dir in darwin_amd64 darwin_arm64 linux_386 linux_amd64 windows_386 windows_amd64; do \
 +		mkdir -p $${dir} ; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
-+		filepath=$${dir}/confluent$${ext} ; \
-+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
++		filepath=$${dir}/cflt$${ext} ; \
++		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/cflt_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
 +		chmod 755 $${filepath} ; \
 +	done
  
 -cmd/lint/en_US.dic:
 -	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
++	$(DESTDIR)$(BINPATH)/cflt --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
  
 -.PHONY: lint-cli
 -lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
@@ -241,7 +241,7 @@
 -## Scan and validate third-party dependency licenses
 -lint-licenses: build
 -	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
--	@binary="confluent" ; \
+-	@binary="cflt" ; \
 -	echo Licenses for $${binary} binary ; \
 -	[ -t 0 ] && args="" || args="-plain" ; \
 -	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} || true

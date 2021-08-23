@@ -1,6 +1,5 @@
 package kafka
 
-// confluent kafka topic <commands>
 import (
 	"context"
 	"encoding/json"
@@ -16,9 +15,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // Info needed to complete kafka topic ...
@@ -70,7 +70,7 @@ func (topicCmd *topicCommand) init() {
 			examples.Example{
 				// on-prem examples are ccloud examples + "of a specified cluster (providing Kafka REST Proxy endpoint)."
 				Text: "List all topics of a specified cluster (providing Kafka REST Proxy endpoint).",
-				Code: "confluent kafka topic list --url http://localhost:8082",
+				Code: pversion.CLIName + " kafka topic list --url http://localhost:8082",
 			},
 		),
 	}
@@ -87,11 +87,11 @@ func (topicCmd *topicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
-				Code: "confluent kafka topic create my_topic --url http://localhost:8082",
+				Code: pversion.CLIName + " kafka topic create my_topic --url http://localhost:8082",
 			},
 			examples.Example{
 				Text: "Create a topic named `my_topic_2` with specified configuration parameters.",
-				Code: "confluent kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip",
+				Code: pversion.CLIName + " kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip",
 			}),
 	}
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
@@ -110,7 +110,7 @@ func (topicCmd *topicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topic `my_topic` at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.",
-				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
+				Code: pversion.CLIName + " kafka topic delete my_topic --url http://localhost:8082",
 			}),
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
@@ -125,7 +125,7 @@ func (topicCmd *topicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).",
-				Code: "confluent kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
+				Code: pversion.CLIName + " kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
 			}),
 	}
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
@@ -142,7 +142,7 @@ func (topicCmd *topicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic at specified cluster (providing Kafka REST Proxy endpoint).",
-				Code: "confluent kafka topic describe my_topic --url http://localhost:8082",
+				Code: pversion.CLIName + " kafka topic describe my_topic --url http://localhost:8082",
 			},
 		),
 	}
@@ -152,19 +152,6 @@ func (topicCmd *topicCommand) init() {
 	topicCmd.AddCommand(describeCmd)
 }
 
-//List Kafka topics.
-//
-//Usage:
-//confluent kafka topic list [flags]
-//
-//Flags:
-//--url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string    Path to client private key, include for mTLS authentication.
-//--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//-o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
-//--context string            CLI Context name.
 func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
@@ -193,22 +180,6 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 	return outputWriter.Out()
 }
 
-//Create a Kafka topic.
-//
-//Usage:
-//confluent kafka topic create <topic> [flags]
-//
-//Flags:
-//--url string                 Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string        Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string    Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string     Path to client private key, include for mTLS authentication.
-//--no-auth                    Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//--partitions int32           Number of topic partitions. (default 6)
-//--replication-factor int32   Number of replicas. (default 3)
-//--config strings             A comma-separated list of topic configuration ('key=value') overrides for the topic being created.
-//--if-not-exists              Exit gracefully if topic already exists.
-//--context string             CLI Context name.
 func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
@@ -283,18 +254,6 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 	return nil
 }
 
-//Delete a Kafka topic.
-//
-//Usage:
-//confluent kafka topic delete <topic> [flags]
-//
-//Flags:
-//--url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string    Path to client private key, include for mTLS authentication.
-//--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//--context string            CLI Context name.
 func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
@@ -315,19 +274,6 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 	return nil
 }
 
-//Update a Kafka topic.
-//
-//Usage:
-//confluent kafka topic update <topic> [flags]
-//
-//Flags:
-//--url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string    Path to client private key, include for mTLS authentication.
-//--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//--config strings            A comma-separated list of topics configuration ('key=value') overrides for the topic being created.
-//--context string            CLI Context name.
 func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []string) error {
 	// Parse Argument
 	topicName := args[0]
@@ -401,19 +347,6 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	return nil
 }
 
-//Describe a Kafka topic.
-//
-//Usage:
-//confluent kafka topic describe <topic> [flags]
-//
-//Flags:
-//--url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string    Path to client private key, include for mTLS authentication.
-//--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//-o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
-//--context string            CLI Context name.
 func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]

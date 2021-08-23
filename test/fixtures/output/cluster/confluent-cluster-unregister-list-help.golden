@@ -1,7 +1,7 @@
 Unregister cluster from the MDS cluster registry.
 
 Usage:
-  confluent cluster unregister [flags]
+  cflt cluster unregister [flags]
 
 Flags:
       --cluster-name string   REQUIRED: Cluster Name.

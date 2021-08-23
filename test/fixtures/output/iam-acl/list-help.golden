@@ -1,30 +1,26 @@
-Create a Kafka ACL.
+List Kafka ACLs for a resource.
 
 This command only works with centralized ACLs.
 
 Usage:
-  confluent iam acl create [flags]
+  cflt iam acl list [flags]
 
 Examples:
-Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:
+List all the ACLs for the specified Kafka cluster:
 
-  $ confluent iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>
+  $ cflt iam acl list --kafka-cluster-id <kafka-cluster-id>
 
-Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster.
+List all the ACLs for the specified cluster that include allow permissions for the user Jane:
 
-  $ confluent iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>
-
-Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster.
-
-  $ confluent iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>
+  $ cflt iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane
 
 Flags:
       --kafka-cluster-id string   REQUIRED: Kafka cluster ID for scope of ACL commands.
       --allow                     ACL permission to allow access.
       --deny                      ACL permission to restrict access to resource.
-      --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.
+      --principal string          Principal for this operation with User: or Group: prefix.
       --host string               Set host for access. Only IP addresses are supported. (default "*")
-      --operation string          REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --cluster-scope             Set the cluster resource. With this option the ACL grants
                                   access to the provided operations on the Kafka cluster itself.
       --consumer-group string     Set the Consumer Group resource.
@@ -33,6 +29,7 @@ Flags:
                                   operations on the topics that start with that prefix, depending on whether
                                   the --prefix option was also passed.
       --prefix                    Set to match all resource names prefixed with this value.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --context string            CLI context name.
 
 Global Flags:

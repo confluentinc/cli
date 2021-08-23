@@ -1,11 +1,11 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent kafka topic describe <topic> [flags]
+  cflt kafka topic describe <topic> [flags]
 
 Examples:
 Describe the `my_topic` topic.
 
-  $ confluent kafka topic describe my_topic
+  $ cflt kafka topic describe my_topic
 
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

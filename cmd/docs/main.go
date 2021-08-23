@@ -15,7 +15,7 @@ import (
 // This code is adapted from https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 
 func main() {
-	// Prevent printing the user's HOME in docs when generating confluent local services kafka
+	// Prevent printing the user's $HOME in docs
 	if err := os.Setenv("HOME", "$HOME"); err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 	for i, cfg := range configs {
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg, false, new(version.Version)).Command,
+			Command: cmd.New(cfg, false, new(version.Version)).Command,
 		}
 	}
 

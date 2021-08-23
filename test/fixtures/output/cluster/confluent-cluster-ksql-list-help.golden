@@ -1,7 +1,7 @@
 List ksqlDB clusters that are registered with the MDS cluster registry.
 
 Usage:
-  confluent ksql cluster list [flags]
+  cflt ksql cluster list [flags]
 
 Flags:
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")

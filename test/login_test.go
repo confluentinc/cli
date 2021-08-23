@@ -73,7 +73,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	}
 
 	for _, tt := range tests {
-		s.runCcloudTest(tt)
+		s.runCloudTest(tt)
 	}
 }
 
@@ -370,6 +370,6 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 
 	for _, tt := range tests {
 		tt.loginURL = s.TestBackend.GetMdsUrl()
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }

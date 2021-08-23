@@ -29,7 +29,7 @@ func (s *CLITestSuite) TestConfig() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runCloudTest(tt)
 	}
 }
 

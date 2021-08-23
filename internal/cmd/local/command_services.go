@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type Service struct {
@@ -187,11 +188,11 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Start all available services:",
-					Code: "confluent local services start",
+					Code: pversion.CLIName + " local services start",
 				},
 				examples.Example{
 					Text: "Start Apache Kafka® and ZooKeeper as its dependency:",
-					Code: "confluent local services kafka start",
+					Code: pversion.CLIName + " local services kafka start",
 				},
 			),
 		}, prerunner)
@@ -263,11 +264,11 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Stop all running services:",
-					Code: "confluent local services stop",
+					Code: pversion.CLIName + " local services stop",
 				},
 				examples.Example{
 					Text: "Stop Apache Kafka® and its dependent services.",
-					Code: "confluent local services kafka stop",
+					Code: pversion.CLIName + " local services kafka stop",
 				},
 			),
 		}, prerunner)

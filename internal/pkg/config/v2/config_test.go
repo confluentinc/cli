@@ -459,39 +459,19 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	type fields struct {
-		CLIName string
-	}
 	tests := []struct {
 		name    string
-		fields  fields
 		want    string
 		wantErr bool
 	}{
 		{
-			name: "config file for ccloud binary",
-			fields: fields{
-				CLIName: "ccloud",
-			},
-			want: filepath.FromSlash(os.Getenv("HOME") + "/.ccloud/config.json"),
-		},
-		{
-			name: "config file for confluent binary",
-			fields: fields{
-				CLIName: "confluent",
-			},
+			name: "config filepath is ~/.confluent/config.json",
 			want: filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
-		},
-		{
-			name:   "should default to ~/.confluent if CLIName isn't provided",
-			fields: fields{},
-			want:   filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := New(&config.Params{
-				CLIName:    tt.fields.CLIName,
 				MetricSink: nil,
 				Logger:     log.New(),
 			})

@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type migrateCmd struct {
@@ -45,7 +46,7 @@ func (c *migrateCmd) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Combine two audit log configuration files for clusters 'clusterA' and 'clusterB' with the following bootstrap servers and authority.",
-				Code: "confluent audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
+				Code: pversion.CLIName + " audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
 					"--bootstrap-servers logs.example.com:9092 --bootstrap-servers logs.example.com:9093 --authority mds.example.com",
 			},
 		),

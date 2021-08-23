@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 
 	"github.com/c-bata/go-prompt"
 
@@ -155,7 +156,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",
-				Code: "confluent kafka topic consume -b my_topic",
+				Code: pversion.CLIName + " kafka topic consume -b my_topic",
 			},
 		),
 	}
@@ -178,7 +179,7 @@ func (a *authenticatedTopicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all topics.",
-				Code: "confluent kafka topic list",
+				Code: pversion.CLIName + " kafka topic list",
 			},
 		),
 	}
@@ -194,7 +195,7 @@ func (a *authenticatedTopicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a topic named `my_topic` with default options.",
-				Code: "confluent kafka topic create my_topic",
+				Code: pversion.CLIName + " kafka topic create my_topic",
 			},
 		),
 	}
@@ -213,7 +214,7 @@ func (a *authenticatedTopicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic.",
-				Code: "confluent kafka topic describe my_topic",
+				Code: pversion.CLIName + " kafka topic describe my_topic",
 			},
 		),
 	}
@@ -229,7 +230,7 @@ func (a *authenticatedTopicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
-				Code: `confluent kafka topic update my_topic --config="retention.ms=259200000"`,
+				Code: pversion.CLIName + ` kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),
 	}
@@ -246,7 +247,7 @@ func (a *authenticatedTopicCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
-				Code: "confluent kafka topic delete my_topic\nconfluent kafka topic delete my_topic_avro",
+				Code: pversion.CLIName + " kafka topic delete my_topic\n" + pversion.CLIName + " kafka topic delete my_topic_avro",
 			},
 		),
 	}

@@ -1,6 +1,6 @@
 Error: required flag(s) "resource" not set
 Usage:
-  confluent api-key use <apikey> [flags]
+  cflt api-key use <apikey> [flags]
 
 Flags:
       --resource string   REQUIRED: The resource ID.

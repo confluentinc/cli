@@ -3,6 +3,7 @@ ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
+BINARY          := cflt
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -16,7 +17,7 @@ include ./mk-files/utils.mk
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
-RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
+RESOLVED_PATH=github.com/confluentinc/cli/cmd/cflt
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -67,7 +68,7 @@ endif
 
 .PHONY: run
 run:
-	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
+	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/cflt/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
@@ -84,9 +85,9 @@ build-integ:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	binary="confluent_test" ; \
+	binary="cflt_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+	go test ./cmd/cflt -ldflags="-buildmode=exe -s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -96,9 +97,9 @@ build-integ-nonrace:
 
 .PHONY: build-integ-race
 build-integ-race:
-	binary="confluent_test_race" ; \
+	binary="cflt_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+	go test ./cmd/cflt -ldflags="-buildmode=exe -s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -154,8 +155,7 @@ endif
 ## Scan and validate third-party dependency licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@binary="confluent" ; \
-	echo Licenses for $${binary} binary ; \
+	echo Licenses for $(BINARY) binary ; \
 	[ -t 0 ] && args="" || args="-plain" ; \
 	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} || true
 

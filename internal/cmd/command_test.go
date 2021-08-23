@@ -108,6 +108,6 @@ func TestHelp_OnPrem(t *testing.T) {
 }
 
 func runWithConfig(cfg *v3.Config) (string, error) {
-	cli := NewConfluentCommand(cfg, true, mockVersion)
+	cli := New(cfg, true, mockVersion)
 	return pcmd.ExecuteCommand(cli.Command, "help")
 }

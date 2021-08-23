@@ -16,7 +16,7 @@ func (s *CLITestSuite) TestPaymentDescribe() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }
 
@@ -35,6 +35,6 @@ func (s *CLITestSuite) TestPaymentUpdate() {
 	}
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }

@@ -52,20 +52,20 @@ install: apply-patches
 	mkdir -p $(DESTDIR)$(DOCPATH)
 	mkdir -p $(DESTDIR)$(SYSCONFDIR)
 
-	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+	cp packaging/cflt.sh $(DESTDIR)$(BINPATH)/cflt
+	chmod 755 $(DESTDIR)$(BINPATH)/cflt
 
 	cd $(DESTDIR)$(LIBPATH) ; \
 	for dir in darwin_amd64 darwin_arm64 linux_386 linux_amd64 windows_386 windows_amd64; do \
 		mkdir -p $${dir} ; \
 		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
-		filepath=$${dir}/confluent$${ext} ; \
-		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
+		filepath=$${dir}/cflt$${ext} ; \
+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/cflt_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
 		chmod 755 $${filepath} ; \
 	done
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+	$(DESTDIR)$(BINPATH)/cflt --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
 

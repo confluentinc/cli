@@ -12,10 +12,11 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
-	defaultConfigFileFmt = "%s/.%s/config.json"
+	defaultConfigFileFmt = "%s/.confluent/config.json"
 )
 
 var (
@@ -173,29 +174,7 @@ func (c *Config) SetContext(name string) error {
 
 // Name returns the display name for the CLI
 func (c *Config) Name() string {
-	name := "Confluent CLI"
-	if c.CLIName == "ccloud" {
-		name = "Confluent Cloud CLI"
-	}
-	return name
-}
-
-func (c *Config) Support() string {
-	support := "https://confluent.io; support@confluent.io"
-	if c.CLIName == "ccloud" {
-		support = "https://confluent.cloud; support@confluent.io"
-	}
-	return support
-}
-
-// APIName returns the display name of the remote API
-// (e.g., Confluent Platform or Confluent Cloud)
-func (c *Config) APIName() string {
-	name := "Confluent Platform"
-	if c.CLIName == "ccloud" {
-		name = "Confluent Cloud"
-	}
-	return name
+	return pversion.FullCLIName
 }
 
 // Context returns the current Context object.
@@ -203,11 +182,7 @@ func (c *Config) Context() (*Context, error) {
 	if c.CurrentContext == "" {
 		return nil, new(errors.NotLoggedInError)
 	}
-	context, err := c.FindContext(c.CurrentContext)
-	if err != nil {
-		return nil, err
-	}
-	return context, nil
+	return c.FindContext(c.CurrentContext)
 }
 
 // CredentialType returns the credential type of the current Context.
@@ -222,7 +197,7 @@ func (c *Config) CredentialType() (CredentialType, error) {
 	if cred, ok := c.Credentials[context.Credential]; ok {
 		return cred.CredentialType, nil
 	}
-	return -1, errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.CurrentContext, c.CLIName, c.Filename, c.Logger)
+	return -1, errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.CurrentContext, c.Filename, c.Logger)
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster for the current Context,
@@ -335,7 +310,7 @@ func (c *Config) DeleteUserAuth() error {
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
 	}
 	return c.Filename, nil
 }

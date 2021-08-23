@@ -11,25 +11,22 @@ import (
 func (s *CLITestSuite) TestAuditLogConfig() {
 	tests := []CLITest{
 		{
-			name:    "confluent audit-log config describe --help",
 			args:    "audit-log config describe --help",
-			fixture: "auditlog/confluent-audit-log-config-describe-help.golden",
+			fixture: "auditlog/config-describe-help.golden",
 		},
 		{
-			name:    "confluent audit-log config edit --help",
 			args:    "audit-log config edit --help",
-			fixture: "auditlog/confluent-audit-log-config-edit-help.golden",
+			fixture: "auditlog/config-edit-help.golden",
 		},
 		{
-			name:    "confluent audit-log config update --help",
 			args:    "audit-log config update --help",
-			fixture: "auditlog/confluent-audit-log-config-update-help.golden",
+			fixture: "auditlog/config-update-help.golden",
 		},
 	}
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -56,20 +53,18 @@ func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
 func (s *CLITestSuite) TestAuditLogRoute() {
 	tests := []CLITest{
 		{
-			name:    "confluent audit-log route list --help",
 			args:    "audit-log route list --help",
-			fixture: "auditlog/confluent-audit-log-route-list-help.golden",
+			fixture: "auditlog/route-list-help.golden",
 		},
 		{
-			name:    "confluent audit-log route lookup --help",
 			args:    "audit-log route lookup --help",
-			fixture: "auditlog/confluent-audit-log-route-lookup-help.golden",
+			fixture: "auditlog/route-lookup-help.golden",
 		},
 	}
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -99,6 +94,6 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }

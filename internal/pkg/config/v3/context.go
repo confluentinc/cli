@@ -49,7 +49,7 @@ func newContext(name string, platform *v2.Platform, credential *v2.Credential,
 
 func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {
 	if cluster.ID == "" {
-		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.Filename, c.Logger)
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, c.Name, cluster.ID)
@@ -94,13 +94,13 @@ func (c *Context) validateApiKeysDict(cluster *v1.KafkaClusterConfig) error {
 
 func (c *Context) validate() error {
 	if c.Name == "" {
-		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.Filename, c.Logger)
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.Filename, c.Logger)
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename, c.Logger)
 	}
 	if c.SchemaRegistryClusters == nil {
 		c.SchemaRegistryClusters = map[string]*v2.SchemaRegistryCluster{}

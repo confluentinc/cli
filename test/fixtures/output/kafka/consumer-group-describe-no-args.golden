@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent kafka consumer-group describe <consumer-group> [flags]
+  cflt kafka consumer-group describe <consumer-group> [flags]
 
 Examples:
 Describe the `my_consumer_group` consumer group.

@@ -24,7 +24,7 @@ func (s *CLITestSuite) TestCluster() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 
 	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "false")
@@ -44,6 +44,6 @@ func (s *CLITestSuite) TestClusterRegistry() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }

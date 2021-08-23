@@ -1,4 +1,4 @@
 Error: environment "non-existent-id" not found
 
 Suggestions:
-    List available environments with `confluent environment list`.
+    List available environments with `cflt environment list`.

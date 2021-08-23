@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var connectors = []string{
@@ -49,15 +50,15 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Print the current configuration of a connector named `s3-sink`:",
-					Code: "confluent local services connect connector config s3-sink",
+					Code: pversion.CLIName + " local services connect connector config s3-sink",
 				},
 				examples.Example{
 					Text: "Configure a connector named `wikipedia-file-source` by passing its configuration properties in JSON format.",
-					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.json",
+					Code: pversion.CLIName + " local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.json",
 				},
 				examples.Example{
 					Text: "Configure a connector named `wikipedia-file-source` by passing its configuration properties as Java properties.",
-					Code: "confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.properties",
+					Code: pversion.CLIName + " local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.properties",
 				},
 			),
 		}, prerunner)
@@ -194,7 +195,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Load a predefined connector called `s3-sink`:",
-					Code: "confluent local load s3-sink",
+					Code: pversion.CLIName + " local load s3-sink",
 				},
 			),
 		}, prerunner)
@@ -269,7 +270,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Unload a predefined connector called `s3-sink`:",
-					Code: "confluent local unload s3-sink",
+					Code: pversion.CLIName + " local unload s3-sink",
 				},
 			),
 		}, prerunner)

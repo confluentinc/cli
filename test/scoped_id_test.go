@@ -69,7 +69,7 @@ func (s *CLITestSuite) TestClusterScopedId() {
 	}
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 

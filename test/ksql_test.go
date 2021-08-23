@@ -27,6 +27,6 @@ func (s *CLITestSuite) TestKSQL() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt)
+		s.runCloudTest(tt)
 	}
 }

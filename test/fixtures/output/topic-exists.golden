@@ -1,4 +1,4 @@
 Error: topic "topic-exist" already exists for Kafka cluster "lkc-create-topic"
 
 Suggestions:
-    To list topics for the cluster "lkc-create-topic", use `confluent kafka topic list --cluster lkc-create-topic`.
+    To list topics for the cluster "lkc-create-topic", use `cflt kafka topic list --cluster lkc-create-topic`.

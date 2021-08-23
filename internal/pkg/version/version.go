@@ -19,7 +19,7 @@ type Version struct {
 }
 
 const (
-	CLIName     = "confluent"
+	CLIName     = "cflt"
 	FullCLIName = "Confluent CLI"
 )
 
@@ -61,11 +61,4 @@ Development: %s
 		runtime.GOOS,
 		runtime.GOARCH,
 		strconv.FormatBool(!v.IsReleased()))
-}
-
-func GetFullCLIName(cliName string) string {
-	if cliName == "ccloud" {
-		return "Confluent Cloud CLI"
-	}
-	return "Confluent CLI"
 }

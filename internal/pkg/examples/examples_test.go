@@ -14,10 +14,10 @@ func TestBuildExampleString(t *testing.T) {
 		},
 		Example{
 			Text: "Text",
-			Code: "confluent",
+			Code: "cflt",
 		},
 	)
 
-	want := "Text\n\n  Code\n\nText\n\n  $ confluent"
+	want := "Text\n\n  Code\n\nText\n\n  $ cflt"
 	require.Equal(t, want, got)
 }

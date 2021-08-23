@@ -1,12 +1,15 @@
 package local
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -18,8 +21,8 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
-					Text: "If you run the `confluent local destroy` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:",
-					Code: "confluent local destroy",
+					Text: fmt.Sprintf("If you run the `%s local destroy` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:", pversion.CLIName),
+					Code: pversion.CLIName + " local destroy",
 				},
 			),
 		}, prerunner)

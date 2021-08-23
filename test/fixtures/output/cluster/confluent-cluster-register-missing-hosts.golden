@@ -1,6 +1,6 @@
 Error: required flag(s) "hosts" not set
 Usage:
-  confluent cluster register [flags]
+  cflt cluster register [flags]
 
 Flags:
       --cluster-name string                 REQUIRED: Cluster name.

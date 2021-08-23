@@ -1,27 +1,27 @@
 Error: unknown flag: --cluster
 Usage:
-  confluent iam rolebinding list [flags]
+  cflt iam rolebinding list [flags]
 
 Examples:
 Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
-  $ confluent iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic
+  $ cflt iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic
 
 To list the role bindings for a specific principal:
 
-  $ confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo
+  $ cflt iam rolebinding list --kafka-cluster-id $CID --principal User:frodo
 
 To list the role bindings for a specific principal, filtered to a specific role:
 
-  $ confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead
+  $ cflt iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead
 
 To list the principals bound to a specific role:
 
-  $ confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite
+  $ cflt iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite
 
 To list the principals bound to a specific resource with a specific role:
 
-  $ confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties
+  $ cflt iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties
 
 Flags:
       --principal string                    Principal whose rolebindings should be listed.

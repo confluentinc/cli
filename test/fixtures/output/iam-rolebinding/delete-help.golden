@@ -1,7 +1,7 @@
 Delete an existing role binding.
 
 Usage:
-  confluent iam rolebinding delete [flags]
+  cflt iam rolebinding delete [flags]
 
 Flags:
       --role string                         REQUIRED: Role name of the existing role binding.

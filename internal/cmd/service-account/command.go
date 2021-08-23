@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -95,7 +96,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a service account named `DemoServiceAccount`.",
-				Code: `confluent service-account create DemoServiceAccount --description "This is a demo service account."`,
+				Code: pversion.CLIName + ` service-account create DemoServiceAccount --description "This is a demo service account."`,
 			},
 		),
 	}
@@ -113,7 +114,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update the description of a service account with resource ID `sa-lqv3mm`",
-				Code: `confluent service-account update sa-lqv3mm --description "Update demo service account information."`,
+				Code: pversion.CLIName + ` service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
 	}
@@ -130,7 +131,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a service account with resource ID `sa-lqv3mm`",
-				Code: "confluent service-account delete sa-lqv3mm",
+				Code: pversion.CLIName + " service-account delete sa-lqv3mm",
 			},
 		),
 	}

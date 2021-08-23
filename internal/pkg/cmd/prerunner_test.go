@@ -270,39 +270,39 @@ func Test_UpdateToken(t *testing.T) {
 		authToken string
 	}{
 		{
-			name:      "ccloud expired token",
+			name:      "cloud expired token",
 			isCloud:   true,
 			authToken: expiredAuthTokenForDevCloud,
 		},
 		{
-			name:      "ccloud empty token",
+			name:      "cloud empty token",
 			isCloud:   true,
 			authToken: "",
 		},
 		{
-			name:      "ccloud invalid token",
+			name:      "cloud invalid token",
 			isCloud:   true,
 			authToken: "jajajajaja",
 		},
 		{
-			name:      "ccloud jwt with no exp claim",
+			name:      "cloud jwt with no exp claim",
 			isCloud:   true,
 			authToken: jwtWithNoExp,
 		},
 		{
-			name:      "confluent expired token",
+			name:      "on-prem expired token",
 			authToken: expiredAuthTokenForDevCloud,
 		},
 		{
-			name:      "confluent empty token",
+			name:      "on-prem empty token",
 			authToken: "",
 		},
 		{
-			name:      "confluent invalid token",
+			name:      "on-prem invalid token",
 			authToken: "jajajajaja",
 		},
 		{
-			name:      "confluent jwt with no exp claim",
+			name:      "on-prem jwt with no exp claim",
 			authToken: jwtWithNoExp,
 		},
 	}
@@ -312,7 +312,7 @@ func Test_UpdateToken(t *testing.T) {
 			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedConfluentConfigMock()
+				cfg = v3.AuthenticatedOnPremConfigMock()
 			}
 
 			cfg.Context().State.AuthToken = tt.authToken
@@ -350,11 +350,11 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 	username := "csreesangkom"
 
-	ccloudCreds := &pauth.Credentials{
+	cloudCreds := &pauth.Credentials{
 		Username: username,
 		Password: "csreepassword",
 	}
-	confluentCreds := &pauth.Credentials{
+	onPremCreds := &pauth.Credentials{
 		Username:       username,
 		Password:       "csreepassword",
 		PrerunLoginURL: "http://localhost:8090",
@@ -372,29 +372,29 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			name:          "CCloud no env var credentials but successful login from netrc",
 			isCloud:       true,
 			envVarReturn:  credentialsFuncReturnValues{nil, nil},
-			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{cloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
 			name:          "Confluent no env var credentials but successful login from netrc",
 			envVarReturn:  credentialsFuncReturnValues{nil, nil},
-			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{onPremCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
 			name:          "CCloud successful login from env var",
 			isCloud:       true,
-			envVarReturn:  credentialsFuncReturnValues{ccloudCreds, nil},
-			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
+			envVarReturn:  credentialsFuncReturnValues{cloudCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{cloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  false,
 		},
 		{
 			name:          "Confluent successful login from env var",
-			envVarReturn:  credentialsFuncReturnValues{confluentCreds, nil},
-			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			envVarReturn:  credentialsFuncReturnValues{onPremCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{onPremCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  false,
 		},
@@ -402,14 +402,14 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			name:          "CCloud env var failed but netrc succeeds",
 			isCloud:       true,
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
-			netrcReturn:   credentialsFuncReturnValues{ccloudCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{cloudCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
 		{
 			name:          "Confluent env var failed but netrc succeeds",
 			envVarReturn:  credentialsFuncReturnValues{nil, errors.New("ENV VAR FAILED")},
-			netrcReturn:   credentialsFuncReturnValues{confluentCreds, nil},
+			netrcReturn:   credentialsFuncReturnValues{onPremCreds, nil},
 			envVarChecked: true,
 			netrcChecked:  true,
 		},
@@ -437,7 +437,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedConfluentConfigMock()
+				cfg = v3.AuthenticatedOnPremConfigMock()
 			}
 			err := pauth.PersistLogoutToConfig(cfg)
 			require.NoError(t, err)
@@ -546,11 +546,11 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 		isCloud bool
 	}{
 		{
-			name:    "ccloud logged in user",
+			name:    "cloud logged in user",
 			isCloud: true,
 		},
 		{
-			name: "confluent logged in user",
+			name: "on-prem logged in user",
 		},
 	}
 	for _, tt := range tests {
@@ -559,7 +559,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedConfluentConfigMock()
+				cfg = v3.AuthenticatedOnPremConfigMock()
 			}
 			cfg.Context().State.AuthToken = validAuthToken
 
@@ -840,7 +840,7 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 }
 
 func TestInitializeOnPremKafkaRest(t *testing.T) {
-	cfg := v3.AuthenticatedConfluentConfigMock()
+	cfg := v3.AuthenticatedOnPremConfigMock()
 	cfg.Context().State.AuthToken = validAuthToken
 	r := getPreRunBase()
 	r.Config = cfg

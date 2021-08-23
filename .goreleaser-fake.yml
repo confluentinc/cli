@@ -1,6 +1,6 @@
-project_name: confluent
+project_name: cflt
 
-dist: dist/confluent
+dist: dist/cflt
 
 before:
   hooks:
@@ -14,12 +14,12 @@ before:
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   -
-    binary: confluent
-    main: cmd/confluent/main.go
+    binary: cflt
+    main: cmd/cflt/main.go
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=cflt
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:

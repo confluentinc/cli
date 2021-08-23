@@ -1,7 +1,7 @@
-Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).
+Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.
 
 Usage:
-  confluent audit-log config edit [flags]
+  cflt audit-log route lookup <crn> [flags]
 
 Flags:
       --context string   CLI context name.

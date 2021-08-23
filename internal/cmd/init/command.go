@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -33,7 +34,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient a
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Initialize and set a current context of name "new context":`,
-				Code: `confluent init "new context" --kafka-auth`,
+				Code: pversion.CLIName + ` init "new context" --kafka-auth`,
 			},
 		),
 	}

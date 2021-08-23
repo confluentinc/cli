@@ -117,11 +117,10 @@ func NewCloudTestBackendFromRouters(cloudRouter *CloudRouter, kafkaRouter *Kafka
 }
 
 // Creates and returns new TestBackend struct with passed MdsRouter
-// Use this to spin up a backend for a confluent cli test that requires non-default endpoint behavior or needs additional endpoints
+// Use this to spin up a backend for an integration test that requires non-default endpoint behavior or needs additional endpoints
 // Define/override the endpoints on the mdsRouter
 func NewConfluentTestBackendFromRouter(mdsRouter *MdsRouter) *TestBackend {
-	confluent := &TestBackend{
+	return &TestBackend{
 		mds: httptest.NewServer(mdsRouter),
 	}
-	return confluent
 }

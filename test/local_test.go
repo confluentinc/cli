@@ -23,7 +23,7 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -40,7 +40,7 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -57,7 +57,7 @@ func (s *CLITestSuite) TestLocalVersion() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -73,7 +73,7 @@ func (s *CLITestSuite) TestLocalServicesList() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -91,7 +91,7 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -111,7 +111,7 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 

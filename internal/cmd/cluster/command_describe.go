@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type Metadata interface {
@@ -74,7 +75,7 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Discover the cluster ID and Kafka ID for Connect.",
-					Code: "confluent cluster describe --url http://localhost:8083",
+					Code: pversion.CLIName + " cluster describe --url http://localhost:8083",
 				},
 			),
 		}, prerunner),

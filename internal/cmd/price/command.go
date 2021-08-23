@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -97,7 +98,7 @@ func (c *command) newListCommand() *cobra.Command {
 	// Required flags
 	command.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", mapToList(formatCloud)))
 	_ = command.MarkFlagRequired("cloud")
-	command.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
+	command.Flags().String("region", "", fmt.Sprintf(`Cloud region ID for cluster (use "%s kafka region list" to see all).`, pversion.CLIName))
 	_ = command.MarkFlagRequired("region")
 
 	// Extra filtering flags

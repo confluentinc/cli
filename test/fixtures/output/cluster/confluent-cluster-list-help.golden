@@ -1,7 +1,7 @@
 List clusters that are registered with the MDS cluster registry.
 
 Usage:
-  confluent cluster list [flags]
+  cflt cluster list [flags]
 
 Flags:
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")

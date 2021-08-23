@@ -141,7 +141,7 @@ func (s *CLITestSuite) TestKafka() {
 	for _, tt := range tests {
 		tt.login = "default"
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runCloudTest(tt)
 	}
 }
 
@@ -187,7 +187,7 @@ func (s *CLITestSuite) TestKafka() {
 //	for _, tt := range tests {
 //		tt.login = "default"
 //		tt.workflow = true
-//		s.runCcloudTest(tt)
+//		s.runCloudTest(tt)
 //	}
 //}
 
@@ -214,7 +214,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runOnPremTest(clitest)
 	}
 }
 
@@ -223,7 +223,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 	tests := []CLITest{
 		// <topic> errors
 		{args: fmt.Sprintf("kafka topic create --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
-		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --no-auth", kafkaRestURL), contains: "Error: topic \"topic-exist\" already exists for the Kafka cluster\n\nSuggestions:\n    To list topics for the cluster, use `confluent kafka topic list --url <url>`.", wantErrCode: 1, name: "creating topic with existing topic name should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --no-auth", kafkaRestURL), contains: "Error: topic \"topic-exist\" already exists for the Kafka cluster\n\nSuggestions:\n    To list topics for the cluster, use `cflt kafka topic list --url <url>`.", wantErrCode: 1, name: "creating topic with existing topic name should fail"},
 		// --partitions errors
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -2 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Number of partitions must be larger than 0. (40002)\n", wantErrCode: 1, name: "creating topic with negative partitions name should fail"},
 		// --replication-factor errors
@@ -244,7 +244,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runOnPremTest(clitest)
 	}
 }
 
@@ -257,7 +257,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicDelete() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runOnPremTest(clitest)
 	}
 }
 
@@ -281,7 +281,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runOnPremTest(clitest)
 	}
 }
 
@@ -301,7 +301,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicDescribe() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runOnPremTest(clitest)
 	}
 }
 
@@ -331,6 +331,6 @@ func (s *CLITestSuite) TestConfluentKafkaACL() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runOnPremTest(clitest)
 	}
 }

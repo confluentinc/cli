@@ -617,10 +617,10 @@ func TestConfig_getFilename(t *testing.T) {
 
 func TestConfig_AddContext(t *testing.T) {
 	filename := "/tmp/TestConfig_AddContext.json"
-	conf := AuthenticatedConfluentConfigMock()
+	conf := AuthenticatedOnPremConfigMock()
 	conf.Filename = filename
 	context := conf.Context()
-	noContextConf := AuthenticatedConfluentConfigMock()
+	noContextConf := AuthenticatedOnPremConfigMock()
 	noContextConf.Filename = filename
 	delete(noContextConf.Contexts, noContextConf.Context().Name)
 	noContextConf.CurrentContext = ""

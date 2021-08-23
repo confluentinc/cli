@@ -1,6 +1,6 @@
 Error: type should be one of connect-cluster, kafka-cluster, ksql-cluster, schema-registry-cluster
 Usage:
-  confluent cluster list [flags]
+  cflt cluster list [flags]
 
 Flags:
       --type string     Filter list to this cluster type (connect-cluster, kafka-cluster, ksql-cluster, schema-registry-cluster).

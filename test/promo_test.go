@@ -10,7 +10,7 @@ func (s *CLITestSuite) TestPromoAdd() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }
 
@@ -28,6 +28,6 @@ func (s *CLITestSuite) TestPromoList() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }

@@ -63,7 +63,7 @@ func AuthenticatedCloudConfigMock() *Config {
 	return AuthenticatedConfigMock(params)
 }
 
-func AuthenticatedConfluentConfigMock() *Config {
+func AuthenticatedOnPremConfigMock() *Config {
 	params := mockConfigParams{
 		cliName:        "confluent",
 		contextName:    mockContextName,

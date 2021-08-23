@@ -22,6 +22,6 @@ func (s *CLITestSuite) TestCloudSignup() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }

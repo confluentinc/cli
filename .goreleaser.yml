@@ -1,6 +1,6 @@
-project_name: confluent
+project_name: cflt
 
-dist: dist/confluent
+dist: dist/cflt
 
 before:
   hooks:
@@ -13,12 +13,12 @@ before:
 # NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
-  - binary: confluent
-    main: cmd/confluent/main.go
+  - binary: cflt
+    main: cmd/cflt/main.go
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent -buildmode=exe
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=cflt -buildmode=exe
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
@@ -29,13 +29,13 @@ builds:
     goarch:
       - amd64
       - 386
-  - binary: confluent
+  - binary: cflt
     id: signed-amd64
-    main: cmd/confluent/main.go
+    main: cmd/cflt/main.go
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=cflt
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
@@ -48,16 +48,16 @@ builds:
       post:
         - cmd: make download-licenses
           env:
-            - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/confluent/signed-amd64_darwin_amd64/confluent
-        - cmd: gon gon_confluent_amd64.hcl
-  - binary: confluent
+            - LICENSE_BIN=cflt
+            - LICENSE_BIN_PATH=./dist/cflt/signed-amd64_darwin_amd64/cflt
+        - cmd: gon gon_cflt_amd64.hcl
+  - binary: cflt
     id: signed-arm64
-    main: cmd/confluent/main.go
+    main: cmd/cflt/main.go
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -X main.cliName=cflt
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
@@ -70,9 +70,9 @@ builds:
       post:
         - cmd: make download-licenses
           env:
-            - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/confluent/signed-arm64_darwin_arm64/confluent
-        - cmd: gon gon_confluent_arm64.hcl
+            - LICENSE_BIN=cflt
+            - LICENSE_BIN_PATH=./dist/cflt/signed-arm64_darwin_arm64/cflt
+        - cmd: gon gon_cflt_arm64.hcl
 
 release:
   disable: true

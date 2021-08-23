@@ -1,7 +1,7 @@
 Manage your Confluent Cloud or Confluent Platform. Log in to see all available commands.
 
 Usage:
-  confluent [command]
+  cflt [command]
 
 Available Commands:
   cloud-signup Sign up for Confluent Cloud.
@@ -21,4 +21,4 @@ Flags:
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
       --version         Show version of the Confluent CLI.
 
-Use "confluent [command] --help" for more information about a command.
+Use "cflt [command] --help" for more information about a command.

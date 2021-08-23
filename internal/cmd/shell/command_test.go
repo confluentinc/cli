@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -36,7 +37,7 @@ func Test_prefixState(t *testing.T) {
 					return cfg
 				}(),
 			},
-			wantText:  "confluent > ",
+			wantText:  pversion.CLIName + " > ",
 			wantColor: candyAppleGreen,
 		},
 		{
@@ -44,7 +45,7 @@ func Test_prefixState(t *testing.T) {
 			args: args{
 				config: v3.UnauthenticatedCloudConfigMock(),
 			},
-			wantText:  "confluent > ",
+			wantText:  pversion.CLIName + " > ",
 			wantColor: watermelonRed,
 		},
 	}

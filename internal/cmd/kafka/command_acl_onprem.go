@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -41,7 +42,7 @@ func (aclCmd *aclOnPremCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: `cluster-scope`, `consumer-group`, `topic`, or `transactional-id`. For example, for a consumer to read a topic, you need to grant `READ` and `DESCRIBE` both on the `consumer-group` and the `topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1\nconfluent kafka acl create --allow --Group:Finance --operation READ --operation DESCRIBE --topic '*'",
+				Code: pversion.CLIName + " kafka acl create --allow --User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1\n" + pversion.CLIName + " kafka acl create --allow --Group:Finance --operation READ --operation DESCRIBE --topic '*'",
 			}),
 	}
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -58,7 +59,7 @@ func (aclCmd *aclOnPremCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete all READ access ACLs for the specified user:",
-				Code: "confluent kafka acl delete --operation READ --allow --topic Test --principal User:Jane --host '*'",
+				Code: pversion.CLIName + " kafka acl delete --operation READ --allow --topic Test --principal User:Jane --host '*'",
 			}),
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -75,11 +76,11 @@ func (aclCmd *aclOnPremCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the local ACLs for the Kafka cluster:",
-				Code: "confluent kafka acl list",
+				Code: pversion.CLIName + " kafka acl list",
 			},
 			examples.Example{
 				Text: "List all the ACLs for the Kafka cluster that include allow permissions for the user Jane:",
-				Code: "confluent kafka acl list --allow --principal User:Jane",
+				Code: pversion.CLIName + " kafka acl list --allow --principal User:Jane",
 			},
 		),
 	}

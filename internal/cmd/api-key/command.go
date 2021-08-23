@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -88,7 +89,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List the API keys that belong to service account with resource ID `sa-lqv3mm` on cluster `lkc-xyz`",
-				Code: `confluent api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
+				Code: pversion.CLIName + ` api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
 			},
 		),
 	}
@@ -107,7 +108,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`",
-				Code: `confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
+				Code: pversion.CLIName + ` api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
 			},
 		),
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func TestPrintDocPage(t *testing.T) {
@@ -138,9 +139,9 @@ func TestPrintWarnings_NoWarnings(t *testing.T) {
 }
 
 func TestPrintWarnings_ConfluentLocal(t *testing.T) {
-	confluent := &cobra.Command{Use: "confluent"}
+	root := &cobra.Command{Use: pversion.CLIName}
 	local := &cobra.Command{Use: "local"}
-	confluent.AddCommand(local)
+	root.AddCommand(local)
 
 	expected := []string{
 		".. include:: ../includes/cli.rst",
@@ -203,9 +204,9 @@ func TestPrintNotes_NoNotes(t *testing.T) {
 }
 
 func TestPrintNotes_ConfluentLocal(t *testing.T) {
-	confluent := &cobra.Command{Use: "confluent"}
+	root := &cobra.Command{Use: pversion.CLIName}
 	local := &cobra.Command{Use: "local"}
-	confluent.AddCommand(local)
+	root.AddCommand(local)
 
 	expected := []string{
 		".. include:: ../includes/path-set-cli.rst",
@@ -216,12 +217,12 @@ func TestPrintNotes_ConfluentLocal(t *testing.T) {
 }
 
 func TestPrintNotes_ConfluentIAMRolebindingCreate(t *testing.T) {
-	confluent := &cobra.Command{Use: "confluent"}
+	root := &cobra.Command{Use: pversion.CLIName}
 	iam := &cobra.Command{Use: "iam"}
 	rolebinding := &cobra.Command{Use: "rolebinding"}
 	create := &cobra.Command{Use: "create"}
 
-	confluent.AddCommand(iam)
+	root.AddCommand(iam)
 	iam.AddCommand(rolebinding)
 	rolebinding.AddCommand(create)
 
@@ -234,9 +235,9 @@ func TestPrintNotes_ConfluentIAMRolebindingCreate(t *testing.T) {
 }
 
 func TestPrintNotes_ConfluentSecret(t *testing.T) {
-	confluent := &cobra.Command{Use: "confluent"}
+	root := &cobra.Command{Use: pversion.CLIName}
 	secret := &cobra.Command{Use: "secret"}
-	confluent.AddCommand(secret)
+	root.AddCommand(secret)
 
 	expected := []string{
 		".. tip:: For examples, see :platform:`Secrets Usage Examples|security/secrets.html#secrets-examples`.",

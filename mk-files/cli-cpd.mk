@@ -18,4 +18,4 @@ run-system-tests:
 .PHONY: replace-cli-binary
 replace-cli-binary:
 	echo $$(ls)
-	cp ./dist/confluent/confluent_linux_amd64/confluent $(CC_SYSTEM_TEST_CHECKOUT_DIR)/test/cli/cli_bin/linux_amd64/confluent 
+	cp ./dist/cflt/cflt_linux_amd64/cflt $(CC_SYSTEM_TEST_CHECKOUT_DIR)/test/cli/cli_bin/linux_amd64/cflt 

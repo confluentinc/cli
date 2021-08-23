@@ -238,7 +238,7 @@ func main() {
 
 	code := 0
 	for _, cfg := range configs {
-		cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
+		cli := cmd.New(cfg, true, new(version.Version))
 		if err := l.Lint(cli.Command); err != nil {
 			fmt.Printf("For context \"%s\", %v", cfg.CurrentContext, err)
 			code = 1

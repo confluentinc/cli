@@ -91,20 +91,20 @@ To download a tarball for your OS and architecture:
     VERSION=v0.95.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=confluent_${VERSION}_${OS}_${ARCH}.tar.gz
+    FILE=cflt_${VERSION}_${OS}_${ARCH}.tar.gz
     curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI:
 
     tar -xzvf ${FILE}
-    sudo mv confluent/confluent /usr/local/bin
+    sudo mv cflt/cflt /usr/local/bin
 
 ### Building From Source
 
 ```
 $ make deps
 $ make build
-$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
+$ dist/cflt/cflt_$(go env GOOS)_$(go env GOARCH)/cflt -h
 ```
 
 If `make deps` fails with an "unknown revision" error, you probably need to put your username and a
@@ -159,8 +159,8 @@ This repo follows the [golang standard project layout](https://github.com/golang
 
 Here's the basic file structure:
 
-* `cmd/confluent/main.go` - entrypoint for the CLI binary
-* `internal/cmd/command.go` - bootstraps the root `confluent` CLI command
+* `cmd/cflt/main.go` - entrypoint for the CLI binary
+* `internal/cmd/command.go` - bootstraps the root `cflt` CLI command
 * `internal/cmd/<command>/<command>.go` - defines each command we support
 
 Things under `internal/cmd` are commands, things under `internal/pkg` are packages to be used by commands.
@@ -218,7 +218,7 @@ Note: you can verify whether a macOS binary is signed and notarized correctly
 by running `spctl -a -vvv -t install <binary name>`.  If all is good, you
 should see output like
 ```
-dist/confluent/confluent_darwin_amd64/confluent: accepted
+dist/cflt/cflt_darwin_amd64/cflt: accepted
 source=Notarized Developer ID
 origin=Developer ID Application: Confluent, Inc. (RTSX8FNWR2)
 ```
@@ -348,9 +348,9 @@ INT_TEST_ARGS is can also be used with `make test` target, if you want to filter
 ### Command Overview
 Commands in the CLI follow the following syntax:
 
-`confluent <resource> [subresource] <standard-verb> [args]`
+`cflt <resource> [subresource] <standard-verb> [args]`
 
-We'll be implementing a `confluent config file show <num-times>` command that outputs the config file of the CLI a specified number of times. For example, `confluent config file 3` might output:
+We'll be implementing a `cflt config file show <num-times>` command that outputs the config file of the CLI a specified number of times. For example, `cflt config file 3` might output:
 ```
 ~/.confluent/config.json
 ~/.confluent/config.json
@@ -436,13 +436,13 @@ See [error.md](errors.md) for details.
 ### Registering the Command
 We must register our newly created command with the top-level `config` command located at `internal/cmd/config/command.go`. We add it to the `config` command with `c.AddCommand(NewFileCommand(c.prerunner, c.analytics))`.
 
-With an entirely new command, we would also need to register it with the base top-level command (`confluent`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
+With an entirely new command, we would also need to register it with the base top-level command (`cflt`) located at `internal/cmd/command.go`, using the same `AddCommand` syntax. Since the `config` is already registered, we can skip this step.
 
 ### Building
 To build the CLI binary, we run `make build`. After this, we can run our command in the following way, and see that it (hopefully) works!
 
 ```
-dist/confluent/confluent_<platform>_<arch>/confluent config file show 3
+dist/cflt/cflt_<platform>_<arch>/cflt config file show 3
 ```
 
 ### Integration Testing

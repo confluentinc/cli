@@ -3,7 +3,7 @@ set -e
 
 # This script is designed to live in a Confluent Platform tarball distribution.
 # It depends on the CLI binaries for different OS/ARCH combinations living at
-#   ../libexec/cli/${OS}_${ARCH}/confluent
+#   ../libexec/cli/${OS}_${ARCH}/cflt
 
 is_supported_platform() {
   platform=$1
@@ -50,7 +50,7 @@ check_executable() {
     # optional logging goes here
     true
   else
-    log_crit "executable $EXECUTABLE does not exist.  Make sure this script is up-to-date and resides at bin/confluent in the Confluent Platform release directory."
+    log_crit "executable $EXECUTABLE does not exist.  Make sure this script is up-to-date and resides at bin/cflt in the Confluent Platform release directory."
     exit 1
   fi
 }
@@ -198,9 +198,9 @@ End of functions from https://github.com/client9/shlib
 ------------------------------------------------------------------------
 EOF
 
-OWNER=confluentinc
+OWNER="confluentinc"
 REPO="cli"
-BINARY=confluent
+BINARY="cflt"
 OS=$(uname_os)
 ARCH=$(uname_arch)
 PREFIX="${OWNER}/${REPO}"

@@ -10,7 +10,7 @@ func (s *CLITestSuite) TestUserList() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }
 
@@ -34,7 +34,7 @@ func (s *CLITestSuite) TestUserDescribe() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }
 
@@ -58,7 +58,7 @@ func (s *CLITestSuite) TestUserDelete() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }
 
@@ -82,6 +82,6 @@ func (s *CLITestSuite) TestUserInvite() {
 
 	for _, test := range tests {
 		test.login = "default"
-		s.runCcloudTest(test)
+		s.runCloudTest(test)
 	}
 }

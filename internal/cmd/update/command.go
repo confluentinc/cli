@@ -22,22 +22,22 @@ import (
 const (
 	S3BinBucket          = "confluent.cloud"
 	S3BinRegion          = "us-west-2"
-	S3BinPrefix          = "%s-cli/binaries"
-	S3ReleaseNotesPrefix = "%s-cli/release-notes"
-	CheckFileFmt         = "%s/.%s/update_check"
+	S3BinPrefix          = "cli/binaries"
+	S3ReleaseNotesPrefix = "cli/release-notes"
+	CheckFileFmt         = "%s/.confluent/update_check"
 	CheckInterval        = 24 * time.Hour
 )
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
+func NewClient(disableUpdateCheck bool, logger *log.Logger) update.Client {
 	// The following function will never err, since "_" is a valid separator.
-	objectKey, _ := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
+	objectKey, _ := s3.NewPrefixedKey(S3BinPrefix, "_", true)
 
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:          S3BinRegion,
 		S3BinBucket:          S3BinBucket,
-		S3BinPrefix:          fmt.Sprintf(S3BinPrefix, cliName),
-		S3ReleaseNotesPrefix: fmt.Sprintf(S3ReleaseNotesPrefix, cliName),
+		S3BinPrefix:          S3BinPrefix,
+		S3ReleaseNotesPrefix: S3ReleaseNotesPrefix,
 		S3ObjectKey:          objectKey,
 		Logger:               logger,
 	})
@@ -45,7 +45,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) upda
 	return update.NewClient(&update.ClientParams{
 		Repository:    repo,
 		DisableCheck:  disableUpdateCheck,
-		CheckFile:     fmt.Sprintf(CheckFileFmt, homedir, cliName),
+		CheckFile:     fmt.Sprintf(CheckFileFmt, homedir),
 		CheckInterval: CheckInterval,
 		Logger:        logger,
 		Out:           os.Stdout,
@@ -92,7 +92,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, pversion.CLIName)
+		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
 
 	if !updateAvailable {
@@ -117,7 +117,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := c.client.UpdateBinary(pversion.CLIName, latestVersion, oldBin); err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, pversion.CLIName)
+		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}
 	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, pversion.CLIName)
 

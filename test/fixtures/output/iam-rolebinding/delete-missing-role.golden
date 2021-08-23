@@ -1,6 +1,6 @@
 Error: required flag(s) "role" not set
 Usage:
-  confluent iam rolebinding delete [flags]
+  cflt iam rolebinding delete [flags]
 
 Flags:
       --role string            REQUIRED: Role name of the existing role binding.

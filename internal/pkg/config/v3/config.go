@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	defaultConfigFileFmt = "%s/.%s/config.json"
+	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
 )
 
@@ -73,19 +73,14 @@ func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
 
 // NewBaseConfig initializes a new Config object
 func New(params *config.Params) *Config {
-	c := &Config{}
-	baseCfg := config.NewBaseConfig(params, Version)
-	c.BaseConfig = baseCfg
-	if c.CLIName == "" {
-		// HACK: this is a workaround while we're building multiple binaries off one codebase
-		c.CLIName = "confluent"
+	return &Config{
+		BaseConfig:    config.NewBaseConfig(params, Version),
+		Platforms:     make(map[string]*v2.Platform),
+		Credentials:   make(map[string]*v2.Credential),
+		Contexts:      make(map[string]*Context),
+		ContextStates: make(map[string]*v2.ContextState),
+		AnonymousId:   uuid.New().String(),
 	}
-	c.Platforms = map[string]*v2.Platform{}
-	c.Credentials = map[string]*v2.Credential{}
-	c.Contexts = map[string]*Context{}
-	c.ContextStates = map[string]*v2.ContextState{}
-	c.AnonymousId = uuid.New().String()
-	return c
 }
 
 // Load reads the CLI config from disk.
@@ -120,13 +115,13 @@ func (c *Config) Load() error {
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
-			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename, c.Logger)
 		}
 		if context.CredentialName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename, c.Logger)
 		}
 		if context.PlatformName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename, c.Logger)
 		}
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
@@ -134,7 +129,7 @@ func (c *Config) Load() error {
 		context.Logger = c.Logger
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename, c.Logger)
 		}
 		context.KafkaClusterContext.Context = context
 	}
@@ -247,7 +242,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			c.Logger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename, c.Logger)
 		}
 	}
 	// Validate that every context:
@@ -261,25 +256,25 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			c.Logger.Trace("unspecified credential error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename, c.Logger)
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			c.Logger.Trace("unspecified platform error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename, c.Logger)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(v2.ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
 			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
-			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename, c.Logger)
 		}
 	}
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			c.Logger.Trace("context state mapped to nonexistent context")
-			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.CLIName, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename, c.Logger)
 		}
 	}
 
@@ -400,7 +395,7 @@ func (c *Config) HasLogin() bool {
 	if ctx == nil {
 		return false
 	}
-	if c.CLIName == "ccloud" {
+	if c.IsCloud() {
 		return ctx.hasCCloudLogin()
 	}
 	return ctx.HasMDSLogin()
@@ -414,7 +409,7 @@ func (c *Config) ResetAnonymousId() error {
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, "confluent"))
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
 	}
 	return c.Filename, nil
 }

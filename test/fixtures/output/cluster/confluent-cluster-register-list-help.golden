@@ -1,7 +1,7 @@
 Register cluster with the MDS cluster registry.
 
 Usage:
-  confluent cluster register [flags]
+  cflt cluster register [flags]
 
 Flags:
       --cluster-name string                 REQUIRED: Cluster name.

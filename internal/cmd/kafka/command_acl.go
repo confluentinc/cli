@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
@@ -55,7 +56,7 @@ func (c *aclCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: `cluster`, `consumer-group`, `topic`, or `transactional-id`. For example, for a consumer to read a topic, you need to grant `READ` and `DESCRIBE` both on the `consumer-group` and the `topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1\nconfluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic '*'",
+				Code: pversion.CLIName + " kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1\n" + pversion.CLIName + " kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic '*'",
 			},
 		),
 	}

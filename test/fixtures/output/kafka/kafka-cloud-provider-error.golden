@@ -1,4 +1,4 @@
 Error: "oops" is not an available cloud provider
 
 Suggestions:
-    To view a list of available cloud providers and regions, use `confluent kafka region list`.
+    To view a list of available cloud providers and regions, use `cflt kafka region list`.

@@ -173,7 +173,7 @@ type ACLTestSuite struct {
 }
 
 func (suite *ACLTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedConfluentConfigMock()
+	suite.conf = v3.AuthenticatedOnPremConfigMock()
 	suite.conf.CLIName = "confluent"
 }
 

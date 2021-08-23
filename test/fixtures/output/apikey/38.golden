@@ -1,11 +1,11 @@
 Error: required flag(s) "resource" not set
 Usage:
-  confluent api-key create [flags]
+  cflt api-key create [flags]
 
 Examples:
 Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`
 
-  $ confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm
+  $ cflt api-key create --resource lkc-xyz --service-account sa-lqv3mm
 
 Flags:
       --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.

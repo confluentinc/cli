@@ -1,7 +1,7 @@
 List Kafka consumer groups.
 
 Usage:
-  confluent kafka consumer-group list [flags]
+  cflt kafka consumer-group list [flags]
 
 Examples:
 List all consumer groups.

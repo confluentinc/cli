@@ -249,7 +249,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 		if err := r.notifyIfUpdateAvailable(cmd, command.Version.Version); err != nil {
 			return err
 		}
-		r.warnIfConfluentLocal(cmd)
+		r.warnIfLocalCommand(cmd)
 		if r.Config != nil {
 			ctx := command.Config.Context()
 			err := r.ValidateToken(cmd, command.Config)
@@ -866,8 +866,8 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 	return strings.Contains(cmd.CommandPath(), "update")
 }
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+func (r *PreRun) warnIfLocalCommand(cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), version.CLIName+" local") {
 		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }

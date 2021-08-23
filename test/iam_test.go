@@ -14,7 +14,7 @@ func (s *CLITestSuite) TestConfluentIAM() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runConfluentTest(tt)
+		s.runOnPremTest(tt)
 	}
 }
 
@@ -31,6 +31,6 @@ func (s *CLITestSuite) TestCcloudIAM() {
 
 	for _, tt := range tests {
 		tt.login = "default"
-		s.runCcloudTest(tt)
+		s.runCloudTest(tt)
 	}
 }

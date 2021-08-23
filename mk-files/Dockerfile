@@ -7,9 +7,6 @@ RUN apk update --no-cache && \
 
 RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
 
-RUN chmod +x /bin/confluent
+RUN chmod +x /bin/cflt
 
-# This symbolic link exists for backwards compatibility reasons
-RUN ln -s /bin/confluent /confluent
-
-RUN mkdir /etc/bash_completion.d && confluent completion bash > /etc/bash_completion.d/confluent
+RUN mkdir /etc/bash_completion.d && cflt completion bash > /etc/bash_completion.d/cflt
