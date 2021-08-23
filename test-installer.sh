@@ -28,7 +28,7 @@ for pair in Darwin,x86_64,darwin,amd64 Darwin,arm64,darwin,arm64 Linux,x86_64,li
   uname_arch_check
 done
 
-binary="cflt"
+binary="confluent"
 TEST_OS=$(go env GOOS)
 TEST_ARCH=$(go env GOARCH)
 [[ -z "$ARCHIVES_VERSION" ]] && VERSION_TO_TEST="LATEST" || VERSION_TO_TEST=$ARCHIVES_VERSION
