@@ -16,6 +16,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "context",
 		Short: "Manage contexts.",
+		Long:  "Manage contexts. Contexts define the state of a Confluent Cloud or Confluent Platform instance.",
 	}
 
 	c := &command{
@@ -42,6 +43,6 @@ func (c *command) context(args []string) (*pcmd.DynamicContext, error) {
 	if ctx := c.Config.Context(); ctx != nil {
 		return ctx, nil
 	} else {
-		return nil, new(errors.NotLoggedInError)
+		return nil, errors.NewErrorWithSuggestions("no context selected", "Select an existing context with `confluent context use`, or supply a specific context name as an argument.")
 	}
 }

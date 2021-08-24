@@ -9,15 +9,15 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "delete [context]",
+		Use:   "delete <context>",
 		Short: "Delete a context.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	ctx, err := c.context(args)
+	ctx, err := c.Config.FindContext(args[0])
 	if err != nil {
 		return err
 	}

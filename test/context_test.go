@@ -6,7 +6,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 )
 
-func (s *CLITestSuite) contextCreate(name string) string {
+func (s *CLITestSuite) contextCreateArgs(name string) string {
 	var (
 		bootstrap = s.TestBackend.GetCloudUrl()
 		apiKey    = "test"
@@ -18,7 +18,7 @@ func (s *CLITestSuite) contextCreate(name string) string {
 
 func (s *CLITestSuite) TestContextCreate() {
 	resetConfiguration(s.T(), "ccloud")
-	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreate("0")}
+	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
 	s.runCcloudTest(tt)
 }
 
@@ -26,7 +26,7 @@ func (s *CLITestSuite) TestContextDelete() {
 	resetConfiguration(s.T(), "ccloud")
 
 	tests := []CLITest{
-		{args: s.contextCreate("0")},
+		{args: s.contextCreateArgs("0")},
 		{fixture: "context/delete/0.golden", args: "context delete 0"},
 		{fixture: "context/delete/1.golden", args: "context delete 1", wantErrCode: 1},
 	}
@@ -41,7 +41,7 @@ func (s *CLITestSuite) TestDescribe() {
 	resetConfiguration(s.T(), "ccloud")
 
 	tests := []CLITest{
-		{args: s.contextCreate("0")},
+		{args: s.contextCreateArgs("0")},
 		{args: "context use 0"},
 		{fixture: "context/describe/0.golden", args: "context describe"},
 		{fixture: "context/describe/1.golden", args: "context describe --api-key"},
@@ -60,8 +60,8 @@ func (s *CLITestSuite) TestContextList() {
 	resetConfiguration(s.T(), "ccloud")
 
 	tests := []CLITest{
-		{args: s.contextCreate("0")},
-		{args: s.contextCreate("1")},
+		{args: s.contextCreateArgs("0")},
+		{args: s.contextCreateArgs("1")},
 		{fixture: "context/list/0.golden", args: "context list"},
 	}
 
@@ -97,7 +97,7 @@ func (s *CLITestSuite) TestContextUpdate() {
 	resetConfiguration(s.T(), "ccloud")
 
 	tests := []CLITest{
-		{args: s.contextCreate("0")},
+		{args: s.contextCreateArgs("0")},
 		{fixture: "context/update/0.golden", args: "context update 0 --name 1"},
 		{fixture: "context/update/0.golden", args: "context describe 1"},
 	}
@@ -112,7 +112,7 @@ func (s *CLITestSuite) TestContextUse() {
 	resetConfiguration(s.T(), "ccloud")
 
 	tests := []CLITest{
-		{args: s.contextCreate("0")},
+		{args: s.contextCreateArgs("0")},
 		{fixture: "context/use/0.golden", args: "context describe", wantErrCode: 1},
 		{fixture: "context/use/1.golden", args: "context use 0"},
 		{fixture: "context/use/2.golden", args: "context describe"},

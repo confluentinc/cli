@@ -354,12 +354,11 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		apiKey: apiKeyPair,
 	}
 	kafkaClusterCfg := &v1.KafkaClusterConfig{
-		ID:          "anonymous-id",
-		Name:        "anonymous-cluster",
-		Bootstrap:   bootstrapURL,
-		APIEndpoint: "",
-		APIKeys:     apiKeys,
-		APIKey:      apiKey,
+		ID:        "anonymous-id",
+		Name:      "anonymous-cluster",
+		Bootstrap: bootstrapURL,
+		APIKeys:   apiKeys,
+		APIKey:    apiKey,
 	}
 	kafkaClusters := map[string]*v1.KafkaClusterConfig{
 		kafkaClusterCfg.ID: kafkaClusterCfg,
