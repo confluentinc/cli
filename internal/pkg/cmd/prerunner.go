@@ -432,7 +432,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			bearerToken, err := getBearerToken(state, ctx.Platform.Server)
+			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
 			if err != nil {
 				return nil, err
 			}
