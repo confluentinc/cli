@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/blang/semver"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -16,7 +15,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -420,16 +418,7 @@ func (c *Config) IsCloud() bool {
 		return false
 	}
 
-	if c.IsTest && ctx.PlatformName == testserver.TestCloudURL.String() {
-		return true
-	}
-
-	for _, hostname := range CCloudHostnames {
-		if strings.Contains(ctx.PlatformName, hostname) {
-			return true
-		}
-	}
-	return false
+	return ctx.IsCloud(c.IsTest)
 }
 
 func (c *Config) IsOnPrem() bool {

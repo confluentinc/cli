@@ -9,6 +9,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // Context represents a specific CLI context.
@@ -170,6 +171,18 @@ func (c *Context) UpdateAuthToken(token string) error {
 	return nil
 }
 
+func (c *Context) IsCloud(isTest bool) bool {
+	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+		return true
+	}
+
+	for _, hostname := range CCloudHostnames {
+		if strings.Contains(c.PlatformName, hostname) {
+			return true
+		}
+	}
+	return false
+}
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig, contextName string) {
 	var problems []string
 	if missingKey {

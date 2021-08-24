@@ -543,7 +543,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
-			cfg := v3.AuthenticatedConfigMockWithContextName("confluent", legacyContextName)
+			cfg := v3.AuthenticatedConfigMockWithContextName(legacyContextName)
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)

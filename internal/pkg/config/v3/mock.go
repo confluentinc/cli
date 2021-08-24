@@ -49,7 +49,6 @@ func MockKafkaClusterId() string {
 
 func AuthenticatedCloudConfigMock() *Config {
 	params := mockConfigParams{
-		cliName:        "ccloud",
 		contextName:    mockContextName,
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
@@ -65,7 +64,6 @@ func AuthenticatedCloudConfigMock() *Config {
 
 func AuthenticatedOnPremConfigMock() *Config {
 	params := mockConfigParams{
-		cliName:        "confluent",
 		contextName:    mockContextName,
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
@@ -79,9 +77,8 @@ func AuthenticatedOnPremConfigMock() *Config {
 	return AuthenticatedConfigMock(params)
 }
 
-func AuthenticatedConfigMockWithContextName(cliName string, contextName string) *Config {
+func AuthenticatedConfigMockWithContextName(contextName string) *Config {
 	params := mockConfigParams{
-		cliName:        cliName,
 		contextName:    contextName,
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
@@ -125,7 +122,6 @@ func UnauthenticatedCloudConfigMock() *Config {
 }
 
 type mockConfigParams struct {
-	cliName        string
 	contextName    string
 	userId         int32
 	userResourceId string

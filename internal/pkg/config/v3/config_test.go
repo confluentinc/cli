@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -39,11 +40,14 @@ type TestInputs struct {
 	account              *orgv1.Account
 }
 
-func SetupTestInputs(cliName string) *TestInputs {
+func SetupTestInputs(isCloud bool) *TestInputs {
 	testInputs := &TestInputs{}
 	platform := &v2.Platform{
 		Name:   "http://test",
 		Server: "http://test",
+	}
+	if isCloud {
+		platform.Name = testserver.TestCloudURL.String()
 	}
 	apiCredential := &v2.Credential{
 		Name:     "api-key-abc-key-123",
@@ -164,13 +168,13 @@ func SetupTestInputs(cliName string) *TestInputs {
 		State:  twoEnvState,
 		Logger: log.New(),
 	}
+	cliName := "confluent"
+	if isCloud {
+		cliName = "ccloud"
+	}
 	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
 			Ver:      Version,
 		},
@@ -188,14 +192,11 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: state,
 		},
 		CurrentContext: contextName,
+		IsTest:         true,
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", cliName),
 			Ver:      Version,
 		},
@@ -213,14 +214,11 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: {},
 		},
 		CurrentContext: contextName,
+		IsTest:         true,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
 			Ver:      Version,
 		},
@@ -238,6 +236,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: twoEnvState,
 		},
 		CurrentContext: contextName,
+		IsTest:         true,
 	}
 
 	statefulContext.Config = testInputs.statefulConfig
@@ -253,8 +252,8 @@ func SetupTestInputs(cliName string) *TestInputs {
 }
 
 func TestConfig_Load(t *testing.T) {
-	testConfigsConfluent := SetupTestInputs("confluent")
-	testConfigsCcloud := SetupTestInputs("ccloud")
+	testConfigsConfluent := SetupTestInputs(false)
+	testConfigsCcloud := SetupTestInputs(true)
 	tests := []struct {
 		name    string
 		want    *Config
@@ -285,11 +284,7 @@ func TestConfig_Load(t *testing.T) {
 			name: "should load disable update checks and disable updates",
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: "test_json/load_disable_update.json",
 					Ver:      Version,
 				},
@@ -305,11 +300,7 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{
-				CLIName:    tt.want.CLIName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			c := New(&config.Params{Logger: log.New()})
 			c.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
@@ -317,8 +308,11 @@ func TestConfig_Load(t *testing.T) {
 			if err := c.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, tt.wantErr)
 			}
-			// Get around automatically assigned anonymous id
+
+			// Get around automatically assigned anonymous id and IsTest check
 			tt.want.AnonymousId = c.AnonymousId
+			tt.want.IsTest = c.IsTest
+
 			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
 				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
 			}
@@ -327,8 +321,8 @@ func TestConfig_Load(t *testing.T) {
 }
 
 func TestConfig_Save(t *testing.T) {
-	testConfigsConfluent := SetupTestInputs("confluent")
-	testConfigsCcloud := SetupTestInputs("ccloud")
+	testConfigsConfluent := SetupTestInputs(false)
+	testConfigsCcloud := SetupTestInputs(true)
 	tests := []struct {
 		name             string
 		config           *Config
@@ -403,7 +397,7 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
-	testConfigsCcloud := SetupTestInputs("ccloud")
+	testConfigsCcloud := SetupTestInputs(true)
 	tests := []struct {
 		name             string
 		config           *Config
@@ -446,9 +440,7 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 }
 
 func TestConfig_OverwrittenKafka(t *testing.T) {
-	//	testConfigsConfluent := SetupTestInputs("confluent")
-	testConfigsCcloud := SetupTestInputs("ccloud")
-	//testConfigsCcloud2 := SetupTestInputs("ccloud")
+	testConfigsCcloud := SetupTestInputs(true)
 
 	tests := []struct {
 		name           string
@@ -496,7 +488,7 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 }
 
 func TestConfig_OverwrittenContext(t *testing.T) {
-	testConfigsCcloud := SetupTestInputs("ccloud")
+	testConfigsCcloud := SetupTestInputs(true)
 
 	tests := []struct {
 		name           string
@@ -535,7 +527,7 @@ func TestConfig_OverwrittenContext(t *testing.T) {
 }
 
 func TestConfig_OverwrittenAccount(t *testing.T) {
-	testConfigsCcloud := SetupTestInputs("ccloud")
+	testConfigsCcloud := SetupTestInputs(true)
 
 	tests := []struct {
 		name           string
@@ -598,11 +590,7 @@ func TestConfig_getFilename(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{
-				CLIName:    tt.fields.CLIName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			c := New(&config.Params{Logger: log.New()})
 			got, err := c.getFilename()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Config.getFilename() error = %v, wantErr %v", err, tt.wantErr)
@@ -881,7 +869,7 @@ func TestConfig_Context(t *testing.T) {
 }
 
 func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
-	testInputs := SetupTestInputs("ccloud")
+	testInputs := SetupTestInputs(true)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
 	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
@@ -938,7 +926,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 }
 
 func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
-	testInputs := SetupTestInputs("confluent")
+	testInputs := SetupTestInputs(false)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
 	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
@@ -992,8 +980,8 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 		},
 		APIKey: "akey",
 	}
-	for _, cliName := range []string{"ccloud", "confluent"} {
-		testInputs := SetupTestInputs(cliName)
+	for _, isCloud := range []bool{true, false} {
+		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 		reflect.DeepEqual(kcc, kafkaClusterContext.GetKafkaClusterConfig(clusterID))
@@ -1016,8 +1004,8 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		},
 		APIKey: apiKey,
 	}
-	for _, cliName := range []string{"ccloud", "confluent"} {
-		testInputs := SetupTestInputs(cliName)
+	for _, isCloud := range []bool{true, false} {
+		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 
@@ -1048,8 +1036,8 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 		},
 		APIKey: apiKey,
 	}
-	for _, cliName := range []string{"ccloud", "confluent"} {
-		testInputs := SetupTestInputs(cliName)
+	for _, isCloud := range []bool{true, false} {
+		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 		kafkaClusterContext.SetActiveKafkaCluster(clusterID)

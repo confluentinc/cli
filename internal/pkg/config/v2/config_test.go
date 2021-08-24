@@ -150,7 +150,6 @@ func TestConfig_Load(t *testing.T) {
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
 					Params: &config.Params{
-						CLIName:    "confluent",
 						MetricSink: nil,
 						Logger:     log.New(),
 					},
@@ -191,11 +190,7 @@ func TestConfig_Load(t *testing.T) {
 			},
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: testConfigFile.Name(),
 					Ver:      Version,
 				},
@@ -222,11 +217,7 @@ func TestConfig_Load(t *testing.T) {
 			},
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: testConfigFile.Name(),
 					Ver:      Version,
 				},
@@ -243,7 +234,6 @@ func TestConfig_Load(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := New(&config.Params{
-				CLIName:    "confluent",
 				MetricSink: nil,
 				Logger:     log.New(),
 			})
@@ -383,11 +373,7 @@ func TestConfig_Save(t *testing.T) {
 			name: "save config with state to file",
 			config: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: "",
 					Ver:      Version,
 				},
@@ -412,11 +398,7 @@ func TestConfig_Save(t *testing.T) {
 			name: "save stateless config to file",
 			config: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: "",
 					Ver:      Version,
 				},
@@ -608,7 +590,6 @@ func TestConfig_SetContext(t *testing.T) {
 
 //func TestConfig_AuthenticatedState(t *testing.T) {
 //	type fields struct {
-//		CLIName        string
 //		MetricSink     metric.Sink
 //		Logger         *log.Logger
 //		Filename       string
@@ -693,7 +674,6 @@ func TestConfig_SetContext(t *testing.T) {
 //	for _, tt := range tests {
 //		t.Run(tt.name, func(t *testing.T) {
 //			c := &Config{
-//				CLIName:        tt.fields.CLIName,
 //				MetricSink:     tt.fields.MetricSink,
 //				Logger:         tt.fields.Logger,
 //				Filename:       tt.fields.Filename,

@@ -4,8 +4,8 @@
   "disable_updates": false,
   "no_browser": false,
   "platforms": {
-    "http://test": {
-      "name": "http://test",
+    "http://127.0.0.1:1024": {
+      "name": "http://127.0.0.1:1024",
       "server": "http://test"
     }
   },
@@ -31,7 +31,7 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "platform": "http://test",
+      "platform": "http://127.0.0.1:1024",
       "credential": "username-test-user",
       "kafka_cluster_context": {
         "environment_context": true,
