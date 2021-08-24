@@ -266,8 +266,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			utils.Printf(cmd, errors.KsqlDBTerminateClusterMsg, args[0], string(body))
-			return nil
+			return errors.Errorf(errors.KsqlDBTerminateClusterMsg, args[0], string(body))
 		}
 	}
 
