@@ -111,7 +111,7 @@ func (suite *ExporterTestSuite) TestCreateExporter() {
 	configs := "key1=value1\nkey2=value2"
 	configPath := filepath.Join(dir, "config.txt")
 	req.NoError(ioutil.WriteFile(configPath, []byte(configs), 0644))
-	cmd.SetArgs([]string{"exporter", "create", "--name", exporterName, "--context-type", "AUTO",
+	cmd.SetArgs([]string{"exporter", "create", exporterName, "--context-type", "AUTO",
 		"--context", contextName, "--subjects", subjectName, "--config-file", configPath})
 	err = cmd.Execute()
 	req.NoError(err)
@@ -134,7 +134,7 @@ func (suite *ExporterTestSuite) TestListExporters() {
 
 func (suite *ExporterTestSuite) TestDescribeExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "describe", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "describe", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -146,7 +146,7 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 
 func (suite *ExporterTestSuite) TestStatusExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "status", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "status", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -158,7 +158,7 @@ func (suite *ExporterTestSuite) TestStatusExporter() {
 
 func (suite *ExporterTestSuite) TestUpdateExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "update", "--name", exporterName, "--context", contextName})
+	cmd.SetArgs([]string{"exporter", "update", exporterName, "--context", contextName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -170,7 +170,7 @@ func (suite *ExporterTestSuite) TestUpdateExporter() {
 
 func (suite *ExporterTestSuite) TestGetExporterConfig() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "get-config", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "configs", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -182,7 +182,7 @@ func (suite *ExporterTestSuite) TestGetExporterConfig() {
 
 func (suite *ExporterTestSuite) TestPauseExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "pause", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "pause", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -194,7 +194,7 @@ func (suite *ExporterTestSuite) TestPauseExporter() {
 
 func (suite *ExporterTestSuite) TestResumeExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "resume", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "resume", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -206,7 +206,7 @@ func (suite *ExporterTestSuite) TestResumeExporter() {
 
 func (suite *ExporterTestSuite) TestResetExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "reset", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "reset", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
@@ -218,7 +218,7 @@ func (suite *ExporterTestSuite) TestResetExporter() {
 
 func (suite *ExporterTestSuite) TestDeleteExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "delete", "--name", exporterName})
+	cmd.SetArgs([]string{"exporter", "delete", exporterName})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)

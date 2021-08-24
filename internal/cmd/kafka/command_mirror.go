@@ -361,7 +361,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, err := readConfigsFromFile(configs)
+	configMap, err := utils.ReadConfigsFromFile(configs)
 	if err != nil {
 		return err
 	}
