@@ -880,7 +880,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			valueString = strings.TrimSpace(record[len(record)-1])
 
 			if len(record) == 2 {
-				key = strings.TrimSpace(record[0]) // sarama StringEncoder.
+				key = strings.TrimSpace(record[0])
 			} else {
 				return errors.New(errors.MissingKeyErrorMsg)
 			}
@@ -892,7 +892,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			return err
 		}
 		encoded := append(metaInfo, encodedMessage...)
-		value := string(encoded) // sarama StringEncoder.
+		value := string(encoded)
 
 		msg := &ckafka.Message{
 			TopicPartition: ckafka.TopicPartition{Topic: &topic, Partition: ckafka.PartitionAny},
@@ -972,7 +972,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	} else {
 		srClient, ctx = nil, nil
 	}
-	fmt.Println("srClient, ctx", srClient, ctx)
 
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
@@ -998,10 +997,20 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
+	// consumer subscribe to the topic
 	err = consumer.Subscribe(topic, nil)
 	if err != nil {
 		return err
 	}
+
+	groupHandler := &GroupHandler{
+		SrClient:   srClient,
+		Ctx:        ctx,
+		Format:     valueFormat,
+		Out:        cmd.OutOrStdout(),
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+	}
+
 	// start consuming msg
 	run := true
 	signals := make(chan os.Signal, 1)
@@ -1019,27 +1028,12 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			}
 			switch e := ev.(type) {
 			case *ckafka.Message:
-				if printKey {
-					key := e.Key
-					var keyString string
-					if len(key) == 0 {
-						keyString = "null"
-					} else {
-						keyString = string(key)
-					}
-					_, err := fmt.Fprint(os.Stderr, keyString+delimiter)
-					if err != nil {
-						return err
-					}
-				}
-
-				fmt.Printf("%s\n", string(e.Value)) // deserialize the msg.
-
-				if e.Headers != nil {
-					fmt.Printf("%% Headers: %v\n", e.Headers)
+				err = ConsumeMsg(e, groupHandler)
+				if err != nil {
+					return err
 				}
 			case ckafka.Error:
-				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
+				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == ckafka.ErrAllBrokersDown {
 					run = false
 				}

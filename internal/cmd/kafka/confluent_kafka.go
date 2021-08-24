@@ -3,12 +3,14 @@ package kafka
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
@@ -102,4 +104,53 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 		}
 	}
 	return tempStorePath, nil
+}
+
+func ConsumeMsg(e *ckafka.Message, h *GroupHandler) error {
+	value := e.Value
+	if h.Properties.PrintKey {
+		key := e.Key
+		var keyString string
+		if len(key) == 0 {
+			keyString = "null"
+		} else {
+			keyString = string(key)
+		}
+		_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
+		if err != nil {
+			return err
+		}
+	}
+
+	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
+	if err != nil {
+		return err
+	}
+
+	if h.Format != "string" {
+		schemaPath, err := h.RequestSchema(value)
+		if err != nil {
+			return err
+		}
+		// Message body is encoded after 5 bytes of meta information.
+		value = value[5:]
+		err = deserializationProvider.LoadSchema(schemaPath)
+		if err != nil {
+			return err
+		}
+	}
+	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(h.Out, jsonMessage)
+	if err != nil {
+		return err
+	}
+
+	if e.Headers != nil {
+		fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
+	}
+	return nil
 }
