@@ -30,12 +30,6 @@ steps:
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Install Go 1.16.3 (Windows)
 
-- script: |
-    brew install gcc
-  condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Install gcc (Windows)
-
-
 # Linux
 - bash: |
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"

@@ -19,6 +19,12 @@ variables:
   CI: true
 
 steps:
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      gcc -version
+      
 - template: azure-pipelines-templates/setup-secrets.yml
 
 - template: azure-pipelines-templates/setup-go.yml
