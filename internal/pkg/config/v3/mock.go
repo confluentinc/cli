@@ -201,9 +201,9 @@ func createPlatform(name, server string) *v2.Platform {
 func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *v1.AuthConfig {
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
-			Id:             userId,
-			Email:          email,
-			ResourceId:     userResourceId,
+			Id:         userId,
+			Email:      email,
+			ResourceId: userResourceId,
 		},
 		Account: &orgv1.Account{Id: envId},
 		Organization: &orgv1.Organization{

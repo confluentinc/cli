@@ -1,5 +1,6 @@
 [
   {
+    "last_source_fetch_offset": "1293009",
     "link_name": "link-1",
     "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
@@ -9,6 +10,7 @@
     "status_time_ms": "111111111"
   }, 
   {
+    "last_source_fetch_offset": "28340404",
     "link_name": "link-1",
     "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
@@ -18,6 +20,7 @@
     "status_time_ms": "111111111"
   }, 
   {
+    "last_source_fetch_offset": "5739304",
     "link_name": "link-1",
     "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
