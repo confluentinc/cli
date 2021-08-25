@@ -31,9 +31,9 @@ steps:
   displayName: Install Go 1.16.3 (Windows)
 
 - script: |
-    brew install gcc 11.2
+    brew install gcc
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Install gcc 11.2 (Windows)
+  displayName: Install gcc (Windows)
 
 
 # Linux
