@@ -30,6 +30,20 @@ steps:
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Install Go 1.16.3 (Windows)
 
+- powershell: |
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri "https://github.com/brechtsanders/winlibs_mingw/releases/download/11.2.0-12.0.1-9.0.0-r1/winlibs-x86_64-posix-seh-gcc-11.2.0-llvm-12.0.1-mingw-w64-9.0.0-r1.zip" -OutFile "$(Agent.BuildDirectory)\64gcc11.2.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/64gcc11.2.zip "-o$(Agent.BuildDirectory)" -y
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Install gcc 11.2 x86_64 (Windows)
+
+- powershell: |
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri "https://github.com/brechtsanders/winlibs_mingw/releases/download/11.2.0-12.0.1-9.0.0-r1/winlibs-i686-posix-dwarf-gcc-11.2.0-llvm-12.0.1-mingw-w64-9.0.0-r1.zip" -OutFile "$(Agent.BuildDirectory)\32gcc11.2.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/32gcc11.2.zip "-o$(Agent.BuildDirectory)" -y
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Install gcc 11.2 i686 (Windows)
+
 # Linux
 - bash: |
     echo "##vso[task.setvariable variable=GOROOT]$(Agent.BuildDirectory)/go"
