@@ -785,7 +785,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	err = validateTopic(adminClient, topic, cluster)
+	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
 	}
@@ -907,6 +907,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
 		// Reset key prior to reuse
@@ -982,7 +983,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	err = validateTopic(adminClient, topic, cluster)
+	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
 	}
@@ -1045,9 +1046,10 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
 	metaData, err := client.GetMetadata(nil, true, 60*1000)
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return err
 	}
 	var foundTopic bool
@@ -1058,8 +1060,10 @@ func validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaCl
 		}
 	}
 	if !foundTopic {
+		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
 	}
+	h.logger.Tracef("validateTopic succeeded")
 	return nil
 }
 
