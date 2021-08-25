@@ -293,7 +293,7 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else if cmd.Flags().Changed("context-name") {
-		return errors.New("can't set context-name if context-type is not CUSTOM")
+		return errors.New("can only set context-name if context-type is CUSTOM")
 	}
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
