@@ -121,7 +121,7 @@ func (c *exporterCommand) init(cliName string) {
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter. Should use" +
-		" comma separated list, or specify the flag multiple times")
+		" comma separated list, or specify the flag multiple times.")
 	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "The context name of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
