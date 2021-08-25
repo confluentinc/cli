@@ -75,3 +75,12 @@ steps:
     mkdir ${GOROOT}\bin
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Set up the Go workspace (Windows)
+
+- script: |
+    echo '$(Agent.BuildDirectory)'
+    export CC=$(Agent.BuildDirectory)/gcc11.2
+    export CXX=$(Agent.BuildDirectory)/gcc11.2
+    PATH = C:\Strawberry\c\bin\:$PATH
+    echo '$(PATH)'
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Set up the GCC workspace (Windows)

@@ -9,6 +9,9 @@ strategy:
 
 pool:
   vmImage: $(imageName)
+  variables:
+    CC: gcc-11.2
+    CXX: g++-11.2
 
 variables:
   # Fixes checksum errors when downloading chrome
@@ -16,6 +19,11 @@ variables:
   CI: true
 
 steps:
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      where gcc
 
 - template: azure-pipelines-templates/setup-secrets.yml
 
