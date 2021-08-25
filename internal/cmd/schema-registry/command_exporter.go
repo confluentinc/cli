@@ -90,7 +90,8 @@ func (c *exporterCommand) init(cliName string) {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter.")
+	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter. Should use" +
+		" comma separated list, or specify the flag multiple times.")
 	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "The context name of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
@@ -415,7 +416,7 @@ func (c *exporterCommand) getConfig(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return catchSchemaExporterNotFound(name, httpResponse, err)
 	}
-	return output.StructuredOutput(outputFormat, configs)
+	return output.StructuredOutputForCommand(cmd, outputFormat, configs)
 }
 
 func (c *exporterCommand) status(cmd *cobra.Command, args []string) error {

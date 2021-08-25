@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -78,7 +79,7 @@ func (suite *ExporterTestSuite) SetupTest() {
 				return srsdk.UpdateExporterResponse{Name: exporterName}, nil, nil
 			},
 			GetExporterConfigFunc: func(_ context.Context, name string) (map[string]string, *http.Response, error) {
-				return map[string]string{}, nil, nil
+				return map[string]string{"key": "value"}, nil, nil
 			},
 			PauseExporterFunc: func(_ context.Context, name string) (srsdk.UpdateExporterResponse, *http.Response, error) {
 				return srsdk.UpdateExporterResponse{Name: exporterName}, nil, nil
@@ -113,119 +114,165 @@ func (suite *ExporterTestSuite) TestCreateExporter() {
 	req.NoError(ioutil.WriteFile(configPath, []byte(configs), 0644))
 	cmd.SetArgs([]string{"exporter", "create", exporterName, "--context-type", "AUTO",
 		"--context", contextName, "--subjects", subjectName, "--config-file", configPath})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err = cmd.Execute()
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.CreateExporterCalled())
 	req.NoError(os.RemoveAll(dir))
-	retVal := apiMock.CreateExporterCalls()[0]
-	req.Equal(retVal.Body.Name, exporterName)
+	params := apiMock.CreateExporterCalls()[0]
+	req.Equal(params.Body.Name, exporterName)
+
+	req.Equal("Created schema exporter \"my_exporter\".\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestListExporters() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "list"})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExportersCalled())
+
+	req.Equal("   Exporter    \n+-------------+\n  my_exporter  \n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestDescribeExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "describe", exporterName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExporterInfoCalled())
-	retVal := apiMock.GetExporterInfoCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.GetExporterInfoCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("+--------------------------------+-------------+\n" +
+		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n" +
+		"| Context Type                   | AUTO        |\n| Context                        |             |\n" +
+		"| Remote Schema Registry Configs |             |\n+--------------------------------+-------------+\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestStatusExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "status", exporterName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExporterStatusCalled())
-	retVal := apiMock.GetExporterStatusCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.GetExporterStatusCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("+--------------------+-------------+\n" +
+		"| Name               | my_exporter |\n| Exporter State     | PAUSED      |\n" +
+		"| Exporter Offset    |           0 |\n| Exporter Timestamp |           0 |\n" +
+		"| Error Trace        |             |\n+--------------------+-------------+\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestUpdateExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "update", exporterName, "--context", contextName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.PutExporterCalled())
-	retVal := apiMock.PutExporterCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.PutExporterCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("Updated schema exporter \"my_exporter\".\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestGetExporterConfig() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "configs", exporterName})
+	cmd.SetArgs([]string{"exporter", "configs", exporterName, "--output", "yaml"})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExporterConfigCalled())
-	retVal := apiMock.GetExporterConfigCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.GetExporterConfigCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("key: value\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestPauseExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "pause", exporterName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.PauseExporterCalled())
-	retVal := apiMock.PauseExporterCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.PauseExporterCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("Paused schema exporter \"my_exporter\".\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestResumeExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "resume", exporterName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ResumeExporterCalled())
-	retVal := apiMock.ResumeExporterCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.ResumeExporterCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("Resumed schema exporter \"my_exporter\".\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestResetExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "reset", exporterName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.ResetExporterCalled())
-	retVal := apiMock.ResetExporterCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.ResetExporterCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("Reset schema exporter \"my_exporter\".\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestDeleteExporter() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"exporter", "delete", exporterName})
+	output := new(bytes.Buffer)
+	cmd.SetOut(output)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.DeleteExporterCalled())
-	retVal := apiMock.DeleteExporterCalls()[0]
-	req.Equal(retVal.Name, exporterName)
+	params := apiMock.DeleteExporterCalls()[0]
+	req.Equal(params.Name, exporterName)
+
+	req.Equal("Deleted schema exporter \"my_exporter\".\n", output.String())
 }
 
 func TestExporterSuite(t *testing.T) {
