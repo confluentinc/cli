@@ -777,8 +777,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create producer: %s\n", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to create producer: %v\n", err)
 	}
 	defer producer.Close()
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
@@ -976,8 +975,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create consumer: %s\n", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to create consumer: %v\n", err)
 	}
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
@@ -1047,16 +1045,16 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 // validate that a topic exists before attempting to produce/consume messages
 func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
-	metaData, err := client.GetMetadata(nil, true, 60*1000)
+	metadata, err := client.GetMetadata(nil, true, 60*1000)
 	if err != nil {
 		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return err
 	}
 	var foundTopic bool
-	for _, t := range metaData.Topics {
+	for _, t := range metadata.Topics {
+		h.logger.Tracef("validateTopic: found topic " + t.Topic)
 		if topic == t.Topic {
-			foundTopic = true
-			break
+			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
