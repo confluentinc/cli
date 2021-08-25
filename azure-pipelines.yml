@@ -23,7 +23,12 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
-      gcc -version
+      gcc -v
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      gcc --version
       
 - template: azure-pipelines-templates/setup-secrets.yml
 
