@@ -37,6 +37,12 @@ steps:
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Install gcc 11.2 x86_64 (Windows)
 
+- script: |
+    echo '##vso[task.prependpath]$(Agent.BuildDirectory)\mingw64\bin'
+    echo '##vso[task.setvariable variable=PATH;]$(Agent.BuildDirectory)\mingw64\bin;$(PATH)'
+    echo '$(PATH)'
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Set up the GCC workspace (Windows)
 
 # Linux
 - bash: |
@@ -76,12 +82,3 @@ steps:
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Set up the Go workspace (Windows)
 
-- script: |
-    echo '##vso[task.prependpath]$(Agent.BuildDirectory)\mingw64\bin'
-    echo '$(Agent.BuildDirectory)'
-    cd $(Agent.BuildDirectory)
-    ls
-    echo '##vso[task.setvariable variable=PATH;]$(Agent.BuildDirectory)\mingw64\bin;$(PATH)'
-    echo '$(PATH)'
-  condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Set up the GCC workspace (Windows)
