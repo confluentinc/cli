@@ -77,10 +77,11 @@ steps:
   displayName: Set up the Go workspace (Windows)
 
 - script: |
+    echo '##vso[task.prependpath]$(Agent.BuildDirectory)\mingw64\bin'
     echo '$(Agent.BuildDirectory)'
-    export CC=$(Agent.BuildDirectory)/gcc11.2
-    export CXX=$(Agent.BuildDirectory)/gcc11.2
-    PATH = C:\Strawberry\c\bin\:$PATH
+    cd $(Agent.BuildDirectory)
+    ls
+    echo '##vso[task.setvariable variable=PATH;]$(Agent.BuildDirectory)\mingw64\bin;$(PATH)'
     echo '$(PATH)'
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: Set up the GCC workspace (Windows)
