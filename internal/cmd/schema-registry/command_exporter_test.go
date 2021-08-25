@@ -162,7 +162,7 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 
 func (suite *ExporterTestSuite) TestStatusExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "status", exporterName})
+	cmd.SetArgs([]string{"exporter", "get-status", exporterName})
 	output := new(bytes.Buffer)
 	cmd.SetOut(output)
 	err := cmd.Execute()
@@ -197,7 +197,7 @@ func (suite *ExporterTestSuite) TestUpdateExporter() {
 
 func (suite *ExporterTestSuite) TestGetExporterConfig() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "configs", exporterName, "--output", "yaml"})
+	cmd.SetArgs([]string{"exporter", "get-config", exporterName, "--output", "yaml"})
 	output := new(bytes.Buffer)
 	cmd.SetOut(output)
 	err := cmd.Execute()

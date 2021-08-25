@@ -145,14 +145,14 @@ func (c *exporterCommand) init(cliName string) {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "configs <name>",
+		Use:   "get-config <name>",
 		Short: "Get the configurations of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.getConfig),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the configurations of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter configs my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter get-config my_exporter", cliName),
 			},
 		),
 	}
@@ -161,14 +161,14 @@ func (c *exporterCommand) init(cliName string) {
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "status <name>",
+		Use:   "get-status <name>",
 		Short: "Get the status of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.status),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the status of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter status my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter get-status my_exporter", cliName),
 			},
 		),
 	}
