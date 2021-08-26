@@ -212,7 +212,6 @@ lint-licenses: build
 
 .PHONY: coverage-unit
 coverage-unit:
-ifeq "$${OS}" "Windows_NT"
       ifdef CI
 	@# Run unit tests with coverage.
 	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
@@ -221,16 +220,6 @@ ifeq "$${OS}" "Windows_NT"
 	@# Run unit tests.
 	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
       endif
-else 
-	  ifdef CI
-	@# Run unit tests with coverage.
-	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-      else
-	@# Run unit tests.
-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-      endif
-endif
 
 .PHONY: coverage-integ
 coverage-integ:
