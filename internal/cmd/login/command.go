@@ -60,7 +60,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
 	}
 
-	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
+	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for Confluent Platform deployments.")
 	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
