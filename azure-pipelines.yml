@@ -31,6 +31,13 @@ steps:
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
   displayName: 'Display GCC version (Windows)'
 
+- task: CmdLine@2
+  inputs:
+    script: |
+      wmic MEMORYCHIP get BankLabel, DeviceLocator, MemoryType, TypeDetail, Capacity, Speed
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Show RAM details (Windows)'
+
 - script: |
     curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub
     sudo chmod 755 /usr/bin/hub
