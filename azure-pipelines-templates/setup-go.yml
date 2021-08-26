@@ -25,10 +25,10 @@ steps:
 
 - powershell: |
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -Uri "https://golang.org/dl/go1.17.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.17.zip" -Verbose
-    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.17.zip "-o$(Agent.BuildDirectory)" -y
+    Invoke-WebRequest -Uri "https://golang.org/dl/go1.16.3.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.16.3.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.16.3.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Install Go 1.17 (Windows)
+  displayName: Install Go 1.16.3 (Windows)
 
 - powershell: |
     $ProgressPreference = 'SilentlyContinue'
