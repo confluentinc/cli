@@ -233,8 +233,8 @@ func CatchTopicNotExistError(err error, topicName string, clusterId string) (boo
 		return false, nil
 	}
 	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
-		errorMsg := fmt.Sprintf(TopicDoesNotExistsErrorMsg, topicName)
-		suggestionsMsg := fmt.Sprintf(TopicDoesNotExistsSuggestions, clusterId, clusterId)
+		errorMsg := fmt.Sprintf(TopicDoesNotExistErrorMsg, topicName)
+		suggestionsMsg := fmt.Sprintf(TopicDoesNotExistSuggestions, clusterId, clusterId)
 		return true, NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
 	return false, err
