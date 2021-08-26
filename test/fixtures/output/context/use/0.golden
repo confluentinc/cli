@@ -1,5 +1,4 @@
-Error: not logged in
+Error: no context selected
 
 Suggestions:
-    You must be logged in to run this command.
-    To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`.
+    Select an existing context with `confluent context use`, or supply a specific context name as an argument.
