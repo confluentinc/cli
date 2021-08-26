@@ -1043,7 +1043,7 @@ func (h *hasAPIKeyTopicCommand) validateTopic(topic string, cluster *v1.KafkaClu
 	if !foundTopic {
 		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		client.Close()
-		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 	h.logger.Tracef("validateTopic succeeded")
 	return client, nil
