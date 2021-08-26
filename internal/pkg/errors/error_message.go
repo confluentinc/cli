@@ -22,8 +22,8 @@ const (
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
 	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `ccloud kafka cluster use` command."
 	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`."
-	ServiceAccountNotFoundErrorMsg      = "Service account \"%s\" not found"
-	ServiceAccountNotFoundSuggestions   = "List service accounts with `ccloud service-account list`.	"
+	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
+	ServiceAccountNotFoundSuggestions   = "List service accounts with `ccloud service-account list`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
