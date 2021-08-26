@@ -115,3 +115,10 @@ func ValidateEmail(email string) bool {
 	matched := rgxEmail.MatchString(email)
 	return matched
 }
+
+func Abbreviate(s string, maxLength int) string {
+	if len(s) < maxLength {
+		return s
+	}
+	return s[0:maxLength]+"..."
+}

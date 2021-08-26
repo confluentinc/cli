@@ -50,13 +50,14 @@ func (brokerCmd *brokerCommand) init() {
 		//Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.describe),
 		Short: "Describe a Kafka broker.",
-		Long:  "See broker configurations and partition-replica information for the spcified broker.",
+		Long:  "See cluster-wide or per broker configuration values.",
 		// TODO example
 	}
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().Bool("all", false,"See cluster-wide broker configurations.")
-	describeCmd.Flags().Int32("broker", -1,"See configuration values for specific broker ID.")
+	describeCmd.Flags().Bool("all", false,"Get cluster-wide broker configurations (non-default values only).")
+	describeCmd.Flags().Int32("broker", -1,"Get configuration values for specific broker ID.")
+	describeCmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
 	describeCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(describeCmd)
 
@@ -116,7 +117,7 @@ type BrokerData struct {
 
 type ConfigData struct {
 	Name        string              `json:"name"`
-	Value       *string             `json:"value,omitempty"`
+	Value       string             `json:"value,omitempty"`
 	IsDefault   bool                `json:"is_default"`
 	IsReadOnly  bool                `json:"is_read_only"`
 	IsSensitive bool                `json:"is_sensitive"`
@@ -124,9 +125,11 @@ type ConfigData struct {
 
 func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 	// TODO config name flag
-	var err error
-	var resp *http.Response
 	brokerId, all, err := checkAllOrBrokerIdSpecified(cmd)
+	if err != nil {
+		return err
+	}
+	configName, err := cmd.Flags().GetString("config-name")
 	if err != nil {
 		return err
 	}
@@ -140,51 +143,60 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 		return err
 	}
 	// Get Broker Configs
-	var clusterConfig kafkarestv3.ClusterConfigDataList
-	var brokerConfig kafkarestv3.BrokerConfigDataList
 	var data []ConfigData
 	if all {
-		clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
+		var clusterConfig kafkarestv3.ClusterConfigDataList
+		var resp *http.Response
+		var err error
+		if configName != "" {
+			var configNameData kafkarestv3.ClusterConfigData
+			configNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsNameGet(restContext, clusterId, configName)
+			clusterConfig.Data = []kafkarestv3.ClusterConfigData{configNameData}
+		} else {
+			clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
+		}
+
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 		}
 		data = parseClusterConfigData(clusterConfig)
 	} else {
-		brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+		var brokerConfig kafkarestv3.BrokerConfigDataList
+		var resp *http.Response
+		var err error
+		if configName != "" {
+			var brokerNameData kafkarestv3.BrokerConfigData
+			brokerNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
+			brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
+		} else {
+			brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+		}
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 		}
 		data = parseBrokerConfigData(brokerConfig)
 	}
-
-	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	if format == output.Human.String() {
+		configsTableLabels := []string{"Name", "Value", "Is Default", "Is Read Only", "Is Sensitive"}
+		configsTableEntries := make([][]string, len(data))
+		for i, entry := range data {
+			configsTableEntries[i] = printer.ToRow(&struct {
+				name  		string
+				value 		string
+				isDefault	bool
+				isReadOnly  bool
+				isSensitive bool
+			}{name: utils.Abbreviate(entry.Name, 30), value: utils.Abbreviate(entry.Value, 20), isDefault: entry.IsDefault, isReadOnly: entry.IsReadOnly, isSensitive: entry.IsSensitive},
+			[]string{"name", "value", "isDefault", "isReadOnly", "isSensitive"})
+		}
+		sort.Slice(configsTableEntries, func(i int, j int) bool {
+			return configsTableEntries[i][0] < configsTableEntries[j][0]
+		})
+		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
+	} else {
+		return output.StructuredOutputForCommand(cmd, format, data)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name", "Value", "IsDefault", "IsReadOnly", "IsSensitive"}, []string{"Name", "Value", "Is Default", "Is Read Only", "Is Sensitive"}, []string{"name", "value", "is_default", "is_read_only", "is_sensitive"})
-
-	if err != nil {
-		return err
-	}
-	for _, entry := range data {
-		outputWriter.AddElement(entry)
-	}
-	return outputWriter.Out()
-
-
-	// TODO is this too much output?
-	// Get partition-replicas
-	//partitionReplicaResp, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
-	//if err != nil {
-	//	return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
-	//}
-	//brokerInfo := &BrokerData{
-	//	BrokerConfigData: brokerConfigsResp.Data,
-	//	//ReplicaData: 	  partitionReplicaResp.Data,
-	//}
-
-
-
-	//return output.StructuredOutputForCommand(cmd, format, data)
+	return nil
 }
 
 func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []ConfigData {
@@ -192,10 +204,12 @@ func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []C
 	for _, data := range clusterConfig.Data {
 		config := ConfigData{
 			Name:        data.Name,
-			Value:       data.Value,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
 			IsSensitive: data.IsSensitive,
+		}
+		if data.Value != nil {
+			config.Value = *data.Value
 		}
 		configs = append(configs, config)
 	}
@@ -207,10 +221,14 @@ func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []Conf
 	for _, data := range brokerConfig.Data {
 		config := ConfigData{
 			Name:        data.Name,
-			Value:       data.Value,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
 			IsSensitive: data.IsSensitive,
+		}
+		if data.Value != nil {
+			config.Value = *data.Value
+		} else {
+			config.Value = ""
 		}
 		configs = append(configs, config)
 	}
