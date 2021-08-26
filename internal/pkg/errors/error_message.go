@@ -22,6 +22,8 @@ const (
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
 	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `ccloud kafka cluster use` command."
 	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`."
+	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
+	ServiceAccountNotFoundSuggestions   = "List service accounts with `ccloud service-account list`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -112,8 +114,10 @@ const (
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
 	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
-	TopicNotExistsErrorMsg                        = "topic \"%s\" does not exist"
-	TopicNotExistsSuggestions                     = ListTopicSuggestions
+	TopicDoesNotExistErrorMsg                     = "topic \"%s\" does not exist"
+	TopicDoesNotExistSuggestions                  = ListTopicSuggestions
+	TopicDoesNotExistOrMissingACLsErrorMsg		  = "topic \"%s\" does not exist or your api key does not have the ACLs required to describe it"
+	TopicDoesNotExistOrMissingACLsSuggestions	  = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`.\nTo list ACLs use `ccloud kafka acl list --cluster %s`."
 	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                       = "invalid value \"%s\" for `--type` flag"

@@ -784,6 +784,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	defer adminClient.Close()
 	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
@@ -981,6 +982,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	defer adminClient.Close()
 	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
@@ -1059,7 +1061,7 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	}
 	if !foundTopic {
 		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 	h.logger.Tracef("validateTopic succeeded")
 	return nil

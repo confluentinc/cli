@@ -361,6 +361,7 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 		if err != nil {
 			return map[string]string{}, err
 		}
+
 		path := local.ExtractConfig(data)["plugin.path"].(string)
 		full, err := c.ch.GetFile("share", "java")
 		if err != nil {
@@ -377,12 +378,18 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 			if err != nil {
 				return map[string]string{}, err
 			}
+
 			classpath := fmt.Sprintf("%s:%s", os.Getenv("CLASSPATH"), file)
 			classpath = strings.TrimPrefix(classpath, ":")
 			if err := os.Setenv("CLASSPATH", classpath); err != nil {
 				return map[string]string{}, err
 			}
-			config["rest.extension.classes"] = "io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"
+
+			classes := []string{"io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension"}
+			if val, ok := local.ExtractConfig(data)["rest.extension.classes"]; ok {
+				classes = append(classes, strings.Split(val.(string), ",")...)
+			}
+			config["rest.extension.classes"] = strings.Join(classes, ",")
 		}
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
@@ -406,21 +413,11 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 		config["dataDir"] = data
 	}
 
-	if isCP {
-		if utils.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
-			config, err = appendMonitoringInterceptors(config)
-			if err != nil {
-				return map[string]string{}, err
-			}
-		}
+	if isCP && utils.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+		config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+		config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
 	}
 
-	return config, nil
-}
-
-func appendMonitoringInterceptors(config map[string]string) (map[string]string, error) {
-	config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-	config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
 	return config, nil
 }
 
