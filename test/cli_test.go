@@ -142,15 +142,12 @@ func (s *CLITestSuite) TearDownSuite() {
 }
 
 func (s *CLITestSuite) TestCcloudErrors() {
-	// TODO: Add this test back when we add prompt testing for integration test
-	// Now that non-interactive login is officially supported, we ignore failures from env var and netrc login and give user another chance at login
-	//	s.T().Run("invalid user or pass", func(tt *testing.T) {
-	//		loginURL := serveErrors(tt)
-	//		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-	//		output := runCommand(tt, testBin, env, "login --url "+loginURL, 1)
-	//		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-	//		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
-	//	})
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, "login --url "+s.TestBackend.GetCloudUrl(), 1)
+		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
+	})
 
 	s.T().Run("expired token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
@@ -199,7 +196,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		}
 		loginURL := s.getLoginURL("ccloud", tt)
 		if tt.login == "default" {
-			env := []string{pauth.DeprecatedConfluentCloudEmail + "=fake@user.com", pauth.DeprecatedConfluentCloudPassword + "=pass1"}
+			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)

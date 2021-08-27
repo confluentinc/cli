@@ -227,7 +227,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentTokenAndCredentialsFromEnvVar() {
 	// incomplete credentials, setting on username but not password
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformUsername, deprecatedEnvUser))
+	suite.require.NoError(os.Setenv(ConfluentPlatformUsername, deprecatedEnvUser))
 	creds, err := suite.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.require.Nil(creds)
@@ -301,21 +301,21 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromPr
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromEnvVar() {
 	// incomplete and should, as there is no credentials set
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformMDSURL, prerunURL))
+	suite.require.NoError(os.Setenv(ConfluentPlatformMDSURL, prerunURL))
 	creds, err := suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.Error(err)
 	suite.require.Equal(errors.NoCredentialsFoundErrorMsg, err.Error())
 	suite.require.Nil(creds)
 
 	// incomplete and should return nil cred, as there is no password set even though username is set
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformUsername, envUsername))
+	suite.require.NoError(os.Setenv(ConfluentPlatformUsername, envUsername))
 	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.Error(err)
 	suite.require.Equal(errors.NoCredentialsFoundErrorMsg, err.Error())
 	suite.require.Nil(creds)
 
 	// incomplete as this only sets username and password but not URL which is needed for Prerun login
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformMDSURL, ""))
+	suite.require.NoError(os.Unsetenv(ConfluentPlatformMDSURL))
 	suite.setCPEnvVars()
 	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.Error(err)
@@ -323,13 +323,13 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.require.Nil(creds)
 
 	// Set URL
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformMDSURL, prerunURL))
+	suite.require.NoError(os.Setenv(ConfluentPlatformMDSURL, prerunURL))
 	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.compareCredentials(envPrerunCredentials, creds)
 
-	// Set ca-cert-pat
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformCACertPath, caCertPath))
+	// Set ca-cert-path
+	suite.require.NoError(os.Setenv(ConfluentPlatformCACertPath, caCertPath))
 	creds, err = suite.loginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar(&cobra.Command{})()
 	suite.require.NoError(err)
 	suite.compareCredentials(envPrerunCredentialsWithCaCertPath, creds)

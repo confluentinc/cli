@@ -127,7 +127,6 @@ var (
 
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
@@ -177,7 +176,6 @@ func TestCredentialsOverride(t *testing.T) {
 
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
@@ -234,7 +232,6 @@ func TestLoginSuccess(t *testing.T) {
 
 func TestLoginOrderOfPrecedence(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	netrcUser := "netrc@confleunt.io"
 	netrcPassword := "netrcpassword"
 	netrcCreds := &pauth.Credentials{
@@ -368,7 +365,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 func TestPromptLoginFlag(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	wrongCreds := &pauth.Credentials{
 		Username: "wrong_user",
 		Password: "wrong_password",
@@ -444,7 +440,6 @@ func TestPromptLoginFlag(t *testing.T) {
 
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -498,7 +493,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setEnv {
-				os.Setenv(pauth.DeprecatedConfluentPlatformCACertPath, "testcert.pem")
+				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
 			cfg := v3.New(&config.Params{
 				CLIName:    "confluent",
@@ -526,7 +521,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 
 			req.Equal(tt.expectedContextName, ctx.Name)
 			if tt.setEnv {
-				os.Unsetenv(pauth.DeprecatedConfluentPlatformCACertPath)
+				os.Unsetenv(pauth.ConfluentPlatformCACertPath)
 			}
 		})
 	}
@@ -636,7 +631,6 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
@@ -720,7 +714,6 @@ func TestLoginWithExistingContext(t *testing.T) {
 
 func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	suite := []struct {
 		urlIn      string
 		valid      bool
@@ -855,11 +848,6 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
-}
-
-// Integration tests use the deprecated CCloud email env var, so the user's regular env vars aren't overwritten.
-func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
-	req.NoError(os.Unsetenv(pauth.DeprecatedConfluentCloudEmail))
 }
 
 func TestIsCCloudURL_True(t *testing.T) {
