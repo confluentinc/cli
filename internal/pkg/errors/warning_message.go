@@ -13,7 +13,7 @@ const (
 
 	//login command
 	UsingLoginURLDefaults      = "Assuming %s.\n"
-	DeprecatedEnvVarWarningMsg = "%s has been deprecated and replaced by %s.\n"
+	DeprecatedEnvVarWarningMsg = "`%s` has been deprecated and replaced by `%s`.\n"
 
 	//kafka rest
 	AssumingHttpProtocol  = "Assuming http protocol.\n"
