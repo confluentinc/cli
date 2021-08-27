@@ -180,7 +180,6 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 		case http.MethodPut:
 			err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
 			require.NoError(t, err)
-		case http.MethodDelete:
 		}
 	}
 }
