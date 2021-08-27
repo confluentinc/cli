@@ -42,8 +42,9 @@ type clusterCommand struct {
 func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "app",
-			Short: "Manage ksqlDB apps.",
+			Use:         "app",
+			Short:       "Manage ksqlDB apps.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, SubcommandFlags)
 	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.prerunner = prerunner

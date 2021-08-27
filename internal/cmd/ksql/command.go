@@ -21,8 +21,9 @@ type command struct {
 func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
-			Use:   "ksql",
-			Short: "Manage ksqlDB applications.",
+			Use:         "ksql",
+			Short:       "Manage ksqlDB applications.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 		}, prerunner)
 	cmd := &command{
 		CLICommand:      cliCmd,
@@ -35,11 +36,12 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 }
 
 func (c *command) init(cfg *v3.Config) {
-	if cfg.IsCloud() {
-		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		c.AddCommand(clusterCmd.Command)
+	clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
+
+	c.AddCommand(clusterCmd.Command)
+	c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+
+	if cfg.IsCloudLogin() {
 		c.serverCompleter.AddCommand(clusterCmd)
-	} else {
-		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}
 }

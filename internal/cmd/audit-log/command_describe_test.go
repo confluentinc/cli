@@ -42,5 +42,5 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 		}
 	}
 
-	return New(cfg, climock.NewPreRunnerMock(client, nil, nil, cfg))
+	return New(climock.NewPreRunnerMock(client, nil, nil, cfg))
 }

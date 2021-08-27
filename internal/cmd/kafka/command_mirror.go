@@ -70,8 +70,10 @@ type mirrorCommand struct {
 func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:    "mirror",
-			Short:  "Manages cluster linking mirror topics.",
+			Use:         "mirror",
+			Short:       "Manages cluster linking mirror topics.",
+			Hidden:      true,
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		},
 		prerunner, MirrorSubcommandFlags)
 	cmd := &mirrorCommand{
@@ -92,8 +94,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror list --link <link> --mirror-status <mirror-status>",
 			},
 		),
-		RunE:   c.list,
-		Args:   cobra.NoArgs,
+		RunE: c.list,
+		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
@@ -111,8 +113,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror describe <destination-topic-name> --link <link>",
 			},
 		),
-		RunE:   c.describe,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.describe,
+		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
@@ -130,8 +132,8 @@ func (c *mirrorCommand) init() {
 					"--replication-factor <replication-factor> --config-file mirror_config.txt",
 			},
 		),
-		RunE:   c.create,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.create,
+		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
@@ -150,8 +152,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
-		RunE:   c.promote,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.promote,
+		Args: cobra.MinimumNArgs(1),
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -168,8 +170,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
-		RunE:   c.failover,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.failover,
+		Args: cobra.MinimumNArgs(1),
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -186,8 +188,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
-		RunE:   c.pause,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.pause,
+		Args: cobra.MinimumNArgs(1),
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -204,8 +206,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
 			},
 		),
-		RunE:   c.resume,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.resume,
+		Args: cobra.MinimumNArgs(1),
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")

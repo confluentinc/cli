@@ -26,8 +26,9 @@ type schemaCommand struct {
 func NewSchemaCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "schema",
-			Short: "Manage Schema Registry schemas.",
+			Use:         "schema",
+			Short:       "Manage Schema Registry schemas.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, SchemaSubcommandFlags)
 	schemaCmd := &schemaCommand{
 		AuthenticatedStateFlagCommand: cliCmd,

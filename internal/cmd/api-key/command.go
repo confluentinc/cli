@@ -66,8 +66,9 @@ var (
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "api-key",
-			Short: "Manage the API keys.",
+			Use:         "api-key",
+			Short:       "Manage the API keys.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, SubcommandFlags)
 	cmd := &command{
 		AuthenticatedStateFlagCommand: cliCmd,

@@ -14,21 +14,20 @@ type command struct {
 
 // New returns the default command object for interacting with RBAC.
 func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "iam",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+	}
+
 	var cliCmd *pcmd.AuthenticatedCLICommand
-	if cfg.IsOnPrem() {
-		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(
-			&cobra.Command{
-				Use:   "iam",
-				Short: "Manage RBAC, ACL and IAM permissions.",
-				Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
-			}, prerunner)
+	if cfg.IsOnPremLogin() {
+		cmd.Short = "Manage RBAC, ACL and IAM permissions."
+		cmd.Long = "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions."
+		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	} else {
-		cliCmd = pcmd.NewAuthenticatedCLICommand(
-			&cobra.Command{
-				Use:   "iam",
-				Short: "Manage RBAC and IAM permissions.",
-				Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions.",
-			}, prerunner)
+		cmd.Short = "Manage RBAC and IAM permissions."
+		cmd.Long = "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions."
+		cliCmd = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	}
 
 	c := &command{
@@ -36,11 +35,9 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
+	c.AddCommand(NewACLCommand(c.prerunner))
 	c.AddCommand(NewRoleCommand(cfg, c.prerunner))
 	c.AddCommand(NewRolebindingCommand(cfg, c.prerunner))
-	if cfg.IsOnPrem() {
-		c.AddCommand(NewACLCommand(c.prerunner))
-	}
 
 	return c.Command
 }

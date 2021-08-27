@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -19,29 +18,28 @@ type command struct {
 }
 
 // New returns the default command object for interacting with audit logs.
-func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewCLICommand(
-		&cobra.Command{
-			Use:   "audit-log",
-			Short: "Manage audit log configuration.",
-			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
-		}, prerunner)
-	cmd := &command{
-		CLICommand: cliCmd,
+func New(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "audit-log",
+		Short:       "Manage audit log configuration.",
+		Long:        "Manage which auditable events are logged, and where the event logs are sent.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+	}
+
+	c := &command{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		prerunner:  prerunner,
 	}
-	cmd.init(cfg)
-	return cmd.Command
+	c.init()
+
+	return c.Command
 }
 
-func (c *command) init(cfg *v3.Config) {
-	if cfg.IsCloud() {
-		c.AddCommand(NewDescribeCommand(c.prerunner))
-	} else {
-		c.AddCommand(NewMigrateCommand(c.prerunner))
-		c.AddCommand(NewConfigCommand(c.prerunner))
-		c.AddCommand(NewRouteCommand(c.prerunner))
-	}
+func (c *command) init() {
+	c.AddCommand(NewDescribeCommand(c.prerunner))
+	c.AddCommand(NewMigrateCommand(c.prerunner))
+	c.AddCommand(NewConfigCommand(c.prerunner))
+	c.AddCommand(NewRouteCommand(c.prerunner))
 }
 
 type errorMessage struct {

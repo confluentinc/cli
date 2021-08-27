@@ -7,22 +7,23 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type migrateCmd struct {
-	*cmd.CLICommand
-	prerunner cmd.PreRunner
+	*pcmd.CLICommand
+	prerunner pcmd.PreRunner
 }
 
-func NewMigrateCommand(prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewCLICommand(
+func NewMigrateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
-			Use:   "migrate",
-			Short: "Migrate legacy audit log configurations.",
+			Use:         "migrate",
+			Short:       "Migrate legacy audit log configurations.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		}, prerunner)
 	command := &migrateCmd{
 		CLICommand: cliCmd,

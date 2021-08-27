@@ -35,9 +35,9 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 
 func (a *Command) init(prerunner pcmd.PreRunner) {
 	context := "Confluent Cloud or Confluent Platform"
-	if a.cfg.IsCloud() {
+	if a.cfg.IsCloudLogin() {
 		context = "Confluent Cloud"
-	} else if a.cfg.IsOnPrem() {
+	} else if a.cfg.IsOnPremLogin() {
 		context = "Confluent Platform"
 	}
 
@@ -62,7 +62,7 @@ func (a *Command) logout(cmd *cobra.Command, _ []string) error {
 			level = a.Config.Logger.GetLevel()
 		}
 
-		username, err := a.netrcHandler.RemoveNetrcCredentials(a.cfg.IsCloud(), a.Config.Config.Context().Name)
+		username, err := a.netrcHandler.RemoveNetrcCredentials(a.cfg.IsCloudLogin(), a.Config.Config.Context().Name)
 		if err == nil {
 			if level >= log.WARN {
 				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())

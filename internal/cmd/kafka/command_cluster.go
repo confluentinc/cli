@@ -17,6 +17,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -94,29 +95,42 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
-	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Kafka clusters.",
-		}, prerunner, ClusterSubcommandFlags)
-	cmd := &clusterCommand{
-		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:                     prerunner,
-		analyticsClient:               analyticsClient,
+func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+	cmd := &cobra.Command{
+		Use:         "cluster",
+		Short:       "Manage Kafka clusters.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
-	cmd.init()
-	return cmd
+
+	c := &clusterCommand{
+		prerunner:       prerunner,
+		analyticsClient: analyticsClient,
+	}
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+	}
+
+	c.init(cfg)
+
+	return c
 }
 
-func (c *clusterCommand) init() {
+func (c *clusterCommand) init(cfg *v3.Config) {
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka clusters.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Use:  "list",
+		Args: cobra.NoArgs,
 	}
-	listCmd.Flags().Bool("all", false, "List clusters across all environments.")
+	if cfg.IsCloudLogin() {
+		listCmd.Short = "List Kafka clusters."
+		listCmd.RunE = pcmd.NewCLIRunE(c.list)
+		listCmd.Flags().Bool("all", false, "List clusters across all environments.")
+	} else {
+		listCmd.Short = "List registered Kafka clusters."
+		listCmd.Long = "List Kafka clusters that are registered with the MDS cluster registry."
+		listCmd.RunE = pcmd.NewCLIRunE(c.onPremList)
+	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -129,6 +143,7 @@ func (c *clusterCommand) init() {
 		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
 			return c.create(cmd, args, form.NewPrompt(os.Stdin))
 		}),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
@@ -153,20 +168,22 @@ func (c *clusterCommand) init() {
 	c.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe a Kafka cluster.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:         "describe <id>",
+		Short:       "Describe a Kafka cluster.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.describe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a Kafka cluster.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:         "update <id>",
+		Short:       "Update a Kafka cluster.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.update),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Change a cluster's name and expand its CKU count:",
@@ -181,18 +198,20 @@ func (c *clusterCommand) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Kafka cluster.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Use:         "delete <id>",
+		Short:       "Delete a Kafka cluster.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.delete),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	c.AddCommand(deleteCmd)
 
 	useCmd := &cobra.Command{
-		Use:   "use <id>",
-		Short: "Make the Kafka cluster active for use in other commands.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.use),
+		Use:         "use <id>",
+		Short:       "Make the Kafka cluster active for use in other commands.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.use),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	c.AddCommand(useCmd)
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}

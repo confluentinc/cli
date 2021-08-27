@@ -55,7 +55,7 @@ func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClie
 	}
 }
 
-func (c *Commander) Anonymous(command *pcmd.CLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
@@ -68,8 +68,7 @@ func (c *Commander) Anonymous(command *pcmd.CLICommand) func(cmd *cobra.Command,
 
 func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 		c.setClient(command)
@@ -78,18 +77,18 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		command.State, err = ctx.AuthenticatedState(cmd)
+		state, err := ctx.AuthenticatedState(cmd)
 		if err != nil {
 			return err
 		}
+		command.State = state
 		return nil
 	}
 }
 
 func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 		c.setClient(command)
@@ -98,7 +97,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		if !ctx.HasMDSLogin() {
+		if !ctx.HasBasicMDSLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.State = ctx.State
@@ -108,8 +107,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 
 func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 		ctx := command.Config.Context()

@@ -603,13 +603,9 @@ func TestConfig_getFilename(t *testing.T) {
 				MetricSink: nil,
 				Logger:     log.New(),
 			})
-			got, err := c.getFilename()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Config.getFilename() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := c.GetFilename()
 			if got != tt.want {
-				t.Errorf("Config.getFilename() = %v, want %v", got, tt.want)
+				t.Errorf("Config.GetFilename() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1075,7 +1071,7 @@ func TestConfig_IsCloud_True(t *testing.T) {
 			Contexts:       map[string]*Context{"context": {PlatformName: platform}},
 			CurrentContext: "context",
 		}
-		require.True(t, config.IsCloud(), platform+" should be true")
+		require.True(t, config.IsCloudLogin(), platform+" should be true")
 	}
 }
 
@@ -1089,7 +1085,7 @@ func TestConfig_IsCloud_False(t *testing.T) {
 	}
 
 	for _, config := range configs {
-		require.False(t, config.IsCloud())
+		require.False(t, config.IsCloudLogin())
 	}
 }
 
@@ -1098,7 +1094,7 @@ func TestConfig_IsOnPrem_True(t *testing.T) {
 		Contexts:       map[string]*Context{"context": {PlatformName: "https://example.com"}},
 		CurrentContext: "context",
 	}
-	require.True(t, config.IsOnPrem())
+	require.True(t, config.IsOnPremLogin())
 }
 
 func TestConfig_IsOnPrem_False(t *testing.T) {
@@ -1115,6 +1111,6 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 	}
 
 	for _, config := range configs {
-		require.False(t, config.IsOnPrem())
+		require.False(t, config.IsOnPremLogin())
 	}
 }

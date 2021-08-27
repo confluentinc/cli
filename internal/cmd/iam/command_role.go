@@ -45,7 +45,7 @@ func NewRoleCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
 	var cliCmd *cmd.AuthenticatedStateFlagCommand
-	if cfg.IsOnPrem() {
+	if cfg.IsOnPremLogin() {
 		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRoleCmd, prerunner, RoleSubcommandFlags)
 	} else {
 		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
@@ -59,7 +59,7 @@ func NewRoleCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *roleCommand) createContext() context.Context {
-	if c.cfg.IsCloud() {
+	if c.cfg.IsCloudLogin() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
@@ -140,7 +140,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
-	if c.cfg.IsCloud() {
+	if c.cfg.IsCloudLogin() {
 		return c.ccloudList(cmd)
 	} else {
 		return c.confluentList(cmd)
@@ -221,7 +221,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 	role := args[0]
 
-	if c.cfg.IsCloud() {
+	if c.cfg.IsCloudLogin() {
 		return c.ccloudDescribe(cmd, role)
 	} else {
 		return c.confluentDescribe(cmd, role)

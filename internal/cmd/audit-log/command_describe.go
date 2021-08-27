@@ -40,9 +40,10 @@ func NewDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &describeCmd{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
-				Use:   "describe",
-				Short: "Describe the audit log configuration for this organization.",
-				Args:  cobra.NoArgs,
+				Use:         "describe",
+				Short:       "Describe the audit log configuration for this organization.",
+				Args:        cobra.NoArgs,
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 			},
 			prerunner,
 		),

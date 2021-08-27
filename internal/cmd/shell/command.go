@@ -45,10 +45,11 @@ func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, config *v3.Co
 
 func (c *command) init() {
 	c.Command = &cobra.Command{
-		Use:   "shell",
-		Short: fmt.Sprintf("Run the %s shell.", version.CLIName),
-		RunE:  pcmd.NewCLIRunE(c.shell),
-		Args:  cobra.NoArgs,
+		Use:         "shell",
+		Short:       fmt.Sprintf("Run the %s shell.", version.CLIName),
+		RunE:        pcmd.NewCLIRunE(c.shell),
+		Args:        cobra.NoArgs,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 }
 

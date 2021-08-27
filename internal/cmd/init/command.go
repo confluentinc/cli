@@ -36,11 +36,12 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver, analyticsClient a
 				Code: `confluent init "new context" --kafka-auth`,
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 	cliCmd := pcmd.NewAnonymousCLICommand(cobraCmd, prerunner)
 	cobraCmd.PersistentPreRunE = pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
 		analyticsClient.SetCommandType(analytics.Init)
-		return prerunner.Anonymous(cliCmd)(cmd, args)
+		return prerunner.Anonymous(cliCmd, false)(cmd, args)
 	})
 	cmd := &command{
 		CLICommand: cliCmd,

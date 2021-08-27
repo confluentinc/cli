@@ -116,7 +116,11 @@ func (c *Context) Save() error {
 	return c.Config.Save()
 }
 
-func (c *Context) HasMDSLogin() bool {
+func (c *Context) HasBasicMDSLogin() bool {
+	if c.Credential == nil {
+		return false
+	}
+
 	credType := c.Credential.CredentialType
 	switch credType {
 	case v2.Username:
@@ -128,7 +132,11 @@ func (c *Context) HasMDSLogin() bool {
 	}
 }
 
-func (c *Context) hasCCloudLogin() bool {
+func (c *Context) hasBasicCloudLogin() bool {
+	if c.Credential == nil {
+		return false
+	}
+
 	credType := c.Credential.CredentialType
 	switch credType {
 	case v2.Username:
