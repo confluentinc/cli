@@ -28,20 +28,20 @@ type exporterInfoDisplay struct {
 }
 
 type exporterStatusDisplay struct {
-	Name   string
-	State  string
-	Offset string
-	Ts     string
-	Trace  string
+	Name      string
+	State     string
+	Offset    string
+	Timestamp string
+	Trace     string
 }
 
 var (
 	describeInfoLabels              = []string{"Name", "Subjects", "ContextType", "Context", "Config"}
 	describeInfoHumanRenames        = map[string]string{"ContextType": "Context Type", "Config": "Remote Schema Registry Configs"}
 	describeInfoStructuredRenames   = map[string]string{"Name": "name", "Subjects": "subjects", "ContextType": "context_type", "Context": "context", "Config": "config"}
-	describeStatusLabels            = []string{"Name", "State", "Offset", "Ts", "Trace"}
-	describeStatusHumanRenames      = map[string]string{"State": "Exporter State", "Offset": "Exporter Offset", "Ts": "Exporter Timestamp", "Trace": "Error Trace"}
-	describeStatusStructuredRenames = map[string]string{"Name": "name", "State": "state", "Offset": "offset", "Ts": "timestamp", "Trace": "trace"}
+	describeStatusLabels            = []string{"Name", "State", "Offset", "Timestamp", "Trace"}
+	describeStatusHumanRenames      = map[string]string{"State": "Exporter State", "Offset": "Exporter Offset", "Timestamp": "Exporter Timestamp", "Trace": "Error Trace"}
+	describeStatusStructuredRenames = map[string]string{"Name": "name", "State": "state", "Offset": "offset", "Timestamp": "timestamp", "Trace": "trace"}
 )
 
 func NewExporterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
@@ -83,18 +83,15 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter create my_exporter"+
-					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context-name my_context"+
-					"--config-file ~/config.txt", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my_subject1,my_subject2 --context-type CUSTOM --context my_context --config config.txt", cliName),
 			},
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().StringSlice("subjects", []string{"*"}, "The subjects of the exporter. Should use" +
-		" comma separated list, or specify the flag multiple times.")
-	cmd.Flags().String("context-type", "AUTO", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
-	cmd.Flags().String("context-name", "", "The context name of the exporter.")
-	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
+	cmd.Flags().StringSlice("subjects", []string{"*"}, "Exporter subjects. Use a comma separated list, or specify the flag multiple times.")
+	cmd.Flags().String("context-type", "AUTO", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
+	cmd.Flags().String("context-name", "", "Exporter context name.")
+	cmd.Flags().String("config-file", "", "Exporter config file.")
 
 	_ = cmd.MarkFlagRequired("config-file")
 	cmd.Flags().SortFlags = false
@@ -108,17 +105,17 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my_exporter"+
+				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter"+
 					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context-name my_context", cliName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my_exporter --config-file ~/config.txt", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --config-file ~/config.txt", cliName),
 			},
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter. Should use" +
+	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter. Should use"+
 		" comma separated list, or specify the flag multiple times.")
 	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "The context name of the exporter.")
@@ -134,7 +131,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the information of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter describe my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter describe my-exporter", cliName),
 			},
 		),
 	}
@@ -150,7 +147,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the configurations of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter get-config my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter get-config my-exporter", cliName),
 			},
 		),
 	}
@@ -166,7 +163,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the status of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter get-status my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter get-status my-exporter", cliName),
 			},
 		),
 	}
@@ -182,7 +179,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter pause my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter pause my-exporter", cliName),
 			},
 		),
 	}
@@ -198,7 +195,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Resume schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter resume my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter resume my-exporter", cliName),
 			},
 		),
 	}
@@ -214,7 +211,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Reset schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter reset my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter reset my-exporter", cliName),
 			},
 		),
 	}
@@ -230,7 +227,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter delete my_exporter", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter delete my-exporter", cliName),
 			},
 		),
 	}
@@ -314,7 +311,7 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.CreatedExporterMsg, name)
+	utils.Printf(cmd, errors.ExporterActionMsg, "Created", name)
 	return nil
 }
 
@@ -330,10 +327,10 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	updateRequest := srsdk.UpdateExporterRequest{
-		Subjects: info.Subjects,
+		Subjects:    info.Subjects,
 		ContextType: info.ContextType,
-		Context: info.Context,
-		Config: info.Config,
+		Context:     info.Context,
+		Config:      info.Config,
 	}
 
 	contextType, err := cmd.Flags().GetString("context-type")
@@ -374,7 +371,7 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedExporterMsg, name)
+	utils.Printf(cmd, errors.ExporterActionMsg, "Updated", name)
 	return nil
 }
 
@@ -429,11 +426,11 @@ func (c *exporterCommand) status(cmd *cobra.Command, args []string) error {
 	}
 
 	data := &exporterStatusDisplay{
-		Name:   status.Name,
-		State:  status.State,
-		Offset: strconv.FormatInt(status.Offset, 10),
-		Ts:     strconv.FormatInt(status.Ts, 10),
-		Trace:  status.Trace,
+		Name:      status.Name,
+		State:     status.State,
+		Offset:    strconv.FormatInt(status.Offset, 10),
+		Timestamp: strconv.FormatInt(status.Ts, 10),
+		Trace:     status.Trace,
 	}
 	return output.DescribeObject(cmd, data, describeStatusLabels, describeStatusHumanRenames, describeStatusStructuredRenames)
 }
@@ -450,7 +447,7 @@ func (c *exporterCommand) pause(cmd *cobra.Command, args []string) error {
 		return catchSchemaExporterNotFound(name, httpResponse, err)
 	}
 
-	utils.Printf(cmd, errors.PausedExporterMsg, name)
+	utils.Printf(cmd, errors.ExporterActionMsg, "Paused", name)
 	return nil
 }
 
@@ -466,7 +463,7 @@ func (c *exporterCommand) resume(cmd *cobra.Command, args []string) error {
 		return catchSchemaExporterNotFound(name, httpResponse, err)
 	}
 
-	utils.Printf(cmd, errors.ResumedExporterMsg, name)
+	utils.Printf(cmd, errors.ExporterActionMsg, "Resumed", name)
 	return nil
 }
 
@@ -482,7 +479,7 @@ func (c *exporterCommand) reset(cmd *cobra.Command, args []string) error {
 		return catchSchemaExporterNotFound(name, httpResponse, err)
 	}
 
-	utils.Printf(cmd, errors.ResetExporterMsg, name)
+	utils.Printf(cmd, errors.ExporterActionMsg, "Reset", name)
 	return nil
 }
 
@@ -498,13 +495,13 @@ func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 		return catchSchemaExporterNotFound(name, httpResponse, err)
 	}
 
-	utils.Printf(cmd, errors.DeletedExporterMsg, name)
+	utils.Printf(cmd, errors.ExporterActionMsg, "Deleted", name)
 	return nil
 }
 
 func catchSchemaExporterNotFound(name string, httpResponse *http.Response, err error) error {
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
-		return errors.Errorf(errors.SchemaExporterNotFoundMsg, name)
+		return errors.Errorf(errors.SchemaExporterNotFoundErrorMsg, name)
 	}
 	return err
 }

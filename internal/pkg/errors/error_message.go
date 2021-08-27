@@ -178,12 +178,12 @@ const (
 	ParsePromptFormatErrorMsg = "error parsing prompt format string \"%s\""
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions     = "Schema ID must be an integer."
-	SchemaExporterNotFoundMsg    = "Schema exporter \"%s\" not found"
+	CompatibilityOrModeErrorMsg    = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg   = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg        = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg          = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions       = "Schema ID must be an integer."
+	SchemaExporterNotFoundErrorMsg = "schema exporter \"%s\" not found"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

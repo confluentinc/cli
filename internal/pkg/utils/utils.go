@@ -121,8 +121,8 @@ func ValidateEmail(email string) bool {
 func toMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
 	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
+		pair := strings.Split(cfg, "=")
+		if len(pair) != 2 {
 			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
 		}
 		configMap[pair[0]] = pair[1]
@@ -140,7 +140,7 @@ func ReadConfigsFromFile(configFile string) (map[string]string, error) {
 		return nil, err
 	}
 
-	// Create config map from the argument.a
+	// Create config map from the argument.
 	var configs []string
 	for _, s := range strings.Split(string(configContents), "\n") {
 		// Filter out blank lines
