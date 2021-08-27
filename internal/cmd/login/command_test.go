@@ -67,14 +67,14 @@ var (
 			}, nil
 		},
 	}
-	mockUser = &sdkMock.User{}
+	mockUser                    = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -155,7 +155,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -301,7 +301,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -396,7 +396,7 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
-				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -456,7 +456,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, &ccloud.InvalidLoginError{}
 			}

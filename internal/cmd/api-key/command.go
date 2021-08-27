@@ -218,7 +218,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
-			userId = userIdMap[serviceAccountId]
+			var ok bool
+			userId, ok = userIdMap[serviceAccountId]
+			if !ok {
+				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountId), errors.ServiceAccountNotFoundSuggestions)
+			}
 		} else { // if user inputs numeric ID, convert it to int32
 			userIdp, _ := strconv.Atoi(serviceAccountId)
 			userId = int32(userIdp)

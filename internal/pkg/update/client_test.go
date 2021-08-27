@@ -143,7 +143,7 @@ func TestCheckForUpdates(t *testing.T) {
 						return v3, nil
 					},
 				},
-				Logger: log.New(),
+				Logger:    log.New(),
 				CheckFile: tmpCheckFile1.Name(),
 			}),
 			args: args{

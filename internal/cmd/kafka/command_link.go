@@ -68,7 +68,6 @@ func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:         "link",
 			Short:       "Manages inter-cluster links.",
-			Hidden:      true,
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		},
 		prerunner, LinkSubcommandFlags)
@@ -191,8 +190,11 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -321,8 +323,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	// Overriding the bootstrap server prop by the flag value
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -357,8 +362,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -377,8 +385,11 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -442,8 +453,11 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 

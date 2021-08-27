@@ -41,15 +41,15 @@ func TestHandleError(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:	 "mds v1 backend error",
-			err:	 mdsv1.GenericOpenAPIError{},
-			want:	 fmt.Sprintf(GenericOpenAPIErrorMsg, "", ""),
+			name:    "mds v1 backend error",
+			err:     mdsv1.GenericOpenAPIError{},
+			want:    fmt.Sprintf(GenericOpenAPIErrorMsg, "", ""),
 			wantErr: true,
 		},
 		{
-			name:	 "mds v2 backend error",
-			err:	 mdsv2alpha1.GenericOpenAPIError{},
-			want:	 fmt.Sprintf(GenericOpenAPIErrorMsg, "", ""),
+			name:    "mds v2 backend error",
+			err:     mdsv2alpha1.GenericOpenAPIError{},
+			want:    fmt.Sprintf(GenericOpenAPIErrorMsg, "", ""),
 			wantErr: true,
 		},
 	}
