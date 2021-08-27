@@ -146,11 +146,11 @@ func (s *SRRouter) HandleSRExporters(t *testing.T) func(w http.ResponseWriter, r
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			exporters := []string{"exporter1", "exporter2"}
 			err := json.NewEncoder(w).Encode(exporters)
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			var req srsdk.CreateExporterRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
@@ -167,7 +167,7 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 		vars := mux.Vars(r)
 		name := vars["name"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			info := srsdk.ExporterInfo{
 				Name:        name,
 				Subjects:    []string{"foo", "bar"},
@@ -177,10 +177,10 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 			}
 			err := json.NewEncoder(w).Encode(info)
 			require.NoError(t, err)
-		case "PUT":
+		case http.MethodPut:
 			err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 		}
 	}
 }

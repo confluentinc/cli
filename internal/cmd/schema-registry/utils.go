@@ -42,7 +42,7 @@ func convertMapToString(m map[string]string) string {
 	for key, value := range m {
 		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
 	}
-	return b.String()
+	return strings.TrimSuffix(b.String(), "\n")
 }
 
 func RequireSubjectFlag(cmd *cobra.Command) {

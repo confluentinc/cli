@@ -5,5 +5,4 @@
 | Context                        | mycontext     |
 | Remote Schema Registry Configs | key1="value1" |
 |                                | key2="value2" |
-|                                |               |
 +--------------------------------+---------------+
