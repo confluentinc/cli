@@ -93,11 +93,7 @@ func New(params *config.Params) *Config {
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
 	currentVersion := Version
-	filename, err := c.getFilename()
-	c.Filename = filename
-	if err != nil {
-		return err
-	}
+	filename := c.GetFilename()
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -161,10 +157,7 @@ func (c *Config) Save() error {
 		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
 	}
 
-	filename, err := c.getFilename()
-	if err != nil {
-		return err
-	}
+	filename := c.GetFilename()
 
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
@@ -429,29 +422,37 @@ func (c *Config) Context() *Context {
 	return c.Contexts[c.CurrentContext]
 }
 
+// CredentialType returns the credential type used in the current context: API key, username & password, or neither.
 func (c *Config) CredentialType() v2.CredentialType {
-	ctx := c.Context()
-	if ctx == nil {
-		return v2.None
-	}
-	if c.Context().Credential.CredentialType == v2.APIKey {
+	if c.hasAPIKeyLogin() {
 		return v2.APIKey
 	}
-	if c.HasLogin() {
+
+	if c.HasBasicLogin() {
 		return v2.Username
 	}
+
 	return v2.None
 }
 
-func (c *Config) HasLogin() bool {
+// hasAPIKeyLogin returns true if the user has valid API Key credentials.
+func (c *Config) hasAPIKeyLogin() bool {
+	ctx := c.Context()
+	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
+}
+
+// HasBasicLogin returns true if the user has valid username & password credentials.
+func (c *Config) HasBasicLogin() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
 	}
-	if c.CLIName == "ccloud" {
-		return ctx.hasCCloudLogin()
+
+	if c.IsCloudLogin() {
+		return ctx.hasBasicCloudLogin()
+	} else {
+		return ctx.HasBasicMDSLogin()
 	}
-	return ctx.HasMDSLogin()
 }
 
 func (c *Config) ResetAnonymousId() error {
@@ -459,15 +460,15 @@ func (c *Config) ResetAnonymousId() error {
 	return c.Save()
 }
 
-func (c *Config) getFilename() (string, error) {
+func (c *Config) GetFilename() string {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
 		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, "confluent"))
 	}
-	return c.Filename, nil
+	return c.Filename
 }
 
-func (c *Config) IsCloud() bool {
+func (c *Config) IsCloudLogin() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
@@ -485,11 +486,7 @@ func (c *Config) IsCloud() bool {
 	return false
 }
 
-func (c *Config) IsOnPrem() bool {
+func (c *Config) IsOnPremLogin() bool {
 	ctx := c.Context()
-	if ctx == nil {
-		return false
-	}
-
-	return ctx.PlatformName != "" && !c.IsCloud()
+	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
 }

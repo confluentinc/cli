@@ -8,23 +8,26 @@ import (
 )
 
 type command struct {
-	*cobra.Command
+	*pcmd.CLICommand
 	resolv pcmd.FlagResolver
 	plugin secret.PasswordProtection
 }
 
 // New returns the default command object for Password Protection
-func New(resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:   "secret",
-			Short: "Manage secrets for Confluent Platform.",
-		},
-		resolv: resolv,
-		plugin: plugin,
+func New(prerunner pcmd.PreRunner, resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "secret",
+		Short:       "Manage secrets for Confluent Platform.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	cmd.init()
-	return cmd.Command
+
+	c := &command{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		resolv:     resolv,
+		plugin:     plugin,
+	}
+	c.init()
+	return c.Command
 }
 
 func (c *command) init() {

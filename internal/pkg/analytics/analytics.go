@@ -360,7 +360,7 @@ func (a *ClientObj) getUser() userInfo {
 }
 
 func (a *ClientObj) getCloudUserInfo() (userId, organizationId, email string) {
-	if !a.config.HasLogin() {
+	if !a.config.HasBasicLogin() {
 		return "", "", ""
 	}
 	user := a.config.Context().State.Auth.User
@@ -372,7 +372,7 @@ func (a *ClientObj) getCloudUserInfo() (userId, organizationId, email string) {
 }
 
 func (a *ClientObj) getCPUsername() string {
-	if !a.config.HasLogin() {
+	if !a.config.HasBasicLogin() {
 		return ""
 	}
 	ctx := a.config.Context()
@@ -382,7 +382,7 @@ func (a *ClientObj) getCPUsername() string {
 func (a *ClientObj) getCredentialType() string {
 	switch a.config.CredentialType() {
 	case v2.Username:
-		if a.config.HasLogin() {
+		if a.config.HasBasicLogin() {
 			return v2.Username.String()
 		}
 	case v2.APIKey:

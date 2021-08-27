@@ -27,7 +27,7 @@ func TestHelp_NoContext(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"completion", "context", "help", "kafka", "local", "login", "logout", "secret", "update", "version",
+		"cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
 		commands = utils.Remove(commands, "local")
@@ -50,8 +50,8 @@ func TestHelp_Cloud(t *testing.T) {
 
 	commands := []string{
 		"admin", "api-key", "audit-log", "cloud-signup", "completion", "context", "connect", "environment", "help",
-		"iam", "kafka", "ksql", "login", "logout", "price", "prompt", "schema-registry", "secret", "service-account",
-		"shell", "update", "version",
+		"iam", "kafka", "ksql", "login", "logout", "price", "prompt", "schema-registry", "service-account", "shell",
+		"update", "version",
 	}
 
 	for _, command := range commands {
@@ -75,7 +75,7 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"admin", "audit-log", "completion", "context", "help", "kafka", "login", "logout", "secret", "update",
+		"admin", "audit-log", "cloud-signup", "completion", "context", "help", "kafka", "login", "logout", "update",
 		"version",
 	}
 
@@ -95,8 +95,8 @@ func TestHelp_OnPrem(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"audit-log", "cluster", "completion", "context", "connect", "help", "iam", "kafka", "ksql", "local", "login",
-		"logout", "schema-registry", "secret", "update", "version",
+		"audit-log", "cloud-signup", "cluster", "completion", "context", "connect", "help", "iam", "kafka", "ksql",
+		"local", "login", "logout", "schema-registry", "secret", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
 		commands = utils.Remove(commands, "local")

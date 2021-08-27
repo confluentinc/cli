@@ -53,7 +53,7 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) upda
 }
 
 type command struct {
-	Command *cobra.Command
+	*pcmd.CLICommand
 	version *pversion.Version
 	logger  *log.Logger
 	client  update.Client
@@ -62,26 +62,28 @@ type command struct {
 }
 
 // New returns the command for the built-in updater.
-func New(logger *log.Logger, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
-	cmd := &command{
+func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
+	c := &command{
 		version:         version,
 		logger:          logger,
 		client:          client,
 		analyticsClient: analytics,
 	}
-	cmd.init()
-	return cmd.Command
-}
 
-func (c *command) init() {
-	c.Command = &cobra.Command{
-		Use:   "update",
-		Short: fmt.Sprintf("Update the %s.", pversion.FullCLIName),
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+	cmd := &cobra.Command{
+		Use:         "update",
+		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.update),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireUpdatesEnabled},
 	}
-	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
-	c.Command.Flags().SortFlags = false
+
+	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
+	cmd.Flags().SortFlags = false
+
+	c.CLICommand = pcmd.NewAnonymousCLICommand(cmd, prerunner)
+
+	return c.Command
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {

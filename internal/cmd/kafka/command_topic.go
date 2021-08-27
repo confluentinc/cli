@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 
 	"github.com/c-bata/go-prompt"
 
@@ -40,8 +41,7 @@ import (
 )
 
 const (
-	defaultReplicationFactor  = 3
-	unspecifiedPartitionCount = -1
+	defaultReplicationFactor = 3
 )
 
 type kafkaTopicCommand struct {
@@ -57,6 +57,7 @@ type hasAPIKeyTopicCommand struct {
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	prerunner           pcmd.PreRunner
 	logger              *log.Logger
 	clientID            string
 	completableChildren []*cobra.Command
@@ -73,30 +74,47 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
-	command := &cobra.Command{
+func NewTopicCommand(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
+
 	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(command, prerunner, ProduceAndConsumeFlags),
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
 		prerunner:           prerunner,
 		logger:              logger,
 		clientID:            clientID,
 	}
+
 	hasAPIKeyCmd.init()
 	kafkaTopicCommand := &kafkaTopicCommand{
 		hasAPIKeyTopicCommand: hasAPIKeyCmd,
 	}
+
 	if !isAPIKeyLogin {
-		authenticatedCmd := &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(command, prerunner, TopicSubcommandFlags),
+		flagMap := OnPremTopicSubcommandFlags
+		if cfg.IsCloudLogin() {
+			flagMap = TopicSubcommandFlags
+		}
+
+		c := &authenticatedTopicCommand{
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, flagMap),
+			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
 		}
-		authenticatedCmd.init()
-		kafkaTopicCommand.authenticatedTopicCommand = authenticatedCmd
+
+		if cfg.IsCloudLogin() {
+			c.init()
+		} else {
+			c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+			c.onPremInit()
+		}
+
+		kafkaTopicCommand.authenticatedTopicCommand = c
 	}
+
 	return kafkaTopicCommand
 }
 
@@ -133,10 +151,11 @@ func (k *kafkaTopicCommand) ServerCompletableChildren() []*cobra.Command {
 
 func (h *hasAPIKeyTopicCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "produce <topic>",
-		Short: "Produce messages to a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(h.produce),
+		Use:         "produce <topic>",
+		Short:       "Produce messages to a Kafka topic.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(h.produce),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -148,10 +167,11 @@ func (h *hasAPIKeyTopicCommand) init() {
 	h.AddCommand(cmd)
 
 	cmd = &cobra.Command{
-		Use:   "consume <topic>",
-		Short: "Consume messages from a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(h.consume),
+		Use:         "consume <topic>",
+		Short:       "Consume messages from a Kafka topic.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(h.consume),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",
@@ -712,7 +732,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, false)
+	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, false)
 	if err != nil {
 		return err
 	}
@@ -873,7 +893,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, beginning)
+	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, beginning)
 	if err != nil {
 		return err
 	}
@@ -959,26 +979,31 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+func (h *hasAPIKeyTopicCommand) validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+	h.logger.Tracef("validateTopic begins")
 	client, err := NewSaramaClient(cluster, clientID, beginning)
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error initializing client")
 		return nil, err
 	}
 	topics, err := client.Topics()
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return nil, err
 	}
 	var foundTopic bool
 	for _, t := range topics {
+		h.logger.Tracef("validateTopic: found topic " + t)
 		if topic == t {
-			foundTopic = true
-			break
+			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
+		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		client.Close()
-		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
+	h.logger.Tracef("validateTopic succeeded")
 	return client, nil
 }
 

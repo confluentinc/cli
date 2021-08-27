@@ -21,7 +21,6 @@ Available Commands:
   price           See Confluent Cloud pricing information.
   prompt          Print Confluent CLI context for your terminal prompt.
   schema-registry Manage Schema Registry.
-  secret          Manage secrets for Confluent Platform.
   service-account Manage service accounts.
   shell           Run the confluent shell.
   update          Update the Confluent CLI.

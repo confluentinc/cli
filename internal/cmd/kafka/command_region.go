@@ -23,9 +23,10 @@ type regionCommand struct {
 func NewRegionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
-			Use:   "region",
-			Short: "Manage Confluent Cloud regions.",
-			Long:  "Use this command to manage Confluent Cloud regions.",
+			Use:         "region",
+			Short:       "Manage Confluent Cloud regions.",
+			Long:        "Use this command to manage Confluent Cloud regions.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner)
 	cmd := &regionCommand{
 		AuthenticatedCLICommand: cliCmd,

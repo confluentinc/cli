@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dghubble/sling"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -178,4 +180,23 @@ func GenerateContextName(username string, url string, caCertPath string) string 
 
 func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
+}
+
+type response struct {
+	Error string `json:"error"`
+	Token string `json:"token"`
+}
+
+func GetBearerToken(authenticatedState *v2.ContextState, server string) (string, error) {
+	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
+	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
+
+	// Configure and send post request with session token to Auth Service to get access token
+	responses := new(response)
+	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
+	if err != nil {
+		return "", err
+	}
+
+	return responses.Token, nil
 }

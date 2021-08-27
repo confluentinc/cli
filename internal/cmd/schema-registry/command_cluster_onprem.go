@@ -14,45 +14,27 @@ import (
 
 var clusterType = "schema-registry-cluster"
 
-type clusterCommandOnPrem struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
-}
-
-// NewClusterCommand returns the Cobra command for Kafka cluster.
-func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
-		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Schema Registry clusters.",
-		},
-		prerunner, OnPremClusterSubcommandFlags)
-	cmd := &clusterCommandOnPrem{
-		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:                     prerunner,
+func (c *clusterCommand) newListCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "list",
+		Short:       "List registered Schema Registry clusters.",
+		Long:        "List Schema Registry clusters that are registered with the MDS cluster registry.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.list),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	cmd.init()
-	return cmd.Command
+
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	cmd.Flags().SortFlags = false
+
+	return cmd
 }
 
-func (c *clusterCommandOnPrem) init() {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List registered Schema Registry clusters.",
-		Long:  "List Schema Registry clusters that are registered with the MDS cluster registry.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
-	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
-	c.AddCommand(listCmd)
-}
-
-func (c *clusterCommandOnPrem) createContext() context.Context {
+func (c *clusterCommand) createContext() context.Context {
 	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 }
 
-func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	schemaClustertype := &mds.ClusterRegistryListOpts{
 		ClusterType: optional.NewString(clusterType),
 	}

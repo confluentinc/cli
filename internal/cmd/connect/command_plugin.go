@@ -35,8 +35,9 @@ var (
 func NewPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &pluginCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cobra.Command{
-			Use:   "plugin",
-			Short: "Show plugins and their configurations.",
+			Use:         "plugin",
+			Short:       "Show plugins and their configurations.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, SubcommandFlags),
 	}
 	c.init()

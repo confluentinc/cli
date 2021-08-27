@@ -64,8 +64,9 @@ var (
 func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "connect",
-			Short: "Manage Kafka Connect.",
+			Use:         "connect",
+			Short:       "Manage Kafka Connect.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 		}, prerunner, SubcommandFlags)
 	cmd := &command{
 		AuthenticatedStateFlagCommand: cliCmd,
@@ -78,10 +79,11 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 
 func (c *command) init(cfg *v3.Config) {
 	describeCmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe a connector.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:         "describe <id>",
+		Short:       "Describe a connector.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.describe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
@@ -93,10 +95,11 @@ func (c *command) init(cfg *v3.Config) {
 	describeCmd.Flags().SortFlags = false
 
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List connectors.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Use:         "list",
+		Short:       "List connectors.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.list),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List connectors in the current or specified Kafka cluster context.",
@@ -108,10 +111,11 @@ func (c *command) init(cfg *v3.Config) {
 	listCmd.Flags().SortFlags = false
 
 	createCmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a connector.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		Use:         "create",
+		Short:       "Create a connector.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.create),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a connector in the current or specified Kafka cluster context.",
@@ -125,10 +129,11 @@ func (c *command) init(cfg *v3.Config) {
 	createCmd.Flags().SortFlags = false
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a connector.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Use:         "delete <id>",
+		Short:       "Delete a connector.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.delete),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a connector in the current or specified Kafka cluster context.",
@@ -138,20 +143,22 @@ func (c *command) init(cfg *v3.Config) {
 	}
 
 	updateCmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a connector configuration.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:         "update <id>",
+		Short:       "Update a connector configuration.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.update),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	updateCmd.Flags().String("config", "", "JSON connector config file.")
 	panicOnError(updateCmd.MarkFlagRequired("config"))
 	updateCmd.Flags().SortFlags = false
 
 	pauseCmd := &cobra.Command{
-		Use:   "pause <id>",
-		Short: "Pause a connector.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.pause),
+		Use:         "pause <id>",
+		Short:       "Pause a connector.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.pause),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause a connector in the current or specified Kafka cluster context.",
@@ -161,10 +168,11 @@ func (c *command) init(cfg *v3.Config) {
 	}
 
 	resumeCmd := &cobra.Command{
-		Use:   "resume <id>",
-		Short: "Resume a connector.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.resume),
+		Use:         "resume <id>",
+		Short:       "Resume a connector.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.resume),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Resume a connector in the current or specified Kafka cluster context.",
@@ -173,19 +181,17 @@ func (c *command) init(cfg *v3.Config) {
 		),
 	}
 
-	if cfg.IsCloud() {
-		c.AddCommand(describeCmd)
-		c.AddCommand(listCmd)
-		c.AddCommand(createCmd)
-		c.AddCommand(deleteCmd)
-		c.AddCommand(updateCmd)
-		c.AddCommand(pauseCmd)
-		c.AddCommand(resumeCmd)
-		c.AddCommand(NewEventCommand(c.prerunner))
-		c.AddCommand(NewPluginCommand(c.prerunner))
-	} else {
-		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
-	}
+	c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+	c.AddCommand(createCmd)
+	c.AddCommand(deleteCmd)
+	c.AddCommand(describeCmd)
+	c.AddCommand(NewEventCommand(c.prerunner))
+	c.AddCommand(listCmd)
+	c.AddCommand(pauseCmd)
+	c.AddCommand(NewPluginCommand(c.prerunner))
+	c.AddCommand(resumeCmd)
+	c.AddCommand(updateCmd)
+
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
 	c.completableFlagChildren = map[string][]*cobra.Command{
 		"cluster": {createCmd},

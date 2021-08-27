@@ -10,17 +10,20 @@ import (
 	"text/template"
 
 	"github.com/c-bata/go-prompt"
+	"github.com/spf13/cobra"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -69,6 +72,7 @@ const (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	logger              *log.Logger
 	prerunner           pcmd.PreRunner
 	completableChildren []*cobra.Command
 	analyticsClient     analytics.Client
@@ -94,29 +98,42 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
-	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Kafka clusters.",
-		}, prerunner, ClusterSubcommandFlags)
-	cmd := &clusterCommand{
-		AuthenticatedStateFlagCommand: cliCmd,
-		prerunner:                     prerunner,
-		analyticsClient:               analyticsClient,
+func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+	cmd := &cobra.Command{
+		Use:         "cluster",
+		Short:       "Manage Kafka clusters.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
-	cmd.init()
-	return cmd
+
+	c := &clusterCommand{
+		prerunner:       prerunner,
+		analyticsClient: analyticsClient,
+	}
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+	}
+
+	c.init(cfg)
+
+	return c
 }
 
-func (c *clusterCommand) init() {
+func (c *clusterCommand) init(cfg *v3.Config) {
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka clusters.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Use:  "list",
+		Args: cobra.NoArgs,
 	}
-	listCmd.Flags().Bool("all", false, "List clusters across all environments.")
+	if cfg.IsCloudLogin() {
+		listCmd.Short = "List Kafka clusters."
+		listCmd.RunE = pcmd.NewCLIRunE(c.list)
+		listCmd.Flags().Bool("all", false, "List clusters across all environments.")
+	} else {
+		listCmd.Short = "List registered Kafka clusters."
+		listCmd.Long = "List Kafka clusters that are registered with the MDS cluster registry."
+		listCmd.RunE = pcmd.NewCLIRunE(c.onPremList)
+	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
@@ -129,6 +146,7 @@ func (c *clusterCommand) init() {
 		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
 			return c.create(cmd, args, form.NewPrompt(os.Stdin))
 		}),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
@@ -153,10 +171,11 @@ func (c *clusterCommand) init() {
 	c.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe a Kafka cluster.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:         "describe <id>",
+		Short:       "Describe a Kafka cluster.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.describe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -166,7 +185,10 @@ func (c *clusterCommand) init() {
 		Use:   "update <id>",
 		Short: "Update a Kafka cluster.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
+			return c.update(cmd, args, form.NewPrompt(os.Stdin))
+		}),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Change a cluster's name and expand its CKU count:",
@@ -181,18 +203,19 @@ func (c *clusterCommand) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Kafka cluster.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Use:         "delete <id>",
+		Short:       "Delete a Kafka cluster.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.delete),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	c.AddCommand(deleteCmd)
-
 	useCmd := &cobra.Command{
-		Use:   "use <id>",
-		Short: "Make the Kafka cluster active for use in other commands.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.use),
+		Use:         "use <id>",
+		Short:       "Make the Kafka cluster active for use in other commands.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.use),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	c.AddCommand(useCmd)
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
@@ -470,7 +493,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
-func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
@@ -495,30 +518,118 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	} else {
 		req.Name = currentCluster.Name
 	}
-	if cmd.Flags().Changed("cku") {
-		cku, err := cmd.Flags().GetInt("cku")
-		if err != nil {
-			return err
-		}
-		if cku <= 0 {
-			return errors.New(errors.CKUMoreThanZeroErrorMsg)
-		}
-
-		// Cluster can't be resized while it's provisioning or being expanded already.
-		// Name _can_ be changed during these times, though.
-		if currentCluster.Status == schedv1.ClusterStatus_PROVISIONING {
-			return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-		} else if currentCluster.Status == schedv1.ClusterStatus_EXPANDING {
-			return errors.New(errors.KafkaClusterExpandingErrorMsg)
-		}
-
-		req.Cku = int32(cku)
+	req.Cku, err = c.validateResize(cmd, currentCluster, prompt)
+	if err != nil {
+		return err
 	}
+
 	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
 	return outputKafkaClusterDescription(cmd, updatedCluster)
+}
+
+func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *schedv1.KafkaCluster, prompt form.Prompt) (int32, error) {
+	if cmd.Flags().Changed("cku") {
+		cku, err := cmd.Flags().GetInt("cku")
+		if err != nil {
+			return currentCluster.Cku, err
+		}
+		// Ensure the cluster is a Dedicated Cluster
+		if !isDedicated(currentCluster) {
+			return currentCluster.Cku, errors.Errorf("error updating kafka cluster: %v", errors.ClusterResizeNotSupported)
+		}
+		// Durability Checks
+		if currentCluster.Durability == schedv1.Durability_HIGH && cku <= 1 {
+			return currentCluster.Cku, errors.New(errors.CKUMoreThanOneErrorMsg)
+		}
+		if cku <= 0 {
+			return currentCluster.Cku, errors.New(errors.CKUMoreThanZeroErrorMsg)
+		}
+		// Cluster can't be resized while it's provisioning or being expanded already.
+		// Name _can_ be changed during these times, though.
+		err = isClusterResizeInProgress(currentCluster)
+		if err != nil {
+			return currentCluster.Cku, err
+		}
+		//If shrink
+		if int32(cku) < currentCluster.Cku {
+			// metrics api auth via jwt
+			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, true)
+			if errFromSmallWindowMetrics != nil && !shouldPrompt {
+				return currentCluster.Cku, fmt.Errorf("cluster shrink validation error: \n%v", errFromSmallWindowMetrics)
+			}
+			promptMessage := ""
+			if shouldPrompt {
+				promptMessage = fmt.Sprintf("\n%v\n", errFromSmallWindowMetrics)
+			}
+			_, errFromLargeWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, false)
+			if errFromLargeWindowMetrics != nil {
+				promptMessage += fmt.Sprintf("\n%v\n", errFromLargeWindowMetrics)
+			}
+			if promptMessage != "" {
+				ok, err := confirmShrink(cmd, prompt, promptMessage)
+				if !ok || err != nil {
+					return currentCluster.Cku, err
+				} else {
+					return int32(cku), nil
+				}
+			}
+		}
+		return int32(cku), nil
+	}
+	return currentCluster.Cku, nil
+}
+
+func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool) (bool, error) {
+	var window string
+	if isLatestMetric {
+		window = "15 min"
+	} else {
+		window = "3 days"
+	}
+	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, uint32(cku))
+	if err != nil {
+		c.logger.Warn("Could not retrieve usage limits ", err)
+		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
+	}
+	errorMessage := errors.Errorf("Looking at metrics in the last %s window:", window)
+	shouldPrompt := true
+	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
+	if isValidPartitionCountErr != nil {
+		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidPartitionCountErr.Error())
+		shouldPrompt = false
+	}
+	var isValidStorageLimitErr error
+	if !currentCluster.InfiniteStorage {
+		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
+		if isValidStorageLimitErr != nil {
+			errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidStorageLimitErr.Error())
+			shouldPrompt = false
+		}
+	}
+	// Get Cluster Load Metric
+	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
+	if isValidLoadErr != nil {
+		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidLoadErr)
+	}
+	if isValidStorageLimitErr == nil && isValidLoadErr == nil && isValidPartitionCountErr == nil {
+		return false, nil
+	}
+	return shouldPrompt, errorMessage
+}
+
+func confirmShrink(cmd *cobra.Command, prompt form.Prompt, promptMessage string) (bool, error) {
+	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: %s\nDo you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
+	if err := f.Prompt(cmd, prompt); err != nil {
+		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
+	}
+	if !f.Responses["proceed"].(bool) {
+		utils.Println(cmd, "Not proceeding with kafka cluster shrink")
+		return false, nil
+	}
+	return true, nil
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -640,6 +751,16 @@ func isDedicated(cluster *schedv1.KafkaCluster) bool {
 
 func isExpanding(cluster *schedv1.KafkaCluster) bool {
 	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
+}
+
+func (c *clusterCommand) getUsageLimit(ctx context.Context, cku uint32) (int32, int32, error) {
+	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx)
+	if err != nil || usageReply.UsageLimits == nil || len(usageReply.UsageLimits.GetCkuLimits()) == 0 || usageReply.UsageLimits.GetCkuLimits()[cku] == nil {
+		return 0, 0, errors.Wrap(err, "Could not retrieve partition count usage limits. Please try again or contact support.")
+	}
+	partitionCount := usageReply.UsageLimits.GetCkuLimits()[cku].GetNumPartitions().GetValue()
+	storageLimit := usageReply.UsageLimits.GetCkuLimits()[cku].Storage.GetValue()
+	return partitionCount, storageLimit, nil
 }
 
 func isShrinking(cluster *schedv1.KafkaCluster) bool {
