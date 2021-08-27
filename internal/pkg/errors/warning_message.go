@@ -12,7 +12,8 @@ const (
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
 
 	//login command
-	UsingLoginURLDefaults = "Assuming %s.\n"
+	UsingLoginURLDefaults      = "Assuming %s.\n"
+	DeprecatedEnvVarWarningMsg = "%s has been deprecated and replaced by %s.\n"
 
 	//kafka rest
 	AssumingHttpProtocol  = "Assuming http protocol.\n"

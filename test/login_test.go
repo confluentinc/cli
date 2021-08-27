@@ -115,9 +115,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 
 		// TODO: add save test using stdin input
@@ -181,9 +181,9 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
@@ -217,7 +217,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 		s.Fail("Failed to create netrc file")
 	}
 
-	env := []string{auth.CCloudEmailEnvVar + "=" + ssoTestEmail}
+	env := []string{auth.ConfluentCloudEmail + "=" + ssoTestEmail}
 	cmd := exec.Command(binaryPath(s.T(), testBin), []string{"login", "--save", "-vvv", "--url", ssoTestLoginUrl, "--no-browser"}...)
 	cmd.Env = append(os.Environ(), env...)
 

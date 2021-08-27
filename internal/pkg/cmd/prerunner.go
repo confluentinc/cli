@@ -677,9 +677,9 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 }
 
 func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
-	if caCertPath == "" && os.Getenv(pauth.ConfluentCACertPathEnvVar) != "" {
-		logger.Debug(fmt.Sprintf("found ca cert path in %s", pauth.ConfluentCACertPathEnvVar))
-		caCertPath = os.Getenv(pauth.ConfluentCACertPathEnvVar)
+	if caCertPath == "" && os.Getenv(pauth.DeprecatedConfluentPlatformCACertPath) != "" {
+		logger.Debug(fmt.Sprintf("found ca cert path in %s", pauth.DeprecatedConfluentPlatformCACertPath))
+		caCertPath = os.Getenv(pauth.DeprecatedConfluentPlatformCACertPath)
 	}
 	// use cert path flag or env var if it was passed
 	if caCertPath != "" {
