@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -39,8 +40,13 @@ func PrintVersions(versions []int32) {
 
 func convertMapToString(m map[string]string) string {
 	b := new(bytes.Buffer)
-	for key, value := range m {
-		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	keys := make([]string, 0, len(m))
+	for key, _ := range m {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, m[key])
 	}
 	return strings.TrimSuffix(b.String(), "\n")
 }
