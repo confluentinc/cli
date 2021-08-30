@@ -39,8 +39,8 @@ func PrintVersions(versions []int32) {
 
 func convertMapToString(m map[string]string) string {
 	pairs := make([]string, 0, len(m))
-	for key, _ := range m {
-		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, m[key]))
+	for key, value := range m {
+		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, value))
 	}
 	sort.Strings(pairs)
 	return strings.Join(pairs, "\n")
