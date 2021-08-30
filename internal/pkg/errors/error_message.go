@@ -232,7 +232,7 @@ const (
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
 	CorruptedConfigSuggestions = "Your CLI config file \"%s\" is corrupted.\n" +
-		"Remove config file, and run `%s login` or `%s init`.\n" +
+		"Remove config file, and run `%s login` or `%s context create`.\n" +
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +
 		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
