@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -44,6 +45,9 @@ func SetupTestInputs(cliName string) *TestInputs {
 	platform := &v2.Platform{
 		Name:   "http://test",
 		Server: "http://test",
+	}
+	if cliName == "ccloud" {
+		platform.Name = testserver.TestCloudURL.String()
 	}
 	apiCredential := &v2.Credential{
 		Name:     "api-key-abc-key-123",
@@ -166,11 +170,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 	}
 	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
 			Ver:      Version,
 		},
@@ -188,14 +188,11 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: state,
 		},
 		CurrentContext: contextName,
+		IsTest:         true,
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", cliName),
 			Ver:      Version,
 		},
@@ -213,14 +210,11 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: {},
 		},
 		CurrentContext: contextName,
+		IsTest:         true,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params: &config.Params{
-				CLIName:    cliName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			},
+			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
 			Ver:      Version,
 		},
@@ -238,6 +232,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: twoEnvState,
 		},
 		CurrentContext: contextName,
+		IsTest:         true,
 	}
 
 	statefulContext.Config = testInputs.statefulConfig
@@ -285,11 +280,7 @@ func TestConfig_Load(t *testing.T) {
 			name: "should load disable update checks and disable updates",
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: "test_json/load_disable_update.json",
 					Ver:      Version,
 				},
@@ -305,11 +296,7 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{
-				CLIName:    tt.want.CLIName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			c := New(&config.Params{Logger: log.New()})
 			c.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
@@ -317,8 +304,11 @@ func TestConfig_Load(t *testing.T) {
 			if err := c.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, tt.wantErr)
 			}
-			// Get around automatically assigned anonymous id
+
+			// Get around automatically assigned anonymous id and IsTest check
 			tt.want.AnonymousId = c.AnonymousId
+			tt.want.IsTest = c.IsTest
+
 			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
 				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
 			}
@@ -598,11 +588,7 @@ func TestConfig_getFilename(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{
-				CLIName:    tt.fields.CLIName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			c := New(&config.Params{Logger: log.New()})
 			got := c.GetFilename()
 			if got != tt.want {
 				t.Errorf("Config.GetFilename() = %v, want %v", got, tt.want)

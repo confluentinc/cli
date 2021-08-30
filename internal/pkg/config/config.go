@@ -16,7 +16,6 @@ type Config interface {
 }
 
 type Params struct {
-	CLIName    string      `json:"-"`
 	MetricSink metric.Sink `json:"-"`
 	Logger     *log.Logger `json:"-"`
 }

@@ -500,11 +500,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if tt.setEnv {
 				os.Setenv(pauth.ConfluentCACertPathEnvVar, "testcert.pem")
 			}
-			cfg := v3.New(&config.Params{
-				CLIName:    "confluent",
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			cfg := v3.New(&config.Params{Logger: log.New()})
 			var expectedCaCert string
 			if tt.setEnv {
 				expectedCaCert = tt.envCertPath
@@ -784,11 +780,7 @@ func TestValidateUrl(t *testing.T) {
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*Command, *v3.Config) {
-	cfg := v3.New(&config.Params{
-		CLIName:    cliName,
-		MetricSink: nil,
-		Logger:     nil,
-	})
+	cfg := v3.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if cliName == "confluent" {
 		mdsConfig := mds.NewConfiguration()
