@@ -25,7 +25,7 @@ func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.Dynami
 	return getSchemaRegistryClient(cmd, cfg, ver, "", "")
 }
 
-func GetApiClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil

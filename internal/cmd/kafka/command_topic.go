@@ -729,14 +729,14 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject string, valueFormat string, schemaPath string, srAPIKey string, srAPISecret string) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath, srAPIKey, srAPISecret string) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
 	var refs []srsdk.SchemaReference
 
-	srClient, ctx, err := sr.GetApiClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
+	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 	if err != nil {
 		if err.Error() == "ccloud" {
 			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
@@ -979,7 +979,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			return err
 		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetApiClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
+		srClient, ctx, err = sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 		if err != nil {
 			if err.Error() == "ccloud" {
 				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
