@@ -976,7 +976,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		return fmt.Errorf("failed to create consumer: %v\n", err)
+		return fmt.Errorf("failed to create consumer: %v.\n", err)
 	}
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
