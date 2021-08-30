@@ -285,7 +285,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, err := readConfigsFromFile(configFile)
+	configMap, err := utils.ReadConfigsFromFile(configFile)
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configsMap, err := readConfigsFromFile(configFile)
+	configsMap, err := utils.ReadConfigsFromFile(configFile)
 	if err != nil {
 		return err
 	}

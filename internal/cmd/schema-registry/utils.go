@@ -1,7 +1,9 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -33,6 +35,14 @@ func PrintVersions(versions []int32) {
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
 	printer.RenderCollectionTable(entries, titleRow)
+}
+
+func convertMapToString(m map[string]string) string {
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	}
+	return strings.TrimSuffix(b.String(), "\n")
 }
 
 func RequireSubjectFlag(cmd *cobra.Command) {
