@@ -312,7 +312,7 @@ func Test_UpdateToken(t *testing.T) {
 			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedConfluentConfigMock()
+				cfg = v3.AuthenticatedOnPremConfigMock()
 			}
 
 			cfg.Context().State.AuthToken = tt.authToken
@@ -437,7 +437,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedConfluentConfigMock()
+				cfg = v3.AuthenticatedOnPremConfigMock()
 			}
 			err := pauth.PersistLogoutToConfig(cfg)
 			require.NoError(t, err)
@@ -559,7 +559,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			if tt.isCloud {
 				cfg = v3.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedConfluentConfigMock()
+				cfg = v3.AuthenticatedOnPremConfigMock()
 			}
 			cfg.Context().State.AuthToken = validAuthToken
 
@@ -840,7 +840,7 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 }
 
 func TestInitializeOnPremKafkaRest(t *testing.T) {
-	cfg := v3.AuthenticatedConfluentConfigMock()
+	cfg := v3.AuthenticatedOnPremConfigMock()
 	cfg.Context().State.AuthToken = validAuthToken
 	r := getPreRunBase()
 	r.Config = cfg
