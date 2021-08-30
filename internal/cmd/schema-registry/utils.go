@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"sort"
@@ -39,16 +38,12 @@ func PrintVersions(versions []int32) {
 }
 
 func convertMapToString(m map[string]string) string {
-	b := new(bytes.Buffer)
-	keys := make([]string, 0, len(m))
+	pairs := make([]string, 0, len(m))
 	for key, _ := range m {
-		keys = append(keys, key)
+		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, m[key]))
 	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		fmt.Fprintf(b, "%s=\"%s\"\n", key, m[key])
-	}
-	return strings.TrimSuffix(b.String(), "\n")
+	sort.Strings(pairs)
+	return strings.Join(pairs, "\n")
 }
 
 func RequireSubjectFlag(cmd *cobra.Command) {
