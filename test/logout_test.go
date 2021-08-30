@@ -22,7 +22,7 @@ var (
 func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	type saveTest struct {
 		input    string
-		cliName  string
+		isCloud  bool
 		wantFile string
 		loginURL string
 		bin      string
@@ -36,28 +36,28 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	tests := []saveTest{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
-			"ccloud",
+			true,
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
 			cloudUrl,
 			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
-			"confluent",
+			false,
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
 			mdsUrl,
 			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
-			"ccloud",
+			true,
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
 			cloudUrl,
 			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
-			"confluent",
+			false,
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
 			mdsUrl,
 			testBin,
@@ -66,7 +66,7 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	for _, tt := range tests {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
-		if tt.cliName == "ccloud" {
+		if tt.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
@@ -99,7 +99,7 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	// fail to parse the netrc file should leave it unchanged
 	type saveTest struct {
 		input    string
-		cliName  string
+		isCloud  bool
 		wantFile string
 		loginURL string
 		bin      string
@@ -113,14 +113,14 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	tests := []saveTest{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
-			"ccloud",
+			true,
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
 			cloudUrl,
 			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
-			"confluent",
+			false,
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
 			mdsUrl,
 			testBin,
@@ -129,7 +129,7 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	for _, tt := range tests {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
-		if tt.cliName == "ccloud" {
+		if tt.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
