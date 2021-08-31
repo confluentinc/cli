@@ -74,6 +74,9 @@ func catchCCloudTokenErrors(err error) error {
 }
 
 func catchOpenAPIErrors(err error) error {
+	if err == nil {
+		return nil
+	}
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
 		return New(string(openAPIError.Body()))
 	}
