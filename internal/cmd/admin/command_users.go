@@ -210,12 +210,12 @@ func (c userCommand) invite(cmd *cobra.Command, args []string) error {
 	if !matched {
 		return errors.New(errors.BadEmailFormatErrorMsg)
 	}
-	newUser := &orgv1.User{Email: email}
-	user, err := c.Client.User.Invite(context.Background(), newUser)
+	newInvitation := &flowv1.CreateInvitationRequest{User: &orgv1.User{Email: email}, SendInvitation: true}
+	invitation, err := c.Client.User.CreateInvitation(context.Background(), newInvitation)
 	if err != nil {
 		return err
 	}
-	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
+	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, invitation.Email))
 	return nil
 }
 
