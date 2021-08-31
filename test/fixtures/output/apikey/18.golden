@@ -1,3 +1,6 @@
+The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
+For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+
 Error: unable to set active API key: invalid API key "MYKEY2" for resource "lkc-cool1"
 
 Suggestions:

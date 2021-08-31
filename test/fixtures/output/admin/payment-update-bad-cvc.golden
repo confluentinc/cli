@@ -1,3 +1,6 @@
+The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
+For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+
 Edit credit card
 Card number: MM/YY: CVC: "99" is not of valid format for field "cvc".
 CVC: Cardholder name: Updated.

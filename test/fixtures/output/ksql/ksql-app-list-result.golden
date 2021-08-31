@@ -1,3 +1,6 @@
+The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
+For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+
        Id      |        Name        | Topic Prefix |   Kafka   | Storage |         Endpoint         |    Status     
 +--------------+--------------------+--------------+-----------+---------+--------------------------+--------------+
   lksqlc-ksql5 | account ksql       | pksqlc-abcde | lkc-qwert |     101 | SASL_SSL://ksql-endpoint | PROVISIONING  

@@ -1,3 +1,6 @@
+The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
+For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+
   CloudId |      CloudName      | RegionId  |       RegionName         
 +---------+---------------------+-----------+-------------------------+
   aws     | Amazon Web Services | us-east-1 | us-east-1 (N. Virginia)  

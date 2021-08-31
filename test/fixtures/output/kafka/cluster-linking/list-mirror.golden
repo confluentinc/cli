@@ -1,3 +1,6 @@
+The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
+For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+
   Link Name | Mirror Topic Name | Num Partition | Max Per Partition Mirror Lag | Source Topic Name | Mirror Status | Status Time Ms  
 +-----------+-------------------+---------------+------------------------------+-------------------+---------------+----------------+
   link-1    | dest-topic-1      |             3 |                       571428 | src-topic-1       | active        |      111111111  
