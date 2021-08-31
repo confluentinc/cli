@@ -431,4 +431,8 @@ const (
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "Metadata Service backend error: %s: %s"
+
+	// Broker commands
+	MustSpecifyAllOrBrokerIDErrorMsg	= "must pass broker ID argument or specify `--all` flag"
+	OnlySpecifyAllOrBrokerIDErrorMsg	= "only specify broker ID argument OR `--all` flag"
 )
