@@ -246,7 +246,7 @@ func (c *exporterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	exporters, _, err := srClient.DefaultApi.GetExporters(ctx)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	if len(exporters) > 0 {
@@ -307,7 +307,7 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		Config:      configMap,
 	})
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Created", name)
@@ -322,7 +322,7 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	updateRequest := srsdk.UpdateExporterRequest{
@@ -367,7 +367,7 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 
 	_, _, err = srClient.DefaultApi.PutExporter(ctx, name, updateRequest)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Updated", name)
@@ -382,7 +382,7 @@ func (c *exporterCommand) describe(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	data := &exporterInfoDisplay{
@@ -408,7 +408,7 @@ func (c *exporterCommand) getConfig(cmd *cobra.Command, args []string) error {
 
 	configs, _, err := srClient.DefaultApi.GetExporterConfig(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 	return output.StructuredOutputForCommand(cmd, outputFormat, configs)
 }
@@ -421,7 +421,7 @@ func (c *exporterCommand) status(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	status, _, err := srClient.DefaultApi.GetExporterStatus(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	data := &exporterStatusDisplay{
@@ -443,7 +443,7 @@ func (c *exporterCommand) pause(cmd *cobra.Command, args []string) error {
 
 	_, _, err = srClient.DefaultApi.PauseExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Paused", name)
@@ -459,7 +459,7 @@ func (c *exporterCommand) resume(cmd *cobra.Command, args []string) error {
 
 	_, _, err = srClient.DefaultApi.ResumeExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Resumed", name)
@@ -475,7 +475,7 @@ func (c *exporterCommand) reset(cmd *cobra.Command, args []string) error {
 
 	_, _, err = srClient.DefaultApi.ResetExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Reset", name)
@@ -491,16 +491,9 @@ func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 
 	_, err = srClient.DefaultApi.DeleteExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterAPIError(err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Deleted", name)
 	return nil
-}
-
-func catchSchemaExporterAPIError(err error) error {
-	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return errors.New(string(openAPIError.Body()))
-	}
-	return err
 }

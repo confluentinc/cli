@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"regexp"
 	"strings"
 
@@ -68,6 +69,13 @@ func catchCCloudTokenErrors(err error) error {
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
 		return NewErrorWithSuggestions(ExpiredTokenErrorMsg, ExpiredTokenSuggestions)
+	}
+	return err
+}
+
+func catchOpenAPIErrors(err error) error {
+	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
+		return New(string(openAPIError.Body()))
 	}
 	return err
 }

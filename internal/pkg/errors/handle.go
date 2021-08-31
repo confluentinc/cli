@@ -26,5 +26,6 @@ func handleErrors(err error) error {
 	err = catchTypedErrors(err)
 	err = catchMDSErrors(err)
 	err = catchCoreV1Errors(err)
+	err = catchOpenAPIErrors(err)
 	return err
 }
