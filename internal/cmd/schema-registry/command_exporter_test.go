@@ -275,6 +275,12 @@ func (suite *ExporterTestSuite) TestDeleteExporter() {
 	req.Equal("Deleted schema exporter \"my_exporter\".\n", output.String())
 }
 
+func (suite *ExporterTestSuite) TestConvertMapToString() {
+	m := map[string]string{"name": "alice", "phone": "xxx-xxx-xxxx", "age": "20"}
+	req := require.New(suite.T())
+	req.Equal("age=\"20\"\nname=\"alice\"\nphone=\"xxx-xxx-xxxx\"", convertMapToString(m))
+}
+
 func TestExporterSuite(t *testing.T) {
 	suite.Run(t, new(ExporterTestSuite))
 }
