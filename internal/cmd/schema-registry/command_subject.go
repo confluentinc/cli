@@ -49,6 +49,7 @@ func (c *subjectCommand) init(cliName string) {
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
+	listCmd.Flags().String("subject-prefix", ":*:", "Subject prefix.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -151,7 +152,11 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted)}
+	subjectPrefix, err := cmd.Flags().GetString("subject-prefix")
+	if err != nil {
+		return err
+	}
+	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted), SubjectPrefix: optional.NewString(subjectPrefix)}
 	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
 	if err != nil {
 		return err
