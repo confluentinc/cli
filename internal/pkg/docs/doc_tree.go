@@ -11,11 +11,13 @@ func GenerateDocTree(tabs []Tab, dir string, depth int) error {
 	if tabs[0].Command.HasSubCommands() {
 		// This command has subcommands. Create a new directory and add an index page.
 		// We assume that if one tab's command has subcommands, they all have subcommands.
-		name := tabs[0].Command.Name()
-		dir = filepath.Join(dir, name)
+		if depth > 0 {
+			name := tabs[0].Command.Name()
+			dir = filepath.Join(dir, name)
 
-		if err := os.Mkdir(dir, os.ModePerm); err != nil {
-			return err
+			if err := os.Mkdir(dir, os.ModePerm); err != nil {
+				return err
+			}
 		}
 
 		if err := generateIndexPage(tabs, dir); err != nil {
