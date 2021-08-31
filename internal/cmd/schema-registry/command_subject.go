@@ -49,7 +49,7 @@ func (c *subjectCommand) init(cliName string) {
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
-	listCmd.Flags().String("subject-prefix", ":*:", "Subject prefix.")
+	listCmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
@@ -152,7 +152,7 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	subjectPrefix, err := cmd.Flags().GetString("subject-prefix")
+	subjectPrefix, err := cmd.Flags().GetString("prefix")
 	if err != nil {
 		return err
 	}
