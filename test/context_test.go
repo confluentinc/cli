@@ -100,6 +100,7 @@ func (s *CLITestSuite) TestContextUpdate() {
 		{args: s.contextCreateArgs("0")},
 		{fixture: "context/update/0.golden", args: "context update 0 --name 1"},
 		{fixture: "context/update/0.golden", args: "context describe 1"},
+		{fixture: "context/update/1.golden", args: "context update 1", wantErrCode: 1},
 	}
 
 	for _, tt := range tests {

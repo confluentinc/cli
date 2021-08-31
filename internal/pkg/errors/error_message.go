@@ -345,6 +345,7 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
+	FlagRequiredErrorMsg                     = "must use at least one flag"
 	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
 	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
 	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."

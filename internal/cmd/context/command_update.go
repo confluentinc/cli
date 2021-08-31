@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -37,6 +38,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
 		return err
+	}
+
+	if name == "" && kafkaCluster == "" {
+		return errors.New(errors.FlagRequiredErrorMsg)
 	}
 
 	if name != "" {
