@@ -103,13 +103,12 @@ func (e *CorruptedConfigError) UserFacingError() error {
 	return NewErrorWithSuggestions(e.errorMsg, e.suggestionsMsg)
 }
 
-func NewUpdateClientWrapError(err error, errorMsg string, cliName string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error(), cliName: cliName}
+func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
+	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
 }
 
 type UpdateClientError struct {
 	errorMsg string
-	cliName  string
 }
 
 func (e *UpdateClientError) Error() string {

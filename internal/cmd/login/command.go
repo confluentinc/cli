@@ -142,7 +142,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	if url != pauth.CCloudURL { // by default, LoginManager client uses prod url
 		client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-		c.loginCredentialsManager.SetCCloudClient(client)
+		c.loginCredentialsManager.SetCloudClient(client)
 	}
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
@@ -150,16 +150,16 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.C
 	}
 
 	if promptOnly {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd))
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd))
 	}
 	netrcFilterParams := netrc.NetrcMachineParams{
-		CLIName: "ccloud",
+		IsCloud: true,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
-		c.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd),
 	)
 }
 
@@ -235,18 +235,18 @@ func (c *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		return nil, err
 	}
 	if promptOnly {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd))
 	}
 
 	netrcFilterParams := netrc.NetrcMachineParams{
-		CLIName: "confluent",
+		IsCloud: false,
 		URL:     url,
 	}
 
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
+		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(cmd),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
-		c.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd),
+		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
 }
 

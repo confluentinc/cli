@@ -94,7 +94,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
 	updateAvailable, latestVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, pversion.CLIName)
+		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
 
 	if !updateAvailable {
@@ -119,7 +119,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := c.client.UpdateBinary(pversion.CLIName, latestVersion, oldBin); err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, pversion.CLIName)
+		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}
 	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, pversion.CLIName)
 

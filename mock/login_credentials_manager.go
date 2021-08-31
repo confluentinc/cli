@@ -69,13 +69,13 @@ type MockLoginCredentialsManager struct {
 	}
 }
 
-// GetCCloudCredentialsFromEnvVar mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+// GetCloudCredentialsFromEnvVar mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetCloudCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCCloudCredentialsFromEnvVar.Lock()
 	defer m.lockGetCCloudCredentialsFromEnvVar.Unlock()
 
 	if m.GetCCloudCredentialsFromEnvVarFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.GetCCloudCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetCCloudCredentialsFromEnvVar was called.")
+		panic("mocker: MockLoginCredentialsManager.GetCCloudCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetCloudCredentialsFromEnvVar was called.")
 	}
 
 	call := struct {
@@ -89,7 +89,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVar(cmd *github
 	return m.GetCCloudCredentialsFromEnvVarFunc(cmd)
 }
 
-// GetCCloudCredentialsFromEnvVarCalled returns true if GetCCloudCredentialsFromEnvVar was called at least once.
+// GetCCloudCredentialsFromEnvVarCalled returns true if GetCloudCredentialsFromEnvVar was called at least once.
 func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVarCalled() bool {
 	m.lockGetCCloudCredentialsFromEnvVar.Lock()
 	defer m.lockGetCCloudCredentialsFromEnvVar.Unlock()
@@ -97,7 +97,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVarCalled() boo
 	return len(m.calls.GetCCloudCredentialsFromEnvVar) > 0
 }
 
-// GetCCloudCredentialsFromEnvVarCalls returns the calls made to GetCCloudCredentialsFromEnvVar.
+// GetCCloudCredentialsFromEnvVarCalls returns the calls made to GetCloudCredentialsFromEnvVar.
 func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVarCalls() []struct {
 	Cmd *github_com_spf13_cobra.Command
 } {
@@ -107,13 +107,13 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromEnvVarCalls() []st
 	return m.calls.GetCCloudCredentialsFromEnvVar
 }
 
-// GetCCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+// GetCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetCloudCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCCloudCredentialsFromPrompt.Unlock()
 
 	if m.GetCCloudCredentialsFromPromptFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.GetCCloudCredentialsFromPromptFunc is nil but MockLoginCredentialsManager.GetCCloudCredentialsFromPrompt was called.")
+		panic("mocker: MockLoginCredentialsManager.GetCCloudCredentialsFromPromptFunc is nil but MockLoginCredentialsManager.GetCloudCredentialsFromPrompt was called.")
 	}
 
 	call := struct {
@@ -127,7 +127,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPrompt(cmd *github
 	return m.GetCCloudCredentialsFromPromptFunc(cmd)
 }
 
-// GetCCloudCredentialsFromPromptCalled returns true if GetCCloudCredentialsFromPrompt was called at least once.
+// GetCCloudCredentialsFromPromptCalled returns true if GetCloudCredentialsFromPrompt was called at least once.
 func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPromptCalled() bool {
 	m.lockGetCCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCCloudCredentialsFromPrompt.Unlock()
@@ -135,7 +135,7 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPromptCalled() boo
 	return len(m.calls.GetCCloudCredentialsFromPrompt) > 0
 }
 
-// GetCCloudCredentialsFromPromptCalls returns the calls made to GetCCloudCredentialsFromPrompt.
+// GetCCloudCredentialsFromPromptCalls returns the calls made to GetCloudCredentialsFromPrompt.
 func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPromptCalls() []struct {
 	Cmd *github_com_spf13_cobra.Command
 } {
@@ -145,13 +145,13 @@ func (m *MockLoginCredentialsManager) GetCCloudCredentialsFromPromptCalls() []st
 	return m.calls.GetCCloudCredentialsFromPrompt
 }
 
-// GetConfluentCredentialsFromEnvVar mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+// GetOnPremCredentialsFromEnvVar mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetOnPremCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetConfluentCredentialsFromEnvVar.Lock()
 	defer m.lockGetConfluentCredentialsFromEnvVar.Unlock()
 
 	if m.GetConfluentCredentialsFromEnvVarFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.GetConfluentCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetConfluentCredentialsFromEnvVar was called.")
+		panic("mocker: MockLoginCredentialsManager.GetConfluentCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetOnPremCredentialsFromEnvVar was called.")
 	}
 
 	call := struct {
@@ -165,7 +165,7 @@ func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromEnvVar(cmd *git
 	return m.GetConfluentCredentialsFromEnvVarFunc(cmd)
 }
 
-// GetConfluentCredentialsFromEnvVarCalled returns true if GetConfluentCredentialsFromEnvVar was called at least once.
+// GetConfluentCredentialsFromEnvVarCalled returns true if GetOnPremCredentialsFromEnvVar was called at least once.
 func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromEnvVarCalled() bool {
 	m.lockGetConfluentCredentialsFromEnvVar.Lock()
 	defer m.lockGetConfluentCredentialsFromEnvVar.Unlock()
@@ -173,7 +173,7 @@ func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromEnvVarCalled() 
 	return len(m.calls.GetConfluentCredentialsFromEnvVar) > 0
 }
 
-// GetConfluentCredentialsFromEnvVarCalls returns the calls made to GetConfluentCredentialsFromEnvVar.
+// GetConfluentCredentialsFromEnvVarCalls returns the calls made to GetOnPremCredentialsFromEnvVar.
 func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromEnvVarCalls() []struct {
 	Cmd *github_com_spf13_cobra.Command
 } {
@@ -183,13 +183,13 @@ func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromEnvVarCalls() [
 	return m.calls.GetConfluentCredentialsFromEnvVar
 }
 
-// GetConfluentCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+// GetOnPremCredentialsFromPrompt mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetOnPremCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetConfluentCredentialsFromPrompt.Lock()
 	defer m.lockGetConfluentCredentialsFromPrompt.Unlock()
 
 	if m.GetConfluentCredentialsFromPromptFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.GetConfluentCredentialsFromPromptFunc is nil but MockLoginCredentialsManager.GetConfluentCredentialsFromPrompt was called.")
+		panic("mocker: MockLoginCredentialsManager.GetConfluentCredentialsFromPromptFunc is nil but MockLoginCredentialsManager.GetOnPremCredentialsFromPrompt was called.")
 	}
 
 	call := struct {
@@ -203,7 +203,7 @@ func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromPrompt(cmd *git
 	return m.GetConfluentCredentialsFromPromptFunc(cmd)
 }
 
-// GetConfluentCredentialsFromPromptCalled returns true if GetConfluentCredentialsFromPrompt was called at least once.
+// GetConfluentCredentialsFromPromptCalled returns true if GetOnPremCredentialsFromPrompt was called at least once.
 func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromPromptCalled() bool {
 	m.lockGetConfluentCredentialsFromPrompt.Lock()
 	defer m.lockGetConfluentCredentialsFromPrompt.Unlock()
@@ -211,7 +211,7 @@ func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromPromptCalled() 
 	return len(m.calls.GetConfluentCredentialsFromPrompt) > 0
 }
 
-// GetConfluentCredentialsFromPromptCalls returns the calls made to GetConfluentCredentialsFromPrompt.
+// GetConfluentCredentialsFromPromptCalls returns the calls made to GetOnPremCredentialsFromPrompt.
 func (m *MockLoginCredentialsManager) GetConfluentCredentialsFromPromptCalls() []struct {
 	Cmd *github_com_spf13_cobra.Command
 } {
@@ -262,13 +262,13 @@ func (m *MockLoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
 	return m.calls.GetCredentialsFromNetrc
 }
 
-// GetConfluentPrerunCredentialsFromEnvVar mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+// GetOnPremPrerunCredentialsFromEnvVar mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetOnPremPrerunCredentialsFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetConfluentPrerunCredentialsFromEnvVar.Lock()
 	defer m.lockGetConfluentPrerunCredentialsFromEnvVar.Unlock()
 
 	if m.GetConfluentPrerunCredentialsFromEnvVarFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVar was called.")
+		panic("mocker: MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromEnvVarFunc is nil but MockLoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar was called.")
 	}
 
 	call := struct {
@@ -282,7 +282,7 @@ func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVar(cm
 	return m.GetConfluentPrerunCredentialsFromEnvVarFunc(cmd)
 }
 
-// GetConfluentPrerunCredentialsFromEnvVarCalled returns true if GetConfluentPrerunCredentialsFromEnvVar was called at least once.
+// GetConfluentPrerunCredentialsFromEnvVarCalled returns true if GetOnPremPrerunCredentialsFromEnvVar was called at least once.
 func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVarCalled() bool {
 	m.lockGetConfluentPrerunCredentialsFromEnvVar.Lock()
 	defer m.lockGetConfluentPrerunCredentialsFromEnvVar.Unlock()
@@ -290,7 +290,7 @@ func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVarCal
 	return len(m.calls.GetConfluentPrerunCredentialsFromEnvVar) > 0
 }
 
-// GetConfluentPrerunCredentialsFromEnvVarCalls returns the calls made to GetConfluentPrerunCredentialsFromEnvVar.
+// GetConfluentPrerunCredentialsFromEnvVarCalls returns the calls made to GetOnPremPrerunCredentialsFromEnvVar.
 func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVarCalls() []struct {
 	Cmd *github_com_spf13_cobra.Command
 } {
@@ -300,13 +300,13 @@ func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromEnvVarCal
 	return m.calls.GetConfluentPrerunCredentialsFromEnvVar
 }
 
-// GetConfluentPrerunCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+// GetOnPremPrerunCredentialsFromNetrc mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetConfluentPrerunCredentialsFromNetrc.Lock()
 	defer m.lockGetConfluentPrerunCredentialsFromNetrc.Unlock()
 
 	if m.GetConfluentPrerunCredentialsFromNetrcFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromNetrcFunc is nil but MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromNetrc was called.")
+		panic("mocker: MockLoginCredentialsManager.GetConfluentPrerunCredentialsFromNetrcFunc is nil but MockLoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc was called.")
 	}
 
 	call := struct {
@@ -320,7 +320,7 @@ func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrc(cmd
 	return m.GetConfluentPrerunCredentialsFromNetrcFunc(cmd)
 }
 
-// GetConfluentPrerunCredentialsFromNetrcCalled returns true if GetConfluentPrerunCredentialsFromNetrc was called at least once.
+// GetConfluentPrerunCredentialsFromNetrcCalled returns true if GetOnPremPrerunCredentialsFromNetrc was called at least once.
 func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrcCalled() bool {
 	m.lockGetConfluentPrerunCredentialsFromNetrc.Lock()
 	defer m.lockGetConfluentPrerunCredentialsFromNetrc.Unlock()
@@ -328,7 +328,7 @@ func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrcCall
 	return len(m.calls.GetConfluentPrerunCredentialsFromNetrc) > 0
 }
 
-// GetConfluentPrerunCredentialsFromNetrcCalls returns the calls made to GetConfluentPrerunCredentialsFromNetrc.
+// GetConfluentPrerunCredentialsFromNetrcCalls returns the calls made to GetOnPremPrerunCredentialsFromNetrc.
 func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrcCalls() []struct {
 	Cmd *github_com_spf13_cobra.Command
 } {
@@ -338,13 +338,13 @@ func (m *MockLoginCredentialsManager) GetConfluentPrerunCredentialsFromNetrcCall
 	return m.calls.GetConfluentPrerunCredentialsFromNetrc
 }
 
-// SetCCloudClient mocks base method by wrapping the associated func.
-func (m *MockLoginCredentialsManager) SetCCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1.Client) {
+// SetCloudClient mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) SetCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1.Client) {
 	m.lockSetCCloudClient.Lock()
 	defer m.lockSetCCloudClient.Unlock()
 
 	if m.SetCCloudClientFunc == nil {
-		panic("mocker: MockLoginCredentialsManager.SetCCloudClientFunc is nil but MockLoginCredentialsManager.SetCCloudClient was called.")
+		panic("mocker: MockLoginCredentialsManager.SetCCloudClientFunc is nil but MockLoginCredentialsManager.SetCloudClient was called.")
 	}
 
 	call := struct {
@@ -358,7 +358,7 @@ func (m *MockLoginCredentialsManager) SetCCloudClient(client *github_com_conflue
 	m.SetCCloudClientFunc(client)
 }
 
-// SetCCloudClientCalled returns true if SetCCloudClient was called at least once.
+// SetCCloudClientCalled returns true if SetCloudClient was called at least once.
 func (m *MockLoginCredentialsManager) SetCCloudClientCalled() bool {
 	m.lockSetCCloudClient.Lock()
 	defer m.lockSetCCloudClient.Unlock()
@@ -366,7 +366,7 @@ func (m *MockLoginCredentialsManager) SetCCloudClientCalled() bool {
 	return len(m.calls.SetCCloudClient) > 0
 }
 
-// SetCCloudClientCalls returns the calls made to SetCCloudClient.
+// SetCCloudClientCalls returns the calls made to SetCloudClient.
 func (m *MockLoginCredentialsManager) SetCCloudClientCalls() []struct {
 	Client *github_com_confluentinc_ccloud_sdk_go_v1.Client
 } {

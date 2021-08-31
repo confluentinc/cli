@@ -91,7 +91,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			name: "mds context",
 			want: confluentMachine,
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 				CtxName: mdsContext,
 			},
 			file: netrcFilePath,
@@ -100,7 +100,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			name: "ccloud login context",
 			want: ccloudMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				CtxName: ccloudLoginContext,
 			},
 			file: netrcFilePath,
@@ -109,7 +109,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			name: "ccloud sso context",
 			want: ccloudSSOMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				CtxName: ccloudSSOContext,
 				IsSSO:   true,
 			},
@@ -118,7 +118,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 		{
 			name: "No file error",
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 				CtxName: mdsContext,
 			},
 			wantErr: true,
@@ -128,7 +128,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			name: "Context doesn't exist",
 			want: nil,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				CtxName: "non-existent-context",
 			},
 			file: netrcFilePath,
@@ -137,7 +137,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			name: "Context name with special characters",
 			want: specialCharsMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				CtxName: specialCharsContext,
 			},
 			file: netrcFilePath,
@@ -189,7 +189,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			name: "ccloud login with url",
 			want: ccloudMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				URL:     loginURL,
 			},
 			file: netrcFilePath,
@@ -198,7 +198,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			name: "ccloud login no url",
 			want: ccloudDiffURLMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 			},
 			file: netrcFilePath,
 		},
@@ -206,7 +206,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			name: "confluent login with url",
 			want: confluentMachine,
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 				URL:     loginURL,
 			},
 			file: netrcFilePath,
@@ -215,7 +215,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			name: "ccloud sso with url",
 			want: ccloudSSOMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				IsSSO:   true,
 				URL:     loginURL,
 			},
@@ -225,7 +225,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			name: "no sso specified but sso comes first",
 			want: ssoFirstMachine,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				URL:     ssoFirstURL,
 			},
 			file: netrcFilePath,
@@ -233,7 +233,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 		{
 			name: "No file error",
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 			},
 			wantErr: true,
 			file:    "wrong-file",
@@ -242,7 +242,7 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			name: "URL doesn't exist",
 			want: nil,
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				URL:     "http://dontexist",
 			},
 			file: netrcFilePath,
@@ -374,7 +374,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "ccloud-ctx-name-regex",
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				CtxName: ccloudCtxName,
 			},
 			matchNames: []string{
@@ -390,7 +390,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "ccloud-sso-regex",
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				IsSSO:   true,
 				URL:     url,
 			},
@@ -406,7 +406,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "ccloud-all-regex",
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				IsSSO:   false,
 				URL:     url,
 			},
@@ -422,7 +422,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "confluent-ctx-name-regex",
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 				CtxName: confluentCtxName,
 			},
 			matchNames: []string{
@@ -436,7 +436,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "confluent-regex",
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 				IsSSO:   false,
 				URL:     url,
 			},
@@ -451,7 +451,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "ccloud-special-chars",
 			params: NetrcMachineParams{
-				CLIName: "ccloud",
+				IsCloud: true,
 				CtxName: specialCharsCtxName,
 			},
 			matchNames: []string{
@@ -466,7 +466,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		{
 			name: "confluent-special-chars",
 			params: NetrcMachineParams{
-				CLIName: "confluent",
+				IsCloud: false,
 				CtxName: specialCharsCtxName,
 			},
 			matchNames: []string{
@@ -485,7 +485,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 					t.Errorf("Got: regex.Match=false Expect: true\n"+
 						"Machine name: %s \n"+
 						"Regex String: %s \n"+
-						"Params: CLIName=%s IsSSO=%t URL=%s", machineName, regex.String(), tt.params.CLIName, tt.params.IsSSO, tt.params.URL)
+						"Params: IsCloud=%t IsSSO=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.IsSSO, tt.params.URL)
 				}
 			}
 			for _, machineName := range tt.nonMatchNames {
@@ -493,7 +493,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 					t.Errorf("Got: regex.Match=true Expect: false\n"+
 						"Machine name: %s \n"+
 						"Regex String: %s\n"+
-						"Params: CLIName=%s IsSSO=%t URL=%s", machineName, regex.String(), tt.params.CLIName, tt.params.IsSSO, tt.params.URL)
+						"Params: IsCloud=%t IsSSO=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.IsSSO, tt.params.URL)
 				}
 			}
 		})

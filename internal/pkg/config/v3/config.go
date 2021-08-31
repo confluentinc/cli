@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	defaultConfigFileFmt = "%s/.%s/config.json"
+	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
 )
 
@@ -408,7 +408,7 @@ func (c *Config) ResetAnonymousId() error {
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, "confluent"))
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
 	}
 	return c.Filename
 }

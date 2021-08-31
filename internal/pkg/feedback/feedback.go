@@ -7,8 +7,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func HandleFeedbackNudge(cliName string, cmdArgs []string) {
-	if cliName == "ccloud" && isHelpCommand(cmdArgs) {
+func HandleFeedbackNudge(args []string) {
+	if isHelpCommand(args) {
 		_, _ = fmt.Fprintf(os.Stderr, errors.FeedbackNudgeMsg)
 	}
 }
