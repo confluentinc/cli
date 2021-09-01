@@ -38,7 +38,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -130,7 +129,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(environmentCmd.Command)
 	cli.AddCommand(iam.New(cfg, prerunner))
 	cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
-	cli.AddCommand(kafka.New(cfg, isAPIKeyCredential(cfg), prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
@@ -164,11 +163,6 @@ func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion 
 		Logger: analytics.NewLogger(logger),
 	})
 	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())
-}
-
-func isAPIKeyCredential(cfg *v3.Config) bool {
-	ctx := cfg.Context()
-	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
 }
 
 func (c *command) Execute(args []string) error {
