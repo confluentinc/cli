@@ -210,7 +210,7 @@ func (s *CLITestSuite) TestSSOLoginAndSave() {
 		s.T().Skip()
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	err := ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte{}, 0600)
 	if err != nil {

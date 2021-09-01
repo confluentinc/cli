@@ -84,7 +84,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck, logger)
 
-	analyticsClient := getAnalyticsClient(isTest, pversion.CLIName, cfg, ver.Version, logger)
+	analyticsClient := getAnalyticsClient(isTest, cfg, ver.Version, logger)
 	authTokenHandler := pauth.NewAuthTokenHandler(logger)
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -156,14 +156,14 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
 }
 
-func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
-	if cliName == "confluent" || isTest {
+func getAnalyticsClient(isTest bool, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
+	if cfg.IsOnPremLogin() || isTest {
 		return mock.NewDummyAnalyticsMock()
 	}
 	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
 		Logger: analytics.NewLogger(logger),
 	})
-	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())
+	return analytics.NewAnalyticsClient(cfg, cliVersion, segmentClient, clockwork.NewRealClock())
 }
 
 func isAPIKeyCredential(cfg *v3.Config) bool {

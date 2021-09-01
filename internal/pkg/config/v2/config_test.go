@@ -149,11 +149,7 @@ func TestConfig_Load(t *testing.T) {
 			},
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: testConfigFile.Name(),
 					Ver:      Version,
 				},
@@ -191,11 +187,7 @@ func TestConfig_Load(t *testing.T) {
 			},
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: testConfigFile.Name(),
 					Ver:      Version,
 				},
@@ -222,11 +214,7 @@ func TestConfig_Load(t *testing.T) {
 			},
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: testConfigFile.Name(),
 					Ver:      Version,
 				},
@@ -242,11 +230,7 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{
-				CLIName:    "confluent",
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			c := New(&config.Params{Logger: log.New()})
 			c.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
@@ -383,11 +367,7 @@ func TestConfig_Save(t *testing.T) {
 			name: "save config with state to file",
 			config: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: "",
 					Ver:      Version,
 				},
@@ -412,11 +392,7 @@ func TestConfig_Save(t *testing.T) {
 			name: "save stateless config to file",
 			config: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params: &config.Params{
-						CLIName:    "confluent",
-						MetricSink: nil,
-						Logger:     log.New(),
-					},
+					Params:   &config.Params{Logger: log.New()},
 					Filename: "",
 					Ver:      Version,
 				},
@@ -459,51 +435,17 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	type fields struct {
-		CLIName string
+	cfg := New(&config.Params{Logger: log.New()})
+
+	got, err := cfg.getFilename()
+	if err != nil {
+		t.Fatalf("Config.getFilename() error = %v", err)
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    string
-		wantErr bool
-	}{
-		{
-			name: "config file for ccloud binary",
-			fields: fields{
-				CLIName: "ccloud",
-			},
-			want: filepath.FromSlash(os.Getenv("HOME") + "/.ccloud/config.json"),
-		},
-		{
-			name: "config file for confluent binary",
-			fields: fields{
-				CLIName: "confluent",
-			},
-			want: filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
-		},
-		{
-			name:   "should default to ~/.confluent if CLIName isn't provided",
-			fields: fields{},
-			want:   filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json"),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{
-				CLIName:    tt.fields.CLIName,
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
-			got, err := c.getFilename()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Config.getFilename() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Config.getFilename() = %v, want %v", got, tt.want)
-			}
-		})
+
+	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
+
+	if got != want {
+		t.Errorf("Config.getFilename() = %v, want %v", got, want)
 	}
 }
 

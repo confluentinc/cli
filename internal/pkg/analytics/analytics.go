@@ -91,10 +91,9 @@ type cmdPage struct {
 	commandType CommandType
 }
 type ClientObj struct {
-	cliName string
-	client  segment.Client
-	config  *v3.Config
-	clock   clockwork.Clock
+	client segment.Client
+	config *v3.Config
+	clock  clockwork.Clock
 
 	// cache data until we flush events to segment (when each cmd call finishes)
 	cmdPages   []*cmdPage
@@ -111,9 +110,8 @@ type userInfo struct {
 	anonymousId    string
 }
 
-func NewAnalyticsClient(cliName string, cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
+func NewAnalyticsClient(cfg *v3.Config, version string, segmentClient segment.Client, clock clockwork.Clock) *ClientObj {
 	client := &ClientObj{
-		cliName:    cliName,
 		config:     cfg,
 		client:     segmentClient,
 		cliVersion: version,
@@ -264,7 +262,6 @@ func (a *ClientObj) identify() error {
 	}
 	traits := segment.Traits{}
 	traits.Set(VersionPropertiesKey, a.activeCmd.cliVersion)
-	traits.Set(CliNameTraitsKey, a.cliName)
 	traits.Set(CredentialPropertiesKey, a.activeCmd.user.credentialType)
 	if a.activeCmd.user.credentialType == v2.APIKey.String() {
 		traits.Set(ApiKeyPropertiesKey, a.activeCmd.user.apiKey)
@@ -322,7 +319,7 @@ func (a *ClientObj) addArgsProperties(cmd *cobra.Command, args []string) {
 
 func (a *ClientObj) addUserProperties() {
 	a.activeCmd.properties.Set(CredentialPropertiesKey, a.activeCmd.user.credentialType)
-	if a.cliName == "ccloud" && a.activeCmd.user.credentialType == v2.Username.String() {
+	if a.config.IsCloudLogin() && a.activeCmd.user.credentialType == v2.Username.String() {
 		a.activeCmd.properties.Set(OrgIdPropertiesKey, a.activeCmd.user.organizationId)
 		a.activeCmd.properties.Set(EmailPropertiesKey, a.activeCmd.user.email)
 	}
@@ -348,7 +345,7 @@ func (a *ClientObj) getUser() userInfo {
 	if user.credentialType == v2.APIKey.String() {
 		user.apiKey = a.getCredApiKey()
 	}
-	if a.cliName == "ccloud" {
+	if a.config.IsCloudLogin() {
 		userId, organizationId, email := a.getCloudUserInfo()
 		user.id = userId
 		user.organizationId = organizationId

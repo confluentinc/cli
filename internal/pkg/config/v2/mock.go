@@ -12,11 +12,7 @@ import (
 )
 
 func AuthenticatedConfigMock() *Config {
-	conf := New(&config.Params{
-		CLIName:    "",
-		MetricSink: nil,
-		Logger:     log.New(),
-	})
+	conf := New(&config.Params{Logger: log.New()})
 	conf.Logger = log.New()
 	auth := &v1.AuthConfig{
 		User: &orgv1.User{
