@@ -724,22 +724,22 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 	}
 }
 
-// Handler for: "/api/organizations/{id}/invites"
+// Handler for: "/api/invitations"
 func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		bs := string(body)
-		var res flowv1.SendInviteReply
+		var res flowv1.CreateInvitationReply
 		switch {
 		case strings.Contains(bs, "user@exists.com"):
-			res = flowv1.SendInviteReply{
+			res = flowv1.CreateInvitationReply{
 				Error: &v1.Error{Message: "User is already active"},
-				User:  nil,
+				Invitation:  nil,
 			}
 		default:
-			res = flowv1.SendInviteReply{
+			res = flowv1.CreateInvitationReply{
 				Error: nil,
-				User:  buildUser(1, "miles@confluent.io", "Miles", "Todzo", ""),
+				Invitation:  buildInvitation("invitation_1", "miles@confluent.io", "user_1", "org_1"),
 			}
 		}
 		data, err := json.Marshal(res)

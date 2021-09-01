@@ -29,7 +29,7 @@ const (
 	priceTable          = "/api/organizations/{id}/price_table"
 	paymentInfo         = "/api/organizations/{id}/payment_info"
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
-	invites             = "/api/organizations/{id}/invites"
+	invites             = "/api/invitations"
 	user                = "/api/users/{id}"
 	users               = "/api/users"
 	user_profile        = "/api/user_profiles/{id}"
