@@ -117,7 +117,7 @@ func ValidateEmail(email string) bool {
 }
 
 func Abbreviate(s string, maxLength int) string {
-	if len(s) < maxLength {
+	if len(s) <= maxLength {
 		return s
 	}
 	return s[0:maxLength]+"..."

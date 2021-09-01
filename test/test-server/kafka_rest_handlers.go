@@ -1123,6 +1123,155 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLag(t *testing.T) func(http.ResponseW
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers"
+func (r KafkaRestProxyRouter) HandleKafkaBrokers(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		host1 := "kafka1"
+		port1 := int32(1)
+		host2 := "kafka2"
+		port2 := int32(2)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerDataList{
+			Data: []kafkarestv3.BrokerData{
+				{
+					ClusterId: 	vars["cluster_id"],
+					BrokerId: 	1,
+					Port:    	&port1,
+					Host: 		&host1,
+				},
+				{
+					ClusterId: 	vars["cluster_id"],
+					BrokerId: 	2,
+					Port:    	&port2,
+					Host: 		&host2,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs/{name}"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigsName(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue := "gzip"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.ClusterConfigData{
+			Name:  			vars["name"],
+			Value:			&configValue,
+			IsSensitive: 	false,
+			IsReadOnly:  	false,
+			IsDefault:  	false,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue1 := "gzip"
+		configValue2 := "SASL/PLAIN"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.ClusterConfigDataList{
+			Data: []kafkarestv3.ClusterConfigData{
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "compression.type",
+					Value:       &configValue1,
+					IsDefault:   true,
+					IsReadOnly:  true,
+					IsSensitive: true,
+				},
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "sasl_mechanism",
+					Value:       &configValue2,
+					IsDefault:   false,
+					IsReadOnly:  false,
+					IsSensitive: false,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs/{name}"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsName(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue1 := "gzip"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerConfigData{
+				ClusterId:   vars["cluster_id"],
+				Name:        vars["name"],
+				Value:       &configValue1,
+				IsDefault:   true,
+				IsReadOnly:  true,
+				IsSensitive: true,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue1 := "gzip"
+		configValue2 := "SASL/PLAIN"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerConfigDataList{
+			Data: []kafkarestv3.BrokerConfigData{
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "compression.type",
+					Value:       &configValue1,
+					IsDefault:   true,
+					IsReadOnly:  true,
+					IsSensitive: true,
+				},
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "sasl_mechanism",
+					Value:       &configValue2,
+					IsDefault:   false,
+					IsReadOnly:  false,
+					IsSensitive: false,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigsAlter(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		var req kafkarestv3.ClustersClusterIdBrokerConfigsalterPostOpts
+		err := json.NewDecoder(r.Body).Decode(&req)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsAlter(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		var req kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts
+		err := json.NewDecoder(r.Body).Decode(&req)
+		require.NoError(t, err)
+	}
+}
+
+
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)
 	responseBody := fmt.Sprintf(`{

@@ -20,11 +20,11 @@ type brokerCommand struct {
 }
 
 type configData struct {
-	Name        string              `json:"name"`
-	Value       string              `json:"value,omitempty"`
-	IsDefault   bool                `json:"is_default"`
-	IsReadOnly  bool                `json:"is_read_only"`
-	IsSensitive bool                `json:"is_sensitive"`
+	Name        string              `json:"name" yaml:name`
+	Value       string              `json:"value,omitempty" yaml:"value,omitempty"`
+	IsDefault   bool                `json:"is_default" yaml:"is_default"`
+	IsReadOnly  bool                `json:"is_read_only" yaml:"is_read_only"`
+	IsSensitive bool                `json:"is_sensitive" yaml:"is_sensitive"`
 }
 
 const abbreviationLength = 25
@@ -113,8 +113,12 @@ func (brokerCmd *brokerCommand) list(cmd *cobra.Command, args []string) error {
 		}{
 			ClusterId: data.ClusterId,
 			BrokerId:  data.BrokerId,
-			Host:      *(data.Host),
-			Port:      *(data.Port),
+		}
+		if data.Host != nil {
+			s.Host = *(data.Host)
+		}
+		if data.Port != nil {
+			s.Port = *(data.Port)
 		}
 		outputWriter.AddElement(s)
 	}
@@ -178,7 +182,7 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 		for i, entry := range data {
 			entry.Name = utils.Abbreviate(entry.Name, abbreviationLength)
 			entry.Value = utils.Abbreviate(entry.Value, abbreviationLength)
-			configsTableEntries[i] = printer.ToRow(entry, []string{"Name", "Value", "isDefault", "isReadOnly", "isSensitive"})
+			configsTableEntries[i] = printer.ToRow(&entry, []string{"Name", "Value", "IsDefault", "IsReadOnly", "IsSensitive"})
 		}
 		sort.Slice(configsTableEntries, func(i int, j int) bool {
 			return configsTableEntries[i][0] < configsTableEntries[j][0]
@@ -241,7 +245,7 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 	if format == output.Human.String() {
 		// no errors (config update successful)
 		if all {
-			utils.Printf(cmd, "Updated the following broker configs for cluster \"%d\":\n", clusterId)
+			utils.Printf(cmd, "Updated the following broker configs for cluster \"%s\":\n", clusterId)
 		} else {
 			utils.Printf(cmd, "Updated the following configs for broker \"%d\":\n", brokerId)
 		}
