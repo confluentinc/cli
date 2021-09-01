@@ -189,7 +189,7 @@ func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool,
 	return false, nil
 }
 
-func buildInvitation(id string, email string, userResourceId string, orgResourceId string) *orgv1.Invitation {
+func buildInvitation(id, email, userResourceId, orgResourceId string) *orgv1.Invitation {
 	return &orgv1.Invitation{
 		Id:             id,
 		Email:          email,

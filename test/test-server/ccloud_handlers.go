@@ -734,11 +734,9 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 		case strings.Contains(bs, "user@exists.com"):
 			res = flowv1.CreateInvitationReply{
 				Error: &v1.Error{Message: "User is already active"},
-				Invitation:  nil,
 			}
 		default:
 			res = flowv1.CreateInvitationReply{
-				Error: nil,
 				Invitation:  buildInvitation("invitation_1", "miles@confluent.io", "user_1", "org_1"),
 			}
 		}
