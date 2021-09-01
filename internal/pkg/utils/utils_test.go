@@ -219,24 +219,24 @@ func TestIsShorthandCountFlag(t *testing.T) {
 }
 
 func TestAbbreviate(t *testing.T) {
-	tests := []struct{
-		input 	 string
+	tests := []struct {
+		input    string
 		maxLen   int
 		expected string
 	}{
 		{
-			input: "helloooooo",
-			maxLen: 3,
+			input:    "helloooooo",
+			maxLen:   3,
 			expected: "hel...",
 		},
 		{
-			input: "helloooooo",
-			maxLen: 50,
+			input:    "helloooooo",
+			maxLen:   50,
 			expected: "helloooooo",
 		},
 		{
-			input: "hi",
-			maxLen: 2,
+			input:    "hi",
+			maxLen:   2,
 			expected: "hi",
 		},
 	}

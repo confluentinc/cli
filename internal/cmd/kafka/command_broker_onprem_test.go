@@ -1,10 +1,11 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
@@ -15,7 +16,7 @@ func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
 	id, all, err := checkAllOrBrokerIdSpecified(cmd, []string{})
 	req.NoError(err)
 	req.True(all)
-	req.Equal( int32(-1), id)
+	req.Equal(int32(-1), id)
 	// only broker id arg
 	cmd = newCmdWithAllFlag()
 	id, all, err = checkAllOrBrokerIdSpecified(cmd, []string{"1"})
@@ -27,7 +28,7 @@ func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
 	_ = cmd.ParseFlags([]string{"--all"})
 	id, all, err = checkAllOrBrokerIdSpecified(cmd, []string{"1"})
 	req.Error(err)
-	req.Equal( errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
+	req.Equal(errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
 	// neither
 	cmd = newCmdWithAllFlag()
 	id, all, err = checkAllOrBrokerIdSpecified(cmd, []string{})
@@ -58,20 +59,20 @@ func (suite *KafkaClusterTestSuite) TestBroker_parseClusterConfigData() {
 	req := suite.Require()
 	value := "testValue"
 	clusterConfig := kafkarestv3.ClusterConfigDataList{
-		Data:     []kafkarestv3.ClusterConfigData{
+		Data: []kafkarestv3.ClusterConfigData{
 			{
-				Name: "testConfig",
-				Value: &value,
-				IsReadOnly: true,
+				Name:        "testConfig",
+				Value:       &value,
+				IsReadOnly:  true,
 				IsSensitive: true,
-				IsDefault: true,
+				IsDefault:   true,
 			},
 			{
-				Name: "testConfig2",
-				Value: nil,
-				IsReadOnly: true,
+				Name:        "testConfig2",
+				Value:       nil,
+				IsReadOnly:  true,
 				IsSensitive: true,
-				IsDefault: true,
+				IsDefault:   true,
 			},
 		},
 	}
@@ -83,20 +84,20 @@ func (suite *KafkaClusterTestSuite) TestBroker_parseBrokerConfigData() {
 	req := suite.Require()
 	value := "testValue"
 	brokerConfig := kafkarestv3.BrokerConfigDataList{
-		Data:     []kafkarestv3.BrokerConfigData{
+		Data: []kafkarestv3.BrokerConfigData{
 			{
-				Name: "testConfig",
-				Value: &value,
-				IsReadOnly: true,
+				Name:        "testConfig",
+				Value:       &value,
+				IsReadOnly:  true,
 				IsSensitive: true,
-				IsDefault: true,
+				IsDefault:   true,
 			},
 			{
-				Name: "testConfig2",
-				Value: nil,
-				IsReadOnly: true,
+				Name:        "testConfig2",
+				Value:       nil,
+				IsReadOnly:  true,
 				IsSensitive: true,
-				IsDefault: true,
+				IsDefault:   true,
 			},
 		},
 	}
@@ -104,7 +105,7 @@ func (suite *KafkaClusterTestSuite) TestBroker_parseBrokerConfigData() {
 	verifyConfigData(req, data, expectedConfigData)
 }
 
-func newCmdWithAllFlag() *cobra.Command{
+func newCmdWithAllFlag() *cobra.Command {
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("all", false, "All brokers.")
 	return cmd

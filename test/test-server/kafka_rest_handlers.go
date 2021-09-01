@@ -1154,16 +1154,16 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokers(t *testing.T) func(http.Respons
 		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerDataList{
 			Data: []kafkarestv3.BrokerData{
 				{
-					ClusterId: 	vars["cluster_id"],
-					BrokerId: 	1,
-					Port:    	&port1,
-					Host: 		&host1,
+					ClusterId: vars["cluster_id"],
+					BrokerId:  1,
+					Port:      &port1,
+					Host:      &host1,
 				},
 				{
-					ClusterId: 	vars["cluster_id"],
-					BrokerId: 	2,
-					Port:    	&port2,
-					Host: 		&host2,
+					ClusterId: vars["cluster_id"],
+					BrokerId:  2,
+					Port:      &port2,
+					Host:      &host2,
 				},
 			},
 		})
@@ -1178,11 +1178,11 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigsName(t *testing.T) func(ht
 		configValue := "gzip"
 		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(kafkarestv3.ClusterConfigData{
-			Name:  			vars["name"],
-			Value:			&configValue,
-			IsSensitive: 	false,
-			IsReadOnly:  	false,
-			IsDefault:  	false,
+			Name:        vars["name"],
+			Value:       &configValue,
+			IsSensitive: false,
+			IsReadOnly:  false,
+			IsDefault:   false,
 		})
 		require.NoError(t, err)
 	}
@@ -1226,12 +1226,12 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsName(t *testing.T) func(
 		configValue1 := "gzip"
 		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerConfigData{
-				ClusterId:   vars["cluster_id"],
-				Name:        vars["name"],
-				Value:       &configValue1,
-				IsDefault:   true,
-				IsReadOnly:  true,
-				IsSensitive: true,
+			ClusterId:   vars["cluster_id"],
+			Name:        vars["name"],
+			Value:       &configValue1,
+			IsDefault:   true,
+			IsReadOnly:  true,
+			IsSensitive: true,
 		})
 		require.NoError(t, err)
 	}
@@ -1289,7 +1289,6 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsAlter(t *testing.T) func
 		require.NoError(t, err)
 	}
 }
-
 
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)

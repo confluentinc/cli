@@ -1,17 +1,19 @@
 package kafka
 
 import (
+	"net/http"
+	"sort"
+	"strconv"
+
 	"github.com/antihax/optional"
+	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
-	"net/http"
-	"sort"
-	"strconv"
 )
 
 type brokerCommand struct {
@@ -19,11 +21,11 @@ type brokerCommand struct {
 }
 
 type configData struct {
-	Name        string              `json:"name" yaml:name`
-	Value       string              `json:"value,omitempty" yaml:"value,omitempty"`
-	IsDefault   bool                `json:"is_default" yaml:"is_default"`
-	IsReadOnly  bool                `json:"is_read_only" yaml:"is_read_only"`
-	IsSensitive bool                `json:"is_sensitive" yaml:"is_sensitive"`
+	Name        string `json:"name" yaml:name`
+	Value       string `json:"value,omitempty" yaml:"value,omitempty"`
+	IsDefault   bool   `json:"is_default" yaml:"is_default"`
+	IsReadOnly  bool   `json:"is_read_only" yaml:"is_read_only"`
+	IsSensitive bool   `json:"is_sensitive" yaml:"is_sensitive"`
 }
 
 const abbreviationLength = 25
@@ -62,7 +64,7 @@ func (brokerCmd *brokerCommand) init() {
 		Long:  "See cluster-wide or per broker configuration values.",
 		// TODO example
 	}
-	describeCmd.Flags().Bool("all", false,"Get cluster-wide broker configurations (non-default values only).")
+	describeCmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
 	describeCmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
