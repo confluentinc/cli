@@ -4,7 +4,6 @@ import (
 	"github.com/antihax/optional"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/go-printer"
@@ -217,7 +216,7 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return err
 	}
-	configsMap, err := kafka.ToMap(configStrings)
+	configsMap, err := utils.ToMap(configStrings)
 	if err != nil {
 		return err
 	}

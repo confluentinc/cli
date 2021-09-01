@@ -713,16 +713,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 					NumPartitions:   3,
 					MirrorLags: []kafkarestv3.MirrorLag{
 						{
-							Partition: 0,
-							Lag:       142857,
+							Partition:             0,
+							Lag:                   142857,
+							LastSourceFetchOffset: 1293009,
 						},
 						{
-							Partition: 1,
-							Lag:       285714,
+							Partition:             1,
+							Lag:                   285714,
+							LastSourceFetchOffset: 28340404,
 						},
 						{
-							Partition: 2,
-							Lag:       571428,
+							Partition:             2,
+							Lag:                   571428,
+							LastSourceFetchOffset: 5739304,
 						},
 					},
 					MirrorStatus: "active",
@@ -737,12 +740,14 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 					NumPartitions:   2,
 					MirrorLags: []kafkarestv3.MirrorLag{
 						{
-							Partition: 0,
-							Lag:       0,
+							Partition:             0,
+							Lag:                   0,
+							LastSourceFetchOffset: 0,
 						},
 						{
-							Partition: 1,
-							Lag:       0,
+							Partition:             1,
+							Lag:                   0,
+							LastSourceFetchOffset: 0,
 						},
 					},
 					MirrorStatus: "stopped",
@@ -815,16 +820,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 					NumPartitions:   3,
 					MirrorLags: []kafkarestv3.MirrorLag{
 						{
-							Partition: 0,
-							Lag:       142857,
+							Partition:             0,
+							Lag:                   142857,
+							LastSourceFetchOffset: 1293009,
 						},
 						{
-							Partition: 1,
-							Lag:       285714,
+							Partition:             1,
+							Lag:                   285714,
+							LastSourceFetchOffset: 28340404,
 						},
 						{
-							Partition: 2,
-							Lag:       571428,
+							Partition:             2,
+							Lag:                   571428,
+							LastSourceFetchOffset: 5739304,
 						},
 					},
 					MirrorStatus: "active",
@@ -839,12 +847,14 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 					NumPartitions:   2,
 					MirrorLags: []kafkarestv3.MirrorLag{
 						{
-							Partition: 0,
-							Lag:       0,
+							Partition:             0,
+							Lag:                   0,
+							LastSourceFetchOffset: 0,
 						},
 						{
-							Partition: 1,
-							Lag:       0,
+							Partition:             1,
+							Lag:                   0,
+							LastSourceFetchOffset: 0,
 						},
 					},
 					MirrorStatus: "stopped",
@@ -907,16 +917,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 					ErrorCode:       nil,
 					MirrorLags: []kafkarestv3.MirrorLag{
 						{
-							Partition: 0,
-							Lag:       142857,
+							Partition:             0,
+							Lag:                   142857,
+							LastSourceFetchOffset: 1293009,
 						},
 						{
-							Partition: 1,
-							Lag:       285714,
+							Partition:             1,
+							Lag:                   285714,
+							LastSourceFetchOffset: 28340404,
 						},
 						{
-							Partition: 2,
-							Lag:       571428,
+							Partition:             2,
+							Lag:                   571428,
+							LastSourceFetchOffset: 5739304,
 						},
 					},
 				},
@@ -928,16 +941,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 					ErrorCode:       &errorCode,
 					MirrorLags: []kafkarestv3.MirrorLag{
 						{
-							Partition: 0,
-							Lag:       142857,
+							Partition:             0,
+							Lag:                   142857,
+							LastSourceFetchOffset: 1293009,
 						},
 						{
-							Partition: 1,
-							Lag:       285714,
+							Partition:             1,
+							Lag:                   285714,
+							LastSourceFetchOffset: 28340404,
 						},
 						{
-							Partition: 2,
-							Lag:       571428,
+							Partition:             2,
+							Lag:                   571428,
+							LastSourceFetchOffset: 5739304,
 						},
 					},
 				},
@@ -1052,16 +1068,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.Respon
 				NumPartitions:   3,
 				MirrorLags: []kafkarestv3.MirrorLag{
 					{
-						Partition: 0,
-						Lag:       142857,
+						Partition:             0,
+						Lag:                   142857,
+						LastSourceFetchOffset: 1293009,
 					},
 					{
-						Partition: 1,
-						Lag:       285714,
+						Partition:             1,
+						Lag:                   285714,
+						LastSourceFetchOffset: 28340404,
 					},
 					{
-						Partition: 2,
-						Lag:       571428,
+						Partition:             2,
+						Lag:                   571428,
+						LastSourceFetchOffset: 5739304,
 					},
 				},
 				MirrorStatus: "active",

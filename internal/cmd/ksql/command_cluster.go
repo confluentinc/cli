@@ -3,6 +3,11 @@ package ksql
 import (
 	"context"
 	"fmt"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/dghubble/sling"
+	"golang.org/x/oauth2"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -219,8 +224,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
-		err = errors.CatchKSQLNotFoundError(err, args[0])
-		return err
+		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
@@ -228,7 +232,45 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: id}
-	err := c.Client.KSQL.Delete(context.Background(), req)
+
+	// Check KSQL exists
+	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	if err != nil {
+		return errors.CatchKSQLNotFoundError(err, args[0])
+	}
+
+	// terminate cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
+	if cluster.Status == schedv1.ClusterStatus_UP {
+		ctx := c.Config.Context()
+		state, err := ctx.AuthenticatedState(cmd)
+		if err != nil {
+			return err
+		}
+
+		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+		if err != nil {
+			return err
+		}
+
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+		client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
+		request := make(map[string][]string)
+		request["deleteTopicList"] = []string{".*"}
+		response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
+		if err != nil {
+			return err
+		}
+
+		if response.StatusCode != http.StatusOK {
+			body, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return err
+			}
+			return errors.Errorf(errors.KsqlDBTerminateClusterMsg, args[0], string(body))
+		}
+	}
+
+	err = c.Client.KSQL.Delete(context.Background(), req)
 	if err != nil {
 		return err
 	}

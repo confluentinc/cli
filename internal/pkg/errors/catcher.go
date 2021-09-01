@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"regexp"
 	"strings"
 
@@ -19,9 +20,6 @@ import (
 */
 
 func catchTypedErrors(err error) error {
-	if err == nil {
-		return nil
-	}
 	if typedErr, ok := err.(CLITypedError); ok {
 		return typedErr.UserFacingError()
 	}
@@ -29,9 +27,6 @@ func catchTypedErrors(err error) error {
 }
 
 func catchMDSErrors(err error) error {
-	if err == nil {
-		return nil
-	}
 	switch err2 := err.(type) {
 	case mds.GenericOpenAPIError:
 		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
@@ -45,9 +40,6 @@ func catchMDSErrors(err error) error {
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
 func catchCoreV1Errors(err error) error {
-	if err == nil {
-		return nil
-	}
 	e, ok := err.(*corev1.Error)
 	if ok {
 		var result error
@@ -58,9 +50,6 @@ func catchCoreV1Errors(err error) error {
 }
 
 func catchCCloudTokenErrors(err error) error {
-	if err == nil {
-		return nil
-	}
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
 		return NewErrorWithSuggestions(InvalidLoginErrorMsg, CCloudInvalidLoginSuggestions)
@@ -72,6 +61,13 @@ func catchCCloudTokenErrors(err error) error {
 	return err
 }
 
+func catchOpenAPIError(err error) error {
+	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
+		return New(string(openAPIError.Body()))
+	}
+	return err
+}
+
 /*
 Error: 1 error occurred:
 	* error creating ACLs: reply error: invalid character 'C' looking for beginning of value
@@ -79,9 +75,6 @@ Error: 1 error occurred:
 	* error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
-	if err == nil {
-		return nil
-	}
 	backendUnmarshllingErrorRegex := regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`)
 	if backendUnmarshllingErrorRegex.MatchString(err.Error()) {
 		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
@@ -233,8 +226,8 @@ func CatchTopicNotExistError(err error, topicName string, clusterId string) (boo
 		return false, nil
 	}
 	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
-		errorMsg := fmt.Sprintf(TopicNotExistsErrorMsg, topicName)
-		suggestionsMsg := fmt.Sprintf(TopicNotExistsSuggestions, clusterId, clusterId)
+		errorMsg := fmt.Sprintf(TopicDoesNotExistErrorMsg, topicName)
+		suggestionsMsg := fmt.Sprintf(TopicDoesNotExistSuggestions, clusterId, clusterId)
 		return true, NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
 	return false, err
