@@ -26,12 +26,12 @@ func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
 	// --all and broker id arg
 	cmd = newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	id, all, err = checkAllOrBrokerIdSpecified(cmd, []string{"1"})
+	_, _, err = checkAllOrBrokerIdSpecified(cmd, []string{"1"})
 	req.Error(err)
 	req.Equal(errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
 	// neither
 	cmd = newCmdWithAllFlag()
-	id, all, err = checkAllOrBrokerIdSpecified(cmd, []string{})
+	_, _, err = checkAllOrBrokerIdSpecified(cmd, []string{})
 	req.Error(err)
 	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
 }

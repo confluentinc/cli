@@ -21,7 +21,7 @@ type brokerCommand struct {
 }
 
 type configData struct {
-	Name        string `json:"name" yaml:name`
+	Name        string `json:"name" yaml:"name"`
 	Value       string `json:"value,omitempty" yaml:"value,omitempty"`
 	IsDefault   bool   `json:"is_default" yaml:"is_default"`
 	IsReadOnly  bool   `json:"is_read_only" yaml:"is_read_only"`
