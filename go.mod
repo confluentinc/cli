@@ -47,9 +47,10 @@ require (
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github/v25 v25.0.2
+	github.com/google/go-github/v28 v28.1.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0
-	github.com/goreleaser/goreleaser v0.162.1
+	github.com/goreleaser/goreleaser v0.164.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/go-multierror v1.1.0
