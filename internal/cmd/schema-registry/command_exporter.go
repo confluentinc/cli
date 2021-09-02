@@ -329,7 +329,7 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 		Subjects:    info.Subjects,
 		ContextType: info.ContextType,
 		Context:     info.Context,
-		Config:      info.Config,
+		Config:      nil,
 	}
 
 	contextType, err := cmd.Flags().GetString("context-type")
