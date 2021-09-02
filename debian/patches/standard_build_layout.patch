@@ -1,6 +1,6 @@
---- cli/Makefile	2021-09-02 14:38:01.000000000 -0700
+--- cli/Makefile	2021-09-02 14:46:00.000000000 -0700
 +++ debian/Makefile	2021-08-26 16:04:24.000000000 -0700
-@@ -1,205 +1,130 @@
+@@ -1,202 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -63,17 +63,14 @@
 -	go get github.com/mitchellh/golicense@v0.2.0
 -
 -ifeq ($(shell uname),Darwin)
--GORELEASER_SUFFIX ?= -mac.yml
 -SHASUM ?= gsha256sum
 -else ifneq (,$(findstring NT,$(shell uname)))
--GORELEASER_SUFFIX ?= -windows.yml
 -# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
 -SHASUM ?= CertUtil SHA256 -hashfile
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--GORELEASER_SUFFIX ?= -linux.yml
 -SHASUM ?= sha256sum
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)

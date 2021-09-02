@@ -41,14 +41,11 @@ deps:
 	go get github.com/mitchellh/golicense@v0.2.0
 
 ifeq ($(shell uname),Darwin)
-GORELEASER_SUFFIX ?= -mac.yml
 SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
-GORELEASER_SUFFIX ?= -windows.yml
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
 SHASUM ?= CertUtil SHA256 -hashfile
 else
-GORELEASER_SUFFIX ?= -linux.yml
 SHASUM ?= sha256sum
 endif
 
