@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/confluentinc/cli/internal/pkg/examples"
+
 	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -49,7 +51,13 @@ func (brokerCmd *brokerCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(brokerCmd.list),
 		Short: "List Kafka brokers.",
-		// TODO example
+		Long:  "List Kafka brokers using Confluent Kafka REST.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List the Kafka brokers for a cluster.",
+				Code: "confluent kafka broker list",
+			},
+		),
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -61,8 +69,17 @@ func (brokerCmd *brokerCommand) init() {
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.describe),
 		Short: "Describe a Kafka broker.",
-		Long:  "See cluster-wide or per broker configuration values.",
-		// TODO example
+		Long:  "Describe cluster-wide or per broker configuration values using Confluent Kafka REST.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe the `min.insync.replicas` configuration for broker 1.",
+				Code: "confluent kafka broker describe 1 --config-name min.insync.replicas",
+			},
+			examples.Example{
+				Text: "Describe the non-default cluster-wide broker configuration values.",
+				Code: "confluent kafka broker describe --all",
+			},
+		),
 	}
 	describeCmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
 	describeCmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
@@ -76,7 +93,16 @@ func (brokerCmd *brokerCommand) init() {
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.update),
 		Short: "Update Kafka an broker or cluster-wide broker configs.",
-		// TODO example
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Update configuration values for broker 1.",
+				Code: "confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2",
+			},
+			examples.Example{
+				Text: "Update configuration values for all brokers in the cluster.",
+				Code: "confluent kafka broker update --all --config min.insync.replicas=2,num.partitions=2",
+			},
+		),
 	}
 	updateCmd.Flags().Bool("all", false, "Apply config update to all brokers in the cluster.")
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the broker being updated.")
