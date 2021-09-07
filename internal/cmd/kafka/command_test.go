@@ -92,7 +92,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_READ, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_READ, Host: "*",
 			},
 		},
 	},
@@ -101,7 +101,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_READ, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_READ, Host: "*",
 			},
 		},
 	},
@@ -110,7 +110,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_WRITE, Host: "*",
 			},
 		},
 	},
@@ -119,7 +119,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_WRITE, Host: "*",
 			},
 		},
 	},
@@ -128,7 +128,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
 			},
 		},
 	},
@@ -137,7 +137,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
 			},
 		},
 	},
@@ -146,7 +146,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_DELETE, Host: "*",
 			},
 		},
 	},
@@ -155,7 +155,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_DELETE, Host: "*",
 			},
 		},
 	},
@@ -164,7 +164,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_ALTER, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER, Host: "*",
 			},
 		},
 	},
@@ -173,7 +173,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_ALTER, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER, Host: "*",
 			},
 		},
 	},
@@ -182,7 +182,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
 			},
 		},
 	},
@@ -191,7 +191,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE, Host: "*",
 			},
 		},
 	},
@@ -200,7 +200,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
 			},
 		},
 	},
@@ -209,7 +209,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_CLUSTER_ACTION, Host: "*",
 			},
 		},
 	},
@@ -218,7 +218,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
 			},
 		},
 	},
@@ -227,7 +227,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_DESCRIBE_CONFIGS, Host: "*",
 			},
 		},
 	},
@@ -236,7 +236,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
 			},
 		},
 	},
@@ -245,7 +245,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
 			},
 		},
 	},
@@ -254,7 +254,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
 			},
 		},
 	},
@@ -263,7 +263,7 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
 			},
 		},
 	},
@@ -272,15 +272,15 @@ var aclEntries = []struct {
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_ALTER_CONFIGS, Host: "*",
 			},
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_IDEMPOTENT_WRITE, Host: "*",
 			},
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
-				Principal:      "User:0", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
 			},
 		},
 	},
@@ -612,7 +612,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 			{
 				Pattern: &schedv1.ResourcePatternConfig{ResourceType: schedv1.ResourceTypes_TOPIC, Name: "dan",
 					PatternType: schedv1.PatternTypes_LITERAL},
-				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:0",
+				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
 					Operation: schedv1.ACLOperations_READ, PermissionType: schedv1.ACLPermissionTypes_ALLOW},
 			},
 		}
@@ -631,7 +631,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 			{
 				Pattern: &schedv1.ResourcePatternConfig{ResourceType: schedv1.ResourceTypes_CLUSTER, Name: "kafka-cluster",
 					PatternType: schedv1.PatternTypes_LITERAL},
-				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:0",
+				Entry: &schedv1.AccessControlEntryConfig{Host: "*", Principal: "User:42",
 					Operation: schedv1.ACLOperations_READ, PermissionType: schedv1.ACLPermissionTypes_ALLOW},
 			},
 		}
@@ -1140,6 +1140,11 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 					{
 						Id:          serviceAccountId,
 						ResourceId:  userResourceId,
+						ServiceName: serviceAccountName,
+					},
+					{
+						Id:          42,
+						ResourceId:  "sa-42",
 						ServiceName: serviceAccountName,
 					},
 				}, nil
