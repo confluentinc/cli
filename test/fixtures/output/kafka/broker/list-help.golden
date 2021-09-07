@@ -1,4 +1,4 @@
-List Kafka brokers.
+List Kafka brokers using Confluent Kafka REST.
 
 Usage:
   confluent kafka broker list [flags]

@@ -1,7 +1,16 @@
-See cluster-wide or per broker configuration values.
+Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.
 
 Usage:
-  confluent kafka broker describe <broker> [flags]
+  confluent kafka broker describe [broker] [flags]
+
+Examples:
+Describe the `min.insync.replicas` configuration for broker 1.
+
+  $ confluent kafka broker describe 1 --config-name min.insync.replicas
+
+Describe the non-default cluster-wide broker configuration values.
+
+  $ confluent kafka broker describe --all
 
 Flags:
       --all                       Get cluster-wide broker configurations (non-default values only).

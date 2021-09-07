@@ -201,7 +201,7 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 	return nil
 }
 // fetch per-broker configs or just configName config if specified
-func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId, brokerId, configName string) (kafkarestv3.BrokerConfigDataList, error) {
+func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, configName string) (kafkarestv3.BrokerConfigDataList, error) {
 	var brokerConfig kafkarestv3.BrokerConfigDataList
 	var resp *http.Response
 	var err error
