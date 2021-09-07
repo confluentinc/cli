@@ -13,6 +13,7 @@ const (
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
+	BadServiceAccountIDErrorMsg         = `failed to parse service account id: ensure service account id begins with "sa-"`
 	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg      = "refusing to overwrite existing secret for API Key \"%s\""

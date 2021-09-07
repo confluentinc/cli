@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -53,9 +52,9 @@ type command struct {
 }
 
 var (
-	listFields              = []string{"Key", "Description", "UserId", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Resource Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels    = []string{"key", "description", "owner", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
+	listFields              = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner Resource Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
@@ -175,7 +174,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	type keyDisplay struct {
 		Key            string
 		Description    string
-		UserId         int32
 		UserResourceId string
 		UserEmail      string
 		ResourceType   string
@@ -193,7 +191,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
-	serviceAccountId, err := cmd.Flags().GetString("service-account")
+	serviceAccountID, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -210,18 +208,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	userId := int32(0)
 	serviceAccount := false
-	if serviceAccountId != "" {
+	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
 		serviceAccount = true
-		if isResourceId(serviceAccountId) { // if user inputs resource ID, get corresponding numeric ID
-			userIdMap, err := c.mapResourceIdToUserId(allUsers)
-			if err != nil {
-				return err
-			}
-			userId = userIdMap[serviceAccountId]
-		} else { // if user inputs numeric ID, convert it to int32
-			userIdp, _ := strconv.Atoi(serviceAccountId)
-			userId = int32(userIdp)
+		validFormat := strings.HasPrefix(serviceAccountID, "sa-")
+		if !validFormat {
+			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
+		userIdMap := c.mapResourceIdToUserId(allUsers)
+		userId = userIdMap[serviceAccountID]
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -246,10 +240,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(users)
-	resourceIdMap, err := c.mapUserIdToResourceId(allUsers)
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(allUsers)
 
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
@@ -295,7 +286,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
-				UserId:         apiKey.UserId,
 				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   pcmd.CloudResourceType,
@@ -311,7 +301,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
-				UserId:         apiKey.UserId,
 				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   lc.Type,
@@ -373,7 +362,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	serviceAccountId, err := cmd.Flags().GetString("service-account")
+	serviceAccountID, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -384,11 +373,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	key := &schedv1.ApiKey{
-		Description: description,
-		AccountId:   c.EnvironmentId(),
+		UserResourceId: serviceAccountID,
+		Description:    description,
+		AccountId:      c.EnvironmentId(),
 	}
 
-	key, err = c.completeKeyId(key, serviceAccountId) // get corresponding numeric/resource ID if the cmd has a service-account flag
+	key, err = c.completeKeyUserId(key) // get corresponding numeric ID if the cmd has a service-account flag
 	if err != nil {
 		return err
 	}
@@ -663,27 +653,19 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return append(serviceAccounts, adminUsers...), nil
 }
 
-func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
-	if Id != "" { // it has a service-account flag
-		key.ServiceAccount = true
+func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
+	if key.UserResourceId != "" { // it has a service-account flag
+		validFormat := strings.HasPrefix(key.UserResourceId, "sa-")
+		if !validFormat {
+			return nil, errors.New(errors.BadServiceAccountIDErrorMsg)
+		}
 		users, err := c.getAllUsers()
 		if err != nil {
 			return key, err
 		}
-		idp, err := strconv.Atoi(Id)
-		if err != nil { // it's a resource id
-			key.UserResourceId = Id
-			for _, user := range users {
-				if Id == user.ResourceId {
-					key.UserId = user.Id
-				}
-			}
-		} else { // it's a numeric id
-			key.UserId = int32(idp)
-			for _, user := range users {
-				if int32(idp) == user.Id {
-					key.UserResourceId = user.ResourceId
-				}
+		for _, user := range users {
+			if key.UserResourceId == user.ResourceId {
+				key.UserId = user.Id
 			}
 		}
 	} else {
@@ -692,23 +674,18 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) mapUserIdToResourceId(users []*orgv1.User) (map[int32]string, error) {
+func (c *command) mapUserIdToResourceId(users []*orgv1.User) map[int32]string {
 	idMap := make(map[int32]string)
 	for _, user := range users {
 		idMap[user.Id] = user.ResourceId
 	}
-	return idMap, nil
+	return idMap
 }
 
-func (c *command) mapResourceIdToUserId(users []*orgv1.User) (map[string]int32, error) {
+func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
 	}
-	return idMap, nil
-}
-
-func isResourceId(Id string) bool {
-	_, err := strconv.Atoi(Id)
-	return err != nil
+	return idMap
 }
