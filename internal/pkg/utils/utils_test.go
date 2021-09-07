@@ -241,22 +241,22 @@ func getFlagMap() map[string]*pflag.Flag {
 func TestReadConfigsFromFile(t *testing.T) {
 	req := require.New(t)
 	type testCase struct {
-		config      string
-		expected 	map[string]string
-		wantErr		bool
+		config   string
+		expected map[string]string
+		wantErr  bool
 	}
 	tests := []testCase{
 		{
 			config: "key=val\n key2=val2 \n key3=val password=pass",
 			expected: map[string]string{
-				"key":"val",
-				"key2":"val2",
-				"key3":"val password=pass",
+				"key":  "val",
+				"key2": "val2",
+				"key3": "val password=pass",
 			},
 			wantErr: false,
 		},
 		{
-			config: "keyval\nkey2 = val2\n key3=val password=pass",
+			config:  "keyval\nkey2 = val2\n key3=val password=pass",
 			wantErr: true,
 		},
 	}
