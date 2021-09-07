@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"net/http"
 	"sort"
 	"strconv"
@@ -52,12 +53,6 @@ func (brokerCmd *brokerCommand) init() {
 		RunE:  pcmd.NewCLIRunE(brokerCmd.list),
 		Short: "List Kafka brokers.",
 		Long:  "List Kafka brokers using Confluent Kafka REST.",
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List the Kafka brokers for a cluster.",
-				Code: "confluent kafka broker list",
-			},
-		),
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -65,11 +60,11 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <broker>",
+		Use:   "describe [broker]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.describe),
 		Short: "Describe a Kafka broker.",
-		Long:  "Describe cluster-wide or per broker configuration values using Confluent Kafka REST.",
+		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `min.insync.replicas` configuration for broker 1.",
@@ -89,7 +84,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <broker>",
+		Use:   "update [broker]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.update),
 		Short: "Update Kafka an broker or cluster-wide broker configs.",
@@ -175,31 +170,16 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 	}
 	// Get Broker Configs
 	var data []configData
-	var resp *http.Response
-	if all {
-		var clusterConfig kafkarestv3.ClusterConfigDataList
-		if configName != "" { // Get configName config
-			var configNameData kafkarestv3.ClusterConfigData
-			configNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsNameGet(restContext, clusterId, configName)
-			clusterConfig.Data = []kafkarestv3.ClusterConfigData{configNameData}
-		} else { // Get all configs
-			clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
-		}
+	if all { // fetch cluster-wide configs
+		clusterConfig, err := getClusterWideConfigs(restClient, restContext, clusterId, configName)
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return err
 		}
 		data = parseClusterConfigData(clusterConfig)
-	} else {
-		var brokerConfig kafkarestv3.BrokerConfigDataList
-		if configName != "" {
-			var brokerNameData kafkarestv3.BrokerConfigData
-			brokerNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
-			brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
-		} else {
-			brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
-		}
+	} else { // fetch individual broker configs
+		brokerConfig, err := getIndividualBrokerConfigs(restClient, restContext, clusterId, brokerId, configName)
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return err
 		}
 		data = parseBrokerConfigData(brokerConfig)
 	}
@@ -211,7 +191,7 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 			entry.Value = utils.Abbreviate(entry.Value, abbreviationLength)
 			configsTableEntries[i] = printer.ToRow(&entry, []string{"Name", "Value", "IsDefault", "IsReadOnly", "IsSensitive"})
 		}
-		sort.Slice(configsTableEntries, func(i int, j int) bool {
+		sort.Slice(configsTableEntries, func(i, j int) bool {
 			return configsTableEntries[i][0] < configsTableEntries[j][0]
 		})
 		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
@@ -219,6 +199,41 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 		return output.StructuredOutputForCommand(cmd, format, data)
 	}
 	return nil
+}
+// fetch per-broker configs or just configName config if specified
+func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId, brokerId, configName string) (kafkarestv3.BrokerConfigDataList, error) {
+	var brokerConfig kafkarestv3.BrokerConfigDataList
+	var resp *http.Response
+	var err error
+	if configName != "" {
+		var brokerNameData kafkarestv3.BrokerConfigData
+		brokerNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
+		brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
+	} else {
+		brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+	}
+	if err != nil {
+		return brokerConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	}
+	return brokerConfig, nil
+}
+
+// fetch cluster-wide configs or just configName config if specified
+func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, configName string) (kafkarestv3.ClusterConfigDataList, error) {
+	var clusterConfig kafkarestv3.ClusterConfigDataList
+	var resp *http.Response
+	var err error
+	if configName != "" { // Get configName config
+		var configNameData kafkarestv3.ClusterConfigData
+		configNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsNameGet(restContext, clusterId, configName)
+		clusterConfig.Data = []kafkarestv3.ClusterConfigData{configNameData}
+	} else { // Get all configs
+		clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
+	}
+	if err != nil {
+		return clusterConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	}
+	return clusterConfig, nil
 }
 
 func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error {
