@@ -82,7 +82,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config config.txt", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config-file config.txt", cliName),
 			},
 		),
 	}
