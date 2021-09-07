@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -260,27 +259,36 @@ func TestReadConfigsFromFile(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, t := range tests {
-		file, err := ioutil.TempFile(os.TempDir(), "test")
+	file1, err := ioutil.TempFile(os.TempDir(), "test")
+	req.NoError(err)
+	_, err = file1.Write([]byte(tests[0].config))
+	req.NoError(err)
+	defer os.Remove(file1.Name())
+	out1, err := ReadConfigsFromFile(file1.Name())
+	if tests[0].wantErr {
+		req.Error(err)
+	} else {
 		req.NoError(err)
-		_, err = file.Write([]byte(t.config))
+		validateConfigMap(req, tests[0].expected, out1)
+	}
+
+	file2, err := ioutil.TempFile(os.TempDir(), "test")
+	req.NoError(err)
+	_, err = file2.Write([]byte(tests[1].config))
+	req.NoError(err)
+	defer os.Remove(file2.Name())
+	out2, err := ReadConfigsFromFile(file2.Name())
+	if tests[1].wantErr {
+		req.Error(err)
+	} else {
 		req.NoError(err)
-		out, err := ReadConfigsFromFile(file.Name())
-		if t.wantErr {
-			req.Error(err)
-		} else {
-			req.NoError(err)
-			validateConfigMap(req, t.expected, out)
-		}
-		err = os.Remove(file.Name())
-		req.NoError(err)
+		validateConfigMap(req, tests[1].expected, out2)
 	}
 }
 
 func validateConfigMap(req *require.Assertions, expected map[string]string, out map[string]string) {
 	req.Equal(len(expected), len(out))
 	for k, v := range out {
-		fmt.Println(k + " " + v)
 		req.Equal(expected[k], v)
 	}
 }
