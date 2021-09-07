@@ -68,6 +68,7 @@ var rules = []linter.Rule{
 				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
 				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
 				"lag":            {CreateCommandArg: "N/A", OtherCommandsArg: "<consumer-group>"},
+				"broker":         {CreateCommandArg: "N/A", OtherCommandsArg: "[broker-id]"},
 			},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),

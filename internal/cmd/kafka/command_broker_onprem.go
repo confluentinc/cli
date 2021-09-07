@@ -60,7 +60,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe [broker]",
+		Use:   "describe [broker-id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.describe),
 		Short: "Describe a Kafka broker.",
@@ -84,7 +84,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update [broker]",
+		Use:   "update [broker-id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.update),
 		Short: "Update Kafka an broker or cluster-wide broker configs.",
