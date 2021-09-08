@@ -79,7 +79,7 @@ var rules = []linter.Rule{
 		// skip api-key create since you don't get to choose a name for API keys
 		linter.ExcludeCommandContains("api-key create"),
 		// skip connector create since you don't get to choose id for connector
-		linter.ExcludeCommandContains("connector create"),
+		linter.ExcludeCommandContains("connect create"),
 		// skip local which delegates to external bash scripts
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
@@ -99,9 +99,9 @@ var rules = []linter.Rule{
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name
-		linter.ExcludeCommandContains("connector-catalog describe"),
+		linter.ExcludeCommandContains("connect plugin describe"),
 		// skip connector event describe as it shows connector log events configuration for an org
-		linter.ExcludeCommandContains("connector event describe"),
+		linter.ExcludeCommandContains("connect event describe"),
 		// skip feedback command
 		linter.ExcludeCommand("feedback"),
 		// skip signup command

@@ -13,6 +13,7 @@ const (
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
+	BadServiceAccountIDErrorMsg         = `failed to parse service account id: ensure service account id begins with "sa-"`
 	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg      = "refusing to overwrite existing secret for API Key \"%s\""
@@ -152,7 +153,6 @@ const (
 
 	// ksql commands
 	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
-	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"

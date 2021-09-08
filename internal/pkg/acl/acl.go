@@ -338,7 +338,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	return aclData
 }
 
-func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, IdMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -386,7 +386,7 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 	return outputWriter.Out()
 }
 
-func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, IdMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
