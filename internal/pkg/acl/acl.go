@@ -338,7 +338,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	return aclData
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, idMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -354,16 +354,9 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 
 	for _, aclData := range aclGetResp.Data {
 		principal := aclData.Principal
-		var resourceId, prefix string
-		if principal != "" {
-			prefix = strings.Split(principal, ":")[0]
-			userId := strings.Split(principal, ":")[1]
-			idp, err := strconv.Atoi(userId)
-			if err == nil {
-				resourceId = IdMap[int32(idp)]
-			} else {
-				resourceId = userId
-			}
+		resourceId, prefix, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+		if err != nil {
+			return err
 		}
 		record := &struct {
 			Principal    string
@@ -386,7 +379,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 	return outputWriter.Out()
 }
 
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, idMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -402,16 +395,9 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 
 	for _, binding := range bindingsObj {
 		principal := binding.Entry.Principal
-		var resourceId, prefix string
-		if principal != "" {
-			prefix = strings.Split(principal, ":")[0]
-			userId := strings.Split(principal, ":")[1]
-			idp, err := strconv.Atoi(userId)
-			if err == nil {
-				resourceId = IdMap[int32(idp)]
-			} else {
-				resourceId = userId
-			}
+		resourceId, prefix, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+		if err != nil {
+			return err
 		}
 		record := &struct {
 			Principal    string
@@ -432,4 +418,19 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	}
 
 	return outputWriter.Out()
+}
+
+func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]string) (string, string, error) {
+	var prefix, resourceId string
+	if principal != "" {
+		splitPrincipal := strings.Split(principal, ":")
+		if len(splitPrincipal) < 2 {
+			return prefix, resourceId, errors.Errorf("Unrecognized principal format %s", principal)
+		}
+		prefix = splitPrincipal[0]
+		userId := splitPrincipal[1]
+		idp, _ := strconv.Atoi(userId)
+		resourceId = idMap[int32(idp)]
+	}
+	return prefix, resourceId, nil
 }

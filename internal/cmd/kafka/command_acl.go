@@ -170,10 +170,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	resourceIdByUserIdMap, err := getUserIdMap(c.Client)
-	if err != nil {
-		return err
-	}
 
 	var bindings []*schedv1.ACLBinding
 	for _, acl := range acls {

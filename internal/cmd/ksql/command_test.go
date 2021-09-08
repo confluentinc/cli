@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	ksqlClusterID     = "lksqlc-12345"
-	physicalClusterID = "pksqlc-zxcvb"
-	outputTopicPrefix = "pksqlc-abcde"
-	keyString         = "key"
-	keySecretString   = "secret"
-	serviceAcctID     = int32(123)
-	expectedACLs      = `  Principal | Permission |    Operation     |   ResourceType   |         ResourceName         | PatternType  
+	ksqlClusterID         = "lksqlc-12345"
+	physicalClusterID     = "pksqlc-zxcvb"
+	outputTopicPrefix     = "pksqlc-abcde"
+	keyString             = "key"
+	keySecretString       = "secret"
+	serviceAcctID         = int32(123)
+	serviceAcctResourceID = "sa-12345"
+	expectedACLs          = `  Principal | Permission |    Operation     |   ResourceType   |         ResourceName         | PatternType  
 +-----------+------------+------------------+------------------+------------------------------+-------------+
   User:123  | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL      
   User:123  | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL      
