@@ -11,7 +11,7 @@ import (
 // Client is a mock of Client interface
 type Client struct {
 	lockCheckForUpdates sync.Mutex
-	CheckForUpdatesFunc func(cliName, currentVersion string, forceCheck bool) (bool, string, error)
+	CheckForUpdatesFunc func(cliName, currentVersion string, forceCheck bool) (string, string, error)
 
 	lockGetLatestReleaseNotes sync.Mutex
 	GetLatestReleaseNotesFunc func(currentVersion string) (string, []string, error)
@@ -47,7 +47,7 @@ type Client struct {
 }
 
 // CheckForUpdates mocks base method by wrapping the associated func.
-func (m *Client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (bool, string, error) {
+func (m *Client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error) {
 	m.lockCheckForUpdates.Lock()
 	defer m.lockCheckForUpdates.Unlock()
 

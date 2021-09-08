@@ -12,8 +12,8 @@ import (
 
 // Repository is a mock of Repository interface
 type Repository struct {
-	lockGetLatestBinaryVersion sync.Mutex
-	GetLatestBinaryVersionFunc func(name string) (*github_com_hashicorp_go_version.Version, error)
+	lockGetLatestMajorAndMinorVersion sync.Mutex
+	GetLatestMajorAndMinorVersionFunc func(name string, current *github_com_hashicorp_go_version.Version) (*github_com_hashicorp_go_version.Version, *github_com_hashicorp_go_version.Version, error)
 
 	lockGetLatestReleaseNotesVersions sync.Mutex
 	GetLatestReleaseNotesVersionsFunc func(currentVersion string) (github_com_hashicorp_go_version.Collection, error)
@@ -31,8 +31,9 @@ type Repository struct {
 	DownloadReleaseNotesFunc func(version string) (string, error)
 
 	calls struct {
-		GetLatestBinaryVersion []struct {
-			Name string
+		GetLatestMajorAndMinorVersion []struct {
+			Name    string
+			Current *github_com_hashicorp_go_version.Version
 		}
 		GetLatestReleaseNotesVersions []struct {
 			CurrentVersion string
@@ -53,42 +54,45 @@ type Repository struct {
 	}
 }
 
-// GetLatestBinaryVersion mocks base method by wrapping the associated func.
-func (m *Repository) GetLatestBinaryVersion(name string) (*github_com_hashicorp_go_version.Version, error) {
-	m.lockGetLatestBinaryVersion.Lock()
-	defer m.lockGetLatestBinaryVersion.Unlock()
+// GetLatestMajorAndMinorVersion mocks base method by wrapping the associated func.
+func (m *Repository) GetLatestMajorAndMinorVersion(name string, current *github_com_hashicorp_go_version.Version) (*github_com_hashicorp_go_version.Version, *github_com_hashicorp_go_version.Version, error) {
+	m.lockGetLatestMajorAndMinorVersion.Lock()
+	defer m.lockGetLatestMajorAndMinorVersion.Unlock()
 
-	if m.GetLatestBinaryVersionFunc == nil {
-		panic("mocker: Repository.GetLatestBinaryVersionFunc is nil but Repository.GetLatestBinaryVersion was called.")
+	if m.GetLatestMajorAndMinorVersionFunc == nil {
+		panic("mocker: Repository.GetLatestMajorAndMinorVersionFunc is nil but Repository.GetLatestMajorAndMinorVersion was called.")
 	}
 
 	call := struct {
-		Name string
+		Name    string
+		Current *github_com_hashicorp_go_version.Version
 	}{
-		Name: name,
+		Name:    name,
+		Current: current,
 	}
 
-	m.calls.GetLatestBinaryVersion = append(m.calls.GetLatestBinaryVersion, call)
+	m.calls.GetLatestMajorAndMinorVersion = append(m.calls.GetLatestMajorAndMinorVersion, call)
 
-	return m.GetLatestBinaryVersionFunc(name)
+	return m.GetLatestMajorAndMinorVersionFunc(name, current)
 }
 
-// GetLatestBinaryVersionCalled returns true if GetLatestBinaryVersion was called at least once.
-func (m *Repository) GetLatestBinaryVersionCalled() bool {
-	m.lockGetLatestBinaryVersion.Lock()
-	defer m.lockGetLatestBinaryVersion.Unlock()
+// GetLatestMajorAndMinorVersionCalled returns true if GetLatestMajorAndMinorVersion was called at least once.
+func (m *Repository) GetLatestMajorAndMinorVersionCalled() bool {
+	m.lockGetLatestMajorAndMinorVersion.Lock()
+	defer m.lockGetLatestMajorAndMinorVersion.Unlock()
 
-	return len(m.calls.GetLatestBinaryVersion) > 0
+	return len(m.calls.GetLatestMajorAndMinorVersion) > 0
 }
 
-// GetLatestBinaryVersionCalls returns the calls made to GetLatestBinaryVersion.
-func (m *Repository) GetLatestBinaryVersionCalls() []struct {
-	Name string
+// GetLatestMajorAndMinorVersionCalls returns the calls made to GetLatestMajorAndMinorVersion.
+func (m *Repository) GetLatestMajorAndMinorVersionCalls() []struct {
+	Name    string
+	Current *github_com_hashicorp_go_version.Version
 } {
-	m.lockGetLatestBinaryVersion.Lock()
-	defer m.lockGetLatestBinaryVersion.Unlock()
+	m.lockGetLatestMajorAndMinorVersion.Lock()
+	defer m.lockGetLatestMajorAndMinorVersion.Unlock()
 
-	return m.calls.GetLatestBinaryVersion
+	return m.calls.GetLatestMajorAndMinorVersion
 }
 
 // GetLatestReleaseNotesVersions mocks base method by wrapping the associated func.
@@ -285,9 +289,9 @@ func (m *Repository) DownloadReleaseNotesCalls() []struct {
 
 // Reset resets the calls made to the mocked methods.
 func (m *Repository) Reset() {
-	m.lockGetLatestBinaryVersion.Lock()
-	m.calls.GetLatestBinaryVersion = nil
-	m.lockGetLatestBinaryVersion.Unlock()
+	m.lockGetLatestMajorAndMinorVersion.Lock()
+	m.calls.GetLatestMajorAndMinorVersion = nil
+	m.lockGetLatestMajorAndMinorVersion.Unlock()
 	m.lockGetLatestReleaseNotesVersions.Lock()
 	m.calls.GetLatestReleaseNotesVersions = nil
 	m.lockGetLatestReleaseNotesVersions.Unlock()

@@ -115,11 +115,13 @@ const (
 	// update command
 	CheckingForUpdatesMsg = "Checking for updates..."
 	UpToDateMsg           = "Already up to date."
+	MajorVersionUpdateMsg = "The only available update is a major version update. Use `%s update --major` to accept the update.\n"
 	UpdateAutocompleteMsg = "Update your autocomplete scripts as instructed by `%s help completion`.\n"
 
 	// cmd package
 	TokenExpiredMsg        = "Your token has expired. You are now logged out."
-	NotifyUpdateMsg        = "Updates are available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
+	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update --major\n\n"
+	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install them, please run:\n$ %s update\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
 		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
 	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"

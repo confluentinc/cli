@@ -20,7 +20,7 @@ import (
 
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
-	CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error)
+	CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string) error
@@ -66,34 +66,50 @@ func NewClient(params *ClientParams) *client {
 }
 
 // CheckForUpdates checks for new versions in the repo
-func (c *client) CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (updateAvailable bool, latestVersion string, err error) {
+func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error) {
 	if c.DisableCheck {
-		return false, currentVersion, nil
+		return "", "", nil
 	}
+
 	shouldCheck, err := c.readCheckFile()
 	if err != nil {
-		return false, currentVersion, err
+		return "", "", err
 	}
 	if !shouldCheck && !forceCheck {
-		return false, currentVersion, nil
+		return "", "", nil
 	}
+
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		err = errors.Wrapf(err, errors.ParseVersionErrorMsg, cliName, currentVersion)
-		return false, currentVersion, err
+		return "", "", errors.Wrapf(err, errors.ParseVersionErrorMsg, cliName, currentVersion)
 	}
-	latestBinaryVersion, err := c.Repository.GetLatestBinaryVersion(cliName)
+
+	latestMajorVersion, latestMinorVersion, err := c.Repository.GetLatestMajorAndMinorVersion(cliName, currVersion)
 	if err != nil {
-		return false, currentVersion, err
+		return "", "", err
 	}
-	// after fetching the latest version we touch the file so that we don't make the request again for 24hrs
+
+	// If there is a major version update for `ccloud`, it will be found under the name `confluent`.
+	if cliName == "ccloud" {
+		latestMajorVersion, _, err = c.Repository.GetLatestMajorAndMinorVersion("confluent", currVersion)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	// After fetching the latest version, we touch the file so that we don't make the request again for 24hrs.
 	if err := c.touchCheckFile(); err != nil {
-		return false, currentVersion, errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
+		return "", "", errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
 	}
-	if isLessThanVersion(currVersion, latestBinaryVersion) {
-		return true, latestBinaryVersion.Original(), nil
+
+	var major, minor string
+	if isLessThanVersion(currVersion, latestMajorVersion) {
+		major = latestMajorVersion.Original()
 	}
-	return false, currentVersion, nil
+	if isLessThanVersion(currVersion, latestMinorVersion) {
+		minor = latestMinorVersion.Original()
+	}
+	return major, minor, nil
 }
 
 func (c *client) GetLatestReleaseNotes(currentVersion string) (string, []string, error) {

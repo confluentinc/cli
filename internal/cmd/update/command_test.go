@@ -13,7 +13,7 @@ import (
 
 func TestGetReleaseNotes_MultipleReleaseNotes(t *testing.T) {
 	client := &updatemock.Client{
-		GetLatestReleaseNotesFunc: func(currentVersion string) (string, []string, error) {
+		GetLatestReleaseNotesFunc: func(_ string) (string, []string, error) {
 			notes := []string{
 				"v0.1.0 changes\n",
 				"v1.0.0 changes\n",

@@ -20,24 +20,24 @@ import (
 )
 
 const (
-	S3BinBucket          = "confluent.cloud"
-	S3BinRegion          = "us-west-2"
-	S3BinPrefix          = "%s-cli/binaries"
-	S3ReleaseNotesPrefix = "%s-cli/release-notes"
-	CheckFileFmt         = "%s/.%s/update_check"
-	CheckInterval        = 24 * time.Hour
+	S3BinBucket             = "confluent.cloud"
+	S3BinRegion             = "us-west-2"
+	S3BinPrefixFmt          = "%s-cli/binaries"
+	S3ReleaseNotesPrefixFmt = "%s-cli/release-notes"
+	CheckFileFmt            = "%s/.%s/update_check"
+	CheckInterval           = 24 * time.Hour
 )
 
 // NewClient returns a new update.Client configured for the CLI
 func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
 	// The following function will never err, since "_" is a valid separator.
-	objectKey, _ := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefix, cliName), "_", true)
+	objectKey, _ := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefixFmt, cliName), "_", true)
 
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:          S3BinRegion,
 		S3BinBucket:          S3BinBucket,
-		S3BinPrefix:          fmt.Sprintf(S3BinPrefix, cliName),
-		S3ReleaseNotesPrefix: fmt.Sprintf(S3ReleaseNotesPrefix, cliName),
+		S3BinPrefix:          fmt.Sprintf(S3BinPrefixFmt, cliName),
+		S3ReleaseNotesPrefix: fmt.Sprintf(S3ReleaseNotesPrefixFmt, cliName),
 		S3ObjectKey:          objectKey,
 		Logger:               logger,
 	})
@@ -84,6 +84,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
+	c.Command.Flags().Bool("major", false, "Allow major version updates.")
 	c.Command.Flags().SortFlags = false
 }
 
@@ -92,18 +93,39 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
+
+	major, err := cmd.Flags().GetBool("major")
+	if err != nil {
+		return err
+	}
+
 	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
-	updateAvailable, latestVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
+	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(c.cliName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
 
-	if !updateAvailable {
+	if latestMajorVersion == "" && latestMinorVersion == "" {
 		utils.Println(cmd, errors.UpToDateMsg)
 		return nil
 	}
 
-	releaseNotes := c.getReleaseNotes(latestVersion)
+	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
+		utils.Printf(cmd, errors.MajorVersionUpdateMsg, c.cliName)
+		return nil
+	}
+
+	updateVersion := latestMinorVersion
+	if major && latestMajorVersion != "" {
+		updateVersion = latestMajorVersion
+	}
+
+	oldName := c.cliName
+	if strings.HasPrefix(updateVersion, "2.") {
+		c.cliName = "confluent"
+	}
+
+	releaseNotes := c.getReleaseNotes(updateVersion)
 
 	// HACK: our packaging doesn't include the "v" in the version, so we add it back so that the prompt is consistent
 	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
@@ -111,7 +133,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(c.cliName, c.version.Version, "v"+latestVersion, releaseNotes, !updateYes) {
+	if !c.client.PromptToDownload(oldName, c.version.Version, "v"+updateVersion, releaseNotes, !updateYes) {
 		return nil
 	}
 
@@ -119,11 +141,12 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(c.cliName, latestVersion, oldBin); err != nil {
+
+	if err := c.client.UpdateBinary(c.cliName, updateVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
-	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
 
+	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
 	return nil
 }
 
