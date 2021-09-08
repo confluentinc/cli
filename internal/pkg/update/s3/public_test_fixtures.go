@@ -265,21 +265,21 @@ const ListVersionsPublicFixtureDirtyVersions = `\
   <MaxKeys>1000</MaxKeys>
   <IsTruncated>false</IsTruncated>
   <Contents>
-    <Key>ccloud-cli/binaries/0.44.0/confluent_0.44.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.44.0/ccloud_0.44.0_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/binaries/0.44.0/confluent_0.44.0-dirty-cody_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.44.0/ccloud_0.44.0-dirty-cody_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/binaries/0.44.0/confluent_0.44.0-SNAPSHOT_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.44.0/ccloud_0.44.0-SNAPSHOT_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
@@ -296,21 +296,21 @@ const ListVersionsPublicFixtureUnsortedVersions = `\
   <MaxKeys>1000</MaxKeys>
   <IsTruncated>false</IsTruncated>
   <Contents>
-    <Key>ccloud-cli/binaries/0.43.0/confluent_0.43.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.43.0/ccloud_0.43.0_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/binaries/0.42.0/confluent_0.42.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.42.0/ccloud_0.42.0_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/binaries/0.42.1/confluent_0.42.1_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.42.1/ccloud_0.42.1_darwin_amd64</Key>
     <LastModified>2019-03-29T20:32:38.000Z</LastModified>
     <ETag>"42ceaf9337d08be81d625f6ede2d62c7"</ETag>
     <Size>17067256</Size>
@@ -378,14 +378,14 @@ const ListVersionsPublicFixtureMajorAndMinor = `\
   <MaxKeys>1000</MaxKeys>
   <IsTruncated>false</IsTruncated>
   <Contents>
-    <Key>ccloud-cli/binaries/0.1.0/confluent_0.1.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/0.1.0/ccloud_0.1.0_darwin_amd64</Key>
     <LastModified>2019-03-30T03:47:23.000Z</LastModified>
     <ETag>"6d67d14d2e493c4954f3b9a73c3b7e96"</ETag>
     <Size>469</Size>
     <StorageClass>STANDARD</StorageClass>
   </Contents>
   <Contents>
-    <Key>ccloud-cli/binaries/1.0.0/confluent_1.0.0_darwin_amd64</Key>
+    <Key>ccloud-cli/binaries/1.0.0/ccloud_1.0.0_darwin_amd64</Key>
     <LastModified>2019-03-30T03:47:23.000Z</LastModified>
     <ETag>"a040fb753aa77009330bb7b6e0f805a8"</ETag>
     <Size>17067256</Size>

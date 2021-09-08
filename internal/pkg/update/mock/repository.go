@@ -16,19 +16,19 @@ type Repository struct {
 	GetLatestMajorAndMinorVersionFunc func(name string, current *github_com_hashicorp_go_version.Version) (*github_com_hashicorp_go_version.Version, *github_com_hashicorp_go_version.Version, error)
 
 	lockGetLatestReleaseNotesVersions sync.Mutex
-	GetLatestReleaseNotesVersionsFunc func(currentVersion string) (github_com_hashicorp_go_version.Collection, error)
+	GetLatestReleaseNotesVersionsFunc func(name, currentVersion string) (github_com_hashicorp_go_version.Collection, error)
 
 	lockGetAvailableBinaryVersions sync.Mutex
 	GetAvailableBinaryVersionsFunc func(name string) (github_com_hashicorp_go_version.Collection, error)
 
 	lockGetAvailableReleaseNotesVersions sync.Mutex
-	GetAvailableReleaseNotesVersionsFunc func() (github_com_hashicorp_go_version.Collection, error)
+	GetAvailableReleaseNotesVersionsFunc func(name string) (github_com_hashicorp_go_version.Collection, error)
 
 	lockDownloadVersion sync.Mutex
 	DownloadVersionFunc func(name, version, downloadDir string) (string, int64, error)
 
 	lockDownloadReleaseNotes sync.Mutex
-	DownloadReleaseNotesFunc func(version string) (string, error)
+	DownloadReleaseNotesFunc func(name, version string) (string, error)
 
 	calls struct {
 		GetLatestMajorAndMinorVersion []struct {
@@ -36,12 +36,14 @@ type Repository struct {
 			Current *github_com_hashicorp_go_version.Version
 		}
 		GetLatestReleaseNotesVersions []struct {
+			Name           string
 			CurrentVersion string
 		}
 		GetAvailableBinaryVersions []struct {
 			Name string
 		}
 		GetAvailableReleaseNotesVersions []struct {
+			Name string
 		}
 		DownloadVersion []struct {
 			Name        string
@@ -49,6 +51,7 @@ type Repository struct {
 			DownloadDir string
 		}
 		DownloadReleaseNotes []struct {
+			Name    string
 			Version string
 		}
 	}
@@ -96,7 +99,7 @@ func (m *Repository) GetLatestMajorAndMinorVersionCalls() []struct {
 }
 
 // GetLatestReleaseNotesVersions mocks base method by wrapping the associated func.
-func (m *Repository) GetLatestReleaseNotesVersions(currentVersion string) (github_com_hashicorp_go_version.Collection, error) {
+func (m *Repository) GetLatestReleaseNotesVersions(name, currentVersion string) (github_com_hashicorp_go_version.Collection, error) {
 	m.lockGetLatestReleaseNotesVersions.Lock()
 	defer m.lockGetLatestReleaseNotesVersions.Unlock()
 
@@ -105,14 +108,16 @@ func (m *Repository) GetLatestReleaseNotesVersions(currentVersion string) (githu
 	}
 
 	call := struct {
+		Name           string
 		CurrentVersion string
 	}{
+		Name:           name,
 		CurrentVersion: currentVersion,
 	}
 
 	m.calls.GetLatestReleaseNotesVersions = append(m.calls.GetLatestReleaseNotesVersions, call)
 
-	return m.GetLatestReleaseNotesVersionsFunc(currentVersion)
+	return m.GetLatestReleaseNotesVersionsFunc(name, currentVersion)
 }
 
 // GetLatestReleaseNotesVersionsCalled returns true if GetLatestReleaseNotesVersions was called at least once.
@@ -125,6 +130,7 @@ func (m *Repository) GetLatestReleaseNotesVersionsCalled() bool {
 
 // GetLatestReleaseNotesVersionsCalls returns the calls made to GetLatestReleaseNotesVersions.
 func (m *Repository) GetLatestReleaseNotesVersionsCalls() []struct {
+	Name           string
 	CurrentVersion string
 } {
 	m.lockGetLatestReleaseNotesVersions.Lock()
@@ -172,7 +178,7 @@ func (m *Repository) GetAvailableBinaryVersionsCalls() []struct {
 }
 
 // GetAvailableReleaseNotesVersions mocks base method by wrapping the associated func.
-func (m *Repository) GetAvailableReleaseNotesVersions() (github_com_hashicorp_go_version.Collection, error) {
+func (m *Repository) GetAvailableReleaseNotesVersions(name string) (github_com_hashicorp_go_version.Collection, error) {
 	m.lockGetAvailableReleaseNotesVersions.Lock()
 	defer m.lockGetAvailableReleaseNotesVersions.Unlock()
 
@@ -181,11 +187,14 @@ func (m *Repository) GetAvailableReleaseNotesVersions() (github_com_hashicorp_go
 	}
 
 	call := struct {
-	}{}
+		Name string
+	}{
+		Name: name,
+	}
 
 	m.calls.GetAvailableReleaseNotesVersions = append(m.calls.GetAvailableReleaseNotesVersions, call)
 
-	return m.GetAvailableReleaseNotesVersionsFunc()
+	return m.GetAvailableReleaseNotesVersionsFunc(name)
 }
 
 // GetAvailableReleaseNotesVersionsCalled returns true if GetAvailableReleaseNotesVersions was called at least once.
@@ -198,6 +207,7 @@ func (m *Repository) GetAvailableReleaseNotesVersionsCalled() bool {
 
 // GetAvailableReleaseNotesVersionsCalls returns the calls made to GetAvailableReleaseNotesVersions.
 func (m *Repository) GetAvailableReleaseNotesVersionsCalls() []struct {
+	Name string
 } {
 	m.lockGetAvailableReleaseNotesVersions.Lock()
 	defer m.lockGetAvailableReleaseNotesVersions.Unlock()
@@ -250,7 +260,7 @@ func (m *Repository) DownloadVersionCalls() []struct {
 }
 
 // DownloadReleaseNotes mocks base method by wrapping the associated func.
-func (m *Repository) DownloadReleaseNotes(version string) (string, error) {
+func (m *Repository) DownloadReleaseNotes(name, version string) (string, error) {
 	m.lockDownloadReleaseNotes.Lock()
 	defer m.lockDownloadReleaseNotes.Unlock()
 
@@ -259,14 +269,16 @@ func (m *Repository) DownloadReleaseNotes(version string) (string, error) {
 	}
 
 	call := struct {
+		Name    string
 		Version string
 	}{
+		Name:    name,
 		Version: version,
 	}
 
 	m.calls.DownloadReleaseNotes = append(m.calls.DownloadReleaseNotes, call)
 
-	return m.DownloadReleaseNotesFunc(version)
+	return m.DownloadReleaseNotesFunc(name, version)
 }
 
 // DownloadReleaseNotesCalled returns true if DownloadReleaseNotes was called at least once.
@@ -279,6 +291,7 @@ func (m *Repository) DownloadReleaseNotesCalled() bool {
 
 // DownloadReleaseNotesCalls returns the calls made to DownloadReleaseNotes.
 func (m *Repository) DownloadReleaseNotesCalls() []struct {
+	Name    string
 	Version string
 } {
 	m.lockDownloadReleaseNotes.Lock()

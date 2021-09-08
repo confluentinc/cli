@@ -30,16 +30,12 @@ const (
 
 // NewClient returns a new update.Client configured for the CLI
 func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
-	// The following function will never err, since "_" is a valid separator.
-	objectKey, _ := s3.NewPrefixedKey(fmt.Sprintf(S3BinPrefixFmt, cliName), "_", true)
-
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
-		S3BinRegion:          S3BinRegion,
-		S3BinBucket:          S3BinBucket,
-		S3BinPrefix:          fmt.Sprintf(S3BinPrefixFmt, cliName),
-		S3ReleaseNotesPrefix: fmt.Sprintf(S3ReleaseNotesPrefixFmt, cliName),
-		S3ObjectKey:          objectKey,
-		Logger:               logger,
+		S3BinRegion:             S3BinRegion,
+		S3BinBucket:             S3BinBucket,
+		S3BinPrefixFmt:          S3BinPrefixFmt,
+		S3ReleaseNotesPrefixFmt: S3ReleaseNotesPrefixFmt,
+		Logger:                  logger,
 	})
 	homedir, _ := os.UserHomeDir()
 	return update.NewClient(&update.ClientParams{
@@ -120,12 +116,12 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		updateVersion = latestMajorVersion
 	}
 
-	oldName := c.cliName
+	updateName := c.cliName
 	if strings.HasPrefix(updateVersion, "2.") {
-		c.cliName = "confluent"
+		updateName = "confluent"
 	}
 
-	releaseNotes := c.getReleaseNotes(updateVersion)
+	releaseNotes := c.getReleaseNotes(updateName, updateVersion)
 
 	// HACK: our packaging doesn't include the "v" in the version, so we add it back so that the prompt is consistent
 	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
@@ -133,7 +129,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(oldName, c.version.Version, "v"+updateVersion, releaseNotes, !updateYes) {
+	if !c.client.PromptToDownload(c.cliName, c.version.Version, "v"+updateVersion, releaseNotes, !updateYes) {
 		return nil
 	}
 
@@ -142,16 +138,16 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.client.UpdateBinary(c.cliName, updateVersion, oldBin); err != nil {
+	if err := c.client.UpdateBinary(updateName, updateVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, c.cliName)
+	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, updateName)
 	return nil
 }
 
-func (c *command) getReleaseNotes(latestBinaryVersion string) string {
-	latestReleaseNotesVersion, allReleaseNotes, err := c.client.GetLatestReleaseNotes(c.version.Version)
+func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
+	latestReleaseNotesVersion, allReleaseNotes, err := c.client.GetLatestReleaseNotes(cliName, c.version.Version)
 
 	var errMsg string
 	if err != nil {

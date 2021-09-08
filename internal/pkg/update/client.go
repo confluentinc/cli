@@ -20,8 +20,8 @@ import (
 
 // Client lets you check for updated application binaries and install them if desired
 type Client interface {
-	CheckForUpdates(cliName string, currentVersion string, forceCheck bool) (string, string, error)
-	GetLatestReleaseNotes(currentVersion string) (string, []string, error)
+	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
+	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string) error
 }
@@ -112,8 +112,8 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 	return major, minor, nil
 }
 
-func (c *client) GetLatestReleaseNotes(currentVersion string) (string, []string, error) {
-	latestReleaseNotesVersions, err := c.Repository.GetLatestReleaseNotesVersions(currentVersion)
+func (c *client) GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error) {
+	latestReleaseNotesVersions, err := c.Repository.GetLatestReleaseNotesVersions(cliName, currentVersion)
 	if err != nil {
 		return "", nil, err
 	}
@@ -122,7 +122,7 @@ func (c *client) GetLatestReleaseNotes(currentVersion string) (string, []string,
 	var allReleaseNotes []string
 
 	for _, version := range latestReleaseNotesVersions {
-		releaseNotes, err := c.Repository.DownloadReleaseNotes(version.String())
+		releaseNotes, err := c.Repository.DownloadReleaseNotes(cliName, version.String())
 		if err != nil {
 			return "", nil, err
 		}
@@ -219,6 +219,8 @@ func (c *client) UpdateBinary(cliName, version, path string) error {
 	// Note, this should _only_ be done on Windows; on unix platforms, cross-devices moves can fail (e.g.
 	// binary is on another device than the system tmp dir); but on such platforms we don't need to do moves anyway
 
+	newPath := filepath.Join(filepath.Dir(path), cliName)
+
 	if c.OS == "windows" {
 		// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
 		previousVersionBinary := filepath.Join(downloadDir, cliName+".old")
@@ -226,7 +228,7 @@ func (c *client) UpdateBinary(cliName, version, path string) error {
 		if err != nil {
 			return errors.Wrapf(err, errors.MoveFileErrorMsg, path, previousVersionBinary)
 		}
-		err = c.copyFile(newBin, path)
+		err = c.copyFile(newBin, newPath)
 		if err != nil {
 			// If we moved the old binary out of the way but couldn't put the new one in place,
 			// attempt to restore the old binary to where it was before bailing
@@ -237,17 +239,24 @@ func (c *client) UpdateBinary(cliName, version, path string) error {
 				// in the opposite direction as well
 				return errors.Wrapf(restoreErr, errors.MoveRestoreErrorMsg, previousVersionBinary, path)
 			}
-			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, path)
+			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, newPath)
 		}
 	} else {
-		err = c.copyFile(newBin, path)
+		err = c.copyFile(newBin, newPath)
 		if err != nil {
-			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, path)
+			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, newPath)
 		}
 	}
 
-	if err := c.fs.Chmod(path, 0755); err != nil {
-		return errors.Wrapf(err, errors.ChmodErrorMsg, path)
+	if err := c.fs.Chmod(newPath, 0755); err != nil {
+		return errors.Wrapf(err, errors.ChmodErrorMsg, newPath)
+	}
+
+	// After updating `ccloud` to `confluent`, remove `ccloud`.
+	if newPath != path {
+		if err := c.fs.Remove(path); err != nil {
+			return errors.Wrapf(err, "unable to remove %s", path)
+		}
 	}
 
 	return nil

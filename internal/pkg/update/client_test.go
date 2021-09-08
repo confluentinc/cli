@@ -491,11 +491,11 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "success",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionsFunc: func(_ string) (version.Collection, error) {
+					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
 						v, _ := version.NewSemver(releaseNotesVersion)
 						return version.Collection{v}, nil
 					},
-					DownloadReleaseNotesFunc: func(_ string) (string, error) {
+					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return releaseNotes, nil
 					},
 				},
@@ -509,10 +509,10 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "error getting release notes version",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionsFunc: func(_ string) (version.Collection, error) {
+					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
 						return nil, errors.New("whoops")
 					},
-					DownloadReleaseNotesFunc: func(_ string) (string, error) {
+					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return "", nil
 					},
 				},
@@ -524,11 +524,11 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "error downloading release notes",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionsFunc: func(_ string) (version.Collection, error) {
+					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
 						v1, _ := version.NewSemver("v1")
 						return version.Collection{v1}, nil
 					},
-					DownloadReleaseNotesFunc: func(_ string) (string, error) {
+					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return "", errors.New("whoops")
 					},
 				},
@@ -539,7 +539,7 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes(currentVersion)
+			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes("confluent", currentVersion)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

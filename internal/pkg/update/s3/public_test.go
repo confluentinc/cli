@@ -61,8 +61,7 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 	}
 
 	type fields struct {
-		S3BinPrefix string
-		Endpoint    string
+		Endpoint string
 	}
 	type args struct {
 		name string
@@ -75,109 +74,58 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "can get available versions for requested package and current os/arch",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "ccloud",
-			},
-			want: makeVersions("0.47.0", "0.48.0"),
+			name:   "can get available versions for requested package and current os/arch",
+			fields: fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/", "prefix=ccloud-cli/", req).URL},
+			args:   args{name: "ccloud"},
+			want:   makeVersions("0.47.0", "0.48.0"),
 		},
 		{
-			name: "excludes files that don't match our naming standards",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureInvalidNames, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "confluent",
-			},
+			name:    "excludes files that don't match our naming standards",
+			fields:  fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureInvalidNames, "/", "prefix=ccloud-cli/", req).URL},
+			args:    args{name: "ccloud"},
 			wantErr: true,
 		},
 		{
-			name: "excludes files that aren't prefixed correctly",
-			fields: fields{
-				Endpoint:    NewMockPublicS3(ListVersionsPublicFixtureInvalidPrefix, "/", "prefix=confluent/", req).URL,
-				S3BinPrefix: "confluent",
-			},
-			args: args{
-				name: "confluent",
-			},
+			name:   "excludes other binaries in the same bucket/path",
+			fields: fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureOtherBinaries, "/", "prefix=ccloud-cli/", req).URL},
+			args:   args{name: "ccloud"},
+			want:   makeVersions("0.42.0"),
+		},
+		{
+			name:   "excludes binaries with dirty or SNAPSHOT versions",
+			fields: fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureDirtyVersions, "/", "prefix=ccloud-cli/", req).URL},
+			args:   args{name: "ccloud"},
+			want:   makeVersions("0.44.0"),
+		},
+		{
+			name:   "sorts by version",
+			fields: fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/", req).URL},
+			args:   args{name: "ccloud"},
+			want:   makeVersions("0.42.0", "0.42.1", "0.43.0"),
+		},
+		{
+			name:    "errors when non-semver version found",
+			fields:  fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureNonSemver, "/", "prefix=ccloud-cli/", req).URL},
+			args:    args{name: "ccloud"},
 			wantErr: true,
 		},
 		{
-			name: "excludes other binaries in the same bucket/path",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureOtherBinaries, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "ccloud",
-			},
-			want: makeVersions("0.42.0"),
-		},
-		{
-			name: "excludes binaries with dirty or SNAPSHOT versions",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureDirtyVersions, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "confluent",
-			},
-			want: makeVersions("0.44.0"),
-		},
-		{
-			name: "sorts by version",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "confluent",
-			},
-			want: makeVersions("0.42.0", "0.42.1", "0.43.0"),
-		},
-		{
-			name: "errors when no version available",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "confluent",
-			},
-			wantErr: true,
-		},
-		{
-			name: "errors when non-semver version found",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixtureNonSemver, "/", "prefix=ccloud-cli/", req).URL,
-			},
-			args: args{
-				name: "confluent",
-			},
-			wantErr: true,
-		},
-		{
-			name: "errors when S3 returns non-200 response",
-			fields: fields{
-				Endpoint: NewMockPublicS3Error().URL,
-			},
-			args: args{
-				name: "confluent",
-			},
+			name:    "errors when S3 returns non-200 response",
+			fields:  fields{Endpoint: NewMockPublicS3Error().URL},
+			args:    args{name: "confluent"},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
+		fmt.Println(tt.name)
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.fields.S3BinPrefix == "" {
-				tt.fields.S3BinPrefix = "ccloud-cli"
-			}
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			goos := "darwin"
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinPrefix: tt.fields.S3BinPrefix,
-				S3ObjectKey: NewTestVersionPrefixedKeyParser(tt.fields.S3BinPrefix, goos, goarch, req),
-				Logger:      logger,
+				S3BinPrefixFmt: "%s-cli",
+				S3ObjectKey:    NewTestVersionPrefixedKeyParser(fmt.Sprintf("%s-cli", tt.args.name), goos, goarch, req),
+				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
@@ -229,15 +177,9 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 		{
 			name:      "sorts by version",
 			fields:    fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/", req).URL},
-			args:      args{name: "confluent"},
+			args:      args{name: "ccloud"},
 			wantMajor: makeVersion("0.43.0"),
 			wantMinor: makeVersion("0.43.0"),
-		},
-		{
-			name:    "errors when no version available",
-			fields:  fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/", "prefix=ccloud-cli/", req).URL},
-			args:    args{name: "confluent"},
-			wantErr: true,
 		},
 		{
 			name:    "errors when S3 returns non-200 response",
@@ -248,7 +190,7 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 		{
 			name:      "different major and minor versions",
 			fields:    fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureMajorAndMinor, "/", "prefix=ccloud-cli/", req).URL},
-			args:      args{name: "confluent"},
+			args:      args{name: "ccloud"},
 			wantMajor: makeVersion("1.0.0"),
 			wantMinor: makeVersion("0.1.0"),
 		},
@@ -259,9 +201,9 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 			goos := "darwin"
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinPrefix: "ccloud-cli",
-				S3ObjectKey: NewTestVersionPrefixedKeyParser("ccloud-cli", goos, goarch, req),
-				Logger:      logger,
+				S3BinPrefixFmt: "%s-cli",
+				S3ObjectKey:    NewTestVersionPrefixedKeyParser(fmt.Sprintf("%s-cli", tt.args.name), goos, goarch, req),
+				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
@@ -368,14 +310,14 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinBucket:          tt.fields.S3BinBucket,
-				S3BinRegion:          tt.fields.S3BinRegion,
-				S3ReleaseNotesPrefix: fmt.Sprintf("%s-cli/release-notes", tt.fields.CLIName),
-				Logger:               log.New(),
+				S3BinBucket:             tt.fields.S3BinBucket,
+				S3BinRegion:             tt.fields.S3BinRegion,
+				S3ReleaseNotesPrefixFmt: "%s-cli/release-notes",
+				Logger:                  log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
-			got, err := r.GetAvailableReleaseNotesVersions()
+			got, err := r.GetAvailableReleaseNotesVersions(tt.fields.CLIName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PublicRepo.GetAvailableReleaseNotesVersions() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -474,14 +416,14 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinBucket:          tt.fields.S3BinBucket,
-				S3BinRegion:          tt.fields.S3BinRegion,
-				S3ReleaseNotesPrefix: fmt.Sprintf("%s-cli/release-notes", tt.fields.CLIName),
-				Logger:               log.New(),
+				S3BinBucket:             tt.fields.S3BinBucket,
+				S3BinRegion:             tt.fields.S3BinRegion,
+				S3ReleaseNotesPrefixFmt: "%s-cli/release-notes",
+				Logger:                  log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
-			got, err := r.GetLatestReleaseNotesVersions(currentVersion)
+			got, err := r.GetLatestReleaseNotesVersions(tt.fields.CLIName, currentVersion)
 			if tt.wantErr {
 				req.Error(err)
 			} else {
@@ -587,9 +529,9 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 			goos := "darwin"
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinPrefix: fmt.Sprintf("%s-cli", tt.args.name),
-				S3ObjectKey: NewTestVersionPrefixedKeyParser("ccloud-cli", goos, goarch, req),
-				Logger:      log.New(),
+				S3BinPrefixFmt: "%s-cli",
+				S3ObjectKey:    NewTestVersionPrefixedKeyParser("ccloud-cli", goos, goarch, req),
+				Logger:         log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
@@ -660,14 +602,14 @@ func TestPublicRepo_DownloadReleaseNotes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinBucket:          tt.fields.S3BinBucket,
-				S3BinRegion:          tt.fields.S3BinRegion,
-				S3ReleaseNotesPrefix: fmt.Sprintf("/%s-cli/release-notes", tt.args.name),
-				Logger:               log.New(),
+				S3BinBucket:             tt.fields.S3BinBucket,
+				S3BinRegion:             tt.fields.S3BinRegion,
+				S3ReleaseNotesPrefixFmt: "/%s-cli/release-notes",
+				Logger:                  log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
-			releaseNotes, err := r.DownloadReleaseNotes(tt.args.version)
+			releaseNotes, err := r.DownloadReleaseNotes(tt.args.name, tt.args.version)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, tt.wantErr)
 				return
