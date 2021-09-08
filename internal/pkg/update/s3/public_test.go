@@ -124,7 +124,6 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
-				S3ObjectKey:    NewTestVersionPrefixedKeyParser(fmt.Sprintf("%s-cli", tt.args.name), goos, goarch, req),
 				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
@@ -171,14 +170,12 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 			name:      "can get available versions for requested package and current os/arch",
 			fields:    fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/", "prefix=ccloud-cli/", req).URL},
 			args:      args{name: "ccloud"},
-			wantMajor: makeVersion("0.48.0"),
 			wantMinor: makeVersion("0.48.0"),
 		},
 		{
 			name:      "sorts by version",
 			fields:    fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureUnsortedVersions, "/", "prefix=ccloud-cli/", req).URL},
 			args:      args{name: "ccloud"},
-			wantMajor: makeVersion("0.43.0"),
 			wantMinor: makeVersion("0.43.0"),
 		},
 		{
@@ -202,7 +199,6 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
-				S3ObjectKey:    NewTestVersionPrefixedKeyParser(fmt.Sprintf("%s-cli", tt.args.name), goos, goarch, req),
 				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
@@ -530,7 +526,6 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
-				S3ObjectKey:    NewTestVersionPrefixedKeyParser("ccloud-cli", goos, goarch, req),
 				Logger:         log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint

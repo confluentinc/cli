@@ -260,7 +260,7 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						v, _ := version.NewVersion("v1.2.4")
-						return v, v, nil
+						return nil, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -269,7 +269,6 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantMajor: "v1.2.4",
 			wantMinor: "v1.2.4",
 		},
 		{
@@ -326,7 +325,7 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						v, _ := version.NewVersion("v0.238.0-7-g5060ef4")
-						return v, v, nil
+						return nil, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -335,7 +334,6 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v0.238.0",
 			},
-			wantMajor: "v0.238.0-7-g5060ef4",
 			wantMinor: "v0.238.0-7-g5060ef4",
 		},
 		{

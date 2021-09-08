@@ -103,7 +103,7 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 	}
 
 	var major, minor string
-	if isLessThanVersion(currVersion, latestMajorVersion) {
+	if latestMajorVersion != nil && isLessThanVersion(currVersion, latestMajorVersion) {
 		major = latestMajorVersion.Original()
 	}
 	if isLessThanVersion(currVersion, latestMinorVersion) {
