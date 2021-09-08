@@ -354,7 +354,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 
 	for _, aclData := range aclGetResp.Data {
 		principal := aclData.Principal
-		resourceId, prefix, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
 		if err != nil {
 			return err
 		}
@@ -395,7 +395,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 
 	for _, binding := range bindingsObj {
 		principal := binding.Entry.Principal
-		resourceId, prefix, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
 		if err != nil {
 			return err
 		}

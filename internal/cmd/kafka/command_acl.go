@@ -424,14 +424,14 @@ func (c *aclCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *aclCommand) ACLResourceIdToNumericId(acl []*ACLConfiguration, IdMap map[string]int32) error {
+func (c *aclCommand) ACLResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
 	for i := 0; i < len(acl); i++ {
 		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
 			serviceAccountID := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
 			if !strings.HasPrefix(serviceAccountID, "sa-") {
 				return errors.New(errors.BadServiceAccountIDErrorMsg)
 			}
-			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", IdMap[serviceAccountID]) // translate into numeric ID
+			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", idMap[serviceAccountID]) // translate into numeric ID
 		}
 	}
 	return nil
