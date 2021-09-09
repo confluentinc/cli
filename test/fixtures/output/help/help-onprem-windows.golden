@@ -9,7 +9,7 @@ Available Commands:
   cluster         Retrieve metadata about Confluent Platform clusters.
   completion      Print shell completion code.
   connect         Manage Kafka Connect.
-  context         Manage contexts.
+  context         Manage CLI configuration contexts.
   help            Help about any command
   iam             Manage RBAC, ACL and IAM permissions.
   kafka           Manage Apache Kafka.

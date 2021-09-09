@@ -10,7 +10,7 @@ Available Commands:
   cloud-signup    Sign up for Confluent Cloud.
   completion      Print shell completion code.
   connect         Manage Kafka Connect.
-  context         Manage contexts.
+  context         Manage CLI configuration contexts.
   environment     Manage and select Confluent Cloud environments.
   help            Help about any command
   iam             Manage RBAC and IAM permissions.
