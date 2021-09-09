@@ -111,6 +111,11 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
+	if latestMajorVersion == "" && major {
+		utils.Print(cmd, errors.NoMajorVersionUpdateMsg)
+		return nil
+	}
+
 	updateVersion := latestMinorVersion
 	if major && latestMajorVersion != "" {
 		updateVersion = latestMajorVersion

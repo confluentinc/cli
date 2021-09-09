@@ -113,10 +113,11 @@ const (
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
 
 	// update command
-	CheckingForUpdatesMsg = "Checking for updates..."
-	UpToDateMsg           = "Already up to date."
-	MajorVersionUpdateMsg = "The only available update is a major version update. Use `%s update --major` to accept the update.\n"
-	UpdateAutocompleteMsg = "Update your autocomplete scripts as instructed by `%s help completion`.\n"
+	CheckingForUpdatesMsg   = "Checking for updates..."
+	UpToDateMsg             = "Already up to date."
+	MajorVersionUpdateMsg   = "The only available update is a major version update. Use `%s update --major` to accept the update.\n"
+	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
+	UpdateAutocompleteMsg   = "Update your autocomplete scripts as instructed by `%s help completion`.\n"
 
 	// cmd package
 	TokenExpiredMsg        = "Your token has expired. You are now logged out."
