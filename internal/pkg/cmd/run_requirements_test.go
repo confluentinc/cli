@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -22,7 +21,6 @@ var (
 	}
 
 	apiKeyCloudCfg = &v3.Config{
-		BaseConfig: &config.BaseConfig{Params: &config.Params{CLIName: "ccloud"}}, // TODO: Remove CLIName
 		Contexts: map[string]*v3.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v2.Credential{CredentialType: v2.APIKey},
@@ -32,7 +30,6 @@ var (
 	}
 
 	nonAPIKeyCloudCfg = &v3.Config{
-		BaseConfig: &config.BaseConfig{Params: &config.Params{CLIName: "ccloud"}}, // TODO: Remove CLIName
 		Contexts: map[string]*v3.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v2.Credential{CredentialType: v2.Username},
@@ -42,7 +39,6 @@ var (
 	}
 
 	onPremCfg = &v3.Config{
-		BaseConfig: &config.BaseConfig{Params: &config.Params{CLIName: "confluent"}}, // TODO: Remove CLIName
 		Contexts: map[string]*v3.Context{"on-prem": {
 			Credential:   new(v2.Credential),
 			PlatformName: "https://example.com",

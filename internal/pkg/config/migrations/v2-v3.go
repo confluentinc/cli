@@ -34,8 +34,11 @@ func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
 	}
 	cfgV3.Contexts = contextsV3
 	_, _ = fmt.Fprintf(os.Stderr, "Migrated config from V2 to V3.\n")
-	if cfgV3.CLIName == "ccloud" {
-		_, _ = fmt.Fprintf(os.Stderr, "Active Kafka setting and Kafka cluster information are removed from username credential contexts.\n")
+	for _, ctx := range cfgV3.Contexts {
+		if ctx.IsCloud(false) {
+			_, _ = fmt.Fprintf(os.Stderr, "Active Kafka setting and Kafka cluster information are removed from cloud username credential contexts.\n")
+			break
+		}
 	}
 	return cfgV3, nil
 }
@@ -55,7 +58,7 @@ func migrateContextV2ToV3(contextV2 *v2.Context, cfgV3 *v3.Config) *v3.Context {
 	}
 	kafka := contextV2.Kafka
 	kafkaClusters := contextV2.KafkaClusters
-	if cfgV3.CLIName == "ccloud" && contextV3.Credential.CredentialType == v2.Username {
+	if contextV3.IsCloud(false) && contextV3.Credential.CredentialType == v2.Username {
 		kafka = ""
 		kafkaClusters = map[string]*v1.KafkaClusterConfig{}
 		contextV3.Logger.Debugf("Removing active Kafka setting and Kafka cluster information from context %s as part of config migration from V2 to V3.\n", contextV3.Name)

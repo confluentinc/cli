@@ -16,6 +16,7 @@ Available Commands:
   ksql            Manage ksqlDB applications.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Platform.
+  prompt          Print Confluent CLI context for your terminal prompt.
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
   update          Update the Confluent CLI.

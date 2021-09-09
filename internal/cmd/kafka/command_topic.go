@@ -74,48 +74,42 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func NewTopicCommand(cfg *v3.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 
-	hasAPIKeyCmd := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
-		prerunner:           prerunner,
-		logger:              logger,
-		clientID:            clientID,
-	}
+	c := &kafkaTopicCommand{}
 
-	hasAPIKeyCmd.init()
-	kafkaTopicCommand := &kafkaTopicCommand{
-		hasAPIKeyTopicCommand: hasAPIKeyCmd,
-	}
-
-	if !isAPIKeyLogin {
-		flagMap := OnPremTopicSubcommandFlags
-		if cfg.IsCloudLogin() {
-			flagMap = TopicSubcommandFlags
+	if cfg.IsCloudLogin() {
+		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
+			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
+			prerunner:           prerunner,
+			logger:              logger,
+			clientID:            clientID,
 		}
+		c.hasAPIKeyTopicCommand.init()
 
-		c := &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, flagMap),
+		c.authenticatedTopicCommand = &authenticatedTopicCommand{
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, TopicSubcommandFlags),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
 		}
-
-		if cfg.IsCloudLogin() {
-			c.init()
-		} else {
-			c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
-			c.onPremInit()
+		c.authenticatedTopicCommand.init()
+	} else {
+		c.authenticatedTopicCommand = &authenticatedTopicCommand{
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, OnPremTopicSubcommandFlags),
+			prerunner:                     prerunner,
+			logger:                        logger,
+			clientID:                      clientID,
 		}
-
-		kafkaTopicCommand.authenticatedTopicCommand = c
+		c.authenticatedTopicCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+		c.authenticatedTopicCommand.onPremInit()
 	}
 
-	return kafkaTopicCommand
+	return c
 }
 
 func (k *kafkaTopicCommand) Cmd() *cobra.Command {
@@ -201,6 +195,7 @@ func (a *authenticatedTopicCommand) init() {
 				Code: "confluent kafka topic list",
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
@@ -217,6 +212,7 @@ func (a *authenticatedTopicCommand) init() {
 				Code: "confluent kafka topic create my_topic",
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
@@ -236,6 +232,7 @@ func (a *authenticatedTopicCommand) init() {
 				Code: "confluent kafka topic describe my_topic",
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -252,6 +249,7 @@ func (a *authenticatedTopicCommand) init() {
 				Code: `confluent kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
@@ -269,6 +267,7 @@ func (a *authenticatedTopicCommand) init() {
 				Code: "confluent kafka topic delete my_topic\nconfluent kafka topic delete my_topic_avro",
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	a.AddCommand(deleteCmd)
 

@@ -9,6 +9,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // Context represents a specific CLI context.
@@ -43,7 +44,7 @@ func newContext(name string, platform *v2.Platform, credential *v2.Credential, k
 
 func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {
 	if cluster.ID == "" {
-		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.Filename, c.Logger)
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, c.Name, cluster.ID)
@@ -88,13 +89,13 @@ func (c *Context) validateApiKeysDict(cluster *v1.KafkaClusterConfig) error {
 
 func (c *Context) validate() error {
 	if c.Name == "" {
-		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.Filename, c.Logger)
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.Filename, c.Logger)
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename, c.Logger)
 	}
 	if c.SchemaRegistryClusters == nil {
 		c.SchemaRegistryClusters = map[string]*v2.SchemaRegistryCluster{}
@@ -170,6 +171,19 @@ func (c *Context) UpdateAuthToken(token string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *Context) IsCloud(isTest bool) bool {
+	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+		return true
+	}
+
+	for _, hostname := range CCloudHostnames {
+		if strings.Contains(c.PlatformName, hostname) {
+			return true
+		}
+	}
+	return false
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *v1.KafkaClusterConfig, contextName string) {

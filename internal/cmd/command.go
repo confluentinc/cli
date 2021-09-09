@@ -37,7 +37,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -83,7 +82,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck, logger)
 
-	analyticsClient := getAnalyticsClient(isTest, pversion.CLIName, cfg, ver.Version, logger)
+	analyticsClient := getAnalyticsClient(isTest, cfg, ver.Version, logger)
 	authTokenHandler := pauth.NewAuthTokenHandler(logger)
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent, logger)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -128,7 +127,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(connectCmd.Command)
 	cli.AddCommand(environmentCmd.Command)
 	cli.AddCommand(iam.New(cfg, prerunner))
-	cli.AddCommand(kafka.New(cfg, isAPIKeyCredential(cfg), prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
@@ -154,19 +153,14 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
 }
 
-func getAnalyticsClient(isTest bool, cliName string, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
-	if cliName == "confluent" || isTest {
+func getAnalyticsClient(isTest bool, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
+	if cfg.IsOnPremLogin() || isTest {
 		return mock.NewDummyAnalyticsMock()
 	}
 	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
 		Logger: analytics.NewLogger(logger),
 	})
-	return analytics.NewAnalyticsClient(cliName, cfg, cliVersion, segmentClient, clockwork.NewRealClock())
-}
-
-func isAPIKeyCredential(cfg *v3.Config) bool {
-	ctx := cfg.Context()
-	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == v2.APIKey
+	return analytics.NewAnalyticsClient(cfg, cliVersion, segmentClient, clockwork.NewRealClock())
 }
 
 func (c *command) Execute(args []string) error {

@@ -20,7 +20,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
+func New(cfg *v3.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
 	serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
@@ -35,15 +35,15 @@ func New(cfg *v3.Config, isAPIKeyLogin bool, prerunner pcmd.PreRunner, logger *l
 		serverCompleter: serverCompleter,
 		analyticsClient: analyticsClient,
 	}
-	cmd.init(cfg, isAPIKeyLogin)
+	cmd.init(cfg)
 	return cmd.Command
 }
 
-func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
+func (c *command) init(cfg *v3.Config) {
 	aclCmd := NewACLCommand(cfg, c.prerunner)
 	clusterCmd := NewClusterCommand(cfg, c.prerunner, c.analyticsClient)
 	groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
-	topicCmd := NewTopicCommand(cfg, isAPIKeyLogin, c.prerunner, c.logger, c.clientID)
+	topicCmd := NewTopicCommand(cfg, c.prerunner, c.logger, c.clientID)
 
 	c.AddCommand(NewLinkCommand(c.prerunner))
 	c.AddCommand(NewMirrorCommand(c.prerunner))
@@ -51,7 +51,12 @@ func (c *command) init(cfg *v3.Config, isAPIKeyLogin bool) {
 	c.AddCommand(aclCmd.Command)
 	c.AddCommand(clusterCmd.Command)
 	c.AddCommand(groupCmd.Command)
-	c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
+
+	if topicCmd.hasAPIKeyTopicCommand != nil {
+		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
+	} else if topicCmd.authenticatedTopicCommand != nil {
+		c.AddCommand(topicCmd.authenticatedTopicCommand.Command)
+	}
 
 	if cfg.IsCloudLogin() {
 		c.serverCompleter.AddCommand(aclCmd)

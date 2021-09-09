@@ -24,7 +24,7 @@ func NewTestAnalyticsClient(config *v3.Config, out *[]segment.Message) analytics
 		},
 		CloseFunc: func() error { return nil },
 	}
-	return analytics.NewAnalyticsClient(config.CLIName, config, "1.1.1.1.1", mockSegmentClient, clockwork.NewFakeClockAt(testTime))
+	return analytics.NewAnalyticsClient(config, "1.1.1.1.1", mockSegmentClient, clockwork.NewFakeClockAt(testTime))
 }
 
 func GetPagePropertyValue(segmentMsg segment.Message, key string) (interface{}, error) {

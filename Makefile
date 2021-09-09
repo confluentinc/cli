@@ -4,6 +4,10 @@ GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
 
+.PHONY: build
+build:
+	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
@@ -32,19 +36,16 @@ generate:
 
 .PHONY: deps
 deps:
-	go get github.com/goreleaser/goreleaser@v0.162.1 && \
+	go get github.com/goreleaser/goreleaser@v0.164.0 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/mitchellh/golicense@v0.2.0
 
 ifeq ($(shell uname),Darwin)
-GORELEASER_SUFFIX ?= -mac.yml
 SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
-GORELEASER_SUFFIX ?= -windows.yml
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
 SHASUM ?= CertUtil SHA256 -hashfile
 else
-GORELEASER_SUFFIX ?= -linux.yml
 SHASUM ?= sha256sum
 endif
 
@@ -67,15 +68,11 @@ endif
 
 .PHONY: run
 run:
-	 @GOPRIVATE=github.com/confluentinc go run -ldflags '-buildmode=exe' cmd/confluent/main.go $(RUN_ARGS)
+	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
 #
-
-.PHONY: build
-build:
-	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser release --snapshot --rm-dist -f .goreleaser$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -86,7 +83,7 @@ build-integ:
 build-integ-nonrace:
 	binary="confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -98,7 +95,7 @@ build-integ-nonrace:
 build-integ-race:
 	binary="confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w \
+	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -163,22 +160,22 @@ lint-licenses: build
 coverage-unit:
       ifdef CI
 	@# Run unit tests with coverage.
-	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
       else
 	@# Run unit tests.
-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
       endif
 
 .PHONY: coverage-integ
 coverage-integ:
       ifdef CI
 	@# Run integration tests with coverage.
-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
+	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
       endif
 
 .PHONY: test-prep
