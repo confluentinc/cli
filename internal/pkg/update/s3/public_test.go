@@ -1,7 +1,6 @@
 package s3
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -36,14 +35,6 @@ func NewMockPublicS3Error() *httptest.Server {
 		w.WriteHeader(500)
 	})
 	return httptest.NewServer(mux)
-}
-
-func NewTestVersionPrefixedKeyParser(prefix, goos, goarch string, req *require.Assertions) *PrefixedKey {
-	p, err := NewPrefixedKey(prefix, "_", true)
-	req.NoError(err)
-	p.goos = goos
-	p.goarch = goarch
-	return p
 }
 
 func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
@@ -117,18 +108,12 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		fmt.Println(tt.name)
 		t.Run(tt.name, func(t *testing.T) {
-			// Need to inject these so tests pass in different environments (e.g., CI)
-			goos := "darwin"
-			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
-			r.goos = goos
-			r.goarch = goarch
 
 			got, err := r.GetAvailableBinaryVersions(tt.args.name)
 			if (err != nil) != tt.wantErr {
@@ -194,16 +179,11 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Need to inject these so tests pass in different environments (e.g., CI)
-			goos := "darwin"
-			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
-			r.goos = goos
-			r.goarch = goarch
 
 			v, _ := version.NewVersion("v0.0.0")
 			latestMajorVersion, latestMinorVersion, err := r.GetLatestMajorAndMinorVersion(tt.args.name, v)
@@ -521,16 +501,11 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Need to inject these so tests pass in different environments (e.g., CI)
-			goos := "darwin"
-			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 				Logger:         log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
-			r.goos = goos
-			r.goarch = goarch
 			if tt.fields.FileSystem != nil {
 				r.fs = tt.fields.FileSystem
 			}
