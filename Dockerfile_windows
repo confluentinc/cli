@@ -1,0 +1,39 @@
+FROM mcr.microsoft.com/windows:1809 AS makeiso
+
+ENV chocolateyUseWindowsCompression false
+
+RUN powershell -NoProfile -ExecutionPolicy unrestricted -Command \
+    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')); \
+    choco feature disable --name showDownloadProgress
+
+RUN choco install make && \
+    choco install grep && \
+    choco install sed && \
+    choco install git && \
+    choco install mingw && \
+    choco install golang -y
+
+RUN mkdir -p /go/src/github.com/goreleaser && \
+    cd /go/src/github.com/goreleaser && \
+    git clone https://github.com/goreleaser/goreleaser.git && \
+    cd goreleaser && \
+    git checkout v0.141.0 && \
+    go install . && \
+    mkdir -p /go/src/github.com/confluentinc/cli && \
+    cd /go/src/github.com/confluentinc/cli
+
+RUN powershell $Env:Path += ";C:\Program Files\Git\bin\;C:\Program Files\Git\cmd\;C:\Program Files\Go\bin"
+
+COPY . /go/src/github.com/confluentinc/cli/
+
+COPY .netrc /root/.netrc
+RUN chmod 600 /root/.netrc
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    make gorelease-windows ; \
+    for file in dist/ccloud/*linux*; do mv -v "$file" "${file/windows}"; done ; \
+    for file in dist/confluent/*linux*; do mv -v "$file" "${file/windows}"; done ; \
+    for file in dist/ccloud/*.txt; do mv -v "$file" "${file/checksums/checksums_windows}"; done; \
+    for file in dist/ccloud/*.txt; do sed -i 's/windows/g' $file ; done; \
+    for file in dist/confluent/*.txt; do mv -v "$file" "${file/checksums/checksums_windows}"; done; \
+    for file in dist/confluent/*.txt; do sed -i 's/windows/g' $file ; done

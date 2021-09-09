@@ -46,6 +46,9 @@ else ifneq (,$(findstring NT,$(shell uname)))
 GORELEASER_SUFFIX ?= -windows.yml
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
 SHASUM ?= CertUtil SHA256 -hashfile
+else ifneq (,$(findstring Windows,$(shell systeminfo)))
+GORELEASER_SUFFIX ?= -windows.yml
+SHASUM ?= CertUtil SHA256 -hashfile
 else
 GORELEASER_SUFFIX ?= -linux.yml
 SHASUM ?= sha256sum
