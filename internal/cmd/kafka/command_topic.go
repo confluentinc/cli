@@ -164,6 +164,8 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
+	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
@@ -186,6 +188,8 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
+	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
@@ -725,14 +729,14 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath, srAPIKey, srAPISecret string) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
 	var refs []srsdk.SchemaReference
 
-	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
+	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 	if err != nil {
 		if err.Error() == "ccloud" {
 			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
@@ -826,7 +830,15 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	// Registering schema when specified, and fill metaInfo array.
 	if valueFormat != "string" && len(schemaPath) > 0 {
-		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
+		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		if err != nil {
+			return err
+		}
+		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		if err != nil {
+			return err
+		}
+		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
 		if err != nil {
 			return err
 		}
@@ -961,8 +973,16 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
+		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		if err != nil {
+			return err
+		}
+		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		if err != nil {
+			return err
+		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		srClient, ctx, err = sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 		if err != nil {
 			if err.Error() == "ccloud" {
 				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}

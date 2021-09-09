@@ -103,9 +103,9 @@ func (c *linkCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka link create my_link source-cluster-id lkc-abced " +
+				Code: "ccloud kafka link create my_link --source-cluster-id lkc-abced " +
 					"--source-bootstrap-server myhost:1234 --config-file ~/myfile.txt \n" +
-					"ccloud kafka link create my_link source-cluster-id lkc-abced " +
+					"ccloud kafka link create my_link --source-cluster-id lkc-abced " +
 					"--source-bootstrap-server myhost:1234 --source-api-key abcde --source-api-secret 88888 \n",
 			},
 		),
@@ -285,7 +285,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, err := readConfigsFromFile(configFile)
+	configMap, err := utils.ReadConfigsFromFile(configFile)
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configsMap, err := readConfigsFromFile(configFile)
+	configsMap, err := utils.ReadConfigsFromFile(configFile)
 	if err != nil {
 		return err
 	}
