@@ -35,7 +35,7 @@ generate:
 deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GOPRIVATE=github.com/confluentinc && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 	go get github.com/mitchellh/golicense@v0.2.0 && \
 	go get golang.org/x/tools/cmd/goimports@v0.1.3
@@ -171,7 +171,9 @@ endif
 
 .PHONY: lint
 lint:
-ifneq (,$(findstring NT,$(shell uname)))
+ifeq ($(shell uname),Darwin)
+	true
+else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
 	@echo "Linting..."
@@ -183,12 +185,12 @@ endif
 .PHONY: lint-go
 lint-go:
 	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
-	@echo "✅ golangci-lint"
+	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
 	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
-	@echo "✅ cmd/lint/main.go"
+	@echo "✅  cmd/lint/main.go"
 
 cmd/lint/en_US.aff:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
@@ -199,7 +201,7 @@ cmd/lint/en_US.dic:
 .PHONY: lint-installers
 lint-installers:
 	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
-	@echo "✅ installation script linter"
+	@echo "✅  installation script linter"
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses
