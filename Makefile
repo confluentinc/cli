@@ -35,10 +35,9 @@ generate:
 deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GOPRIVATE=github.com/confluentinc && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
-	go get github.com/mitchellh/golicense@v0.2.0 && \
-	go get golang.org/x/tools/cmd/goimports@v0.1.3
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
+	go get github.com/mitchellh/golicense@v0.2.0
 
 ifeq ($(shell uname),Darwin)
 GORELEASER_SUFFIX ?= -mac.yml
