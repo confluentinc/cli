@@ -109,11 +109,16 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Need to inject these so tests pass in different environments (e.g., CI)
+			goos := "darwin"
+			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
+			r.goos = goos
+			r.goarch = goarch
 
 			got, err := r.GetAvailableBinaryVersions(tt.args.name)
 			if (err != nil) != tt.wantErr {
@@ -179,11 +184,16 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Need to inject these so tests pass in different environments (e.g., CI)
+			goos := "darwin"
+			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
+			r.goos = goos
+			r.goarch = goarch
 
 			v, _ := version.NewVersion("v0.0.0")
 			latestMajorVersion, latestMinorVersion, err := r.GetLatestMajorAndMinorVersion(tt.args.name, v)
@@ -501,11 +511,16 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Need to inject these so tests pass in different environments (e.g., CI)
+			goos := "darwin"
+			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 				Logger:         log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
+			r.goos = goos
+			r.goarch = goarch
 			if tt.fields.FileSystem != nil {
 				r.fs = tt.fields.FileSystem
 			}
@@ -570,7 +585,6 @@ func TestPublicRepo_DownloadReleaseNotes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Need to inject these so tests pass in different environments (e.g., CI)
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinBucket:             tt.fields.S3BinBucket,
 				S3BinRegion:             tt.fields.S3BinRegion,

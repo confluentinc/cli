@@ -156,6 +156,8 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 
 func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBucketResult, name string) (version.Collection, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
+	objectKey.goos = r.goos
+	objectKey.goarch = r.goarch
 
 	var versions version.Collection
 	for _, v := range result.Contents {
@@ -231,6 +233,8 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (match bo
 
 func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
+	objectKey.goos = r.goos
+	objectKey.goarch = r.goarch
 
 	s3URL := objectKey.URLFor(name, version)
 	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
