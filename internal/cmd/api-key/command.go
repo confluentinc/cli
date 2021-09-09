@@ -102,6 +102,7 @@ func (c *command) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API keys for a given resource.",
+		Long:  "Create API keys for a given resource. A resource is some Confluent product or service for which an API key can be created, for example ksqlDB application ID, or \"cloud\" to create a Cloud API key.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
@@ -217,7 +218,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
-			userId = userIdMap[serviceAccountId]
+			var ok bool
+			userId, ok = userIdMap[serviceAccountId]
+			if !ok {
+				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountId), errors.ServiceAccountNotFoundSuggestions)
+			}
 		} else { // if user inputs numeric ID, convert it to int32
 			userIdp, _ := strconv.Atoi(serviceAccountId)
 			userId = int32(userIdp)
@@ -448,7 +453,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
-	err = c.keystore.DeleteAPIKey(apiKey, cmd)
+	err = c.keystore.DeleteAPIKey(apiKey)
 	if err != nil {
 		return err
 	}

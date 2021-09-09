@@ -27,6 +27,8 @@ func (k *KafkaApiRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseW
 				Entry: &schedv1.AccessControlEntryConfig{
 					Operation:      schedv1.ACLOperations_READ,
 					PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+					Host:           "*",
+					Principal:      "User:sa-123",
 				},
 			},
 		}
@@ -217,10 +219,14 @@ func (k *KafkaApiRouter) HandleKafkaDescribeTopic(t *testing.T) func(http.Respon
 		topic := vars["topic"]
 		var describeTopicReply *schedv1.DescribeTopicReply
 		switch {
-		case cluster == "lkc-describe-topic-kafka-api" && topic == "topic1":
+		case cluster == "lkc-describe-topic-kafka-api" && topic == "topic-exist":
 			describeTopicReply = &schedv1.DescribeTopicReply{Topic: &schedv1.TopicDescription{
-				Name:       "topic1",
-				Partitions: []*schedv1.TopicPartitionInfo{{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1}, Replicas: []*schedv1.KafkaNode{{Id: 1}}}},
+				Name: "topic-exist",
+				Partitions: []*schedv1.TopicPartitionInfo{
+					{Partition: 0, Leader: &schedv1.KafkaNode{Id: 1001}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}},
+					{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1002}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1002}, {Id: 1003}}},
+					{Partition: 2, Leader: &schedv1.KafkaNode{Id: 1003}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1003}}},
+				},
 			}}
 		default:
 			w.WriteHeader(http.StatusNotFound)
@@ -265,7 +271,7 @@ func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		var listTopicConfigReply *schedv1.ListTopicConfigReply
 		if r.Method == "GET" { //part of describe call
-			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "retention.ms", Value: "1000"}, {Name: "compression.type", Value: "zip"}}}}
+			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "retention.ms", Value: "604800000"}}}}
 			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(topicReply))

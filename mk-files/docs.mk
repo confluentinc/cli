@@ -105,8 +105,7 @@ update-settings-and-conf:
 			sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 			sed -i '' "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 			sed -i '' "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
-			sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-			git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+			git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 			git push && \
 			cd .. ; \
 		done ; \
@@ -118,29 +117,13 @@ update-settings-and-conf:
 		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
 		sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 		sed -i '' "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
-		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-		git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		git push && \
 		git checkout $(CLEAN_VERSION)-post && \
 		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
 		sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 		sed -i '' "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
-		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-		git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		git push && \
 		cd .. ; \
 	done
-	for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
-		oldest_branch=$(OLDEST_BRANCH_CONFLUENT) && \
-		if [[ "$(CCLOUD_DOCS_DIR)" == "$${repo}" ]]; then \
-			oldest_branch=$(OLDEST_BRANCH_CCLOUD); \
-		fi ; \
-		cd $${repo} && \
-		git fetch && \
-		git checkout $${oldest_branch} && \
-		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-		git commit -am "chore: add new version $(CLEAN_VERSION) to all old branches' version pickers" && \
-		git push && \
-		cd .. ; \
-	done
-

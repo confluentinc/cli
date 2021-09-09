@@ -40,8 +40,7 @@ import (
 )
 
 const (
-	defaultReplicationFactor  = 3
-	unspecifiedPartitionCount = -1
+	defaultReplicationFactor = 3
 )
 
 type kafkaTopicCommand struct {
@@ -165,6 +164,8 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
+	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
@@ -187,6 +188,8 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
+	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
 	cmd.Flags().SortFlags = false
 	h.AddCommand(cmd)
 }
@@ -495,11 +498,10 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			for _, replica := range replicaStatusDataList.Data {
 				if _, ok := partitionIdToData[replica.PartitionId]; !ok {
 					partitionIdToData[replica.PartitionId] = partitionData{
-						TopicName: 	 replica.TopicName,
-						PartitionId: replica.PartitionId,
-						ReplicaBrokerIds: []int32{replica.BrokerId},
+						TopicName:              replica.TopicName,
+						PartitionId:            replica.PartitionId,
+						ReplicaBrokerIds:       []int32{replica.BrokerId},
 						InSyncReplicaBrokerIds: []int32{},
-
 					}
 				} else {
 					tmp := partitionIdToData[replica.PartitionId]
@@ -544,7 +546,6 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			return output.StructuredOutput(outputOption, topicData)
 		}
 	}
-
 	// Kafka REST is not available, fallback to KafkaAPI
 	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
 	if err != nil {
@@ -728,14 +729,14 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, subject string, valueFormat string, schemaPath string) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath, srAPIKey, srAPISecret string) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
 	var refs []srsdk.SchemaReference
 
-	srClient, ctx, err := sr.GetApiClient(cmd, nil, h.Config, h.Version)
+	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 	if err != nil {
 		if err.Error() == "ccloud" {
 			return nil, &errors.SRNotAuthenticatedError{CLIName: err.Error()}
@@ -777,7 +778,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, false)
+	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, false)
 	if err != nil {
 		return err
 	}
@@ -819,7 +820,15 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	// Registering schema when specified, and fill metaInfo array.
 	if valueFormat != "string" && len(schemaPath) > 0 {
-		info, err := h.registerSchema(cmd, subject, serializationProvider.GetSchemaName(), schemaPath)
+		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		if err != nil {
+			return err
+		}
+		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		if err != nil {
+			return err
+		}
+		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
 		if err != nil {
 			return err
 		}
@@ -938,7 +947,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	saramaClient, err := validateTopic(topic, cluster, h.clientID, beginning)
+	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, beginning)
 	if err != nil {
 		return err
 	}
@@ -961,9 +970,16 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
-
+		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		if err != nil {
+			return err
+		}
+		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		if err != nil {
+			return err
+		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetApiClient(cmd, nil, h.Config, h.Version)
+		srClient, ctx, err = sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 		if err != nil {
 			if err.Error() == "ccloud" {
 				return &errors.SRNotAuthenticatedError{CLIName: err.Error()}
@@ -1024,26 +1040,31 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+func (h *hasAPIKeyTopicCommand) validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
+	h.logger.Tracef("validateTopic begins")
 	client, err := NewSaramaClient(cluster, clientID, beginning)
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error initializing client")
 		return nil, err
 	}
 	topics, err := client.Topics()
 	if err != nil {
+		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return nil, err
 	}
 	var foundTopic bool
 	for _, t := range topics {
+		h.logger.Tracef("validateTopic: found topic " + t)
 		if topic == t {
-			foundTopic = true
-			break
+			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
+		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		client.Close()
-		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicNotExistsErrorMsg, topic), fmt.Sprintf(errors.TopicNotExistsSuggestions, cluster.ID, cluster.ID))
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
+	h.logger.Tracef("validateTopic succeeded")
 	return client, nil
 }
 
@@ -1102,7 +1123,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
-	utils.Println(cmd, "\nConfiguration\n ")
+	utils.Print(cmd, "\nConfiguration\n\n")
 	printer.RenderCollectionTable(entries, titleRow)
 	return nil
 }

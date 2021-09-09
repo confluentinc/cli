@@ -22,6 +22,8 @@ const (
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
 	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `ccloud kafka cluster use` command."
 	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `ccloud api-key create`."
+	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
+	ServiceAccountNotFoundSuggestions   = "List service accounts with `ccloud service-account list`."
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -96,31 +98,38 @@ const (
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
 	// kafka cluster commands
-	ListTopicSuggestions                  = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
-	FailedToRenderKeyPolicyErrorMsg       = "BYOK error: failed to render key policy"
-	FailedToReadConfirmationErrorMsg      = "BYOK error: failed to read your confirmation"
-	AuthorizeAccountsErrorMsg             = "BYOK error: please authorize the key for the accounts (%s)x"
-	AuthorizeIdentityErrorMsg             = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg           = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
-	BYOKSupportErrorMsg                   = "BYOK is available on AWS and GCP."
-	CKUMoreThanZeroErrorMsg               = "`--cku` value must be greater than 0"
-	CloudRegionNotAvailableErrorMsg       = "\"%s\" is not an available region for \"%s\""
-	CloudRegionNotAvailableSuggestions    = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
-	CloudProviderNotAvailableErrorMsg     = "\"%s\" is not an available cloud provider"
-	CloudProviderNotAvailableSuggestions  = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
-	TopicNotExistsErrorMsg                = "topic \"%s\" does not exist"
-	TopicNotExistsSuggestions             = ListTopicSuggestions
-	InvalidAvailableFlagErrorMsg          = "invalid value \"%s\" for `--availability` flag"
-	InvalidAvailableFlagSuggestions       = "Allowed values for `--availability` flag are: %s, %s."
-	InvalidTypeFlagErrorMsg               = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions            = "Allowed values for `--type` flag are: %s, %s, %s."
-	NameOrCKUFlagErrorMsg                 = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
-	NonEmptyNameErrorMsg                  = "`--name` flag value must not be emtpy"
-	KafkaClusterNotFoundErrorMsg          = "kafka cluster \"%s\" not found"
-	KafkaClusterStillProvisioningErrorMsg = "Your cluster is still provisioning, so it can't be updated yet.  Please retry in a few minutes."
-	KafkaClusterUpdateFailedSuggestions   = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
-	KafkaClusterExpandingErrorMsg         = "Your cluster is already expanding.  Please wait for that operation to complete before updating again."
-	ChooseRightEnvironmentSuggestions     = "Ensure the cluster ID you entered is valid.\n" +
+	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`."
+	FailedToRenderKeyPolicyErrorMsg               = "BYOK error: failed to render key policy"
+	FailedToReadConfirmationErrorMsg              = "BYOK error: failed to read your confirmation"
+	FailedToReadClusterResizeConfirmationErrorMsg = "Cluster resize error: failed to read your confirmation"
+	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
+	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
+	CKUOnlyForDedicatedErrorMsg                   = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP."
+	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
+	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
+	ClusterResizeNotSupported                     = "Cluster resize is support only on dedicated clusters."
+	CloudRegionNotAvailableErrorMsg               = "\"%s\" is not an available region for \"%s\""
+	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `ccloud kafka region list --cloud %s`."
+	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
+	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
+	TopicDoesNotExistErrorMsg                     = "topic \"%s\" does not exist"
+	TopicDoesNotExistSuggestions                  = ListTopicSuggestions
+	TopicDoesNotExistOrMissingACLsErrorMsg        = "topic \"%s\" does not exist or your api key does not have the ACLs required to describe it"
+	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`.\nTo list ACLs use `ccloud kafka acl list --cluster %s`."
+	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
+	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
+	InvalidTypeFlagErrorMsg                       = "invalid value \"%s\" for `--type` flag"
+	InvalidTypeFlagSuggestions                    = "Allowed values for `--type` flag are: %s, %s, %s."
+	NameOrCKUFlagErrorMsg                         = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
+	NonEmptyNameErrorMsg                          = "`--name` flag value must not be emtpy"
+	KafkaClusterNotFoundErrorMsg                  = "kafka cluster \"%s\" not found"
+	KafkaClusterStillProvisioningErrorMsg         = "Your cluster is still provisioning, so it can't be updated yet.  Please retry in a few minutes."
+	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes."
+	KafkaClusterExpandingErrorMsg                 = "Your cluster is expanding. Please wait for that operation to complete before updating again."
+	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
+	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
+	ChooseRightEnvironmentSuggestions             = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `ccloud kafka cluster list`, `ccloud environment list`, and `ccloud environment use`."
 	UnknownTopicErrorMsg = "unknown topic \"%s\""
 
@@ -151,9 +160,9 @@ const (
 	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
-	NoServiceAccountErrorMsg       = "no service account found for KSQL cluster \"%s\""
-	APIKeyAndSecretBothRequired    = "both --api-key and --api-secret must be provided"
-	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"
+	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
+	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
+	KsqlDBTerminateClusterMsg   = "Failed to terminate ksqlDB app \"%s\" due to \"%s\".\n"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -174,11 +183,12 @@ const (
 	ParsePromptFormatErrorMsg = "error parsing prompt format string \"%s\""
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	CompatibilityOrModeErrorMsg    = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg   = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg        = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg          = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions       = "Schema ID must be an integer."
+	SchemaExporterNotFoundErrorMsg = "schema exporter \"%s\" not found"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

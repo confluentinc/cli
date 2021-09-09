@@ -18,6 +18,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -174,7 +175,7 @@ func (suite *APITestSuite) SetupTest() {
 		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
 			return nil
 		},
-		DeleteAPIKeyFunc: func(key string, cmd *cobra.Command) error {
+		DeleteAPIKeyFunc: func(key string) error {
 			return nil
 		},
 	}
@@ -193,7 +194,6 @@ func (suite *APITestSuite) SetupTest() {
 				},
 			}, nil
 		},
-		CheckEmailFunc: nil,
 		ListFunc: func(_ context.Context) ([]*v1.User, error) {
 			return []*v1.User{
 				{

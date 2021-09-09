@@ -2,13 +2,15 @@ package acl
 
 import (
 	"fmt"
-	errMsgs "github.com/confluentinc/cli/internal/pkg/errors"
+	"testing"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	errMsgs "github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func TestParseAclRequest(t *testing.T) {

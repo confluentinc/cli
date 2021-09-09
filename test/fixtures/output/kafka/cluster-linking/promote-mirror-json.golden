@@ -1,30 +1,34 @@
 [
   {
-    "ErrorCode": "",
-    "ErrorMessage": "",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "0",
-    "PartitionMirrorLag": "142857"
+    "error_code": "",
+    "error_message": "",
+    "last_source_fetch_offset": "1293009",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "0",
+    "partition_mirror_lag": "142857"
   }, 
   {
-    "ErrorCode": "",
-    "ErrorMessage": "",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "1",
-    "PartitionMirrorLag": "285714"
+    "error_code": "",
+    "error_message": "",
+    "last_source_fetch_offset": "28340404",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "1",
+    "partition_mirror_lag": "285714"
   }, 
   {
-    "ErrorCode": "",
-    "ErrorMessage": "",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "2",
-    "PartitionMirrorLag": "571428"
+    "error_code": "",
+    "error_message": "",
+    "last_source_fetch_offset": "5739304",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "2",
+    "partition_mirror_lag": "571428"
   }, 
   {
-    "ErrorCode": "401",
-    "ErrorMessage": "Not authorized",
-    "MirrorTopicName": "dest-topic-1",
-    "Partition": "-1",
-    "PartitionMirrorLag": "-1"
+    "error_code": "401",
+    "error_message": "Not authorized",
+    "last_source_fetch_offset": "-1",
+    "mirror_topic_name": "dest-topic-1",
+    "partition": "-1",
+    "partition_mirror_lag": "-1"
   }
 ]

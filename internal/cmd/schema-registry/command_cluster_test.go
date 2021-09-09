@@ -14,13 +14,14 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 )
 
 const (
@@ -58,8 +59,8 @@ func (suite *ClusterTestSuite) SetupSuite() {
 			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.ModeGetResponse, *http.Response, error) {
-				return srsdk.ModeGetResponse{}, nil, nil
+			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.Mode, *http.Response, error) {
+				return srsdk.Mode{}, nil, nil
 			},
 			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil

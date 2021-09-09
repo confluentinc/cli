@@ -2,19 +2,23 @@ package kafka
 
 import (
 	"bufio"
-	"fmt"
-	"io/ioutil"
 	logger "log"
 	_nethttp "net/http"
 	"os"
+	"regexp"
 	"strings"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 func copyMap(inputMap map[string]string) map[string]string {
 	newMap := make(map[string]string)
@@ -30,18 +34,6 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
-}
-
-func toMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
-		}
-		configMap[pair[0]] = pair[1]
-	}
-	return configMap, nil
 }
 
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.CreateTopicRequestDataConfigs {
@@ -71,29 +63,6 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.A
 		i++
 	}
 	return kafkaRestConfigs
-}
-
-func readConfigsFromFile(configFile string) (map[string]string, error) {
-	if configFile == "" {
-		return map[string]string{}, nil
-	}
-
-	configContents, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create config map from the argument.a
-	var configs []string
-	for _, s := range strings.Split(string(configContents), "\n") {
-		// Filter out blank lines
-		spaceTrimmed := strings.TrimSpace(s)
-		if s != "" && spaceTrimmed[0] != '#' {
-			configs = append(configs, spaceTrimmed)
-		}
-	}
-
-	return toMap(configs)
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Command) (string, error) {
@@ -153,4 +122,40 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 		return nil, "", err
 	}
 	return kafkaREST, kafkaClusterConfig.ID, nil
+}
+
+func isClusterResizeInProgress(currentCluster *schedv1.KafkaCluster) error {
+	switch currentCluster.Status {
+	case schedv1.ClusterStatus_PROVISIONING:
+		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+	case schedv1.ClusterStatus_EXPANDING:
+		return errors.New(errors.KafkaClusterExpandingErrorMsg)
+	case schedv1.ClusterStatus_SHRINKING:
+		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+	case schedv1.ClusterStatus_DELETING:
+		return errors.New(errors.KafkaClusterDeletingErrorMsg)
+	case schedv1.ClusterStatus_DELETED:
+		return errors.New(errors.KafkaClusterDeletingErrorMsg)
+	}
+	return nil
+}
+
+func camelToSnake(camels []string) []string {
+	var ret []string
+	for _, camel := range camels {
+		snake := matchFirstCap.ReplaceAllString(camel, "${1}_${2}")
+		snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+		ret = append(ret, strings.ToLower(snake))
+	}
+	return ret
+}
+
+func camelToSpaced(camels []string) []string {
+	var ret []string
+	for _, camel := range camels {
+		snake := matchFirstCap.ReplaceAllString(camel, "${1} ${2}")
+		snake = matchAllCap.ReplaceAllString(snake, "${1} ${2}")
+		ret = append(ret, snake)
+	}
+	return ret
 }

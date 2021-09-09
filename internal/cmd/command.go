@@ -8,15 +8,17 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	"github.com/confluentinc/cli/internal/cmd/api-key"
-	"github.com/confluentinc/cli/internal/cmd/audit-log"
+	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/connector"
-	"github.com/confluentinc/cli/internal/cmd/connector-catalog"
+	connectorcatalog "github.com/confluentinc/cli/internal/cmd/connector-catalog"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	initcontext "github.com/confluentinc/cli/internal/cmd/init"
@@ -27,9 +29,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
+	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/signup"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -101,7 +103,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cliName, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 
 	prerunner := &pcmd.PreRun{
@@ -235,4 +237,11 @@ func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
 	})
 
 	return load.LoadAndMigrate(cfg)
+}
+
+func getCloudClient(cliName string, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
+	if cliName == "ccloud" {
+		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+	}
+	return nil
 }

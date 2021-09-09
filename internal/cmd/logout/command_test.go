@@ -12,6 +12,9 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/login"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -22,8 +25,6 @@ import (
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	cliMock "github.com/confluentinc/cli/mock"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 )
 
 const (
@@ -41,7 +42,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -129,13 +130,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 	suite := []struct {
 		cliName string
 		args    []string

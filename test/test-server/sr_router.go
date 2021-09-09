@@ -16,6 +16,13 @@ const (
 	subjectVersion       = "/subjects/{subject}/versions/{version}"
 	schemaById           = "/schemas/ids/{id}"
 	subjects             = "/subjects"
+	exporters            = "/exporters"
+	exporter             = "/exporters/{name}"
+	exporterStatus       = "/exporters/{name}/status"
+	exporterConfig       = "/exporters/{name}/config"
+	exporterPause        = "/exporters/{name}/pause"
+	exporterResume       = "/exporters/{name}/resume"
+	exporterReset        = "/exporters/{name}/reset"
 	subjectLevelConfig   = "/config/{subject}"
 	modeSubject          = "/mode/{subject}"
 )
@@ -45,6 +52,13 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 	s.HandleFunc(subjectVersion, s.HandleSRSubjectVersion(t))
 	s.HandleFunc(schemaById, s.HandleSRById(t))
 	s.HandleFunc(subjects, s.HandleSRSubjects(t))
+	s.HandleFunc(exporters, s.HandleSRExporters(t))
+	s.HandleFunc(exporter, s.HandleSRExporter(t))
+	s.HandleFunc(exporterStatus, s.HandleSRExporterStatus(t))
+	s.HandleFunc(exporterConfig, s.HandleSRExporterConfig(t))
+	s.HandleFunc(exporterPause, s.HandleSRExporterPause(t))
+	s.HandleFunc(exporterResume, s.HandleSRExporterResume(t))
+	s.HandleFunc(exporterReset, s.HandleSRExporterReset(t))
 	s.HandleFunc(subjectLevelConfig, s.HandleSRSubjectConfig(t))
 	s.HandleFunc(modeSubject, s.HandleSRSubjectMode(t))
 }

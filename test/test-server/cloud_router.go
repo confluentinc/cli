@@ -13,7 +13,7 @@ import (
 const (
 	sessions            = "/api/sessions"
 	me                  = "/api/me"
-	checkEmail          = "/api/check_email/{email}"
+	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
 	apiKey              = "/api/api_keys/{key}"
@@ -43,6 +43,9 @@ const (
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
+	usageLimits         = "/api/usage_limits"
+	metricsApi          = "/{version}/metrics/{view}/{query}"
+	accessTokens        = "/api/access_tokens"
 )
 
 type CloudRouter struct {
@@ -70,7 +73,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t))
-	c.HandleFunc(checkEmail, c.HandleCheckEmail(t))
+	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
@@ -84,6 +87,8 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addUserRoutes(t)
 	c.addConnectorsRoutes(t)
 	c.addV2AlphaRoutes(t)
+	c.addUsageLimitRoutes(t)
+	c.addMetricsQueryRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -149,4 +154,13 @@ func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {
 	c.HandleFunc(connectorPlugins, c.HandlePlugins(t))
 	c.HandleFunc(connectCatalog, c.HandleConnectCatalog(t))
 	c.HandleFunc(connectorUpdate, c.HandleConnectUpdate(t))
+}
+
+func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
+	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
+}
+
+func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
+	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
+	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
 }

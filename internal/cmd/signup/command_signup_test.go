@@ -11,6 +11,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+
 	cmdPkg "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -180,13 +181,7 @@ func newCmd(conf *v3.Config) *command {
 			}, nil
 		},
 	}
-	user := &ccloudmock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &ccloudmock.User{}
 	ccloudClientFactory := &cliMock.MockCCloudClientFactory{
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 			return &ccloud.Client{Auth: auth, User: user}
@@ -211,14 +206,7 @@ func mockCcloudClient() *ccloud.Client {
 				return "", nil
 			},
 		},
-		User: &ccloudmock.User{
-			CheckEmailFunc: func(_ context.Context, user *orgv1.User) (*orgv1.User, error) {
-				if user.Email == "mtodzo@confluent.io" {
-					return &orgv1.User{Email: "mtodzo@confluent.io"}, nil
-				}
-				return nil, nil
-			},
-		},
+		User:   &ccloudmock.User{},
 		Params: &ccloud.Params{BaseURL: "http://baseurl.com"},
 	}
 }

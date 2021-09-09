@@ -22,6 +22,9 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -35,8 +38,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	cliMock "github.com/confluentinc/cli/mock"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 )
 
 const (
@@ -66,20 +67,14 @@ var (
 			}, nil
 		},
 	}
-	mockUser = &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: "",
-			}, nil
-		},
-	}
+	mockUser                    = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -148,13 +143,7 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: envUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -166,7 +155,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -203,13 +192,7 @@ func TestLoginSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 
 	suite := []struct {
 		cliName string
@@ -317,7 +300,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -412,7 +395,7 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
-				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -472,7 +455,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, client *ccloud.Client) func() (*pauth.Credentials, error) {
+		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, &ccloud.InvalidLoginError{}
 			}
@@ -682,13 +665,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 			}, nil
 		},
 	}
-	user := &sdkMock.User{
-		CheckEmailFunc: func(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-			return &orgv1.User{
-				Email: promptUser,
-			}, nil
-		},
-	}
+	user := &sdkMock.User{}
 
 	suite := []struct {
 		cliName string

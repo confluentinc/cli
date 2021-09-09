@@ -70,8 +70,7 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 			}
 		} else {
 			require.NoError(t, err)
-			ctx, err := tt.dConfig.Context(cmd)
-			require.NoError(t, err)
+			ctx := tt.dConfig.Context()
 			if tt.context != "" {
 				require.Equal(t, tt.context, ctx.Name)
 			} else {

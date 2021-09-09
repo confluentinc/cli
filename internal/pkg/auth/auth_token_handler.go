@@ -4,11 +4,12 @@ package auth
 import (
 	"context"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
@@ -48,10 +49,10 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	if err != nil {
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
 	}
-	if userSSO == nil {
+	if userSSO == "" {
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO.Sso.Auth0ConnectionName, a.logger)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO, a.logger)
 	if err != nil {
 		return "", "", err
 	}
@@ -62,15 +63,20 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	return token, refreshToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email string) (*orgv1.User, error) {
-	userSSO, err := client.User.CheckEmail(context.Background(), &orgv1.User{Email: email})
+func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email string) (string, error) {
+	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
+	loginRealmReply, err := client.User.LoginRealm(context.Background(),
+		&flowv1.GetLoginRealmRequest{
+			Email:    email,
+			ClientId: auth0ClientId,
+		})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	if userSSO != nil && userSSO.Sso != nil && userSSO.Sso.Enabled && userSSO.Sso.Auth0ConnectionName != "" {
-		return userSSO, nil
+	if loginRealmReply.IsSso {
+		return loginRealmReply.Realm, nil
 	}
-	return nil, nil
+	return "", nil
 }
 
 func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, error) {
