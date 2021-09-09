@@ -1,6 +1,7 @@
 package price
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -139,12 +140,12 @@ func (c *command) list(command *cobra.Command, _ []string) error {
 	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	// Only kafka price is supported by the CLI now
 	product := "kafka"
-	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(nil, org, product)
+	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.TODO(), org, product)
 	if err != nil {
 		return err
 	}
 	product = "cluster-link"
-	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(nil, org, product)
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(context.TODO(), org, product)
 	if err != nil {
 		return err
 	}

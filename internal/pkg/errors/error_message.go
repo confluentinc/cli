@@ -160,9 +160,9 @@ const (
 	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
 
 	// ksql commands
-	NoServiceAccountErrorMsg    = "no service account found for KSQL cluster \"%s\""
-	APIKeyAndSecretBothRequired = "both --api-key and --api-secret must be provided"
-	KsqlDBTerminateClusterMsg   = "Failed to terminate ksqlDB app \"%s\" due to \"%s\".\n"
+	APIKeyAndSecretBothRequired    = "both --api-key and --api-secret must be provided"
+	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"
+	KsqlDBTerminateClusterMsg      = "Failed to terminate ksqlDB app \"%s\" due to \"%s\".\n"
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"

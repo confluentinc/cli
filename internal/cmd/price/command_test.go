@@ -139,7 +139,7 @@ func TestPrice_ClusterLink(t *testing.T) {
 
 	want := strings.Join([]string{
 		"         Metric        | Cluster Type | Availability | Network Type |     Price       ",
-		"+----------------------+--------------+--------------+--------------+----------------+",
+		"-----------------------+--------------+--------------+--------------+-----------------",
 		"  Cluster linking base | Basic        | Single zone  | Internet     | $1.00 USD/Hour  ",
 	}, "\n")
 

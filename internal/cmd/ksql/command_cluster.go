@@ -3,13 +3,15 @@ package ksql
 import (
 	"context"
 	"fmt"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/dghubble/sling"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/dghubble/sling"
+	"golang.org/x/oauth2"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
@@ -370,7 +372,7 @@ func (c *clusterCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.NoServiceAccountErrorMsg, cluster.Id)
+	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.Id)
 }
 
 func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error {
