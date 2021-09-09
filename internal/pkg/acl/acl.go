@@ -80,8 +80,8 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
+	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
@@ -89,12 +89,12 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 
 	for _, binding := range bindingsObj {
 		record := &struct {
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			Resource         string
-			Name             string
-			Type             string
+			Principal    string
+			Permission   string
+			Operation    string
+			ResourceType string
+			ResourceName string
+			PatternType  string
 		}{
 			binding.Entry.Principal,
 			binding.Entry.PermissionType.String(),
@@ -338,36 +338,35 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	return aclData
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, idMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
+	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
 	}
 
 	for _, aclData := range aclGetResp.Data {
-		var resourceId string
-		if aclData.Principal != "" {
-			UserId := aclData.Principal[5:]
-			idp, _ := strconv.Atoi(UserId)
-			resourceId = IdMap[int32(idp)]
+		principal := aclData.Principal
+		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+		if err != nil {
+			return err
 		}
 		record := &struct {
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			Resource         string
-			Name             string
-			Type             string
+			Principal    string
+			Permission   string
+			Operation    string
+			ResourceType string
+			ResourceName string
+			PatternType  string
 		}{
-			resourceId,
+			prefix + ":" + resourceId,
 			string(aclData.Permission),
 			string(aclData.Operation),
 			string(aclData.ResourceType),
@@ -380,36 +379,35 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 	return outputWriter.Out()
 }
 
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, IdMap map[int32]string) error {
+func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, idMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	}
 
-	aclListFields := []string{"ServiceAccountId", "Permission", "Operation", "Resource", "Name", "Type"}
-	aclListStructuredRenames := []string{"service_account_id", "permission", "operation", "resource", "name", "type"}
+	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
 		return err
 	}
 
 	for _, binding := range bindingsObj {
-		var resourceId string
-		if binding.Entry.Principal != "" {
-			UserId := binding.Entry.Principal[5:]
-			idp, _ := strconv.Atoi(UserId)
-			resourceId = IdMap[int32(idp)]
+		principal := binding.Entry.Principal
+		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+		if err != nil {
+			return err
 		}
 		record := &struct {
-			ServiceAccountId string
-			Permission       string
-			Operation        string
-			Resource         string
-			Name             string
-			Type             string
+			Principal    string
+			Permission   string
+			Operation    string
+			ResourceType string
+			ResourceName string
+			PatternType  string
 		}{
-			resourceId,
+			prefix + ":" + resourceId,
 			binding.Entry.PermissionType.String(),
 			binding.Entry.Operation.String(),
 			binding.Pattern.ResourceType.String(),
@@ -420,4 +418,19 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	}
 
 	return outputWriter.Out()
+}
+
+func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]string) (string, string, error) {
+	var prefix, resourceId string
+	if principal != "" {
+		splitPrincipal := strings.Split(principal, ":")
+		if len(splitPrincipal) < 2 {
+			return prefix, resourceId, errors.Errorf("Unrecognized principal format %s", principal)
+		}
+		prefix = splitPrincipal[0]
+		userId := splitPrincipal[1]
+		idp, _ := strconv.Atoi(userId)
+		resourceId = idMap[int32(idp)]
+	}
+	return prefix, resourceId, nil
 }
