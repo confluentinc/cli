@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows:1809 AS makeiso
+FROM mcr.microsoft.com/windows:1809
 
 ENV chocolateyUseWindowsCompression false
 
@@ -11,28 +11,24 @@ RUN choco install make && \
     choco install sed -y && \
     choco install git -y && \
     choco install mingw -y && \
-    choco install golang -y
+    choco install golang -y && \
+    choco install curl
 
-RUN powershell $Env:Path+=';C:\Program Files\Git\bin\;C:\Program Files\Git\cmd\;C:\Program Files\Go\bin' && \
-    powershell refreshenv
+RUN powershell curl.exe -L -k -o goreleaser.zip https://github.com/goreleaser/goreleaser/releases/download/v0.177.0/goreleaser_Windows_x86_64.zip && \
+    Expand-Archive goreleaser.zip
 
-RUN powershell mkdir -p /go/src/github.com/goreleaser && \
-    powershell cd /go/src/github.com/goreleaser && \
-    powershell git clone https://github.com/goreleaser/goreleaser.git && \
-    powershell cd goreleaser && \
-    powershell git checkout v0.141.0 && \
-    powershell go install . && \
-    powershell mkdir -p /go/src/github.com/confluentinc/cli
+RUN powershell setx PATH \"$env:path;C:\Program Files\Git\bin\;C:\goreleaser\" -m && \
+    $env:path
 
 COPY . /go/src/github.com/confluentinc/cli/
 
 COPY .netrc /root/.netrc
-RUN chmod 600 /root/.netrc
+RUN powershell icacls root/.netrc /grant Everyone:F
 
 RUN cd /go/src/github.com/confluentinc/cli && \
     make gorelease-windows ; \
-    for file in dist/ccloud/*linux*; do mv -v "$file" "${file/windows}"; done ; \
-    for file in dist/confluent/*linux*; do mv -v "$file" "${file/windows}"; done ; \
+    for file in dist/ccloud/*windows*; do mv -v "$file" "${file/windows}"; done ; \
+    for file in dist/confluent/*winodws*; do mv -v "$file" "${file/windows}"; done ; \
     for file in dist/ccloud/*.txt; do mv -v "$file" "${file/checksums/checksums_windows}"; done; \
     for file in dist/ccloud/*.txt; do sed -i 's/windows/g' $file ; done; \
     for file in dist/confluent/*.txt; do mv -v "$file" "${file/checksums/checksums_windows}"; done; \
