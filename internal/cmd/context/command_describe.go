@@ -15,7 +15,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [context]",
 		Short: "Describe a context.",
-		Long:  "Describe a full context or a specific context field.",
+		Long:  "Describe a context or a specific context field.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}

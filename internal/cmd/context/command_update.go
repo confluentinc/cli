@@ -1,6 +1,8 @@
 package context
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -41,7 +43,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if name == "" && kafkaCluster == "" {
-		return errors.New(errors.FlagRequiredErrorMsg)
+		return fmt.Errorf(errors.FlagRequiredErrorMsg, "--name, --kafka-cluster")
 	}
 
 	if name != "" {

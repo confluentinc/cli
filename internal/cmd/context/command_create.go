@@ -15,11 +15,12 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [context]",
 		Short: "Create a new context.",
+		Long:  "Create a new Cloud context with an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create and use a context called "new context":`,
+				Text: `Create a context called "new context":`,
 				Code: version.CLIName + ` context create "new context" --bootstrap https://example.com --api-key key --api-secret @api-secret.txt`,
 			},
 		),
