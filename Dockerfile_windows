@@ -7,22 +7,22 @@ RUN powershell -NoProfile -ExecutionPolicy unrestricted -Command \
     choco feature disable --name showDownloadProgress
 
 RUN choco install make && \
-    choco install grep && \
-    choco install sed && \
-    choco install git && \
-    choco install mingw && \
+    choco install grep -y && \
+    choco install sed -y && \
+    choco install git -y && \
+    choco install mingw -y && \
     choco install golang -y
 
-RUN mkdir -p /go/src/github.com/goreleaser && \
-    cd /go/src/github.com/goreleaser && \
-    git clone https://github.com/goreleaser/goreleaser.git && \
-    cd goreleaser && \
-    git checkout v0.141.0 && \
-    go install . && \
-    mkdir -p /go/src/github.com/confluentinc/cli && \
-    cd /go/src/github.com/confluentinc/cli
+RUN powershell $Env:Path+=';C:\Program Files\Git\bin\;C:\Program Files\Git\cmd\;C:\Program Files\Go\bin' && \
+    powershell refreshenv
 
-RUN powershell $Env:Path += ";C:\Program Files\Git\bin\;C:\Program Files\Git\cmd\;C:\Program Files\Go\bin"
+RUN powershell mkdir -p /go/src/github.com/goreleaser && \
+    powershell cd /go/src/github.com/goreleaser && \
+    powershell git clone https://github.com/goreleaser/goreleaser.git && \
+    powershell cd goreleaser && \
+    powershell git checkout v0.141.0 && \
+    powershell go install . && \
+    powershell mkdir -p /go/src/github.com/confluentinc/cli
 
 COPY . /go/src/github.com/confluentinc/cli/
 

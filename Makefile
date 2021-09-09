@@ -214,11 +214,11 @@ lint-licenses: build
 	done
 
 .PHONY: coverage-unit
+## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error. Will renable in the future when this issue is resolved.
 coverage-unit:
 ifdef CI
 	@# Run unit tests with coverage.
   ifeq "$(OS)" "Windows_NT"
-  ## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error. Will renable in the future when this issue is resolved.
 	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
   else
 	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
