@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/blang/semver"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"

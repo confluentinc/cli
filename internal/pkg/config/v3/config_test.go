@@ -587,6 +587,7 @@ func TestConfig_AddContext(t *testing.T) {
 	conf := AuthenticatedOnPremConfigMock()
 	conf.Filename = filename
 	context := conf.Context()
+	conf.CurrentContext = ""
 	noContextConf := AuthenticatedOnPremConfigMock()
 	noContextConf.Filename = filename
 	delete(noContextConf.Contexts, noContextConf.Context().Name)
