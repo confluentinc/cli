@@ -131,14 +131,17 @@ func (a *Command) login(cmd *cobra.Command, _ []string) error {
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (a *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
-	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
+	if url != pauth.CCloudURL { // by default, LoginManager client uses prod url
+		client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
+		a.loginCredentialsManager.SetCCloudClient(client)
+	}
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
 
 	if promptOnly {
-		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client))
+		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd))
 	}
 	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
@@ -147,7 +150,7 @@ func (a *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.C
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
 		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
-		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd, client),
+		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd),
 	)
 }
 

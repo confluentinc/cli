@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"

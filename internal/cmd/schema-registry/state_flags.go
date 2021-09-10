@@ -20,6 +20,10 @@ var SchemaSubcommandFlags = map[string]*pflag.FlagSet{
 	"schema": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
 }
 
+var ExporterSubcommandFlags = map[string]*pflag.FlagSet{
+	"exporter": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
+}
+
 var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
 	"cluster": cmd.ContextSet(),
 }

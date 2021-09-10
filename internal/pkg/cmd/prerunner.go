@@ -432,7 +432,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			bearerToken, err := getBearerToken(state, ctx.Platform.Server)
+			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
 			if err != nil {
 				return nil, err
 			}
@@ -447,6 +447,9 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
+		return "", nil
+	}
+	if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") == "" && !strings.Contains(cmd.Name(), "link") && !strings.Contains(cmd.Name(), "mirror") {
 		return "", nil
 	}
 	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)

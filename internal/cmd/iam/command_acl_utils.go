@@ -2,9 +2,10 @@ package iam
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"sort"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/hashicorp/go-multierror"
 

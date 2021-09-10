@@ -6,7 +6,7 @@ set -e
 
 S3_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud
 S3_CONTENT_CHECK_URL="${S3_URL}?prefix="
-if [[ ! -z "$OVERRIDE_S3_FOLDER" ]]
+if [ -n "$OVERRIDE_S3_FOLDER" ]
 then
 	S3_CONTENT_CHECK_URL="${S3_URL}?prefix=${OVERRIDE_S3_FOLDER}/"
 	S3_URL=${S3_URL}/${OVERRIDE_S3_FOLDER}

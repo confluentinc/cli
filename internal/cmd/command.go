@@ -8,6 +8,8 @@ import (
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
@@ -99,7 +101,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cliName, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 
 	prerunner := &pcmd.PreRun{
@@ -230,4 +232,11 @@ func loadConfig(cliName string, logger *log.Logger) (*v3.Config, error) {
 	})
 
 	return load.LoadAndMigrate(cfg)
+}
+
+func getCloudClient(cliName string, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
+	if cliName == "ccloud" {
+		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+	}
+	return nil
 }

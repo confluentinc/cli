@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/dghubble/sling"
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -189,4 +190,23 @@ func GetRemoteAPIName(cliName string) string {
 		return "Confluent Cloud"
 	}
 	return "Confluent Platform"
+}
+
+type response struct {
+	Error string `json:"error"`
+	Token string `json:"token"`
+}
+
+func GetBearerToken(authenticatedState *v2.ContextState, server string) (string, error) {
+	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
+	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
+
+	// Configure and send post request with session token to Auth Service to get access token
+	responses := new(response)
+	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
+	if err != nil {
+		return "", err
+	}
+
+	return responses.Token, nil
 }

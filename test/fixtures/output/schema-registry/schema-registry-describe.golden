@@ -2,8 +2,8 @@
 | Name                 | account schema-registry |
 | Cluster ID           | lsrc-1234               |
 | Endpoint URL         | SASL_SSL://sr-endpoint  |
-| Used Schemas         |                         |
-| Available Schemas    |                         |
+| Used Schemas         |                       0 |
+| Available Schemas    |                       0 |
 | Global Compatibility | <Requires API Key>      |
 | Mode                 | <Requires API Key>      |
 | Service Provider     |                         |

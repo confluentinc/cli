@@ -1,12 +1,10 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/antihax/optional"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -26,10 +24,10 @@ var (
 	listMirrorFields               = []string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
 	structuredListMirrorFields     = camelToSnake(listMirrorFields)
 	humanListMirrorFields          = camelToSpaced(listMirrorFields)
-	describeMirrorFields           = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"}
+	describeMirrorFields           = []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"}
 	structuredDescribeMirrorFields = camelToSnake(describeMirrorFields)
 	humanDescribeMirrorFields      = camelToSpaced(describeMirrorFields)
-	alterMirrorFields              = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode"}
+	alterMirrorFields              = []string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"}
 	structuredAlterMirrorFields    = camelToSnake(alterMirrorFields)
 	humanAlterMirrorFields         = camelToSpaced(alterMirrorFields)
 )
@@ -45,21 +43,23 @@ type listMirrorWrite struct {
 }
 
 type describeMirrorWrite struct {
-	LinkName           string
-	MirrorTopicName    string
-	SourceTopicName    string
-	MirrorStatus       string
-	StatusTimeMs       int64
-	Partition          int32
-	PartitionMirrorLag int64
+	LinkName              string
+	MirrorTopicName       string
+	SourceTopicName       string
+	MirrorStatus          string
+	StatusTimeMs          int64
+	Partition             int32
+	PartitionMirrorLag    int64
+	LastSourceFetchOffset int64
 }
 
 type alterMirrorWrite struct {
-	MirrorTopicName    string
-	Partition          int32
-	ErrorMessage       string
-	ErrorCode          string
-	PartitionMirrorLag int64
+	MirrorTopicName       string
+	Partition             int32
+	ErrorMessage          string
+	ErrorCode             string
+	PartitionMirrorLag    int64
+	LastSourceFetchOffset int64
 }
 
 type mirrorCommand struct {
@@ -70,8 +70,8 @@ type mirrorCommand struct {
 func NewMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:    "mirror",
-			Short:  "Manages cluster linking mirror topics.",
+			Use:   "mirror",
+			Short: "Manages cluster linking mirror topics.",
 		},
 		prerunner, MirrorSubcommandFlags)
 	cmd := &mirrorCommand{
@@ -92,8 +92,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror list --link <link> --mirror-status <mirror-status>",
 			},
 		),
-		RunE:   c.list,
-		Args:   cobra.NoArgs,
+		RunE: c.list,
+		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
@@ -111,8 +111,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror describe <destination-topic-name> --link <link>",
 			},
 		),
-		RunE:   c.describe,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.describe,
+		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
@@ -130,8 +130,8 @@ func (c *mirrorCommand) init() {
 					"--replication-factor <replication-factor> --config-file mirror_config.txt",
 			},
 		),
-		RunE:   c.create,
-		Args:   cobra.ExactArgs(1),
+		RunE: c.create,
+		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
@@ -150,8 +150,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
-		RunE:   c.promote,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.promote,
+		Args: cobra.MinimumNArgs(1),
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -168,8 +168,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
-		RunE:   c.failover,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.failover,
+		Args: cobra.MinimumNArgs(1),
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -186,8 +186,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
 			},
 		),
-		RunE:   c.pause,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.pause,
+		Args: cobra.MinimumNArgs(1),
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -204,8 +204,8 @@ func (c *mirrorCommand) init() {
 				Code: "ccloud kafka mirror resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
 			},
 		),
-		RunE:   c.resume,
-		Args:   cobra.MinimumNArgs(1),
+		RunE: c.resume,
+		Args: cobra.MinimumNArgs(1),
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -225,8 +225,11 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -298,8 +301,11 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -323,13 +329,14 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	for _, partitionLag := range mirror.MirrorLags {
 		outputWriter.AddElement(&describeMirrorWrite{
-			LinkName:           mirror.LinkName,
-			MirrorTopicName:    mirror.MirrorTopicName,
-			SourceTopicName:    mirror.SourceTopicName,
-			MirrorStatus:       string(mirror.MirrorStatus),
-			StatusTimeMs:       mirror.StateTimeMs,
-			Partition:          partitionLag.Partition,
-			PartitionMirrorLag: partitionLag.Lag,
+			LinkName:              mirror.LinkName,
+			MirrorTopicName:       mirror.MirrorTopicName,
+			SourceTopicName:       mirror.SourceTopicName,
+			MirrorStatus:          string(mirror.MirrorStatus),
+			StatusTimeMs:          mirror.StateTimeMs,
+			Partition:             partitionLag.Partition,
+			PartitionMirrorLag:    partitionLag.Lag,
+			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
 
@@ -354,16 +361,17 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, err := readConfigsFromFile(configs)
+	configMap, err := utils.ReadConfigsFromFile(configs)
 	if err != nil {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
-		// Fall back to use kafka-api
-		fmt.Println("Kafka REST is not enabled")
-		return c.createWithKafkaApi(cmd, linkName, sourceTopicName, replicationFactor, configMap)
+		if err != nil {
+			return err
+		}
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
 	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
@@ -401,8 +409,11 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -440,8 +451,11 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -479,8 +493,11 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -518,8 +535,11 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
@@ -546,37 +566,6 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 	return printAlterMirrorResult(cmd, results)
 }
 
-func (c *mirrorCommand) createWithKafkaApi(
-	cmd *cobra.Command, linkName string, sourceTopicName string, factor int32, configMap map[string]string) error {
-	// Kafka REST is not available, fall back to KafkaAPI
-
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
-	if err != nil {
-		return err
-	}
-
-	topic := &schedv1.Topic{
-		Spec: &schedv1.TopicSpecification{
-			Name:                 sourceTopicName,
-			NumPartitions:        unspecifiedPartitionCount,
-			ReplicationFactor:    uint32(factor),
-			Configs:              configMap,
-			Mirror:               &schedv1.TopicMirrorSpecification{LinkName: linkName, MirrorTopic: sourceTopicName},
-			XXX_NoUnkeyedLiteral: struct{}{},
-			XXX_unrecognized:     nil,
-			XXX_sizecache:        0,
-		},
-		Validate: false,
-	}
-
-	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
-		return err
-	}
-	utils.Printf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
-	return nil
-}
-
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
 	outputWriter, err := output.NewListOutputWriter(
 		cmd, alterMirrorFields, humanAlterMirrorFields, structuredAlterMirrorFields)
@@ -599,22 +588,24 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 		// fatal error
 		if errMsg != "" {
 			outputWriter.AddElement(&alterMirrorWrite{
-				MirrorTopicName:    result.MirrorTopicName,
-				Partition:          -1,
-				ErrorMessage:       errMsg,
-				ErrorCode:          code,
-				PartitionMirrorLag: -1,
+				MirrorTopicName:       result.MirrorTopicName,
+				Partition:             -1,
+				ErrorMessage:          errMsg,
+				ErrorCode:             code,
+				PartitionMirrorLag:    -1,
+				LastSourceFetchOffset: -1,
 			})
 			continue
 		}
 
 		for _, partitionLag := range result.MirrorLags {
 			outputWriter.AddElement(&alterMirrorWrite{
-				MirrorTopicName:    result.MirrorTopicName,
-				Partition:          partitionLag.Partition,
-				ErrorMessage:       errMsg,
-				ErrorCode:          code,
-				PartitionMirrorLag: partitionLag.Lag,
+				MirrorTopicName:       result.MirrorTopicName,
+				Partition:             partitionLag.Partition,
+				ErrorMessage:          errMsg,
+				ErrorCode:             code,
+				PartitionMirrorLag:    partitionLag.Lag,
+				LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 			})
 		}
 	}
