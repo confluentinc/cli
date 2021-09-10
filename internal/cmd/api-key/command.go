@@ -216,7 +216,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
 		userIdMap := c.mapResourceIdToUserId(allUsers)
-		userId = userIdMap[serviceAccountID]
+		var ok bool
+		userId, ok = userIdMap[serviceAccountID]
+		if !ok {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID), errors.ServiceAccountNotFoundSuggestions)
+		}
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
