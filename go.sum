@@ -344,8 +344,8 @@ github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mo
 github.com/confluentinc/protoc-gen-ccloud v0.0.3 h1:i2+J04C4iW1hoe0tvzWH8wXg05rmxN4G7Qz1LpusEBE=
 github.com/confluentinc/protoc-gen-ccloud v0.0.3/go.mod h1:aZRVEnVpDqGKlGNaR75eWMcMzXOFDDps7ByPJiPPwxg=
 github.com/confluentinc/prototools v0.0.3/go.mod h1:BeYyZpaHqLMJ3uFf5aGl30F6xnideWJLd0HsGm9QY2U=
-github.com/confluentinc/schema-registry-sdk-go v0.0.9 h1:Ux5Ht1rk5soi+Zf/cw1z0Je76qMrV0LqyoXfRYZolFk=
-github.com/confluentinc/schema-registry-sdk-go v0.0.9/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
+github.com/confluentinc/schema-registry-sdk-go v0.0.11 h1:chWZyfO6QxpfUFkF9aQfM5FF08SuIlGVXNVLLlSeNjw=
+github.com/confluentinc/schema-registry-sdk-go v0.0.11/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
 github.com/containerd/continuity v0.0.0-20190426062206-aaeac12a7ffc/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
 github.com/containerd/continuity v0.0.0-20191127005431-f65d91d395eb/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
@@ -1494,7 +1494,6 @@ golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 h1:SQFwaSi55rU7vdNs9Yr0Z324VNlrF+0wMqRXT4St8ck=
 golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
-golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20170830134202-bb24a47a89ea/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180816055513-1c9583448a9c/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

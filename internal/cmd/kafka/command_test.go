@@ -88,7 +88,7 @@ var aclEntries = []struct {
 	err     error
 }{
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "read"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "read"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -97,7 +97,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "read"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "read"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -106,7 +106,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "write"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -115,7 +115,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "write"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -124,7 +124,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "create"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -133,7 +133,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "create"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -142,7 +142,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "delete"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "delete"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -151,7 +151,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "delete"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "delete"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -160,7 +160,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "alter"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "alter"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -169,7 +169,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "alter"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -178,7 +178,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "describe"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "describe"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -187,7 +187,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "describe"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "describe"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -196,7 +196,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "cluster-action"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "cluster-action"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -205,7 +205,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "cluster-action"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "cluster-action"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -214,7 +214,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "describe-configs"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "describe-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -223,7 +223,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "describe-configs"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "describe-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -232,7 +232,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "alter-configs"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "alter-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -241,7 +241,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "alter-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -250,7 +250,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "idempotent-write"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "idempotent-write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -259,7 +259,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "idempotent-write"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "idempotent-write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -268,7 +268,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -387,7 +387,7 @@ func ListPrincipalACLTest(t *testing.T, enableREST bool) {
 		}
 		entry := aclEntry.entries[0]
 		cmd := newCmd(expect, enableREST)
-		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
+		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, "sa-"+strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
 			expect <- convertToFilter(&schedv1.ACLBinding{Entry: &schedv1.AccessControlEntryConfig{Principal: entry.Principal}})
@@ -417,7 +417,7 @@ func ListResourcePrincipalFilterACLTest(t *testing.T, enableREST bool) {
 			}
 			entry := aclEntry.entries[0]
 			cmd := newCmd(expect, enableREST)
-			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
+			cmd.SetArgs(append(args, "--service-account", "sa-"+strings.TrimPrefix(entry.Principal, "User:")))
 
 			// TODO: better testing of KafkaREST
 			if !enableREST {
@@ -442,7 +442,7 @@ func TestListResourcePrincipalFilterACL2(t *testing.T) {
 }
 
 func MultipleResourceACLTest(t *testing.T, enableREST bool) {
-	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
+	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "sa-42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
 	cmd := newCmd(nil, enableREST)
@@ -605,7 +605,7 @@ func TestUpdateTopic2(t *testing.T) {
 func DefaultsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	cmd := newCmd(expect, enableREST)
-	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
+	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "sa-42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- []*schedv1.ACLBinding{
@@ -623,7 +623,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}
 
 	cmd = newCmd(expect, enableREST)
-	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
+	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "sa-42",
 		"--operation", "read"})
 
 	go func() {
@@ -1139,6 +1139,11 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 					{
 						Id:          serviceAccountId,
 						ResourceId:  userResourceId,
+						ServiceName: serviceAccountName,
+					},
+					{
+						Id:          42,
+						ResourceId:  "sa-42",
 						ServiceName: serviceAccountName,
 					},
 				}, nil

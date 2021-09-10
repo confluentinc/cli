@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
+	"strings"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -114,12 +113,14 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.ACLResourceIdtoNumericId(acl)
+	userIdMap, err := c.mapResourceIdToUserId()
 	if err != nil {
 		return err
 	}
-
-	IdMap, err := getUserIdMap(c.Client)
+	if err := c.ACLResourceIdToNumericId(acl, userIdMap); err != nil {
+		return err
+	}
+	resourceIdMap, err := c.mapUserIdToResourceId()
 	if err != nil {
 		return err
 	}
@@ -148,22 +149,21 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponseWithMap(cmd, aclGetResp, cmd.OutOrStdout(), IdMap)
+			return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclGetResp, cmd.OutOrStdout(), resourceIdMap)
 		}
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-
 	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
 	if err != nil {
 		return err
 	}
-	resp, err := c.Client.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
 
+	resp, err := c.Client.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
 	if err != nil {
 		return err
 	}
-	return aclutil.PrintACLsWithMap(cmd, resp, os.Stdout, IdMap)
+	return aclutil.PrintACLsWithResourceIdMap(cmd, resp, os.Stdout, resourceIdMap)
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
@@ -172,7 +172,14 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.ACLResourceIdtoNumericId(acls)
+	userIdMap, err := c.mapResourceIdToUserId()
+	if err != nil {
+		return err
+	}
+	if err := c.ACLResourceIdToNumericId(acls, userIdMap); err != nil {
+		return err
+	}
+	resourceIdMap, err := c.mapUserIdToResourceId()
 	if err != nil {
 		return err
 	}
@@ -206,21 +213,21 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+				_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
 				}
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
-					_ = aclutil.PrintACLs(cmd, bindings[:i], os.Stdout)
+					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
 				}
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
@@ -229,7 +236,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		if kafkaRestExists {
-			return aclutil.PrintACLs(cmd, bindings, os.Stdout)
+			return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
 		}
 	}
 
@@ -245,7 +252,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLs(cmd, bindings, os.Stdout)
+	return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
@@ -254,8 +261,11 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.ACLResourceIdtoNumericId(acls)
+	userIdMap, err := c.mapResourceIdToUserId()
 	if err != nil {
+		return err
+	}
+	if err := c.ACLResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
 	}
 
@@ -427,43 +437,39 @@ func (c *aclCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *aclCommand) ACLResourceIdtoNumericId(acl []*ACLConfiguration) error {
-	IdMap, err := getResourceIdMap(c.Client)
-	if err != nil {
-		return err
-	}
+func (c *aclCommand) ACLResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
 	for i := 0; i < len(acl); i++ {
 		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
-			id := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
-			_, err := strconv.Atoi(id)
-			if err != nil { // it's a resource id
-				acl[i].ACLBinding.Entry.Principal = "User:" + strconv.Itoa(int(IdMap[id])) // translate into numeric ID
+			serviceAccountID := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
+			if !strings.HasPrefix(serviceAccountID, "sa-") {
+				return errors.New(errors.BadServiceAccountIDErrorMsg)
 			}
+			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", idMap[serviceAccountID]) // translate into numeric ID
 		}
 	}
 	return nil
 }
 
-func getResourceIdMap(client *ccloud.Client) (map[string]int32, error) {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	saMap := make(map[string]int32)
+	idMap := make(map[int32]string)
 	for _, sa := range serviceAccounts {
-		saMap[sa.ResourceId] = sa.Id
+		idMap[sa.Id] = sa.ResourceId
 	}
-	return saMap, nil
+	return idMap, nil
 }
 
-func getUserIdMap(client *ccloud.Client) (map[int32]string, error) {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	saMap := make(map[int32]string)
+	idMap := make(map[string]int32)
 	for _, sa := range serviceAccounts {
-		saMap[sa.Id] = sa.ResourceId
+		idMap[sa.ResourceId] = sa.Id
 	}
-	return saMap, nil
+	return idMap, nil
 }

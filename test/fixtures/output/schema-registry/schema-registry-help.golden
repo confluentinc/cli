@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   cluster     Manage Schema Registry cluster.
+  exporter    Manage Schema Registry exporters.
   schema      Manage Schema Registry schemas.
   subject     Manage Schema Registry subjects.
 

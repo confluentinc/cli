@@ -87,25 +87,18 @@ update-settings-and-conf:
 		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		sed -i '' "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		sed -i '' "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
-		sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-		git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		git push; \
 	fi
 	git checkout $(MINOR_BRANCH) && \
 	sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
 	sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	sed -i '' "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
-	sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-	git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
+	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 	git push; \
 	git checkout $(CLEAN_VERSION)-post && \
 	sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
 	sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	sed -i '' "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
-	sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-	git commit -am "[ci skip] chore: update settings.sh, conf.py, and script.js due to $(CLEAN_VERSION) release" && \
-	git push && \
-	git checkout $(OLDEST_BRANCH) && \
-	sed -i '' "s/docVersions = \[/&\n   '$(CLEAN_VERSION)',/" _local-static/js/script.js && \
-	git commit -am "chore: add new version $(CLEAN_VERSION) to all old branches' version pickers" && \
+	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 	git push

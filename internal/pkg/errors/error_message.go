@@ -13,6 +13,7 @@ const (
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
+	BadServiceAccountIDErrorMsg         = `failed to parse service account id: ensure service account id begins with "sa-"`
 	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
 	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg      = "refusing to overwrite existing secret for API Key \"%s\""
@@ -179,11 +180,12 @@ const (
 	ParsePromptFormatErrorMsg = "error parsing prompt format string \"%s\""
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	CompatibilityOrModeErrorMsg    = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg   = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg        = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg          = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions       = "Schema ID must be an integer."
+	SchemaExporterNotFoundErrorMsg = "schema exporter \"%s\" not found"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

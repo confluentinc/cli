@@ -60,7 +60,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				Operation:    "READ",
 				Permission:   "ALLOW",
 				Host:         "*",
-				Principal:    "User:sa-123",
+				Principal:    "User:12345",
 				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
 			}}})
 			require.NoError(t, err)
