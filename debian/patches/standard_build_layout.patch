@@ -1,4 +1,4 @@
---- cli/Makefile	2021-09-09 16:43:42.000000000 -0700
+--- cli/Makefile	2021-09-10 10:38:36.000000000 -0700
 +++ debian/Makefile	2021-08-26 16:04:24.000000000 -0700
 @@ -1,259 +1,130 @@
 -SHELL           := /bin/bash
@@ -57,7 +57,7 @@
 -	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 -	export GOPRIVATE=github.com/confluentinc && \
 -	go get github.com/goreleaser/goreleaser@v0.162.1 && \
--	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
+-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
 -	go get github.com/mitchellh/golicense@v0.2.0
 -
 -ifeq ($(shell uname),Darwin)
