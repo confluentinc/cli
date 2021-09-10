@@ -170,11 +170,11 @@ When you add a new command or resource, assuming it's already in the SDK, you ge
 
 ### Build Other Platforms
 
-If you have a need to build a binary for a platform that is not the current one, use the following to target a different `.goreleaser-*` file matching the destined platform.
+If you have a need to build a binary for a platform that is not the current one, use the following:
 
-    make build GORELEASER_SUFFIX=-linux.yml   # build linux
-    make build GORELEASER_SUFFIX=-mac.yml     # build mac
-    make build GORELEASER_SUFFIX=-windows.yml # build windows
+    GOOS=linux make build
+    GOOS=mac make build
+    GOOS=windows make build
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment

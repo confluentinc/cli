@@ -126,22 +126,24 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.
 
 func (c *promptCommand) init(cfg *v3.Config, prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
-		Use:         "prompt",
-		Short:       fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),
-		Long:        longDescription,
-		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.prompt),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "prompt",
+		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),
+		Long:  longDescription,
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
+
 	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
 	defaultFormat := `({{color "blue" "confluent"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
 	if cfg.IsOnPremLogin() {
 		defaultFormat = `({{color "blue" "confluent"}}|{{color "cyan" "%K"}})`
 	}
+
 	promptCmd.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
 	promptCmd.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
 	promptCmd.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
 	promptCmd.Flags().SortFlags = false
+
 	c.CLICommand = pcmd.NewAnonymousCLICommand(promptCmd, prerunner)
 }
 

@@ -40,6 +40,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 
 func (c *command) init(cfg *v3.Config) {
 	c.AddCommand(NewClusterCommand(cfg, c.prerunner, c.srClient, c.logger, c.analyticsClient))
+	c.AddCommand(NewExporterCommand(c.prerunner, c.srClient))
 	c.AddCommand(NewSchemaCommand(c.prerunner, c.srClient))
 	c.AddCommand(NewSubjectCommand(c.prerunner, c.srClient))
 }

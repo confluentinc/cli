@@ -141,6 +141,109 @@ func (s *SRRouter) HandleSRSubjects(t *testing.T) func(http.ResponseWriter, *htt
 	}
 }
 
+// Handler for: "/exporters"
+func (s *SRRouter) HandleSRExporters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			exporters := []string{"exporter1", "exporter2"}
+			err := json.NewEncoder(w).Encode(exporters)
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req srsdk.CreateExporterRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.CreateExporterResponse{Name: req.Name})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/exporters/{name}"
+func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		name := vars["name"]
+		switch r.Method {
+		case http.MethodGet:
+			info := srsdk.ExporterInfo{
+				Name:        name,
+				Subjects:    []string{"foo", "bar"},
+				ContextType: "CUSTOM",
+				Context:     "mycontext",
+				Config:      map[string]string{"key1": "value1", "key2": "value2"},
+			}
+			err := json.NewEncoder(w).Encode(info)
+			require.NoError(t, err)
+		case http.MethodPut:
+			err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/exporters/{name}/status"
+func (s *SRRouter) HandleSRExporterStatus(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		name := vars["name"]
+		status := srsdk.ExporterStatus{
+			Name:   name,
+			State:  "RUNNING",
+			Offset: 0,
+			Ts:     0,
+			Trace:  "",
+		}
+		err := json.NewEncoder(w).Encode(status)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/exporters/{name}/config"
+func (s *SRRouter) HandleSRExporterConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(map[string]string{"key1": "value1", "key2": "value2"})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/exporters/{name}/pause"
+func (s *SRRouter) HandleSRExporterPause(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		name := vars["name"]
+		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/exporters/{name}/resume"
+func (s *SRRouter) HandleSRExporterResume(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		name := vars["name"]
+		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/exporters/{name}/reset"
+func (s *SRRouter) HandleSRExporterReset(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		name := vars["name"]
+		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/config/{subject}"
 func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
