@@ -47,8 +47,9 @@ var (
 func NewExporterCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "exporter",
-			Short: "Manage Schema Registry exporters.",
+			Use:         "exporter",
+			Short:       "Manage Schema Registry exporters.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, ExporterSubcommandFlags)
 	exporterCmd := &exporterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,

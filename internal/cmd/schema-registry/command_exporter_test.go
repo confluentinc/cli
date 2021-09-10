@@ -3,22 +3,24 @@ package schemaregistry
 import (
 	"bytes"
 	"context"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	cliMock "github.com/confluentinc/cli/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	cliMock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -101,7 +103,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.conf.Logger, cliMock.NewDummyAnalyticsMock())
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.conf.Logger, cliMock.NewDummyAnalyticsMock())
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
@@ -154,9 +156,9 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 	params := apiMock.GetExporterInfoCalls()[0]
 	req.Equal(params.Name, exporterName)
 
-	req.Equal("+--------------------------------+-------------+\n" +
-		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n" +
-		"| Context Type                   | AUTO        |\n| Context                        |             |\n" +
+	req.Equal("+--------------------------------+-------------+\n"+
+		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n"+
+		"| Context Type                   | AUTO        |\n| Context                        |             |\n"+
 		"| Remote Schema Registry Configs |             |\n+--------------------------------+-------------+\n", output.String())
 }
 
@@ -173,9 +175,9 @@ func (suite *ExporterTestSuite) TestStatusExporter() {
 	params := apiMock.GetExporterStatusCalls()[0]
 	req.Equal(params.Name, exporterName)
 
-	req.Equal("+--------------------+-------------+\n" +
-		"| Name               | my_exporter |\n| Exporter State     | PAUSED      |\n" +
-		"| Exporter Offset    |           0 |\n| Exporter Timestamp |           0 |\n" +
+	req.Equal("+--------------------+-------------+\n"+
+		"| Name               | my_exporter |\n| Exporter State     | PAUSED      |\n"+
+		"| Exporter Offset    |           0 |\n| Exporter Timestamp |           0 |\n"+
 		"| Error Trace        |             |\n+--------------------+-------------+\n", output.String())
 }
 
