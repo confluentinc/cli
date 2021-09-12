@@ -21,16 +21,24 @@ RUN powershell mkdir -p /go/src/github.com/goreleaser && \
     cd goreleaser && \
     git checkout v0.141.0 && \
     go install . && \
-    powershell mkdir -p /go/src/github.com/confluentinc/cli
+    powershell mkdir -p /go/src/github.com/confluentinc/cli && \
+    cd /go/src/github.com/confluentinc/cli
+
+COPY .netrc /Users/ContainerAdministrator/
+
+RUN powershell Rename-Item -Path "/Users/ContainerAdministrator/.netrc" -NewName "_netrc" && \
+    cd Users/ContainerAdministrator && \
+    powershell icacls _netrc /grant Everyone:F
 
 COPY . /go/src/github.com/confluentinc/cli/
 
-COPY .netrc /root/.netrc
-RUN powershell icacls root/.netrc /grant Everyone:F && \
-    powershell type root/.netrc
+RUN powershell setx PATH \"$env:path;C:\go\src\github.com\confluentinc\cli\" -m
 
 RUN cd /go/src/github.com/confluentinc/cli && \
-    make gorelease-windows ; \
+    git config credential.helper "netrc" && \
+    make gorelease-windows ; 
+
+RUN cd /go/src/github.com/confluentinc/cli && \
     for file in dist/ccloud/*windows*; do mv -v "$file" "${file/windows}"; done ; \
     for file in dist/confluent/*windows*; do mv -v "$file" "${file/windows}"; done ; \
     for file in dist/ccloud/*.txt; do mv -v "$file" "${file/checksums/checksums_windows}"; done; \
