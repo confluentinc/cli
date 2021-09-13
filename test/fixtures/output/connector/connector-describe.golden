@@ -10,10 +10,10 @@ Connector Details
 
 Task Level Details
   TaskId |  State   
-+--------+---------+
+---------+----------
        1 | Running  
 
 
 Configuration Details
   Config | Value  
-+--------+-------+
+---------+--------

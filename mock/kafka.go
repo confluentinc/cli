@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // This deprecated package is being used in https://github.com/confluentinc/cc-structs
 
 	linkv1 "github.com/confluentinc/cc-structs/kafka/clusterlink/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 )
 
 // Compile-time check interface adherence
@@ -88,8 +90,8 @@ func (m *Kafka) UpdateTopic(_ context.Context, _ *schedv1.KafkaCluster, topic *s
 func (m *Kafka) ListACLs(ctx context.Context, _ *schedv1.KafkaCluster, filter *schedv1.ACLFilter) ([]*schedv1.ACLBinding, error) {
 	// Testing DeleteACLs calls List, then Delete, but only sends the expected message once;
 	// so for now we want to ignore assertions about List while testing Delete
-	if requestor, ok := ctx.Value("requestor").(string); ok {
-		if requestor == "delete" {
+	if val, ok := ctx.Value(kafka.Requester).(string); ok {
+		if val == "delete" {
 			return nil, nil
 		}
 	}
@@ -180,7 +182,7 @@ func assertEquals(actual interface{}, expected interface{}) error {
 
 func assertEqualValues(actual interface{}, expected interface{}) error {
 	if actual != expected {
-		return fmt.Errorf("Actual: %+v\nExpected: %+v", actual, expected)
+		return fmt.Errorf("actual: %+v\nexpected: %+v", actual, expected)
 	}
 	return nil
 }
@@ -188,11 +190,11 @@ func assertEqualValues(actual interface{}, expected interface{}) error {
 func assertEqualBindings(actual []*schedv1.ACLBinding, expected interface{}) error {
 	exp := expected.([]*schedv1.ACLBinding)
 	if len(actual) != len(exp) {
-		return fmt.Errorf("Length is not equal. actual: %d, expected: %d", len(actual), len(exp))
+		return fmt.Errorf("length is not equal, actual: %d, expected: %d", len(actual), len(exp))
 	}
 	for i, actualMessage := range actual {
 		if err := assertEquals(actualMessage, exp[i]); err != nil {
-			return fmt.Errorf("Index %d is not equal. %s", i, err)
+			return fmt.Errorf("index %d is not equal: %v", i, err)
 		}
 	}
 	return nil
@@ -201,11 +203,11 @@ func assertEqualBindings(actual []*schedv1.ACLBinding, expected interface{}) err
 func assertEqualFilters(actual []*schedv1.ACLFilter, expected interface{}) error {
 	exp := expected.([]*schedv1.ACLFilter)
 	if len(actual) != len(exp) {
-		return fmt.Errorf("Length is not equal. actual: %d, expected: %d", len(actual), len(exp))
+		return fmt.Errorf("length is not equal, actual: %d, expected: %d", len(actual), len(exp))
 	}
 	for i, actualMessage := range actual {
 		if err := assertEquals(actualMessage, exp[i]); err != nil {
-			return fmt.Errorf("Index %d is not equal. %s", i, err)
+			return fmt.Errorf("index %d is not equal: %v", i, err)
 		}
 	}
 	return nil

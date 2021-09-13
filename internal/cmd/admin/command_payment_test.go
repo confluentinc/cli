@@ -41,7 +41,7 @@ func TestPaymentUpdate(t *testing.T) {
 	cmd.SetOut(buf)
 
 	tests := []*PaymentUpdateSuite{
-		&PaymentUpdateSuite{
+		{
 			prompt: mock.NewPromptMock(
 				"4242424242424242",
 				"12/70",
@@ -68,7 +68,7 @@ func TestPaymentRegexValidation(t *testing.T) {
 	cmd.SetOut(buf)
 
 	tests := []*PaymentUpdateSuite{
-		&PaymentUpdateSuite{
+		{
 			prompt: mock.NewPromptMock(
 				"42424242",                 //too short
 				"424242424242424242424242", //too long
@@ -85,7 +85,7 @@ func TestPaymentRegexValidation(t *testing.T) {
 				"Updated.",
 			},
 		},
-		&PaymentUpdateSuite{
+		{
 			prompt: mock.NewPromptMock(
 				"4242424242424242",
 				"121/70", //too many digits for month
@@ -104,7 +104,7 @@ func TestPaymentRegexValidation(t *testing.T) {
 				"Updated.",
 			},
 		},
-		&PaymentUpdateSuite{
+		{
 			prompt: mock.NewPromptMock(
 				"4242424242424242",
 				"12/70",

@@ -584,26 +584,6 @@ func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
 	return cipherRegex.MatchString(config), nil
 }
 
-func (c *PasswordProtectionSuite) addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
-	property.DisableExpansion = true
-	configProviders := property.GetString(ConfigProviderKey, "")
-	if configProviders == "" {
-		configProviders = SecureConfigProvider
-	} else if !strings.Contains(configProviders, SecureConfigProvider) {
-		configProviders = configProviders + "," + SecureConfigProvider
-	}
-
-	_, _, err := property.Set(ConfigProviderKey, configProviders)
-	if err != nil {
-		return nil, err
-	}
-	_, _, err = property.Set(SecureConfigProviderClassKey, SecureConfigProviderClass)
-	if err != nil {
-		return nil, err
-	}
-	return property, nil
-}
-
 func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEngine) ([]byte, error) {
 	masterKey, err := c.loadMasterKey()
 	if err != nil {

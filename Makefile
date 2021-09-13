@@ -36,7 +36,7 @@ deps:
 	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 	export GOPRIVATE=github.com/confluentinc && \
 	go get github.com/goreleaser/goreleaser@v0.162.1 && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
 	go get github.com/mitchellh/golicense@v0.2.0
 
 ifeq ($(shell uname),Darwin)
@@ -168,20 +168,6 @@ else
 	true
 endif
 
-cmd/lint/en_US.aff:
-	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
-
-cmd/lint/en_US.dic:
-	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
-
-.PHONY: lint-cli
-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
-	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
-
-.PHONY: lint-go
-lint-go:
-	@golangci-lint run --timeout=10m
-
 .PHONY: lint
 lint:
 ifeq ($(shell uname),Darwin)
@@ -189,15 +175,32 @@ ifeq ($(shell uname),Darwin)
 else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
-	make lint-go && \
-	make lint-cli && \
-	make lint-installers
+	@echo "Linting..."
+	@make lint-go
+	@make lint-cli
+	@make lint-installers
 endif
 
+.PHONY: lint-go
+lint-go:
+	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+	@echo "✅  golangci-lint"
+
+.PHONY: lint-cli
+lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+	@echo "✅  cmd/lint/main.go"
+
+cmd/lint/en_US.aff:
+	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+
+cmd/lint/en_US.dic:
+	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+
 .PHONY: lint-installers
-## Lints the CLI installation scripts
 lint-installers:
 	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
+	@echo "✅  installation script linter"
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses
@@ -231,7 +234,6 @@ coverage-integ:
 	@# Run integration tests.
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
       endif
-
 
 .PHONY: test-prep
 test-prep: lint

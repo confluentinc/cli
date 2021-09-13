@@ -24,7 +24,15 @@ func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.Dynami
 		// Tests/mocks
 		return srClient, nil, nil
 	}
-	return getSchemaRegistryClient(cmd, cfg, ver)
+	return getSchemaRegistryClient(cmd, cfg, ver, "", "")
+}
+
+func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+	if srClient != nil {
+		// Tests/mocks
+		return srClient, nil, nil
+	}
+	return getSchemaRegistryClient(cmd, cfg, ver, srAPIKey, srAPISecret)
 }
 
 func PrintVersions(versions []int32) {
