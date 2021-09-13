@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/dghubble/sling"
@@ -20,19 +21,34 @@ import (
 const (
 	CCloudURL = "https://confluent.cloud"
 
-	CCloudEmailEnvVar       = "CCLOUD_EMAIL"
-	ConfluentUsernameEnvVar = "CONFLUENT_USERNAME"
-	CCloudPasswordEnvVar    = "CCLOUD_PASSWORD"
-	ConfluentPasswordEnvVar = "CONFLUENT_PASSWORD"
+	ConfluentCloudEmail         = "CONFLUENT_CLOUD_EMAIL"
+	ConfluentCloudPassword      = "CONFLUENT_CLOUD_PASSWORD"
+	ConfluentPlatformUsername   = "CONFLUENT_PLATFORM_USERNAME"
+	ConfluentPlatformPassword   = "CONFLUENT_PLATFORM_PASSWORD"
+	ConfluentPlatformMDSURL     = "CONFLUENT_PLATFORM_MDS_URL"
+	ConfluentPlatformCACertPath = "CONFLUENT_PLATFORM_CA_CERT_PATH"
 
-	CCloudEmailDeprecatedEnvVar       = "XX_CCLOUD_EMAIL"
-	ConfluentUsernameDeprecatedEnvVar = "XX_CONFLUENT_USERNAME"
-	CCloudPasswordDeprecatedEnvVar    = "XX_CCLOUD_PASSWORD"
-	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
-
-	ConfluentURLEnvVar        = "CONFLUENT_MDS_URL"
-	ConfluentCACertPathEnvVar = "CONFLUENT_CA_CERT_PATH"
+	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
+	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
+	DeprecatedConfluentPlatformUsername   = "CONFLUENT_USERNAME"
+	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
+	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
+	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
 )
+
+// GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
+func GetEnvWithFallback(current, deprecated string) string {
+	if val := os.Getenv(current); val != "" {
+		return val
+	}
+
+	if val := os.Getenv(deprecated); val != "" {
+		_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
+		return val
+	}
+
+	return ""
+}
 
 func PersistLogoutToConfig(config *v3.Config) error {
 	ctx := config.Context()

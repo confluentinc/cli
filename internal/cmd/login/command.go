@@ -2,7 +2,7 @@ package login
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -52,8 +52,9 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: "Log in to Confluent Cloud using your email and password, or non-interactively using the `CCLOUD_EMAIL` and `CCLOUD_PASSWORD` environment variables.\n\n" +
-			"You can log in to Confluent Platform with your username and password, or non-interactively using `CONFLUENT_USERNAME`, `CONFLUENT_PASSWORD`, `CONFLUENT_MDS_URL`, and `CONFLUENT_CA_CERT_PATH`. In a non-interactive login, `CONFLUENT_MDS_URL` replaces the `--url` flag, and `CONFLUENT_CA_CERT_PATH` replaces the `--ca-cert-path` flag.\n\n" +
+		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
+			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args:              cobra.NoArgs,
 		RunE:              pcmd.NewCLIRunE(c.login),
@@ -216,15 +217,11 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-	if err != nil {
-		return "", err
-	}
-	if caCertPath != "" {
-		return caCertPath, nil
+	if path, err := cmd.Flags().GetString("ca-cert-path"); path != "" || err != nil {
+		return path, err
 	}
 
-	return os.Getenv(pauth.ConfluentCACertPathEnvVar), nil
+	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
 }
 
 // Order of precedence: env vars > netrc > prompt
@@ -264,15 +261,11 @@ func (c *Command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName s
 }
 
 func (c *Command) getURL(cmd *cobra.Command) (string, error) {
-	url, err := cmd.Flags().GetString("url")
-	if err != nil {
-		return "", err
-	}
-	if url != "" {
-		return url, nil
+	if url, err := cmd.Flags().GetString("url"); url != "" || err != nil {
+		return url, err
 	}
 
-	if url := os.Getenv(pauth.ConfluentURLEnvVar); url != "" {
+	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
 		return url, nil
 	}
 

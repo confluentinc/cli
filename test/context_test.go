@@ -81,10 +81,10 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 	}
 
 	env := []string{
-		fmt.Sprintf("%s=%s", pauth.ConfluentUsernameEnvVar, "on-prem@example.com"),
-		fmt.Sprintf("%s=%s", pauth.ConfluentPasswordEnvVar, "password"),
-		fmt.Sprintf("%s=%s", pauth.CCloudEmailEnvVar, "cloud@example.com"),
-		fmt.Sprintf("%s=%s", pauth.CCloudPasswordEnvVar, "password"),
+		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformUsername, "on-prem@example.com"),
+		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformPassword, "password"),
+		fmt.Sprintf("%s=%s", pauth.ConfluentCloudEmail, "cloud@example.com"),
+		fmt.Sprintf("%s=%s", pauth.ConfluentCloudPassword, "password"),
 	}
 
 	for _, tt := range tests {
