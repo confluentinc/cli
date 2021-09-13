@@ -482,9 +482,9 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v3.New(&config.Params{
-		CLIName: cliName,
-	})
+	cfg := v3.New(&config.Params{CLIName: cliName})
+	cfg.DisableUpdateCheck = true
+
 	err := cfg.Save()
 	require.NoError(t, err)
 }
