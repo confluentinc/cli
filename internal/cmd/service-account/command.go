@@ -3,7 +3,7 @@ package serviceaccount
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"strings"
 
 	"github.com/c-bata/go-prompt"
 
@@ -25,10 +25,10 @@ type command struct {
 }
 
 var (
-	listFields                = []string{"Id", "ResourceId", "ServiceName", "ServiceDescription"}
-	listHumanLabels           = []string{"Id", "Resource ID", "Name", "Description"}
-	listStructuredLabels      = []string{"id", "resource_id", "name", "description"}
-	describeFields            = []string{"Id", "ResourceId", "ServiceName", "ServiceDescription"}
+	listFields                = []string{"ResourceId", "ServiceName", "ServiceDescription"}
+	listHumanLabels           = []string{"Resource ID", "Name", "Description"}
+	listStructuredLabels      = []string{"resource_id", "name", "description"}
+	describeFields            = []string{"ResourceId", "ServiceName", "ServiceDescription"}
 	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "Resource ID"}
 	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "resource_id"}
 )
@@ -172,7 +172,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.ResourceId)
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
@@ -186,14 +186,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	idp, err := strconv.Atoi(args[0])
-	user := &orgv1.User{
-		ServiceDescription: description,
+	if !strings.HasPrefix(args[0], "sa-") {
+		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	if err == nil { // it's a numeric ID
-		user.Id = int32(idp)
-	} else { // it's a resource ID
-		user.ResourceId = args[0]
+	user := &orgv1.User{
+		ResourceId:         args[0],
+		ServiceDescription: description,
 	}
 
 	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
@@ -205,14 +203,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	idp, err := strconv.Atoi(args[0])
-	user := &orgv1.User{}
-	if err == nil { // it's a numeric ID
-		user.Id = int32(idp)
-	} else { // it's a resource ID
-		user.ResourceId = args[0]
+	if !strings.HasPrefix(args[0], "sa-") {
+		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
+	user := &orgv1.User{ResourceId: args[0]}
+	err := c.Client.User.DeleteServiceAccount(context.Background(), user)
 	if err != nil {
 		return err
 	}

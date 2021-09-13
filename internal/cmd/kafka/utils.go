@@ -2,8 +2,6 @@ package kafka
 
 import (
 	"bufio"
-	"fmt"
-	"io/ioutil"
 	logger "log"
 	_nethttp "net/http"
 	"os"
@@ -38,18 +36,6 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func toMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
-		}
-		configMap[pair[0]] = pair[1]
-	}
-	return configMap, nil
-}
-
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.CreateTopicRequestDataConfigs {
 	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 	i := 0
@@ -77,29 +63,6 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.A
 		i++
 	}
 	return kafkaRestConfigs
-}
-
-func readConfigsFromFile(configFile string) (map[string]string, error) {
-	if configFile == "" {
-		return map[string]string{}, nil
-	}
-
-	configContents, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create config map from the argument.a
-	var configs []string
-	for _, s := range strings.Split(string(configContents), "\n") {
-		// Filter out blank lines
-		spaceTrimmed := strings.TrimSpace(s)
-		if s != "" && spaceTrimmed[0] != '#' {
-			configs = append(configs, spaceTrimmed)
-		}
-	}
-
-	return toMap(configs)
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Command) (string, error) {

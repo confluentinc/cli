@@ -11,6 +11,7 @@ import (
 func (s *CLITestSuite) TestSchemaRegistry() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	schemaPath := GetInputFixturePath(s.T(), "schema", "schema-example.json")
+	exporterConfigPath := GetInputFixturePath(s.T(), "schema", "schema-exporter-config.txt")
 
 	tests := []CLITest{
 		{args: "schema-registry --help", fixture: "schema-registry/schema-registry-help.golden"},
@@ -20,6 +21,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry cluster enable --cloud gcp --geo us", fixture: "schema-registry/schema-registry-enable.golden"},
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-registry-schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/schema-registry-subject-help.golden"},
+		{args: "schema-registry exporter --help", fixture: "schema-registry/schema-registry-exporter-help.golden"},
 
 		{args: "schema-registry cluster describe", fixture: "schema-registry/schema-registry-describe.golden"},
 		{args: "schema-registry cluster update --environment=" + test_server.SRApiEnvId, fixture: "schema-registry/schema-registry-update-missing-flags.golden", wantErrCode: 1},
@@ -71,6 +73,62 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			name:    "schema-registry subject update mode",
 			args:    "schema-registry subject update testSubject --mode READ --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
 			fixture: "schema-registry/schema-registry-subject-update-mode.golden",
+		},
+
+		{
+			name:    "schema-registry exporter list",
+			args:    "schema-registry exporter list --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-list.golden",
+		},
+		{
+			name:    "schema-registry exporter create",
+			args:    "schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --config-file " + exporterConfigPath + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-create.golden",
+		},
+		{
+			name:    "schema-registry exporter describe",
+			args:    "schema-registry exporter describe myexporter " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-describe.golden",
+		},
+		{
+			name:    "schema-registry exporter update",
+			args:    "schema-registry exporter update myexporter --subjects foo,bar,test " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-update.golden",
+		},
+		{
+			name:    "schema-registry exporter delete",
+			args:    "schema-registry exporter delete myexporter " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-delete.golden",
+		},
+		{
+			name:    "schema-registry exporter get-status",
+			args:    "schema-registry exporter get-status myexporter " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-get-status.golden",
+		},
+		{
+			name:    "schema-registry exporter get-config json",
+			args:    "schema-registry exporter get-config myexporter --output json " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-get-config-json.golden",
+		},
+		{
+			name:    "schema-registry exporter get-config yaml",
+			args:    "schema-registry exporter get-config myexporter --output yaml " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-get-config-yaml.golden",
+		},
+		{
+			name:    "schema-registry exporter pause",
+			args:    "schema-registry exporter pause myexporter " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-pause.golden",
+		},
+		{
+			name:    "schema-registry exporter resume",
+			args:    "schema-registry exporter resume myexporter " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-resume.golden",
+		},
+		{
+			name:    "schema-registry exporter reset",
+			args:    "schema-registry exporter reset myexporter " + " --api-key=key --api-secret=secret --environment=" + test_server.SRApiEnvId,
+			fixture: "schema-registry/schema-registry-exporter-reset.golden",
 		},
 	}
 
