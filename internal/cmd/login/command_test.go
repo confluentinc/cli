@@ -127,7 +127,6 @@ var (
 
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
@@ -177,7 +176,6 @@ func TestCredentialsOverride(t *testing.T) {
 
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
@@ -219,7 +217,7 @@ func TestLoginSuccess(t *testing.T) {
 	for _, s := range suite {
 		// Log in to the CLI control plane
 		if s.setEnv {
-			_ = os.Setenv(pauth.ConfluentURLEnvVar, "http://localhost:8090")
+			_ = os.Setenv(pauth.ConfluentPlatformMDSURL, "http://localhost:8090")
 		}
 		loginCmd, cfg := newLoginCmd(auth, user, s.cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -227,14 +225,13 @@ func TestLoginSuccess(t *testing.T) {
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.cliName)
 		if s.setEnv {
-			_ = os.Unsetenv(pauth.ConfluentURLEnvVar)
+			_ = os.Unsetenv(pauth.ConfluentPlatformMDSURL)
 		}
 	}
 }
 
 func TestLoginOrderOfPrecedence(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	netrcUser := "netrc@confleunt.io"
 	netrcPassword := "netrcpassword"
 	netrcCreds := &pauth.Credentials{
@@ -368,7 +365,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 func TestPromptLoginFlag(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	wrongCreds := &pauth.Credentials{
 		Username: "wrong_user",
 		Password: "wrong_password",
@@ -444,7 +440,6 @@ func TestPromptLoginFlag(t *testing.T) {
 
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -498,7 +493,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setEnv {
-				os.Setenv(pauth.ConfluentCACertPathEnvVar, "testcert.pem")
+				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
 			cfg := v3.New(&config.Params{Logger: log.New()})
 			var expectedCaCert string
@@ -522,7 +517,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 
 			req.Equal(tt.expectedContextName, ctx.Name)
 			if tt.setEnv {
-				os.Unsetenv(pauth.ConfluentCACertPathEnvVar)
+				os.Unsetenv(pauth.ConfluentPlatformCACertPath)
 			}
 		})
 	}
@@ -632,7 +627,6 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Co
 
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
 			return testToken, nil
@@ -716,7 +710,6 @@ func TestLoginWithExistingContext(t *testing.T) {
 
 func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	suite := []struct {
 		urlIn      string
 		valid      bool
@@ -847,11 +840,6 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
-}
-
-// XX_CCLOUD_EMAIL is used for integration test hack
-func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
-	req.NoError(os.Setenv(pauth.CCloudEmailDeprecatedEnvVar, ""))
 }
 
 func TestIsCCloudURL_True(t *testing.T) {

@@ -142,18 +142,15 @@ func (s *CLITestSuite) TearDownSuite() {
 }
 
 func (s *CLITestSuite) TestCcloudErrors() {
-	// TODO: Add this test back when we add prompt testing for integration test
-	// Now that non-interactive login is officially supported, we ignore failures from env var and netrc login and give user another chance at login
-	//	s.T().Run("invalid user or pass", func(tt *testing.T) {
-	//		loginURL := serveErrors(tt)
-	//		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
-	//		output := runCommand(tt, testBin, env, "login --url "+loginURL, 1)
-	//		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-	//		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
-	//	})
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, "login --url "+s.TestBackend.GetCloudUrl(), 1)
+		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
+	})
 
 	s.T().Run("expired token", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
+		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
@@ -163,7 +160,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	})
 
 	s.T().Run("malformed token", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
+		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
@@ -174,7 +171,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	})
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
+		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
@@ -199,7 +196,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		}
 		loginURL := s.getLoginURL("ccloud", tt)
 		if tt.login == "default" {
-			env := []string{fmt.Sprintf("%s=fake@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", pauth.CCloudPasswordEnvVar)}
+			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
@@ -256,7 +253,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		// Executes login command if test specifies
 		loginURL := s.getLoginURL("confluent", tt)
 		if tt.login == "default" {
-			env := []string{"XX_CONFLUENT_USERNAME=fake@user.com", "XX_CONFLUENT_PASSWORD=pass1"}
+			env := []string{pauth.DeprecatedConfluentPlatformUsername + "=fake@user.com", pauth.DeprecatedConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
