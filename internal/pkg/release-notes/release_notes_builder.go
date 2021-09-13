@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	newFeaturesSectionTitle = "New Features"
-	bugFixesSectionTitle    = "Bug Fixes"
-	noChangeContentFormat   = "No changes relating to %s for this version."
-	bulletPointFormat       = "  - %s"
+	breakingChangesSectionTitle = "Breaking Changes"
+	newFeaturesSectionTitle     = "New Features"
+	bugFixesSectionTitle        = "Bug Fixes"
+	noChangeContentFormat       = "No changes relating to %s for this version."
+	bulletPointFormat           = "  - %s"
 )
 
 type ReleaseNotesBuilder interface {
@@ -35,10 +36,11 @@ func NewReleaseNotesBuilder(version string, params *ReleaseNotesBuilderParams) R
 }
 
 func (b *ReleaseNotesBuilderImpl) buildReleaseNotes(content *ReleaseNotesContent) string {
+	title := fmt.Sprintf(b.titleFormat, b.cliDisplayName, b.version)
+	breakingChangesSection := b.buildSection(breakingChangesSectionTitle, content.breakingChanges)
 	newFeaturesSection := b.buildSection(newFeaturesSectionTitle, content.newFeatures)
 	bugFixesSection := b.buildSection(bugFixesSectionTitle, content.bugFixes)
-	title := fmt.Sprintf(b.titleFormat, b.cliDisplayName, b.version)
-	return b.assembleReleaseNotes(title, newFeaturesSection, bugFixesSection)
+	return title + "\n" + b.getReleaseNotesContent(breakingChangesSection, newFeaturesSection, bugFixesSection)
 }
 
 func (b *ReleaseNotesBuilderImpl) buildSection(sectionTitle string, sectionElements []string) string {
@@ -58,20 +60,17 @@ func (b *ReleaseNotesBuilderImpl) buildBulletPoints(elements []string) string {
 	return strings.Join(bulletPointList, "\n")
 }
 
-func (b *ReleaseNotesBuilderImpl) assembleReleaseNotes(title string, newFeaturesSection string, bugFixesSection string) string {
-	content := b.getReleaseNotesContent(newFeaturesSection, bugFixesSection)
-	return title + "\n" + content
-}
+func (b *ReleaseNotesBuilderImpl) getReleaseNotesContent(sections ...string) string {
+	var fullSections []string
+	for _, section := range sections {
+		if section != "" {
+			fullSections = append(fullSections, section)
+		}
+	}
 
-func (b *ReleaseNotesBuilderImpl) getReleaseNotesContent(newFeaturesSection string, bugFixesSection string) string {
-	if newFeaturesSection == "" && bugFixesSection == "" {
+	if len(fullSections) == 0 {
 		return fmt.Sprintf(noChangeContentFormat, b.cliDisplayName)
 	}
-	if newFeaturesSection == "" {
-		return bugFixesSection
-	}
-	if bugFixesSection == "" {
-		return newFeaturesSection
-	}
-	return newFeaturesSection + "\n\n" + bugFixesSection
+
+	return strings.Join(fullSections, "\n\n")
 }

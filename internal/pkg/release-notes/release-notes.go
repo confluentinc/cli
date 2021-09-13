@@ -100,11 +100,7 @@ func buildAndWriteCCloudReleaseNotes(version string, content *ReleaseNotesConten
 	if err != nil {
 		return err
 	}
-	err = writeFile(updatedCCloudDocsFilePath, ccloudDocsPage)
-	if err != nil {
-		return err
-	}
-	return nil
+	return writeFile(updatedCCloudDocsFilePath, ccloudDocsPage)
 }
 
 func buildAndWriteConfluentReleaseNotes(version string, content *ReleaseNotesContent, docsPath string) error {
@@ -118,11 +114,7 @@ func buildAndWriteConfluentReleaseNotes(version string, content *ReleaseNotesCon
 	if err != nil {
 		return err
 	}
-	err = writeFile(updatedConflunetDocsFilePath, updatedDocsPage)
-	if err != nil {
-		return err
-	}
-	return nil
+	return writeFile(updatedConflunetDocsFilePath, updatedDocsPage)
 }
 
 func buildReleaseNotes(version string, releaseNotesBuildParams *ReleaseNotesBuilderParams, content *ReleaseNotesContent) string {

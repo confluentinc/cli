@@ -7,10 +7,10 @@ import (
 )
 
 func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
-
 	tests := []struct {
 		name                     string
 		prepFile                 string
+		wantBreakingChanges      []string
 		wantBothNewFeatures      []string
 		wantBothBugFixes         []string
 		wantCCloudNewFeatures    []string
@@ -21,6 +21,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 		{
 			name:                     "test get sections map",
 			prepFile:                 "test_files/prep1",
+			wantBreakingChanges:      []string{"both breakingchange1", "both breakingchange2"},
 			wantBothNewFeatures:      []string{"both feature1", "both feature2"},
 			wantBothBugFixes:         []string{"both bug1", "both bug2"},
 			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2"},
@@ -31,6 +32,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 		{
 			name:                     "test get sections map",
 			prepFile:                 "test_files/prep2",
+			wantBreakingChanges:      []string{"both breakingchange1", "both breakingchange2"},
 			wantBothNewFeatures:      []string{"both feature1", "both feature2"},
 			wantBothBugFixes:         []string{"both bug1", "both bug2"},
 			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2"},
@@ -44,6 +46,7 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 			prepReader := PrepFileReaderImpl{}
 			err := prepReader.ReadPrepFile(tt.prepFile)
 			require.NoError(t, err)
+			require.Equal(t, prepReader.sections[breakingChanges], tt.wantBreakingChanges)
 			require.Equal(t, prepReader.sections[bothNewFeatures], tt.wantBothNewFeatures)
 			require.Equal(t, prepReader.sections[bothBugFixes], tt.wantBothBugFixes)
 			require.Equal(t, prepReader.sections[ccloudNewFeatures], tt.wantCCloudNewFeatures)

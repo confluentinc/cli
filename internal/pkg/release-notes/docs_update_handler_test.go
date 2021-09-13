@@ -14,6 +14,10 @@ func Test_Docs_Update_Handler(t *testing.T) {
 	newReleaseNotes := `|ccloud| CLI v1.2.0 Release Notes
 =================================
 
+Breaking Changes
+------------------------
+- 1.2 breaking change
+
 New Features
 ------------------------
 - 1.2 cloud feature

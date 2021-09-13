@@ -11,7 +11,8 @@ import (
 type SectionType int
 
 const (
-	bothNewFeatures SectionType = iota
+	breakingChanges SectionType = iota
+	bothNewFeatures
 	bothBugFixes
 	ccloudNewFeatures
 	ccloudBugFixes
@@ -21,6 +22,7 @@ const (
 
 var (
 	sectionNameToSectionTypeMap = map[string]SectionType{
+		breakingChangesTitle:      breakingChanges,
 		bothNewFeaturesTitle:      bothNewFeatures,
 		bothBugFixesTitle:         bothBugFixes,
 		ccloudNewFeaturesTitle:    ccloudNewFeatures,
@@ -43,8 +45,9 @@ type PrepFileReaderImpl struct {
 }
 
 type ReleaseNotesContent struct {
-	newFeatures []string
-	bugFixes    []string
+	breakingChanges []string
+	newFeatures     []string
+	bugFixes        []string
 }
 
 func NewPrepFileReader() PrepFileReader {
@@ -81,11 +84,7 @@ func (p *PrepFileReaderImpl) extractSections() error {
 			line = p.extractSectionContent(section)
 		}
 	}
-	err := p.scanner.Err()
-	if err != nil {
-		return err
-	}
-	return nil
+	return p.scanner.Err()
 }
 
 func (p *PrepFileReaderImpl) checkForSectionName(line string) (SectionType, bool) {
@@ -120,8 +119,7 @@ func (p *PrepFileReaderImpl) extractSectionContent(section SectionType) (lastLin
 }
 
 func (p *PrepFileReaderImpl) isPlaceHolder(element string) bool {
-	return element == placeHolder ||
-		(strings.HasPrefix(element, "<") && strings.HasSuffix(element, ">"))
+	return element == placeHolder || (strings.HasPrefix(element, "<") && strings.HasSuffix(element, ">"))
 }
 
 func (p *PrepFileReaderImpl) GetCCloudReleaseNotesContent() (*ReleaseNotesContent, error) {
@@ -129,8 +127,9 @@ func (p *PrepFileReaderImpl) GetCCloudReleaseNotesContent() (*ReleaseNotesConten
 		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
 	content := &ReleaseNotesContent{
-		newFeatures: p.getSectionContentList(ccloudNewFeatures, bothNewFeatures),
-		bugFixes:    p.getSectionContentList(ccloudBugFixes, bothBugFixes),
+		breakingChanges: p.sections[breakingChanges],
+		newFeatures:     append(p.sections[ccloudNewFeatures], p.sections[bothNewFeatures]...),
+		bugFixes:        append(p.sections[ccloudBugFixes], p.sections[bothBugFixes]...),
 	}
 	return content, nil
 }
@@ -140,20 +139,9 @@ func (p *PrepFileReaderImpl) GetConfluentReleaseNotesContent() (*ReleaseNotesCon
 		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
 	content := &ReleaseNotesContent{
-		newFeatures: p.getSectionContentList(confluentNewFeatures, bothNewFeatures),
-		bugFixes:    p.getSectionContentList(confluentBugFixes, bothBugFixes),
+		breakingChanges: p.sections[breakingChanges],
+		newFeatures:     append(p.sections[confluentNewFeatures], p.sections[bothNewFeatures]...),
+		bugFixes:        append(p.sections[confluentBugFixes], p.sections[bothBugFixes]...),
 	}
 	return content, nil
-}
-
-func (p *PrepFileReaderImpl) getSectionContentList(exclusiveSection, bothSection SectionType) []string {
-	exclusiveContent := p.sections[exclusiveSection]
-	bothContent := p.sections[bothSection]
-	if len(exclusiveContent)+len(bothContent) == 0 {
-		return []string{}
-	}
-	var contentList []string
-	contentList = append(contentList, exclusiveContent...)
-	contentList = append(contentList, bothContent...)
-	return contentList
 }

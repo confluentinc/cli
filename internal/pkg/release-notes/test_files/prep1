@@ -21,6 +21,11 @@ NOTE: DO NOT EDIT THE SECTION NAMES (e.g. 'New Features for Both CLIs')
 BOTH CLIs
 -------------
 
+Breaking Changes
+- both breakingchange1
+- both breakingchange2
+
+
 New Features for Both CLIs
 - both feature1
 - both feature2
