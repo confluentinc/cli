@@ -1,7 +1,6 @@
-- name: test-topic
-  operation: READ
+- operation: READ
+  pattern_type: LITERAL
   permission: ALLOW
-  resource: TOPIC
-  service_account_id: ""
-  type: LITERAL
-  user_id: User:sa-123
+  principal: User:sa-12345
+  resource_name: test-topic
+  resource_type: TOPIC

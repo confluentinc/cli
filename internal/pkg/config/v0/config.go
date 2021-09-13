@@ -11,11 +11,10 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-const (
-	defaultConfigFileFmt = "%s/.%s/config.json"
-)
+const defaultConfigFileFmt = "%s/.confluent/config.json"
 
 var (
 	Version = semver.MustParse("0.0.0")
@@ -33,19 +32,13 @@ type Config struct {
 	CurrentContext string                 `json:"current_context" hcl:"current_context"`
 }
 
-// NewBaseConfig initializes a new Config object
 func New(params *config.Params) *Config {
-	c := &Config{}
-	baseCfg := config.NewBaseConfig(params, Version)
-	c.BaseConfig = baseCfg
-	if c.CLIName == "" {
-		// HACK: this is a workaround while we're building multiple binaries off one codebase
-		c.CLIName = "confluent"
+	return &Config{
+		BaseConfig:  config.NewBaseConfig(params, Version),
+		Platforms:   make(map[string]*Platform),
+		Credentials: make(map[string]*Credential),
+		Contexts:    make(map[string]*Context),
 	}
-	c.Platforms = map[string]*Platform{}
-	c.Credentials = map[string]*Credential{}
-	c.Contexts = map[string]*Context{}
-	return c
 }
 
 // Load reads the CLI config from disk.
@@ -100,21 +93,7 @@ func (c *Config) Validate() error {
 
 // Binary returns the display name for the CLI
 func (c *Config) Name() string {
-	name := "Confluent CLI"
-	if c.CLIName == "ccloud" {
-		name = "Confluent Cloud CLI"
-	}
-	return name
-}
-
-// APIName returns the display name of the remote API
-// (e.g., Confluent Platform or Confluent Cloud)
-func (c *Config) APIName() string {
-	name := "Confluent Platform"
-	if c.CLIName == "ccloud" {
-		name = "Confluent Cloud"
-	}
-	return name
+	return pversion.FullCLIName
 }
 
 // Context returns the current Context object.
@@ -186,7 +165,7 @@ func (c *Config) CheckHasAPIKey(clusterID string) error {
 func (c *Config) getFilename() (string, error) {
 	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
+		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
 	}
 	return c.Filename, nil
 }

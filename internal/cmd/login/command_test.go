@@ -495,11 +495,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if tt.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
-			cfg := v3.New(&config.Params{
-				CLIName:    "confluent",
-				MetricSink: nil,
-				Logger:     log.New(),
-			})
+			cfg := v3.New(&config.Params{Logger: log.New()})
 			var expectedCaCert string
 			if tt.setEnv {
 				expectedCaCert = tt.envCertPath
@@ -550,7 +546,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
-			cfg := v3.AuthenticatedConfigMockWithContextName("confluent", legacyContextName)
+			cfg := v3.AuthenticatedConfigMockWithContextName(legacyContextName)
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)
@@ -777,11 +773,7 @@ func TestValidateUrl(t *testing.T) {
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*Command, *v3.Config) {
-	cfg := v3.New(&config.Params{
-		CLIName:    cliName,
-		MetricSink: nil,
-		Logger:     nil,
-	})
+	cfg := v3.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if cliName == "confluent" {
 		mdsConfig := mds.NewConfiguration()

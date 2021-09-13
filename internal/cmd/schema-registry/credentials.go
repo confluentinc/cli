@@ -48,7 +48,7 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v0.APIKeyPair, sho
 	return auth, didPromptUser, nil
 }
 
-func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
+func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
 
 	ctx := cfg.Context()
@@ -83,6 +83,16 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 	for {
 		// Get credentials as Schema Registry BasicAuth
+		if srAPIKey != "" && srAPISecret != "" {
+			srCluster.SrCredentials = &v0.APIKeyPair{
+				Key:    srAPIKey,
+				Secret: srAPISecret,
+			}
+		} else if srAPISecret != "" {
+			utils.ErrPrintln(cmd, "No schema registry API key specified.")
+		} else if srAPIKey != "" {
+			utils.ErrPrintln(cmd, "No schema registry API key secret specified.")
+		}
 		srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, shouldPrompt)
 		if err != nil {
 			return nil, nil, err

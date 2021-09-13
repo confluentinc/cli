@@ -192,7 +192,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 
 	s.T().Run(tt.name, func(t *testing.T) {
 		if !tt.workflow {
-			resetConfiguration(t, "ccloud")
+			resetConfiguration(t)
 		}
 		loginURL := s.getLoginURL("ccloud", tt)
 		if tt.login == "default" {
@@ -247,7 +247,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 	}
 	s.T().Run(tt.name, func(t *testing.T) {
 		if !tt.workflow {
-			resetConfiguration(t, "confluent")
+			resetConfiguration(t)
 		}
 
 		// Executes login command if test specifies
@@ -356,12 +356,10 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	}
 }
 
-func resetConfiguration(t *testing.T, cliName string) {
+func resetConfiguration(t *testing.T) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v3.New(&config.Params{
-		CLIName: cliName,
-	})
+	cfg := v3.New(new(config.Params))
 	err := cfg.Save()
 	require.NoError(t, err)
 }

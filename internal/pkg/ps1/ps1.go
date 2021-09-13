@@ -139,7 +139,6 @@ var (
 			}
 		}
 		return map[string]interface{}{
-			"CLIName":          cfg.CLIName,
 			"ContextName":      cfg.CurrentContext,
 			"AccountId":        accountID,
 			"AccountName":      accountName,

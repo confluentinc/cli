@@ -25,7 +25,7 @@ func (s *CLITestSuite) TestConfig() {
 		{args: "config context current --username", login: "default", fixture: "config/14.golden"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.workflow = true
@@ -47,7 +47,7 @@ func (s *CLITestSuite) TestConfig_CloudAndOnPrem() {
 		fmt.Sprintf("%s=%s", pauth.ConfluentCloudPassword, "password"),
 	}
 
-	resetConfiguration(s.T(), "confluent")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		out := runCommand(s.T(), testBin, env, tt.args, 0)

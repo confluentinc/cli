@@ -5,7 +5,7 @@ func (s *CLITestSuite) TestCCloudAuditLogDescribe() {
 		{args: "audit-log describe", login: "default", fixture: "auditlog/describe.golden"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.workflow = true

@@ -2,6 +2,8 @@ package test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/confluentinc/bincover"
@@ -9,6 +11,8 @@ import (
 
 func (s *CLITestSuite) TestKafka() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	createLinkConfigFile := getCreateLinkConfigFile()
+	defer os.Remove(createLinkConfigFile)
 	tests := []CLITest{
 		{args: "kafka cluster --help", fixture: "kafka/kafka-cluster-help.golden"},
 		{args: "environment use a-595", fixture: "kafka/0.golden"},
@@ -115,6 +119,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		// Cluster linking
+		{args: "kafka link create my_link --source-cluster-id lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/cluster-linking/create-link.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/cluster-linking/list-link-plain.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/cluster-linking/list-link-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/cluster-linking/list-link-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
@@ -136,13 +141,19 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/cluster-linking/promote-mirror-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.login = "default"
 		tt.workflow = true
 		s.runCcloudTest(tt)
 	}
+}
+
+func getCreateLinkConfigFile() string {
+	file, _ := ioutil.TempFile(os.TempDir(), "test")
+	_, _ = file.Write([]byte("key=val\n key2=val2 \n key3=val password=pass"))
+	return file.Name()
 }
 
 //func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {

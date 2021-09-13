@@ -87,12 +87,12 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 
 		// create api-key for a service account
-		{args: "api-key create --resource lkc-cool1 --service-account 12345", fixture: "apikey/24.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/24.golden"},
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 		{args: "api-key list", fixture: "apikey/25.golden"},
-		{args: "api-key list --service-account 12345", fixture: "apikey/26.golden"},
+		{args: "api-key list --service-account sa-12345", fixture: "apikey/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey/27.golden"},
-		{args: "api-key list --resource lkc-cool1 --service-account 12345", fixture: "apikey/50.golden"},
+		{args: "api-key list --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/50.golden"},
 		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/51.golden"},
 		{args: "api-key list --service-account sa-12345", fixture: "apikey/52.golden"},
 		{name: "error listing api keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "apikey/53.golden"},
@@ -107,12 +107,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "apikey/16.golden"},
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "apikey/49.golden",
 			wantFunc: func(t *testing.T) {
-				logger := log.New()
-				cfg := v3.New(&config.Params{
-					CLIName:    "ccloud",
-					MetricSink: nil,
-					Logger:     logger,
-				})
+				cfg := v3.New(&config.Params{Logger: log.New()})
 				cfg, err := load.LoadAndMigrate(cfg)
 				require.NoError(t, err)
 				ctx := cfg.Context()
@@ -135,7 +130,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --resource lkc-unknown", fixture: "apikey/resource-unknown-error.golden", wantErrCode: 1},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.workflow = true
