@@ -285,6 +285,7 @@
  	done
  
 -.PHONY: coverage-unit
+-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error. Will renable in the future when this issue is resolved.
 -coverage-unit:
 -ifdef CI
 -	@# Run unit tests with coverage.

@@ -213,36 +213,3 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	}
 	return err
 }
-
-/*
-	SARAMA ERROR CATCHING
-*/
-
-/*
-kafka server: Request was for a topic or partition that does not exist on this broker.
-*/
-func CatchTopicNotExistError(err error, topicName string, clusterId string) (bool, error) {
-	if err == nil {
-		return false, nil
-	}
-	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
-		errorMsg := fmt.Sprintf(TopicDoesNotExistErrorMsg, topicName)
-		suggestionsMsg := fmt.Sprintf(TopicDoesNotExistSuggestions, clusterId, clusterId)
-		return true, NewErrorWithSuggestions(errorMsg, suggestionsMsg)
-	}
-	return false, err
-}
-
-/*
-Error: "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
-*/
-func CatchClusterUnreachableError(err error, clusterId string, apiKey string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)") {
-		suggestionsMsg := fmt.Sprintf(UnableToConnectToKafkaSuggestions, clusterId, apiKey, apiKey, clusterId)
-		return NewErrorWithSuggestions(UnableToConnectToKafkaErrorMsg, suggestionsMsg)
-	}
-	return err
-}
