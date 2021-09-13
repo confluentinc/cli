@@ -87,7 +87,7 @@ func (brokerCmd *brokerCommand) init() {
 		Use:   "update [broker-id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.update),
-		Short: "Update Kafka an broker or cluster-wide broker configs.",
+		Short: "Update per-broker or cluster-wide Kafka broker configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
