@@ -1,6 +1,6 @@
---- cli/Makefile	2021-08-26 00:10:41.000000000 -0700
-+++ debian/Makefile	2021-08-26 00:10:35.000000000 -0700
-@@ -1,265 +1,130 @@
+--- cli/Makefile	2021-09-10 10:38:36.000000000 -0700
++++ debian/Makefile	2021-08-26 16:04:24.000000000 -0700
+@@ -1,259 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -40,7 +40,7 @@
 -	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
 -	export GOPRIVATE=github.com/confluentinc && \
 -	go get github.com/goreleaser/goreleaser@v0.162.1 && \
--	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
+-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
 -	go get github.com/mitchellh/golicense@v0.2.0
 -
 -ifeq ($(shell uname),Darwin)
@@ -186,48 +186,69 @@
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
 -	true
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
++
++	chown -R root:root $(DESTDIR)$(PREFIX)
++
++clean:
++	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
++	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
++	rm -rf RPM_BUILDING
++
++distclean: clean
++ifneq ($(PACKAGE_TYPE),deb)
++	git reset --hard HEAD
++	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
  endif
  
--cmd/lint/en_US.aff:
--	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
-+all: install
- 
--cmd/lint/en_US.dic:
--	@curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
-+archive: install
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
- 
--.PHONY: lint-cli
--lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
--
--.PHONY: lint-go
--lint-go:
--	@golangci-lint run --timeout=10m
--
 -.PHONY: lint
 -lint:
 -ifeq ($(shell uname),Darwin)
 -	true
 -else ifneq (,$(findstring NT,$(shell uname)))
 -	true
--else
--	make lint-go && \
--	make lint-cli && \
--	make lint-installers
-+apply-patches: $(wildcard debian/patches/*)
-+ifeq ($(APPLY_PATCHES),yes)
-+	git reset --hard HEAD
-+	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
++RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
++
++# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
++# the version since RPM versions don't support non-numeric
++# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
++# Version=0.8.2 Release=0.X.beta
++# where X is the RPM release # of 0.8.2-beta (the prefix 0. forces this to be
++# considered earlier than any 0.8.2 final releases since those will start with
++# Version=0.8.2 Release=1)
++RPM_RELEASE_POSTFIX=$(subst -,,$(subst $(RPM_VERSION),,$(VERSION)))
++ifneq ($(RPM_RELEASE_POSTFIX),)
++	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
++	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
+ else
+-	@echo "Linting..."
+-	@make lint-go
+-	@make lint-cli
+-	@make lint-installers
++	RPM_RELEASE_ID=$(REVISION)
  endif
  
+-.PHONY: lint-go
+-lint-go:
+-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+-	@echo "✅  golangci-lint"
+-
+-.PHONY: lint-cli
+-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+-	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-	@echo "✅  cmd/lint/main.go"
+-
+-cmd/lint/en_US.aff:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+-
+-cmd/lint/en_US.dic:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+-
 -.PHONY: lint-installers
--## Lints the CLI installation scripts
 -lint-installers:
 -	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
+-	@echo "✅  installation script linter"
 -
 -.PHONY: lint-licenses
 -## Scan and validate third-party dependency licenses
@@ -322,7 +343,6 @@
 -	@# Run integration tests.
 -	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
 -      endif
--
 -
 -.PHONY: test-prep
 -test-prep: lint
