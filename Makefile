@@ -36,7 +36,7 @@ generate:
 
 .PHONY: deps
 deps:
-	go get github.com/goreleaser/goreleaser@v0.164.0 && \
+	go get github.com/goreleaser/goreleaser@v0.162.1 && \
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/mitchellh/golicense@v0.2.0
 
