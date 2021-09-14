@@ -18,3 +18,6 @@ builds:
       - windows
     goarch:
       - amd64
+
+release:
+  disable: true
