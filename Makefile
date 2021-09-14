@@ -34,6 +34,12 @@ clean:
 generate:
 	@go generate ./...
 
+.PHONY: jenkins-deps
+jenkins-deps:
+	go get github.com/goreleaser/goreleaser@v0.164.0 && \
+	# Jenkins errs when downloading golangci-lint, so we omit it here.
+	go get github.com/mitchellh/golicense@v0.2.0
+
 .PHONY: deps
 deps:
 	go get github.com/goreleaser/goreleaser@v0.164.0 && \
