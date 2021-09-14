@@ -62,6 +62,7 @@ require (
 	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-tty v0.0.3 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4

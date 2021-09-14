@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -103,6 +104,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
+	latestMajorVersion = "2.0.0"
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
 		utils.Println(cmd, errors.UpToDateMsg)
@@ -166,15 +168,14 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		}
 
 		if other != nil {
-			current = mergeConfigs(current, other)
+			current.MergeWith(other)
 		}
-
-		current.CLIName = "confluent"
 
 		if err := backupConfig("confluent"); err != nil {
 			return err
 		}
 
+		current.CLIName = "confluent"
 		if err := current.Save(); err != nil {
 			return err
 		}
@@ -231,36 +232,12 @@ func getConfig(cliName string) (*v3.Config, error) {
 		return nil, nil
 	}
 
-	cfg := new(v3.Config)
-	cfg.Filename = path
+	cfg := &v3.Config{BaseConfig: &config.BaseConfig{
+		Params:   &config.Params{Logger: log.New()},
+		Filename: path,
+	}}
 	err = cfg.Load()
 	return cfg, err
-}
-
-// mergeConfigs merges the current CLI config with another config, if it exists.
-func mergeConfigs(current, other *v3.Config) *v3.Config {
-	current.DisableUpdates = current.DisableUpdates || other.DisableUpdates
-	current.DisableUpdateCheck = current.DisableUpdateCheck || other.DisableUpdateCheck
-	current.NoBrowser = current.NoBrowser || other.NoBrowser
-
-	if current.CurrentContext == "" {
-		current.CurrentContext = other.CurrentContext
-	}
-
-	for name, ctx := range other.Contexts {
-		current.Contexts[name] = ctx
-	}
-	for name, platform := range other.Platforms {
-		current.Platforms[name] = platform
-	}
-	for name, credential := range other.Credentials {
-		current.Credentials[name] = credential
-	}
-	for name, state := range current.ContextStates {
-		current.ContextStates[name] = state
-	}
-
-	return current
 }
 
 func backupConfig(cliName string) error {

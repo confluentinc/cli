@@ -1077,3 +1077,25 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 		require.Empty(t, kafkaClusterContext.GetActiveKafkaClusterId())
 	}
 }
+
+func TestConfig_MergeWith(t *testing.T) {
+	tests := []struct {
+		current *Config
+		other   *Config
+	}{
+		{new(Config), new(Config)},
+		{&Config{DisableUpdates: false}, &Config{DisableUpdates: true}},
+		{&Config{DisableUpdateCheck: false}, &Config{DisableUpdateCheck: true}},
+		{&Config{NoBrowser: false}, &Config{NoBrowser: true}},
+		{&Config{CurrentContext: ""}, &Config{CurrentContext: "context"}},
+		{&Config{Contexts: nil}, &Config{Contexts: map[string]*Context{"context": new(Context)}}},
+		{&Config{Platforms: nil}, &Config{Platforms: map[string]*v2.Platform{"platform": new(v2.Platform)}}},
+		{&Config{Credentials: nil}, &Config{Credentials: map[string]*v2.Credential{"credential": new(v2.Credential)}}},
+		{&Config{ContextStates: nil}, &Config{ContextStates: map[string]*v2.ContextState{"context-state": new(v2.ContextState)}}},
+	}
+
+	for _, test := range tests {
+		test.current.MergeWith(test.other)
+		require.Equal(t, test.other, test.current)
+	}
+}
