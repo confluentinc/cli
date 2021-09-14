@@ -104,7 +104,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg, c.cliName)
 	}
-	latestMajorVersion = "2.0.0"
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
 		utils.Println(cmd, errors.UpToDateMsg)
