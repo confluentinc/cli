@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -91,6 +92,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	reassignmentsCmd.Flags().String("topic", "", "Topic name to search by.")
 	reassignmentsCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	reassignmentsCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	reassignmentsCmd.Flags().SortFlags = false
 	partitionCmd.AddCommand(reassignmentsCmd)
 }
@@ -146,6 +148,8 @@ func parseLeaderId(leader kafkarestv3.Relationship) int32 {
 	return int32(leaderId)
 }
 
+type replicaData
+
 func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string) error {
 	partitionIdStr := args[0]
 	i, err := strconv.ParseInt(partitionIdStr, 10, 32)
@@ -173,6 +177,23 @@ func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
+	s := struct {
+		partitionData
+		replicaData
+	}
+	//replicasStatusListResp, resp, err := restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
+	//if err != nil {
+	//	fmt.Println("1")
+	//	return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	//}
+	replicasListResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
+	if err != nil {
+		fmt.Println("2")
+		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	}
+	//output.StructuredOutputForCommand(cmd, format, replicasStatusListResp)
+	output.StructuredOutputForCommand(cmd, format, replicasListResp)
+
 	// TODO human readable output
 	return output.StructuredOutputForCommand(cmd, format, partitionGetResp)
 }
@@ -200,7 +221,7 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 		}
 		partitionId := int32(i)
 		if topic == "" {
-			return errors.New("must specify parition id and topic together")
+			return errors.New("must specify partition id and topic together")
 		}
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)
@@ -210,11 +231,12 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 	} else {
 		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
 	}
+	fmt.Println(reassignmentListResp)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "BrokerId", "Host", "Port"}, []string{"Cluster ID", "Broker ID", "Host", "Port"}, []string{"cluster_id", "broker_id", "host", "port"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "TopicName", "PartitionId", "AddingReplicas", "RemovingReplicas"}, []string{"Cluster ID", "Topic Name", "Partition ID", "Adding Replicas", "Removing Replicas"}, []string{"cluster_id", "topic_name", "partition_id", "adding_replicas", "removing_replicas"})
 	if err != nil {
 		return err
 	}
