@@ -46,7 +46,7 @@ def job = {
                             mkdir -p $GOROOT/bin
                             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                             echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                            make deps
+                            make deps || exit 1
                             make build
                             cd dist/confluent
                             targz=$(ls *.tar.gz| head -1)
