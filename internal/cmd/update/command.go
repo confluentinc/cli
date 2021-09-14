@@ -3,14 +3,17 @@ package update
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-version"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/update"
@@ -116,14 +119,13 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	updateVersion := latestMinorVersion
-	if major && latestMajorVersion != "" {
-		updateVersion = latestMajorVersion
-	}
+	isMajorVersionUpdate := major && latestMajorVersion != ""
 
 	updateName := c.cliName
-	if strings.HasPrefix(updateVersion, "2.") {
+	updateVersion := latestMinorVersion
+	if isMajorVersionUpdate {
 		updateName = "confluent"
+		updateVersion = latestMajorVersion
 	}
 
 	releaseNotes := c.getReleaseNotes(updateName, updateVersion)
@@ -145,6 +147,37 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	if err := c.client.UpdateBinary(updateName, updateVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg, c.cliName)
+	}
+
+	if isMajorVersionUpdate {
+		var current, other *v3.Config
+
+		for _, cliName := range []string{"confluent", "ccloud"} {
+			cfg, err := getConfig(cliName)
+			if err != nil {
+				return err
+			}
+
+			if cliName == c.cliName {
+				current = cfg
+			} else {
+				other = cfg
+			}
+		}
+
+		if other != nil {
+			current = mergeConfigs(current, other)
+		}
+
+		current.CLIName = "confluent"
+
+		if err := backupConfig("confluent"); err != nil {
+			return err
+		}
+
+		if err := current.Save(); err != nil {
+			return err
+		}
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, updateName)
@@ -186,4 +219,64 @@ func sameVersionCheck(v1 string, v2 string) (bool, error) {
 		return false, err
 	}
 	return version1.Compare(version2) == 0, nil
+}
+
+func getConfig(cliName string) (*v3.Config, error) {
+	path, err := getConfigPath(cliName)
+	if err != nil {
+		return nil, err
+	}
+
+	if !utils.DoesPathExist(path) {
+		return nil, nil
+	}
+
+	cfg := new(v3.Config)
+	cfg.Filename = path
+	err = cfg.Load()
+	return cfg, err
+}
+
+// mergeConfigs merges the current CLI config with another config, if it exists.
+func mergeConfigs(current, other *v3.Config) *v3.Config {
+	current.DisableUpdates = current.DisableUpdates || other.DisableUpdates
+	current.DisableUpdateCheck = current.DisableUpdateCheck || other.DisableUpdateCheck
+	current.NoBrowser = current.NoBrowser || other.NoBrowser
+
+	if current.CurrentContext == "" {
+		current.CurrentContext = other.CurrentContext
+	}
+
+	for name, ctx := range other.Contexts {
+		current.Contexts[name] = ctx
+	}
+	for name, platform := range other.Platforms {
+		current.Platforms[name] = platform
+	}
+	for name, credential := range other.Credentials {
+		current.Credentials[name] = credential
+	}
+	for name, state := range current.ContextStates {
+		current.ContextStates[name] = state
+	}
+
+	return current
+}
+
+func backupConfig(cliName string) error {
+	path, err := getConfigPath(cliName)
+	if err != nil {
+		return err
+	}
+
+	return os.Rename(path, path+".old")
+}
+
+func getConfigPath(cliName string) (string, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(home, "."+cliName, "config.json"), nil
 }
