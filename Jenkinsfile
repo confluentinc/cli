@@ -49,12 +49,12 @@ def job = {
                             make jenkins-deps || exit 1
                             make build
                             cd dist/confluent
-                            nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
-                            tar -czf $nn confluent_linux_amd64/confluent
-                            nnn=${nn%.tar.gz}
-                            mkdir $nnn ; tar -C $(pwd)/$nnn -xzvf $nn ; rm $nn ; tar -cvzf ${nn} ${nnn}
-                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --body ${nn}
-                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --acl public-read
+                            dir=confluent_SNAPSHOT-${HASH}_linux_amd64
+                            mv confluent_linux_amd64 $dir
+                            tarball=$dir.tar.gz
+                            tar -czf $tarball $dir
+                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
+                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
                         '''
                     }
                 }
