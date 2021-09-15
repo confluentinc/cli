@@ -191,6 +191,71 @@ var v2RoutesAndReplies = map[string]string{
 				}
 		  	}
 		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-55eee": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=a-595",
+						"cloud-cluster=lkc-1111aaa"
+					],
+					"clusters": {
+						"kafka-cluster": "lkc-1111aaa"
+					}
+				},
+				"rolebindings": {
+					"User:u-55eee": {
+						"ResourceOwner": [
+							{ "resourceType": "Topic", "name": "clicks-", "patternType": "PREFIX" },
+							{ "resourceType": "Topic", "name": "payroll", "patternType": "LITERAL" },
+							{ "resourceType": "Group", "name": "readers", "patternType": "LITERAL" }
+						]
+					}
+				}
+		  	}
+		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-66fff": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=a-595",
+						"cloud-cluster=lkc-1111aaa"
+					],
+					"clusters": {
+						"ksql-cluster": "lksqlc-2222bbb"
+					}
+				},
+				"rolebindings": {
+					"User:u-66fff": {
+						"ResourceOwner": [
+							{ "resourceType": "Cluster", "name": "lksqlc-2222bbb", "patternType": "LITERAL" }
+						]
+					}
+				}
+		  	}
+		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-77ggg": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=1234",
+						"environment=a-595",
+						"cloud-cluster=lkc-1111aaa"
+					],
+					"clusters": {
+						"schema-registry-cluster": "lsrc-3333ccc"
+					}
+				},
+				"rolebindings": {
+					"User:u-66fff": {
+						"ResourceOwner": [
+							{ "resourceType": "Subject", "name": "clicks", "patternType": "LITERAL" }
+						]
+					}
+				}
+		  	}
+		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
 			"User:u-11aaa"
 		]`,
