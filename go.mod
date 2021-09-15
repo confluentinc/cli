@@ -51,18 +51,18 @@ require (
 	github.com/goreleaser/goreleaser v0.164.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
-	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-version v1.2.1
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.12
 	github.com/jhump/protoreflect v1.7.0
-	github.com/jonboulle/clockwork v0.2.0
+	github.com/jonboulle/clockwork v0.1.0
 	github.com/linkedin/goavro/v2 v2.9.8
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.2.0
-	github.com/olekukonko/tablewriter v0.0.5
+	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
