@@ -1,4 +1,4 @@
---- cli/Makefile	2021-09-15 09:42:34.000000000 -0700
+--- cli/Makefile	2021-09-15 09:46:32.000000000 -0700
 +++ debian/Makefile	2021-08-26 16:04:24.000000000 -0700
 @@ -1,207 +1,130 @@
 -SHELL           := /bin/bash
@@ -59,7 +59,7 @@
 -.PHONY: deps
 -deps:
 -	go get github.com/goreleaser/goreleaser@v0.164.0 && \
--	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
+-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 -	go get github.com/mitchellh/golicense@v0.2.0
 -
 -.PHONY: jenkins-deps
