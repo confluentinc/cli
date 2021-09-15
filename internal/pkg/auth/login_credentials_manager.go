@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
@@ -87,10 +88,10 @@ func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Pro
 
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	envVars := environmentVariables{
-		username:           CCloudEmailEnvVar,
-		password:           CCloudPasswordEnvVar,
-		deprecatedUsername: CCloudEmailDeprecatedEnvVar,
-		deprecatedPassword: CCloudPasswordDeprecatedEnvVar,
+		username:           ConfluentCloudEmail,
+		password:           ConfluentCloudPassword,
+		deprecatedUsername: DeprecatedConfluentCloudEmail,
+		deprecatedPassword: DeprecatedConfluentCloudPassword,
 	}
 	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
 }
@@ -98,17 +99,27 @@ func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(cmd *cobra.C
 func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Command, envVars environmentVariables) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		email, password := h.getEnvVarCredentials(cmd, envVars.username, envVars.password)
+
 		if h.isSSOUser(email) {
-			h.logger.Debugf("CCLOUD_EMAIL=%s belongs to an SSO user.", email)
+			h.logger.Debugf("%s=%s belongs to an SSO user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
-		if len(email) == 0 {
+
+		if email == "" {
 			email, password = h.getEnvVarCredentials(cmd, envVars.deprecatedUsername, envVars.deprecatedPassword)
+			if email != "" {
+				_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
+			}
+			if password != "" {
+				_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
+			}
 		}
-		if len(password) == 0 {
+
+		if password == "" {
 			h.logger.Debug("Did not find full credential set from environment variables")
 			return nil, nil
 		}
+
 		return &Credentials{Username: email, Password: password}, nil
 	}
 }
@@ -130,10 +141,10 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(cmd *cobra.Command, u
 
 func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	envVars := environmentVariables{
-		username:           ConfluentUsernameEnvVar,
-		password:           ConfluentPasswordEnvVar,
-		deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
-		deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+		username:           ConfluentPlatformUsername,
+		password:           ConfluentPlatformPassword,
+		deprecatedUsername: DeprecatedConfluentPlatformUsername,
+		deprecatedPassword: DeprecatedConfluentPlatformPassword,
 	}
 	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
 }
@@ -187,13 +198,6 @@ func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromPrompt(cmd *cobra.
 }
 
 func (h *LoginCredentialsManagerImpl) promptForUser(cmd *cobra.Command, userField string) string {
-	// HACK: SSO integration test extracts email from env var
-	// TODO: remove this hack once we implement prompting for integration test
-	if testEmail := os.Getenv(CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
-		h.logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, CCloudEmailDeprecatedEnvVar)
-		return testEmail
-	}
-
 	f := form.New(form.Field{ID: userField, Prompt: userField})
 	if err := f.Prompt(cmd, h.prompt); err != nil {
 		return ""
@@ -236,25 +240,25 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email string) bool {
 // URL and ca-cert-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		url := os.Getenv(ConfluentURLEnvVar)
+		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
 		if url == "" {
 			return nil, errors.New(errors.NoURLEnvVarErrorMsg)
 		}
+
 		envVars := environmentVariables{
-			username:           ConfluentUsernameEnvVar,
-			password:           ConfluentPasswordEnvVar,
-			deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
-			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+			username:           ConfluentPlatformUsername,
+			password:           ConfluentPlatformPassword,
+			deprecatedUsername: DeprecatedConfluentPlatformUsername,
+			deprecatedPassword: DeprecatedConfluentPlatformPassword,
 		}
-		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
-		if err != nil {
-			return nil, err
-		}
+
+		creds, _ := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
 		if creds == nil {
 			return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
-		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCACertPathEnvVar)
+		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCACertPath, DeprecatedConfluentPlatformCACertPath)
+
 		return creds, nil
 	}
 }

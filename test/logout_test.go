@@ -67,9 +67,9 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
 		if tt.isCloud {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)
@@ -130,9 +130,9 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
 		if tt.isCloud {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)

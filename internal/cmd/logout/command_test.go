@@ -191,7 +191,6 @@ func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string)
 	req.Empty(state.Auth)
 }
 
-// XX_CCLOUD_EMAIL is used for integration test hack
 func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
-	req.NoError(os.Setenv(pauth.CCloudEmailDeprecatedEnvVar, ""))
+	req.NoError(os.Unsetenv(pauth.DeprecatedConfluentCloudEmail))
 }
