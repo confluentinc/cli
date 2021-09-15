@@ -252,8 +252,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			return err
 		}
 
-		r.warnIfCCloud(cmd)
-		r.warnIfConfluentLocal(cmd)
+		r.printWarnings(cmd)
 
 		if r.Config != nil {
 			ctx := command.Config.Context()
@@ -889,15 +888,40 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 	return strings.Contains(cmd.CommandPath(), "update")
 }
 
-func (r *PreRun) warnIfCCloud(cmd *cobra.Command) {
-	if r.CLIName == "ccloud" {
-		utils.ErrPrintln(cmd, errors.CCloudDeprecationMsg)
-	}
-}
+func (r *PreRun) printWarnings(cmd *cobra.Command) {
+	fmtBreakingChange := "In the next major version update, %s\n"
+	fmtRename := fmt.Sprintf(fmtBreakingChange, "`%s` has been renamed to `%s`.")
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
+	for _, warning := range []struct {
+		prefix string
+		text   string
+	}{
+		// general warnings
+		{prefix: "confluent local", text: "The local commands are intended for a single-node development environment only,\nNOT for production usage. Documentation: https://docs.confluent.io/confluent-cli/current/command-reference/local/index.html\n"},
+
+		// deprecation warnings
+		{prefix: "ccloud", text: "The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.\nFor more details: https://docs.confluent.io/ccloud-cli/current/index.html\n"},
+		{prefix: "ccloud api-key list", text: fmt.Sprintf(fmtBreakingChange, "the `--service-account` flag no longer accepts user IDs.")},
+		{prefix: "ccloud config context get", text: fmt.Sprintf(fmtRename, "ccloud config context get", "confluent context describe")},
+		{prefix: "ccloud config context set", text: fmt.Sprintf(fmtRename, "ccloud config context set", "confluent context update")},
+		{prefix: "ccloud config context", text: fmt.Sprintf(fmtRename, "ccloud config context", "confluent context")},
+		{prefix: "ccloud connector", text: fmt.Sprintf(fmtRename, "ccloud connector", "confluent connect")},
+		{prefix: "ccloud connector-catalog", text: fmt.Sprintf(fmtRename, "ccloud connector-catalog", "confluent connect plugin")},
+		{prefix: "ccloud iam role", text: fmt.Sprintf(fmtRename, "ccloud iam role", "confluent iam rbac")},
+		{prefix: "ccloud iam rolebinding", text: fmt.Sprintf(fmtRename, "ccloud iam rolebinding", "confluent iam rbac")},
+		{prefix: "ccloud init", text: fmt.Sprintf(fmtRename, "ccloud init", "confluent context create")},
+		{prefix: "ccloud kafka acl", text: fmt.Sprintf(fmtBreakingChange, "`ApiEndpoint` has been renamed to `KAPI` and will only be shown if the `--all` flag is used.")},
+		{prefix: "ccloud kafka topic describe", text: fmt.Sprintf(fmtBreakingChange, "the upper table has been removed.")},
+		{prefix: "ccloud ksql app create", text: fmt.Sprintf(fmtBreakingChange, "`ccloud ksql app create` requires the `--api-key` and `--api-secret` flags.")},
+		{prefix: "confluent config context", text: fmt.Sprintf(fmtRename, "confluent config context", "confluent context")},
+		{prefix: "confluent iam acl", text: fmt.Sprintf(fmtBreakingChange, "`resource` has been renamed to `resource-type` and `parameter` has been renamed to `parameter-type`.")},
+		{prefix: "confluent iam role", text: fmt.Sprintf(fmtRename, "confluent iam role", "confluent iam rbac")},
+		{prefix: "confluent iam rolebinding", text: fmt.Sprintf(fmtRename, "confluent iam rolebinding", "confluent iam rbac")},
+		{prefix: "confluent secret", text: fmt.Sprintf(fmtBreakingChange, "this command requires login.")},
+	} {
+		if strings.HasPrefix(cmd.CommandPath(), warning.prefix+" ") || cmd.CommandPath() == warning.prefix {
+			utils.ErrPrintln(cmd, warning.text)
+		}
 	}
 }
 
