@@ -91,6 +91,8 @@ const (
 	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
 	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
 	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
+	UnAuthorizedErrorMsg            = "user is unauthorized to perform this action."
+	UnAuthorizedSuggestions         = " User does not have sufficient privilege to perform this action."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
