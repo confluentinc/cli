@@ -31,10 +31,10 @@ func catchMDSErrors(err error) error {
 	case mds.GenericOpenAPIError:
 		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
-		error := Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
-		if strings.Contains(error.Error(), "Forbidden Access") {
-			return NewErrorWithSuggestions(UnAuthorizedErrorMsg, UnAuthorizedSuggestions)
+		if strings.Contains(err.Error(), "Forbidden Access") {
+			return NewErrorWithSuggestions(UnauthorizedErrorMsg, UnauthorizedSuggestions)
 		}
+		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	}
 	return err
 }
