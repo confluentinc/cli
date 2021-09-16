@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -22,8 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -78,7 +77,7 @@ var (
 
 type APITestSuite struct {
 	suite.Suite
-	conf             *v3.Config
+	conf             *v1.Config
 	apiMock          *ccsdkmock.APIKey
 	keystore         *mock.KeyStore
 	kafkaCluster     *schedv1.KafkaCluster
@@ -95,14 +94,14 @@ type APITestSuite struct {
 
 //Require
 func (suite *APITestSuite) SetupTest() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
-	srCluster.SrCredentials = &v0.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
+	srCluster.SrCredentials = &v1.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	// Set up audit logs
-	ctx.State.Auth.Organization.AuditLog = &v1.AuditLog{
+	ctx.State.Auth.Organization.AuditLog = &orgv1.AuditLog{
 		ClusterId:        cluster.ID,
 		AccountId:        "env-zy987",
 		ServiceAccountId: auditLogServiceAccountId,
@@ -180,13 +179,13 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.userMock = &ccsdkmock.User{
-		DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
-			return &v1.User{
+		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
+			return &orgv1.User{
 				Email: "csreesangkom@confluent.io",
 			}, nil
 		},
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
-			return []*v1.User{
+		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
+			return []*orgv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
@@ -194,8 +193,8 @@ func (suite *APITestSuite) SetupTest() {
 				},
 			}, nil
 		},
-		ListFunc: func(_ context.Context) ([]*v1.User, error) {
-			return []*v1.User{
+		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
+			return []*orgv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,

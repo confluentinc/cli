@@ -8,8 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -21,7 +20,7 @@ var (
 )
 
 func TestHelp_NoContext(t *testing.T) {
-	cfg := &v3.Config{BaseConfig: mockBaseConfig}
+	cfg := &v1.Config{BaseConfig: mockBaseConfig}
 
 	out, err := runWithConfig(cfg)
 	require.NoError(t, err)
@@ -39,9 +38,9 @@ func TestHelp_NoContext(t *testing.T) {
 }
 
 func TestHelp_Cloud(t *testing.T) {
-	cfg := &v3.Config{
+	cfg := &v1.Config{
 		BaseConfig:     mockBaseConfig,
-		Contexts:       map[string]*v3.Context{"cloud": {PlatformName: "confluent.cloud"}},
+		Contexts:       map[string]*v1.Context{"cloud": {PlatformName: "confluent.cloud"}},
 		CurrentContext: "cloud",
 	}
 
@@ -60,12 +59,12 @@ func TestHelp_Cloud(t *testing.T) {
 }
 
 func TestHelp_CloudWithAPIKey(t *testing.T) {
-	cfg := &v3.Config{
+	cfg := &v1.Config{
 		BaseConfig: mockBaseConfig,
-		Contexts: map[string]*v3.Context{
+		Contexts: map[string]*v1.Context{
 			"cloud-with-api-key": {
 				PlatformName: "confluent.cloud",
-				Credential:   &v2.Credential{CredentialType: v2.APIKey},
+				Credential:   &v1.Credential{CredentialType: v1.APIKey},
 			},
 		},
 		CurrentContext: "cloud-with-api-key",
@@ -85,9 +84,9 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 }
 
 func TestHelp_OnPrem(t *testing.T) {
-	cfg := &v3.Config{
+	cfg := &v1.Config{
 		BaseConfig:     mockBaseConfig,
-		Contexts:       map[string]*v3.Context{"on-prem": {PlatformName: "https://example.com"}},
+		Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
 		CurrentContext: "on-prem",
 	}
 
@@ -107,7 +106,7 @@ func TestHelp_OnPrem(t *testing.T) {
 	}
 }
 
-func runWithConfig(cfg *v3.Config) (string, error) {
+func runWithConfig(cfg *v1.Config) (string, error) {
 	cli := NewConfluentCommand(cfg, true, mockVersion)
 	return pcmd.ExecuteCommand(cli.Command, "help")
 }

@@ -20,7 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -72,7 +72,7 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf            *v3.Config
+	conf            *v1.Config
 	kafkaCluster    *schedv1.KafkaCluster
 	ksqlCluster     *schedv1.KSQLCluster
 	serviceAcct     *orgv1.User
@@ -84,7 +84,7 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:   "lkc-123",
 		Name: "kafka",

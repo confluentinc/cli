@@ -15,7 +15,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -120,7 +119,7 @@ func buildMockClient() *ccloud.Client {
 }
 
 func getBaseContext() *pcmd.DynamicContext {
-	config := v3.AuthenticatedCloudConfigMock()
+	config := v1.AuthenticatedCloudConfigMock()
 	context := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
@@ -129,7 +128,7 @@ func getBaseContext() *pcmd.DynamicContext {
 }
 
 func getClusterFlagContext() *pcmd.DynamicContext {
-	config := v3.AuthenticatedCloudConfigMock()
+	config := v1.AuthenticatedCloudConfigMock()
 	clusterFlagContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
@@ -143,7 +142,7 @@ func getClusterFlagContext() *pcmd.DynamicContext {
 }
 
 func getEnvFlagContext() *pcmd.DynamicContext {
-	config := v3.AuthenticatedCloudConfigMock()
+	config := v1.AuthenticatedCloudConfigMock()
 	envFlagContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
@@ -153,14 +152,14 @@ func getEnvFlagContext() *pcmd.DynamicContext {
 }
 
 func getEnvAndClusterFlagContext() *pcmd.DynamicContext {
-	config := v3.AuthenticatedCloudConfigMock()
+	config := v1.AuthenticatedCloudConfigMock()
 	envAndClusterFlagContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
 	}, pmock.NewClientMock())
 
 	envAndClusterFlagContext.State.Auth.Accounts = append(envAndClusterFlagContext.State.Auth.Accounts, &orgv1.Account{Name: flagEnvironment, Id: flagEnvironment})
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v3.KafkaEnvContext{
+	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v1.KafkaEnvContext{
 		ActiveKafkaCluster:  "",
 		KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{},
 	}

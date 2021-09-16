@@ -1,12 +1,9 @@
-package v3
+package v1
 
 import (
 	"fmt"
 	"os"
 
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -17,25 +14,25 @@ type KafkaClusterContext struct {
 	// KafkaClusterConfigs store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	// Mapped by cluster id.
-	KafkaClusterConfigs map[string]*v1.KafkaClusterConfig `json:"kafka_cluster_configs,omitempty"`
-	KafkaEnvContexts    map[string]*KafkaEnvContext       `json:"kafka_environment_contexts,omitempty"`
-	Context             *Context                          `json:"-"`
+	KafkaClusterConfigs map[string]*KafkaClusterConfig `json:"kafka_cluster_configs,omitempty"`
+	KafkaEnvContexts    map[string]*KafkaEnvContext    `json:"kafka_environment_contexts,omitempty"`
+	Context             *Context                       `json:"-"`
 }
 
 type KafkaEnvContext struct {
-	ActiveKafkaCluster  string                            `json:"active_kafka"`
-	KafkaClusterConfigs map[string]*v1.KafkaClusterConfig `json:"kafka_cluster_infos"`
+	ActiveKafkaCluster  string                         `json:"active_kafka"`
+	KafkaClusterConfigs map[string]*KafkaClusterConfig `json:"kafka_cluster_infos"`
 }
 
-func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig) *KafkaClusterContext {
-	if ctx.IsCloud(ctx.Config.IsTest) && ctx.Credential.CredentialType == v2.Username {
+func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*KafkaClusterConfig) *KafkaClusterContext {
+	if ctx.IsCloud(ctx.Config.IsTest) && ctx.Credential.CredentialType == Username {
 		return newKafkaClusterEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	} else {
 		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	}
 }
 
-func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
+func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
 	kafkaEnvContext := &KafkaEnvContext{
 		ActiveKafkaCluster:  activeKafka,
 		KafkaClusterConfigs: kafkaClusters,
@@ -48,7 +45,7 @@ func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[str
 	return kafkaClusterContext
 }
 
-func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[string]*v1.KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
+func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
 	kafkaClusterContext := &KafkaClusterContext{
 		EnvContext:          false,
 		ActiveKafkaCluster:  activeKafka,
@@ -66,7 +63,7 @@ func (k *KafkaClusterContext) GetActiveKafkaClusterId() string {
 	return kafkaEnvContext.ActiveKafkaCluster
 }
 
-func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *v1.KafkaClusterConfig {
+func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *KafkaClusterConfig {
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[k.ActiveKafkaCluster]
 	}
@@ -83,7 +80,7 @@ func (k *KafkaClusterContext) SetActiveKafkaCluster(clusterId string) {
 	}
 }
 
-func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *v1.KafkaClusterConfig {
+func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *KafkaClusterConfig {
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[clusterId]
 	}
@@ -91,7 +88,7 @@ func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *v1.KafkaC
 	return kafkaEnvContext.KafkaClusterConfigs[clusterId]
 }
 
-func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *v1.KafkaClusterConfig) {
+func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *KafkaClusterConfig) {
 	if !k.EnvContext {
 		k.KafkaClusterConfigs[kcc.ID] = kcc
 	} else {
@@ -113,7 +110,7 @@ func (k *KafkaClusterContext) RemoveKafkaCluster(clusterId string) {
 }
 
 func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
-	var clusterConfigs map[string]*v1.KafkaClusterConfig
+	var clusterConfigs map[string]*KafkaClusterConfig
 	if !k.EnvContext {
 		clusterConfigs = k.KafkaClusterConfigs
 	} else {
@@ -136,7 +133,7 @@ func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
 	if k.KafkaEnvContexts[curEnv] == nil {
 		k.KafkaEnvContexts[curEnv] = &KafkaEnvContext{
 			ActiveKafkaCluster:  "",
-			KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{},
+			KafkaClusterConfigs: map[string]*KafkaClusterConfig{},
 		}
 		err := k.Context.Save()
 		if err != nil {
@@ -150,7 +147,7 @@ func (k *KafkaClusterContext) Validate() {
 	k.validateActiveKafka()
 	if !k.EnvContext {
 		if k.KafkaClusterConfigs == nil {
-			k.KafkaClusterConfigs = map[string]*v1.KafkaClusterConfig{}
+			k.KafkaClusterConfigs = map[string]*KafkaClusterConfig{}
 			err := k.Context.Save()
 			if err != nil {
 				panic(fmt.Sprintf("Unable to save new KafkaClusterConfigs map to config for context '%s'.", k.Context.Name))
@@ -169,7 +166,7 @@ func (k *KafkaClusterContext) Validate() {
 		}
 		for env, kafkaEnvContexts := range k.KafkaEnvContexts {
 			if kafkaEnvContexts.KafkaClusterConfigs == nil {
-				kafkaEnvContexts.KafkaClusterConfigs = map[string]*v1.KafkaClusterConfig{}
+				kafkaEnvContexts.KafkaClusterConfigs = map[string]*KafkaClusterConfig{}
 				err := k.Context.Save()
 				if err != nil {
 					panic(fmt.Sprintf("Unable to save new KafkaClusterConfigs map to config for context '%s', environment '%s'.", k.Context.Name, env))
@@ -210,12 +207,12 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 	}
 }
 
-func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) {
+func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *KafkaClusterConfig) {
 	if cluster.ID == "" {
 		panic(fmt.Sprintf("cluster under context '%s' has no id", k.Context.Name))
 	}
 	if cluster.APIKeys == nil {
-		cluster.APIKeys = map[string]*v0.APIKeyPair{}
+		cluster.APIKeys = map[string]*APIKeyPair{}
 		err := k.Context.Save()
 		if err != nil {
 			panic(fmt.Sprintf("Unable to save new APIKeys map in context '%s', for cluster '%s'.", k.Context.Name, cluster.ID))
@@ -232,7 +229,7 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *v1.KafkaCluste
 	k.validateApiKeysDict(cluster)
 }
 
-func (k *KafkaClusterContext) validateApiKeysDict(cluster *v1.KafkaClusterConfig) {
+func (k *KafkaClusterContext) validateApiKeysDict(cluster *KafkaClusterConfig) {
 	missingKey := false
 	mismatchKey := false
 	missingSecret := false

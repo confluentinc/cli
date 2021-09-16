@@ -18,7 +18,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -98,7 +98,7 @@ type describeStruct struct {
 }
 
 // NewClusterCommand returns the command for Kafka cluster.
-func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+func NewClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage Kafka clusters.",
@@ -120,7 +120,7 @@ func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient
 	return c
 }
 
-func (c *clusterCommand) init(cfg *v3.Config) {
+func (c *clusterCommand) init(cfg *v1.Config) {
 	listCmd := &cobra.Command{
 		Use:  "list",
 		Args: cobra.NoArgs,

@@ -17,9 +17,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -44,7 +42,7 @@ const DoNotTrack = "do-not-track-analytics"
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config                  *v3.Config
+	Config                  *v1.Config
 	UpdateClient            update.Client
 	Logger                  *log.Logger
 	Analytics               analytics.Client
@@ -74,7 +72,7 @@ type AuthenticatedCLICommand struct {
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
 	Context           *DynamicContext
-	State             *v2.ContextState
+	State             *v1.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -719,9 +717,9 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		command.Context = ctx
 
 		var clusterId string
-		if command.Context.Credential.CredentialType == v2.APIKey {
+		if command.Context.Credential.CredentialType == v1.APIKey {
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
-		} else if command.Context.Credential.CredentialType == v2.Username {
+		} else if command.Context.Credential.CredentialType == v1.Username {
 			if err := r.ValidateToken(cmd, command.Config); err != nil {
 				return err
 			}
@@ -750,7 +748,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if key != "" {
 				cluster.APIKey = key
 				if secret != "" {
-					cluster.APIKeys[key] = &v0.APIKeyPair{Key: key, Secret: secret}
+					cluster.APIKeys[key] = &v1.APIKeyPair{Key: key, Secret: secret}
 				} else if cluster.APIKeys[key] == nil {
 					return errors.NewErrorWithSuggestions(
 						fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, key, clusterId),

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -21,7 +21,7 @@ import (
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -33,7 +33,7 @@ const (
 	userResourceId     = "sa-55555"
 )
 
-var conf *v3.Config
+var conf *v1.Config
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -1129,13 +1129,13 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{
-			DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
-				return &v1.User{
+			DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
+				return &orgv1.User{
 					Email: "csreesangkom@confluent.io",
 				}, nil
 			},
-			GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
-				return []*v1.User{
+			GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
+				return []*orgv1.User{
 					{
 						Id:          serviceAccountId,
 						ResourceId:  userResourceId,
@@ -1190,5 +1190,5 @@ func newRestCmd(restExpect chan interface{}) *cobra.Command {
 }
 
 func init() {
-	conf = v3.AuthenticatedCloudConfigMock()
+	conf = v1.AuthenticatedCloudConfigMock()
 }

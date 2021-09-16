@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -19,7 +19,7 @@ const (
 
 func Test_prefixState(t *testing.T) {
 	type args struct {
-		config *v3.Config
+		config *v1.Config
 	}
 	tests := []struct {
 		name      string
@@ -30,8 +30,8 @@ func Test_prefixState(t *testing.T) {
 		{
 			name: "prefix when logged in",
 			args: args{
-				config: func() *v3.Config {
-					cfg := v3.AuthenticatedCloudConfigMock()
+				config: func() *v1.Config {
+					cfg := v1.AuthenticatedCloudConfigMock()
 					cfg.Context().State.AuthToken = validAuthToken
 					return cfg
 				}(),
@@ -42,7 +42,7 @@ func Test_prefixState(t *testing.T) {
 		{
 			name: "prefix when logged out",
 			args: args{
-				config: v3.UnauthenticatedCloudConfigMock(),
+				config: v1.UnauthenticatedCloudConfigMock(),
 			},
 			wantText:  "confluent > ",
 			wantColor: watermelonRed,

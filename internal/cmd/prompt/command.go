@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
@@ -115,7 +115,7 @@ type promptCommand struct {
 }
 
 // Returns the Cobra command for the PS1 prompt.
-func New(cfg *v3.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		ps1:    ps1,
 		logger: logger,
@@ -124,7 +124,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.
 	return cmd.Command
 }
 
-func (c *promptCommand) init(cfg *v3.Config, prerunner pcmd.PreRunner) {
+func (c *promptCommand) init(cfg *v1.Config, prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),

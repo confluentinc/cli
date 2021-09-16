@@ -8,7 +8,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
@@ -23,14 +23,14 @@ const (
 type command struct {
 	Command      *cobra.Command
 	RootCmd      *cobra.Command
-	config       *v3.Config
+	config       *v1.Config
 	prerunner    pcmd.PreRunner
 	completer    *completer.ShellCompleter
 	jwtValidator pcmd.JWTValidator
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, config *v3.Config, completer *completer.ShellCompleter, jwtValidator pcmd.JWTValidator) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, config *v1.Config, completer *completer.ShellCompleter, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
 		RootCmd:      rootCmd,
 		config:       config,
@@ -89,7 +89,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func livePrefixFunc(prompt *goprompt.Prompt, config *v3.Config, jwtValidator pcmd.JWTValidator) func() (prefix string, useLivePrefix bool) {
+func livePrefixFunc(prompt *goprompt.Prompt, config *v1.Config, jwtValidator pcmd.JWTValidator) func() (prefix string, useLivePrefix bool) {
 	return func() (prefix string, useLivePrefix bool) {
 		text, color := prefixState(jwtValidator, config)
 		if err := goprompt.OptionPrefixTextColor(color)(prompt); err != nil {
@@ -102,7 +102,7 @@ func livePrefixFunc(prompt *goprompt.Prompt, config *v3.Config, jwtValidator pcm
 }
 
 // prefixState returns the text and color of the prompt prefix.
-func prefixState(jwtValidator pcmd.JWTValidator, config *v3.Config) (text string, color goprompt.Color) {
+func prefixState(jwtValidator pcmd.JWTValidator, config *v1.Config) (text string, color goprompt.Color) {
 	prefixColor := watermelonRed
 	if err := jwtValidator.Validate(config.Context()); err == nil {
 		prefixColor = candyAppleGreen

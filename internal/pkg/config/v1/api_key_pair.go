@@ -1,4 +1,4 @@
-package v0
+package v1
 
 // APIKeyPair holds an API Key and Secret.
 type APIKeyPair struct {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -122,17 +122,17 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		return err
 	}
 
-	req := &v1.SignupRequest{
-		Organization: &v1.Organization{
+	req := &orgv1.SignupRequest{
+		Organization: &orgv1.Organization{
 			Name: fOrgPswdTosPri.Responses["organization"].(string),
-			Plan: &v1.Plan{AcceptTos: &types.BoolValue{Value: fOrgPswdTosPri.Responses["tos"].(bool)}},
+			Plan: &orgv1.Plan{AcceptTos: &types.BoolValue{Value: fOrgPswdTosPri.Responses["tos"].(bool)}},
 		},
-		User: &v1.User{
+		User: &orgv1.User{
 			Email:     fEmailName.Responses["email"].(string),
 			FirstName: fEmailName.Responses["first"].(string),
 			LastName:  fEmailName.Responses["last"].(string),
 		},
-		Credentials: &v1.Credentials{
+		Credentials: &orgv1.Credentials{
 			Password: fOrgPswdTosPri.Responses["password"].(string),
 		},
 		CountryCode: countryCode,
@@ -155,7 +155,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		}
 
 		if !v.Responses["verified"].(bool) {
-			if err := client.Signup.SendVerificationEmail(context.Background(), &v1.User{Email: fEmailName.Responses["email"].(string)}); err != nil {
+			if err := client.Signup.SendVerificationEmail(context.Background(), &orgv1.User{Email: fEmailName.Responses["email"].(string)}); err != nil {
 				return err
 			}
 

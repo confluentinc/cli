@@ -15,8 +15,6 @@ import (
 
 	"github.com/spf13/pflag"
 
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -25,7 +23,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -88,7 +86,7 @@ var (
 
 func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
-		Config:  v3.AuthenticatedCloudConfigMock(),
+		Config:  v1.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{
@@ -173,7 +171,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := v3.New(nil)
+			cfg := v1.New(nil)
 			cfg, err := load.LoadAndMigrate(cfg)
 			require.NoError(t, err)
 
@@ -240,7 +238,7 @@ func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
 	analyticsClient := cliMock.NewDummyAnalyticsMock()
@@ -308,11 +306,11 @@ func Test_UpdateToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var cfg *v3.Config
+			var cfg *v1.Config
 			if tt.isCloud {
-				cfg = v3.AuthenticatedCloudConfigMock()
+				cfg = v1.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedOnPremConfigMock()
+				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
 
 			cfg.Context().State.AuthToken = tt.authToken
@@ -433,11 +431,11 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var cfg *v3.Config
+			var cfg *v1.Config
 			if tt.isCloud {
-				cfg = v3.AuthenticatedCloudConfigMock()
+				cfg = v1.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedOnPremConfigMock()
+				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
 			err := pauth.PersistLogoutToConfig(cfg)
 			require.NoError(t, err)
@@ -555,11 +553,11 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var cfg *v3.Config
+			var cfg *v1.Config
 			if tt.isCloud {
-				cfg = v3.AuthenticatedCloudConfigMock()
+				cfg = v1.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v3.AuthenticatedOnPremConfigMock()
+				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
 			cfg.Context().State.AuthToken = validAuthToken
 
@@ -605,29 +603,29 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKeyCommand(t *testing.T) {
-	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
-	userNameCfgCorruptedAuthToken := v3.AuthenticatedCloudConfigMock()
+	userNameCfgCorruptedAuthToken := v1.AuthenticatedCloudConfigMock()
 	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
 
-	userNotLoggedIn := v3.UnauthenticatedCloudConfigMock()
+	userNotLoggedIn := v1.UnauthenticatedCloudConfigMock()
 
-	usernameClusterWithoutKeyOrSecret := v3.AuthenticatedCloudConfigMock()
+	usernameClusterWithoutKeyOrSecret := v1.AuthenticatedCloudConfigMock()
 	usernameClusterWithoutKeyOrSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v3.MockKafkaClusterId()).APIKey = ""
+	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v1.MockKafkaClusterId()).APIKey = ""
 
-	usernameClusterWithStoredSecret := v3.AuthenticatedCloudConfigMock()
+	usernameClusterWithStoredSecret := v1.AuthenticatedCloudConfigMock()
 	usernameClusterWithStoredSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v3.MockKafkaClusterId()).APIKeys["miles"] = &v0.APIKeyPair{
+	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v1.MockKafkaClusterId()).APIKeys["miles"] = &v1.APIKeyPair{
 		Key:    "miles",
 		Secret: "secret",
 	}
-	usernameClusterWithoutSecret := v3.AuthenticatedCloudConfigMock()
+	usernameClusterWithoutSecret := v1.AuthenticatedCloudConfigMock()
 	usernameClusterWithoutSecret.Context().State.AuthToken = validAuthToken
 	tests := []struct {
 		name           string
-		config         *v3.Config
+		config         *v1.Config
 		errMsg         string
 		suggestionsMsg string
 		key            string
@@ -651,7 +649,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		},
 		{
 			name:   "api credential context",
-			config: v3.APICredentialConfigMock(),
+			config: v1.APICredentialConfigMock(),
 		},
 		{
 			name:   "api key and secret passed via flags",
@@ -667,8 +665,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:           "api key passed via flag without stored secret",
 			key:            "miles",
-			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", v3.MockKafkaClusterId()),
-			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v3.MockKafkaClusterId()),
+			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", v1.MockKafkaClusterId()),
+			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v1.MockKafkaClusterId()),
 			config:         usernameClusterWithoutSecret,
 		},
 		{
@@ -708,7 +706,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 }
 
 func TestStateFlagCommand_AddCommand(t *testing.T) {
-	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
 	subcommandFlags := map[string]*pflag.FlagSet{
@@ -752,7 +750,7 @@ func TestStateFlagCommand_AddCommand(t *testing.T) {
 }
 
 func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
-	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
 	subcommandFlags := map[string]*pflag.FlagSet{
@@ -796,7 +794,7 @@ func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 }
 
 func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
-	userNameConfigLoggedIn := v3.AuthenticatedCloudConfigMock()
+	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
 	subcommandFlags := map[string]*pflag.FlagSet{
@@ -840,7 +838,7 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 }
 
 func TestInitializeOnPremKafkaRest(t *testing.T) {
-	cfg := v3.AuthenticatedOnPremConfigMock()
+	cfg := v1.AuthenticatedOnPremConfigMock()
 	cfg.Context().State.AuthToken = validAuthToken
 	r := getPreRunBase()
 	r.Config = cfg

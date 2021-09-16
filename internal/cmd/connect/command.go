@@ -14,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -61,7 +61,7 @@ var (
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:         "connect",
@@ -77,7 +77,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 	return cmd
 }
 
-func (c *command) init(cfg *v3.Config) {
+func (c *command) init(cfg *v1.Config) {
 	describeCmd := &cobra.Command{
 		Use:         "describe <id>",
 		Short:       "Describe a connector.",

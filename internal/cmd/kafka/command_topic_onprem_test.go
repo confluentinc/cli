@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -233,7 +233,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			return *suite.replicaList, nil, nil
 		},
 	}
-	conf = v3.AuthenticatedOnPremConfigMock()
+	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
 	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, conf)
 	return NewTopicCommand(conf, testPrerunner, nil, "").authenticatedTopicCommand.Command

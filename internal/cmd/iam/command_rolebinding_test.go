@@ -9,7 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	mock2 "github.com/confluentinc/cli/mock"
 )
 
@@ -40,7 +40,7 @@ type roleBindingTest struct {
 
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
-	mockedListUserResult    []*v1.User
+	mockedListUserResult    []*orgv1.User
 	expected                []listDisplay
 }
 
@@ -52,12 +52,12 @@ type expectedListCmdArgs struct {
 
 type RoleBindingTestSuite struct {
 	suite.Suite
-	conf *v3.Config
+	conf *v1.Config
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
-	v3.AddEnvironmentToConfigMock(suite.conf, env123, env123)
+	suite.conf = v1.AuthenticatedCloudConfigMock()
+	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
 func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
@@ -84,25 +84,25 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 		},
 	}
 	userMock := &ccsdkmock.User{
-		DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
+		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
 			if arg1.Email == "test@email.com" {
-				return &v1.User{
+				return &orgv1.User{
 					Email:      "test@email.com",
-					ResourceId: v3.MockUserResourceId,
+					ResourceId: v1.MockUserResourceId,
 				}, nil
 			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
 				return nil, errNotFound
 			} else {
-				return &v1.User{
+				return &orgv1.User{
 					Email:      arg1.ResourceId + "@email.com",
 					ResourceId: arg1.ResourceId,
 				}, nil
 			}
 		},
-		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {
-			return []*v1.User{{
+		ListFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
+			return []*orgv1.User{{
 				Email:      "test@email.com",
-				ResourceId: v3.MockUserResourceId,
+				ResourceId: v1.MockUserResourceId,
 			}}, nil
 		},
 	}
@@ -119,23 +119,23 @@ func TestRoleBindingTestSuite(t *testing.T) {
 var roleBindingListTests = []roleBindingTest{
 	{
 		args:      []string{"--current-user"},
-		principal: "User:" + v3.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		principal: "User:" + v1.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId},
-		principal: "User:" + v3.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId},
+		principal: "User:" + v1.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:u-xyz"},
 		principal: "User:u-xyz",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:test@email.com"},
-		principal: "User:" + v3.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		principal: "User:" + v1.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
@@ -144,17 +144,17 @@ var roleBindingListTests = []roleBindingTest{
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
 		roleName: "OrganizationAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:     []string{"--role", "EnvironmentAdmin", "--current-env"},
 		roleName: "EnvironmentAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
 	{
 		args:     []string{"--role", "EnvironmentAdmin", "--environment", "env-123"},
 		roleName: "EnvironmentAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=env-123"}},
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123"}},
 	},
 }
 
@@ -185,7 +185,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 
 func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(
 	mockeRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping,
-	mockeddListUserResult chan []*v1.User,
+	mockeddListUserResult chan []*orgv1.User,
 ) *cobra.Command {
 	// Mock MDS Client
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
@@ -197,7 +197,7 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(
 
 	// Mock User Client
 	userMock := &ccsdkmock.User{
-		ListFunc: func(arg0 context.Context) ([]*v1.User, error) {
+		ListFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
 			return <-mockeddListUserResult, nil
 		},
 	}
@@ -222,9 +222,9 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: []*v1.User{{
+		mockedListUserResult: []*orgv1.User{{
 			Email:      "test@email.com",
-			ResourceId: v3.MockUserResourceId,
+			ResourceId: v1.MockUserResourceId,
 		}},
 		expected: []listDisplay{
 			{
@@ -242,15 +242,15 @@ var myRoleBindingListTests = []myRoleBindingTest{
 					Path: []string{"organization=Skynet"},
 				},
 				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v3.MockUserResourceId: {
+					"User:" + v1.MockUserResourceId: {
 						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
 					},
 				},
 			},
 		},
-		mockedListUserResult: []*v1.User{{
+		mockedListUserResult: []*orgv1.User{{
 			Email:      "test@email.com",
-			ResourceId: v3.MockUserResourceId,
+			ResourceId: v1.MockUserResourceId,
 		}},
 		expected: []listDisplay{
 			{
@@ -275,7 +275,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: []*v1.User{},
+		mockedListUserResult: []*orgv1.User{},
 		expected: []listDisplay{
 			{
 				Principal: "User:sa-123",
@@ -288,7 +288,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 
 func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 	mockeRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
-	mockeListUserResult := make(chan []*v1.User)
+	mockeListUserResult := make(chan []*orgv1.User)
 	for _, tc := range myRoleBindingListTests {
 		cmd := suite.newMockIamListRoleBindingCmd(mockeRoleBindingsResult, mockeListUserResult)
 
@@ -307,44 +307,44 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 
 var roleBindingCreateDeleteTests = []roleBindingTest{
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "OrganizationAdmin"},
-		principal: "User:" + v3.MockUserResourceId,
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "OrganizationAdmin"},
+		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "OrganizationAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:u-xyz", "--role", "OrganizationAdmin"},
 		principal: "User:u-xyz",
 		roleName:  "OrganizationAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:test@email.com", "--role", "OrganizationAdmin"},
-		principal: "User:" + v3.MockUserResourceId,
+		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "OrganizationAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
 		err:  errNotFound,
 	},
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
-		principal: "User:" + v3.MockUserResourceId,
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
+		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
 	{
-		args:      []string{"--principal", "User:" + v3.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
-		principal: "User:" + v3.MockUserResourceId,
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
+		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + env123}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
-		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v3.MockEnvironmentId},
+		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
 		principal: "User:u-noemail",
 		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v3.MockOrgResourceId, "environment=" + v3.MockEnvironmentId}},
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
 }
 

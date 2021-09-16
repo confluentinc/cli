@@ -3,7 +3,7 @@ package config
 import (
 	"sort"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
@@ -151,7 +151,7 @@ func (c *contextCommand) use(cmd *cobra.Command, args []string) error {
 
 func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 	credentialType := c.Config.CredentialType()
-	if credentialType == v2.None {
+	if credentialType == v1.None {
 		utils.Println(cmd, errors.NotLoggedInErrorMsg)
 		return nil
 	}
@@ -161,7 +161,7 @@ func (c *contextCommand) current(cmd *cobra.Command, _ []string) error {
 	}
 	if username {
 		ctx := c.Config.Config.Context()
-		if credentialType == v2.APIKey {
+		if credentialType == v1.APIKey {
 			utils.Println(cmd, ctx.Credential.APIKeyPair.Key)
 		} else {
 			utils.Println(cmd, ctx.Credential.Username)

@@ -3,7 +3,7 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -20,7 +20,7 @@ type command struct {
 	analyticsClient analytics.Client
 }
 
-func New(cfg *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:         "schema-registry",
@@ -38,7 +38,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 	return cmd.Command
 }
 
-func (c *command) init(cfg *v3.Config) {
+func (c *command) init(cfg *v1.Config) {
 	c.AddCommand(NewClusterCommand(cfg, c.prerunner, c.srClient, c.logger, c.analyticsClient))
 	c.AddCommand(NewExporterCommand(c.prerunner, c.srClient))
 	c.AddCommand(NewSchemaCommand(c.prerunner, c.srClient))

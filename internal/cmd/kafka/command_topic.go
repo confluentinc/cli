@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 
 	"github.com/c-bata/go-prompt"
 
@@ -74,7 +73,7 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(cfg *v3.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",

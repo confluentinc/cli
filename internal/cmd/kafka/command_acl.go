@@ -15,7 +15,7 @@ import (
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -35,7 +35,7 @@ type aclCommand struct {
 }
 
 // NewACLCommand returns the Cobra command for Kafka ACL.
-func NewACLCommand(cfg *v3.Config, prerunner pcmd.PreRunner) *aclCommand {
+func NewACLCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
 	cmd := &cobra.Command{
 		Use:   "acl",
 		Short: "Manage Kafka ACLs.",

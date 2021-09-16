@@ -19,7 +19,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -96,7 +96,7 @@ var (
 func TestLogout(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
 	logoutCmd, cfg := newLogoutCmd(cfg, mockNetrcHandler)
 	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
@@ -111,7 +111,7 @@ func TestLogout(t *testing.T) {
 func TestRemoveNetrcCredentials(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
 	logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
 	// run login command
@@ -143,8 +143,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 }
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*login.Command, *v3.Config) {
-	cfg := v3.New(new(config.Params))
+	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*login.Command, *v1.Config) {
+	cfg := v1.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
@@ -179,12 +179,12 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*Command, *v3.Config) {
+func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*Command, *v1.Config) {
 	logoutCmd := New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
 	return logoutCmd, cfg
 }
 
-func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string) {
+func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string) {
 	req := require.New(t)
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)

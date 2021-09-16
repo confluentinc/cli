@@ -38,7 +38,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
@@ -60,7 +60,7 @@ type command struct {
 	logger    *log.Logger
 }
 
-func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *command {
+func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
 		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
@@ -155,7 +155,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
 }
 
-func getAnalyticsClient(isTest bool, cfg *v3.Config, cliVersion string, logger *log.Logger) analytics.Client {
+func getAnalyticsClient(isTest bool, cfg *v1.Config, cliVersion string, logger *log.Logger) analytics.Client {
 	if cfg.IsOnPremLogin() || isTest {
 		return mock.NewDummyAnalyticsMock()
 	}
@@ -184,8 +184,8 @@ func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	}
 }
 
-func LoadConfig() (*v3.Config, error) {
-	cfg := v3.New(&pconfig.Params{
+func LoadConfig() (*v1.Config, error) {
+	cfg := v1.New(&pconfig.Params{
 		Logger:     log.New(),
 		MetricSink: metric.NewSink(),
 	})
@@ -193,7 +193,7 @@ func LoadConfig() (*v3.Config, error) {
 	return load.LoadAndMigrate(cfg)
 }
 
-func getLongDescription(cfg *v3.Config) string {
+func getLongDescription(cfg *v1.Config) string {
 	switch {
 	case cfg.IsCloudLogin():
 		return "Manage your Confluent Cloud."
@@ -206,7 +206,7 @@ func getLongDescription(cfg *v3.Config) string {
 
 // hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement and errs if a user attempts to use it;
 // for example, an on-prem command shouldn't be used by a cloud user.
-func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) {
+func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
 	if err := pcmd.ErrIfMissingRunRequirement(cmd, cfg); err != nil {
 		cmd.Hidden = true
 
@@ -222,7 +222,7 @@ func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) {
 	}
 }
 
-func getCloudClient(cfg *v3.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
+func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
 	if cfg.IsCloudLogin() {
 		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}

@@ -1,15 +1,206 @@
 package v1
 
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
+)
+
 // Context represents a specific CLI context.
 type Context struct {
-	Name       string
-	Platform   string `json:"platform" hcl:"platform"`
-	Credential string `json:"credentials" hcl:"credentials"`
-	// KafkaClusters store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
-	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
-	KafkaClusters map[string]*KafkaClusterConfig `json:"kafka_clusters" hcl:"kafka_clusters"`
-	// Kafka is your active Kafka cluster and references a key in the KafkaClusters map
-	Kafka string `json:"kafka_cluster" hcl:"kafka_cluster"`
-	// SR map keyed by environment-id
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_cluster" hcl:"schema_registry_cluster"`
+	Name                   string                            `json:"name" hcl:"name"`
+	Platform               *Platform                         `json:"-" hcl:"-"`
+	PlatformName           string                            `json:"platform" hcl:"platform"`
+	Credential             *Credential                       `json:"-" hcl:"-"`
+	CredentialName         string                            `json:"credential" hcl:"credential"`
+	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
+	State                  *ContextState                     `json:"-" hcl:"-"`
+	Logger                 *log.Logger                       `json:"-" hcl:"-"`
+	Config                 *Config                           `json:"-" hcl:"-"`
+}
+
+func newContext(name string, platform *Platform, credential *Credential,
+	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config) (*Context, error) {
+	ctx := &Context{
+		Name:                   name,
+		Platform:               platform,
+		PlatformName:           platform.Name,
+		Credential:             credential,
+		CredentialName:         credential.Name,
+		SchemaRegistryClusters: schemaRegistryClusters,
+		State:                  state,
+		Logger:                 config.Logger,
+		Config:                 config,
+	}
+	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
+	err := ctx.validate()
+	if err != nil {
+		return nil, err
+	}
+	return ctx, nil
+}
+
+func (c *Context) validateKafkaClusterConfig(cluster *KafkaClusterConfig) error {
+	if cluster.ID == "" {
+		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.Filename, c.Logger)
+	}
+	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
+		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, c.Name, cluster.ID)
+		cluster.APIKey = ""
+		err := c.Save()
+		if err != nil {
+			return errors.Wrap(err, errors.ResetInvalidAPIKeyErrorMsg)
+		}
+	}
+	return c.validateApiKeysDict(cluster)
+}
+
+func (c *Context) validateApiKeysDict(cluster *KafkaClusterConfig) error {
+	missingKey := false
+	mismatchKey := false
+	missingSecret := false
+	for k, pair := range cluster.APIKeys {
+		if pair.Key == "" {
+			delete(cluster.APIKeys, k)
+			missingKey = true
+			continue
+		}
+		if k != pair.Key {
+			delete(cluster.APIKeys, k)
+			mismatchKey = true
+			continue
+		}
+		if pair.Secret == "" {
+			delete(cluster.APIKeys, k)
+			missingSecret = true
+		}
+	}
+	if missingKey || mismatchKey || missingSecret {
+		printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster, c.Name)
+		err := c.Save()
+		if err != nil {
+			return errors.Wrap(err, errors.ClearInvalidAPIFailErrorMsg)
+		}
+	}
+	return nil
+}
+
+func (c *Context) validate() error {
+	if c.Name == "" {
+		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.Filename, c.Logger)
+	}
+	if c.CredentialName == "" || c.Credential == nil {
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.Filename, c.Logger)
+	}
+	if c.PlatformName == "" || c.Platform == nil {
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename, c.Logger)
+	}
+	if c.SchemaRegistryClusters == nil {
+		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
+	}
+	if c.State == nil {
+		c.State = new(ContextState)
+	}
+	c.KafkaClusterContext.Validate()
+	return nil
+}
+
+func (c *Context) Save() error {
+	return c.Config.Save()
+}
+
+func (c *Context) HasBasicMDSLogin() bool {
+	if c.Credential == nil {
+		return false
+	}
+
+	credType := c.Credential.CredentialType
+	switch credType {
+	case Username:
+		return c.State != nil && c.State.AuthToken != ""
+	case APIKey:
+		return false
+	default:
+		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
+	}
+}
+
+func (c *Context) hasBasicCloudLogin() bool {
+	if c.Credential == nil {
+		return false
+	}
+
+	credType := c.Credential.CredentialType
+	switch credType {
+	case Username:
+		return c.State != nil && c.State.AuthToken != "" && c.State.Auth != nil && c.State.Auth.Account != nil && c.State.Auth.Account.Id != ""
+	case APIKey:
+		return false
+	default:
+		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
+	}
+}
+
+func (c *Context) DeleteUserAuth() error {
+	if c.State == nil {
+		return nil
+	}
+	c.State.AuthToken = ""
+	c.State.Auth = nil
+	err := c.Save()
+	if err != nil {
+		return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
+	}
+	return nil
+}
+
+func (c *Context) GetCurrentEnvironmentId() string {
+	// non environment contexts
+	if c.State.Auth == nil {
+		return ""
+	}
+	return c.State.Auth.Account.Id
+}
+
+func (c *Context) UpdateAuthToken(token string) error {
+	c.State.AuthToken = token
+	err := c.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Context) IsCloud(isTest bool) bool {
+	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+		return true
+	}
+
+	for _, hostname := range CCloudHostnames {
+		if strings.Contains(c.PlatformName, hostname) {
+			return true
+		}
+	}
+	return false
+}
+
+func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
+	var problems []string
+	if missingKey {
+		problems = append(problems, errors.APIKeyMissingMsg)
+	}
+	if mismatchKey {
+		problems = append(problems, errors.KeyPairMismatchMsg)
+	}
+	if missingSecret {
+		problems = append(problems, errors.APISecretMissingMsg)
+	}
+	problemString := strings.Join(problems, ", ")
+	_, _ = fmt.Fprintf(os.Stderr, errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
 }

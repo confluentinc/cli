@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/c-bata/go-prompt"
-	v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -26,11 +26,11 @@ type KafkaTopicTestSuite struct {
 	suite.Suite
 }
 
-func (suite *KafkaTopicTestSuite) newCmd(conf *v3.Config) *kafkaTopicCommand {
+func (suite *KafkaTopicTestSuite) newCmd(conf *v1.Config) *kafkaTopicCommand {
 	client := &ccloud.Client{
 		Kafka: &ccsdkmock.Kafka{
-			ListTopicsFunc: func(_ context.Context, cluster *v1.KafkaCluster) ([]*v1.TopicDescription, error) {
-				return []*v1.TopicDescription{
+			ListTopicsFunc: func(_ context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.TopicDescription, error) {
+				return []*schedv1.TopicDescription{
 					{
 						Name:     topicName,
 						Internal: isInternal,
@@ -57,7 +57,7 @@ func (suite *KafkaTopicTestSuite) TestServerComplete() {
 		{
 			name: "suggest for authenticated user",
 			fields: fields{
-				Command: suite.newCmd(v3.AuthenticatedCloudConfigMock()),
+				Command: suite.newCmd(v1.AuthenticatedCloudConfigMock()),
 			},
 			want: []prompt.Suggest{
 				{
@@ -79,7 +79,7 @@ func (suite *KafkaTopicTestSuite) TestServerComplete() {
 
 func (suite *KafkaTopicTestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	completableChildren := cmd.ServerCompletableChildren()
 	expectedChildren := []string{"topic describe", "topic update", "topic delete"}
 	req.Len(completableChildren, len(expectedChildren))

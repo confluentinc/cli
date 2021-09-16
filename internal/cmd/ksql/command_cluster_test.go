@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -25,7 +25,7 @@ type KsqlClusterTestSuite struct {
 	suite.Suite
 }
 
-func (suite *KsqlClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
+func (suite *KsqlClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	client := &ccloud.Client{
 		KSQL: &ccsdkmock.KSQL{
 			ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, err error) {
@@ -56,7 +56,7 @@ func (suite *KsqlClusterTestSuite) TestServerComplete() {
 		{
 			name: "suggest for authenticated user",
 			fields: fields{
-				Command: suite.newCmd(v3.AuthenticatedCloudConfigMock()),
+				Command: suite.newCmd(v1.AuthenticatedCloudConfigMock()),
 			},
 			want: []prompt.Suggest{
 				{
@@ -78,7 +78,7 @@ func (suite *KsqlClusterTestSuite) TestServerComplete() {
 
 func (suite *KsqlClusterTestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	completableChildren := cmd.ServerCompletableChildren()
 	expectedChildren := []string{"app describe", "app delete", "app configure-acls"}
 	req.Len(completableChildren, len(expectedChildren))

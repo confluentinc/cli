@@ -6,7 +6,7 @@ import (
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
+	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 // Compile-time check interface adherence

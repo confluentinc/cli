@@ -1,4 +1,4 @@
-package v3
+package v1
 
 import (
 	"fmt"
@@ -6,9 +6,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -101,7 +98,7 @@ func APICredentialConfigMock() *Config {
 	platform := createPlatform(bootstrapServer, bootstrapServer)
 
 	kafkaCluster := createKafkaCluster(anonymousKafkaId, anonymousKafkaName, kafkaAPIKeyPair)
-	kafkaClusters := map[string]*v1.KafkaClusterConfig{
+	kafkaClusters := map[string]*KafkaClusterConfig{
 		kafkaCluster.ID: kafkaCluster,
 	}
 
@@ -142,13 +139,13 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 
 	kafkaAPIKeyPair := createAPIKeyPair(kafkaAPIKey, kafkaAPISecret)
 	kafkaCluster := createKafkaCluster(kafkaClusterId, kafkaClusterName, kafkaAPIKeyPair)
-	kafkaClusters := map[string]*v1.KafkaClusterConfig{
+	kafkaClusters := map[string]*KafkaClusterConfig{
 		kafkaCluster.ID: kafkaCluster,
 	}
 
 	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
 	srCluster := createSRCluster(srAPIKeyPair)
-	srClusters := map[string]*v2.SchemaRegistryCluster{
+	srClusters := map[string]*SchemaRegistryCluster{
 		MockEnvironmentId: srCluster,
 	}
 
@@ -163,33 +160,33 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 	return conf
 }
 
-func createUsernameCredential(credentialName string, auth *v1.AuthConfig) *v2.Credential {
-	credential := &v2.Credential{
+func createUsernameCredential(credentialName string, auth *AuthConfig) *Credential {
+	credential := &Credential{
 		Name:           credentialName,
 		Username:       auth.User.Email,
-		CredentialType: v2.Username,
+		CredentialType: Username,
 	}
 	return credential
 }
 
-func createAPIKeyCredential(credentialName string, apiKeyPair *v0.APIKeyPair) *v2.Credential {
-	credential := &v2.Credential{
+func createAPIKeyCredential(credentialName string, apiKeyPair *APIKeyPair) *Credential {
+	credential := &Credential{
 		Name:           credentialName,
 		APIKeyPair:     apiKeyPair,
-		CredentialType: v2.APIKey,
+		CredentialType: APIKey,
 	}
 	return credential
 }
-func createPlatform(name, server string) *v2.Platform {
-	platform := &v2.Platform{
+func createPlatform(name, server string) *Platform {
+	platform := &Platform{
 		Name:   name,
 		Server: server,
 	}
 	return platform
 }
 
-func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *v1.AuthConfig {
-	auth := &v1.AuthConfig{
+func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *AuthConfig {
+	auth := &AuthConfig{
 		User: &orgv1.User{
 			Id:         userId,
 			Email:      email,
@@ -207,29 +204,29 @@ func createAuthConfig(userId int32, email string, userResourceId string, envId s
 	return auth
 }
 
-func createContextState(authConfig *v1.AuthConfig, authToken string) *v2.ContextState {
-	contextState := &v2.ContextState{
+func createContextState(authConfig *AuthConfig, authToken string) *ContextState {
+	contextState := &ContextState{
 		Auth:      authConfig,
 		AuthToken: authToken,
 	}
 	return contextState
 }
 
-func createAPIKeyPair(apiKey, apiSecret string) *v0.APIKeyPair {
-	keyPair := &v0.APIKeyPair{
+func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
+	keyPair := &APIKeyPair{
 		Key:    apiKey,
 		Secret: apiSecret,
 	}
 	return keyPair
 }
 
-func createKafkaCluster(clusterID string, clusterName string, apiKeyPair *v0.APIKeyPair) *v1.KafkaClusterConfig {
-	cluster := &v1.KafkaClusterConfig{
+func createKafkaCluster(clusterID string, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
+	cluster := &KafkaClusterConfig{
 		ID:          clusterID,
 		Name:        clusterName,
 		Bootstrap:   bootstrapServer,
 		APIEndpoint: kafkaApiEndpoint,
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*APIKeyPair{
 			apiKeyPair.Key: apiKeyPair,
 		},
 		APIKey: apiKeyPair.Key,
@@ -237,8 +234,8 @@ func createKafkaCluster(clusterID string, clusterName string, apiKeyPair *v0.API
 	return cluster
 }
 
-func createSRCluster(apiKeyPair *v0.APIKeyPair) *v2.SchemaRegistryCluster {
-	cluster := &v2.SchemaRegistryCluster{
+func createSRCluster(apiKeyPair *APIKeyPair) *SchemaRegistryCluster {
+	cluster := &SchemaRegistryCluster{
 		Id:                     srClusterId,
 		SchemaRegistryEndpoint: srEndpoint,
 		SrCredentials:          apiKeyPair,
@@ -246,7 +243,7 @@ func createSRCluster(apiKeyPair *v0.APIKeyPair) *v2.SchemaRegistryCluster {
 	return cluster
 }
 
-func setUpConfig(conf *Config, ctx *Context, platform *v2.Platform, credential *v2.Credential, contextState *v2.ContextState) {
+func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Credential, contextState *ContextState) {
 	conf.Platforms[platform.Name] = platform
 	conf.Credentials[credential.Name] = credential
 	conf.ContextStates[ctx.Name] = contextState

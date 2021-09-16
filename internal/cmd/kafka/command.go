@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
@@ -20,7 +20,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with Kafka.
-func New(cfg *v3.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string,
 	serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
@@ -39,7 +39,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID 
 	return cmd.Command
 }
 
-func (c *command) init(cfg *v3.Config) {
+func (c *command) init(cfg *v1.Config) {
 	aclCmd := NewACLCommand(cfg, c.prerunner)
 	clusterCmd := NewClusterCommand(cfg, c.prerunner, c.analyticsClient)
 	groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)

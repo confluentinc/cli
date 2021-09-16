@@ -22,10 +22,7 @@ package analytics_test
 //	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 //
 //	"github.com/confluentinc/cli/internal/pkg/analytics"
-//	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 //	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-//	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-//	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 //	"github.com/confluentinc/cli/mock"
 //)
 //
@@ -60,14 +57,14 @@ package analytics_test
 //
 //type AnalyticsTestSuite struct {
 //	suite.Suite
-//	config          *v3.Config
+//	config          *v1.Config
 //	analyticsClient analytics.Client
 //	mockClient      *mock.SegmentClient
 //	output          []segment.Message
 //}
 //
 //func (suite *AnalyticsTestSuite) SetupSuite() {
-//	suite.config = v3.AuthenticatedCloudConfigMock()
+//	suite.config = v1.AuthenticatedCloudConfigMock()
 //	suite.config.CLIName = ccloudName
 //	suite.createContexts()
 //	suite.createStates()
@@ -622,7 +619,7 @@ package analytics_test
 //		Server:     "test",
 //		CaCertPath: "",
 //	}
-//	apiContext := &v3.Context{
+//	apiContext := &v1.Context{
 //		Name:         apiKeyContext,
 //		Platform:     platform,
 //		PlatformName: platform.Name,
@@ -632,7 +629,7 @@ package analytics_test
 //		Config: suite.config,
 //	}
 //	apiContext.KafkaClusterContext.Context = apiContext
-//	userContext := &v3.Context{
+//	userContext := &v1.Context{
 //		Name:         userNameContext,
 //		Platform:     platform,
 //		PlatformName: platform.Name,
@@ -642,7 +639,7 @@ package analytics_test
 //		Config: suite.config,
 //	}
 //	userContext.KafkaClusterContext.Context = userContext
-//	otherContext := &v3.Context{
+//	otherContext := &v1.Context{
 //		Name:         otherUserContext,
 //		Platform:     platform,
 //		PlatformName: platform.Name,
@@ -652,7 +649,7 @@ package analytics_test
 //		Config: suite.config,
 //	}
 //	otherContext.KafkaClusterContext.Context = otherContext
-//	contexts := make(map[string]*v3.Context)
+//	contexts := make(map[string]*v1.Context)
 //	contexts[apiKeyContext] = apiContext
 //	contexts[userNameContext] = userContext
 //	contexts[otherUserContext] = otherContext
@@ -670,7 +667,7 @@ package analytics_test
 //		Name:           "env1",
 //		OrganizationId: organizationId,
 //	}
-//	userState := &v2.ContextState{
+//	userState := &v1.ContextState{
 //		Auth: &v1.AuthConfig{
 //			User: &orgv1.User{
 //				Id:             userId,
@@ -682,7 +679,7 @@ package analytics_test
 //		AuthToken: "user-token",
 //	}
 //	contexts[userNameContext].State = userState
-//	otherUserState := &v2.ContextState{
+//	otherUserState := &v1.ContextState{
 //		Auth: &v1.AuthConfig{
 //			User: &orgv1.User{
 //				Id:             otherUserId,
@@ -694,7 +691,7 @@ package analytics_test
 //		AuthToken: "other-user-token",
 //	}
 //	contexts[otherUserContext].State = otherUserState
-//	contextStates := make(map[string]*v2.ContextState)
+//	contextStates := make(map[string]*v1.ContextState)
 //	contextStates[userNameContext] = contexts[userNameContext].State
 //	contextStates[otherUserContext] = contexts[otherUserContext].State
 //	suite.config.ContextStates = contextStates

@@ -14,8 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -27,7 +26,7 @@ const (
 
 type SchemaTestSuite struct {
 	suite.Suite
-	conf             *v3.Config
+	conf             *v1.Config
 	kafkaCluster     *schedv1.KafkaCluster
 	srCluster        *schedv1.SchemaRegistryCluster
 	srClientMock     *srsdk.APIClient
@@ -35,7 +34,7 @@ type SchemaTestSuite struct {
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.srMothershipMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
@@ -46,7 +45,7 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	}
 	ctx := suite.conf.Context()
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
-	srCluster.SrCredentials = &v0.APIKeyPair{Key: "key", Secret: "secret"}
+	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,

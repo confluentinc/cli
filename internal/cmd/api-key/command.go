@@ -14,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -456,7 +456,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) store(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	var cluster *configv1.KafkaClusterConfig
+	var cluster *v1.KafkaClusterConfig
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster

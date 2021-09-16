@@ -13,8 +13,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -50,7 +48,7 @@ func GetEnvWithFallback(current, deprecated string) string {
 	return ""
 }
 
-func PersistLogoutToConfig(config *v3.Config) error {
+func PersistLogoutToConfig(config *v1.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
 		return nil
@@ -63,8 +61,8 @@ func PersistLogoutToConfig(config *v3.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
-	state := &v2.ContextState{
+func PersistConfluentLoginToConfig(config *v1.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
+	state := &v1.ContextState{
 		Auth:      nil,
 		AuthToken: token,
 	}
@@ -77,7 +75,7 @@ func PersistConfluentLoginToConfig(config *v3.Config, username string, url strin
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath)
 }
 
-func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
+func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
 	ctxName := GenerateCloudContextName(email, url)
 	state, err := getCCloudContextState(config, ctxName, email, url, token, client)
 	if err != nil {
@@ -90,14 +88,14 @@ func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, tok
 	return state.Auth.Account, nil
 }
 
-func addOrUpdateContext(config *v3.Config, ctxName string, username string, url string, state *v2.ContextState, caCertPath string) error {
+func addOrUpdateContext(config *v1.Config, ctxName string, username string, url string, state *v1.ContextState, caCertPath string) error {
 	credName := generateCredentialName(username)
-	platform := &v2.Platform{
+	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
-	credential := &v2.Credential{
+	credential := &v1.Credential{
 		Name:     credName,
 		Username: username,
 		// don't save password if they entered it interactively.
@@ -133,17 +131,17 @@ func addOrUpdateContext(config *v3.Config, ctxName string, username string, url 
 	return nil
 }
 
-func getCCloudContextState(config *v3.Config, ctxName string, email string, url string, token string, client *ccloud.Client) (*v2.ContextState, error) {
+func getCCloudContextState(config *v1.Config, ctxName string, email string, url string, token string, client *ccloud.Client) (*v1.ContextState, error) {
 	user, err := getCCloudUser(token, client)
 	if err != nil {
 		return nil, err
 	}
-	var state *v2.ContextState
+	var state *v1.ContextState
 	ctx, err := config.FindContext(ctxName)
 	if err == nil {
 		state = ctx.State
 	} else {
-		state = new(v2.ContextState)
+		state = new(v1.ContextState)
 	}
 	state.AuthToken = token
 
@@ -207,7 +205,7 @@ type response struct {
 	Token string `json:"token"`
 }
 
-func GetBearerToken(authenticatedState *v2.ContextState, server string) (string, error) {
+func GetBearerToken(authenticatedState *v1.ContextState, server string) (string, error) {
 	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
 	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
 

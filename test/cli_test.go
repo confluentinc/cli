@@ -20,7 +20,7 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -357,7 +357,7 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 func resetConfiguration(t *testing.T) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v3.New(new(config.Params))
+	cfg := v1.New(new(config.Params))
 	err := cfg.Save()
 	require.NoError(t, err)
 }
