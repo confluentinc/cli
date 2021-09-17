@@ -21,12 +21,13 @@ type pluginCommand struct {
 }
 
 type pluginDisplay struct {
-	Name string
-	Type string
+	PluginName string
+	Type       string
 }
 
 var (
-	pluginFields          = []string{"Name", "Type"}
+	pluginFields          = []string{"PluginName", "Type"}
+	pluginHumanFields     = []string{"Plugin Name", "Type"}
 	pluginStructureLabels = []string{"plugin_name", "type"}
 )
 
@@ -78,7 +79,7 @@ func (c *pluginCommand) init(cliName string) {
 }
 
 func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
-	outputWriter, err := output.NewListOutputWriter(cmd, pluginFields, pluginFields, pluginStructureLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, pluginFields, pluginHumanFields, pluginStructureLabels)
 	if err != nil {
 		return err
 	}
@@ -104,8 +105,8 @@ func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]*pluginDisplay, error)
 	var plugins []*pluginDisplay
 	for _, conn := range connectorInfo {
 		plugins = append(plugins, &pluginDisplay{
-			Name: conn.Class,
-			Type: conn.Type,
+			PluginName: conn.Class,
+			Type:       conn.Type,
 		})
 	}
 	return plugins, nil
@@ -160,7 +161,7 @@ func (c *pluginCommand) ServerComplete() []prompt.Suggest {
 	}
 	for _, conn := range plugins {
 		suggestions = append(suggestions, prompt.Suggest{
-			Text:        conn.Name,
+			Text:        conn.PluginName,
 			Description: conn.Type,
 		})
 	}
