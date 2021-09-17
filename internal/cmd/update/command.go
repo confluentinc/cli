@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blang/semver"
 	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -175,6 +176,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		}
 
 		current.CLIName = "confluent"
+		current.Ver = semver.MustParse("1.0.0")
 		if err := current.Save(); err != nil {
 			return err
 		}
