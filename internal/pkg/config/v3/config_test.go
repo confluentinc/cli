@@ -138,7 +138,6 @@ func SetupTestInputs(cliName string) *TestInputs {
 		},
 		State:  state,
 		Logger: log.New(),
-		Config: &Config{BaseConfig: &config.BaseConfig{Params: &config.Params{CLIName: cliName}}},
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -149,7 +148,6 @@ func SetupTestInputs(cliName string) *TestInputs {
 		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{},
 		State:                  &v2.ContextState{},
 		Logger:                 log.New(),
-		Config:                 &Config{BaseConfig: &config.BaseConfig{Params: &config.Params{CLIName: cliName}}},
 	}
 	twoEnvStatefulContext := &Context{
 		Name:           contextName,
