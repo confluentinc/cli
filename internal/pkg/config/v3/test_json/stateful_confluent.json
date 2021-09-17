@@ -31,6 +31,7 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
+      "netrc_machine_name": "",
       "platform": "http://test",
       "credential": "username-test-user",
       "kafka_cluster_context": {
