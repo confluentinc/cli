@@ -21,7 +21,7 @@ NOTE: DO NOT EDIT THE SECTION NAMES (e.g. 'New Features for Both CLIs')
 BOTH CLIs
 -------------
 
-Breaking Changes
+Breaking Changes for Both CLIs
 - both breakingchange1
 - both breakingchange2
 
@@ -40,6 +40,9 @@ Bug Fixes for Both CLIs
 CCLOUD
 -------------
 
+CCloud Breaking Changes
+- ccloud breakingchange1
+- ccloud breakingchange2
 CCloud New Features
 - ccloud feature1
 - ccloud feature2
@@ -51,6 +54,11 @@ CCloud Bug Fixes
 -------------
 CONFLUENT
 -------------
+
+Confluent Breaking Changes
+- confluent breakingchange1
+- confluent breakingchange2
+
 
 Confluent New Features
 - confluent new feature1

@@ -11,24 +11,28 @@ import (
 type SectionType int
 
 const (
-	breakingChanges SectionType = iota
+	bothBreakingChanges SectionType = iota
 	bothNewFeatures
 	bothBugFixes
+	ccloudBreakingChanges
 	ccloudNewFeatures
 	ccloudBugFixes
+	confluentBreakingChanges
 	confluentNewFeatures
 	confluentBugFixes
 )
 
 var (
 	sectionNameToSectionTypeMap = map[string]SectionType{
-		breakingChangesTitle:      breakingChanges,
-		bothNewFeaturesTitle:      bothNewFeatures,
-		bothBugFixesTitle:         bothBugFixes,
-		ccloudNewFeaturesTitle:    ccloudNewFeatures,
-		ccloudBugFixesTitle:       ccloudBugFixes,
-		confluentNewFeaturesTitle: confluentNewFeatures,
-		confluentBugFixesTitle:    confluentBugFixes,
+		bothBreakingChangesTitle:      bothBreakingChanges,
+		bothNewFeaturesTitle:          bothNewFeatures,
+		bothBugFixesTitle:             bothBugFixes,
+		ccloudBreakingChangesTitle:    ccloudBreakingChanges,
+		ccloudNewFeaturesTitle:        ccloudNewFeatures,
+		ccloudBugFixesTitle:           ccloudBugFixes,
+		confluentBreakingChangesTitle: confluentBreakingChanges,
+		confluentNewFeaturesTitle:     confluentNewFeatures,
+		confluentBugFixesTitle:        confluentBugFixes,
 	}
 	prepFileNotReadErrorMsg = "Prep file has not been read."
 )
@@ -127,7 +131,7 @@ func (p *PrepFileReaderImpl) GetCCloudReleaseNotesContent() (*ReleaseNotesConten
 		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
 	content := &ReleaseNotesContent{
-		breakingChanges: p.sections[breakingChanges],
+		breakingChanges: append(p.sections[ccloudBreakingChanges], p.sections[bothBreakingChanges]...),
 		newFeatures:     append(p.sections[ccloudNewFeatures], p.sections[bothNewFeatures]...),
 		bugFixes:        append(p.sections[ccloudBugFixes], p.sections[bothBugFixes]...),
 	}
@@ -139,7 +143,7 @@ func (p *PrepFileReaderImpl) GetConfluentReleaseNotesContent() (*ReleaseNotesCon
 		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
 	content := &ReleaseNotesContent{
-		breakingChanges: p.sections[breakingChanges],
+		breakingChanges: append(p.sections[confluentBreakingChanges], p.sections[bothBreakingChanges]...),
 		newFeatures:     append(p.sections[confluentNewFeatures], p.sections[bothNewFeatures]...),
 		bugFixes:        append(p.sections[confluentBugFixes], p.sections[bothBugFixes]...),
 	}

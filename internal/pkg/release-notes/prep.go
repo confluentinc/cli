@@ -10,13 +10,15 @@ import (
 )
 
 const (
-	breakingChangesTitle      = "Breaking Changes"
-	bothNewFeaturesTitle      = "New Features for Both CLIs"
-	bothBugFixesTitle         = "Bug Fixes for Both CLIs"
-	ccloudNewFeaturesTitle    = "CCloud New Features"
-	ccloudBugFixesTitle       = "CCloud Bug Fixes"
-	confluentNewFeaturesTitle = "Confluent New Features"
-	confluentBugFixesTitle    = "Confluent Bug Fixes"
+	bothBreakingChangesTitle      = "Breaking Changes for Both CLIs"
+	bothNewFeaturesTitle          = "New Features for Both CLIs"
+	bothBugFixesTitle             = "Bug Fixes for Both CLIs"
+	ccloudBreakingChangesTitle    = "CCloud Breaking Changes"
+	ccloudNewFeaturesTitle        = "CCloud New Features"
+	ccloudBugFixesTitle           = "CCloud Bug Fixes"
+	confluentBreakingChangesTitle = "Confluent Breaking Changes"
+	confluentNewFeaturesTitle     = "Confluent New Features"
+	confluentBugFixesTitle        = "Confluent Bug Fixes"
 
 	prepFileName = "./release-notes/prep"
 	placeHolder  = "<PLACEHOLDER>"
@@ -36,11 +38,13 @@ func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	defer f.Close()
 	mergedPRs := getMergedPRs(prevVersion)
 	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs,
-		breakingChangesTitle,
+		bothBreakingChangesTitle,
 		bothNewFeaturesTitle,
 		bothBugFixesTitle,
+		ccloudBreakingChangesTitle,
 		ccloudNewFeaturesTitle,
 		ccloudBugFixesTitle,
+		confluentBreakingChangesTitle,
 		confluentNewFeaturesTitle,
 		confluentBugFixesTitle,
 	)

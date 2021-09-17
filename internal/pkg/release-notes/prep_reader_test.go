@@ -8,37 +8,43 @@ import (
 
 func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 	tests := []struct {
-		name                     string
-		prepFile                 string
-		wantBreakingChanges      []string
-		wantBothNewFeatures      []string
-		wantBothBugFixes         []string
-		wantCCloudNewFeatures    []string
-		wantCCloudBugFixes       []string
-		wantConfluentNewFeatures []string
-		wantConfluentBugFixes    []string
+		name                         string
+		prepFile                     string
+		wantBothBreakingChanges      []string
+		wantBothNewFeatures          []string
+		wantBothBugFixes             []string
+		wantCCloudBreakingChanges    []string
+		wantCCloudNewFeatures        []string
+		wantCCloudBugFixes           []string
+		wantConfluentBreakingChanges []string
+		wantConfluentNewFeatures     []string
+		wantConfluentBugFixes        []string
 	}{
 		{
-			name:                     "test get sections map",
-			prepFile:                 "test_files/prep1",
-			wantBreakingChanges:      []string{"both breakingchange1", "both breakingchange2"},
-			wantBothNewFeatures:      []string{"both feature1", "both feature2"},
-			wantBothBugFixes:         []string{"both bug1", "both bug2"},
-			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2"},
-			wantCCloudBugFixes:       []string{"ccloud bug1", "ccloud bug2"},
-			wantConfluentNewFeatures: []string{"confluent new feature1", "confluent new feature2"},
-			wantConfluentBugFixes:    []string{"confluent bug1", "confluent bug2"},
+			name:                         "test get sections map",
+			prepFile:                     "test_files/prep1",
+			wantBothBreakingChanges:      []string{"both breakingchange1", "both breakingchange2"},
+			wantBothNewFeatures:          []string{"both feature1", "both feature2"},
+			wantBothBugFixes:             []string{"both bug1", "both bug2"},
+			wantCCloudBreakingChanges:    []string{"ccloud breakingchange1", "ccloud breakingchange2"},
+			wantCCloudNewFeatures:        []string{"ccloud feature1", "ccloud feature2"},
+			wantCCloudBugFixes:           []string{"ccloud bug1", "ccloud bug2"},
+			wantConfluentBreakingChanges: []string{"confluent breakingchange1", "confluent breakingchange2"},
+			wantConfluentNewFeatures:     []string{"confluent new feature1", "confluent new feature2"},
+			wantConfluentBugFixes:        []string{"confluent bug1", "confluent bug2"},
 		},
 		{
-			name:                     "test get sections map",
-			prepFile:                 "test_files/prep2",
-			wantBreakingChanges:      []string{"both breakingchange1", "both breakingchange2"},
-			wantBothNewFeatures:      []string{"both feature1", "both feature2"},
-			wantBothBugFixes:         []string{"both bug1", "both bug2"},
-			wantCCloudNewFeatures:    []string{"ccloud feature1", "ccloud feature2"},
-			wantCCloudBugFixes:       []string{"ccloud bug1", "ccloud bug2"},
-			wantConfluentNewFeatures: []string{"confluent new feature1", "confluent new feature2"},
-			wantConfluentBugFixes:    []string{"confluent bug1", "confluent bug2"},
+			name:                         "test get sections map",
+			prepFile:                     "test_files/prep2",
+			wantBothBreakingChanges:      []string{"both breakingchange1", "both breakingchange2"},
+			wantBothNewFeatures:          []string{"both feature1", "both feature2"},
+			wantBothBugFixes:             []string{"both bug1", "both bug2"},
+			wantCCloudBreakingChanges:    []string{"ccloud breakingchange1", "ccloud breakingchange2"},
+			wantCCloudNewFeatures:        []string{"ccloud feature1", "ccloud feature2"},
+			wantCCloudBugFixes:           []string{"ccloud bug1", "ccloud bug2"},
+			wantConfluentBreakingChanges: []string{"confluent breakingchange1", "confluent breakingchange2"},
+			wantConfluentNewFeatures:     []string{"confluent new feature1", "confluent new feature2"},
+			wantConfluentBugFixes:        []string{"confluent bug1", "confluent bug2"},
 		},
 	}
 	for _, tt := range tests {
@@ -46,11 +52,13 @@ func Test_Prep_Reader_Imp_Read_File(t *testing.T) {
 			prepReader := PrepFileReaderImpl{}
 			err := prepReader.ReadPrepFile(tt.prepFile)
 			require.NoError(t, err)
-			require.Equal(t, prepReader.sections[breakingChanges], tt.wantBreakingChanges)
+			require.Equal(t, prepReader.sections[bothBreakingChanges], tt.wantBothBreakingChanges)
 			require.Equal(t, prepReader.sections[bothNewFeatures], tt.wantBothNewFeatures)
 			require.Equal(t, prepReader.sections[bothBugFixes], tt.wantBothBugFixes)
+			require.Equal(t, prepReader.sections[ccloudBreakingChanges], tt.wantCCloudBreakingChanges)
 			require.Equal(t, prepReader.sections[ccloudNewFeatures], tt.wantCCloudNewFeatures)
 			require.Equal(t, prepReader.sections[ccloudBugFixes], tt.wantCCloudBugFixes)
+			require.Equal(t, prepReader.sections[confluentBreakingChanges], tt.wantConfluentBreakingChanges)
 			require.Equal(t, prepReader.sections[confluentNewFeatures], tt.wantConfluentNewFeatures)
 			require.Equal(t, prepReader.sections[confluentBugFixes], tt.wantConfluentBugFixes)
 		})
