@@ -175,8 +175,14 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		current.CLIName = "confluent"
+		filename, err := getConfigPath("confluent")
+		if err != nil {
+			return err
+		}
+
+		current.Filename = filename
 		current.Ver = semver.MustParse("1.0.0")
+
 		if err := current.Save(); err != nil {
 			return err
 		}

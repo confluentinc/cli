@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -456,7 +455,7 @@ func (c *Config) MergeWith(other *Config) {
 }
 
 func (c *Config) getFilename() (string, error) {
-	if c.Filename == "" || !strings.Contains(c.Filename, c.CLIName) {
+	if c.Filename == "" {
 		homedir, _ := os.UserHomeDir()
 		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir, c.CLIName))
 	}
