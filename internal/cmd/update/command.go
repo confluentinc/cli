@@ -247,6 +247,10 @@ func backupConfig(cliName string) error {
 		return err
 	}
 
+	if !utils.DoesPathExist(path) {
+		return nil
+	}
+
 	return os.Rename(path, path+".old")
 }
 
