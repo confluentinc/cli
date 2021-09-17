@@ -182,6 +182,10 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 		current.Filename = filename
 		current.Ver = semver.MustParse("1.0.0")
+		// Duplicate the context name in the netrc_machine_name field to support updating context names in 2.0
+		for name := range current.Contexts {
+			current.Contexts[name].NetrcMachineName = name
+		}
 
 		if err := current.Save(); err != nil {
 			return err
