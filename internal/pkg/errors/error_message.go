@@ -234,7 +234,7 @@ const (
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
 	CorruptedConfigSuggestions = "Your CLI config file \"%s\" is corrupted.\n" +
-		"Remove config file, and run `confluent login` or `confluent init`.\n" +
+		"Remove config file, and run `confluent login` or `confluent context create`.\n" +
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +
 		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
@@ -347,6 +347,7 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
+	FlagRequiredErrorMsg                     = "must use at least one of the following flags: %s"
 	ProhibitedFlagCombinationErrorMsg        = "cannot use `--%s` and `--%s` flags at the same time"
 	InvalidFlagValueErrorMsg                 = "invalid value \"%s\" for flag `--%s`"
 	InvalidFlagValueSuggestions              = "The possible values for flag `%s` are: %s."

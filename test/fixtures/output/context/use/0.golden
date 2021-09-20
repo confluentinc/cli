@@ -1,0 +1,4 @@
+Error: no context selected
+
+Suggestions:
+    Select an existing context with `confluent context use`, or supply a specific context name as an argument.

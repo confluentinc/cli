@@ -26,9 +26,7 @@ type Context struct {
 	Config                 *Config                              `json:"-" hcl:"-"`
 }
 
-func newContext(name string, platform *v2.Platform, credential *v2.Credential,
-	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState, config *Config) (*Context, error) {
+func newContext(name string, platform *v2.Platform, credential *v2.Credential, kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState, config *Config) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		Platform:               platform,
@@ -41,11 +39,7 @@ func newContext(name string, platform *v2.Platform, credential *v2.Credential,
 		Config:                 config,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
-	err := ctx.validate()
-	if err != nil {
-		return nil, err
-	}
-	return ctx, nil
+	return ctx, ctx.validate()
 }
 
 func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {

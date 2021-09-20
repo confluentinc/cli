@@ -10,16 +10,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	"github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/audit-log"
-	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
+	"github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
-	"github.com/confluentinc/cli/internal/cmd/config"
 	"github.com/confluentinc/cli/internal/cmd/connect"
+	"github.com/confluentinc/cli/internal/cmd/context"
 	"github.com/confluentinc/cli/internal/cmd/environment"
 	"github.com/confluentinc/cli/internal/cmd/iam"
-	initcontext "github.com/confluentinc/cli/internal/cmd/init"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
 	"github.com/confluentinc/cli/internal/cmd/local"
@@ -27,9 +26,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	serviceaccount "github.com/confluentinc/cli/internal/cmd/service-account"
+	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
@@ -124,11 +123,10 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
 	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	cli.AddCommand(completion.New(cli))
-	cli.AddCommand(config.New(cfg.IsCloudLogin(), prerunner, analyticsClient))
+	cli.AddCommand(context.New(prerunner, flagResolver))
 	cli.AddCommand(connectCmd.Command)
 	cli.AddCommand(environmentCmd.Command)
 	cli.AddCommand(iam.New(cfg, prerunner))
-	cli.AddCommand(initcontext.New(prerunner, flagResolver, analyticsClient))
 	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))

@@ -40,6 +40,11 @@ deps:
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0 && \
 	go get github.com/mitchellh/golicense@v0.2.0
 
+.PHONY: jenkins-deps
+# Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
+jenkins-deps:
+	go get github.com/goreleaser/goreleaser@v0.164.0
+
 ifeq ($(shell uname),Darwin)
 SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
