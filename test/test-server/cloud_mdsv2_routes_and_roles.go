@@ -240,8 +240,7 @@ var v2RoutesAndReplies = map[string]string{
 				"scope": {
 				  	"path": [
 						"organization=1234",
-						"environment=a-595",
-						"cloud-cluster=lkc-1111aaa"
+						"environment=a-595"
 					],
 					"clusters": {
 						"schema-registry-cluster": "lsrc-3333ccc"
