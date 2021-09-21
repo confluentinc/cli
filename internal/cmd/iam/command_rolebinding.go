@@ -48,10 +48,6 @@ var (
 		"EnvironmentAdmin": true,
 	}
 
-	organizationScopedRoles = map[string]bool{
-		"OrganizationAdmin": true,
-		"MetricsViewer":     true,
-	}
 )
 
 type rolebindingOptions struct {
