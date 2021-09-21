@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -225,9 +226,11 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 	if err != nil {
 		return "", err
 	} else if caCertPathFlag != "" {
-		return caCertPathFlag, nil
+		caCertPath, err := filepath.Abs(caCertPathFlag)
+		return caCertPath, err
 	} else {
-		return os.Getenv(pauth.ConfluentCaCertPathEnvVar), nil
+		caCertPath, err := filepath.Abs(os.Getenv(pauth.ConfluentCaCertPathEnvVar))
+		return caCertPath, err
 	}
 }
 
