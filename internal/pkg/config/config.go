@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/blang/semver"
+	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
@@ -12,7 +12,7 @@ type Config interface {
 	Load() error
 	Validate() error
 	SetParams(params *Params)
-	Version() semver.Version
+	Version() version.Version
 }
 
 type Params struct {
