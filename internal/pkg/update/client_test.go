@@ -76,12 +76,12 @@ func TestCheckForUpdates(t *testing.T) {
 		forceCheck     bool
 	}
 	tests := []struct {
-		name                string
-		client              *client
-		args                args
-		wantUpdateAvailable bool
-		wantLatestVersion   string
-		wantErr             bool
+		name      string
+		client    *client
+		args      args
+		wantMajor string
+		wantMinor string
+		wantErr   bool
 	}{
 		{
 			name: "should err if currentVersion isn't semver",
@@ -93,16 +93,14 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "gobbledegook",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "gobbledegook",
-			wantErr:             true,
+			wantErr: true,
 		},
 		{
 			name: "should err if can't get versions",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (i *version.Version, e error) {
-						return nil, errors.New("zap")
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						return nil, nil, errors.New("zap")
 					},
 				},
 				Logger: log.New(),
@@ -111,17 +109,15 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
+			wantErr: true,
 		},
 		{
 			name: "should return the new version",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						v3, _ := version.NewSemver("v3")
-						return v3, nil
+						return v3, current, nil
 					},
 				},
 				Logger: log.New(),
@@ -130,17 +126,15 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: true,
-			wantLatestVersion:   "v3",
-			wantErr:             false,
+			wantMajor: "v3",
 		},
 		{
 			name: "should not check for the new version if has checked recently",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						v3, _ := version.NewSemver("v3")
-						return v3, nil
+						return v3, v3, nil
 					},
 				},
 				Logger:    log.New(),
@@ -150,17 +144,14 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             false,
 		},
 		{
 			name: "should not check again if checked recently",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
+						return nil, nil, errors.New("whoops")
 					},
 				},
 				Logger: log.New(),
@@ -171,17 +162,14 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             false,
 		},
 		{
 			name: "should respect forceCheck even if you checked recently",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						v3, _ := version.NewSemver("v3")
-						return v3, nil
+						return v3, current, nil
 					},
 				},
 				Logger: log.New(),
@@ -193,17 +181,15 @@ func TestCheckForUpdates(t *testing.T) {
 				currentVersion: "v1.2.3",
 				forceCheck:     true,
 			},
-			wantUpdateAvailable: true,
-			wantLatestVersion:   "v3",
-			wantErr:             false,
+			wantMajor: "v3",
 		},
 		{
 			name: "should err if you can't create the CheckFile",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v1, _ := version.NewSemver("v2")
-						return v1, nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v2, _ := version.NewSemver("v2")
+						return v2, v2, nil
 					},
 				},
 				Logger: log.New(),
@@ -214,17 +200,15 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
+			wantErr: true,
 		},
 		{
 			name: "should err if you can't touch the CheckFile",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						v1, _ := version.NewSemver("v2")
-						return v1, nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v2, _ := version.NewSemver("v2")
+						return v2, v2, nil
 					},
 				},
 				Logger: log.New(),
@@ -235,17 +219,15 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
+			wantErr: true,
 		},
 		{
 			name: "should not check if disabled",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
-						return nil, errors.New("whoops")
+						return nil, nil, errors.New("whoops")
 					},
 				},
 				Logger:       log.New(),
@@ -255,16 +237,13 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             false,
 		},
 		{
 			name: "checks - error",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						return nil, errors.New("whoops")
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						return nil, nil, errors.New("whoops")
 					},
 				},
 				Logger: log.New(),
@@ -273,16 +252,15 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.3",
-			wantErr:             true,
+			wantErr: true,
 		},
 		{
 			name: "checks - success - update",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						return version.Must(version.NewVersion("v1.2.4")), nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v, _ := version.NewVersion("v1.2.4")
+						return nil, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -291,16 +269,15 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.3",
 			},
-			wantUpdateAvailable: true,
-			wantLatestVersion:   "v1.2.4",
-			wantErr:             false,
+			wantMinor: "v1.2.4",
 		},
 		{
 			name: "checks - success - same version",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						return version.Must(version.NewVersion("v1.2.4")), nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v, _ := version.NewVersion("v1.2.4")
+						return v, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -309,16 +286,14 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v1.2.4",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v1.2.4",
-			wantErr:             false,
 		},
 		{
 			name: "checks - success - hyphen no update",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						return version.Must(version.NewVersion("v0.238.0")), nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v, _ := version.NewVersion("v0.238.0")
+						return v, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -327,16 +302,14 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v0.238.0-7-g5060ef4",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v0.238.0-7-g5060ef4",
-			wantErr:             false,
 		},
 		{
 			name: "checks - success - hyphen same version",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						return version.Must(version.NewVersion("v0.238.0-7-g5060ef4")), nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v, _ := version.NewVersion("v0.238.0-7-g5060ef4")
+						return v, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -345,16 +318,14 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v0.238.0-7-g5060ef4",
 			},
-			wantUpdateAvailable: false,
-			wantLatestVersion:   "v0.238.0-7-g5060ef4",
-			wantErr:             false,
 		},
 		{
 			name: "checks - success - hyphen update",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
-						return version.Must(version.NewVersion("v0.238.0-7-g5060ef4")), nil
+					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
+						v, _ := version.NewVersion("v0.238.0-7-g5060ef4")
+						return nil, v, nil
 					},
 				},
 				Logger: log.New(),
@@ -363,23 +334,50 @@ func TestCheckForUpdates(t *testing.T) {
 				name:           "my-cli",
 				currentVersion: "v0.238.0",
 			},
-			wantUpdateAvailable: true,
-			wantLatestVersion:   "v0.238.0-7-g5060ef4",
-			wantErr:             false,
+			wantMinor: "v0.238.0-7-g5060ef4",
+		},
+		{
+			name: "different major and minor versions",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetLatestMajorAndMinorVersionFunc: func(_ string, current *version.Version) (*version.Version, *version.Version, error) {
+						v0, _ := version.NewVersion("v0.1.0")
+						v1, _ := version.NewVersion("v1.0.0")
+						return v1, v0, nil
+					},
+				},
+			}),
+			args:      args{currentVersion: "v0.0.0"},
+			wantMajor: "v1.0.0",
+			wantMinor: "v0.1.0",
+		},
+		{
+			name: "no latest major or minor versions",
+			client: NewClient(&ClientParams{
+				Repository: &updateMock.Repository{
+					GetLatestMajorAndMinorVersionFunc: func(_ string, current *version.Version) (*version.Version, *version.Version, error) {
+						v0, _ := version.NewVersion("v0.0.0")
+						return v0, v0, nil
+					},
+				},
+			}),
+			args:      args{currentVersion: "v0.0.0"},
+			wantMajor: "",
+			wantMinor: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotUpdateAvailable, gotLatestVersion, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
+			major, minor, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("client.CheckForUpdates() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotUpdateAvailable != tt.wantUpdateAvailable {
-				t.Errorf("client.CheckForUpdates() gotUpdateAvailable = %v, want %v", gotUpdateAvailable, tt.wantUpdateAvailable)
+			if major != tt.wantMajor {
+				t.Errorf("client.CheckForUpdates() major = %v, want %v", major, tt.wantMajor)
 			}
-			if gotLatestVersion != tt.wantLatestVersion {
-				t.Errorf("client.CheckForUpdates() gotLatestVersion = %v, want %v", gotLatestVersion, tt.wantLatestVersion)
+			if minor != tt.wantMinor {
+				t.Errorf("client.CheckForUpdates() minor = %v, want %v", minor, tt.wantMinor)
 			}
 		})
 	}
@@ -394,9 +392,9 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	checkFile := filepath.FromSlash(fmt.Sprintf("%s/new-check-file", tmpDir))
 
 	repo := &updateMock.Repository{
-		GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+		GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 			v3, _ := version.NewSemver("v3")
-			return v3, nil
+			return v3, v3, nil
 		},
 	}
 	clock := clockwork.NewFakeClockAt(time.Now())
@@ -408,11 +406,11 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	client.clock = clock
 
 	// Should check and find update
-	updateAvailable, latestVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
+	latestMajorVersion, latestMinorVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
 	req.NoError(err)
-	req.True(updateAvailable)
-	req.Equal("v3", latestVersion)
-	req.True(repo.GetLatestBinaryVersionCalled())
+	req.Equal("v3", latestMajorVersion)
+	req.Equal("v3", latestMinorVersion)
+	req.True(repo.GetLatestMajorAndMinorVersionCalled())
 
 	// Shouldn't check anymore for 24 hours
 	for i := 0; i < 3; i++ {
@@ -420,18 +418,18 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 		repo.Reset()
 
 		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-		req.False(repo.GetLatestBinaryVersionCalled())
+		req.False(repo.GetLatestMajorAndMinorVersionCalled())
 	}
 
 	// 5 days pass...
 	clock.Advance(5 * 24 * time.Hour)
 
 	// Should check and find update
-	updateAvailable, latestVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
+	latestMajorVersion, latestMinorVersion, err = client.CheckForUpdates("my-cli", "v1.2.3", false)
 	req.NoError(err)
-	req.True(updateAvailable)
-	req.Equal("v3", latestVersion)
-	req.True(repo.GetLatestBinaryVersionCalled())
+	req.Equal("v3", latestMajorVersion)
+	req.Equal("v3", latestMinorVersion)
+	req.True(repo.GetLatestMajorAndMinorVersionCalled())
 
 	// Shouldn't check anymore for 24 hours
 	for i := 0; i < 3; i++ {
@@ -439,23 +437,23 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 		repo.Reset()
 
 		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-		req.False(repo.GetLatestBinaryVersionCalled())
+		req.False(repo.GetLatestMajorAndMinorVersionCalled())
 	}
 
 	// Finally we should check once more
 	clock.Advance(3 * time.Second)
 	repo.Reset()
 	_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-	req.True(repo.GetLatestBinaryVersionCalled())
+	req.True(repo.GetLatestMajorAndMinorVersionCalled())
 }
 
 func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 	req := require.New(t)
 
 	repo := &updateMock.Repository{
-		GetLatestBinaryVersionFunc: func(name string) (*version.Version, error) {
+		GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 			v3, _ := version.NewSemver("v3")
-			return v3, nil
+			return v3, v3, nil
 		},
 	}
 	client := NewClient(&ClientParams{
@@ -466,11 +464,11 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 
 	// Should check for updates every time if no CheckFile given to serve as the "last check" cache
 	for i := 0; i < 3; i++ {
-		updateAvailable, latestVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
+		latestMajorVersion, latestMinorVersion, err := client.CheckForUpdates("my-cli", "v1.2.3", false)
 		req.NoError(err)
-		req.True(updateAvailable)
-		req.Equal("v3", latestVersion)
-		req.True(repo.GetLatestBinaryVersionCalled())
+		req.Equal("v3", latestMajorVersion)
+		req.Equal("v3", latestMinorVersion)
+		req.True(repo.GetLatestMajorAndMinorVersionCalled())
 		repo.Reset()
 	}
 }
@@ -491,11 +489,11 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "success",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionsFunc: func(currentVersion string) (version.Collection, error) {
+					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
 						v, _ := version.NewSemver(releaseNotesVersion)
 						return version.Collection{v}, nil
 					},
-					DownloadReleaseNotesFunc: func(version string) (string, error) {
+					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return releaseNotes, nil
 					},
 				},
@@ -509,10 +507,10 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "error getting release notes version",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionsFunc: func(currentVersion string) (version.Collection, error) {
+					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
 						return nil, errors.New("whoops")
 					},
-					DownloadReleaseNotesFunc: func(version string) (string, error) {
+					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return "", nil
 					},
 				},
@@ -524,11 +522,11 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			name: "error downloading release notes",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
-					GetLatestReleaseNotesVersionsFunc: func(currentVersion string) (version.Collection, error) {
+					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
 						v1, _ := version.NewSemver("v1")
 						return version.Collection{v1}, nil
 					},
-					DownloadReleaseNotesFunc: func(version string) (string, error) {
+					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return "", errors.New("whoops")
 					},
 				},
@@ -539,8 +537,7 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes(currentVersion)
-
+			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes("confluent", currentVersion)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

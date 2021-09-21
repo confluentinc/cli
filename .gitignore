@@ -12,7 +12,11 @@ git-setup-semaphore.sh
 *.dll
 *.so
 *.dylib
-.idea
+
+# Editor configurations
+*.el
+.idea/
+.vscode/
 
 # Test binary, build with `go test -c`
 *.test
@@ -35,5 +39,4 @@ confluent_test
 integ_coverage.txt
 unit_coverage.txt
 *.sw*
-.vscode
 **/*.DS_Store

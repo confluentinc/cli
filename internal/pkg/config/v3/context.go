@@ -26,9 +26,7 @@ type Context struct {
 	Config                 *Config                              `json:"-" hcl:"-"`
 }
 
-func newContext(name string, platform *v2.Platform, credential *v2.Credential,
-	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState, config *Config) (*Context, error) {
+func newContext(name string, platform *v2.Platform, credential *v2.Credential, kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState, config *Config) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		Platform:               platform,
@@ -41,56 +39,7 @@ func newContext(name string, platform *v2.Platform, credential *v2.Credential,
 		Config:                 config,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
-	err := ctx.validate()
-	if err != nil {
-		return nil, err
-	}
-	return ctx, nil
-}
-
-func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {
-	if cluster.ID == "" {
-		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.Filename, c.Logger)
-	}
-	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, c.Name, cluster.ID)
-		cluster.APIKey = ""
-		err := c.Save()
-		if err != nil {
-			return errors.Wrap(err, errors.ResetInvalidAPIKeyErrorMsg)
-		}
-	}
-	return c.validateApiKeysDict(cluster)
-}
-
-func (c *Context) validateApiKeysDict(cluster *v1.KafkaClusterConfig) error {
-	missingKey := false
-	mismatchKey := false
-	missingSecret := false
-	for k, pair := range cluster.APIKeys {
-		if pair.Key == "" {
-			delete(cluster.APIKeys, k)
-			missingKey = true
-			continue
-		}
-		if k != pair.Key {
-			delete(cluster.APIKeys, k)
-			mismatchKey = true
-			continue
-		}
-		if pair.Secret == "" {
-			delete(cluster.APIKeys, k)
-			missingSecret = true
-		}
-	}
-	if missingKey || mismatchKey || missingSecret {
-		printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster, c.Name)
-		err := c.Save()
-		if err != nil {
-			return errors.Wrap(err, errors.ClearInvalidAPIFailErrorMsg)
-		}
-	}
-	return nil
+	return ctx, ctx.validate()
 }
 
 func (c *Context) validate() error {

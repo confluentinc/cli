@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/blang/semver"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -139,8 +141,8 @@ func (c *Config) Save() error {
 	tempKafka := c.resolveOverwrittenKafka()
 	tempAccount := c.resolveOverwrittenAccount()
 	tempContext := c.resolveOverwrittenContext()
-	err := c.Validate()
-	if err != nil {
+
+	if err := c.Validate(); err != nil {
 		return err
 	}
 
@@ -148,18 +150,21 @@ func (c *Config) Save() error {
 	if err != nil {
 		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
 	}
+
 	filename := c.GetFilename()
-	err = os.MkdirAll(filepath.Dir(filename), 0700)
-	if err != nil {
+
+	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
 	}
-	err = ioutil.WriteFile(filename, cfg, 0600)
-	if err != nil {
+
+	if err := ioutil.WriteFile(filename, cfg, 0600); err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
+
 	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenAccount(tempAccount)
 	c.restoreOverwrittenKafka(tempKafka)
+
 	return nil
 }
 
@@ -274,16 +279,17 @@ func (c *Config) Validate() error {
 
 // DeleteContext deletes the specified context, and returns an error if it's not found.
 func (c *Config) DeleteContext(name string) error {
-	_, err := c.FindContext(name)
-	if err != nil {
+	if _, err := c.FindContext(name); err != nil {
 		return err
 	}
 	delete(c.Contexts, name)
-	if c.CurrentContext == name {
+	delete(c.ContextStates, name)
+
+	if name == c.CurrentContext {
 		c.CurrentContext = ""
 	}
-	delete(c.ContextStates, name)
-	return nil
+
+	return c.Save()
 }
 
 // FindContext finds a context by name, and returns nil if not found.
@@ -295,47 +301,91 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name string, platformName string, credentialName string,
-	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextNameExistsErrorMsg, name)
 	}
-	return c.BuildAndSaveContext(name, platformName, credentialName, kafkaClusters, kafka, schemaRegistryClusters, state)
-}
-
-func (c *Config) BuildAndSaveContext(name string, platformName string, credentialName string,
-	kafkaClusters map[string]*v1.KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*v2.SchemaRegistryCluster, state *v2.ContextState) error {
 
 	credential, ok := c.Credentials[credentialName]
 	if !ok {
 		return fmt.Errorf(errors.CredentialNotFoundErrorMsg, credentialName)
 	}
+
 	platform, ok := c.Platforms[platformName]
 	if !ok {
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
-	context, err := newContext(name, platform, credential, kafkaClusters, kafka,
-		schemaRegistryClusters, state, c)
+
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c)
 	if err != nil {
 		return err
 	}
-	c.Contexts[name] = context
-	c.ContextStates[name] = context.State
-	err = c.Validate()
-	if err != nil {
+
+	c.Contexts[name] = ctx
+	c.ContextStates[name] = ctx.State
+
+	if err := c.Validate(); err != nil {
 		return err
 	}
-	if c.CurrentContext == "" {
-		c.CurrentContext = context.Name
-	}
+
 	return c.Save()
 }
 
-func (c *Config) SetContext(name string) error {
-	_, err := c.FindContext(name)
-	if err != nil {
+// CreateContext creates a new context.
+func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) error {
+	apiKeyPair := &v0.APIKeyPair{
+		Key:    apiKey,
+		Secret: apiSecret,
+	}
+	apiKeys := map[string]*v0.APIKeyPair{
+		apiKey: apiKeyPair,
+	}
+	kafkaClusterCfg := &v1.KafkaClusterConfig{
+		ID:        "anonymous-id",
+		Name:      "anonymous-cluster",
+		Bootstrap: bootstrapURL,
+		APIKeys:   apiKeys,
+		APIKey:    apiKey,
+	}
+	kafkaClusters := map[string]*v1.KafkaClusterConfig{
+		kafkaClusterCfg.ID: kafkaClusterCfg,
+	}
+	platform := &v2.Platform{Server: bootstrapURL}
+
+	// Inject credential and platforms name for now, until users can provide custom names.
+	platform.Name = strings.TrimPrefix(platform.Server, "https://")
+
+	// Hardcoded for now, since username/password isn't implemented yet.
+	credential := &v2.Credential{
+		Username:       "",
+		Password:       "",
+		APIKeyPair:     apiKeyPair,
+		CredentialType: v2.APIKey,
+	}
+
+	switch credential.CredentialType {
+	case v2.Username:
+		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
+	case v2.APIKey:
+		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
+	default:
+		return errors.Errorf(errors.UnknownCredentialTypeErrorMsg, credential.CredentialType)
+	}
+
+	if err := c.SaveCredential(credential); err != nil {
+		return err
+	}
+
+	if err := c.SavePlatform(platform); err != nil {
+		return err
+	}
+
+	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil)
+}
+
+// UseContext sets the current context, if it exists.
+func (c *Config) UseContext(name string) error {
+	if _, err := c.FindContext(name); err != nil {
 		return err
 	}
 	c.CurrentContext = name
@@ -358,8 +408,7 @@ func (c *Config) SavePlatform(platform *v2.Platform) error {
 	return c.Save()
 }
 
-// Context returns the user specified context if it exists,
-// the current Context, or nil if there's no context set.
+// Context returns the current context.
 func (c *Config) Context() *Context {
 	if c == nil {
 		return nil

@@ -1,5 +1,5 @@
              Name             |          Type           |  Kafka ID  |     Component ID     |                 Hosts                  |    Protocol     
-+-----------------------------+-------------------------+------------+----------------------+----------------------------------------+----------------+
+------------------------------+-------------------------+------------+----------------------+----------------------------------------+-----------------
   theMdsConnectCluster        | connect-cluster         | kafka-GUID | connect-name         | 10.5.5.5:9005                          | HTTPS           
   theMdsKSQLCluster           | ksql-cluster            | kafka-GUID | ksql-name            | 10.4.4.4:9004                          | HTTPS           
   theMdsKafkaCluster          | kafka-cluster           | kafka-GUID |                      | 10.10.10.10:8090, mds.example.com:8090 | SASL_PLAINTEXT  

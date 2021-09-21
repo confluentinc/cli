@@ -1,5 +1,4 @@
-  Current |                   Name                    |       Platform        |       Credential        
-+---------+-------------------------------------------+-----------------------+------------------------+
-          | login-fake@user.com-http://127.0.0.1:1024 | http://127.0.0.1:1024 | username-fake@user.com  
-          | my-context                                | http://127.0.0.1:1024 | api-key-hi              
-  *       | other-context                             | http://127.0.0.1:1024 | api-key-hi              
+  Current |     Name      |   Platform    | Credential  
+----------+---------------+---------------+-------------
+          | my-context    | boot-test.com | api-key-hi  
+  *       | other-context | boot-test.com | api-key-hi  

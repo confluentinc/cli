@@ -28,6 +28,7 @@ type pluginDisplay struct {
 
 var (
 	pluginFields          = []string{"PluginName", "Type"}
+	pluginHumanFields     = []string{"Plugin Name", "Type"}
 	pluginStructureLabels = []string{"plugin_name", "type"}
 )
 
@@ -80,7 +81,7 @@ func (c *pluginCommand) init() {
 }
 
 func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
-	outputWriter, err := output.NewListOutputWriter(cmd, pluginFields, pluginFields, pluginStructureLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, pluginFields, pluginHumanFields, pluginStructureLabels)
 	if err != nil {
 		return err
 	}

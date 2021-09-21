@@ -422,7 +422,7 @@ func (a *ClientObj) isSwitchUserLogin(prevUser userInfo) bool {
 			return true
 		}
 	} else if a.activeCmd.user.credentialType == v2.APIKey.String() {
-		if a.activeCmd.user.apiKey != a.activeCmd.user.apiKey {
+		if prevUser.apiKey != a.activeCmd.user.apiKey {
 			return true
 		}
 	}
