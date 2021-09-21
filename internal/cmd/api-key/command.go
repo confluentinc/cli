@@ -123,7 +123,7 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <apikey>",
+		Use:   "update <api-key>",
 		Short: "Update an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
@@ -133,7 +133,7 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <apikey>",
+		Use:   "delete <api-key>",
 		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
@@ -141,7 +141,7 @@ func (c *command) init() {
 	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
-		Use:   "store <apikey> <secret>",
+		Use:   "store <api-key> <secret>",
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),
@@ -153,8 +153,9 @@ func (c *command) init() {
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
-		Use:   "use <apikey>",
-		Short: "Make an API key active for use in other commands.",
+		Use:   "use <api-key>",
+		Short: "Set the active API key for use in other commands.",
+		Long:  "Set the active API key for use in any command which supports passing an API key with the `--api-key` flag.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
 	}
