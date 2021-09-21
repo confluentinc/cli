@@ -137,7 +137,7 @@ const (
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	ConfigurationFormErrorMsg            = "configuration must be in the form of key=value"
+	FailedToParseConfigErrMsg            = `failed to parse "key=value" pattern from configuration: %s`
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""

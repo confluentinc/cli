@@ -16,7 +16,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	kafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -238,7 +237,7 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	topicConfigsMap, err := kafka.ToMap(topicConfigStrings)
+	topicConfigsMap, err := utils.ToMap(topicConfigStrings)
 	if err != nil {
 		return err
 	}
@@ -350,7 +349,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	if err != nil {
 		return err
 	}
-	configsMap, err := kafka.ToMap(configStrings)
+	configsMap, err := utils.ToMap(configStrings)
 	if err != nil {
 		return err
 	}
