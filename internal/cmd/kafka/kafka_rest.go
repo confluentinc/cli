@@ -44,14 +44,12 @@ func parseOpenAPIError(err error) (*kafkaRestV3Error, error) {
 }
 
 func kafkaRestError(url string, err error, httpResp *http.Response) error {
-	switch err.(type) {
+	switch e := err.(type) {
 	case *neturl.Error:
-		if e, ok := err.(*neturl.Error); ok {
-			if strings.Contains(e.Error(), SelfSignedCertError) || strings.Contains(e.Error(), UnauthorizedCertError) {
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
-			}
-			return errors.Errorf(errors.KafkaRestConnectionMsg, url, e.Err)
+		if strings.Contains(e.Error(), SelfSignedCertError) || strings.Contains(e.Error(), UnauthorizedCertError) {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
 		}
+		return errors.Errorf(errors.KafkaRestConnectionMsg, url, e.Err)
 	case kafkarestv3.GenericOpenAPIError:
 		openAPIError, parseErr := parseOpenAPIError(err)
 		if parseErr == nil {

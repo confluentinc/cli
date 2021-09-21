@@ -1,5 +1,5 @@
         Name       |   Value    
-+------------------+-----------+
+-------------------+------------
   cleanup.policy   | delete     
   compression.type | producer   
   retention.ms     | 604800000  

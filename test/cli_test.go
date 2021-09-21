@@ -353,6 +353,8 @@ func resetConfiguration(t *testing.T) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := v3.New(new(config.Params))
+	cfg.DisableUpdateCheck = true
+
 	err := cfg.Save()
 	require.NoError(t, err)
 }

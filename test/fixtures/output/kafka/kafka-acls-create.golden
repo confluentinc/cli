@@ -1,4 +1,4 @@
   Principal | Permission | Operation | ResourceType | ResourceName | PatternType  
-+-----------+------------+-----------+--------------+--------------+-------------+
+------------+------------+-----------+--------------+--------------+--------------
   User:     | ALLOW      | READ      | TOPIC        | 'test-topic' | LITERAL      
   User:     | ALLOW      | DESCRIBE  | TOPIC        | 'test-topic' | LITERAL      

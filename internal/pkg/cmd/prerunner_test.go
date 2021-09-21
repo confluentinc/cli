@@ -92,8 +92,8 @@ func getPreRunBase() *pcmd.PreRun {
 		Version: pmock.NewVersionMock(),
 		Logger:  log.New(),
 		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
-				return false, "", nil
+			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
+				return "", "", nil
 			},
 		},
 		FlagResolver: &pcmd.FlagResolverImpl{
@@ -203,9 +203,9 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 
 	r := getPreRunBase()
 	r.UpdateClient = &mock.Client{
-		CheckForUpdatesFunc: func(n, v string, f bool) (bool, string, error) {
+		CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 			calledAnonymous = true
-			return false, "", nil
+			return "", "", nil
 		},
 	}
 

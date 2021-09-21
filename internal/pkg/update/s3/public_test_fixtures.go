@@ -369,6 +369,31 @@ const ListVersionsPublicFixtureInvalidPrefix = `\
   </Contents>
 </ListBucketResult>`
 
+const ListVersionsPublicFixtureMajorAndMinor = `\
+<?xml version="1.0" encoding="utf-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>confluent.cloud</Name>
+  <Prefix>ccloud-cli/binaries/</Prefix>
+  <Marker></Marker>
+  <MaxKeys>1000</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>ccloud-cli/binaries/0.1.0/ccloud_0.1.0_darwin_amd64</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"6d67d14d2e493c4954f3b9a73c3b7e96"</ETag>
+    <Size>469</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+  <Contents>
+    <Key>ccloud-cli/binaries/1.0.0/ccloud_1.0.0_darwin_amd64</Key>
+    <LastModified>2019-03-30T03:47:23.000Z</LastModified>
+    <ETag>"a040fb753aa77009330bb7b6e0f805a8"</ETag>
+    <Size>17067256</Size>
+    <StorageClass>STANDARD</StorageClass>
+  </Contents>
+
+</ListBucketResult>`
+
 const ListReleaseNotesVersionsPublicFixture = `\
 <?xml version="1.0" encoding="utf-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">

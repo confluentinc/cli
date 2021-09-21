@@ -467,7 +467,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
@@ -559,7 +559,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
@@ -652,7 +652,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
