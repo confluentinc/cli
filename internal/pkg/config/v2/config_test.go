@@ -155,7 +155,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: testConfigFile.Name(),
-					Ver:      config.Version{Version},
+					Ver:      config.Version{Version: Version},
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -197,7 +197,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: testConfigFile.Name(),
-					Ver:      config.Version{Version},
+					Ver:      config.Version{Version: Version},
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -228,7 +228,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: testConfigFile.Name(),
-					Ver:      config.Version{Version},
+					Ver:      config.Version{Version: Version},
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -389,7 +389,7 @@ func TestConfig_Save(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: "",
-					Ver:      config.Version{Version},
+					Ver:      config.Version{Version: Version},
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
@@ -418,7 +418,7 @@ func TestConfig_Save(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: "",
-					Ver:      config.Version{Version},
+					Ver:      config.Version{Version: Version},
 				},
 				Platforms: map[string]*Platform{
 					platform.Name: platform,
