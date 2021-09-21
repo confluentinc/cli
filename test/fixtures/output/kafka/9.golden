@@ -2,6 +2,6 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
   CloudId |       CloudName       |    RegionId     |         RegionName           
-+---------+-----------------------+-----------------+-----------------------------+
+----------+-----------------------+-----------------+------------------------------
   gcp     | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
   gcp     | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       

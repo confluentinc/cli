@@ -2,7 +2,7 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
      Id     | Name | Type  | Provider |   Region    | Availability |    Status     
-+-----------+------+-------+----------+-------------+--------------+--------------+
+------------+------+-------+----------+-------------+--------------+---------------
     lkc-123 | abc  | BASIC | gcp      | us-central1 | single-zone  | PROVISIONING  
     lkc-456 | def  | BASIC | gcp      | us-central1 | multi-zone   | PROVISIONING  
     lkc-123 | abc  | BASIC | gcp      | us-central1 | single-zone  | PROVISIONING  

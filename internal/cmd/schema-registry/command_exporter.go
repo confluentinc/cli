@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -83,7 +82,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my_subject1,my_subject2 --context-type CUSTOM --context my_context --config config.txt", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config-file config.txt", cliName),
 			},
 		),
 	}
@@ -106,7 +105,7 @@ func (c *exporterCommand) init(cliName string) {
 			examples.Example{
 				Text: "Update information of new schema exporter.",
 				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter"+
-					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context-name my_context", cliName),
+					" --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context", cliName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
@@ -321,16 +320,15 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	name := args[0]
-	info, httpResponse, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
+	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	updateRequest := srsdk.UpdateExporterRequest{
 		Subjects:    info.Subjects,
 		ContextType: info.ContextType,
 		Context:     info.Context,
-		Config:      info.Config,
 	}
 
 	contextType, err := cmd.Flags().GetString("context-type")
@@ -381,9 +379,9 @@ func (c *exporterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	name := args[0]
-	info, httpResponse, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
+	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	data := &exporterInfoDisplay{
@@ -407,9 +405,9 @@ func (c *exporterCommand) getConfig(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configs, httpResponse, err := srClient.DefaultApi.GetExporterConfig(ctx, name)
+	configs, _, err := srClient.DefaultApi.GetExporterConfig(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 	return output.StructuredOutputForCommand(cmd, outputFormat, configs)
 }
@@ -420,9 +418,9 @@ func (c *exporterCommand) status(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	name := args[0]
-	status, httpResponse, err := srClient.DefaultApi.GetExporterStatus(ctx, name)
+	status, _, err := srClient.DefaultApi.GetExporterStatus(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	data := &exporterStatusDisplay{
@@ -442,9 +440,9 @@ func (c *exporterCommand) pause(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	_, httpResponse, err := srClient.DefaultApi.PauseExporter(ctx, name)
+	_, _, err = srClient.DefaultApi.PauseExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Paused", name)
@@ -458,9 +456,9 @@ func (c *exporterCommand) resume(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	_, httpResponse, err := srClient.DefaultApi.ResumeExporter(ctx, name)
+	_, _, err = srClient.DefaultApi.ResumeExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Resumed", name)
@@ -474,9 +472,9 @@ func (c *exporterCommand) reset(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	_, httpResponse, err := srClient.DefaultApi.ResetExporter(ctx, name)
+	_, _, err = srClient.DefaultApi.ResetExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Reset", name)
@@ -490,18 +488,11 @@ func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	name := args[0]
 
-	httpResponse, err := srClient.DefaultApi.DeleteExporter(ctx, name)
+	_, err = srClient.DefaultApi.DeleteExporter(ctx, name)
 	if err != nil {
-		return catchSchemaExporterNotFound(name, httpResponse, err)
+		return err
 	}
 
 	utils.Printf(cmd, errors.ExporterActionMsg, "Deleted", name)
 	return nil
-}
-
-func catchSchemaExporterNotFound(name string, httpResponse *http.Response, err error) error {
-	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
-		return errors.Errorf(errors.SchemaExporterNotFoundErrorMsg, name)
-	}
-	return err
 }

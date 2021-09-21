@@ -2,6 +2,6 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
    Principal   |        Email         |       Role        | ResourceType |                 Name                  | PatternType  
-+--------------+----------------------+-------------------+--------------+---------------------------------------+-------------+
+---------------+----------------------+-------------------+--------------+---------------------------------------+--------------
   User:u-11aaa | u-11aaa@confluent.io | CloudClusterAdmin | Cluster      | lkc-1111aaa                           |              
   User:u-11aaa | u-11aaa@confluent.io | OrganizationAdmin | Organization | 1111aaaa-11aa-11aa-11aa-111111aaaaaac |              

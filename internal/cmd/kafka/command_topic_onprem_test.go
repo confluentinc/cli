@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-
 	"net/http"
 	purl "net/url"
 	"strings"
 	"testing"
+
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -26,7 +25,7 @@ import (
 
 const (
 	// Expected output of tests
-	ExpectedListTopicsOutput     = "   Name    \n+---------+\n  topic-1  \n  topic-2  \n  topic-3  \n"
+	ExpectedListTopicsOutput     = "   Name    \n-----------\n  topic-1  \n  topic-2  \n  topic-3  \n"
 	ExpectedListTopicsYamlOutput = `- name: topic-1
 - name: topic-2
 - name: topic-3

@@ -2,6 +2,6 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
   Exporter   
-+-----------+
+-------------
   exporter1  
   exporter2  

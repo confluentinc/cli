@@ -2,6 +2,6 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
        Key      | Description | Owner | Owner Resource Id |     Owner Email      | Resource Type | Resource ID |       Created         
-+---------------+-------------+-------+-------------------+----------------------+---------------+-------------+----------------------+
+----------------+-------------+-------+-------------------+----------------------+---------------+-------------+-----------------------
     UIAPIKEY100 |             |     4 | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
     UIAPIKEY103 |             |     4 | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  

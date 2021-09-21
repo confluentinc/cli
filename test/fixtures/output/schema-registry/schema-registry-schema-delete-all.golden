@@ -3,6 +3,6 @@ For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
 Successfully soft deleted all versions for subject "payments"
   Version  
-+---------+
+-----------
         1  
         2  

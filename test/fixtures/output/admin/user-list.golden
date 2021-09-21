@@ -2,7 +2,7 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
   Id | Resource ID |         Email         | First Name | Last Name |   Status   | Authentication Method   
-+----+-------------+-----------------------+------------+-----------+------------+------------------------+
+-----+-------------+-----------------------+------------+-----------+------------+-------------------------
    1 | u11         | bstrauch@confluent.io | Brian      | Strauch   | Unverified | Username/Password, SSO  
    2 | u-17        | mtodzo@confluent.io   | Miles      | Todzo     | Unverified | Username/Password, SSO  
    3 | u-11aaa     | u-11aaa@confluent.io  |         11 | Aaa       | Unverified | Username/Password, SSO  

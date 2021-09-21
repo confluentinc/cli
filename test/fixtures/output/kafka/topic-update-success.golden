@@ -3,6 +3,6 @@ For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
 Updated the following configs for topic "topic-exist":
         Name       | Value  
-+------------------+-------+
+-------------------+--------
   compression.type | gzip   
   retention.ms     |     1  

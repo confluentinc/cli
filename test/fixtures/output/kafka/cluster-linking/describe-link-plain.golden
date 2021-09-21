@@ -2,7 +2,7 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
         Config Name       |   Config Value   | Read Only | Sensitive |  Source  |  Synonyms    
-+-------------------------+------------------+-----------+-----------+----------+-------------+
+--------------------------+------------------+-----------+-----------+----------+--------------
   dest.cluster.id         | cluster-1        | true      | true      |          | []           
   replica.fetch.max.bytes |          1048576 | false     | false     | source-1 | [rfmb bmfr]  
   bootstrap.servers       | bitcoin.com:8888 | false     | false     | source-2 | []           

@@ -2,6 +2,6 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
   Link Name | Source Cluster Id  
-+-----------+-------------------+
+------------+--------------------
   link-1    | cluster-1          
   link-2    | cluster-1          

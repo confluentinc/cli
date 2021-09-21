@@ -2,5 +2,5 @@ Confluent Resource Name: crn://md01.example.com/kafka=kafkaCluster1/connect=conn
 
 Scope:
       Type      |      ID        
-+---------------+---------------+
+----------------+----------------
   kafka-cluster | kafkaCluster1  

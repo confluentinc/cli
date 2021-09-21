@@ -2,6 +2,6 @@ The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been m
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
    Principal   |        Email          
-+--------------+----------------------+
+---------------+-----------------------
   User:u-33ccc | u-33ccc@confluent.io  
   User:u-44ddd | mhe@confluent.io      
