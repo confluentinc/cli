@@ -229,8 +229,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 		caCertPath, err := filepath.Abs(caCertPathFlag)
 		return caCertPath, err
 	} else {
-		caCertPath, err := filepath.Abs(os.Getenv(pauth.ConfluentCaCertPathEnvVar))
-		return caCertPath, err
+		return filepath.Abs(os.Getenv(pauth.ConfluentCaCertPathEnvVar))
 	}
 }
 
