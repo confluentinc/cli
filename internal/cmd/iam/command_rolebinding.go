@@ -541,7 +541,7 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		principal,
 		*scope)
 	if err != nil {
-		if response.StatusCode == http.StatusNotFound {
+		if response != nil && response.StatusCode == http.StatusNotFound {
 			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
 		}
 		return err
