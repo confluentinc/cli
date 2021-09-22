@@ -338,6 +338,18 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-4.golden",
 		},
 		{
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-55eee",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-5.golden",
+		},
+		{
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-66fff",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-6.golden",
+		},
+		{
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-77ggg",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-7.golden",
+		},
+		{
 			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --role OrganizationAdmin",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-user-orgadmin.golden",
 		},
