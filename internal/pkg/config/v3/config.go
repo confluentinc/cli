@@ -8,9 +8,8 @@ import (
 	"path/filepath"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
-	"github.com/blang/semver"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -23,9 +22,7 @@ const (
 	emptyFieldIndicator  = "EMPTY"
 )
 
-var (
-	Version = semver.MustParse("3.0.0")
-)
+var Version, _ = version.NewVersion("3.0.0")
 
 // Config represents the CLI configuration.
 type Config struct {

@@ -173,7 +173,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Logger:     log.New(),
 			},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -198,7 +198,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Logger:     log.New(),
 			},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", cliName),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -223,7 +223,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Logger:     log.New(),
 			},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -292,7 +292,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: "test_json/load_disable_update.json",
-					Ver:      Version,
+					Ver:      config.Version{Version: Version},
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
