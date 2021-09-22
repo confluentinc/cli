@@ -765,7 +765,7 @@ func TestConfig_FindContext(t *testing.T) {
 
 func TestConfig_DeleteContext(t *testing.T) {
 	c := &Config{
-		BaseConfig:     new(config.BaseConfig),
+		BaseConfig:     &config.BaseConfig{Ver: config.Version{Version: new(version.Version)}},
 		Contexts:       map[string]*Context{contextName: {Name: contextName}},
 		CurrentContext: contextName,
 	}

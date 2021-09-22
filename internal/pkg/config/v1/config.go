@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	Version, _      = version.NewVersion("3.0.0")
+	Version, _      = version.NewVersion("1.0.0")
 	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
 )
 
