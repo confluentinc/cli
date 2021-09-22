@@ -14,7 +14,7 @@ func MigrateV2ToV3(cfgV2 *v2.Config) (*v3.Config, error) {
 	baseCfgV3 := &config.BaseConfig{
 		Params:   cfgV2.BaseConfig.Params,
 		Filename: cfgV2.BaseConfig.Filename,
-		Ver:      v3.Version,
+		Ver:      config.Version{Version: v3.Version},
 	}
 	cfgV3 := &v3.Config{
 		BaseConfig:         baseCfgV3,

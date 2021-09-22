@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -47,31 +49,31 @@ func TestUserInviteEmailRegex(t *testing.T) {
 		matched bool
 	}
 	tests := []*RegexTest{
-		&RegexTest{
+		{
 			email:   "",
 			matched: false,
 		},
-		&RegexTest{
+		{
 			email:   "mtodzo@confluent.io",
 			matched: true,
 		},
-		&RegexTest{
+		{
 			email:   "m@t.t.com",
 			matched: true,
 		},
-		&RegexTest{
+		{
 			email:   "m@t",
 			matched: true,
 		},
-		&RegexTest{
+		{
 			email:   "google.com",
 			matched: false,
 		},
-		&RegexTest{
+		{
 			email:   "@images.google.com",
 			matched: false,
 		},
-		&RegexTest{
+		{
 			email:   "david.hyde+cli@confluent.io",
 			matched: true,
 		},
@@ -261,4 +263,60 @@ func getFlagMap() map[string]*pflag.Flag {
 	}
 	cmd.LocalFlags().VisitAll(addToMap)
 	return flagMap
+}
+
+func TestReadConfigsFromFile(t *testing.T) {
+	req := require.New(t)
+	type testCase struct {
+		config   string
+		expected map[string]string
+		wantErr  bool
+	}
+	tests := []testCase{
+		{
+			config: "key=val\n key2=val2 \n key3=val password=pass",
+			expected: map[string]string{
+				"key":  "val",
+				"key2": "val2",
+				"key3": "val password=pass",
+			},
+			wantErr: false,
+		},
+		{
+			config:  "keyval\nkey2 = val2\n key3=val password=pass",
+			wantErr: true,
+		},
+	}
+	file1, err := ioutil.TempFile(os.TempDir(), "test")
+	req.NoError(err)
+	_, err = file1.Write([]byte(tests[0].config))
+	req.NoError(err)
+	defer os.Remove(file1.Name())
+	out1, err := ReadConfigsFromFile(file1.Name())
+	if tests[0].wantErr {
+		req.Error(err)
+	} else {
+		req.NoError(err)
+		validateConfigMap(req, tests[0].expected, out1)
+	}
+
+	file2, err := ioutil.TempFile(os.TempDir(), "test")
+	req.NoError(err)
+	_, err = file2.Write([]byte(tests[1].config))
+	req.NoError(err)
+	defer os.Remove(file2.Name())
+	out2, err := ReadConfigsFromFile(file2.Name())
+	if tests[1].wantErr {
+		req.Error(err)
+	} else {
+		req.NoError(err)
+		validateConfigMap(req, tests[1].expected, out2)
+	}
+}
+
+func validateConfigMap(req *require.Assertions, expected map[string]string, out map[string]string) {
+	req.Equal(len(expected), len(out))
+	for k, v := range out {
+		req.Equal(expected[k], v)
+	}
 }

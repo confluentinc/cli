@@ -13,7 +13,11 @@ git-setup-semaphore.sh
 *.dll
 *.so
 *.dylib
-.idea
+
+# Editor configurations
+*.el
+.idea/
+.vscode/
 
 # Test binary, build with `go test -c`
 *.test
@@ -38,7 +42,6 @@ integ_coverage.txt
 unit_coverage.txt
 /ccloud
 *.sw*
-.vscode
 **/*.DS_Store
 release-notes/prep
 release-notes/ccloud/latest-release.rst

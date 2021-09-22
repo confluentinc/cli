@@ -33,7 +33,7 @@ const (
 	keySecretString   = "secret"
 	serviceAcctID     = int32(123)
 	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
-+------------------+------------+------------------+------------------+------------------------------+----------+
+-------------------+------------+------------------+------------------+------------------------------+-----------
   User:123         | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL   
   User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL   
   User:123         | ALLOW      | CREATE           | TOPIC            | pksqlc-abcde                 | PREFIXED  
@@ -181,7 +181,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
 	err := cmd.Execute()
 
 	req := require.New(suite.T())
-	req.EqualError(err, fmt.Sprintf(errors.KsqlDBNoServiceAccount, ksqlClusterID))
+	req.EqualError(err, fmt.Sprintf(errors.KsqlDBNoServiceAccountErrorMsg, ksqlClusterID))
 	req.Equal(0, len(suite.kafkac.CreateACLsCalls()))
 }
 

@@ -82,7 +82,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my_subject1,my_subject2 --context-type CUSTOM --context my_context --config config.txt", cliName),
+				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config-file config.txt", cliName),
 			},
 		),
 	}
@@ -105,7 +105,7 @@ func (c *exporterCommand) init(cliName string) {
 			examples.Example{
 				Text: "Update information of new schema exporter.",
 				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter"+
-					" --subjects my_subject1,my_subject2 --context-type CUSTOM --context-name my_context", cliName),
+					" --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context", cliName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
@@ -329,7 +329,6 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 		Subjects:    info.Subjects,
 		ContextType: info.ContextType,
 		Context:     info.Context,
-		Config:      info.Config,
 	}
 
 	contextType, err := cmd.Flags().GetString("context-type")

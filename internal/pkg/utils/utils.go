@@ -7,7 +7,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"unicode"
 
 	"github.com/confluentinc/properties"
 
@@ -102,16 +101,6 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 	return normalized
 }
 
-func RemoveSpace(s string) string {
-	rr := make([]rune, 0, len(s))
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			rr = append(rr, r)
-		}
-	}
-	return string(rr)
-}
-
 func ValidateEmail(email string) bool {
 	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	matched := rgxEmail.MatchString(email)
@@ -128,9 +117,9 @@ func Abbreviate(s string, maxLength int) string {
 func ToMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
 	for _, cfg := range configs {
-		pair := strings.Split(cfg, "=")
-		if len(pair) != 2 {
-			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
+		pair := strings.SplitN(cfg, "=", 2)
+		if len(pair) < 2 {
+			return nil, fmt.Errorf(errors.FailedToParseConfigErrMsg, cfg)
 		}
 		configMap[pair[0]] = pair[1]
 	}
