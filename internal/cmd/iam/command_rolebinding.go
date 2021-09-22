@@ -559,18 +559,23 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
 				for _, resourcePattern := range resourcePatterns {
+					add := true
 					if options.resource != "" {
+						add = false
 						for _, rp := range options.resourcesRequest.ResourcePatterns {
 							if rp == resourcePattern {
-								outputWriter.AddElement(&listDisplay{
-									Principal:    principalName,
-									Role:         roleName,
-									ResourceType: resourcePattern.ResourceType,
-									Name:         resourcePattern.Name,
-									PatternType:  resourcePattern.PatternType,
-								})
+								add = true
 							}
 						}
+					}
+					if add {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: resourcePattern.ResourceType,
+							Name:         resourcePattern.Name,
+							PatternType:  resourcePattern.PatternType,
+						})
 					}
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
