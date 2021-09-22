@@ -139,7 +139,7 @@ func (suite *ExporterTestSuite) TestListExporters() {
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetExportersCalled())
 
-	req.Equal("   Exporter    \n+-------------+\n  my_exporter  \n", output.String())
+	req.Equal("   Exporter    \n---------------\n  my_exporter  \n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestDescribeExporter() {

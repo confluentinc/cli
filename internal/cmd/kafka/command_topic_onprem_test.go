@@ -25,7 +25,7 @@ import (
 
 const (
 	// Expected output of tests
-	ExpectedListTopicsOutput     = "   Name    \n+---------+\n  topic-1  \n  topic-2  \n  topic-3  \n"
+	ExpectedListTopicsOutput     = "   Name    \n-----------\n  topic-1  \n  topic-2  \n  topic-3  \n"
 	ExpectedListTopicsYamlOutput = `- name: topic-1
 - name: topic-2
 - name: topic-3
@@ -309,7 +309,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 		{
 			input:               "create topic-X --url http://localhost:8082 --config retention.ms=1,compression",
 			expectError:         true,
-			errorMsgContainsAll: []string{"configuration must be in the form of key=value"},
+			errorMsgContainsAll: []string{`failed to parse "key=value" pattern from configuration: compression`},
 			createTopicName:     "topic-X",
 		},
 		{
@@ -367,7 +367,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopic() {
 	}{
 		{
 			input:               "update topic-X --url http://localhost:8082 --config retention.ms",
-			errorMsgContainsAll: []string{"configuration must be in the form of key=value"},
+			errorMsgContainsAll: []string{`failed to parse "key=value" pattern from configuration: retention.ms`},
 			expectError:         true,
 			updateTopicName:     "topic-X",
 			updateTopicData:     []kafkarestv3.AlterConfigBatchRequestDataData{},

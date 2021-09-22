@@ -33,7 +33,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -339,7 +338,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	topicConfigsMap, err := kafka.ToMap(configs)
+	topicConfigsMap, err := utils.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -466,7 +465,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
@@ -528,7 +527,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	configsMap, err := kafka.ToMap(configStrings)
+	configsMap, err := utils.ToMap(configStrings)
 	if err != nil {
 		return err
 	}
@@ -558,7 +557,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
@@ -603,7 +602,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	configMap, err := kafka.ToMap(configs)
+	configMap, err := utils.ToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -651,7 +650,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicMsg, topicName)
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)

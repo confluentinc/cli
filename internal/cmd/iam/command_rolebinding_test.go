@@ -230,11 +230,10 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			{
 				Principal: "User:u-epo7ml",
 				Role:      "MetricsViewer",
-				Name:      "Skynet",
 			},
 		},
 	},
-	// Principal whose email address is known will be returned with eamil address
+	// Principal whose email address is known will be returned with email address
 	{
 		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
 			{
@@ -256,7 +255,6 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			{
 				Principal: "User:u-123",
 				Role:      "MetricsViewer",
-				Name:      "Skynet",
 				Email:     "test@email.com",
 			},
 		},
@@ -280,7 +278,138 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			{
 				Principal: "User:sa-123",
 				Role:      "MetricsViewer",
-				Name:      "Skynet",
+			},
+		},
+	},
+	// Multiple role bindings at various scopes
+	{
+		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet"},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:" + v1.MockUserResourceId: {
+						"OrganizationAdmin": []mdsv2alpha1.ResourcePattern{},
+					},
+				},
+			},
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet", "environment=Cyberdyne"},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:" + v1.MockUserResourceId: {
+						"EnvironmentAdmin": []mdsv2alpha1.ResourcePattern{},
+					},
+				},
+			},
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet", "environment=Cyberdyne", "cloud-cluster=t1000"},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:" + v1.MockUserResourceId: {
+						"CloudClusterAdmin": []mdsv2alpha1.ResourcePattern{},
+					},
+				},
+			},
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet", "environment=Cyberdyne", "cloud-cluster=t1000"},
+					Clusters: mdsv2alpha1.ScopeClusters{
+						KafkaCluster: "t1000",
+					},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:" + v1.MockUserResourceId: {
+						"ResourceOwner": []mdsv2alpha1.ResourcePattern{{
+							ResourceType: "Topic",
+							Name:         "connor",
+							PatternType:  "LITERAL",
+						}, {
+							ResourceType: "Topic",
+							Name:         "john",
+							PatternType:  "PREFIX",
+						}},
+					},
+				},
+			},
+			{
+				Scope: mdsv2alpha1.Scope{
+					Path: []string{"organization=Skynet", "environment=Cyberdyne"},
+					Clusters: mdsv2alpha1.ScopeClusters{
+						SchemaRegistryCluster: "sr1000",
+					},
+				},
+				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
+					"User:" + v1.MockUserResourceId: {
+						"DeveloperRead": []mdsv2alpha1.ResourcePattern{{
+							ResourceType: "Subject",
+							Name:         "terminators",
+							PatternType:  "LITERAL",
+						}},
+					},
+				},
+			},
+		},
+		mockedListUserResult: []*orgv1.User{{
+			Email:      "test@email.com",
+			ResourceId: v1.MockUserResourceId,
+		}},
+		expected: []listDisplay{
+			{
+				Principal:    "User:u-123",
+				Role:         "CloudClusterAdmin",
+				Email:        "test@email.com",
+				Environment:  "Cyberdyne",
+				CloudCluster: "t1000",
+			},
+			{
+				Principal:      "User:u-123",
+				Role:           "DeveloperRead",
+				Email:          "test@email.com",
+				Environment:    "Cyberdyne",
+				ClusterType:    "Schema Registry",
+				LogicalCluster: "sr1000",
+				ResourceType:   "Subject",
+				Name:           "terminators",
+				PatternType:    "LITERAL",
+			},
+			{
+				Principal:   "User:u-123",
+				Role:        "EnvironmentAdmin",
+				Email:       "test@email.com",
+				Environment: "Cyberdyne",
+			},
+			{
+				Principal: "User:u-123",
+				Role:      "OrganizationAdmin",
+				Email:     "test@email.com",
+			},
+			{
+				Principal:      "User:u-123",
+				Role:           "ResourceOwner",
+				Email:          "test@email.com",
+				Environment:    "Cyberdyne",
+				CloudCluster:   "t1000",
+				ClusterType:    "Kafka",
+				LogicalCluster: "t1000",
+				ResourceType:   "Topic",
+				Name:           "connor",
+				PatternType:    "LITERAL",
+			},
+			{
+				Principal:      "User:u-123",
+				Role:           "ResourceOwner",
+				Email:          "test@email.com",
+				Environment:    "Cyberdyne",
+				CloudCluster:   "t1000",
+				ClusterType:    "Kafka",
+				LogicalCluster: "t1000",
+				ResourceType:   "Topic",
+				Name:           "john",
+				PatternType:    "PREFIX",
 			},
 		},
 	},

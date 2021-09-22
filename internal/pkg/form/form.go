@@ -64,7 +64,7 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 
 		res, err := validate(field, val)
 		if err != nil {
-			if fmt.Sprintf(errors.InvalidInputFormatMsg, val, field.ID) == err.Error() {
+			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
 				utils.ErrPrintln(command, err)
 				i-- //re-prompt on invalid regex
 				continue
@@ -127,7 +127,7 @@ func validate(field Field, val string) (interface{}, error) {
 	if field.Regex != "" {
 		field_rgx, _ := regexp.Compile(field.Regex)
 		if regex_match := field_rgx.MatchString(val); !regex_match {
-			return nil, fmt.Errorf(errors.InvalidInputFormatMsg, val, field.ID)
+			return nil, fmt.Errorf(errors.InvalidInputFormatErrorMsg, val, field.ID)
 		}
 	}
 

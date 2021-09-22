@@ -247,10 +247,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		r.Logger.Flush()
 
 		command.Version = r.Version
-		if err := r.notifyIfUpdateAvailable(cmd, command.Version.Version); err != nil {
-			return err
-		}
-
+		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
 
 		if r.Config != nil {
@@ -292,7 +289,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		setContextErr := r.setAuthenticatedContext(cmd, command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
 				if !command.Config.IsOnPremLogin() {
 					if err := r.ccloudAutoLogin(cmd); err != nil {
 						r.Logger.Debugf("Auto login failed: %v", err)
@@ -514,7 +511,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
 				if !command.Config.IsCloudLogin() {
 					if err := r.confluentAutoLogin(cmd); err != nil {
 						r.Logger.Debugf("Auto login failed: %v", err)
@@ -852,24 +849,32 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available
-func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) error {
+func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
 	if isUpdateCommand(cmd) || r.IsTest {
-		return nil
+		return
 	}
-	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(version.CLIName, currentVersion, false)
+
+	latestMajorVersion, latestMinorVersion, err := r.UpdateClient.CheckForUpdates(version.CLIName, currentVersion, false)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
 		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
 		r.Logger.Warn(err)
-		return nil
+		return
 	}
-	if updateAvailable {
-		if !strings.HasPrefix(latestVersion, "v") {
-			latestVersion = "v" + latestVersion
+
+	if latestMajorVersion != "" {
+		if !strings.HasPrefix(latestMajorVersion, "v") {
+			latestMajorVersion = "v" + latestMajorVersion
 		}
-		utils.ErrPrintf(cmd, errors.NotifyUpdateMsg, version.CLIName, currentVersion, latestVersion, version.CLIName)
+		utils.ErrPrintf(cmd, errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
 	}
-	return nil
+
+	if latestMinorVersion != "" {
+		if !strings.HasPrefix(latestMinorVersion, "v") {
+			latestMinorVersion = "v" + latestMinorVersion
+		}
+		utils.ErrPrintf(cmd, errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
+	}
 }
 
 func isUpdateCommand(cmd *cobra.Command) bool {

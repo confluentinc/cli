@@ -30,16 +30,21 @@ func (s *Spinner) Stop() {
 }
 
 func (s *Spinner) run() {
-	tick := time.Tick(time.Second / 3)
-	for i := 0; i < len(frames); i = (i + 1) % len(frames) {
+	ticker := time.NewTicker(time.Second / 3)
+	defer ticker.Stop()
+
+	i := 0
+
+	for {
 		select {
-		case <-tick:
-			clear()
-			fmt.Fprint(os.Stderr, frames[i])
 		case <-s.stop:
 			clear()
 			close(s.wait)
 			return
+		case <-ticker.C:
+			clear()
+			fmt.Fprint(os.Stderr, frames[i])
+			i = (i + 1) % len(frames)
 		}
 	}
 }

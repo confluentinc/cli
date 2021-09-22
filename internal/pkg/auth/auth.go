@@ -100,14 +100,15 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := config.SavePlatform(platform)
-	if err != nil {
+
+	if err := config.SavePlatform(platform); err != nil {
 		return err
 	}
-	err = config.SaveCredential(credential)
-	if err != nil {
+
+	if err := config.SaveCredential(credential); err != nil {
 		return err
 	}
+
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state
 		ctx.State = state
@@ -118,17 +119,12 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
 	} else {
-		err = config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-			"", nil, state)
+		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state); err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
-	}
-	err = config.SetContext(ctxName)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return config.UseContext(ctxName)
 }
 
 func getCCloudContextState(config *v1.Config, ctxName string, email string, url string, token string, client *ccloud.Client) (*v1.ContextState, error) {

@@ -329,7 +329,7 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 func schemaCountQueryFor(schemaRegistryId string) *ccloud.MetricsApiRequest {
 	return &ccloud.MetricsApiRequest{
 		Aggregations: []ccloud.ApiAggregation{
-			ccloud.ApiAggregation{
+			{
 				Metric: "io.confluent.kafka.schema_registry/schema_count",
 			},
 		},

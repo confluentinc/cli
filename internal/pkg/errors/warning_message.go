@@ -37,8 +37,6 @@ const (
 		"configuration on multiple clusters."
 	NewBootstrapWarning = "New Bootstrap Servers Warning: Cluster %q currently has bootstrap " +
 		"servers = %v. Replacing with %v. Migrated clusters will use the specified bootstrap servers."
-	MalformedConfigError = "Bad Input File: The audit log configuration for cluster %q " +
-		"uses invalid JSON. Parsing error: %v"
 	RepeatedRouteWarning = "Repeated Route Warning: Route Name : %q. There are duplicate routes specified " +
 		"between different router configurations. Duplicate routes will be dropped."
 	NewExcludedPrincipalsWarning = "New Excluded Principals Warning: Due to combining the excluded principals from " +

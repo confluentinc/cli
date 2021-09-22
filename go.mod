@@ -7,7 +7,6 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 	github.com/aws/aws-sdk-go v1.38.35
-	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/chromedp/chromedp v0.5.2
@@ -43,28 +42,26 @@ require (
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.30.0
-	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
+	github.com/golangci/golangci-lint v1.41.1
 	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github/v25 v25.0.2
-	github.com/google/go-github/v28 v28.1.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/goreleaser/goreleaser v0.164.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
-	github.com/hashicorp/go-multierror v1.1.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.2.1
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.1.2
 	github.com/imdario/mergo v0.3.12
 	github.com/jhump/protoreflect v1.7.0
-	github.com/jonboulle/clockwork v0.1.0
+	github.com/jonboulle/clockwork v0.2.0
 	github.com/linkedin/goavro/v2 v2.9.8
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.2.0
-	github.com/olekukonko/tablewriter v0.0.0-20180912035003-be2c049b30cc
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect

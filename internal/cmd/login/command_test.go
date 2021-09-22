@@ -465,7 +465,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		{
 			name:                "specified ca-cert-path",
 			caCertPathFlag:      "testcert.pem",
-			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=%s",
 		},
 		{
 			name:                "no ca-cert-path flag",
@@ -476,7 +476,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			name:                "env var ca-cert-path flag",
 			setEnv:              true,
 			envCertPath:         "testcert.pem",
-			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=testcert.pem",
+			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=%s",
 		},
 	}
 
@@ -499,13 +499,17 @@ func Test_SelfSignedCerts(t *testing.T) {
 			ctx := cfg.Context()
 
 			if tt.setEnv {
-				req.Equal(tt.envCertPath, ctx.Platform.CaCertPath)
+				req.Contains(ctx.Platform.CaCertPath, tt.envCertPath)
 			} else {
 				// ensure the right CaCertPath is stored in Config
-				req.Equal(tt.caCertPathFlag, ctx.Platform.CaCertPath)
+				req.Contains(ctx.Platform.CaCertPath, tt.caCertPathFlag)
 			}
 
-			req.Equal(tt.expectedContextName, ctx.Name)
+			if tt.caCertPathFlag != "" || tt.envCertPath != "" {
+				req.Equal(fmt.Sprintf(tt.expectedContextName, ctx.Platform.CaCertPath), ctx.Name)
+			} else {
+				req.Equal(tt.expectedContextName, ctx.Name)
+			}
 			if tt.setEnv {
 				os.Unsetenv(pauth.ConfluentPlatformCACertPath)
 			}
@@ -600,7 +604,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 	mdsClientManager := &cliMock.MockMDSClientManager{
 		GetMDSClientFunc: func(url string, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
 			// ensure the right caCertPath is used
-			req.Equal(expectedCaCertPath, caCertPath)
+			req.Contains(caCertPath, expectedCaCertPath)
 			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{}, logger)
 			if err != nil {
 				return nil, err
