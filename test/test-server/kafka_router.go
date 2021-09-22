@@ -52,11 +52,11 @@ const (
 	rpBrokerIdConfigs      = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs"
 	rpBrokerConfigsAlter   = "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
 	rpBrokerIdConfigsAlter = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter"
-	rpBrokerId		       = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}"
-	rpBrokersTaskType	   = "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}"
-	rpBrokersTasks	       = "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks"
-	rpBrokerIdTaskType	   = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
-	rpBrokerIdTasks		   = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
+	rpBrokerId             = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}"
+	rpBrokersTaskType      = "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}"
+	rpBrokersTasks         = "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks"
+	rpBrokerIdTaskType     = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
+	rpBrokerIdTasks        = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
 )
 
 type KafkaRouter struct {

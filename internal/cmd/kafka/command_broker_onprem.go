@@ -34,16 +34,16 @@ type configData struct {
 }
 
 type brokerTaskData struct {
-	ClusterId string `json:"cluster_id" yaml:"cluster_id"`
-	BrokerId  int32 `json:"broker_id" yaml:"broker_id"`
-	TaskType  kafkarestv3.BrokerTaskType `json:"task_type" yaml:"task_type"`
-	TaskStatus string `json:"task_status" yaml:"task_status"`
-	CreatedAt	time.Time `json:"created_at" yaml:"created_at"`
-	UpdatedAt	time.Time `json:"updated_at" yaml:"updated_at"`
-	ShutdownScheduled bool `json:"shutdown_scheduled,omitempty" yaml:"shutdown_scheduled,omitempty"`
-	SubTaskStatuses  string `json:"sub_task_statuses" yaml:"sub_task_statuses"`
-	ErrorCode	int32 `json:"error_code,omitempty" yaml:"error_code,omitempty"`
-	ErrorMessage string `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	ClusterId         string                     `json:"cluster_id" yaml:"cluster_id"`
+	BrokerId          int32                      `json:"broker_id" yaml:"broker_id"`
+	TaskType          kafkarestv3.BrokerTaskType `json:"task_type" yaml:"task_type"`
+	TaskStatus        string                     `json:"task_status" yaml:"task_status"`
+	CreatedAt         time.Time                  `json:"created_at" yaml:"created_at"`
+	UpdatedAt         time.Time                  `json:"updated_at" yaml:"updated_at"`
+	ShutdownScheduled bool                       `json:"shutdown_scheduled,omitempty" yaml:"shutdown_scheduled,omitempty"`
+	SubTaskStatuses   string                     `json:"sub_task_statuses" yaml:"sub_task_statuses"`
+	ErrorCode         int32                      `json:"error_code,omitempty" yaml:"error_code,omitempty"`
+	ErrorMessage      string                     `json:"error_message,omitempty" yaml:"error_message,omitempty"`
 }
 
 const abbreviationLength = 25
@@ -451,13 +451,13 @@ func (brokerCmd *brokerCommand) getTasks(cmd *cobra.Command, args []string) erro
 }
 
 func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) brokerTaskData {
-	s := brokerTaskData {
-		ClusterId: entry.ClusterId,
-		BrokerId:  entry.BrokerId,
-		TaskType:  entry.TaskType,
-		TaskStatus: entry.TaskStatus,
-		CreatedAt:  entry.CreatedAt,
-		UpdatedAt:  entry.UpdatedAt,
+	s := brokerTaskData{
+		ClusterId:       entry.ClusterId,
+		BrokerId:        entry.BrokerId,
+		TaskType:        entry.TaskType,
+		TaskStatus:      entry.TaskStatus,
+		CreatedAt:       entry.CreatedAt,
+		UpdatedAt:       entry.UpdatedAt,
 		SubTaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),
 	}
 	if entry.ShutdownScheduled != nil {
@@ -484,7 +484,7 @@ func mapToKeyValueString(values map[string]string) string {
 	return kvString
 }
 
-func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, taskType kafkarestv3.BrokerTaskType) (kafkarestv3.BrokerTaskDataList, error){
+func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, taskType kafkarestv3.BrokerTaskType) (kafkarestv3.BrokerTaskDataList, error) {
 	var taskData kafkarestv3.BrokerTaskDataList
 	var resp *http.Response
 	var err error
@@ -499,7 +499,7 @@ func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext con
 	return taskData, nil
 }
 
-func getBrokerTasksForBroker(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, taskType kafkarestv3.BrokerTaskType) (kafkarestv3.BrokerTaskDataList, error){
+func getBrokerTasksForBroker(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, taskType kafkarestv3.BrokerTaskType) (kafkarestv3.BrokerTaskDataList, error) {
 	var taskData kafkarestv3.BrokerTaskDataList
 	var resp *http.Response
 	var err error
@@ -508,7 +508,7 @@ func getBrokerTasksForBroker(restClient *kafkarestv3.APIClient, restContext cont
 		brokerTaskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(restContext, clusterId, brokerId, taskType)
 		taskData.Data = []kafkarestv3.BrokerTaskData{brokerTaskData}
 	} else {
-		taskData, resp, err = restClient. BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksGet(restContext, clusterId, brokerId)
+		taskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksGet(restContext, clusterId, brokerId)
 	}
 	if err != nil {
 		return taskData, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -527,7 +527,6 @@ func getBrokerTaskType(taskName string) (kafkarestv3.BrokerTaskType, error) {
 	}
 	return "", errors.NewErrorWithSuggestions(errors.InvalidBrokerTaskTypeErrorMsg, errors.InvalidBrokerTaskTypeSuggestions)
 }
-
 
 func checkAllOrBrokerIdSpecified(cmd *cobra.Command, args []string) (int32, bool, error) {
 	if cmd.Flags().Changed("all") && len(args) > 0 {
