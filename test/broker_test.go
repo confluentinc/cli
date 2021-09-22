@@ -24,6 +24,15 @@ func (s *CLITestSuite) TestBroker() {
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN --all", fixture: "kafka/broker/update-all.golden"},
 		{args: "kafka broker update 1 --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-1.golden"},
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", wantErrCode: 1, fixture: "kafka/broker/err-need-all-or-arg.golden"},
+
+		{args: "kafka broker delete -h", fixture: "kafka/broker/delete-help.golden"},
+		{args: "kafka broker delete 1", fixture: "kafka/broker/delete.golden"},
+
+		{args: "kafka broker get-tasks -h", fixture: "kafka/broker/get-tasks-help.golden"},
+		{args: "kafka broker get-tasks 1", fixture: "kafka/broker/get-tasks-1.golden"},
+		{args: "kafka broker get-tasks 1 --task-type remove-broker", fixture: "kafka/broker/get-tasks-1-remove-broker.golden"},
+		{args: "kafka broker get-tasks --all", fixture: "kafka/broker/get-tasks-all.golden"},
+		{args: "kafka broker get-tasks --all --task-type add-broker", fixture: "kafka/broker/get-tasks-all-add-broker.golden"},
 	}
 
 	for _, tt := range tests {

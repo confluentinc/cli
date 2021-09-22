@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/gorilla/mux"
@@ -1289,6 +1290,153 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsAlter(t *testing.T) func
 		require.NoError(t, err)
 	}
 }
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}"
+func (r KafkaRestProxyRouter) HandleKafkaBrokersBrokerId(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		switch r.Method {
+		case http.MethodDelete:
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts
+			_ = json.NewDecoder(r.Body).Decode(&req)
+			err := json.NewEncoder(w).Encode(kafkarestv3.BrokerRemovalData{
+				ClusterId: vars["cluster_id"],
+				BrokerId:  1,
+				BrokerTask: kafkarestv3.Relationship{Related: "http://localhost:9391/kafka/v3/clusters/cluster-1/brokers/1/tasks/remove-broker"},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskDataList{
+			Data: []kafkarestv3.BrokerTaskData{
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId: 1,
+					TaskType: kafkarestv3.BrokerTaskType(vars["task_type"]),
+					TaskStatus: "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status":"IN_PROGRESS"},
+					CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+				},
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId: 2,
+					TaskType: kafkarestv3.BrokerTaskType(vars["task_type"]),
+					TaskStatus: "SUCCESS",
+					SubTaskStatuses: map[string]string{"broker_shutdown_status":"COMPLETED"},
+					CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					ErrorCode: &errorCode,
+					ErrorMessage: &errorMessage,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskDataList{
+			Data: []kafkarestv3.BrokerTaskData{
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId: 1,
+					TaskType: kafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
+					TaskStatus: "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status":"IN_PROGRESS"},
+					CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+				},
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId: 2,
+					TaskType: kafkarestv3.BROKERTASKTYPE_ADD_BROKER,
+					TaskStatus: "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status":"IN_PROGRESS"},
+					CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					ErrorCode: &errorCode,
+					ErrorMessage: &errorMessage,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskData{
+			ClusterId: vars["cluster_id"],
+			BrokerId: 1,
+			TaskType: kafkarestv3.BrokerTaskType(vars["task_type"]),
+			TaskStatus: "SUCCESS",
+			SubTaskStatuses: map[string]string{"partition_reassignment_status":"IN_PROGRESS"},
+			CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+			UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+			ErrorMessage: &errorMessage,
+			ErrorCode: &errorCode,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskDataList{
+			Data: []kafkarestv3.BrokerTaskData{
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId: 1,
+					TaskType: kafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
+					TaskStatus: "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status":"IN_PROGRESS"},
+					CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+				},
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId: 1,
+					TaskType: kafkarestv3.BROKERTASKTYPE_ADD_BROKER,
+					TaskStatus: "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status":"IN_PROGRESS"},
+					CreatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt: time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					ErrorCode: &errorCode,
+					ErrorMessage: &errorMessage,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
 
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)

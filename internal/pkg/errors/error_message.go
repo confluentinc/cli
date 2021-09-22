@@ -441,4 +441,6 @@ const (
 	// Broker commands
 	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"
 	OnlySpecifyAllOrBrokerIDErrorMsg = "only specify broker ID argument OR `--all` flag"
+	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
+	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
 )
