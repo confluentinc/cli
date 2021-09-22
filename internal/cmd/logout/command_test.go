@@ -131,18 +131,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 		},
 	}
 	user := &sdkMock.User{}
-	suite := []struct {
-		cliName string
-		args    []string
-		setEnv  bool
-	}{
-		{
-			cliName: "ccloud",
-			args:    []string{},
-		},
-	}
-	loginCmd, _ := newLoginCmd(auth, user, suite[0].cliName, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
-	_, err := pcmd.ExecuteCommand(loginCmd.Command, suite[0].args...)
+	loginCmd, _ := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
 
 	_, err = logoutCmd.netrcHandler.RemoveNetrcCredentials(true, contextName)
@@ -152,11 +142,11 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req.Equal(exist, false)
 }
 
-func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, cliName string, req *require.Assertions, netrcHandler netrc.NetrcHandler,
+func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*login.Command, *v3.Config) {
 	cfg := v3.New(new(config.Params))
 	var mdsClient *mds.APIClient
-	if cliName == "confluent" {
+	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
 		mdsClient = mds.NewAPIClient(mdsConfig)
 		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{

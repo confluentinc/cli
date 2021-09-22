@@ -212,7 +212,6 @@ const (
 	ReadCertErrorMsg                 = "failed to read certificate"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
-	NetrcCLINameMissingErrorMsg      = "no CLI name specified for netrc credentials"
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
 	CreateNetrcFileErrorMsg          = "unable to create netrc file \"%s\""
 	FailedToObtainedUserSSOErrorMsg  = "unable to obtain SSO info for user \"%s\""

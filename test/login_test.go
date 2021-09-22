@@ -80,19 +80,19 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 
 func (s *CLITestSuite) TestSaveUsernamePassword() {
 	tests := []struct {
-		cliName  string
+		isCloud  bool
 		want     string
 		loginURL string
 		bin      string
 	}{
 		{
-			"ccloud",
+			true,
 			"netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
 			testBin,
 		},
 		{
-			"confluent",
+			false,
 			"netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
 			testBin,
@@ -114,7 +114,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 
 		// run the login command with --save flag and check output
 		var env []string
-		if tt.cliName == "ccloud" {
+		if tt.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
@@ -124,7 +124,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
-		if tt.cliName == "ccloud" {
+		if tt.isCloud {
 			s.Contains(output, loggedInEnvOutput)
 		}
 
@@ -149,21 +149,21 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 
 	tests := []struct {
 		input    string
-		cliName  string
+		isCloud  bool
 		want     string
 		loginURL string
 		bin      string
 	}{
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
-			"ccloud",
+			true,
 			"netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
 			testBin,
 		},
 		{
 			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
-			"confluent",
+			false,
 			"netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
 			testBin,
@@ -180,7 +180,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 
 		// run the login command with --save flag and check output
 		var env []string
-		if tt.cliName == "ccloud" {
+		if tt.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
@@ -188,7 +188,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
 		s.Contains(output, loggedInAsOutput)
-		if tt.cliName == "ccloud" {
+		if tt.isCloud {
 			s.Contains(output, loggedInEnvOutput)
 		}
 

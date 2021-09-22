@@ -47,7 +47,7 @@ type NetrcHandler interface {
 }
 
 type NetrcMachineParams struct {
-	CLIName string
+	IsCloud bool
 	IsSSO   bool
 	CtxName string
 	URL     string
@@ -68,7 +68,7 @@ type NetrcHandlerImpl struct {
 	FileName string
 }
 
-func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, isSSO bool, ctxName string, username string, password string) error {
+func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, username, password string) error {
 	netrcFile, err := getOrCreateNetrc(n.FileName)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
@@ -213,9 +213,6 @@ func getNetrcMachineName(isCloud bool, isSSO bool, ctxName string) string {
 // Returns the first match
 // For SSO case the password is the refreshToken
 func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error) {
-	if params.CLIName == "" {
-		return nil, errors.New(errors.NetrcCLINameMissingErrorMsg)
-	}
 	machines, err := gonetrc.GetMachines(n.FileName)
 	if err != nil {
 		return nil, err
@@ -243,7 +240,7 @@ func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	}
 
 	var regexString string
-	if params.CLIName == "ccloud" {
+	if params.IsCloud {
 		if params.IsSSO {
 			regexString = "^" + fmt.Sprintf(netrcCredentialStringFormat, ccloudSSORefreshTokenString, contextNameRegex)
 		} else {

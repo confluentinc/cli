@@ -62,10 +62,3 @@ Development: %s
 		runtime.GOARCH,
 		strconv.FormatBool(!v.IsReleased()))
 }
-
-func GetFullCLIName(cliName string) string {
-	if cliName == "ccloud" {
-		return "Confluent Cloud CLI"
-	}
-	return "Confluent CLI"
-}

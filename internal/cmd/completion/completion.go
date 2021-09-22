@@ -1,20 +1,17 @@
 package completion
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-const longDescriptionTemplate = `Use this command to print the output Shell completion
+const longDescription = `Use this command to print the output Shell completion
 code for the specified shell (Bash/Zsh only). The shell code must be evaluated to provide
-interactive completion of ` + "`{{.CLIName}}`" + ` commands.
+interactive completion of ` + "`confluent`" + ` commands.
 
 Install Bash completions on macOS:
   #.  Install Homebrew (https://brew.sh/).
@@ -35,7 +32,7 @@ Install Bash completions on macOS:
   
      ::
      
-       {{.CLIName}} completion bash > $(brew --prefix)/etc/bash_completion.d/{{.CLIName}}
+       confluent completion bash > $(brew --prefix)/etc/bash_completion.d/confluent
 
 Install Bash completions on Linux:
   #.  Install Bash completion:
@@ -44,28 +41,28 @@ Install Bash completions on Linux:
 
         sudo apt-get install bash-completion
 
-  #. Set the ` + "`{{.CLIName}} completion`" + ` code for Bash to a file that's sourced on login:
+  #. Set the ` + "`confluent completion`" + ` code for Bash to a file that's sourced on login:
   
      ::
      
-        {{.CLIName}} completion bash > /etc/bash_completion.d/{{.CLIName}}
+        confluent completion bash > /etc/bash_completion.d/confluent
 
-  #. Load the ` + "`{{.CLIName}} completion`" + ` code for Bash into the current shell:
+  #. Load the ` + "`confluent completion`" + ` code for Bash into the current shell:
   
      ::
   
-        source /etc/bash_completion.d/{{.CLIName}}
+        source /etc/bash_completion.d/confluent
 
   #. Add the source command above to your ` + "`~/.bashrc`" + ` or ` + "`~/.bash_profile`" + ` to enable completions for new terminals.
 
 Install Zsh completions:
   Zsh looks for completion functions in the directories listed in the ` + "`fpath`" + ` shell variable.
 
-  #. Put the ` + "`{{.CLIName}} completion`" + ` code for Zsh into a file in one the ` + "`fpath`" + ` directories, preferably one of the functions directories. For example:
+  #. Put the ` + "`confluent completion`" + ` code for Zsh into a file in one the ` + "`fpath`" + ` directories, preferably one of the functions directories. For example:
 
      ::
 
-        {{.CLIName}} completion zsh > ${fpath[1]}/_{{.CLIName}}
+        confluent completion zsh > ${fpath[1]}/_confluent
 
   #. Enable Zsh completions:
   
@@ -73,9 +70,9 @@ Install Zsh completions:
      
         autoload -U compinit && compinit
 
-  #. Add the autoload command in your ` + "`~/.zshrc`" + ` to enable completions for new terminals. If you encounter error messages about insecure files, you can resolve by running the ` + "`chown`" + ` command to change the ` + "`_{{.CLIName}}`" + ` file to the same ` + "`user:group`" + ` as the other files in ` + "`${fpath[1]}/`" + `.
+  #. Add the autoload command in your ` + "`~/.zshrc`" + ` to enable completions for new terminals. If you encounter error messages about insecure files, you can resolve by running the ` + "`chown`" + ` command to change the ` + "`_confluent`" + ` file to the same ` + "`user:group`" + ` as the other files in ` + "`${fpath[1]}/`" + `.
 
-  #. To update your completion scripts after updating the CLI, run ` + "`{{.CLIName}} completion <bash|zsh>`" + ` again and overwrite the file initially created above.
+  #. To update your completion scripts after updating the CLI, run ` + "`confluent completion <bash|zsh>`" + ` again and overwrite the file initially created above.
 `
 
 type completionCommand struct {
@@ -96,31 +93,19 @@ func (c *completionCommand) init() {
 	c.Command = &cobra.Command{
 		Use:   "completion <shell>",
 		Short: "Print shell completion code.",
-		Long:  getLongDescription(),
+		Long:  longDescription,
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.completion),
 	}
 }
 
 func (c *completionCommand) completion(cmd *cobra.Command, args []string) error {
-	var err error
-	if args[0] == "bash" {
-		err = c.rootCmd.GenBashCompletion(cmd.OutOrStdout())
-	} else if args[0] == "zsh" {
-		err = c.rootCmd.GenZshCompletion(cmd.OutOrStdout())
-	} else {
-		err = fmt.Errorf(errors.UnsupportedShellErrorMsg, args[0])
+	switch args[0] {
+	case "bash":
+		return c.rootCmd.GenBashCompletion(cmd.OutOrStdout())
+	case "zsh":
+		return c.rootCmd.GenZshCompletion(cmd.OutOrStdout())
+	default:
+		return fmt.Errorf(errors.UnsupportedShellErrorMsg, args[0])
 	}
-	return err
-}
-
-func getLongDescription() string {
-	t := template.Must(template.New("longDescription").Parse(longDescriptionTemplate))
-	buf := new(bytes.Buffer)
-	data := map[string]interface{}{"CLIName": pversion.CLIName}
-	if err := t.Execute(buf, data); err != nil {
-		// We're okay with this since its definitely a development error; should never happen to users
-		panic(err)
-	}
-	return buf.String()
 }

@@ -194,7 +194,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
-		loginURL := s.getLoginURL("ccloud", tt)
+		loginURL := s.getLoginURL(true, tt)
 		if tt.login == "default" {
 			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
@@ -250,7 +250,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		}
 
 		// Executes login command if test specifies
-		loginURL := s.getLoginURL("confluent", tt)
+		loginURL := s.getLoginURL(false, tt)
 		if tt.login == "default" {
 			env := []string{pauth.DeprecatedConfluentPlatformUsername + "=fake@user.com", pauth.DeprecatedConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
@@ -265,17 +265,15 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 	})
 }
 
-func (s *CLITestSuite) getLoginURL(cliName string, tt CLITest) string {
+func (s *CLITestSuite) getLoginURL(isCloud bool, tt CLITest) string {
 	if tt.loginURL != "" {
 		return tt.loginURL
 	}
-	switch cliName {
-	case "ccloud":
+
+	if isCloud {
 		return s.TestBackend.GetCloudUrl()
-	case "confluent":
+	} else {
 		return s.TestBackend.GetMdsUrl()
-	default:
-		return ""
 	}
 }
 

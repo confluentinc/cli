@@ -56,18 +56,18 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 }
 
 type LoginCredentialsManager interface {
-	GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetCCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
+	GetCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
+	GetCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
-	GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
-	SetCCloudClient(client *ccloud.Client)
+	SetCloudClient(client *ccloud.Client)
 }
 
 type LoginCredentialsManagerImpl struct {
@@ -86,7 +86,7 @@ func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Pro
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	envVars := environmentVariables{
 		username:           ConfluentCloudEmail,
 		password:           ConfluentCloudPassword,
@@ -139,7 +139,7 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(cmd *cobra.Command, u
 	return username, password
 }
 
-func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	envVars := environmentVariables{
 		username:           ConfluentPlatformUsername,
 		password:           ConfluentPlatformPassword,
@@ -170,12 +170,12 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 		return nil, err
 	}
 	if netrcMachine == nil {
-		return nil, errors.Errorf("Found no netrc machine using the filter: %+v", filterParams)
+		return nil, errors.Errorf("found no netrc machine using the filter: %+v", filterParams)
 	}
 	return netrcMachine, err
 }
 
-func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		utils.Println(cmd, "Enter your Confluent Cloud credentials:")
 		email := h.promptForUser(cmd, "Email")
@@ -188,7 +188,7 @@ func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		utils.Println(cmd, "Enter your Confluent credentials:")
 		username := h.promptForUser(cmd, "Username")
@@ -238,7 +238,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email string) bool {
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
 // Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables.
 // URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
 		if url == "" {
@@ -266,10 +266,8 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
 // URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
-	filterParams := netrc.NetrcMachineParams{
-		CLIName: "confluent",
-	}
+func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
+	filterParams := netrc.NetrcMachineParams{IsCloud: false}
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
@@ -286,6 +284,6 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) SetCCloudClient(client *ccloud.Client) {
+func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloud.Client) {
 	h.client = client
 }

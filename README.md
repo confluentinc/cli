@@ -411,7 +411,7 @@ func (s *CLITestSuite) TestFileCommands() {
 	tests := []CLITest{
 		{name: "succeed if showing existing config file", args: "config file show 3", fixture: "file1.golden"},
 	}
-	resetConfiguration(s.T(), "confluent")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		if tt.name == "" {

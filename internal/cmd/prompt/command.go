@@ -3,7 +3,6 @@ package prompt
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -18,36 +17,36 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in your terminal prompt.
+const longDescription = `Use this command to add Confluent information in your terminal prompt.
 
 For Bash, you'll want to do something like this:
 
 ::
 
-  export PS1="\$({{.CLIName}} prompt) $PS1"
+  export PS1="\$(confluent prompt) $PS1"
 
 ZSH users should be aware that they will have to set the 'PROMPT_SUBST' option first:
 
 ::
 
   setopt prompt_subst
-  export PS1="\$({{.CLIName}} prompt) $PS1"
+  export PS1="\$(confluent prompt) $PS1"
 
-You can customize the prompt by calling passing a '--format' flag, such as '-f "{{.CLIName}}|%E:%K"'.
+You can customize the prompt by calling passing a '--format' flag, such as '-f "confluent|%E:%K"'.
 If you want to create a more sophisticated prompt (such as using the built-in color functions),
 it'll be easiest for you if you use an environment variable rather than try to escape the quotes.
 
 ::
 
-  export {{.CLIName | ToUpper}}_PROMPT_FMT='({{color "blue" "{{.CLIName}}"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
-  export PS1="\$({{.CLIName}} prompt -f '${{.CLIName | ToUpper}}_PROMPT_FMT') $PS1"
+  export CONFLUENT_PROMPT_FMT='({{color "blue" "confluent"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
+  export PS1="\$(confluent prompt -f '$CONFLUENT_PROMPT_FMT') $PS1"
 
 To make this permanent, you must add it to your bash or zsh profile.
 
 Formats
 ~~~~~~~
 
-'{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
+'confluent prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
 * '%C' or {{.ContextName}}
 
@@ -129,7 +128,7 @@ func (c *promptCommand) init(cfg *v3.Config, prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),
-		Long:  parseTemplate(longDescriptionTemplate, version.CLIName),
+		Long:  longDescription,
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
@@ -202,10 +201,4 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	}
 
 	return nil
-}
-
-func parseTemplate(template, cliName string) string {
-	template = strings.ReplaceAll(template, "{{.CLIName}}", cliName)
-	template = strings.ReplaceAll(template, "{{.CLIName | ToUpper}}", strings.ToUpper(cliName))
-	return template
 }
