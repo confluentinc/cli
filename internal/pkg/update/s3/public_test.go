@@ -177,8 +177,8 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 		},
 		{
 			name:      "different major and minor versions",
-			fields:    fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureMajorAndMinor, "/", "prefix=ccloud-cli/", req).URL},
-			args:      args{name: "ccloud"},
+			fields:    fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixtureMajorAndMinor, "/", "prefix=confluent-cli/", req).URL},
+			args:      args{name: "confluent"},
 			wantMajor: makeVersion("1.0.0"),
 			wantMinor: makeVersion("0.1.0"),
 		},

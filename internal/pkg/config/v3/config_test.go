@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -19,7 +20,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -176,7 +177,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		BaseConfig: &config.BaseConfig{
 			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -198,7 +199,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		BaseConfig: &config.BaseConfig{
 			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -220,7 +221,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		BaseConfig: &config.BaseConfig{
 			Params:   &config.Params{Logger: log.New()},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -286,7 +287,7 @@ func TestConfig_Load(t *testing.T) {
 				BaseConfig: &config.BaseConfig{
 					Params:   &config.Params{Logger: log.New()},
 					Filename: "test_json/load_disable_update.json",
-					Ver:      Version,
+					Ver:      config.Version{Version: Version},
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -603,7 +604,7 @@ func TestConfig_AddContext(t *testing.T) {
 		kafka                  string
 		schemaRegistryClusters map[string]*v2.SchemaRegistryCluster
 		state                  *v2.ContextState
-		Version                *version.Version
+		Version                *pversion.Version
 		filename               string
 		want                   *Config
 		wantErr                bool
@@ -658,7 +659,7 @@ func TestConfig_AddContext(t *testing.T) {
 
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
-		BaseConfig:    &config.BaseConfig{Params: new(config.Params)},
+		BaseConfig:    &config.BaseConfig{Params: new(config.Params), Ver: config.Version{Version: new(version.Version)}},
 		ContextStates: make(map[string]*v2.ContextState),
 		Contexts:      make(map[string]*Context),
 		Credentials:   make(map[string]*v2.Credential),

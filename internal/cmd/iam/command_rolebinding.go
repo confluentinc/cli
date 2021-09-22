@@ -29,9 +29,9 @@ var (
 	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
 
 	// ccloud has Email as additional field
-	ccloudResourcePatternListFields           = []string{"Principal", "Email", "Role", "ResourceType", "Name", "PatternType"}
-	ccloudResourcePatternHumanListLabels      = []string{"Principal", "Email", "Role", "ResourceType", "Name", "PatternType"}
-	ccloudResourcePatternStructuredListLabels = []string{"principal", "email", "role", "resource_type", "name", "pattern_type"}
+	ccloudResourcePatternListFields           = []string{"Principal", "Email", "Role", "Environment", "CloudCluster", "ClusterType", "LogicalCluster", "ResourceType", "Name", "PatternType"}
+	ccloudResourcePatternHumanListLabels      = []string{"Principal", "Email", "Role", "Environment", "Cloud Cluster", "Cluster Type", "Logical Cluster", "Resource Type", "Name", "Pattern Type"}
+	ccloudResourcePatternStructuredListLabels = []string{"principal", "email", "role", "environment", "cloud_cluster", "cluster_type", "logical_cluster", "resource_type", "resource_name", "pattern_type"}
 
 	//TODO: please move this to a backend route (https://confluentinc.atlassian.net/browse/CIAM-890)
 	clusterScopedRoles = map[string]bool{
@@ -50,10 +50,6 @@ var (
 		"EnvironmentAdmin": true,
 	}
 
-	organizationScopedRoles = map[string]bool{
-		"OrganizationAdmin": true,
-		"MetricsViewer":     true,
-	}
 )
 
 type rolebindingOptions struct {
@@ -72,12 +68,16 @@ type rolebindingCommand struct {
 }
 
 type listDisplay struct {
-	Principal    string
-	Email        string
-	Role         string
-	ResourceType string
-	Name         string
-	PatternType  string
+	Principal      string `json:"principal"`
+	Email          string `json:"email"`
+	Role           string `json:"role"`
+	Environment    string `json:"environment"`
+	CloudCluster   string `json:"cloud_cluster"`
+	ClusterType    string `json:"cluster_type"`
+	LogicalCluster string `json:"logical_cluster"`
+	ResourceType   string `json:"resource_type"`
+	Name           string `json:"resource_name"`
+	PatternType    string `json:"pattern_type"`
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
@@ -423,11 +423,47 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		return err
+	}
+
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
 		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
 			principalEmail := userToEmailMap[principalName]
 			for roleName, resourcePatterns := range roleBindings {
+				if role != "" && role != roleName {
+					continue
+				}
+
+				envName := ""
+				cloudClusterName := ""
+				for _, elem := range roleBindingScope.Path {
+					// we don't capture the organization name because it's always this organization
+					if strings.HasPrefix(elem, "environment=") {
+						envName = strings.TrimPrefix(elem, "environment=")
+					}
+					if strings.HasPrefix(elem, "cloud-cluster=") {
+						cloudClusterName = strings.TrimPrefix(elem, "cloud-cluster=")
+					}
+				}
+				clusterType := ""
+				logicalCluster := ""
+				if roleBindingScope.Clusters.ConnectCluster != "" {
+					clusterType = "Connect"
+					logicalCluster = roleBindingScope.Clusters.ConnectCluster
+				} else if roleBindingScope.Clusters.KsqlCluster != "" {
+					clusterType = "ksqlDB"
+					logicalCluster = roleBindingScope.Clusters.KsqlCluster
+				} else if roleBindingScope.Clusters.SchemaRegistryCluster != "" {
+					clusterType = "Schema Registry"
+					logicalCluster = roleBindingScope.Clusters.SchemaRegistryCluster
+				} else if roleBindingScope.Clusters.KafkaCluster != "" {
+					clusterType = "Kafka"
+					logicalCluster = roleBindingScope.Clusters.KafkaCluster
+				}
+
 				for _, resourcePattern := range resourcePatterns {
 					if cmd.Flags().Changed("resource") {
 						resource, err := cmd.Flags().GetString("resource")
@@ -439,65 +475,26 @@ func (c *rolebindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 						}
 					}
 					outputWriter.AddElement(&listDisplay{
-						Principal:    principalName,
-						Email:        principalEmail,
-						Role:         roleName,
-						ResourceType: resourcePattern.ResourceType,
-						Name:         resourcePattern.Name,
-						PatternType:  resourcePattern.PatternType,
+						Principal:      principalName,
+						Email:          principalEmail,
+						Role:           roleName,
+						Environment:    envName,
+						CloudCluster:   cloudClusterName,
+						ClusterType:    clusterType,
+						LogicalCluster: logicalCluster,
+						ResourceType:   resourcePattern.ResourceType,
+						Name:           resourcePattern.Name,
+						PatternType:    resourcePattern.PatternType,
 					})
 				}
-				if cmd.Flags().Changed("role") {
-					role, err := cmd.Flags().GetString("role")
-					if err != nil {
-						return err
-					}
-					if role != roleName {
-						continue
-					}
-				}
-				orgName := ""
-				envName := ""
-				clusterName := ""
-				for _, elem := range roleBindingScope.Path {
-					if strings.HasPrefix(elem, "organization=") {
-						orgName = strings.TrimPrefix(elem, "organization=")
-					}
-					if strings.HasPrefix(elem, "environment=") {
-						envName = strings.TrimPrefix(elem, "environment=")
-					}
-					if strings.HasPrefix(elem, "cloud-cluster=") {
-						clusterName = strings.TrimPrefix(elem, "cloud-cluster=")
-					}
-				}
-				if len(resourcePatterns) == 0 && organizationScopedRoles[roleName] {
+
+				if len(resourcePatterns) == 0 {
 					outputWriter.AddElement(&listDisplay{
 						Principal:    principalName,
 						Email:        principalEmail,
 						Role:         roleName,
-						ResourceType: "Organization",
-						Name:         orgName,
-						PatternType:  "",
-					})
-				}
-				if len(resourcePatterns) == 0 && environmentScopedRoles[roleName] {
-					outputWriter.AddElement(&listDisplay{
-						Principal:    principalName,
-						Email:        principalEmail,
-						Role:         roleName,
-						ResourceType: "Environment",
-						Name:         envName,
-						PatternType:  "",
-					})
-				}
-				if len(resourcePatterns) == 0 && clusterScopedRolesV2[roleName] {
-					outputWriter.AddElement(&listDisplay{
-						Principal:    principalName,
-						Email:        principalEmail,
-						Role:         roleName,
-						ResourceType: "Cluster",
-						Name:         clusterName,
-						PatternType:  "",
+						Environment:  envName,
+						CloudCluster: cloudClusterName,
 					})
 				}
 			}
@@ -548,7 +545,7 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		principal,
 		*scope)
 	if err != nil {
-		if response.StatusCode == http.StatusNotFound {
+		if response != nil && response.StatusCode == http.StatusNotFound {
 			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
 		}
 		return err

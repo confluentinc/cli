@@ -8,15 +8,13 @@ import (
 	"sort"
 
 	"github.com/antihax/optional"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -217,7 +215,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	topicConfigsMap, err := kafka.ToMap(topicConfigStrings)
+	topicConfigsMap, err := utils.ToMap(topicConfigStrings)
 	if err != nil {
 		return err
 	}
@@ -329,7 +327,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
-	configsMap, err := kafka.ToMap(configStrings)
+	configsMap, err := utils.ToMap(configStrings)
 	if err != nil {
 		return err
 	}

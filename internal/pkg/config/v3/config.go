@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/blang/semver"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	Version         = semver.MustParse("3.0.0")
+	Version, _ = version.NewVersion("3.0.0")
 	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
 )
 
