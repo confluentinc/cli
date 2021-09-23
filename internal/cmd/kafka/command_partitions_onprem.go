@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -212,7 +211,6 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 		}
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)
-		fmt.Println(reassignmentGetResp)
 		if reassignmentGetResp.Kind != "" {
 			reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
 		}
@@ -221,7 +219,6 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 	} else {
 		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
 	}
-	fmt.Println(reassignmentListResp)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
