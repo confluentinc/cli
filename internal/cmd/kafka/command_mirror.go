@@ -125,19 +125,20 @@ func (c *mirrorCommand) init() {
 		Short: "Create a mirror topic under the link. Currently, destination topic name is required to be the same as the Source topic name.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a cluster link, using supplied Source URL and properties.",
+				Text: "Create a cluster link.",
 				Code: "ccloud kafka mirror create <source-topic-name> --link <link> " +
-					"--replication-factor <replication-factor> --config-file mirror_config.txt",
+					"--replication-factor <replication-factor> --config-file mirror_config.txt\n" +
+					"ccloud kafka mirror create <source-topic-name> --link <link>",
 			},
 		),
 		RunE: c.create,
 		Args: cobra.ExactArgs(1),
 	}
-	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link to attach to the mirror topic.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
-	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor, default: 3.")
-	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing topic config overrides. "+
-		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor.")
+	createCmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. "+
+		"Each property should be on its own line with the format: key=value.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
