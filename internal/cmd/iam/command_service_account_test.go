@@ -1,4 +1,4 @@
-package serviceaccount
+package iam
 
 import (
 	"context"
@@ -53,13 +53,12 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *command {
+func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *serviceAccountCommand {
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := New(prerunner, suite.analyticsClient)
-	return cmd
+	return NewServiceAccountCommand(prerunner)
 }
 
 func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
