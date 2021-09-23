@@ -1,5 +1,5 @@
 Updated the following broker configs for cluster "cluster-1":
         Name       |   Value     
-+------------------+------------+
+-------------------+-------------
   compression.type | zip         
   sasl_mechanism   | SASL/PLAIN  

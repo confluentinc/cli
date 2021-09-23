@@ -75,7 +75,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe [broker-id]",
+		Use:   "describe [id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.describe),
 		Short: "Describe a Kafka broker.",
@@ -99,7 +99,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update [broker-id]",
+		Use:   "update [id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.update),
 		Short: "Update per-broker or cluster-wide Kafka broker configs.",
@@ -123,7 +123,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <broker-id>",
+		Use:   "delete <id>",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.delete),
 		Short: "Delete a Kafka broker.",
@@ -133,7 +133,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(deleteCmd)
 
 	tasksCmd := &cobra.Command{
-		Use:   "get-tasks [broker-id]",
+		Use:   "get-tasks [id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.getTasks),
 		Short: "List broker tasks.",

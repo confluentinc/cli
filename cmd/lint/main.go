@@ -68,12 +68,13 @@ var rules = []linter.Rule{
 				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<api-key>"},
 				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
 				"lag":            {CreateCommandArg: "N/A", OtherCommandsArg: "<consumer-group>"},
-				"broker":         {CreateCommandArg: "N/A", OtherCommandsArg: "[broker-id]"},
 			},
 		),
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
 		linter.ExcludeUse("list", "auth"),
+		// skip broker commands which take an optional id in format [id]
+		linter.ExcludeCommandContains("kafka broker"),
 		// skip ACLs which don't have an identity (value objects rather than entities)
 		linter.ExcludeCommandContains("kafka acl"),
 		linter.ExcludeCommandContains("iam acl"),
