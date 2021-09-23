@@ -173,7 +173,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Logger:     log.New(),
 			},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -198,7 +198,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Logger:     log.New(),
 			},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", cliName),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -223,7 +223,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Logger:     log.New(),
 			},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", cliName),
-			Ver:      Version,
+			Ver:      config.Version{Version: Version},
 		},
 		Platforms: map[string]*v2.Platform{
 			platform.Name: platform,
@@ -292,7 +292,7 @@ func TestConfig_Load(t *testing.T) {
 						Logger:     log.New(),
 					},
 					Filename: "test_json/load_disable_update.json",
-					Ver:      Version,
+					Ver:      config.Version{Version: Version},
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -1075,5 +1075,27 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 		_, ok := kafkaClusterContext.KafkaClusterConfigs[clusterID]
 		require.False(t, ok)
 		require.Empty(t, kafkaClusterContext.GetActiveKafkaClusterId())
+	}
+}
+
+func TestConfig_MergeWith(t *testing.T) {
+	tests := []struct {
+		current *Config
+		other   *Config
+	}{
+		{new(Config), new(Config)},
+		{&Config{DisableUpdates: false}, &Config{DisableUpdates: true}},
+		{&Config{DisableUpdateCheck: false}, &Config{DisableUpdateCheck: true}},
+		{&Config{NoBrowser: false}, &Config{NoBrowser: true}},
+		{&Config{CurrentContext: ""}, &Config{CurrentContext: "context"}},
+		{&Config{Contexts: nil}, &Config{Contexts: map[string]*Context{"context": new(Context)}}},
+		{&Config{Platforms: nil}, &Config{Platforms: map[string]*v2.Platform{"platform": new(v2.Platform)}}},
+		{&Config{Credentials: nil}, &Config{Credentials: map[string]*v2.Credential{"credential": new(v2.Credential)}}},
+		{&Config{ContextStates: nil}, &Config{ContextStates: map[string]*v2.ContextState{"context-state": new(v2.ContextState)}}},
+	}
+
+	for _, test := range tests {
+		test.current.MergeWith(test.other)
+		require.Equal(t, test.other, test.current)
 	}
 }

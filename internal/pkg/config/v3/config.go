@@ -8,9 +8,8 @@ import (
 	"path/filepath"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
-	"github.com/blang/semver"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -23,9 +22,7 @@ const (
 	emptyFieldIndicator  = "EMPTY"
 )
 
-var (
-	Version = semver.MustParse("3.0.0")
-)
+var Version, _ = version.NewVersion("3.0.0")
 
 // Config represents the CLI configuration.
 type Config struct {
@@ -406,6 +403,52 @@ func (c *Config) HasLogin() bool {
 func (c *Config) ResetAnonymousId() error {
 	c.AnonymousId = uuid.New().String()
 	return c.Save()
+}
+
+func (c *Config) MergeWith(other *Config) {
+	c.DisableUpdates = c.DisableUpdates || other.DisableUpdates
+	c.DisableUpdateCheck = c.DisableUpdateCheck || other.DisableUpdateCheck
+	c.NoBrowser = c.NoBrowser || other.NoBrowser
+
+	if c.CurrentContext == "" {
+		c.CurrentContext = other.CurrentContext
+	}
+
+	if other.Contexts != nil {
+		if c.Contexts == nil {
+			c.Contexts = make(map[string]*Context)
+		}
+		for name, ctx := range other.Contexts {
+			c.Contexts[name] = ctx
+		}
+	}
+
+	if other.Platforms != nil {
+		if c.Platforms == nil {
+			c.Platforms = make(map[string]*v2.Platform)
+		}
+		for name, platform := range other.Platforms {
+			c.Platforms[name] = platform
+		}
+	}
+
+	if other.Credentials != nil {
+		if c.Credentials == nil {
+			c.Credentials = make(map[string]*v2.Credential)
+		}
+		for name, credential := range other.Credentials {
+			c.Credentials[name] = credential
+		}
+	}
+
+	if other.ContextStates != nil {
+		if c.ContextStates == nil {
+			c.ContextStates = make(map[string]*v2.ContextState)
+		}
+		for name, state := range other.ContextStates {
+			c.ContextStates[name] = state
+		}
+	}
 }
 
 func (c *Config) getFilename() (string, error) {
