@@ -1,27 +1,8 @@
-FROM mcr.microsoft.com/windows:1809
-
-ENV chocolateyUseWindowsCompression false
-
-RUN powershell -NoProfile -ExecutionPolicy unrestricted -Command \
-    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')); \
-    choco feature disable --name showDownloadProgress
-
-RUN choco install make && \
-    choco install grep -y && \
-    choco install sed -y && \
-    choco install git -y && \
-    choco install mingw -y && \
-    choco install golang -y
+FROM public.ecr.aws/j3p8s0n3/windows-2019:latest
 
 RUN powershell setx PATH \"$env:path;C:\Program Files\Git\bin\" -m
 
-RUN powershell mkdir -p /go/src/github.com/goreleaser && \
-    cd /go/src/github.com/goreleaser && \
-    git clone https://github.com/goreleaser/goreleaser.git && \
-    cd goreleaser && \
-    git checkout v0.141.0 && \
-    go install . && \
-    powershell mkdir -p /go/src/github.com/confluentinc/cli && \
+RUN powershell mkdir -p /go/src/github.com/confluentinc/cli && \
     cd /go/src/github.com/confluentinc/cli
 
 COPY .netrc /Users/ContainerAdministrator/
