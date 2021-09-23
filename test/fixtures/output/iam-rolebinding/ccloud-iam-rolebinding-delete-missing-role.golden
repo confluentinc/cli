@@ -8,6 +8,8 @@ Flags:
       --cloud-cluster string   Cloud cluster ID for the role binding.
       --environment string     Environment ID for scope of rolebinding delete.
       --current-env            Use current environment ID for scope.
+      --prefix                 Whether the provided resource name is treated as a prefix pattern.
+      --resource string        Qualified resource name for the role binding.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

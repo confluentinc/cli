@@ -264,4 +264,6 @@ var v2RoutesAndReplies = map[string]string{
 	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
 			"User:u-33ccc", "User:u-44ddd"
 		]`,
+	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin/resource/Topic/name/food":           `["User:u-11aaa"]`,
+	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin/resource/Topic/name/shire-parties": `["User:u-11aaa"]`,
 }

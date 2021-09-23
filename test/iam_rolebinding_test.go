@@ -11,6 +11,10 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			args: "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin --environment a-595 --cloud-cluster lkc-1111aaa",
 		},
 		{
+			name: "ccloud iam rolebinding create cloud-cluster",
+			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --environment a-595 --resource Topic:connect-configs",
+		},
+		{
 			name:        "ccloud iam rolebinding create, invalid use case: missing cloud-cluster",
 			args:        "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin",
 			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-missing-cloud-cluster.golden",
@@ -35,6 +39,10 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 		{
 			name: "ccloud iam rolebinding delete cluster-name",
 			args: "iam rolebinding delete --principal User:u-11aaa --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+		},
+		{
+			name: "ccloud iam rolebinding delete cluster-name",
+			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --resource Topic:connect-configs",
 		},
 		{
 			name:        "ccloud iam rolebinding delete, invalid use case: missing cloud-cluster",
@@ -379,6 +387,14 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 			name:    "ccloud iam rolebinding list --help",
 			args:    "iam rolebinding list --help",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-help.golden",
+		},
+		{
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin --resource Topic:food",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-role-and-resource-with-exact-match.golden",
+		},
+		{
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin --resource Topic:shire-parties",
+			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
 		},
 	}
 
