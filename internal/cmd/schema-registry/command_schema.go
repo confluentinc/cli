@@ -249,14 +249,17 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	schema, err := strconv.Atoi(args[0])
+
+	schemaID, err := strconv.ParseInt(args[0], 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, args[0]), errors.SchemaIntegerSuggestions)
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schema), nil)
+
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schemaID), nil)
 	if err != nil {
 		return err
 	}
+
 	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 

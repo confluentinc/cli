@@ -225,8 +225,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountId), errors.ServiceAccountNotFoundSuggestions)
 			}
 		} else { // if user inputs numeric ID, convert it to int32
-			userIdp, _ := strconv.Atoi(serviceAccountId)
-			userId = int32(userIdp)
+			n, _ := strconv.ParseInt(serviceAccountId, 10, 32)
+			userId = int32(n)
 		}
 	}
 
@@ -669,26 +669,26 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return append(serviceAccounts, adminUsers...), nil
 }
 
-func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
-	if Id != "" { // it has a service-account flag
+func (c *command) completeKeyId(key *schedv1.ApiKey, id string) (*schedv1.ApiKey, error) {
+	if id != "" { // it has a service-account flag
 		key.ServiceAccount = true
 		users, err := c.getAllUsers()
 		if err != nil {
 			return key, err
 		}
-		idp, err := strconv.Atoi(Id)
-		if err != nil { // it's a resource id
-			key.UserResourceId = Id
+
+		if userID, err := strconv.ParseInt(id, 10, 32); err == nil {
+			key.UserId = int32(userID)
 			for _, user := range users {
-				if Id == user.ResourceId {
-					key.UserId = user.Id
+				if int32(userID) == user.Id {
+					key.UserResourceId = user.ResourceId
 				}
 			}
-		} else { // it's a numeric id
-			key.UserId = int32(idp)
+		} else {
+			key.UserResourceId = id
 			for _, user := range users {
-				if int32(idp) == user.Id {
-					key.UserResourceId = user.ResourceId
+				if id == user.ResourceId {
+					key.UserId = user.Id
 				}
 			}
 		}
