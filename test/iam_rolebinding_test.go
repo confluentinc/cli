@@ -11,7 +11,7 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			args: "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin --environment a-595 --cloud-cluster lkc-1111aaa",
 		},
 		{
-			name: "ccloud iam rolebinding create cloud-cluster",
+			name: "ccloud iam rolebinding create cloud-cluster resource",
 			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --environment a-595 --resource Topic:connect-configs",
 		},
 		{

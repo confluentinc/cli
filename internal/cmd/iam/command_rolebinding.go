@@ -310,7 +310,7 @@ func (c *rolebindingCommand) validateRoleAndResourceTypeV1(roleName string, reso
 	return nil
 }
 
-func (c *rolebindingCommand) validateResourceType(resourceType string) error {
+func (c *rolebindingCommand) validateResourceTypeV1(resourceType string) error {
 	ctx := c.createContext()
 	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(ctx)
 	if err != nil {
@@ -364,6 +364,39 @@ func (c *rolebindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 
 	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+}
+
+func (c *rolebindingCommand) validateResourceTypeV2(resourceType string) error {
+	ctx := c.createContext()
+	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	var allResourceTypes = make(map[string]bool)
+	found := false
+	for _, role := range roles {
+		for _, policies := range role.Policies {
+			for _, operation := range policies.AllowedOperations {
+				allResourceTypes[operation.ResourceType] = true
+				if operation.ResourceType == resourceType {
+					found = true
+					break
+				}
+			}
+		}
+	}
+
+	if !found {
+		uniqueResourceTypes := []string{}
+		for rt := range allResourceTypes {
+			uniqueResourceTypes = append(uniqueResourceTypes, rt)
+		}
+		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+	}
+
+	return nil
 }
 
 func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
@@ -884,7 +917,34 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	resourcesRequest := mds.ResourcesRequest{}
 	resourcesRequestV2 := mdsv2alpha1.ResourcesRequest{}
 	if resource != "" {
-		if c.cliName != "ccloud" {
+		if c.cliName == "ccloud" {
+			parsedResourcePattern, err := c.parseAndValidateResourcePatternV2(resource, prefix)
+			if err != nil {
+				return nil, err
+			}
+			// Resource types are defined under roles' access policies, so if no role is specified,
+			// we have to loop over the possible resource types for all roles (this is what
+			// validateResourceTypeV2 does).
+			if role != "" {
+				err = c.validateRoleAndResourceTypeV2(role, parsedResourcePattern.ResourceType)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				err = c.validateResourceTypeV2(parsedResourcePattern.ResourceType)
+				if err != nil {
+					return nil, err
+				}
+			}
+			resourcePatterns := []mdsv2alpha1.ResourcePattern{
+				parsedResourcePattern,
+			}
+			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
+				Scope:            *scopeV2,
+				ResourcePatterns: resourcePatterns,
+			}
+
+		} else {
 			parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -892,14 +952,14 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 
 			// Resource types are defined under roles' access policies, so if no role is specified,
 			// we have to loop over the possible resource types for all roles (this is what
-			// validateResourceType does).
+			// validateResourceTypeV1 does).
 			if role != "" {
 				err = c.validateRoleAndResourceTypeV1(role, parsedResourcePattern.ResourceType)
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				err = c.validateResourceType(parsedResourcePattern.ResourceType)
+				err = c.validateResourceTypeV1(parsedResourcePattern.ResourceType)
 				if err != nil {
 					return nil, err
 				}
@@ -910,22 +970,6 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 			}
 			resourcesRequest = mds.ResourcesRequest{
 				Scope:            *scope,
-				ResourcePatterns: resourcePatterns,
-			}
-		} else {
-			parsedResourcePattern, err := c.parseAndValidateResourcePatternV2(resource, prefix)
-			if err != nil {
-				return nil, err
-			}
-			err = c.validateRoleAndResourceTypeV2(role, parsedResourcePattern.ResourceType)
-			if err != nil {
-				return nil, err
-			}
-			resourcePatterns := []mdsv2alpha1.ResourcePattern{
-				parsedResourcePattern,
-			}
-			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
-				Scope:            *scopeV2,
 				ResourcePatterns: resourcePatterns,
 			}
 		}
