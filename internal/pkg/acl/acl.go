@@ -357,10 +357,8 @@ func PrintACLsFromKafkaRestResponseWithMap(cmd *cobra.Command, aclGetResp kafkar
 		principal := aclData.Principal
 		var resourceId string
 		if principal != "" {
-			UserId := principal[5:]
-			idp, err := strconv.Atoi(UserId)
-			if err == nil {
-				resourceId = IdMap[int32(idp)]
+			if userID, err := strconv.ParseInt(principal[5:], 10, 32); err == nil {
+				resourceId = IdMap[int32(userID)]
 			}
 		}
 		record := &struct {
@@ -404,10 +402,8 @@ func PrintACLsWithMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, wri
 		principal := binding.Entry.Principal
 		var resourceId string
 		if principal != "" {
-			UserId := principal[5:]
-			idp, err := strconv.Atoi(UserId)
-			if err == nil {
-				resourceId = IdMap[int32(idp)]
+			if userID, err := strconv.ParseInt(principal[5:], 10, 32); err == nil {
+				resourceId = IdMap[int32(userID)]
 			}
 		}
 		record := &struct {
