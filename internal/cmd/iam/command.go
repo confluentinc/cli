@@ -12,7 +12,6 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-// New returns the default command object for interacting with RBAC.
 func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "iam",
@@ -36,8 +35,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c.AddCommand(NewACLCommand(c.prerunner))
-	c.AddCommand(NewRoleCommand(cfg, c.prerunner))
-	c.AddCommand(NewRolebindingCommand(cfg, c.prerunner))
+	c.AddCommand(NewRBACCommand(cfg, c.prerunner))
 
 	return c.Command
 }

@@ -218,11 +218,13 @@ func TestPrintNotes_ConfluentLocal(t *testing.T) {
 func TestPrintNotes_ConfluentIAMRolebindingCreate(t *testing.T) {
 	confluent := &cobra.Command{Use: "confluent"}
 	iam := &cobra.Command{Use: "iam"}
+	rbac := &cobra.Command{Use: "rbac"}
 	rolebinding := &cobra.Command{Use: "rolebinding"}
 	create := &cobra.Command{Use: "create"}
 
 	confluent.AddCommand(iam)
-	iam.AddCommand(rolebinding)
+	iam.AddCommand(rbac)
+	rbac.AddCommand(rolebinding)
 	rolebinding.AddCommand(create)
 
 	expected := []string{
