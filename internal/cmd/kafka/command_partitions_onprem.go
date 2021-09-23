@@ -148,8 +148,6 @@ func parseLeaderId(leader kafkarestv3.Relationship) int32 {
 	return int32(leaderId)
 }
 
-type replicaData
-
 func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string) error {
 	partitionIdStr := args[0]
 	i, err := strconv.ParseInt(partitionIdStr, 10, 32)
@@ -169,33 +167,22 @@ func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string
 	if err != nil {
 		return err
 	}
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
 	partitionGetResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdGet(restContext, clusterId, topic, partitionId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	s := struct {
-		partitionData
-		replicaData
+	s := &struct {
+		ClusterId string
+		TopicName  string
+		PartitionId int32
+		LeaderId    int32
+	}{
+		ClusterId: partitionGetResp.ClusterId,
+		TopicName: partitionGetResp.TopicName,
+		PartitionId: partitionGetResp.PartitionId,
+		LeaderId: parseLeaderId(partitionGetResp.Leader),
 	}
-	//replicasStatusListResp, resp, err := restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
-	//if err != nil {
-	//	fmt.Println("1")
-	//	return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
-	//}
-	replicasListResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
-	if err != nil {
-		fmt.Println("2")
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
-	}
-	//output.StructuredOutputForCommand(cmd, format, replicasStatusListResp)
-	output.StructuredOutputForCommand(cmd, format, replicasListResp)
-
-	// TODO human readable output
-	return output.StructuredOutputForCommand(cmd, format, partitionGetResp)
+	return output.DescribeObject(cmd, s, []string{"ClusterId", "TopicName", "PartitionId", "LeaderId"}, map[string]string{"ClusterId":"Cluster ID", "TopicName":"Topic Name", "PartitionId":"Partition ID", "LeaderId":"Leader ID"}, map[string]string{"ClusterId":"cluster_id", "TopicName":"topic_name", "PartitionId":"partition_id", "LeaderId":"leader_id"})
 }
 
 func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args []string) error {
@@ -225,7 +212,10 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 		}
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)
-		reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
+		fmt.Println(reassignmentGetResp)
+		if reassignmentGetResp.Kind != "" {
+			reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
+		}
 	} else if topic != "" {
 		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(restContext, clusterId, topic)
 	} else {
