@@ -9,6 +9,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	templatecolor "github.com/confluentinc/cli/internal/pkg/template-color"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 			if cfg.CurrentContext == "" {
 				return "(none)"
 			}
-			return cfg.CurrentContext
+			return utils.CropString(cfg.CurrentContext, 30)
 		},
 		"%e": func(config *v3.Config) string {
 			context := config.Context()
