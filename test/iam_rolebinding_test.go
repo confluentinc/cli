@@ -15,6 +15,10 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --environment a-595 --resource Topic:connect-configs",
 		},
 		{
+			name: "ccloud iam rolebinding create cloud-cluster resource",
+			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --environment a-595 --prefix --resource Topic:finance_",
+		},
+		{
 			name:        "ccloud iam rolebinding create, invalid use case: missing cloud-cluster",
 			args:        "iam rolebinding create --principal User:u-11aaa --role CloudClusterAdmin",
 			fixture:     "iam-rolebinding/ccloud-iam-rolebinding-missing-cloud-cluster.golden",
@@ -43,6 +47,10 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 		{
 			name: "ccloud iam rolebinding delete cluster-name",
 			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --resource Topic:connect-configs",
+		},
+		{
+			name: "ccloud iam rolebinding delete cluster-name",
+			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --prefix --resource Topic:finance_",
 		},
 		{
 			name:        "ccloud iam rolebinding delete, invalid use case: missing cloud-cluster",
