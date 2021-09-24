@@ -785,7 +785,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	defer producer.Close()
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create admin client: %v\n", err)
 	}
 	defer adminClient.Close()
 	err = h.validateTopic(adminClient, topic, cluster)
@@ -999,7 +999,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create admin client: %v\n", err)
 	}
 	defer adminClient.Close()
 	err = h.validateTopic(adminClient, topic, cluster)
