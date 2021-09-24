@@ -138,7 +138,7 @@ func (c *mirrorCommand) init() {
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link to attach to the mirror topic.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
-	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication-factor.")
+	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
 	createCmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. "+
 		"Each property should be on its own line with the format: key=value.")
 	createCmd.Flags().SortFlags = false
