@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
 type command struct {
@@ -12,7 +13,7 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "iam",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
@@ -34,8 +35,16 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
+	serviceAccountCmd := NewServiceAccountCommand(c.prerunner)
+
 	c.AddCommand(NewACLCommand(c.prerunner))
 	c.AddCommand(NewRBACCommand(cfg, c.prerunner))
+	c.AddCommand(serviceAccountCmd.Command)
+	c.AddCommand(NewUserCommand(c.prerunner))
+
+	if cfg.IsCloudLogin() {
+		serverCompleter.AddCommand(serviceAccountCmd)
+	}
 
 	return c.Command
 }

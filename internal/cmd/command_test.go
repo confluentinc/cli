@@ -50,8 +50,7 @@ func TestHelp_Cloud(t *testing.T) {
 
 	commands := []string{
 		"admin", "api-key", "audit-log", "cloud-signup", "completion", "context", "connect", "environment", "help",
-		"iam", "kafka", "ksql", "login", "logout", "price", "prompt", "schema-registry", "service-account", "shell",
-		"update", "version",
+		"iam", "kafka", "ksql", "login", "logout", "price", "prompt", "schema-registry", "shell", "update", "version",
 	}
 
 	for _, command := range commands {

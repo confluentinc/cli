@@ -102,6 +102,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
+		linter.ExcludeCommandContains("iam user"),
 		// skip cluster linking commands
 		linter.ExcludeCommandContains("kafka link"),
 		linter.ExcludeCommandContains("kafka mirror"),

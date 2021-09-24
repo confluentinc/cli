@@ -1,4 +1,4 @@
-package admin
+package iam
 
 import (
 	"context"
@@ -63,13 +63,14 @@ type userStruct struct {
 	AuthenticationMethod string
 }
 
-func NewUsersCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func NewUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &userCommand{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
-				Use:   "user",
-				Short: "Manage users.",
-				Args:  cobra.NoArgs,
+				Use:         "user",
+				Short:       "Manage users.",
+				Args:        cobra.NoArgs,
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 			},
 			prerunner,
 		),
