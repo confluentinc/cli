@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -104,8 +103,6 @@ func (a *Command) login(cmd *cobra.Command, _ []string) error {
 	}
 
 	client := a.ccloudClientFactory.AnonHTTPClientFactory(url)
-	client.HttpClient.Timeout = 30 * time.Second
-
 	token, refreshToken, err := a.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser)
 	if err != nil {
 		return err
