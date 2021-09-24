@@ -127,8 +127,10 @@ func (c *mirrorCommand) init() {
 			examples.Example{
 				Text: "Create a cluster link.",
 				Code: "ccloud kafka mirror create <source-topic-name> --link <link> " +
-					"--replication-factor <replication-factor> --config-file mirror_config.txt\n" +
-					"ccloud kafka mirror create <source-topic-name> --link <link>",
+					"--replication-factor <replication-factor> --config-file mirror_config.txt\n",
+			},
+			examples.Example{
+				Code: "ccloud kafka mirror create <source-topic-name> --link <link>",
 			},
 		),
 		RunE: c.create,
