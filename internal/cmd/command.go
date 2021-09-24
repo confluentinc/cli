@@ -131,7 +131,7 @@ func NewConfluentCommand(cfg *v3.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(price.New(prerunner))
-	cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
+	cli.AddCommand(prompt.New(prerunner, &ps1.Prompt{}, logger))
 	cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 	cli.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
 	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))

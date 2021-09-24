@@ -14,12 +14,11 @@ import (
 var (
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
 	formatTokens = map[string]func(cfg *v3.Config) string{
-		"%c": func(config *v3.Config) string {
-			context := config.CurrentContext
-			if context == "" {
-				context = "(none)"
+		"%C": func(cfg *v3.Config) string {
+			if cfg.CurrentContext == "" {
+				return "(none)"
 			}
-			return context
+			return cfg.CurrentContext
 		},
 		"%e": func(config *v3.Config) string {
 			context := config.Context()
