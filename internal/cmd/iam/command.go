@@ -13,7 +13,6 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-// New returns the default command object for interacting with RBAC.
 func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "iam",
@@ -39,8 +38,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 	serviceAccountCmd := NewServiceAccountCommand(c.prerunner)
 
 	c.AddCommand(NewACLCommand(c.prerunner))
-	c.AddCommand(NewRoleCommand(cfg, c.prerunner))
-	c.AddCommand(NewRolebindingCommand(cfg, c.prerunner))
+	c.AddCommand(NewRBACCommand(cfg, c.prerunner))
 	c.AddCommand(serviceAccountCmd.Command)
 	c.AddCommand(NewUserCommand(c.prerunner))
 

@@ -68,17 +68,17 @@ const (
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
 
-	// iam role commands
+	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
 	UnknownRoleSuggestions = "The available roles are: %s"
 
-	// iam role-binding commands
+	// iam rbac rolebinding commands
 	PrincipalFormatErrorMsg         = "incorrect principal format specified"
 	PrincipalFormatSuggestions      = "Principal must be specified in this format: `<Principal Type>:<Principal Name>`."
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
-	LookUpRoleSuggestions           = "To check for valid roles, use `confluent role list`."
+	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
 	InvalidResourceTypeErrorMsg     = "invalid resource type \"%s\""
 	InvalidResourceTypeSuggestions  = "The available resource types are: %s"
 	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster-id to uniquely identify the scope"
