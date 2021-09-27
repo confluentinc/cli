@@ -294,6 +294,37 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 	return nil
 }
 
+func (c *rolebindingCommand) validateResourceType(resourceType string) error {
+	ctx := c.createContext()
+	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(ctx)
+	if err != nil {
+		return err
+	}
+
+	var allResourceTypes = make(map[string]bool)
+	found := false
+	for _, role := range roles {
+		for _, operation := range role.AccessPolicy.AllowedOperations {
+			allResourceTypes[operation.ResourceType] = true
+			if operation.ResourceType == resourceType {
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		uniqueResourceTypes := []string{}
+		for rt := range allResourceTypes {
+			uniqueResourceTypes = append(uniqueResourceTypes, rt)
+		}
+		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+	}
+
+	return nil
+}
+
 func (c *rolebindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
 	scope := &mds.MdsScopeClusters{}
 	nonKafkaScopesSet := 0
@@ -559,13 +590,24 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
 				for _, resourcePattern := range resourcePatterns {
-					outputWriter.AddElement(&listDisplay{
-						Principal:    principalName,
-						Role:         roleName,
-						ResourceType: resourcePattern.ResourceType,
-						Name:         resourcePattern.Name,
-						PatternType:  resourcePattern.PatternType,
-					})
+					add := true
+					if options.resource != "" {
+						add = false
+						for _, rp := range options.resourcesRequest.ResourcePatterns {
+							if rp == resourcePattern {
+								add = true
+							}
+						}
+					}
+					if add {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: resourcePattern.ResourceType,
+							Name:         resourcePattern.Name,
+							PatternType:  resourcePattern.PatternType,
+						})
+					}
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
@@ -780,9 +822,19 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		if err != nil {
 			return nil, err
 		}
-		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-		if err != nil {
-			return nil, err
+		// Resource types are defined under roles' access policies, so if no role is specified,
+		// we have to loop over the possible resource types for all roles (this is what
+		// validateResourceType does).
+		if role != "" {
+			err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err = c.validateResourceType(parsedResourcePattern.ResourceType)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resourcePatterns := []mds.ResourcePattern{
 			parsedResourcePattern,

@@ -130,7 +130,7 @@ func (c *linkCommand) init() {
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
+	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
