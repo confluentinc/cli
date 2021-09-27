@@ -14,6 +14,10 @@ func Test_Docs_Update_Handler(t *testing.T) {
 	newReleaseNotes := `|confluent-cli| v1.2.0 Release Notes
 ====================================
 
+Breaking Changes
+------------------------
+- 1.2 breaking change
+
 New Features
 ------------------------
 - v1.2.0 feature

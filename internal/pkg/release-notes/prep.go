@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	newFeaturesTitle = "New Features"
-	bugFixesTitle    = "Bug Fixes"
+	breakingChangesTitle = "Breaking Changes"
+	newFeaturesTitle     = "New Features"
+	bugFixesTitle        = "Bug Fixes"
 
 	prepFileName = "./release-notes/prep"
 	placeHolder  = "<PLACEHOLDER>"
@@ -30,7 +31,7 @@ func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion s
 	}
 	defer f.Close()
 	mergedPRs := getMergedPRs(prevVersion)
-	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs, newFeaturesTitle, bugFixesTitle)
+	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs, breakingChangesTitle, newFeaturesTitle, bugFixesTitle)
 	_, err = io.WriteString(f, prepFile)
 	return err
 }
