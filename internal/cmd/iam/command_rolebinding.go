@@ -159,12 +159,12 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().Bool("current-user", false, "Show role bindings belonging to current user.")
 	listCmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 	listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
+	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
 		listCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 	} else {
-		listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
@@ -191,12 +191,12 @@ func (c *rolebindingCommand) init() {
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	if c.cliName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding create.")
 		createCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 	} else {
-		createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		createCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
@@ -218,12 +218,12 @@ func (c *rolebindingCommand) init() {
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	deleteCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	if c.cliName == "ccloud" {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding delete.")
 		deleteCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 	} else {
-		deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		deleteCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
@@ -467,6 +467,14 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 			return nil, err
 		}
 		scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+cluster)
+	}
+
+	if cmd.Flags().Changed("kafka-cluster-id") {
+		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
+		if err != nil {
+			return nil, err
+		}
+		scopeV2.Clusters.KafkaCluster = kafkaCluster
 	}
 
 	if cmd.Flags().Changed("role") {

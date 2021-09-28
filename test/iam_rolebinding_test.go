@@ -12,11 +12,11 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 		},
 		{
 			name: "ccloud iam rolebinding create cloud-cluster resource",
-			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --environment a-595 --resource Topic:connect-configs",
+			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --kafka-cluster-id kafka-GUID --environment a-595 --resource Topic:connect-configs",
 		},
 		{
 			name: "ccloud iam rolebinding create cloud-cluster resource",
-			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --environment a-595 --prefix --resource Topic:finance_",
+			args: "iam rolebinding create --principal User:u-11aaa --role ResourceOwner --cloud-cluster lkc-1111aaa --kafka-cluster-id kafka-GUID --environment a-595 --prefix --resource Topic:finance_",
 		},
 		{
 			name:        "ccloud iam rolebinding create, invalid use case: missing cloud-cluster",
@@ -46,11 +46,11 @@ func (s *CLITestSuite) TestCcloudIAMRoleBindingCRUD() {
 		},
 		{
 			name: "ccloud iam rolebinding delete cluster-name",
-			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --resource Topic:connect-configs",
+			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --kafka-cluster-id kafka-GUID --resource Topic:connect-configs",
 		},
 		{
 			name: "ccloud iam rolebinding delete cluster-name",
-			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --prefix --resource Topic:finance_",
+			args: "iam rolebinding delete --principal User:u-11aaa --role ResourceOwner --current-env --cloud-cluster lkc-1111aaa --kafka-cluster-id kafka-GUID --prefix --resource Topic:finance_",
 		},
 		{
 			name:        "ccloud iam rolebinding delete, invalid use case: missing cloud-cluster",
@@ -397,11 +397,11 @@ func (s *CLITestSuite) TestCcloudIAMRolebindingList() {
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-help.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin --resource Topic:food",
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --kafka-cluster-id kafka-GUID --role ResourceOwner --resource Topic:food",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-role-and-resource-with-exact-match.golden",
 		},
 		{
-			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin --resource Topic:shire-parties",
+			args:    "iam rolebinding list --environment a-595 --cloud-cluster lkc-1111aaa --kafka-cluster-id kafka-GUID --role ResourceOwner --resource Topic:shire-parties",
 			fixture: "iam-rolebinding/ccloud-iam-rolebinding-list-role-and-resource-with-prefix-match.golden",
 		},
 	}
