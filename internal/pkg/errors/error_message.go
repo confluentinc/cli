@@ -92,7 +92,7 @@ const (
 	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
 	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
 	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
-	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\\n Give the user the appropriate permissions using `ccloud iam rolebinding create`."
+	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\n Give the user the appropriate permissions using `ccloud iam rolebinding create`."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
