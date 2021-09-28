@@ -408,7 +408,7 @@ func (c *Config) ResetAnonymousId() error {
 	return c.Save()
 }
 
-func (c *Config) MergeWith(other *Config) *Config {
+func (c *Config) MergeWith(other *Config) {
 	c.DisableUpdates = c.DisableUpdates || other.DisableUpdates
 	c.DisableUpdateCheck = c.DisableUpdateCheck || other.DisableUpdateCheck
 	c.NoBrowser = c.NoBrowser || other.NoBrowser
@@ -452,8 +452,6 @@ func (c *Config) MergeWith(other *Config) *Config {
 			c.ContextStates[name] = state
 		}
 	}
-
-	return c
 }
 
 func (c *Config) getFilename() (string, error) {
