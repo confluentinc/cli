@@ -71,11 +71,7 @@ func buildAndWriteReleaseNotes(version string, content *ReleaseNotesContent, doc
 	if err != nil {
 		return err
 	}
-	err = writeFile(updatedDocsFilePath, updatedDocsPage)
-	if err != nil {
-		return err
-	}
-	return nil
+	return writeFile(updatedDocsFilePath, updatedDocsPage)
 }
 
 func buildReleaseNotes(version string, releaseNotesBuildParams *ReleaseNotesBuilderParams, content *ReleaseNotesContent) string {

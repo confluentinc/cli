@@ -12,8 +12,8 @@ var (
 )
 
 func main() {
-	fileName := path.Join(".", "release-notes", "prep")
-	err := rn.WriteReleaseNotesPrep(fileName, releaseVersion, prevVersion)
+	filename := path.Join(".", "release-notes", "prep")
+	err := rn.WriteReleaseNotesPrep(filename, releaseVersion, prevVersion)
 	if err != nil {
 		panic(err)
 	}

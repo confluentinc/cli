@@ -11,14 +11,16 @@ import (
 type SectionType int
 
 const (
-	newFeaturesSection SectionType = iota
-	bugFixesSection
+	breakingChanges SectionType = iota
+	newFeatures
+	bugFixes
 )
 
 var (
 	sectionNameToSectionTypeMap = map[string]SectionType{
-		newFeaturesTitle: newFeaturesSection,
-		bugFixesTitle:    bugFixesSection,
+		breakingChangesTitle: breakingChanges,
+		newFeaturesTitle:     newFeatures,
+		bugFixesTitle:        bugFixes,
 	}
 	prepFileNotReadErrorMsg = "Prep file has not been read."
 )
@@ -34,8 +36,9 @@ type PrepFileReaderImpl struct {
 }
 
 type ReleaseNotesContent struct {
-	newFeatures []string
-	bugFixes    []string
+	breakingChanges []string
+	newFeatures     []string
+	bugFixes        []string
 }
 
 func NewPrepFileReader() PrepFileReader {
@@ -72,11 +75,7 @@ func (p *PrepFileReaderImpl) extractSections() error {
 			line = p.extractSectionContent(section)
 		}
 	}
-	err := p.scanner.Err()
-	if err != nil {
-		return err
-	}
-	return nil
+	return p.scanner.Err()
 }
 
 func (p *PrepFileReaderImpl) checkForSectionName(line string) (SectionType, bool) {
@@ -111,8 +110,7 @@ func (p *PrepFileReaderImpl) extractSectionContent(section SectionType) (lastLin
 }
 
 func (p *PrepFileReaderImpl) isPlaceHolder(element string) bool {
-	return element == placeHolder ||
-		(strings.HasPrefix(element, "<") && strings.HasSuffix(element, ">"))
+	return element == placeHolder || (strings.HasPrefix(element, "<") && strings.HasSuffix(element, ">"))
 }
 
 func (p *PrepFileReaderImpl) GetReleaseNotesContent() (*ReleaseNotesContent, error) {
@@ -120,8 +118,9 @@ func (p *PrepFileReaderImpl) GetReleaseNotesContent() (*ReleaseNotesContent, err
 		return nil, errors.Errorf(prepFileNotReadErrorMsg)
 	}
 	content := &ReleaseNotesContent{
-		newFeatures: p.sections[newFeaturesSection],
-		bugFixes:    p.sections[bugFixesSection],
+		breakingChanges: p.sections[breakingChanges],
+		newFeatures:     p.sections[newFeatures],
+		bugFixes:        p.sections[bugFixes],
 	}
 	return content, nil
 }
