@@ -43,7 +43,7 @@ build-release-notes:
 
 .PHONY: publish-release-notes-to-docs-repos
 publish-release-notes-to-docs-repos:
-	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
+	cp release-notes/release-notes.rst $(CONFLUENT_DOCS_DIR)
 	$(warning SUBMITTING PR to docs repo)
 	cd $(CONFLUENT_DOCS_DIR) || exit 1; \
 	git add . || exit 1; \

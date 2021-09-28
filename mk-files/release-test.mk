@@ -1,12 +1,12 @@
 .PHONY: verify-stag
 verify-stag:
 	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make verify-archive-installer
-	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) make verify-binary-files
+	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) make verify-binaries
 
 .PHONY: verify-prod
 verify-prod:
 	OVERRIDE_S3_FOLDER="" make verify-archive-installer
-	VERIFY_BIN_FOLDER=$(S3_BUCKET_PATH) make verify-binary-files
+	VERIFY_BIN_FOLDER=$(S3_BUCKET_PATH) make verify-binaries
 
 .PHONY: verify-archive-installer
 verify-archive-installer:
@@ -21,8 +21,8 @@ test-installer:
 	@bash test-installer.sh $(ARCHIVES_VERSION)
 
 # check that the expected binaries are present and have --acl public-read
-.PHONY: verify-binary
-verify-binary:
+.PHONY: verify-binaries
+verify-binaries:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	@$(caasenv-authenticate) && \
 	binary="confluent"; \
