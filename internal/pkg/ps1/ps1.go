@@ -9,17 +9,17 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	templatecolor "github.com/confluentinc/cli/internal/pkg/template-color"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
 	// For documentation of supported tokens, see internal/cmd/prompt/command.go
 	formatTokens = map[string]func(cfg *v3.Config) string{
-		"%c": func(config *v3.Config) string {
-			context := config.CurrentContext
-			if context == "" {
-				context = "(none)"
+		"%C": func(cfg *v3.Config) string {
+			if cfg.CurrentContext == "" {
+				return "(none)"
 			}
-			return context
+			return utils.CropString(cfg.CurrentContext, 30)
 		},
 		"%e": func(config *v3.Config) string {
 			context := config.Context()

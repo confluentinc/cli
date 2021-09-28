@@ -852,7 +852,7 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
-	if isUpdateCommand(cmd) || r.IsTest {
+	if !r.shouldCheckForUpdates(cmd) || r.IsTest {
 		return
 	}
 
@@ -879,8 +879,14 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 	}
 }
 
-func isUpdateCommand(cmd *cobra.Command) bool {
-	return strings.Contains(cmd.CommandPath(), "update")
+func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
+	for _, subcommand := range []string{"prompt", "update"} {
+		if strings.HasPrefix(cmd.CommandPath(), fmt.Sprintf("confluent %s", subcommand)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
