@@ -27,7 +27,7 @@ import (
 const (
 	S3BinBucket             = "confluent.cloud"
 	S3BinRegion             = "us-west-2"
-	S3BinPrefixFmt          = "%s-cli/binaries"
+	S3BinPrefixFmt          = "cli-release-stag/%s-cli/binaries"
 	S3ReleaseNotesPrefixFmt = "%s-cli/release-notes"
 	CheckFileFmt            = "%s/.%s/update_check"
 	CheckInterval           = 24 * time.Hour
@@ -152,48 +152,55 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	if isMajorVersionUpdate {
-		var current, other *v3.Config
-
-		for _, cliName := range []string{"confluent", "ccloud"} {
-			cfg, err := getConfig(cliName)
-			if err != nil {
-				return err
-			}
-
-			if cliName == c.cliName {
-				current = cfg
-			} else {
-				other = cfg
-			}
-		}
-
-		if other != nil {
-			current.MergeWith(other)
-		}
-
-		if err := backupConfig("confluent"); err != nil {
-			return err
-		}
-
-		filename, err := getConfigPath("confluent")
-		if err != nil {
-			return err
-		}
-
-		current.Filename = filename
-		current.Ver = semver.MustParse("1.0.0")
-		// Duplicate the context name in the netrc_machine_name field to support updating context names in 2.0
-		for name := range current.Contexts {
-			current.Contexts[name].NetrcMachineName = name
-		}
-
-		if err := current.Save(); err != nil {
+		if err := c.migrateConfigFiles(); err != nil {
 			return err
 		}
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, updateName)
 	return nil
+}
+
+// migrateConfigFiles merges ~/.confluent/config.json and ~/.ccloud/config.json, resets the config file version to v1,
+// adds a new context field called "netrc-machine-name", and creates a backup of the confluent config file.
+func (c *command) migrateConfigFiles() error {
+	current, err := getConfig("confluent")
+	if current != nil && current.Ver.Equals(semver.MustParse("1.0.0")) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	other, err := getConfig("ccloud")
+	if err != nil {
+		return err
+	}
+
+	if c.cliName == "ccloud" {
+		current, other = other, current
+	}
+
+	if other != nil {
+		current.MergeWith(other)
+	}
+
+	filename, err := getConfigPath("confluent")
+	if err != nil {
+		return err
+	}
+
+	current.Filename = filename
+	current.Ver = semver.MustParse("1.0.0")
+	for name := range current.Contexts {
+		current.Contexts[name].NetrcMachineName = name
+	}
+
+	if err := backupConfig("confluent"); err != nil {
+		return err
+	}
+
+	return current.Save()
 }
 
 func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
