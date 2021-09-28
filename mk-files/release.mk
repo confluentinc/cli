@@ -63,7 +63,7 @@ gorelease:
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
 	./build_windows.sh && \
 	for binary in ccloud confluent; do \
-		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_windows_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_windows_amd64.tar.gz; \
+		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_windows_amd64.zip $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_windows_amd64.zip; \
 		aws s3 cp dist/$${binary}/$${binary}_windows_amd64/$${binary} $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_windows_amd64; \
 		cat dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums_windows.txt >> dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt; \
 	done

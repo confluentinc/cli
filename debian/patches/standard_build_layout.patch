@@ -1,5 +1,5 @@
---- cli/Makefile	2021-09-13 13:10:56.000000000 -0700
-+++ debian/Makefile	2021-09-08 15:40:17.000000000 -0700
+--- cli/Makefile	2021-09-28 14:47:16.000000000 -0700
++++ debian/Makefile	2021-09-17 16:21:32.000000000 -0700
 @@ -1,271 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -272,7 +272,7 @@
  	done
  
 -.PHONY: coverage-unit
--## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error. Will renable in the future when this issue is resolved.
+-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 -coverage-unit:
 -ifdef CI
 -	@# Run unit tests with coverage.

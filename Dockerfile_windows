@@ -1,7 +1,5 @@
 FROM public.ecr.aws/j3p8s0n3/windows-2019:latest
 
-RUN powershell setx PATH \"$env:path;C:\Program Files\Git\bin\" -m
-
 RUN powershell mkdir -p /go/src/github.com/confluentinc/cli && \
     cd /go/src/github.com/confluentinc/cli
 
@@ -13,10 +11,9 @@ RUN powershell Rename-Item -Path "/Users/ContainerAdministrator/.netrc" -NewName
 
 COPY . /go/src/github.com/confluentinc/cli/
 
-RUN powershell setx PATH \"$env:path;C:\go\src\github.com\confluentinc\cli\" -m
+RUN powershell setx PATH \"$env:path;C:\go\src\github.com\confluentinc\cli\;C:\Program Files\Git\bin\" -m
 
 RUN cd /go/src/github.com/confluentinc/cli && \
-    git config credential.helper "netrc" && \
     make gorelease-windows ; 
 
 RUN cd /go/src/github.com/confluentinc/cli && \

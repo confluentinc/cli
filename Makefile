@@ -217,7 +217,7 @@ lint-licenses: build
 	done
 
 .PHONY: coverage-unit
-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error. Will renable in the future when this issue is resolved.
+## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 coverage-unit:
 ifdef CI
 	@# Run unit tests with coverage.
