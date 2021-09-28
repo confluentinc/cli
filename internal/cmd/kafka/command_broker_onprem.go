@@ -333,13 +333,10 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 	}
 	if format == output.Human.String() {
 		brokerCmd.printHumanUpdate(all, clusterId, brokerId, configs)
+		return nil
 	} else { //json or yaml
-		sort.Slice(configs, func(i int, j int) bool {
-			return configs[i].Name < configs[j].Name
-		})
-		return output.StructuredOutput(format, configs)
+		return brokerCmd.printStructuredUpdate(format, configs)
 	}
-	return nil
 }
 
 func (brokerCmd *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, configs []kafkarestv3.AlterConfigBatchRequestDataData) {
@@ -361,6 +358,24 @@ func (brokerCmd *brokerCommand) printHumanUpdate(all bool, clusterId string, bro
 		return tableEntries[i][0] < tableEntries[j][0]
 	})
 	printer.RenderCollectionTable(tableEntries, tableLabels)
+}
+
+func (brokerCmd *brokerCommand) printStructuredUpdate(format string, configs []kafkarestv3.AlterConfigBatchRequestDataData) error {
+	type printConfig struct {
+		Name  string `json:"name" yaml:"name"`
+		Value string `json:"value,omitempty" yaml:"value,omitempty"`
+	}
+	printConfigs := make([]*printConfig, len(configs))
+	for i, config := range configs {
+		printConfigs[i] = &printConfig{
+			Name:  config.Name,
+			Value: *config.Value,
+		}
+	}
+	sort.Slice(printConfigs, func(i int, j int) bool {
+		return printConfigs[i].Name < printConfigs[j].Name
+	})
+	return output.StructuredOutput(format, printConfigs)
 }
 
 func (brokerCmd *brokerCommand) delete(cmd *cobra.Command, args []string) error {
