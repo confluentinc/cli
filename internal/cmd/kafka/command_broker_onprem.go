@@ -48,7 +48,7 @@ type brokerTaskData struct {
 
 const abbreviationLength = 25
 
-func NewBrokerCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
+func NewBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	brokerCmd := &brokerCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
@@ -293,8 +293,6 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if !output.IsValidFormatString(format) { // catch format flag
-		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	restClient, restContext, err := initKafkaRest(brokerCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
@@ -334,36 +332,35 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 		}
 	}
 	if format == output.Human.String() {
-		// no errors (config update successful)
-		if all {
-			utils.Printf(cmd, "Updated the following broker configs for cluster \"%s\":\n", clusterId)
-		} else {
-			utils.Printf(cmd, "Updated the following configs for broker \"%d\":\n", brokerId)
-		}
-		// Print Updated Configs
-		tableLabels := []string{"Name", "Value"}
-		tableEntries := make([][]string, len(configs))
-		for i, config := range configs {
-			tableEntries[i] = printer.ToRow(
-				&struct {
-					Name  string
-					Value string
-				}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
-		}
-		sort.Slice(tableEntries, func(i int, j int) bool {
-			return tableEntries[i][0] < tableEntries[j][0]
-		})
-		printer.RenderCollectionTable(tableEntries, tableLabels)
+		brokerCmd.printHumanUpdate(all, clusterId, brokerId, configs)
 	} else { //json or yaml
 		sort.Slice(configs, func(i int, j int) bool {
 			return configs[i].Name < configs[j].Name
 		})
-		err = output.StructuredOutput(format, configs)
-		if err != nil {
-			return err
-		}
+		return output.StructuredOutput(format, configs)
 	}
 	return nil
+}
+
+func (brokerCmd *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, configs []kafkarestv3.AlterConfigBatchRequestDataData) {
+	if all {
+		utils.Printf(brokerCmd.Command, "Updated the following broker configs for cluster \"%s\":\n", clusterId)
+	} else {
+		utils.Printf(brokerCmd.Command, "Updated the following configs for broker \"%d\":\n", brokerId)
+	}
+	tableLabels := []string{"Name", "Value"}
+	tableEntries := make([][]string, len(configs))
+	for i, config := range configs {
+		tableEntries[i] = printer.ToRow(
+			&struct {
+				Name  string
+				Value string
+			}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
+	}
+	sort.Slice(tableEntries, func(i int, j int) bool {
+		return tableEntries[i][0] < tableEntries[j][0]
+	})
+	printer.RenderCollectionTable(tableEntries, tableLabels)
 }
 
 func (brokerCmd *brokerCommand) delete(cmd *cobra.Command, args []string) error {
@@ -541,12 +538,8 @@ func checkAllOrBrokerIdSpecified(cmd *cobra.Command, args []string) (int32, bool
 	}
 	if len(args) > 0 {
 		brokerIdStr := args[0]
-		i, err := strconv.ParseInt(brokerIdStr, 10, 32)
-		if err != nil {
-			return -1, false, err
-		}
-		brokerId := int32(i)
-		return brokerId, false, nil
+		brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
+		return int32(brokerId), false, err
 	}
 	return -1, all, nil
 }
