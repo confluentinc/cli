@@ -21,6 +21,10 @@ NOTE: DO NOT EDIT THE SECTION TITLE
 CONFLUENT
 -------------
 
+Breaking Changes
+- breakingchange1
+- breakingchange2
+
 New Features
 - feature1
 - feature2

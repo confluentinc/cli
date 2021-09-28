@@ -150,3 +150,14 @@ func ReadConfigsFromFile(configFile string) (map[string]string, error) {
 
 	return ToMap(configs)
 }
+
+func CropString(s string, n int) string {
+	const suffix = "..."
+	if n-len(suffix) < len(s) {
+		cropped := s[:n-len(suffix)] + suffix
+		if len(cropped) < len(s) {
+			return cropped
+		}
+	}
+	return s
+}

@@ -7,31 +7,39 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 )
 
 const (
-	newFeaturesTitle = "New Features"
-	bugFixesTitle    = "Bug Fixes"
+	breakingChangesTitle = "Breaking Changes"
+	newFeaturesTitle     = "New Features"
+	bugFixesTitle        = "Bug Fixes"
 
 	prepFileName = "./release-notes/prep"
 	placeHolder  = "<PLACEHOLDER>"
 )
 
-func WriteReleaseNotesPrep(filename string, releaseVersion string, prevVersion string) error {
+func WriteReleaseNotesPrep(filename, releaseVersion, prevVersion string) error {
 	prepBaseFile := path.Join(".", "internal", "pkg", "release-notes", "prep-base")
 	prepBaseBytes, err := ioutil.ReadFile(prepBaseFile)
 	if err != nil {
 		return fmt.Errorf("unable to load release prep-base")
 	}
 	prepBaseString := string(prepBaseBytes)
-	f, err := os.Create(filename)
+
+	if err := os.MkdirAll(filepath.Dir(filename), os.ModePerm); err != nil {
+		return err
+	}
+
+	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer file.Close()
+
 	mergedPRs := getMergedPRs(prevVersion)
-	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs, newFeaturesTitle, bugFixesTitle)
-	_, err = io.WriteString(f, prepFile)
+	prepFile := fmt.Sprintf(prepBaseString, releaseVersion, prevVersion, mergedPRs, breakingChangesTitle, newFeaturesTitle, bugFixesTitle)
+	_, err = io.WriteString(file, prepFile)
 	return err
 }
 

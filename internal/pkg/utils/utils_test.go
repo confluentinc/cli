@@ -292,3 +292,17 @@ func validateConfigMap(req *require.Assertions, expected map[string]string, out 
 		req.Equal(expected[k], v)
 	}
 }
+
+func TestCropString(t *testing.T) {
+	for _, tt := range []struct {
+		s       string
+		n       int
+		cropped string
+	}{
+		{"ABCDE", 4, "A..."},
+		{"ABCDE", 5, "ABCDE"},
+		{"ABCDE", 8, "ABCDE"},
+	} {
+		require.Equal(t, tt.cropped, CropString(tt.s, tt.n))
+	}
+}
