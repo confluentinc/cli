@@ -27,7 +27,7 @@ import (
 const (
 	S3BinBucket             = "confluent.cloud"
 	S3BinRegion             = "us-west-2"
-	S3BinPrefixFmt          = "cli-release-stag/%s-cli/binaries"
+	S3BinPrefixFmt          = "%s-cli/binaries"
 	S3ReleaseNotesPrefixFmt = "%s-cli/release-notes"
 	CheckFileFmt            = "%s/.%s/update_check"
 	CheckInterval           = 24 * time.Hour
