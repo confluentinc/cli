@@ -44,11 +44,7 @@ func WriteReleaseNotes(docsPath, releaseVersion string) error {
 	if err != nil {
 		return err
 	}
-	err = buildAndWriteReleaseNotes(releaseVersion, releaseNotesContent, docsPath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return buildAndWriteReleaseNotes(releaseVersion, releaseNotesContent, docsPath)
 }
 
 func getReleaseNotesContent() (*ReleaseNotesContent, error) {

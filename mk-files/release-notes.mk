@@ -34,16 +34,16 @@ clone-and-setup-docs-repos:
 	cd $(CONFLUENT_DOCS_DIR) && \
 	git fetch && \
 	git checkout $(DOCS_BASE_BRANCH) && \
-	git checkout -b $(RELEASE_NOTES_BRANCH) && \
+	git checkout -b $(RELEASE_NOTES_BRANCH)
 
 .PHONY: build-release-notes
 build-release-notes:
 	@echo Previous Release Version: v$(CLEAN_VERSION)
-	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.confluentReleaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
+	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.releaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
 
 .PHONY: publish-release-notes-to-docs-repos
 publish-release-notes-to-docs-repos:
-	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
+	cp release-notes/release-notes.rst $(CONFLUENT_DOCS_DIR)
 	$(warning SUBMITTING PR to docs repo)
 	cd $(CONFLUENT_DOCS_DIR) || exit 1; \
 	git add . || exit 1; \
@@ -55,7 +55,7 @@ publish-release-notes-to-docs-repos:
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
 	$(caasenv-authenticate); \
-    aws s3 cp release-notes/confluent/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
+    aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
 
 define print-publish-release-notes-next-steps
 	@echo
@@ -77,6 +77,4 @@ endef
 
 .PHONY: clean-release-notes
 clean-release-notes:
-	-rm release-notes/prep
-	-rm release-notes/confluent/release-notes.rst
-	-rm release-notes/confluent/latest-release.rst
+	rm -r release-notes/
