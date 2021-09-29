@@ -430,7 +430,7 @@ func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]strin
 		}
 		prefix = splitPrincipal[0]
 		userId := splitPrincipal[1]
-		idp, _ := strconv.Atoi(userId)
+		idp, _ := strconv.ParseInt(userId, 10, 32)
 		resourceId = idMap[int32(idp)]
 	}
 	return prefix, resourceId, nil

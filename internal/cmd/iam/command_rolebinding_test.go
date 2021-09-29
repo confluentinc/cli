@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"testing"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -18,8 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	mock2 "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -61,7 +60,6 @@ func (suite *RoleBindingTestSuite) SetupSuite() {
 }
 
 func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
-
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
@@ -109,7 +107,7 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, mock2.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf), &climock.ServerSideCompleter{})
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {
@@ -162,7 +160,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	expect := make(chan interface{})
 	for _, tc := range roleBindingListTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rolebinding", "list"}, tc.args...))
+		cmd.SetArgs(append([]string{"rbac", "rolebinding", "list"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
@@ -183,28 +181,25 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	}
 }
 
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(
-	mockeRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping,
-	mockeddListUserResult chan []*orgv1.User,
-) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping, mockListUserResult chan []*orgv1.User) *cobra.Command {
 	// Mock MDS Client
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
-			return <-mockeRoleBindingsResult, nil, nil
+			return <-mockRoleBindingsResult, nil, nil
 		},
 	}
 
 	// Mock User Client
 	userMock := &ccsdkmock.User{
-		ListFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
-			return <-mockeddListUserResult, nil
+		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
+			return <-mockListUserResult, nil
 		},
 	}
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, mock2.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf), &climock.ServerSideCompleter{})
 }
 
 var myRoleBindingListTests = []myRoleBindingTest{
@@ -425,7 +420,7 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 			mockeRoleBindingsResult <- tc.scopeRoleBindingMapping
 			mockeListUserResult <- tc.mockedListUserResult
 		}()
-		output, err := pcmd.ExecuteCommand(cmd, "rolebinding", "list", "--current-user", "-ojson")
+		output, err := pcmd.ExecuteCommand(cmd, "rbac", "rolebinding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)
 		var actual []listDisplay
 		err = json.Unmarshal([]byte(output), &actual)
@@ -481,7 +476,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 	expect := make(chan interface{})
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rolebinding", "create"}, tc.args...))
+		cmd.SetArgs(append([]string{"rbac", "rolebinding", "create"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
@@ -506,7 +501,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 	expect := make(chan interface{})
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rolebinding", "delete"}, tc.args...))
+		cmd.SetArgs(append([]string{"rbac", "rolebinding", "delete"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {

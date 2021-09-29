@@ -49,7 +49,6 @@ var (
 	environmentScopedRoles = map[string]bool{
 		"EnvironmentAdmin": true,
 	}
-
 )
 
 type rolebindingOptions struct {
@@ -109,42 +108,42 @@ func (c *rolebindingCommand) init() {
 		example = examples.BuildExampleString(
 			examples.Example{
 				Text: "To list the role bindings for current user:",
-				Code: "confluent iam rolebinding list --current-user",
+				Code: "confluent iam rbac rolebinding list --current-user",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal:",
-				Code: "confluent iam rolebinding list --principal User:frodo",
+				Code: "confluent iam rbac rolebinding list --principal User:frodo",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+				Code: "confluent iam rbac rolebinding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific role:",
-				Code: "confluent iam rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+				Code: "confluent iam rbac rolebinding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
 			},
 		)
 	} else {
 		example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
+				Code: "confluent iam rbac rolebinding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal:",
-				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo",
+				Code: "confluent iam rbac rolebinding list --kafka-cluster-id $CID --principal User:frodo",
 			},
 			examples.Example{
 				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
+				Code: "confluent iam rbac rolebinding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific role:",
-				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite",
+				Code: "confluent iam rbac rolebinding list --kafka-cluster-id $CID --role DeveloperWrite",
 			},
 			examples.Example{
 				Text: "To list the principals bound to a specific resource with a specific role:",
-				Code: "confluent iam rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
+				Code: "confluent iam rbac rolebinding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
 			},
 		)
 
@@ -186,7 +185,7 @@ func (c *rolebindingCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a role binding for the client permitting it produce to the topic users.",
-				Code: version.CLIName + " iam rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+				Code: version.CLIName + " iam rbac rolebinding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
 			},
 		),
 	}
@@ -289,6 +288,37 @@ func (c *rolebindingCommand) validateRoleAndResourceType(roleName string, resour
 
 	if !found {
 		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+	}
+
+	return nil
+}
+
+func (c *rolebindingCommand) validateResourceType(resourceType string) error {
+	ctx := c.createContext()
+	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(ctx)
+	if err != nil {
+		return err
+	}
+
+	var allResourceTypes = make(map[string]bool)
+	found := false
+	for _, role := range roles {
+		for _, operation := range role.AccessPolicy.AllowedOperations {
+			allResourceTypes[operation.ResourceType] = true
+			if operation.ResourceType == resourceType {
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		uniqueResourceTypes := []string{}
+		for rt := range allResourceTypes {
+			uniqueResourceTypes = append(uniqueResourceTypes, rt)
+		}
+		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 	}
 
@@ -560,13 +590,24 @@ func (c *rolebindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
 				for _, resourcePattern := range resourcePatterns {
-					outputWriter.AddElement(&listDisplay{
-						Principal:    principalName,
-						Role:         roleName,
-						ResourceType: resourcePattern.ResourceType,
-						Name:         resourcePattern.Name,
-						PatternType:  resourcePattern.PatternType,
-					})
+					add := true
+					if options.resource != "" {
+						add = false
+						for _, rp := range options.resourcesRequest.ResourcePatterns {
+							if rp == resourcePattern {
+								add = true
+							}
+						}
+					}
+					if add {
+						outputWriter.AddElement(&listDisplay{
+							Principal:    principalName,
+							Role:         roleName,
+							ResourceType: resourcePattern.ResourceType,
+							Name:         resourcePattern.Name,
+							PatternType:  resourcePattern.PatternType,
+						})
+					}
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
 					outputWriter.AddElement(&listDisplay{
@@ -781,9 +822,19 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 		if err != nil {
 			return nil, err
 		}
-		err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
-		if err != nil {
-			return nil, err
+		// Resource types are defined under roles' access policies, so if no role is specified,
+		// we have to loop over the possible resource types for all roles (this is what
+		// validateResourceType does).
+		if role != "" {
+			err = c.validateRoleAndResourceType(role, parsedResourcePattern.ResourceType)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err = c.validateResourceType(parsedResourcePattern.ResourceType)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resourcePatterns := []mds.ResourcePattern{
 			parsedResourcePattern,

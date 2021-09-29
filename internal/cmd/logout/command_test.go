@@ -162,7 +162,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 	ccloudClientFactory := &cliMock.MockCCloudClientFactory{
 		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloud.Client{Auth: auth, User: user}
+			return &ccloud.Client{Params: &ccloud.Params{HttpClient: new(http.Client)}, Auth: auth, User: user}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 			return &ccloud.Client{Auth: auth, User: user}

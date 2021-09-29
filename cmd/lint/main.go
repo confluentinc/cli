@@ -79,7 +79,7 @@ var rules = []linter.Rule{
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store <api-key> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
-		linter.ExcludeCommandContains("iam rolebinding"),
+		linter.ExcludeCommandContains("iam rbac rolebinding"),
 		// skip for register command since they don't have names/IDs
 		linter.ExcludeCommandContains("cluster register"),
 		// skip for unregister command since they don't have names/IDs
@@ -102,6 +102,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
+		linter.ExcludeCommandContains("iam user"),
 		// skip cluster linking commands
 		linter.ExcludeCommandContains("kafka link"),
 		linter.ExcludeCommandContains("kafka mirror"),

@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/ps1"
@@ -30,7 +29,7 @@ ZSH users should be aware that they will have to set the 'PROMPT_SUBST' option f
 ::
 
   setopt prompt_subst
-  export PS1="\$(confluent prompt) $PS1"
+  export PS1='$(confluent prompt) '$PS1
 
 You can customize the prompt by calling passing a '--format' flag, such as '-f "confluent|%E:%K"'.
 If you want to create a more sophisticated prompt (such as using the built-in color functions),
@@ -115,16 +114,16 @@ type promptCommand struct {
 }
 
 // Returns the Cobra command for the PS1 prompt.
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+func New(prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		ps1:    ps1,
 		logger: logger,
 	}
-	cmd.init(cfg, prerunner)
+	cmd.init(prerunner)
 	return cmd.Command
 }
 
-func (c *promptCommand) init(cfg *v1.Config, prerunner pcmd.PreRunner) {
+func (c *promptCommand) init(prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
 		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),
@@ -133,13 +132,7 @@ func (c *promptCommand) init(cfg *v1.Config, prerunner pcmd.PreRunner) {
 		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
 
-	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
-	defaultFormat := `({{color "blue" "confluent"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
-	if cfg.IsOnPremLogin() {
-		defaultFormat = `({{color "blue" "confluent"}}|{{color "cyan" "%K"}})`
-	}
-
-	promptCmd.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
+	promptCmd.Flags().StringP("format", "f", `(confluent|{{color "black" "%C"}})`, "The format string to use. See the help for details.")
 	promptCmd.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
 	promptCmd.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
 	promptCmd.Flags().SortFlags = false
@@ -150,7 +143,6 @@ func (c *promptCommand) init(cfg *v1.Config, prerunner pcmd.PreRunner) {
 // Output context about the current CLI config suitable for a PS1 prompt.
 // It allows custom user formatting the configuration by parsing format flags.
 func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
-	c.ps1.Config = c.Config.Config
 	format, err := cmd.Flags().GetString("format")
 	if err != nil {
 		return err
@@ -179,6 +171,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	retCh := make(chan string)
 	errCh := make(chan error)
 	go func() {
+		c.ps1.Config = c.Config.Config
 		prompt, err := c.ps1.Get(format)
 		if err != nil {
 			errCh <- err
@@ -197,7 +190,6 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	case <-time.After(timeout):
 		// log the timeout and just print nothing
 		c.logger.Warnf("timed out after %s", timeout)
-		return nil
 	}
 
 	return nil

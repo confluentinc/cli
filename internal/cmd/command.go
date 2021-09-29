@@ -28,7 +28,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/service-account"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
@@ -115,7 +114,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 	connectCmd := connect.New(cfg, prerunner, analyticsClient)
 	environmentCmd := environment.New(prerunner, analyticsClient)
-	serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
 
 	cli.AddCommand(admin.New(prerunner, isTest))
 	cli.AddCommand(apiKeyCmd.Command)
@@ -126,17 +124,16 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(context.New(prerunner, flagResolver))
 	cli.AddCommand(connectCmd.Command)
 	cli.AddCommand(environmentCmd.Command)
-	cli.AddCommand(iam.New(cfg, prerunner))
+	cli.AddCommand(iam.New(cfg, prerunner, serverCompleter))
 	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
 	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(price.New(prerunner))
-	cli.AddCommand(prompt.New(cfg, prerunner, &ps1.Prompt{}, logger))
+	cli.AddCommand(prompt.New(prerunner, &ps1.Prompt{}, logger))
 	cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 	cli.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	cli.AddCommand(serviceAccountCmd.Command)
 	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cli.AddCommand(version.New(prerunner, ver))
@@ -145,7 +142,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		serverCompleter.AddCommand(apiKeyCmd)
 		serverCompleter.AddCommand(connectCmd)
 		serverCompleter.AddCommand(environmentCmd)
-		serverCompleter.AddCommand(serviceAccountCmd)
 	}
 
 	hideAndErrIfMissingRunRequirement(cli, cfg)

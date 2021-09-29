@@ -1,4 +1,4 @@
-package serviceaccount
+package iam
 
 import (
 	"context"
@@ -6,11 +6,9 @@ import (
 	"strings"
 
 	"github.com/c-bata/go-prompt"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -18,16 +16,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type command struct {
+type serviceAccountCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	completableChildren []*cobra.Command
-	analyticsClient     analytics.Client
 }
 
 var (
-	listFields                = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-	listHumanLabels           = []string{"Resource ID", "Name", "Description"}
-	listStructuredLabels      = []string{"resource_id", "name", "description"}
 	describeFields            = []string{"ResourceId", "ServiceName", "ServiceDescription"}
 	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "Resource ID"}
 	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "resource_id"}
@@ -36,27 +30,25 @@ var (
 const nameLength = 64
 const descriptionLength = 128
 
-// New returns the Cobra command for service accounts.
-func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:         "service-account",
 			Short:       `Manage service accounts.`,
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner)
-	cmd := &command{
+	cmd := &serviceAccountCommand{
 		AuthenticatedCLICommand: cliCmd,
-		analyticsClient:         analyticsClient,
 	}
 	cmd.init()
 	return cmd
 }
 
-func (c *command) Cmd() *cobra.Command {
+func (c *serviceAccountCommand) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *command) ServerComplete() []prompt.Suggest {
+func (c *serviceAccountCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
@@ -73,11 +65,11 @@ func (c *command) ServerComplete() []prompt.Suggest {
 	return suggestions
 }
 
-func (c *command) ServerCompletableChildren() []*cobra.Command {
+func (c *serviceAccountCommand) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
 }
 
-func (c *command) init() {
+func (c *serviceAccountCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List service accounts.",
@@ -147,7 +139,7 @@ func requireLen(val string, maxLen int, field string) error {
 	return nil
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	if err := requireLen(name, nameLength, "service name"); err != nil {
@@ -172,11 +164,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.ResourceId)
 	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
-func (c *command) update(cmd *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error {
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -194,32 +185,33 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		ServiceDescription: description,
 	}
 
-	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
-	if err != nil {
+	if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
 		return err
 	}
+
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
 	return nil
 }
 
-func (c *command) delete(cmd *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) delete(_ *cobra.Command, args []string) error {
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{ResourceId: args[0]}
-	err := c.Client.User.DeleteServiceAccount(context.Background(), user)
-	if err != nil {
-		return err
-	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
-	return nil
+	return c.Client.User.DeleteServiceAccount(context.Background(), user)
 }
 
-func (c *command) list(cmd *cobra.Command, _ []string) error {
+func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return err
 	}
+
+	var (
+		listFields           = []string{"ResourceId", "ServiceName", "ServiceDescription"}
+		listHumanLabels      = []string{"Resource ID", "Name", "Description"}
+		listStructuredLabels = []string{"resource_id", "name", "description"}
+	)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
