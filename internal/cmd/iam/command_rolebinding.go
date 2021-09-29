@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/confluentinc/go-printer"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
@@ -64,6 +65,7 @@ type rolebindingOptions struct {
 type rolebindingCommand struct {
 	*cmd.AuthenticatedStateFlagCommand
 	cliName string
+	ccloudRbacDataplaneEnabled bool
 }
 
 type listDisplay struct {
@@ -92,9 +94,14 @@ func NewRolebindingCommand(cliName string, prerunner cmd.PreRunner) *cobra.Comma
 	} else {
 		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRolebindingCmd, prerunner, nil)
 	}
+	ccloudRbacDataplaneEnabled := false
+	if os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "" {
+		ccloudRbacDataplaneEnabled = true
+	}
 	roleBindingCmd := &rolebindingCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		cliName:                       cliName,
+		ccloudRbacDataplaneEnabled:    ccloudRbacDataplaneEnabled,
 	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
@@ -158,13 +165,17 @@ func (c *rolebindingCommand) init() {
 	listCmd.Flags().String("principal", "", "Principal whose role bindings should be listed.")
 	listCmd.Flags().Bool("current-user", false, "Show role bindings belonging to current user.")
 	listCmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
-	listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-	listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 	if c.cliName == "ccloud" {
 		listCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
 		listCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		if c.ccloudRbacDataplaneEnabled {
+			listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
+			listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		}
 	} else {
+		listCmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
+		listCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
@@ -189,14 +200,19 @@ func (c *rolebindingCommand) init() {
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-	createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-	createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	if c.cliName == "ccloud" {
 		createCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		createCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding create.")
 		createCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		if c.ccloudRbacDataplaneEnabled{
+			createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+			createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+			createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		}
 	} else {
+		createCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+		createCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+		createCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		createCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		createCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
@@ -216,14 +232,19 @@ func (c *rolebindingCommand) init() {
 	}
 	deleteCmd.Flags().String("role", "", "Role name of the existing role binding.")
 	deleteCmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
-	deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-	deleteCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-	deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	if c.cliName == "ccloud" {
 		deleteCmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		deleteCmd.Flags().String("environment", "", "Environment ID for scope of rolebinding delete.")
 		deleteCmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		if c.ccloudRbacDataplaneEnabled {
+			deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+			deleteCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+			deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		}
 	} else {
+		deleteCmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+		deleteCmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+		deleteCmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		deleteCmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		deleteCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
@@ -469,7 +490,7 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+cluster)
 	}
 
-	if cmd.Flags().Changed("kafka-cluster-id") {
+	if c.ccloudRbacDataplaneEnabled && cmd.Flags().Changed("kafka-cluster-id") {
 		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
 		if err != nil {
 			return nil, err
@@ -804,7 +825,7 @@ func (c *rolebindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 
 	var principals []string
 	var err error
-	if cmd.Flags().Changed("resource") {
+	if c.ccloudRbacDataplaneEnabled && cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
@@ -879,7 +900,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 
 	resource := ""
 	prefix := false
-	if c.cliName != "ccloud" {
+	if c.cliName == "confluent" || c.ccloudRbacDataplaneEnabled {
 		resource, err = cmd.Flags().GetString("resource")
 		if err != nil {
 			return nil, err
@@ -925,7 +946,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 	resourcesRequest := mds.ResourcesRequest{}
 	resourcesRequestV2 := mdsv2alpha1.ResourcesRequest{}
 	if resource != "" {
-		if c.cliName == "ccloud" {
+		if c.cliName == "ccloud"  && c.ccloudRbacDataplaneEnabled {
 			parsedResourcePattern, err := c.parseAndValidateResourcePatternV2(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -952,7 +973,7 @@ func (c *rolebindingCommand) parseCommon(cmd *cobra.Command) (*rolebindingOption
 				ResourcePatterns: resourcePatterns,
 			}
 
-		} else {
+		} else if c.cliName == "confluent" {
 			parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -1013,7 +1034,7 @@ func (c *rolebindingCommand) confluentCreate(options *rolebindingOptions) (resp 
 }
 
 func (c *rolebindingCommand) ccloudCreate(options *rolebindingOptions) (*http.Response, error) {
-	if options.resource != "" {
+	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
 		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,
@@ -1065,24 +1086,24 @@ func (c *rolebindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		Role:      options.role,
 	}
 
-	if options.resource != "" {
-		if len(options.resourcesRequest.ResourcePatterns) != 1 {
+	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+		if len(options.resourcesRequestV2.ResourcePatterns) != 1 {
 			return errors.New("display error: number of resource pattern is not 1")
 		}
-		resourcePattern := options.resourcesRequest.ResourcePatterns[0]
+		resourcePattern := options.resourcesRequestV2.ResourcePatterns[0]
 		displayStruct.ResourceType = resourcePattern.ResourceType
 		displayStruct.Name = resourcePattern.Name
 		displayStruct.PatternType = resourcePattern.PatternType
 	}
 
 	if err != nil {
-		if options.resource != "" {
+		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
 			fieldsSelected = resourcePatternListFields
 		} else {
 			fieldsSelected = []string{"Principal", "Role"}
 		}
 	} else {
-		if options.resource != "" {
+		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
 			displayStruct.Email = user.Email
@@ -1133,7 +1154,7 @@ func (c *rolebindingCommand) confluentDelete(options *rolebindingOptions) (resp 
 }
 
 func (c *rolebindingCommand) ccloudDelete(options *rolebindingOptions) (*http.Response, error) {
-	if options.resource != "" {
+	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
 		return c.MDSv2Client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal (
 			c.createContext(),
 			options.principal,
