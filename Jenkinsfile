@@ -1,5 +1,5 @@
 def config = jobConfig {
-    nodeLabel = 'docker-debian-jdk8'
+    nodeLabel = 'docker-debian-10-system-test-jdk8'
     properties = [
         parameters([
             string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/acl_cli_test.py muckrake/tests/password_protection_cli_test.py muckrake/tests/rbac_kafka_cli_test.py', description: 'Use this to specify a test or subset of tests to run.'),
