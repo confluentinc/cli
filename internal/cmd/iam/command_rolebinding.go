@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
 	"net/http"
 	"os"
@@ -49,6 +50,7 @@ var (
 		"EnvironmentAdmin": true,
 	}
 
+	dataplaneNamespace =  optional.NewString("public,dataplane")
 )
 
 type rolebindingOptions struct {
@@ -364,7 +366,12 @@ func (c *rolebindingCommand) validateResourceTypeV1(resourceType string) error {
 
 func (c *rolebindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
+	roleDetail := mdsv2alpha1.RoleDetailOpts{}
+	if c.ccloudRbacDataplaneEnabled {
+		roleDetail.Namespace = dataplaneNamespace
+	}
+
+	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, &roleDetail)
 	if err != nil || resp.StatusCode == http.StatusNoContent {
 		if err == nil {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
