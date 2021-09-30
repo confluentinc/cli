@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/blang/semver"
+	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/go-homedir"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -92,7 +92,7 @@ func catchV1Config(cfg config.Config) error {
 	// After updating the CLI to v2 (and therefore updating the config file version to v1), attempting to use confluent
 	// v1 will result in the config file being mistaken for v2 or v3. This is easy to catch, since the config file
 	// version will be "1.0.0" which doesn't match "2.0.0" or "3.0.0".
-	if cfg.Version().Equals(semver.MustParse("1.0.0")) {
+	if cfg.Version().Equal(version.Must(version.NewVersion("1.0.0"))) {
 		home, err := homedir.Dir()
 		if err != nil {
 			return err
