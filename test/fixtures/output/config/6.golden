@@ -13,5 +13,6 @@ kafka_cluster_context:
       id: anonymous-id
       name: anonymous-cluster
 name: my-context
+netrc_machine_name: ""
 platform: boot-test.com
 schema_registry_clusters: {}

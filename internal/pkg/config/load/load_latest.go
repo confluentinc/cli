@@ -1,12 +1,19 @@
 package load
 
 import (
+	"fmt"
+	"path"
+
+	"github.com/blang/semver"
+	"github.com/mitchellh/go-homedir"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/migrations"
 	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
@@ -58,6 +65,9 @@ func migrateToLatest(cfg config.Config) (*v3.Config, error) {
 		}
 		return migrateToLatest(cfgV2)
 	case *v2.Config:
+		if err := catchV1Config(cfg); err != nil {
+			return nil, err
+		}
 		cfgV3, err := migrations.MigrateV2ToV3(cfg)
 		if err != nil {
 			return nil, err
@@ -68,8 +78,31 @@ func migrateToLatest(cfg config.Config) (*v3.Config, error) {
 		}
 		return cfgV3, nil
 	case *v3.Config:
+		if err := catchV1Config(cfg); err != nil {
+			return nil, err
+		}
 		return cfg, nil
 	default:
 		panic("unknown config type")
 	}
+}
+
+// catchV1Config will return an error if a user tries to use confluent v1 with a confluent v2 config file.
+func catchV1Config(cfg config.Config) error {
+	// After updating the CLI to v2 (and therefore updating the config file version to v1), attempting to use confluent
+	// v1 will result in the config file being mistaken for v2 or v3. This is easy to catch, since the config file
+	// version will be "1.0.0" which doesn't match "2.0.0" or "3.0.0".
+	if cfg.Version().Equals(semver.MustParse("1.0.0")) {
+		home, err := homedir.Dir()
+		if err != nil {
+			return err
+		}
+		configPath := path.Join(home, ".confluent", "config.json")
+		return errors.NewErrorWithSuggestions(
+			"config file version is incorrectly set to v1",
+			fmt.Sprintf("You've updated the CLI to v2, which reset the config file version to v1. To use the old CLI, revert the config file: `mv %s.old %s`.", configPath, configPath),
+		)
+	}
+
+	return nil
 }

@@ -14,6 +14,7 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name                   string                               `json:"name" hcl:"name"`
+	NetrcMachineName       string                               `json:"netrc_machine_name" hcl:"netrc_machine_name"`
 	Platform               *v2.Platform                         `json:"-" hcl:"-"`
 	PlatformName           string                               `json:"platform" hcl:"platform"`
 	Credential             *v2.Credential                       `json:"-" hcl:"-"`
