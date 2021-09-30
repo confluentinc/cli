@@ -1,2 +1,1 @@
-Error: Unknown topic "topic2".
-
+Error: REST request failed: This server does not host this topic-partition. (40403)

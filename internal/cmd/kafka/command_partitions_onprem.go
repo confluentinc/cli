@@ -1,22 +1,24 @@
 package kafka
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 type partitionCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewPartitionCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
+func NewPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	partitionCommand := &partitionCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
@@ -77,11 +79,11 @@ func (partitionCmd *partitionCommand) init() {
 		RunE:  pcmd.NewCLIRunE(partitionCmd.getReassignments),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get all replica reassignments for the Kafka cluster",
+				Text: "Get all replica reassignments for the Kafka cluster.",
 				Code: "confluent kafka partition get-reassignments",
 			},
 			examples.Example{
-				Text: "Get replica reassignments for `my_topic`",
+				Text: "Get replica reassignments for `my_topic`.",
 				Code: "confluent kafka partition get-reassignments --topic my_topic",
 			},
 			examples.Example{
@@ -121,15 +123,15 @@ func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error
 	}
 	for _, partition := range partitionDatas {
 		s := &struct {
-			ClusterId string
-			TopicName  string
+			ClusterId   string
+			TopicName   string
 			PartitionId int32
 			LeaderId    int32
 		}{
-			ClusterId: partition.ClusterId,
-			TopicName: partition.TopicName,
+			ClusterId:   partition.ClusterId,
+			TopicName:   partition.TopicName,
 			PartitionId: partition.PartitionId,
-			LeaderId: parseLeaderId(partition.Leader),
+			LeaderId:    parseLeaderId(partition.Leader),
 		}
 		outputWriter.AddElement(s)
 	}
@@ -138,7 +140,7 @@ func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error
 }
 
 func parseLeaderId(leader kafkarestv3.Relationship) int32 {
-	index := strings.LastIndex(leader.Related,"/")
+	index := strings.LastIndex(leader.Related, "/")
 	idStr := leader.Related[index+1:]
 	leaderId, err := strconv.ParseInt(idStr, 10, 32)
 	if err != nil {
@@ -148,12 +150,10 @@ func parseLeaderId(leader kafkarestv3.Relationship) int32 {
 }
 
 func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string) error {
-	partitionIdStr := args[0]
-	i, err := strconv.ParseInt(partitionIdStr, 10, 32)
+	partitionId, err := partitionIdFromArg(args)
 	if err != nil {
-		return err // TODO custom error
+		return err
 	}
-	partitionId := int32(i)
 	restClient, restContext, err := initKafkaRest(partitionCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -171,17 +171,17 @@ func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
 	s := &struct {
-		ClusterId string
-		TopicName  string
+		ClusterId   string
+		TopicName   string
 		PartitionId int32
 		LeaderId    int32
 	}{
-		ClusterId: partitionGetResp.ClusterId,
-		TopicName: partitionGetResp.TopicName,
+		ClusterId:   partitionGetResp.ClusterId,
+		TopicName:   partitionGetResp.TopicName,
 		PartitionId: partitionGetResp.PartitionId,
-		LeaderId: parseLeaderId(partitionGetResp.Leader),
+		LeaderId:    parseLeaderId(partitionGetResp.Leader),
 	}
-	return output.DescribeObject(cmd, s, []string{"ClusterId", "TopicName", "PartitionId", "LeaderId"}, map[string]string{"ClusterId":"Cluster ID", "TopicName":"Topic Name", "PartitionId":"Partition ID", "LeaderId":"Leader ID"}, map[string]string{"ClusterId":"cluster_id", "TopicName":"topic_name", "PartitionId":"partition_id", "LeaderId":"leader_id"})
+	return output.DescribeObject(cmd, s, []string{"ClusterId", "TopicName", "PartitionId", "LeaderId"}, map[string]string{"ClusterId": "Cluster ID", "TopicName": "Topic Name", "PartitionId": "Partition ID", "LeaderId": "Leader ID"}, map[string]string{"ClusterId": "cluster_id", "TopicName": "topic_name", "PartitionId": "partition_id", "LeaderId": "leader_id"})
 }
 
 func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args []string) error {
@@ -200,14 +200,12 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 	var reassignmentListResp kafkarestv3.ReassignmentDataList
 	var resp *http.Response
 	if len(args) > 0 {
-		partitionIdStr := args[0] // todo maybe refactor out
-		i, err := strconv.ParseInt(partitionIdStr, 10, 32)
+		partitionId, err := partitionIdFromArg(args)
 		if err != nil {
-			return err // TODO custom error
+			return err
 		}
-		partitionId := int32(i)
 		if topic == "" {
-			return errors.New("must specify partition id and topic together")
+			return errors.New(errors.SpecifyParitionIdWithTopicErrorMsg)
 		}
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)
@@ -229,16 +227,16 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 	}
 	for _, data := range reassignmentListResp.Data {
 		s := &struct {
-			ClusterId string
-			TopicName  string
-			PartitionId int32
-			AddingReplicas []int32
+			ClusterId        string
+			TopicName        string
+			PartitionId      int32
+			AddingReplicas   []int32
 			RemovingReplicas []int32
 		}{
-			ClusterId: data.ClusterId,
-			TopicName: data.TopicName,
-			PartitionId: data.PartitionId,
-			AddingReplicas: data.AddingReplicas,
+			ClusterId:        data.ClusterId,
+			TopicName:        data.TopicName,
+			PartitionId:      data.PartitionId,
+			AddingReplicas:   data.AddingReplicas,
 			RemovingReplicas: data.RemovingReplicas,
 		}
 		outputWriter.AddElement(s)
@@ -247,3 +245,8 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 	return outputWriter.Out()
 }
 
+func partitionIdFromArg(args []string) (int32, error) {
+	partitionIdStr := args[0]
+	partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
+	return int32(partitionId), err
+}

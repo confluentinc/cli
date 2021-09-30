@@ -23,28 +23,33 @@ const (
 	topicConfig     = "/2.0/kafka/{cluster}/topics/{topic}/config"
 
 	//kafka rest urls
-	rpAcls              = "/kafka/v3/clusters/{cluster}/acls"
-	rpTopics            = "/kafka/v3/clusters/{cluster}/topics"
-	rpPartitions        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
-	rpPartitionReplicas = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-	rpReplicaStatus     = "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
-	rpTopicConfigs      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
-	rpConfigsAlter      = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
-	rpTopic             = "/kafka/v3/clusters/{cluster}/topics/{topic}"
-	rpLink              = "/kafka/v3/clusters/{cluster}/links/{link}"
-	rpLinks             = "/kafka/v3/clusters/{cluster}/links"
-	rpLinkConfigs       = "/kafka/v3/clusters/{cluster}/links/{link}/configs"
-	rpMirror            = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}"
-	rpAllMirrors        = "/kafka/v3/clusters/{cluster}/links/-/mirrors"
-	rpMirrors           = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
-	rpMirrorPromote     = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote"
-	rpClusters          = "/kafka/v3/clusters"
-	rpConsumerGroups    = "/kafka/v3/clusters/{cluster_id}/consumer-groups"
-	rpConsumerGroup     = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
-	rpConsumers         = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
-	rpLagSummary        = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
-	rpLags              = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
-	rpLag               = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
+	rpAcls                     = "/kafka/v3/clusters/{cluster}/acls"
+	rpTopics                   = "/kafka/v3/clusters/{cluster}/topics"
+	rpPartitions               = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
+	rpPartitionReplicas        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
+	rpReplicaStatus            = "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
+	rpTopicConfigs             = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
+	rpConfigsAlter             = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
+	rpTopic                    = "/kafka/v3/clusters/{cluster}/topics/{topic}"
+	rpLink                     = "/kafka/v3/clusters/{cluster}/links/{link}"
+	rpLinks                    = "/kafka/v3/clusters/{cluster}/links"
+	rpLinkConfigs              = "/kafka/v3/clusters/{cluster}/links/{link}/configs"
+	rpMirror                   = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}"
+	rpAllMirrors               = "/kafka/v3/clusters/{cluster}/links/-/mirrors"
+	rpMirrors                  = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
+	rpMirrorPromote            = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote"
+	rpClusters                 = "/kafka/v3/clusters"
+	rpConsumerGroups           = "/kafka/v3/clusters/{cluster_id}/consumer-groups"
+	rpConsumerGroup            = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
+	rpConsumers                = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
+	rpLagSummary               = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
+	rpLags                     = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
+	rpLag                      = "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
+	rpTopicNamePartitions      = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions"
+	rpPartitionIdPartitions    = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}"
+	rpPartitionIdReassignments = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment"
+	//rpTopicNameReassignments = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/reassignment"
+	//rpReassignments = "/kafka/v3/clusters/{cluster_id}/topics/-/partitions/reassignment"
 )
 
 type KafkaRouter struct {
@@ -94,7 +99,7 @@ func (k *KafkaApiRouter) buildKafkaApiHandler(t *testing.T) {
 func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpAcls, r.HandleKafkaRPACLs(t))
 	r.HandleFunc(rpTopics, r.HandleKafkaRPTopics(t))
-	r.HandleFunc(rpPartitions, r.HandleKafkaRPPartitions(t))
+	//r.HandleFunc(rpPartitions, r.HandleKafkaRPPartitions(t))
 	r.HandleFunc(rpTopicConfigs, r.HandleKafkaRPTopicConfigs(t))
 	r.HandleFunc(rpPartitionReplicas, r.HandleKafkaRPPartitionReplicas(t))
 	r.HandleFunc(rpReplicaStatus, r.HandleKafkaRPReplicaStatus(t))
@@ -114,6 +119,12 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpLagSummary, r.HandleKafkaRPLagSummary(t))
 	r.HandleFunc(rpLags, r.HandleKafkaRPLags(t))
 	r.HandleFunc(rpLag, r.HandleKafkaRPLag(t))
+	r.HandleFunc(rpTopicNamePartitions, r.HandleKafkaTopicPartitions(t))
+	r.HandleFunc(rpPartitionIdPartitions, r.HandleKafkaTopicPartitionId(t))
+	r.HandleFunc(rpPartitionIdReassignments, r.HandleKafkaTopicPartitionIdReassignment(t))
+	//r.HandleFunc(rpTopicNameReassignments, r.HandleKafkaTopicNamePartitionsReassignment(t))
+	//r.HandleFunc(rpReassignments, r.HandleKafkaTopicPartitionsReassignment(t))
+
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)

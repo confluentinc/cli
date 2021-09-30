@@ -116,8 +116,8 @@ const (
 	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `ccloud kafka region list`."
 	TopicDoesNotExistErrorMsg                     = "topic \"%s\" does not exist"
 	TopicDoesNotExistSuggestions                  = ListTopicSuggestions
-	TopicDoesNotExistOrMissingACLsErrorMsg		  = "topic \"%s\" does not exist or your api key does not have the ACLs required to describe it"
-	TopicDoesNotExistOrMissingACLsSuggestions	  = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`.\nTo list ACLs use `ccloud kafka acl list --cluster %s`."
+	TopicDoesNotExistOrMissingACLsErrorMsg        = "topic \"%s\" does not exist or your api key does not have the ACLs required to describe it"
+	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `ccloud kafka topic list --cluster %s`.\nTo list ACLs use `ccloud kafka acl list --cluster %s`."
 	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                       = "invalid value \"%s\" for `--type` flag"
@@ -437,4 +437,7 @@ const (
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "Metadata Service backend error: %s: %s"
+
+	// Partition command errors
+	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 )
