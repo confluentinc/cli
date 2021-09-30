@@ -429,8 +429,6 @@ const (
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
 	ClusterFlagWithApiLoginErrorMsg     = "\"cluster\" flag should not be passed for API key context, cluster is inferred"
 
-
-
 	// Broker commands
 	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"
 	OnlySpecifyAllOrBrokerIDErrorMsg = "only specify broker ID argument OR `--all` flag"

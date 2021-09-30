@@ -132,7 +132,7 @@ func (brokerCmd *brokerCommand) init() {
 	deleteCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(deleteCmd)
 
-	tasksCmd := &cobra.Command{
+	getTasksCmd := &cobra.Command{
 		Use:   "get-tasks [id]",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(brokerCmd.getTasks),
@@ -148,12 +148,12 @@ func (brokerCmd *brokerCommand) init() {
 			},
 		),
 	}
-	tasksCmd.Flags().Bool("all", false, "List broker tasks for the cluster.")
-	tasksCmd.Flags().String("task-type", "", "Search by task type (add-broker or remove-broker).")
-	tasksCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	tasksCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	tasksCmd.Flags().SortFlags = false
-	brokerCmd.AddCommand(tasksCmd)
+	getTasksCmd.Flags().Bool("all", false, "List broker tasks for the cluster.")
+	getTasksCmd.Flags().String("task-type", "", "Search by task type (add-broker or remove-broker).")
+	getTasksCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	getTasksCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	getTasksCmd.Flags().SortFlags = false
+	brokerCmd.AddCommand(getTasksCmd)
 }
 
 func (brokerCmd *brokerCommand) list(cmd *cobra.Command, args []string) error {
@@ -249,7 +249,7 @@ func (brokerCmd *brokerCommand) describe(cmd *cobra.Command, args []string) erro
 	return nil
 }
 
-// fetch per-broker configs or just configName config if specified
+// getIndividualBrokerConfigs fetches all per-broker configs or just the config specified by configName
 func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, configName string) (kafkarestv3.BrokerConfigDataList, error) {
 	var brokerConfig kafkarestv3.BrokerConfigDataList
 	var resp *http.Response
@@ -267,12 +267,12 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 	return brokerConfig, nil
 }
 
-// fetch cluster-wide configs or just configName config if specified
+// getClusterWideConfigs fetches cluster-wide configs or just configName config if specified
 func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, configName string) (kafkarestv3.ClusterConfigDataList, error) {
 	var clusterConfig kafkarestv3.ClusterConfigDataList
 	var resp *http.Response
 	var err error
-	if configName != "" { // Get configName config
+	if configName != "" { // Get config specified by configName
 		var configNameData kafkarestv3.ClusterConfigData
 		configNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsNameGet(restContext, clusterId, configName)
 		clusterConfig.Data = []kafkarestv3.ClusterConfigData{configNameData}
@@ -334,7 +334,7 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 	if format == output.Human.String() {
 		brokerCmd.printHumanUpdate(all, clusterId, brokerId, configs)
 		return nil
-	} else { //json or yaml
+	} else { //JSON or YAML
 		return brokerCmd.printStructuredUpdate(format, configs)
 	}
 }
@@ -354,7 +354,7 @@ func (brokerCmd *brokerCommand) printHumanUpdate(all bool, clusterId string, bro
 				Value string
 			}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
 	}
-	sort.Slice(tableEntries, func(i int, j int) bool {
+	sort.Slice(tableEntries, func(i, j int) bool {
 		return tableEntries[i][0] < tableEntries[j][0]
 	})
 	printer.RenderCollectionTable(tableEntries, tableLabels)
@@ -372,7 +372,7 @@ func (brokerCmd *brokerCommand) printStructuredUpdate(format string, configs []k
 			Value: *config.Value,
 		}
 	}
-	sort.Slice(printConfigs, func(i int, j int) bool {
+	sort.Slice(printConfigs, func(i, j int) bool {
 		return printConfigs[i].Name < printConfigs[j].Name
 	})
 	return output.StructuredOutput(format, printConfigs)
@@ -400,7 +400,7 @@ func (brokerCmd *brokerCommand) delete(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	fmt.Printf("Started deletion of broker %d. To monitor the remove-broker task run `confluent kafka broker get-tasks %d --task-type remove-broker`", brokerId, brokerId)
+	fmt.Printf("Started deletion of broker %d. To monitor the remove-broker task run `confluent kafka broker get-tasks %d --task-type remove-broker`.", brokerId, brokerId)
 	return nil
 }
 
