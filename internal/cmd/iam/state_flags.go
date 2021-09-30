@@ -14,6 +14,6 @@ var RoleSubcommandFlags = map[string]*pflag.FlagSet{
 	"role": cmd.ContextSet(),
 }
 
-var RolebindingSubcommandFlags = map[string]*pflag.FlagSet{
-	"rolebinding": cmd.ContextSet(),
+var RoleBindingSubcommandFlags = map[string]*pflag.FlagSet{
+	"role-binding": cmd.ContextSet(),
 }

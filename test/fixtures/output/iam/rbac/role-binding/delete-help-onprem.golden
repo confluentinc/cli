@@ -1,7 +1,7 @@
 Delete an existing role binding.
 
 Usage:
-  confluent iam rbac rolebinding delete [flags]
+  confluent iam rbac role-binding delete [flags]
 
 Flags:
       --role string                         REQUIRED: Role name of the existing role binding.
@@ -12,7 +12,7 @@ Flags:
       --schema-registry-cluster-id string   Schema Registry cluster ID for the role binding.
       --ksql-cluster-id string              ksqlDB cluster ID for the role binding.
       --connect-cluster-id string           Kafka Connect cluster ID for the role binding.
-      --cluster-name string                 Cluster name to uniquely identify the cluster for rolebinding listings.
+      --cluster-name string                 Cluster name to uniquely identify the cluster for role binding listings.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
       --context string                      CLI context name.
 

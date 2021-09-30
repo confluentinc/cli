@@ -15,7 +15,7 @@ func NewRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(NewRoleCommand(cfg, prerunner))
-	cmd.AddCommand(NewRolebindingCommand(cfg, prerunner))
+	cmd.AddCommand(NewRoleBindingCommand(cfg, prerunner))
 
 	return cmd
 }

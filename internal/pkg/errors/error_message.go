@@ -72,7 +72,7 @@ const (
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
 	UnknownRoleSuggestions = "The available roles are: %s"
 
-	// iam rbac rolebinding commands
+	// iam rbac role-binding commands
 	PrincipalFormatErrorMsg         = "incorrect principal format specified"
 	PrincipalFormatSuggestions      = "Principal must be specified in this format: `<Principal Type>:<Principal Name>`."
 	ResourceFormatErrorMsg          = "incorrect resource format specified"

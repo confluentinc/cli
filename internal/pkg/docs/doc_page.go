@@ -100,7 +100,7 @@ func printNotes(cmd *cobra.Command, depth int) []string {
 		rows = append(rows, printSphinxBlock("tip", tip, nil)...)
 	}
 
-	if cmd.CommandPath() == "confluent iam rbac rolebinding create" {
+	if cmd.CommandPath() == "confluent iam rbac role-binding create" {
 		note := "If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`."
 		rows = append(rows, printSphinxBlock("note", note, nil)...)
 	}

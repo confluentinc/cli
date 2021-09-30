@@ -233,7 +233,7 @@ while INT_TEST_ARGS environment variable is for integration tests.
 
 For example you can filter for a subset of unit test and a subset integration tests to be run
 
-    make test UNIT_TEST_ARGS="-run TestApiTestSuite" INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_Rolebinding_List"
+    make test UNIT_TEST_ARGS="-run TestApiTestSuite" INT_TEST_ARGS="-run TestCLI/Test_Confluent_Iam_RoleBinding_List"
 
 More details on the use of these environment variables in the *Unit Test* and *Integration Test* sections.
 
@@ -287,15 +287,15 @@ To run a single test case (or all test cases with a prefix)
     # all integration tests
     make int-test INT_TEST_ARGS="-run TestCLI"
 
-    # all subtests of this `TestConfluentIAMRolebindingList` integration tests
-    make int-test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRolebindingList"
+    # all subtests of this `TestConfluentIAMRoleBindingList` integration tests
+    make int-test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRBACRoleBindingList"
 
     # a very specific subset of tests
-    make int-test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRolebindingList/iam_rolebinding_list_--kafka-cluster-id_CID_--principal_User:frodo"
+    make int-test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRBACRoleBindingList/iam_rbac_role-binding_list_--kafka-cluster-id_CID_--principal_User:frodo"
 
 INT_TEST_ARGS is can also be used with `make test` target, if you want to filter or update integration tests but still run unit tests
 
-    make test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRolebindingList"
+    make test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRoleBindingList"
 
 
 ## Adding a New Command to the CLI

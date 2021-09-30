@@ -160,7 +160,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	expect := make(chan interface{})
 	for _, tc := range roleBindingListTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rbac", "rolebinding", "list"}, tc.args...))
+		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
@@ -420,7 +420,7 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 			mockeRoleBindingsResult <- tc.scopeRoleBindingMapping
 			mockeListUserResult <- tc.mockedListUserResult
 		}()
-		output, err := pcmd.ExecuteCommand(cmd, "rbac", "rolebinding", "list", "--current-user", "-ojson")
+		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)
 		var actual []listDisplay
 		err = json.Unmarshal([]byte(output), &actual)
@@ -476,7 +476,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 	expect := make(chan interface{})
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rbac", "rolebinding", "create"}, tc.args...))
+		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
@@ -501,7 +501,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 	expect := make(chan interface{})
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
-		cmd.SetArgs(append([]string{"rbac", "rolebinding", "delete"}, tc.args...))
+		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {

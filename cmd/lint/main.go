@@ -32,7 +32,7 @@ var (
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
 		"deserializers", "env", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init",
 		"io", "json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "pem",
-		"plaintext", "prem", "producer.config", "protobuf", "rbac", "readwrite", "recv", "rolebinding", "rolebindings",
+		"plaintext", "prem", "producer.config", "protobuf", "rbac", "readwrite", "recv", "role-binding", "role-bindings",
 		"signup", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us",
 		"v2", "vpc", "whitelist", "yaml", "zstd",
 	}
@@ -78,8 +78,8 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store <api-key> <secret>"),
-		// skip for rolebindings since they don't have names/IDs
-		linter.ExcludeCommandContains("iam rbac rolebinding"),
+		// skip for rbac role-binding command since they don't have names/IDs
+		linter.ExcludeCommandContains("iam rbac role-binding"),
 		// skip for register command since they don't have names/IDs
 		linter.ExcludeCommandContains("cluster register"),
 		// skip for unregister command since they don't have names/IDs

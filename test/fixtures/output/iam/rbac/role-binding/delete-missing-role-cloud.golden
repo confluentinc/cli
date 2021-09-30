@@ -1,12 +1,12 @@
 Error: required flag(s) "role" not set
 Usage:
-  confluent iam rbac rolebinding delete [flags]
+  confluent iam rbac role-binding delete [flags]
 
 Flags:
       --role string            REQUIRED: Role name of the existing role binding.
       --principal string       REQUIRED: Qualified principal name associated with the role binding.
       --cloud-cluster string   Cloud cluster ID for the role binding.
-      --environment string     Environment ID for scope of rolebinding delete.
+      --environment string     Environment ID for scope of role-binding delete.
       --current-env            Use current environment ID for scope.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
