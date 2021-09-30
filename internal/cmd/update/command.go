@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blang/semver"
 	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -165,7 +164,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 // adds a new context field called "netrc-machine-name", and creates a backup of the confluent config file.
 func (c *command) migrateConfigFiles() error {
 	current, err := getConfig("confluent")
-	if current != nil && current.Ver.Equals(semver.MustParse("1.0.0")) {
+	if current != nil && current.Ver.Equal(version.Must(version.NewVersion("1.0.0"))) {
 		return nil
 	}
 	if err != nil {
@@ -191,7 +190,7 @@ func (c *command) migrateConfigFiles() error {
 	}
 
 	current.Filename = filename
-	current.Ver = semver.MustParse("1.0.0")
+	current.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
 	for name := range current.Contexts {
 		current.Contexts[name].NetrcMachineName = name
 	}
