@@ -89,7 +89,7 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 	// Retrieve schema from cluster only if schema is specified.
-	schemaID := int32(binary.BigEndian.Uint32(value[1:5]))
+	schemaID := int32(binary.BigEndian.Uint32(value[1:5])) // schema id is stored as a part of message meta info
 
 	// Create temporary file to store schema retrieved (also for cache)
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
@@ -150,7 +150,10 @@ func ConsumeMsg(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if e.Headers != nil {
-		fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
+		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

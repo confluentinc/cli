@@ -783,11 +783,13 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return fmt.Errorf("failed to create producer: %v.\n", err)
 	}
 	defer producer.Close()
+
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
 		return fmt.Errorf("failed to create admin client: %v.\n", err)
 	}
 	defer adminClient.Close()
+
 	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
@@ -822,26 +824,10 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-
 	// Meta info contains magic byte and schema ID (4 bytes).
-	// For plain string encoding, meta info is empty.
-	metaInfo := []byte{}
-
-	// Registering schema when specified, and fill metaInfo array.
-	if valueFormat != "string" && len(schemaPath) > 0 {
-		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
-		if err != nil {
-			return err
-		}
-		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
-		if err != nil {
-			return err
-		}
-		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
-		if err != nil {
-			return err
-		}
-		metaInfo = info
+	metaInfo, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider)
+	if err != nil {
+		return err
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
@@ -879,37 +865,24 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	// Prime reader
 	go scan()
 
-	var key, valueString string
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		if len(data) == 0 {
 			go scan()
 			continue
 		}
-		if parseKey {
-			record := strings.SplitN(data, delim, 2)
-			valueString = strings.TrimSpace(record[len(record)-1])
 
-			if len(record) == 2 {
-				key = strings.TrimSpace(record[0])
-			} else {
-				return errors.New(errors.MissingKeyErrorMsg)
-			}
-		} else {
-			valueString = strings.TrimSpace(data)
-		}
-		encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+		key, value, err := getMsgKeyAndValue(metaInfo, data, delim, parseKey, serializationProvider)
 		if err != nil {
 			return err
 		}
-		encoded := append(metaInfo, encodedMessage...)
-		value := string(encoded)
 
 		msg := &ckafka.Message{
 			TopicPartition: ckafka.TopicPartition{Topic: &topic, Partition: ckafka.PartitionAny},
 			Key:            []byte(key),
 			Value:          []byte(value),
 		}
+
 		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
@@ -931,10 +904,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		go scan()
 	}
 	close(deliveryChan)
-	if scanErr != nil {
-		return scanErr
-	}
-	return nil
+	return scanErr
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
@@ -997,11 +967,13 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %v.\n", err)
 	}
+
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		return fmt.Errorf("failed to create admin client: %v.\n", err)
 	}
 	defer adminClient.Close()
+
 	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
@@ -1017,7 +989,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	// consumer subscribe to the topic
 	err = consumer.Subscribe(topic, nil)
 	if err != nil {
 		return err
@@ -1195,4 +1166,50 @@ func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.To
 	}
 
 	return resp, err
+}
+
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
+	// For plain string encoding, meta info is empty.
+	// Registering schema when specified, and fill metaInfo array.
+	metaInfo := []byte{}
+	var err error
+	if valueFormat != "string" && len(schemaPath) > 0 {
+		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		if err != nil {
+			return metaInfo, err
+		}
+		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		if err != nil {
+			return metaInfo, err
+		}
+		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
+		if err != nil {
+			return metaInfo, err
+		}
+		metaInfo = info
+	}
+	return metaInfo, err
+}
+
+func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
+	var key, valueString string
+	if parseKey {
+		record := strings.SplitN(data, delim, 2)
+		valueString = strings.TrimSpace(record[len(record)-1])
+
+		if len(record) == 2 {
+			key = strings.TrimSpace(record[0])
+		} else {
+			return "", "", errors.New(errors.MissingKeyErrorMsg)
+		}
+	} else {
+		valueString = strings.TrimSpace(data)
+	}
+	encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+	if err != nil {
+		return "", "", err
+	}
+	encoded := append(metaInfo, encodedMessage...)
+	value := string(encoded)
+	return key, value, nil
 }
