@@ -287,15 +287,15 @@ To run a single test case (or all test cases with a prefix)
     # all integration tests
     make int-test INT_TEST_ARGS="-run TestCLI"
 
-    # all subtests of this `TestConfluentIAMRoleBindingList` integration tests
-    make int-test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRBACRoleBindingList"
+    # all subtests of this `TestIAMRBACRoleBindingListOnPrem` integration tests
+    make int-test INT_TEST_ARGS="-run TestCLI/TestIAMRBACRoleBindingListOnPrem"
 
     # a very specific subset of tests
-    make int-test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRBACRoleBindingList/iam_rbac_role-binding_list_--kafka-cluster-id_CID_--principal_User:frodo"
+    make int-test INT_TEST_ARGS="-run TestCLI/TestIAMRBACRoleBindingListOnPrem/iam_rbac_role-binding_list_--kafka-cluster-id_CID_--principal_User:frodo"
 
 INT_TEST_ARGS is can also be used with `make test` target, if you want to filter or update integration tests but still run unit tests
 
-    make test INT_TEST_ARGS="-run TestCLI/TestConfluentIAMRoleBindingList"
+    make test INT_TEST_ARGS="-run TestCLI/TestIAMRBACRoleBindingListOnPrem"
 
 
 ## Adding a New Command to the CLI
