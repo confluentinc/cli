@@ -73,6 +73,8 @@ var rules = []linter.Rule{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
 		linter.ExcludeUse("list", "auth"),
+		// skip partition get-reassignments since it takes an optional param [id]
+		linter.ExcludeCommand("kafka partition get-reassignments [id]"),
 		// skip ACLs which don't have an identity (value objects rather than entities)
 		linter.ExcludeCommandContains("kafka acl"),
 		linter.ExcludeCommandContains("iam acl"),

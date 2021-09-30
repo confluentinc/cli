@@ -4,7 +4,7 @@ Usage:
   confluent kafka partition [command]
 
 Available Commands:
-  describe          Describe a Kafka partition
+  describe          Describe a Kafka partition.
   get-reassignments Get ongoing replica reassignments.
   list              List Kafka partitions.
 

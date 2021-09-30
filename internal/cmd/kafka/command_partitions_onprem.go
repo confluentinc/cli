@@ -54,7 +54,7 @@ func (partitionCmd *partitionCommand) init() {
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a Kafka partition",
+		Short: "Describe a Kafka partition.",
 		Long:  "Describe a Kafka partition via Confluent Kafka REST.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(partitionCmd.describe),
@@ -209,6 +209,9 @@ func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args 
 		}
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)
+		if err != nil {
+			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		}
 		if reassignmentGetResp.Kind != "" {
 			reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
 		}

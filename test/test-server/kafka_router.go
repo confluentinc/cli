@@ -25,7 +25,6 @@ const (
 	//kafka rest urls
 	rpAcls                     = "/kafka/v3/clusters/{cluster}/acls"
 	rpTopics                   = "/kafka/v3/clusters/{cluster}/topics"
-	rpPartitions               = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
 	rpPartitionReplicas        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
 	rpReplicaStatus            = "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
 	rpTopicConfigs             = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
@@ -48,8 +47,6 @@ const (
 	rpTopicNamePartitions      = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions"
 	rpPartitionIdPartitions    = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}"
 	rpPartitionIdReassignments = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment"
-	//rpTopicNameReassignments = "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/reassignment"
-	//rpReassignments = "/kafka/v3/clusters/{cluster_id}/topics/-/partitions/reassignment"
 )
 
 type KafkaRouter struct {
@@ -122,8 +119,6 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpTopicNamePartitions, r.HandleKafkaTopicPartitions(t))
 	r.HandleFunc(rpPartitionIdPartitions, r.HandleKafkaTopicPartitionId(t))
 	r.HandleFunc(rpPartitionIdReassignments, r.HandleKafkaTopicPartitionIdReassignment(t))
-	//r.HandleFunc(rpTopicNameReassignments, r.HandleKafkaTopicNamePartitionsReassignment(t))
-	//r.HandleFunc(rpReassignments, r.HandleKafkaTopicPartitionsReassignment(t))
 
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
