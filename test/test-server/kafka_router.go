@@ -96,7 +96,6 @@ func (k *KafkaApiRouter) buildKafkaApiHandler(t *testing.T) {
 func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpAcls, r.HandleKafkaRPACLs(t))
 	r.HandleFunc(rpTopics, r.HandleKafkaRPTopics(t))
-	//r.HandleFunc(rpPartitions, r.HandleKafkaRPPartitions(t))
 	r.HandleFunc(rpTopicConfigs, r.HandleKafkaRPTopicConfigs(t))
 	r.HandleFunc(rpPartitionReplicas, r.HandleKafkaRPPartitionReplicas(t))
 	r.HandleFunc(rpReplicaStatus, r.HandleKafkaRPReplicaStatus(t))

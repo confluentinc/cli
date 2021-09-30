@@ -49,7 +49,7 @@ func (partitionCmd *partitionCommand) init() {
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
-	check(listCmd.MarkFlagRequired("topic"))
+	_ = listCmd.MarkFlagRequired("topic")
 	partitionCmd.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -68,7 +68,7 @@ func (partitionCmd *partitionCommand) init() {
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
-	check(describeCmd.MarkFlagRequired("topic"))
+	_ = describeCmd.MarkFlagRequired("topic")
 	partitionCmd.AddCommand(describeCmd)
 
 	reassignmentsCmd := &cobra.Command{
@@ -142,10 +142,7 @@ func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error
 func parseLeaderId(leader kafkarestv3.Relationship) int32 {
 	index := strings.LastIndex(leader.Related, "/")
 	idStr := leader.Related[index+1:]
-	leaderId, err := strconv.ParseInt(idStr, 10, 32)
-	if err != nil {
-		return -1 //shouldn't happen
-	}
+	leaderId, _ := strconv.ParseInt(idStr, 10, 32)
 	return int32(leaderId)
 }
 

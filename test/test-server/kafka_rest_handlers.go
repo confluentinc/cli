@@ -1137,9 +1137,6 @@ func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionIdReassignment(t *testing
 		vars := mux.Vars(r)
 		partitionIdStr := vars["partition_id"]
 		topicName := vars["topic_name"]
-		//fmt.Println("PRINTING P ID " + partitionIdStr)
-		//partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
-		//require.NoError(t, err)
 		switch r.Method {
 		case "GET":
 			if partitionIdStr != "-" && topicName != "-" {
