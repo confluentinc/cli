@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"time"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
@@ -40,6 +41,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credential
 			return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
 		}
 	}
+	client.HttpClient.Timeout = 30 * time.Second
 	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password)
 	return token, "", err
 }

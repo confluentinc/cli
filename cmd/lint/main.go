@@ -65,7 +65,7 @@ var rules = []linter.Rule{
 				"environment":    {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
 				"role":           {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
 				"topic":          {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
-				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<api-key>"},
 				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
 				"lag":            {CreateCommandArg: "N/A", OtherCommandsArg: "<consumer-group>"},
 			},
@@ -85,7 +85,7 @@ var rules = []linter.Rule{
 		// skip local which delegates to external bash scripts
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
-		linter.ExcludeCommand("api-key store <apikey> <secret>"),
+		linter.ExcludeCommand("api-key store <api-key> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip for register command since they don't have names/IDs

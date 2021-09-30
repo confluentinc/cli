@@ -34,16 +34,9 @@ import (
 )
 
 var (
-	noRebuild           = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update              = flag.Bool("update", false, "update golden files")
-	debug               = flag.Bool("debug", true, "enable verbose output")
-	skipSsoBrowserTests = flag.Bool("skip-sso-browser-tests", false, "If flag is preset, run the tests that require a web browser.")
-	ssoTestEmail        = *flag.String("sso-test-user-email", "ziru+paas-integ-sso@confluent.io", "The email of an sso enabled test user.")
-	ssoTestPassword     = *flag.String("sso-test-user-password", "aWLw9eG+F", "The password for the sso enabled test user.")
-	// this connection is preconfigured in Auth0 to hit a test Okta account
-	ssoTestConnectionName = *flag.String("sso-test-connection-name", "confluent-dev", "The Auth0 SSO connection name.")
-	// browser tests by default against devel
-	ssoTestLoginUrl  = *flag.String("sso-test-login-url", "https://devel.cpdev.cloud", "The login url to use for the sso browser test.")
+	noRebuild        = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
+	update           = flag.Bool("update", false, "update golden files")
+	debug            = flag.Bool("debug", true, "enable verbose output")
 	cover            = false
 	ccloudTestBin    = ccloudTestBinNormal
 	confluentTestBin = confluentTestBinNormal
@@ -482,9 +475,9 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 func resetConfiguration(t *testing.T, cliName string) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v3.New(&config.Params{
-		CLIName: cliName,
-	})
+	cfg := v3.New(&config.Params{CLIName: cliName})
+	cfg.DisableUpdateCheck = true
+
 	err := cfg.Save()
 	require.NoError(t, err)
 }

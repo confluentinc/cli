@@ -248,9 +248,7 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			return err
 		}
 		r.Logger.Flush()
-		if err := r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version); err != nil {
-			return err
-		}
+		r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
 		if r.Config != nil {
 			ctx := command.Config.Context()
@@ -862,24 +860,32 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *DynamicContext) string {
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available
-func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name string, currentVersion string) error {
+func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, name, currentVersion string) {
 	if isUpdateCommand(cmd) || r.IsTest {
-		return nil
+		return
 	}
-	updateAvailable, latestVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
+
+	latestMajorVersion, latestMinorVersion, err := r.UpdateClient.CheckForUpdates(name, currentVersion, false)
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
 		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
 		r.Logger.Warn(err)
-		return nil
+		return
 	}
-	if updateAvailable {
-		if !strings.HasPrefix(latestVersion, "v") {
-			latestVersion = "v" + latestVersion
+
+	if latestMajorVersion != "" {
+		if !strings.HasPrefix(latestMajorVersion, "v") {
+			latestMajorVersion = "v" + latestMajorVersion
 		}
-		utils.ErrPrintf(cmd, errors.NotifyUpdateMsg, name, currentVersion, latestVersion, name)
+		utils.ErrPrintf(cmd, errors.NotifyMajorUpdateMsg, name, currentVersion, latestMajorVersion, name)
 	}
-	return nil
+
+	if latestMinorVersion != "" {
+		if !strings.HasPrefix(latestMinorVersion, "v") {
+			latestMinorVersion = "v" + latestMinorVersion
+		}
+		utils.ErrPrintf(cmd, errors.NotifyMinorUpdateMsg, name, currentVersion, latestMinorVersion, name)
+	}
 }
 
 func isUpdateCommand(cmd *cobra.Command) bool {

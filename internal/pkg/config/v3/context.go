@@ -14,6 +14,7 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name                   string                               `json:"name" hcl:"name"`
+	NetrcMachineName       string                               `json:"netrc_machine_name" hcl:"netrc_machine_name"`
 	Platform               *v2.Platform                         `json:"-" hcl:"-"`
 	PlatformName           string                               `json:"platform" hcl:"platform"`
 	Credential             *v2.Credential                       `json:"-" hcl:"-"`
@@ -45,51 +46,6 @@ func newContext(name string, platform *v2.Platform, credential *v2.Credential,
 		return nil, err
 	}
 	return ctx, nil
-}
-
-func (c *Context) validateKafkaClusterConfig(cluster *v1.KafkaClusterConfig) error {
-	if cluster.ID == "" {
-		return errors.NewCorruptedConfigError(errors.NoIDClusterErrorMsg, c.Name, c.Config.CLIName, c.Config.Filename, c.Logger)
-	}
-	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		_, _ = fmt.Fprintf(os.Stderr, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, c.Name, cluster.ID)
-		cluster.APIKey = ""
-		err := c.Save()
-		if err != nil {
-			return errors.Wrap(err, errors.ResetInvalidAPIKeyErrorMsg)
-		}
-	}
-	return c.validateApiKeysDict(cluster)
-}
-
-func (c *Context) validateApiKeysDict(cluster *v1.KafkaClusterConfig) error {
-	missingKey := false
-	mismatchKey := false
-	missingSecret := false
-	for k, pair := range cluster.APIKeys {
-		if pair.Key == "" {
-			delete(cluster.APIKeys, k)
-			missingKey = true
-			continue
-		}
-		if k != pair.Key {
-			delete(cluster.APIKeys, k)
-			mismatchKey = true
-			continue
-		}
-		if pair.Secret == "" {
-			delete(cluster.APIKeys, k)
-			missingSecret = true
-		}
-	}
-	if missingKey || mismatchKey || missingSecret {
-		printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster, c.Name)
-		err := c.Save()
-		if err != nil {
-			return errors.Wrap(err, errors.ClearInvalidAPIFailErrorMsg)
-		}
-	}
-	return nil
 }
 
 func (c *Context) validate() error {

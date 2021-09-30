@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/blang/semver"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -19,9 +19,7 @@ const (
 	defaultConfigFileFmt = "%s/.%s/config.json"
 )
 
-var (
-	Version = semver.MustParse("2.0.0")
-)
+var Version, _ = version.NewVersion("2.0.0")
 
 // Config represents the CLI configuration.
 type Config struct {
