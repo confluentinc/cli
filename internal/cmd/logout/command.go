@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -18,12 +18,12 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	cfg             *v3.Config
+	cfg             *v1.Config
 	analyticsClient analytics.Client
 	netrcHandler    netrc.NetrcHandler
 }
 
-func New(cfg *v3.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *Command {
 	logoutCmd := &Command{
 		cfg:             cfg,
 		analyticsClient: analyticsClient,

@@ -138,7 +138,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
 	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}

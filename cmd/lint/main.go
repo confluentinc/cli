@@ -10,7 +10,7 @@ import (
 	"github.com/client9/gospell"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -220,16 +220,16 @@ func main() {
 	}
 
 	// Lint all three subsets of commands: no context, cloud, and on-prem
-	configs := []*v3.Config{
+	configs := []*v1.Config{
 		{
 			CurrentContext: "no context",
 		},
 		{
-			Contexts:       map[string]*v3.Context{"cloud": {PlatformName: v3.CCloudHostnames[0]}},
+			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: v1.CCloudHostnames[0]}},
 			CurrentContext: "cloud",
 		},
 		{
-			Contexts:       map[string]*v3.Context{"on-prem": {PlatformName: "https://example.com"}},
+			Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
 			CurrentContext: "on-prem",
 		},
 	}

@@ -1,4 +1,4 @@
-package v3
+package v1
 
 import (
 	"fmt"
@@ -15,9 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -33,7 +30,7 @@ var (
 )
 
 type TestInputs struct {
-	kafkaClusters        map[string]*v1.KafkaClusterConfig
+	kafkaClusters        map[string]*KafkaClusterConfig
 	activeKafka          string
 	statefulConfig       *Config
 	statelessConfig      *Config
@@ -43,24 +40,24 @@ type TestInputs struct {
 
 func SetupTestInputs(isCloud bool) *TestInputs {
 	testInputs := &TestInputs{}
-	platform := &v2.Platform{
+	platform := &Platform{
 		Name:   "http://test",
 		Server: "http://test",
 	}
 	if isCloud {
 		platform.Name = testserver.TestCloudURL.String()
 	}
-	apiCredential := &v2.Credential{
+	apiCredential := &Credential{
 		Name:     "api-key-abc-key-123",
 		Username: "",
 		Password: "",
-		APIKeyPair: &v0.APIKeyPair{
+		APIKeyPair: &APIKeyPair{
 			Key:    apiKeyString,
 			Secret: apiSecretString,
 		},
 		CredentialType: 1,
 	}
-	loginCredential := &v2.Credential{
+	loginCredential := &Credential{
 		Name:           "username-test-user",
 		Username:       "test-user",
 		Password:       "",
@@ -76,8 +73,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		Name: "test-env2",
 	}
 	testInputs.account = account
-	state := &v2.ContextState{
-		Auth: &v1.AuthConfig{
+	state := &ContextState{
+		Auth: &AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
 				Email: "test-user@email",
@@ -93,8 +90,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		},
 		AuthToken: "abc123",
 	}
-	twoEnvState := &v2.ContextState{
-		Auth: &v1.AuthConfig{
+	twoEnvState := &ContextState{
+		Auth: &AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
 				Email: "test-user@email",
@@ -111,13 +108,13 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		},
 		AuthToken: "abc123",
 	}
-	testInputs.kafkaClusters = map[string]*v1.KafkaClusterConfig{
+	testInputs.kafkaClusters = map[string]*KafkaClusterConfig{
 		kafkaClusterID: {
 			ID:          kafkaClusterID,
 			Name:        "anonymous-cluster",
 			Bootstrap:   "http://test",
 			APIEndpoint: "",
-			APIKeys: map[string]*v0.APIKeyPair{
+			APIKeys: map[string]*APIKeyPair{
 				apiKeyString: {
 					Key:    apiKeyString,
 					Secret: apiSecretString,
@@ -133,7 +130,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		PlatformName:   platform.Name,
 		Credential:     loginCredential,
 		CredentialName: loginCredential.Name,
-		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{
+		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
 			accountID: {
 				Id:                     "lsrc-123",
 				SchemaRegistryEndpoint: "http://some-lsrc-endpoint",
@@ -149,8 +146,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		PlatformName:           platform.Name,
 		Credential:             apiCredential,
 		CredentialName:         apiCredential.Name,
-		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{},
-		State:                  &v2.ContextState{},
+		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
+		State:                  &ContextState{},
 		Logger:                 log.New(),
 	}
 	twoEnvStatefulContext := &Context{
@@ -159,7 +156,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		PlatformName:   platform.Name,
 		Credential:     loginCredential,
 		CredentialName: loginCredential.Name,
-		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{
+		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
 			accountID: {
 				Id:                     "lsrc-123",
 				SchemaRegistryEndpoint: "http://some-lsrc-endpoint",
@@ -179,17 +176,17 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
 			Ver:      config.Version{Version: Version},
 		},
-		Platforms: map[string]*v2.Platform{
+		Platforms: map[string]*Platform{
 			platform.Name: platform,
 		},
-		Credentials: map[string]*v2.Credential{
+		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
 			loginCredential.Name: loginCredential,
 		},
 		Contexts: map[string]*Context{
 			contextName: statefulContext,
 		},
-		ContextStates: map[string]*v2.ContextState{
+		ContextStates: map[string]*ContextState{
 			contextName: state,
 		},
 		CurrentContext: contextName,
@@ -201,17 +198,17 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
 			Ver:      config.Version{Version: Version},
 		},
-		Platforms: map[string]*v2.Platform{
+		Platforms: map[string]*Platform{
 			platform.Name: platform,
 		},
-		Credentials: map[string]*v2.Credential{
+		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
 			loginCredential.Name: loginCredential,
 		},
 		Contexts: map[string]*Context{
 			contextName: statelessContext,
 		},
-		ContextStates: map[string]*v2.ContextState{
+		ContextStates: map[string]*ContextState{
 			contextName: {},
 		},
 		CurrentContext: contextName,
@@ -223,17 +220,17 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
 			Ver:      config.Version{Version: Version},
 		},
-		Platforms: map[string]*v2.Platform{
+		Platforms: map[string]*Platform{
 			platform.Name: platform,
 		},
-		Credentials: map[string]*v2.Credential{
+		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
 			loginCredential.Name: loginCredential,
 		},
 		Contexts: map[string]*Context{
 			contextName: twoEnvStatefulContext,
 		},
-		ContextStates: map[string]*v2.ContextState{
+		ContextStates: map[string]*ContextState{
 			contextName: twoEnvState,
 		},
 		CurrentContext: contextName,
@@ -291,10 +288,10 @@ func TestConfig_Load(t *testing.T) {
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
-				Platforms:          map[string]*v2.Platform{},
-				Credentials:        map[string]*v2.Credential{},
+				Platforms:          map[string]*Platform{},
+				Credentials:        map[string]*Credential{},
 				Contexts:           map[string]*Context{},
-				ContextStates:      map[string]*v2.ContextState{},
+				ContextStates:      map[string]*ContextState{},
 			},
 			file: "test_json/load_disable_update.json",
 		},
@@ -600,10 +597,10 @@ func TestConfig_AddContext(t *testing.T) {
 		contextName            string
 		platformName           string
 		credentialName         string
-		kafkaClusters          map[string]*v1.KafkaClusterConfig
+		kafkaClusters          map[string]*KafkaClusterConfig
 		kafka                  string
-		schemaRegistryClusters map[string]*v2.SchemaRegistryCluster
-		state                  *v2.ContextState
+		schemaRegistryClusters map[string]*SchemaRegistryCluster
+		state                  *ContextState
 		Version                *pversion.Version
 		filename               string
 		want                   *Config
@@ -660,10 +657,10 @@ func TestConfig_AddContext(t *testing.T) {
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
 		BaseConfig:    &config.BaseConfig{Params: new(config.Params), Ver: config.Version{Version: new(version.Version)}},
-		ContextStates: make(map[string]*v2.ContextState),
+		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
-		Credentials:   make(map[string]*v2.Credential),
-		Platforms:     make(map[string]*v2.Platform),
+		Credentials:   make(map[string]*Credential),
+		Platforms:     make(map[string]*Platform),
 	}
 
 	err := cfg.CreateContext("context", "https://example.com", "api-key", "api-secret")
@@ -835,12 +832,12 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 		Name: "other-account",
 	}
 	otherKafkaClusterId := "other-kafka"
-	otherKafkaCluster := &v1.KafkaClusterConfig{
+	otherKafkaCluster := &KafkaClusterConfig{
 		ID:          otherKafkaClusterId,
 		Name:        "lit",
 		Bootstrap:   "http://test",
 		APIEndpoint: "",
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
 				Secret: "asecret",
@@ -885,12 +882,12 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
 	otherKafkaClusterId := "other-kafka"
-	otherKafkaCluster := &v1.KafkaClusterConfig{
+	otherKafkaCluster := &KafkaClusterConfig{
 		ID:          otherKafkaClusterId,
 		Name:        "lit",
 		Bootstrap:   "http://test",
 		APIEndpoint: "",
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
 				Secret: "asecret",
@@ -920,12 +917,12 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 
-	kcc := &v1.KafkaClusterConfig{
+	kcc := &KafkaClusterConfig{
 		ID:          clusterID,
 		Name:        "lit",
 		Bootstrap:   "http://test",
 		APIEndpoint: "",
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
 				Secret: "asecret",
@@ -944,12 +941,12 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
-	kcc := &v1.KafkaClusterConfig{
+	kcc := &KafkaClusterConfig{
 		ID:          clusterID,
 		Name:        "lit",
 		Bootstrap:   "http://test",
 		APIEndpoint: "",
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*APIKeyPair{
 			apiKey: {
 				Key:    apiKey,
 				Secret: "asecret",
@@ -976,12 +973,12 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
-	kcc := &v1.KafkaClusterConfig{
+	kcc := &KafkaClusterConfig{
 		ID:          clusterID,
 		Name:        "lit",
 		Bootstrap:   "http://test",
 		APIEndpoint: "",
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*APIKeyPair{
 			apiKey: {
 				Key:    apiKey,
 				Secret: "asecret",

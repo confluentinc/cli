@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -323,7 +323,7 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 }
 
 func (c *Command) isCCloudURL(url string) bool {
-	for _, hostname := range v3.CCloudHostnames {
+	for _, hostname := range v1.CCloudHostnames {
 		if strings.Contains(url, hostname) {
 			return true
 		}

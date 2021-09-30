@@ -21,9 +21,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -41,7 +39,7 @@ var shouldPrompt bool
 
 type KafkaClusterTestSuite struct {
 	suite.Suite
-	conf            *v3.Config
+	conf            *v1.Config
 	kafkaMock       *ccsdkmock.Kafka
 	envMetadataMock *ccsdkmock.EnvironmentMetadata
 	analyticsOutput []segment.Message
@@ -52,7 +50,7 @@ type KafkaClusterTestSuite struct {
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.kafkaMock = &ccsdkmock.Kafka{
 		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (cluster *schedv1.KafkaCluster, e error) {
 			return &schedv1.KafkaCluster{
@@ -155,7 +153,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 	}
 }
 
-func (suite *KafkaClusterTestSuite) newCmd(conf *v3.Config) *clusterCommand {
+func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	client := &ccloud.Client{
 		Kafka:               suite.kafkaMock,
 		EnvironmentMetadata: suite.envMetadataMock,
@@ -181,7 +179,7 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 		{
 			name: "suggest for authenticated user",
 			fields: fields{
-				Command: suite.newCmd(v3.AuthenticatedCloudConfigMock()),
+				Command: suite.newCmd(v1.AuthenticatedCloudConfigMock()),
 			},
 			want: []prompt.Suggest{
 				{
@@ -203,7 +201,7 @@ func (suite *KafkaClusterTestSuite) TestServerComplete() {
 
 func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	req := require.New(suite.T())
-	root := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	root := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	root.analyticsClient.SetStartTime()
 	kafkaMock := &ccsdkmock.Kafka{
 		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
@@ -236,8 +234,8 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 			},
 		},
 	}
-	root.AuthenticatedCLICommand.State = &v2.ContextState{
-		Auth: &configv1.AuthConfig{
+	root.AuthenticatedCLICommand.State = &v1.ContextState{
+		Auth: &v1.AuthConfig{
 			Account: &orgv1.Account{
 				Id: "abc",
 			},
@@ -343,7 +341,7 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	// Set variable for Metrics API mock
 	shouldError = false
 	shouldPrompt = true
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	args := []string{"update", clusterName, "--cku", "2"}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req.Contains(err.Error(), "Cluster resize error: failed to read your confirmation")
@@ -389,7 +387,7 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 	// Set variable for Metrics API mock
 	shouldError = true
 	shouldPrompt = false
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	args := []string{"update", clusterName, "--cku", "2"}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req.True(suite.metricsApi.QueryV2Called())
@@ -398,7 +396,7 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 
 func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {
 	req := require.New(suite.T())
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	completableChildren := cmd.ServerCompletableChildren()
 	expectedChildren := []string{"cluster delete", "cluster describe", "cluster update", "cluster use"}
 	req.Len(completableChildren, len(expectedChildren))
@@ -408,7 +406,7 @@ func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {
 }
 
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	args := []string{"create", clusterName, "--cloud", cloudId, "--region", regionId}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -420,7 +418,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 }
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	args := []string{"delete", clusterId}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())

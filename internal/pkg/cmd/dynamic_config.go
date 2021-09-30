@@ -4,16 +4,16 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type DynamicConfig struct {
-	*v3.Config
+	*v1.Config
 	Resolver FlagResolver
 	Client   *ccloud.Client
 }
 
-func NewDynamicConfig(config *v3.Config, resolver FlagResolver, client *ccloud.Client) *DynamicConfig {
+func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client) *DynamicConfig {
 	return &DynamicConfig{
 		Config:   config,
 		Resolver: resolver,
@@ -23,7 +23,7 @@ func NewDynamicConfig(config *v3.Config, resolver FlagResolver, client *ccloud.C
 
 // Set DynamicConfig values for command with config and resolver from prerunner
 // Calls ParseFlagsIntoConfig so that state flags are parsed ino config struct
-func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v3.Config, resolver FlagResolver) error {
+func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v1.Config, resolver FlagResolver) error {
 	d.Config = cfg
 	d.Resolver = resolver
 	return d.ParseFlagsIntoConfig(cmd)

@@ -14,8 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -52,7 +51,7 @@ type clusterCommand struct {
 	analyticsClient analytics.Client
 }
 
-func NewClusterCommand(cfg *v3.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+func NewClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
@@ -184,7 +183,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		}
 		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
-		v2Cluster := &v2.SchemaRegistryCluster{
+		v2Cluster := &v1.SchemaRegistryCluster{
 			Id:                     newCluster.Id,
 			SchemaRegistryEndpoint: newCluster.Endpoint,
 		}

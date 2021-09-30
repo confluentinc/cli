@@ -1,11 +1,11 @@
 {
-  "version": "3.0.0",
+  "version": "1.0.0",
   "disable_update_check": false,
   "disable_updates": false,
   "no_browser": false,
   "platforms": {
-    "http://127.0.0.1:1024": {
-      "name": "http://127.0.0.1:1024",
+    "http://test": {
+      "name": "http://test",
       "server": "http://test"
     }
   },
@@ -31,27 +31,23 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "platform": "http://127.0.0.1:1024",
+      "platform": "http://test",
       "credential": "username-test-user",
       "kafka_cluster_context": {
-        "environment_context": true,
-        "kafka_environment_contexts": {
-          "acc-123": {
-            "active_kafka": "anonymous-id",
-            "kafka_cluster_infos": {
-              "anonymous-id": {
-                "id": "anonymous-id",
-                "name": "anonymous-cluster",
-                "bootstrap_servers": "http://test",
-                "api_keys": {
-                  "abc-key-123": {
-                    "api_key": "abc-key-123",
-                    "api_secret": "def-secret-456"
-                  }
-                },
-                "api_key": "abc-key-123"
+        "environment_context": false,
+        "active_kafka": "anonymous-id",
+        "kafka_cluster_configs": {
+          "anonymous-id": {
+            "id": "anonymous-id",
+            "name": "anonymous-cluster",
+            "bootstrap_servers": "http://test",
+            "api_keys": {
+              "abc-key-123": {
+                "api_key": "abc-key-123",
+                "api_secret": "def-secret-456"
               }
-            }
+            },
+            "api_key": "abc-key-123"
           }
         }
       },
@@ -79,10 +75,6 @@
           {
             "id": "acc-123",
             "name": "test-env"
-          },
-          {
-            "id": "env-flag",
-            "name": "test-env2"
           }
         ],
         "organization": {

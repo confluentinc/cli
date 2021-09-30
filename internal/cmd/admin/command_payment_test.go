@@ -5,9 +5,6 @@ import (
 	"context"
 	"testing"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-
 	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -16,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -140,7 +137,7 @@ func getCommand() (c *command) {
 				Version: nil,
 			},
 			Client: mockClient(),
-			State: &v2.ContextState{
+			State: &v1.ContextState{
 				Auth: &v1.AuthConfig{
 					User: &orgv1.User{},
 					Organization: &orgv1.Organization{
@@ -156,7 +153,7 @@ func getCommand() (c *command) {
 
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	return New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
 }
 

@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -84,7 +84,7 @@ var (
 
 type AuditConfigTestSuite struct {
 	suite.Suite
-	conf    *v3.Config
+	conf    *v1.Config
 	mockApi mds.AuditLogConfigurationApi
 }
 
@@ -104,7 +104,7 @@ type MockCall struct {
 }
 
 func (suite *AuditConfigTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedOnPremConfigMock()
+	suite.conf = v1.AuthenticatedOnPremConfigMock()
 }
 
 func (suite *AuditConfigTestSuite) TearDownSuite() {

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -39,7 +39,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if apiKey && credential.CredentialType != v2.APIKey {
+	if apiKey && credential.CredentialType != v1.APIKey {
 		return fmt.Errorf(`context "%s" does not have an associated API key`, ctx.Name)
 	}
 
@@ -47,7 +47,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if username && credential.CredentialType != v2.Username {
+	if username && credential.CredentialType != v1.Username {
 		return fmt.Errorf(`context "%s" does not have an associated username`, ctx.Name)
 	}
 

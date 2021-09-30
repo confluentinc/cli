@@ -6,7 +6,7 @@ import (
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 // Compile-time check interface adherence
@@ -270,7 +270,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx
 
 func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
 	// lkc-12345 is the id of the mock cluster set in v3/mock.go
-	if err := assertEqualValues(clusterId, configv3mock.MockKafkaClusterId()); err != nil {
+	if err := assertEqualValues(clusterId, v1.MockKafkaClusterId()); err != nil {
 		return krsdk.ConsumerGroupDataList{}, nil, err
 	}
 

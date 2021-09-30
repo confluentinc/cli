@@ -3,8 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -50,7 +49,7 @@ var (
 
 // ErrIfMissingRunRequirement returns an error when a command or its parent doesn't meet a requirement;
 // for example, an on-prem command shouldn't be used by a cloud user.
-func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) error {
+func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	if cmd == nil {
 		return nil
 	}
@@ -66,11 +65,11 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v3.Config) error {
 				return requireCloudLoginOrOnPremErr
 			}
 		case RequireNonAPIKeyCloudLogin:
-			if !(cfg.CredentialType() != v2.APIKey && cfg.IsCloudLogin()) {
+			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin()) {
 				return requireNonAPIKeyCloudLoginErr
 			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
-			if !(cfg.CredentialType() != v2.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
+			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
 				return requireNonAPIKeyCloudLoginOrOnPremLoginErr
 			}
 		case RequireOnPremLogin:

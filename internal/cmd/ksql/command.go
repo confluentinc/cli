@@ -3,7 +3,7 @@ package ksql
 import (
 	"github.com/spf13/cobra"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -18,7 +18,7 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
 			Use:         "ksql",
@@ -35,7 +35,7 @@ func New(cfg *v3.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 	return cmd.Command
 }
 
-func (c *command) init(cfg *v3.Config) {
+func (c *command) init(cfg *v1.Config) {
 	clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
 
 	c.AddCommand(clusterCmd.Command)

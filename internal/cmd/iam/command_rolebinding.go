@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -63,7 +63,7 @@ type rolebindingOptions struct {
 
 type rolebindingCommand struct {
 	*cmd.AuthenticatedStateFlagCommand
-	cfg *v3.Config
+	cfg *v1.Config
 }
 
 type listDisplay struct {
@@ -80,7 +80,7 @@ type listDisplay struct {
 }
 
 // NewRolebindingCommand returns the sub-command object for interacting with RBAC rolebindings.
-func NewRolebindingCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRolebindingCommand(cfg *v1.Config, prerunner cmd.PreRunner) *cobra.Command {
 	cobraRolebindingCmd := &cobra.Command{
 		Use:   "rolebinding",
 		Short: "Manage RBAC and IAM role bindings.",

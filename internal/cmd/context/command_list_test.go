@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 func TestNewRow_Current(t *testing.T) {
-	ctx := &v3.Context{
+	ctx := &v1.Context{
 		Name:           "context",
 		PlatformName:   "platform",
 		CredentialName: "credential",
@@ -26,7 +26,7 @@ func TestNewRow_Current(t *testing.T) {
 }
 
 func TestNewRow_NotCurrent(t *testing.T) {
-	ctx := &v3.Context{
+	ctx := &v1.Context{
 		Name:           "context",
 		PlatformName:   "platform",
 		CredentialName: "credential",

@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -29,7 +29,7 @@ var (
 
 type roleCommand struct {
 	*cmd.AuthenticatedStateFlagCommand
-	cfg *v3.Config
+	cfg *v1.Config
 }
 
 type prettyRole struct {
@@ -38,7 +38,7 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(cfg *v3.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRoleCommand(cfg *v1.Config, prerunner cmd.PreRunner) *cobra.Command {
 	cobraRoleCmd := &cobra.Command{
 		Use:   "role",
 		Short: "Manage RBAC and IAM roles.",

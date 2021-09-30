@@ -2,11 +2,11 @@ package cmd
 
 import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 )
 
 type KafkaRestTestSuite struct {
@@ -15,7 +15,7 @@ type KafkaRestTestSuite struct {
 
 func (suite *KafkaRestTestSuite) TestInvalidGetBearerToken() {
 	req := suite.Require()
-	emptyState := v2.ContextState{}
+	emptyState := v1.ContextState{}
 	_, err := pauth.GetBearerToken(&emptyState, "invalidhost")
 	req.NotNil(err)
 }

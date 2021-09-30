@@ -14,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -27,14 +27,14 @@ const (
 
 type ServiceAccountTestSuite struct {
 	suite.Suite
-	conf            *v3.Config
+	conf            *v1.Config
 	userMock        *ccsdkmock.User
 	analyticsOutput []segment.Message
 	analyticsClient analytics.Client
 }
 
 func (suite *ServiceAccountTestSuite) SetupTest() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.userMock = &ccsdkmock.User{
 		CreateServiceAccountFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
 			return &orgv1.User{
@@ -53,7 +53,7 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *serviceAccountCommand {
+func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCommand {
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
@@ -62,7 +62,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v3.Config) *serviceAccountCom
 }
 
 func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	args := []string{"create", serviceName, "--description", serviceDescription}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -72,7 +72,7 @@ func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 }
 
 func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
-	cmd := suite.newCmd(v3.AuthenticatedCloudConfigMock())
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	args := []string{"delete", serviceAccountId}
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req := require.New(suite.T())

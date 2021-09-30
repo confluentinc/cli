@@ -6,56 +6,55 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
-	noContextCfg = new(v3.Config)
+	noContextCfg = new(v1.Config)
 
-	cloudCfg = &v3.Config{
-		Contexts:       map[string]*v3.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
+	cloudCfg = &v1.Config{
+		Contexts:       map[string]*v1.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
 
-	apiKeyCloudCfg = &v3.Config{
-		Contexts: map[string]*v3.Context{"cloud": {
+	apiKeyCloudCfg = &v1.Config{
+		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
-			Credential:   &v2.Credential{CredentialType: v2.APIKey},
+			Credential:   &v1.Credential{CredentialType: v1.APIKey},
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
 
-	nonAPIKeyCloudCfg = &v3.Config{
-		Contexts: map[string]*v3.Context{"cloud": {
+	nonAPIKeyCloudCfg = &v1.Config{
+		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
-			Credential:   &v2.Credential{CredentialType: v2.Username},
+			Credential:   &v1.Credential{CredentialType: v1.Username},
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
 
-	onPremCfg = &v3.Config{
-		Contexts: map[string]*v3.Context{"on-prem": {
-			Credential:   new(v2.Credential),
+	onPremCfg = &v1.Config{
+		Contexts: map[string]*v1.Context{"on-prem": {
+			Credential:   new(v1.Credential),
 			PlatformName: "https://example.com",
-			State:        &v2.ContextState{AuthToken: "token"},
+			State:        &v1.ContextState{AuthToken: "token"},
 		}},
 		CurrentContext: "on-prem",
 	}
 
-	updatesDisabledCfg = &v3.Config{DisableUpdates: true}
+	updatesDisabledCfg = &v1.Config{DisableUpdates: true}
 
-	updatesEnabledCfg = &v3.Config{DisableUpdates: false}
+	updatesEnabledCfg = &v1.Config{DisableUpdates: false}
 )
 
 func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 	for _, test := range []struct {
 		req string
-		cfg *v3.Config
+		cfg *v1.Config
 	}{
 		{RequireCloudLogin, cloudCfg},
 		{RequireCloudLoginOrOnPremLogin, cloudCfg},
@@ -75,7 +74,7 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 	for _, test := range []struct {
 		req string
-		cfg *v3.Config
+		cfg *v1.Config
 		err error
 	}{
 		{RequireCloudLogin, onPremCfg, requireCloudLoginErr},

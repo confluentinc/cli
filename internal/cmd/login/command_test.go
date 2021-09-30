@@ -29,9 +29,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -487,7 +485,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if tt.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
-			cfg := v3.New(&config.Params{Logger: log.New()})
+			cfg := v1.New(&config.Params{Logger: log.New()})
 			var expectedCaCert string
 			if tt.setEnv {
 				expectedCaCert = tt.envCertPath
@@ -542,7 +540,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
-			cfg := v3.AuthenticatedConfigMockWithContextName(legacyContextName)
+			cfg := v1.AuthenticatedConfigMockWithContextName(legacyContextName)
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)
@@ -561,7 +559,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v3.Config, expectedCaCertPath string) *Command {
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Config, expectedCaCertPath string) *Command {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
@@ -661,7 +659,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		Name:        "bob",
 		Bootstrap:   "http://bobby",
 		APIEndpoint: "http://bobbyboi",
-		APIKeys: map[string]*v0.APIKeyPair{
+		APIKeys: map[string]*v1.APIKeyPair{
 			activeApiKey: {
 				Key:    activeApiKey,
 				Secret: "bo",
@@ -767,8 +765,8 @@ func TestValidateUrl(t *testing.T) {
 }
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*Command, *v3.Config) {
-	cfg := v3.New(new(config.Params))
+	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*Command, *v1.Config) {
+	cfg := v1.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
@@ -803,12 +801,12 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *v3.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v3.Config) {
+func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v1.Config) {
 	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
 	return logoutCmd, cfg
 }
 
-func verifyLoggedInState(t *testing.T, cfg *v3.Config, isCloud bool) {
+func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool) {
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
@@ -830,7 +828,7 @@ func verifyLoggedInState(t *testing.T, cfg *v3.Config, isCloud bool) {
 	}
 }
 
-func verifyLoggedOutState(t *testing.T, cfg *v3.Config, loggedOutContext string) {
+func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string) {
 	req := require.New(t)
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)

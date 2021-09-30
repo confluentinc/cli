@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
-func NewTestAnalyticsClient(config *v3.Config, out *[]segment.Message) analytics.Client {
+func NewTestAnalyticsClient(config *v1.Config, out *[]segment.Message) analytics.Client {
 	testTime := time.Date(1999, time.December, 31, 23, 59, 59, 0, time.UTC)
 	mockSegmentClient := &cliMock.SegmentClient{
 		EnqueueFunc: func(m segment.Message) error {

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -52,7 +52,7 @@ type row struct {
 	Credential string
 }
 
-func newRow(isHuman bool, ctx *v3.Context, current string) *row {
+func newRow(isHuman bool, ctx *v1.Context, current string) *row {
 	isCurrent := ctx.Name == current
 
 	return &row{

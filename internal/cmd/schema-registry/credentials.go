@@ -8,8 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -27,7 +26,7 @@ func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, er
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil
 }
 
-func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v0.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
+func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
 	auth := &srsdk.BasicAuth{}
 	didPromptUser := false
 
@@ -53,7 +52,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 	ctx := cfg.Context()
 
-	srCluster := &v2.SchemaRegistryCluster{}
+	srCluster := &v1.SchemaRegistryCluster{}
 	endpoint, _ := cmd.Flags().GetString("sr-endpoint")
 	if len(endpoint) == 0 {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
@@ -69,7 +68,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	}
 	if key != "" {
 		if srCluster.SrCredentials == nil {
-			srCluster.SrCredentials = &v0.APIKeyPair{}
+			srCluster.SrCredentials = &v1.APIKeyPair{}
 		}
 		srCluster.SrCredentials.Key = key
 		if secret != "" {
@@ -84,7 +83,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	for {
 		// Get credentials as Schema Registry BasicAuth
 		if srAPIKey != "" && srAPISecret != "" {
-			srCluster.SrCredentials = &v0.APIKeyPair{
+			srCluster.SrCredentials = &v1.APIKeyPair{
 				Key:    srAPIKey,
 				Secret: srAPISecret,
 			}
@@ -131,7 +130,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		if didPromptUser {
 			// Save credentials
-			srCluster.SrCredentials = &v0.APIKeyPair{
+			srCluster.SrCredentials = &v1.APIKeyPair{
 				Key:    srAuth.UserName,
 				Secret: srAuth.Password,
 			}

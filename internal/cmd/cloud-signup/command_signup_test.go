@@ -13,7 +13,7 @@ import (
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	cmdPkg "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -150,9 +150,9 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
-	cloudSignupCmd := newCmd(v3.AuthenticatedCloudConfigMock())
+	cloudSignupCmd := newCmd(v1.AuthenticatedCloudConfigMock())
 	cloudSignupCmd.Config = &cmdPkg.DynamicConfig{
-		Config: v3.UnauthenticatedCloudConfigMock(),
+		Config: v1.UnauthenticatedCloudConfigMock(),
 	}
 
 	err := cloudSignupCmd.Signup(cmd, prompt, mockCcloudClient())
@@ -163,7 +163,7 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	}
 }
 
-func newCmd(conf *v3.Config) *command {
+func newCmd(conf *v1.Config) *command {
 	client := mockCcloudClient()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
 	auth := &ccloudmock.Auth{
