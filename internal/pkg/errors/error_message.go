@@ -432,6 +432,12 @@ const (
 	// Partition command errors
 	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 
+	// Broker commands
+	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"
+	OnlySpecifyAllOrBrokerIDErrorMsg = "only specify broker ID argument OR `--all` flag"
+	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
+	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
+
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
 )

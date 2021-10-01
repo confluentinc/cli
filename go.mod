@@ -26,7 +26,7 @@ require (
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.5
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.27
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
