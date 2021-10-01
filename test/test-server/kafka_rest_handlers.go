@@ -1380,6 +1380,7 @@ func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionIdReassignment(t *testing
 		}
 	}
 }
+
 // Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}"
 func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
