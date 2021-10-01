@@ -50,7 +50,7 @@ var (
 		"EnvironmentAdmin": true,
 	}
 
-	dataplaneNamespace =  optional.NewString("public,dataplane")
+	dataplaneNamespace =  optional.NewString("dataplane")
 )
 
 type rolebindingOptions struct {
@@ -370,13 +370,17 @@ func (c *rolebindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 	if c.ccloudRbacDataplaneEnabled {
 		roleDetail.Namespace = dataplaneNamespace
 	}
-
+    // Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+    // namespace and if we get an error try without any namespace.
 	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, &roleDetail)
 	if err != nil || resp.StatusCode == http.StatusNoContent {
-		if err == nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-		} else {
-			return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
+		if err != nil || resp.StatusCode == http.StatusNoContent {
+			if err == nil {
+				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+			} else {
+				return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+			}
 		}
 	}
 
