@@ -28,7 +28,7 @@ require (
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
-	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.27
+	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.11
 	github.com/davecgh/go-spew v1.1.1

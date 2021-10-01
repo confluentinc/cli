@@ -96,10 +96,38 @@ var v2RbacRoles = map[string]string{
 				]
 			}
 		}`,
+	"ResourceOwner": `{
+			"name": "ResourceOwner",
+			"policies": [
+			{
+			  "bindingScope": "cloud-cluster",
+			  "bindWithResource": false,
+			  "allowedOperations": [
+				{
+				  "resourceType": "CloudCluster",
+				  "operations": [ "Describe" ]
+				}
+			  ]
+        },
+        {
+			  "bindingScope": "cluster",
+			  "bindWithResource": true,
+			  "allowedOperations": [
+				{
+				  "resourceType": "Topic",
+				  "operations": ["Create", "Delete", "Read", "Write", "Describe", "DescribeConfigs", "Alter", "AlterConfigs", "DescribeAccess", "AlterAccess"]
+				},
+				{
+				  "resourceType": "Group",
+				  "operations": ["Read", "Describe", "Delete", "DescribeAccess", "AlterAccess"]
+				}
+			  ]
+        }]}`,
 }
 
 var v2RoutesAndReplies = map[string]string{
 	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,
+	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/ResourceOwner/bindings": `[]`,
 	"/api/metadata/security/v2alpha1/roleNames": `[
 			"CCloudRoleBindingAdmin",
 			"CloudClusterAdmin",
@@ -264,4 +292,6 @@ var v2RoutesAndReplies = map[string]string{
 	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
 			"User:u-33ccc", "User:u-44ddd"
 		]`,
+	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/food":           `["User:u-11aaa"]`,
+	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/shire-parties": `["User:u-11aaa"]`,
 }

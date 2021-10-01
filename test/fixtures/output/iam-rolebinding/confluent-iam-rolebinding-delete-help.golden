@@ -7,7 +7,7 @@ Flags:
       --role string                         REQUIRED: Role name of the existing role binding.
       --principal string                    REQUIRED: Qualified principal name associated with the role binding.
       --prefix                              Whether the provided resource name is treated as a prefix pattern.
-      --resource string                     Qualified resource name associated with the role binding.
+      --resource string                     Qualified resource name for the role binding.
       --kafka-cluster-id string             Kafka cluster ID for the role binding.
       --schema-registry-cluster-id string   Schema Registry cluster ID for the role binding.
       --ksql-cluster-id string              ksqlDB cluster ID for the role binding.

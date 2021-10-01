@@ -160,5 +160,51 @@
   }, 
   {
     "name": "OrganizationAdmin"
+  }, 
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "cloud-cluster",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "CloudCluster",
+            "operations": ["Describe"]
+          }
+        ]
+      }, 
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "Topic",
+            "operations": [
+              "Create", 
+              "Delete", 
+              "Read", 
+              "Write", 
+              "Describe", 
+              "DescribeConfigs", 
+              "Alter", 
+              "AlterConfigs", 
+              "DescribeAccess", 
+              "AlterAccess"
+            ]
+          }, 
+          {
+            "resourceType": "Group",
+            "operations": [
+              "Read", 
+              "Describe", 
+              "Delete", 
+              "DescribeAccess", 
+              "AlterAccess"
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]
