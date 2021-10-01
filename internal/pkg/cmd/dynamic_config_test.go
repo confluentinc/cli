@@ -50,7 +50,7 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 			name:    "bad-context specified with flag",
 			context: "bad-context",
 			dConfig: dynamicConfigFlag,
-			errMsg:  fmt.Sprintf(errors.ContextNotExistErrorMsg, "bad-context"),
+			errMsg:  fmt.Sprintf(errors.ContextDoesNotExistErrorMsg, "bad-context"),
 		},
 	}
 	for _, tt := range tests {
