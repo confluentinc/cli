@@ -107,6 +107,13 @@ func ValidateEmail(email string) bool {
 	return matched
 }
 
+func Abbreviate(s string, maxLength int) string {
+	if len(s) <= maxLength {
+		return s
+	}
+	return s[0:maxLength] + "..."
+}
+
 func ToMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
 	for _, cfg := range configs {
