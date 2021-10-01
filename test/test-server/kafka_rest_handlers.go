@@ -189,72 +189,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
-func (r KafkaRestProxyRouter) HandleKafkaRPPartitions(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		topicName := vars["topic"]
-		switch r.Method {
-		case "GET":
-			if topicName == "topic-exist" {
-				w.Header().Set("Content-Type", "application/json")
-				responseString := fmt.Sprintf(`{
-					"kind": "KafkaPartitionList",
-					"metadata": {
-						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions",
-						"next": null
-					},
-					"data": [
-						{
-							"kind": "KafkaPartition",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0",
-								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=0"
-							},
-							"cluster_id": "cluster-1",
-							"topic_name": "%[1]s",
-							"partition_id": 0,
-							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/replicas/1001"},
-							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/replicas"},
-							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/reassignment"}
-						},
-						{
-							"kind": "KafkaPartition",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1",
-								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=1"
-							},
-							"cluster_id": "cluster-1",
-							"topic_name": "%[1]s",
-							"partition_id": 1,
-							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/replicas/1001"},
-							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/replicas"},
-							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/reassignment"}
-						},
-						{
-							"kind": "KafkaPartition",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2",
-								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=2"
-							},
-							"cluster_id": "cluster-1",
-							"topic_name": "%[1]s",
-							"partition_id": 2,
-							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/replicas/1001"},
-							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/replicas"},
-							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/reassignment"}
-						}
-					]
-				}`, "topic-exist")
-				_, err := io.WriteString(w, responseString)
-				require.NoError(t, err)
-			} else {
-				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
-			}
-		}
-	}
-}
-
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1143,6 +1077,61 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLag(t *testing.T) func(http.ResponseW
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions"
+func (r KafkaRestProxyRouter) HandleKafkaTopicPartitions(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionDataList{
+				Data: []kafkarestv3.PartitionData{
+					{
+						ClusterId:   vars["cluster_id"],
+						PartitionId: 0,
+						TopicName:   vars["topic_name"],
+						Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+					},
+					{
+						ClusterId:   vars["cluster_id"],
+						PartitionId: 1,
+						TopicName:   vars["topic_name"],
+						Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/1"},
+					},
+					{
+						ClusterId:   vars["cluster_id"],
+						PartitionId: 2,
+						TopicName:   vars["topic_name"],
+						Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/0"},
+					},
+				},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}"
+func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionId(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionIdStr := vars["partition_id"]
+		partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
+		require.NoError(t, err)
+		switch r.Method {
+		case "GET":
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionData{
+				ClusterId:   vars["cluster_id"],
+				PartitionId: int32(partitionId),
+				TopicName:   vars["topic_name"],
+				Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
 // Handler for: "/kafka/v3/clusters/{cluster_id}/brokers"
 func (r KafkaRestProxyRouter) HandleKafkaBrokers(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1306,6 +1295,88 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokersBrokerId(t *testing.T) func(http
 				BrokerTask: kafkarestv3.Relationship{Related: "http://localhost:9391/kafka/v3/clusters/cluster-1/brokers/1/tasks/remove-broker"},
 			})
 			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment"
+func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionIdReassignment(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionIdStr := vars["partition_id"]
+		topicName := vars["topic_name"]
+		switch r.Method {
+		case "GET":
+			if partitionIdStr != "-" && topicName != "-" {
+				partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
+				require.NoError(t, err)
+				w.Header().Set("Content-Type", "application/json")
+				err = json.NewEncoder(w).Encode(kafkarestv3.ReassignmentData{
+					Kind:             "ReassignmentData",
+					ClusterId:        vars["cluster_id"],
+					PartitionId:      int32(partitionId),
+					TopicName:        vars["topic_name"],
+					AddingReplicas:   []int32{1, 2, 3},
+					RemovingReplicas: []int32{4},
+				})
+				require.NoError(t, err)
+			} else if topicName != "-" {
+				w.Header().Set("Content-Type", "application/json")
+				err := json.NewEncoder(w).Encode(kafkarestv3.ReassignmentDataList{
+					Data: []kafkarestv3.ReassignmentData{
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      0,
+							TopicName:        vars["topic_name"],
+							AddingReplicas:   []int32{1, 2, 3},
+							RemovingReplicas: []int32{4},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      1,
+							TopicName:        vars["topic_name"],
+							AddingReplicas:   []int32{4},
+							RemovingReplicas: []int32{1, 2, 3},
+						},
+					},
+				})
+				require.NoError(t, err)
+			} else if partitionIdStr == "-" && topicName == "-" {
+				w.Header().Set("Content-Type", "application/json")
+				err := json.NewEncoder(w).Encode(kafkarestv3.ReassignmentDataList{
+					Data: []kafkarestv3.ReassignmentData{
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      0,
+							TopicName:        "topic1",
+							AddingReplicas:   []int32{1, 2, 3},
+							RemovingReplicas: []int32{4},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      1,
+							TopicName:        "topic1",
+							AddingReplicas:   []int32{4},
+							RemovingReplicas: []int32{1, 2, 3},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      0,
+							TopicName:        "topic2",
+							AddingReplicas:   []int32{1, 2, 3},
+							RemovingReplicas: []int32{4},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      1,
+							TopicName:        "topic2",
+							AddingReplicas:   []int32{4},
+							RemovingReplicas: []int32{1, 2, 3},
+						},
+					},
+				})
+				require.NoError(t, err)
+			}
 		}
 	}
 }
