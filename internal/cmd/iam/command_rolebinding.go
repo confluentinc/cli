@@ -523,7 +523,7 @@ func (c *rolebindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
-		return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
+		return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 	}
 	return scopeV2, nil
 }
