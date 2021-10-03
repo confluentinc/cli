@@ -249,8 +249,8 @@ const (
 	CreateConfigDirectoryErrorMsg      = "unable to create config directory: %s"
 	CreateConfigFileErrorMsg           = "unable to write config to file: %s"
 	CurrentContextNotExistErrorMsg     = "the current context \"%s\" does not exist"
-	ContextNotExistErrorMsg            = "context \"%s\" does not exist"
-	ContextNameExistsErrorMsg          = "cannot create context \"%s\": context with this name already exists"
+	ContextDoesNotExistErrorMsg        = `context "%s" does not exist`
+	ContextAlreadyExistsErrorMsg       = `context "%s" already exists`
 	CredentialNotFoundErrorMsg         = "credential \"%s\" not found"
 	PlatformNotFoundErrorMsg           = "platform \"%s\" not found"
 	NoNameCredentialErrorMsg           = "credential must have a name"

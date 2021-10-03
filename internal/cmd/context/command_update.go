@@ -46,7 +46,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.FlagRequiredErrorMsg, "--name, --kafka-cluster")
 	}
 
-	if name != "" {
+	if name != "" && name != ctx.Name {
+		if _, ok := ctx.Config.Contexts[name]; ok {
+			return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
+		}
+
 		delete(ctx.Config.Contexts, ctx.Name)
 		delete(ctx.Config.ContextStates, ctx.Name)
 

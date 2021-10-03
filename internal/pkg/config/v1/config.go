@@ -293,14 +293,14 @@ func (c *Config) DeleteContext(name string) error {
 func (c *Config) FindContext(name string) (*Context, error) {
 	context, ok := c.Contexts[name]
 	if !ok {
-		return nil, fmt.Errorf(errors.ContextNotExistErrorMsg, name)
+		return nil, fmt.Errorf(errors.ContextDoesNotExistErrorMsg, name)
 	}
 	return context, nil
 }
 
 func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
 	if _, ok := c.Contexts[name]; ok {
-		return fmt.Errorf(errors.ContextNameExistsErrorMsg, name)
+		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
 
 	credential, ok := c.Credentials[credentialName]
