@@ -215,17 +215,17 @@ func TestPrintNotes_ConfluentLocal(t *testing.T) {
 	require.Equal(t, expected, printNotes(local, 1))
 }
 
-func TestPrintNotes_ConfluentIAMRolebindingCreate(t *testing.T) {
+func TestPrintNotes_ConfluentIAMRoleBindingCreate(t *testing.T) {
 	confluent := &cobra.Command{Use: "confluent"}
 	iam := &cobra.Command{Use: "iam"}
 	rbac := &cobra.Command{Use: "rbac"}
-	rolebinding := &cobra.Command{Use: "rolebinding"}
+	roleBinding := &cobra.Command{Use: "role-binding"}
 	create := &cobra.Command{Use: "create"}
 
 	confluent.AddCommand(iam)
 	iam.AddCommand(rbac)
-	rbac.AddCommand(rolebinding)
-	rolebinding.AddCommand(create)
+	rbac.AddCommand(roleBinding)
+	roleBinding.AddCommand(create)
 
 	expected := []string{
 		".. note:: If you need to troubleshoot when setting up role bindings, it may be helpful to view audit logs on the fly to identify authorization events for specific principals, resources, or operations. For details, refer to :platform:`Viewing audit logs on the fly|security/audit-logs/audit-logs-properties-config.html#view-audit-logs-on-the-fly`.",

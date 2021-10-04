@@ -1,0 +1,34 @@
+Error: unknown flag: --cluster
+Usage:
+  confluent iam rbac role-binding list [flags]
+
+Examples:
+To list the role bindings for current user:
+
+  $ confluent iam rbac role-binding list --current-user
+
+To list the role bindings for a specific principal:
+
+  $ confluent iam rbac role-binding list --principal User:frodo
+
+To list the role bindings for a specific principal, filtered to a specific role:
+
+  $ confluent iam rbac role-binding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa
+
+To list the principals bound to a specific role:
+
+  $ confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa
+
+Flags:
+      --principal string       Principal whose role bindings should be listed.
+      --current-user           Show role bindings belonging to current user.
+      --role string            List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
+      --cloud-cluster string   Cloud cluster ID for scope of role binding listings.
+      --environment string     Environment ID for scope of role binding listings.
+      --current-env            Use current environment ID for scope.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
