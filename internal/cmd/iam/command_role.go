@@ -29,6 +29,7 @@ var (
 type roleCommand struct {
 	*cmd.AuthenticatedStateFlagCommand
 	cliName string
+	ccloudRbacDataplaneEnabled bool
 }
 
 type prettyRole struct {
@@ -49,9 +50,14 @@ func NewRoleCommand(cliName string, prerunner cmd.PreRunner) *cobra.Command {
 	} else {
 		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
 	}
+	ccloudRbacDataplaneEnabled := false
+	if os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "" {
+		ccloudRbacDataplaneEnabled = true
+	}
 	roleCmd := &roleCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		cliName:                       cliName,
+		ccloudRbacDataplaneEnabled:    ccloudRbacDataplaneEnabled,
 	}
 	roleCmd.init()
 	return roleCmd.Command
@@ -114,9 +120,18 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	rolesV2, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
-	if err != nil {
-		return err
+	roles := mdsv2alpha1.RolesOpts{}
+	if c.ccloudRbacDataplaneEnabled {
+		roles.Namespace = dataplaneNamespace
+	}
+	// Currently we don't allow multiple namespace in roles so as a workaround we first check with dataplane
+	// namespace and if we get an error try without any namespace.
+	rolesV2, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), &roles)
+	if err != nil || r.StatusCode == http.StatusNoContent {
+		rolesV2, _, err = c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
+		if err != nil {
+			return err
+		}
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -182,19 +197,28 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
-	if err != nil {
-		if r.StatusCode == http.StatusNotFound {
-			availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
-			if err != nil {
-				return err
+	roleDetail := mdsv2alpha1.RoleDetailOpts{}
+	if c.ccloudRbacDataplaneEnabled {
+		roleDetail.Namespace = dataplaneNamespace
+	}
+	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+	// namespace and if we get an error try without any namespace.
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, &roleDetail)
+	if err != nil || r.StatusCode == http.StatusNoContent {
+		details, r, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
+		if err != nil {
+			if r.StatusCode == http.StatusNotFound {
+				availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
+				if err != nil {
+					return err
+				}
+
+				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
+				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
 			}
 
-			suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
+			return err
 		}
-
-		return err
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
