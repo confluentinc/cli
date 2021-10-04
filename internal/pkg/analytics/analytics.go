@@ -27,7 +27,7 @@ const (
 
 var (
 	// map command string to secret handler func
-	secretCommandArgs     = map[string]func([]string) []string{"ccloud api-key store": apiKeyStoreSecretHandler}
+	secretCommandArgs     = map[string]func([]string) []string{"confluent api-key store": apiKeyStoreSecretHandler}
 	SecretValueString     = "<secret_value>"
 	malformedCmdEventName = "Malformed Command Error"
 	nonUser               = "no-user-info"
