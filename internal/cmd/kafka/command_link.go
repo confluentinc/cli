@@ -154,7 +154,7 @@ func (c *linkCommand) init() {
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update configuration for the cluster link `my-link`.",
+				Text: "Update configuration values for the cluster link `my-link`.",
 				Code: "confluent kafka link update my-link --config-file my-config.txt",
 			},
 		),

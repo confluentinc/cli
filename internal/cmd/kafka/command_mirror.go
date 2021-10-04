@@ -122,7 +122,8 @@ func (c *mirrorCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <source-topic-name>",
-		Short: "Create a mirror topic under the link. Currently, destination topic name is required to be the same as the source topic name.",
+		Short: "Create a mirror topic under the link.",
+		Long:  "Create a mirror topic under the link. The destination topic name is required to be the same as the source topic name.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -200,7 +201,7 @@ func (c *mirrorCommand) init() {
 
 	resumeCmd := &cobra.Command{
 		Use:   "resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
-		Short: "Resume irror topics.",
+		Short: "Resume mirror topics.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.resume,
 		Example: examples.BuildExampleString(
