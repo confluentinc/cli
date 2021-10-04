@@ -1,4 +1,8 @@
 The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
+In the next major version update, `ccloud config context get` has been renamed to `confluent context describe`.
+
+In the next major version update, `ccloud config context` has been renamed to `confluent context`.
+
 Error: context "other-context" does not exist

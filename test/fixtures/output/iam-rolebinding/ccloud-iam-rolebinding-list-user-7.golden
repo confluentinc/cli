@@ -1,0 +1,8 @@
+The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
+For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+
+In the next major version update, `ccloud iam rolebinding` has been renamed to `confluent iam rbac role-binding`.
+
+   Principal   | Email |     Role      | Environment | Cloud Cluster |  Cluster Type   | Logical Cluster | Resource Type |  Name  | Pattern Type  
+---------------+-------+---------------+-------------+---------------+-----------------+-----------------+---------------+--------+---------------
+  User:u-66fff |       | ResourceOwner | a-595       |               | Schema Registry | lsrc-3333ccc    | Subject       | clicks | LITERAL       

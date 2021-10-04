@@ -65,7 +65,7 @@ var rules = []linter.Rule{
 				"environment":    {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
 				"role":           {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
 				"topic":          {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
-				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<apikey>"},
+				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<api-key>"},
 				"consumer-group": {CreateCommandArg: "<consumer-group>", OtherCommandsArg: "<consumer-group>"},
 				"lag":            {CreateCommandArg: "N/A", OtherCommandsArg: "<consumer-group>"},
 			},
@@ -73,6 +73,10 @@ var rules = []linter.Rule{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
 		linter.ExcludeUse("list", "auth"),
+		// skip partition get-reassignments since it takes an optional param [id]
+		linter.ExcludeCommand("kafka partition get-reassignments [id]"),
+		// skip broker commands which take an optional id in format [id]
+		linter.ExcludeCommandContains("kafka broker"),
 		// skip ACLs which don't have an identity (value objects rather than entities)
 		linter.ExcludeCommandContains("kafka acl"),
 		linter.ExcludeCommandContains("iam acl"),
@@ -83,7 +87,7 @@ var rules = []linter.Rule{
 		// skip local which delegates to external bash scripts
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
-		linter.ExcludeCommand("api-key store <apikey> <secret>"),
+		linter.ExcludeCommand("api-key store <api-key> <secret>"),
 		// skip for rolebindings since they don't have names/IDs
 		linter.ExcludeCommandContains("iam rolebinding"),
 		// skip for register command since they don't have names/IDs

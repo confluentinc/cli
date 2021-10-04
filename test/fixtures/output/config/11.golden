@@ -1,4 +1,6 @@
 The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
+In the next major version update, `ccloud config context` has been renamed to `confluent context`.
+
 my-context

@@ -1,6 +1,8 @@
 The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
+In the next major version update, `ccloud iam role` has been renamed to `confluent iam rbac role`.
+
            Name          |                 AccessPolicy                  
 -------------------------+-----------------------------------------------
   CCloudRoleBindingAdmin | null                                          
@@ -158,4 +160,48 @@ For more details: https://docs.confluent.io/ccloud-cli/current/index.html
                          | ]                                             
                          |                                               
   OrganizationAdmin      | null                                          
+                         |                                               
+  ResourceOwner          | [                                             
+                         |   {                                           
+                         |     "bindingScope": "cloud-cluster",          
+                         |     "bindWithResource": false,                
+                         |     "allowedOperations": [                    
+                         |       {                                       
+                         |         "resourceType": "CloudCluster",       
+                         |         "operations": ["Describe"]            
+                         |       }                                       
+                         |     ]                                         
+                         |   },                                          
+                         |   {                                           
+                         |     "bindingScope": "cluster",                
+                         |     "bindWithResource": true,                 
+                         |     "allowedOperations": [                    
+                         |       {                                       
+                         |         "resourceType": "Topic",              
+                         |         "operations": [                       
+                         |           "Create",                           
+                         |           "Delete",                           
+                         |           "Read",                             
+                         |           "Write",                            
+                         |           "Describe",                         
+                         |           "DescribeConfigs",                  
+                         |           "Alter",                            
+                         |           "AlterConfigs",                     
+                         |           "DescribeAccess",                   
+                         |           "AlterAccess"                       
+                         |         ]                                     
+                         |       },                                      
+                         |       {                                       
+                         |         "resourceType": "Group",              
+                         |         "operations": [                       
+                         |           "Read",                             
+                         |           "Describe",                         
+                         |           "Delete",                           
+                         |           "DescribeAccess",                   
+                         |           "AlterAccess"                       
+                         |         ]                                     
+                         |       }                                       
+                         |     ]                                         
+                         |   }                                           
+                         | ]                                             
                          |                                               

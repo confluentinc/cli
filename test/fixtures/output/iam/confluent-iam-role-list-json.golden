@@ -1,3 +1,5 @@
+In the next major version update, `confluent iam role` has been renamed to `confluent iam rbac`.
+
 [
   {
     "name": "DeveloperRead",

@@ -1,4 +1,4 @@
 The local commands are intended for a single-node development environment only,
-NOT for production usage. https://docs.confluent.io/current/cli/index.html
+NOT for production usage. Documentation: https://docs.confluent.io/confluent-cli/current/command-reference/local/index.html
 
 ZooKeeper is [DOWN]

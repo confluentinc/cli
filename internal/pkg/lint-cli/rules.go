@@ -182,7 +182,7 @@ type NamedArgumentConfig struct {
 func RequireNamedArgument(defConfig NamedArgumentConfig, overrides map[string]NamedArgumentConfig) Rule {
 	return func(cmd *cobra.Command) error {
 		// check whether arg parsing is setup correctly to expect exactly 1 arg (the ID/Name)
-		if reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.ExactArgs(1)).Pointer() {
+		if reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.ExactArgs(1)).Pointer() && reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.MaximumNArgs(1)).Pointer() {
 			return fmt.Errorf("missing expected argument on %s", FullCommand(cmd))
 		}
 

@@ -7,7 +7,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"unicode"
 
 	"github.com/confluentinc/properties"
 
@@ -102,28 +101,25 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 	return normalized
 }
 
-func RemoveSpace(s string) string {
-	rr := make([]rune, 0, len(s))
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			rr = append(rr, r)
-		}
-	}
-	return string(rr)
-}
-
 func ValidateEmail(email string) bool {
 	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	matched := rgxEmail.MatchString(email)
 	return matched
 }
 
-func toMap(configs []string) (map[string]string, error) {
+func Abbreviate(s string, maxLength int) string {
+	if len(s) <= maxLength {
+		return s
+	}
+	return s[0:maxLength] + "..."
+}
+
+func ToMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
 	for _, cfg := range configs {
 		pair := strings.SplitN(cfg, "=", 2)
 		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.ConfigurationFormErrorMsg)
+			return nil, fmt.Errorf(errors.FailedToParseConfigErrMsg, cfg)
 		}
 		configMap[pair[0]] = pair[1]
 	}
@@ -150,5 +146,5 @@ func ReadConfigsFromFile(configFile string) (map[string]string, error) {
 		}
 	}
 
-	return toMap(configs)
+	return ToMap(configs)
 }

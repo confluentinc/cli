@@ -1,6 +1,8 @@
 The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
+In the next major version update, `ccloud iam role` has been renamed to `confluent iam rbac role`.
+
 - name: CCloudRoleBindingAdmin
   policies: []
 - name: CloudClusterAdmin
@@ -116,3 +118,33 @@ For more details: https://docs.confluent.io/ccloud-cli/current/index.html
       - Describe
 - name: OrganizationAdmin
   policies: []
+- name: ResourceOwner
+  policies:
+  - bindingscope: cloud-cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: CloudCluster
+      operations:
+      - Describe
+  - bindingscope: cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Topic
+      operations:
+      - Create
+      - Delete
+      - Read
+      - Write
+      - Describe
+      - DescribeConfigs
+      - Alter
+      - AlterConfigs
+      - DescribeAccess
+      - AlterAccess
+    - resourcetype: Group
+      operations:
+      - Read
+      - Describe
+      - Delete
+      - DescribeAccess
+      - AlterAccess

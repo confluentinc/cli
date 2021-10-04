@@ -185,36 +185,33 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	idp, err := strconv.Atoi(args[0])
-	user := &orgv1.User{
-		ServiceDescription: description,
-	}
-	if err == nil { // it's a numeric ID
-		user.Id = int32(idp)
-	} else { // it's a resource ID
+	user := &orgv1.User{ServiceDescription: description}
+	if userID, err := strconv.ParseInt(args[0], 10, 32); err == nil {
+		user.Id = int32(userID)
+	} else {
 		user.ResourceId = args[0]
 	}
 
-	err = c.Client.User.UpdateServiceAccount(context.Background(), user)
-	if err != nil {
+	if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
 		return err
 	}
+
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
 	return nil
 }
 
-func (c *command) delete(cmd *cobra.Command, args []string) error {
-	idp, err := strconv.Atoi(args[0])
+func (c *command) delete(_ *cobra.Command, args []string) error {
 	user := &orgv1.User{}
-	if err == nil { // it's a numeric ID
-		user.Id = int32(idp)
-	} else { // it's a resource ID
+	if userID, err := strconv.ParseInt(args[0], 10, 32); err == nil {
+		user.Id = int32(userID)
+	} else {
 		user.ResourceId = args[0]
 	}
-	err = c.Client.User.DeleteServiceAccount(context.Background(), user)
-	if err != nil {
+
+	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
 		return err
 	}
+
 	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, user.Id)
 	return nil
 }

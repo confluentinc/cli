@@ -1,6 +1,8 @@
 The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
 For more details: https://docs.confluent.io/ccloud-cli/current/index.html
 
+In the next major version update, `ApiEndpoint` has been renamed to `KAPI` and will only be shown if the `--all` flag is used.
+
     UserId    | ServiceAccountId | Permission | Operation | Resource |    Name    |  Type    
 --------------+------------------+------------+-----------+----------+------------+----------
   User:sa-123 |                  | ALLOW      | READ      | TOPIC    | test-topic | LITERAL  

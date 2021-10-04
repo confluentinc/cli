@@ -1,0 +1,5 @@
+Updated the following configs for broker "1":
+        Name       |   Value     
+-------------------+-------------
+  compression.type | zip         
+  sasl_mechanism   | SASL/PLAIN  

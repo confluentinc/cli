@@ -151,37 +151,55 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	if isMajorVersionUpdate {
-		var current, other *v3.Config
-
-		for _, cliName := range []string{"confluent", "ccloud"} {
-			cfg, err := getConfig(cliName)
-			if err != nil {
-				return err
-			}
-
-			if cliName == c.cliName {
-				current = cfg
-			} else {
-				other = cfg
-			}
-		}
-
-		if other != nil {
-			current.MergeWith(other)
-		}
-
-		if err := backupConfig("confluent"); err != nil {
-			return err
-		}
-
-		current.CLIName = "confluent"
-		if err := current.Save(); err != nil {
+		if err := c.migrateConfigFiles(); err != nil {
 			return err
 		}
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, updateName)
 	return nil
+}
+
+// migrateConfigFiles merges ~/.confluent/config.json and ~/.ccloud/config.json, resets the config file version to v1,
+// adds a new context field called "netrc-machine-name", and creates a backup of the confluent config file.
+func (c *command) migrateConfigFiles() error {
+	current, err := getConfig("confluent")
+	if current != nil && current.Ver.Equal(version.Must(version.NewVersion("1.0.0"))) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	other, err := getConfig("ccloud")
+	if err != nil {
+		return err
+	}
+
+	if c.cliName == "ccloud" {
+		current, other = other, current
+	}
+
+	if other != nil {
+		current.MergeWith(other)
+	}
+
+	filename, err := getConfigPath("confluent")
+	if err != nil {
+		return err
+	}
+
+	current.Filename = filename
+	current.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
+	for name := range current.Contexts {
+		current.Contexts[name].NetrcMachineName = name
+	}
+
+	if err := backupConfig("confluent"); err != nil {
+		return err
+	}
+
+	return current.Save()
 }
 
 func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
@@ -243,6 +261,10 @@ func backupConfig(cliName string) error {
 	path, err := getConfigPath(cliName)
 	if err != nil {
 		return err
+	}
+
+	if !utils.DoesPathExist(path) {
+		return nil
 	}
 
 	return os.Rename(path, path+".old")

@@ -33,15 +33,7 @@ machine, the secret is not available for CLI use until you "store" it. This is b
 secrets are irretrievable after creation.
 
 You must have an API secret stored locally for certain CLI commands to
-work. For example, the Kafka topic consume and produce commands require an API secret.
-
-There are five ways to pass the secret:
-1. api-key store <key> <secret>.
-2. api-key store; you will be prompted for both API key and secret.
-3. api-key store <key>; you will be prompted for API secret.
-4. api-key store <key> -; for piping API secret.
-5. api-key store <key> @<filepath>.
-`
+work. For example, the Kafka topic consume and produce commands require an API secret.`
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
@@ -123,7 +115,7 @@ func (c *command) init() {
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <apikey>",
+		Use:   "update <api-key>",
 		Short: "Update an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.update),
@@ -133,7 +125,7 @@ func (c *command) init() {
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <apikey>",
+		Use:   "delete <api-key>",
 		Short: "Delete an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),
@@ -141,11 +133,33 @@ func (c *command) init() {
 	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
-		Use:   "store <apikey> <secret>",
+		Use:   "store [api-key] [secret]",
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),
 		RunE:  pcmd.NewCLIRunE(c.store),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Pass the API key and secret as arguments",
+				Code: "ccloud api-key store my-key my-secret",
+			},
+			examples.Example{
+				Text: "Get prompted for both the API key and secret",
+				Code: "ccloud api-key store",
+			},
+			examples.Example{
+				Text: "Get prompted for only the API secret",
+				Code: "ccloud api-key store my-key",
+			},
+			examples.Example{
+				Text: "Pipe the API secret",
+				Code: "ccloud api-key store my-key -",
+			},
+			examples.Example{
+				Text: "Provide the API secret in a file",
+				Code: "ccloud api-key store my-key @my-secret.txt",
+			},
+		),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "The resource ID of the resource the API key is for.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
@@ -153,8 +167,9 @@ func (c *command) init() {
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
-		Use:   "use <apikey>",
-		Short: "Make an API key active for use in other commands.",
+		Use:   "use <api-key>",
+		Short: "Set the active API key for use in other commands.",
+		Long:  "Set the active API key for use in any command which supports passing an API key with the `--api-key` flag.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.use),
 	}
@@ -224,8 +239,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountId), errors.ServiceAccountNotFoundSuggestions)
 			}
 		} else { // if user inputs numeric ID, convert it to int32
-			userIdp, _ := strconv.Atoi(serviceAccountId)
-			userId = int32(userIdp)
+			n, _ := strconv.ParseInt(serviceAccountId, 10, 32)
+			userId = int32(n)
 		}
 	}
 
@@ -668,26 +683,26 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return append(serviceAccounts, adminUsers...), nil
 }
 
-func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
-	if Id != "" { // it has a service-account flag
+func (c *command) completeKeyId(key *schedv1.ApiKey, id string) (*schedv1.ApiKey, error) {
+	if id != "" { // it has a service-account flag
 		key.ServiceAccount = true
 		users, err := c.getAllUsers()
 		if err != nil {
 			return key, err
 		}
-		idp, err := strconv.Atoi(Id)
-		if err != nil { // it's a resource id
-			key.UserResourceId = Id
+
+		if userID, err := strconv.ParseInt(id, 10, 32); err == nil {
+			key.UserId = int32(userID)
 			for _, user := range users {
-				if Id == user.ResourceId {
-					key.UserId = user.Id
+				if int32(userID) == user.Id {
+					key.UserResourceId = user.ResourceId
 				}
 			}
-		} else { // it's a numeric id
-			key.UserId = int32(idp)
+		} else {
+			key.UserResourceId = id
 			for _, user := range users {
-				if int32(idp) == user.Id {
-					key.UserResourceId = user.ResourceId
+				if id == user.ResourceId {
+					key.UserId = user.Id
 				}
 			}
 		}
