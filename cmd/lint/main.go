@@ -39,13 +39,6 @@ var (
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",
 	}
-	ccloudClusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("ccloud kafka acl", "ccloud kafka topic"),
-		// only on children of kafka topic commands
-		linter.ExcludeCommand("kafka topic"),
-		//only on children of kafka acl commands
-		linter.ExcludeCommand("kafka acl"),
-	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
 	}
@@ -107,10 +100,6 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("kafka link"),
 		linter.ExcludeCommandContains("kafka mirror"),
 	),
-	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
-	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("cluster", "string"), ccloudClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), ccloudClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),

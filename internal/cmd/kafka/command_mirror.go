@@ -87,33 +87,32 @@ func (c *mirrorCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all mirror topics in the cluster or under the given cluster link.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all mirrors in the cluster or under the given cluster link.",
-				Code: "ccloud kafka mirror list --link <link> --mirror-status <mirror-status>",
+				Text: "List all active mirror topics under `my-link`.",
+				Code: "confluent kafka mirror list --link my-link --mirror-status active",
 			},
 		),
-		RunE: c.list,
-		Args: cobra.NoArgs,
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
-	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of "+
-		"[active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
+	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <destination-topic-name>",
 		Short: "Describe a mirror topic.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe a mirror topic under the link.",
-				Code: "ccloud kafka mirror describe <destination-topic-name> --link <link>",
+				Text: "Describe mirror topic `my-topic` under the link `my-link`.",
+				Code: "confluent kafka mirror describe my-topic --link my-link",
 			},
 		),
-		RunE: c.describe,
-		Args: cobra.ExactArgs(1),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
@@ -123,19 +122,20 @@ func (c *mirrorCommand) init() {
 
 	createCmd := &cobra.Command{
 		Use:   "create <source-topic-name>",
-		Short: "Create a mirror topic under the link. Currently, destination topic name is required to be the same as the Source topic name.",
+		Short: "Create a mirror topic under the link.",
+		Long:  "Create a mirror topic under the link. The destination topic name is required to be the same as the source topic name.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a cluster link.",
-				Code: "ccloud kafka mirror create <source-topic-name> --link <link> " +
-					"--replication-factor <replication-factor> --config-file mirror_config.txt",
+				Text: "Create a mirror topic `my-topic` under cluster link `my-link`.",
+				Code: "confluent kafka mirror create my-topic --link my-link",
 			},
 			examples.Example{
-				Code: "ccloud kafka mirror create <source-topic-name> --link <link>",
+				Text: "Create a mirror topic with a custom replication factor and configuration file.",
+				Code: "confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config-file my-config.txt",
 			},
 		),
-		RunE: c.create,
-		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(linkFlagName, "", "The name of the cluster link to attach to the mirror topic.")
 	check(createCmd.MarkFlagRequired(linkFlagName))
@@ -146,16 +146,16 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(createCmd)
 
 	promoteCmd := &cobra.Command{
-		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
-		Short: "Promote the mirror topics.",
+		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link my-link",
+		Short: "Promote mirror topics.",
+		RunE:  c.promote,
+		Args:  cobra.MinimumNArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Promote the mirror topics.",
-				Code: "ccloud kafka mirror promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
+				Text: "Promote mirror topics `my-topic-1` and `my-topic-2`.",
+				Code: "confluent kafka mirror promote my-topic-1 my-topic-2 --link my-link",
 			},
 		),
-		RunE: c.promote,
-		Args: cobra.MinimumNArgs(1),
 	}
 	promoteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -164,16 +164,16 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(promoteCmd)
 
 	failoverCmd := &cobra.Command{
-		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
-		Short: "Failover the mirror topics.",
+		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link my-link",
+		Short: "Failover mirror topics.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.failover,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Failover the mirror topics.",
-				Code: "ccloud kafka mirror failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
+				Text: "Failover mirror topics `my-topic-1` and `my-topic-2`.",
+				Code: "confluent kafka mirror failover my-topic-1 my-topic-2 --link my-link",
 			},
 		),
-		RunE: c.failover,
-		Args: cobra.MinimumNArgs(1),
 	}
 	failoverCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -182,16 +182,16 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(failoverCmd)
 
 	pauseCmd := &cobra.Command{
-		Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
-		Short: "Pause the mirror topics.",
+		Use:   "pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link my-link",
+		Short: "Pause mirror topics.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.pause,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Pause the mirror topics.",
-				Code: "ccloud kafka mirror pause <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link <link>",
+				Text: "Pause mirror topics `my-topic-1` and `my-topic-2`.",
+				Code: "confluent kafka mirror pause my-topic-1 my-topic-2 --link my-link",
 			},
 		),
-		RunE: c.pause,
-		Args: cobra.MinimumNArgs(1),
 	}
 	pauseCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
@@ -201,15 +201,15 @@ func (c *mirrorCommand) init() {
 
 	resumeCmd := &cobra.Command{
 		Use:   "resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
-		Short: "Resume the mirror topics.",
+		Short: "Resume mirror topics.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.resume,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Resume the mirror topics.",
-				Code: "ccloud kafka mirror resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
+				Text: "Resume mirror topics `my-topic-1` and `my-topic-2`.",
+				Code: "confluent kafka mirror resume my-topic-1 my-topic-2 --link my-link",
 			},
 		),
-		RunE: c.resume,
-		Args: cobra.MinimumNArgs(1),
 	}
 	resumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")

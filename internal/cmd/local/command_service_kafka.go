@@ -186,11 +186,11 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 				},
 				examples.Example{
 					Text: "Produce Avro data to a topic called `mytopic5` in Confluent Cloud. Assumes topic has already been created, and Confluent Schema Registry is listening at `http://localhost:8081`.",
-					Code: `confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro --property \\\nvalue.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' \\\n--property schema.registry.url=http://localhost:8081`,
+					Code: "confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro\n--property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}'\n--property schema.registry.url=http://localhost:8081",
 				},
 				examples.Example{
 					Text: "Produce Avro data to a topic called `mytopic6` in Confluent Cloud. Assumes topic has already been created and you are using Confluent Cloud Confluent Schema Registry.",
-					Code: `confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro --property \\\nvalue.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' \\\n--property schema.registry.url=https://<SR ENDPOINT> \\\n--property basic.auth.credentials.source=USER_INFO \\\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>`,
+					Code: "confluent local services kafka produce mytopic6 --cloud --config /tmp/myconfig.properties --value-format avro\n--property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}'\n--property schema.registry.url=https://<SR ENDPOINT>\n--property basic.auth.credentials.source=USER_INFO\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>",
 				},
 			),
 		}, prerunner)
@@ -208,7 +208,7 @@ func (c *Command) runKafkaProduceCommand(command *cobra.Command, args []string) 
 func (c *Command) initFlags(mode string) {
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
-	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
+	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
 	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
 	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
 
