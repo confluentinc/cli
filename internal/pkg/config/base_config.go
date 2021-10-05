@@ -47,3 +47,7 @@ func NewBaseConfig(params *Params, ver *version.Version) *BaseConfig {
 func (c *BaseConfig) SetParams(params *Params) {
 	c.Params = params
 }
+
+func (c *BaseConfig) Version() *version.Version {
+	return c.Ver.Version
+}

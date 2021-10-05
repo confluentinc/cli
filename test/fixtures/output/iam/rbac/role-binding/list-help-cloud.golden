@@ -21,13 +21,15 @@ To list the principals bound to a specific role:
   $ confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa
 
 Flags:
-      --principal string       Principal whose role bindings should be listed.
-      --current-user           Show role bindings belonging to current user.
-      --role string            List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
-      --cloud-cluster string   Cloud cluster ID for scope of role binding listings.
-      --environment string     Environment ID for scope of role binding listings.
-      --current-env            Use current environment ID for scope.
-  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+      --principal string          Principal whose role bindings should be listed.
+      --current-user              Show role bindings belonging to current user.
+      --role string               List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
+      --cloud-cluster string      Cloud cluster ID for scope of role binding listings.
+      --environment string        Environment ID for scope of role binding listings.
+      --current-env               Use current environment ID for scope.
+      --resource string           If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
+      --kafka-cluster-id string   Kafka cluster ID for scope of role binding listings.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

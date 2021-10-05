@@ -45,8 +45,10 @@ func (c *command) init(cfg *v1.Config) {
 	groupCmd := NewGroupCommand(c.prerunner, c.serverCompleter)
 	topicCmd := NewTopicCommand(cfg, c.prerunner, c.logger, c.clientID)
 
+	c.AddCommand(NewBrokerCommand(c.prerunner))
 	c.AddCommand(NewLinkCommand(c.prerunner))
 	c.AddCommand(NewMirrorCommand(c.prerunner))
+	c.AddCommand(NewPartitionCommand(c.prerunner))
 	c.AddCommand(NewRegionCommand(c.prerunner))
 	c.AddCommand(aclCmd.Command)
 	c.AddCommand(clusterCmd.Command)

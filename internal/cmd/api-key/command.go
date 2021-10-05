@@ -32,15 +32,7 @@ machine, the secret is not available for CLI use until you "store" it. This is b
 secrets are irretrievable after creation.
 
 You must have an API secret stored locally for certain CLI commands to
-work. For example, the Kafka topic consume and produce commands require an API secret.
-
-There are five ways to pass the secret:
-1. api-key store <key> <secret>.
-2. api-key store; you will be prompted for both API key and secret.
-3. api-key store <key>; you will be prompted for API secret.
-4. api-key store <key> -; for piping API secret.
-5. api-key store <key> @<filepath>.
-`
+work. For example, the Kafka topic consume and produce commands require an API secret.`
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
@@ -141,11 +133,33 @@ func (c *command) init() {
 	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
-		Use:   "store <api-key> <secret>",
+		Use:   "store [api-key] [secret]",
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),
 		RunE:  pcmd.NewCLIRunE(c.store),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Pass the API key and secret as arguments",
+				Code: "ccloud api-key store my-key my-secret",
+			},
+			examples.Example{
+				Text: "Get prompted for both the API key and secret",
+				Code: "ccloud api-key store",
+			},
+			examples.Example{
+				Text: "Get prompted for only the API secret",
+				Code: "ccloud api-key store my-key",
+			},
+			examples.Example{
+				Text: "Pipe the API secret",
+				Code: "ccloud api-key store my-key -",
+			},
+			examples.Example{
+				Text: "Provide the API secret in a file",
+				Code: "ccloud api-key store my-key @my-secret.txt",
+			},
+		),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "The resource ID of the resource the API key is for.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")

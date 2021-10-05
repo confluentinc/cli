@@ -113,3 +113,33 @@
       - Describe
 - name: OrganizationAdmin
   policies: []
+- name: ResourceOwner
+  policies:
+  - bindingscope: cloud-cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: CloudCluster
+      operations:
+      - Describe
+  - bindingscope: cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Topic
+      operations:
+      - Create
+      - Delete
+      - Read
+      - Write
+      - Describe
+      - DescribeConfigs
+      - Alter
+      - AlterConfigs
+      - DescribeAccess
+      - AlterAccess
+    - resourcetype: Group
+      operations:
+      - Read
+      - Describe
+      - Delete
+      - DescribeAccess
+      - AlterAccess

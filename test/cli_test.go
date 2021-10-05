@@ -112,6 +112,8 @@ func (s *CLITestSuite) SetupSuite() {
 	err = os.Chdir("..")
 	req.NoError(err)
 
+	err = os.Setenv("XX_CCLOUD_RBAC_DATAPLANE", "yes")
+	req.NoError(err)
 	if _, err := os.Stat(binaryPath(s.T(), testBin)); os.IsNotExist(err) || !*noRebuild {
 		var makeArgs string
 		if testBin == testBinRace {

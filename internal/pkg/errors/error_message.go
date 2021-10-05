@@ -90,6 +90,8 @@ const (
 	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
 	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
 	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
+	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
+	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
@@ -425,6 +427,15 @@ const (
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
 	ClusterFlagWithApiLoginErrorMsg     = "\"cluster\" flag should not be passed for API key context, cluster is inferred"
+
+	// Partition command errors
+	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
+
+	// Broker commands
+	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"
+	OnlySpecifyAllOrBrokerIDErrorMsg = "only specify broker ID argument OR `--all` flag"
+	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
+	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"

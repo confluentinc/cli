@@ -9,7 +9,6 @@ require (
 	github.com/aws/aws-sdk-go v1.38.35
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/chromedp/chromedp v0.5.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
@@ -27,9 +26,9 @@ require (
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.5
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
-	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.27
+	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.11
 	github.com/davecgh/go-spew v1.1.1

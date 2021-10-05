@@ -13,6 +13,7 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name                   string                            `json:"name" hcl:"name"`
+	NetrcMachineName       string                            `json:"netrc_machine_name" hcl:"netrc_machine_name"`
 	Platform               *Platform                         `json:"-" hcl:"-"`
 	PlatformName           string                            `json:"platform" hcl:"platform"`
 	Credential             *Credential                       `json:"-" hcl:"-"`
@@ -29,6 +30,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
+		NetrcMachineName:       name,
 		Platform:               platform,
 		PlatformName:           platform.Name,
 		Credential:             credential,
