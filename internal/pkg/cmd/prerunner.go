@@ -895,6 +895,10 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 }
 
 func (r *PreRun) printWarnings(cmd *cobra.Command) {
+	if output, err := cmd.Flags().GetString("output"); err == nil && (output == "json" || output == "yaml") {
+		return
+	}
+
 	fmtBreakingChange := "In the next major version update, %s\n"
 	fmtRename := fmt.Sprintf(fmtBreakingChange, "`%s` has been renamed to `%s`.")
 
