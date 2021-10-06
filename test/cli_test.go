@@ -126,6 +126,11 @@ func (s *CLITestSuite) SetupSuite() {
 
 	err = os.Setenv("XX_CCLOUD_RBAC_DATAPLANE", "yes")
 	req.NoError(err)
+
+	// Temporarily change $HOME, so the current config file isn't altered.
+	err = os.Setenv("HOME", os.TempDir())
+	req.NoError(err)
+
 	for _, binary := range []string{ccloudTestBin, confluentTestBin} {
 		if _, err = os.Stat(binaryPath(s.T(), binary)); os.IsNotExist(err) || !*noRebuild {
 			var makeArgs string
