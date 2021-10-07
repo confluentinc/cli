@@ -166,10 +166,9 @@ lint-installers:
 ## Scan and validate third-party dependency licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@binary="confluent" ; \
-	echo Licenses for $${binary} binary ; \
+	echo Licenses for confluent binary ; \
 	[ -t 0 ] && args="" || args="-plain" ; \
-	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} || true
+	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
 
 .PHONY: coverage-unit
 coverage-unit:

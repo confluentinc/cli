@@ -50,12 +50,11 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml && \
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml && \
 	./build_alpine.sh && \
-	binary="confluent"; \
-	aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_alpine_amd64.tar.gz; \
-	aws s3 cp dist/$${binary}/$${binary}_alpine_amd64/$${binary} $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_alpine_amd64; \
-	cat dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums_alpine.txt >> dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt
+	aws s3 cp dist/confluent_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_alpine_amd64.tar.gz; \
+	aws s3 cp dist/confluent_alpine_amd64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_alpine_amd64; \
+	cat dist/confluent_$(VERSION_NO_V)_checksums_alpine.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -82,10 +81,9 @@ set-acls:
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
 	$(caasenv-authenticate); \
-	binary="confluent"; \
-	folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
-	aws s3 cp dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt;\
-	aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read
+	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt;\
+	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
@@ -99,11 +97,10 @@ copy-stag-archives-to-latest:
 # second argument: S3 folder destination for latest archives
 define copy-archives-files-to-latest
 	$(caasenv-authenticate); \
-	binary="confluent"; \
-	archives_folder=$1/$${binary}-cli/archives/$(CLEAN_VERSION); \
-	latest_folder=$2/$${binary}-cli/archives/latest; \
+	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
+	latest_folder=$2/confluent-cli/archives/latest; \
 	for suffix in $(ARCHIVE_TYPES); do \
-		aws s3 cp $${archives_folder}/$${binary}_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/$${binary}_latest_$${suffix} --acl public-read; \
+		aws s3 cp $${archives_folder}/confluent_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
 	done
 endef
 
@@ -114,13 +111,12 @@ endef
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(caasenv-authenticate); \
-	binary="confluent"; \
-	version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
-	latest_checksums=$${binary}_latest_checksums.txt; \
+	version_checksums=confluent_v$(CLEAN_VERSION)_checksums.txt; \
+	latest_checksums=confluent_latest_checksums.txt; \
 	cd $(TEMP_DIR) ; \
-	aws s3 cp $1/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
+	aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
 	cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
-	aws s3 cp $${latest_checksums} $2/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read
+	aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read
 	rm -rf $(TEMP_DIR)
 endef
 

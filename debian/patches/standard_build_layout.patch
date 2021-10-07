@@ -1,6 +1,6 @@
---- cli/Makefile	2021-09-22 14:16:50.000000000 -0700
-+++ debian/Makefile	2021-08-26 16:04:24.000000000 -0700
-@@ -1,217 +1,130 @@
+--- cli/Makefile	2021-10-07 11:10:55.000000000 -0700
++++ debian/Makefile	2021-09-27 13:48:33.000000000 -0700
+@@ -1,216 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -256,10 +256,9 @@
 -## Scan and validate third-party dependency licenses
 -lint-licenses: build
 -	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
--	@binary="confluent" ; \
--	echo Licenses for $${binary} binary ; \
+-	echo Licenses for confluent binary ; \
 -	[ -t 0 ] && args="" || args="-plain" ; \
--	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$${binary}_$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} || true
+-	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
 -
 -.PHONY: coverage-unit
 -coverage-unit:
