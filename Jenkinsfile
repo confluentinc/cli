@@ -48,7 +48,7 @@ def job = {
                             echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
                             make jenkins-deps || exit 1
                             make build
-                            cd dist/confluent
+                            cd dist
                             dir=confluent_SNAPSHOT-${HASH}_linux_amd64
                             mv confluent_linux_amd64 $dir
                             tarball=$dir.tar.gz

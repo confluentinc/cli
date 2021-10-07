@@ -1,6 +1,6 @@
 project_name: confluent
 
-dist: dist/confluent
+dist: dist
 
 before:
   hooks:

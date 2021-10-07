@@ -103,7 +103,7 @@ To install the CLI:
 ```
 $ make deps
 $ make build
-$ dist/confluent/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
+$ dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 ```
 
 If `make deps` fails with an "unknown revision" error, you probably need to put your username and a
@@ -397,7 +397,7 @@ With an entirely new command, we would also need to register it with the base to
 To build the CLI binary, we run `make build`. After this, we can run our command in the following way, and see that it (hopefully) works!
 
 ```
-dist/confluent/confluent_<platform>_<arch>/confluent config file show 3
+dist/confluent_<platform>_<arch>/confluent config file show 3
 ```
 
 ### Integration Testing

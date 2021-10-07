@@ -1,6 +1,6 @@
 project_name: confluent
 
-dist: dist/confluent
+dist: dist
 
 before:
   hooks:
@@ -49,7 +49,7 @@ builds:
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/confluent/signed-amd64_darwin_amd64/confluent
+            - LICENSE_BIN_PATH=./dist/signed-amd64_darwin_amd64/confluent
         - cmd: gon gon_confluent_amd64.hcl
   - binary: confluent
     id: signed-arm64
@@ -71,11 +71,8 @@ builds:
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/confluent/signed-arm64_darwin_arm64/confluent
+            - LICENSE_BIN_PATH=./dist/signed-arm64_darwin_arm64/confluent
         - cmd: gon gon_confluent_arm64.hcl
-
-release:
-  disable: true
 
 archives:
   - id: binary
