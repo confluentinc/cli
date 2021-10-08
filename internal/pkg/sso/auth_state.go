@@ -165,11 +165,13 @@ func (s *authState) saveOAuthTokenResponse(data map[string]interface{}) error {
 	if token, ok := data["id_token"]; ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
-		return errors.New(errors.MissingIDTokenFieldErrorMsg)
+		return errors.Errorf(errors.FmtMissingOAuthFieldErrorMsg, "id_token")
 	}
 
 	if token, ok := data["refresh_token"]; ok {
 		s.SSOProviderRefreshToken = token.(string)
+	} else {
+		return errors.Errorf(errors.FmtMissingOAuthFieldErrorMsg, "refresh_token")
 	}
 
 	return nil
