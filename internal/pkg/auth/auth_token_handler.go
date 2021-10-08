@@ -35,8 +35,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credential
 	if credentials.IsSSO {
 		// SSO password is the refresh token, if not present then user must perform SSO login, if present then refresh token automatically obtains a new token
 		if credentials.Password != "" {
-			token, err := a.refreshCCloudSSOToken(client, credentials.Password)
-			return token, "", err
+			return a.refreshCCloudSSOToken(client, credentials.Password)
 		} else {
 			return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
 		}
@@ -81,16 +80,18 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, error) {
-	idToken, err := sso.GetNewIDTokenFromRefreshToken(client.BaseURL, refreshToken, a.logger)
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, string, error) {
+	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken, a.logger)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
+
 	token, err := client.Auth.Login(context.Background(), idToken, "", "")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return token, nil
+
+	return token, refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {

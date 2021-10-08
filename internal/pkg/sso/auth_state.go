@@ -130,46 +130,48 @@ func (s *authState) generateCodes() error {
 	return nil
 }
 
-// GetOAuthToken exchanges the obtained authorization code for an auth0/ID token from the SSO provider
+// getOAuthToken exchanges the obtained authorization code for an auth0/ID token from the SSO provider
 func (s *authState) getOAuthToken() error {
 	payload := strings.NewReader("grant_type=authorization_code" +
 		"&client_id=" + s.SSOProviderClientID +
 		"&code_verifier=" + s.CodeVerifier +
 		"&code=" + s.SSOProviderAuthenticationCode +
 		"&redirect_uri=" + s.SSOProviderCallbackUrl)
+
 	data, err := s.getOAuthTokenResponse(payload)
 	if err != nil {
 		return err
 	}
-	token, ok := data["id_token"]
-	if ok {
-		s.SSOProviderIDToken = token.(string)
-	} else {
-		return errors.New(errors.MissingIDTokenFieldErrorMsg)
-	}
-	refreshToken, ok := data["refresh_token"]
-	if ok {
-		s.SSOProviderRefreshToken = refreshToken.(string)
-	}
-	return nil
+
+	return s.saveOAuthTokenResponse(data)
 }
 
-// GetOAuthToken exchanges the obtained authorization code for an auth0/ID token from the SSO provider
+// refreshOAuthToken exchanges the refresh token for an auth0/ID token from the SSO provider
 func (s *authState) refreshOAuthToken() error {
 	payload := strings.NewReader("grant_type=refresh_token" +
 		"&client_id=" + s.SSOProviderClientID +
 		"&refresh_token=" + s.SSOProviderRefreshToken +
 		"&redirect_uri=" + s.SSOProviderCallbackUrl)
+
 	data, err := s.getOAuthTokenResponse(payload)
 	if err != nil {
 		return err
 	}
-	token, ok := data["id_token"]
-	if ok {
+
+	return s.saveOAuthTokenResponse(data)
+}
+
+func (s *authState) saveOAuthTokenResponse(data map[string]interface{}) error {
+	if token, ok := data["id_token"]; ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
 		return errors.New(errors.MissingIDTokenFieldErrorMsg)
 	}
+
+	if token, ok := data["refresh_token"]; ok {
+		s.SSOProviderRefreshToken = token.(string)
+	}
+
 	return nil
 }
 
