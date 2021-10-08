@@ -33,13 +33,15 @@ func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
 // Second string returned is refresh token if the user performs SSO login
 func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error) {
 	if credentials.IsSSO {
-		// SSO password is the refresh token, if not present then user must perform SSO login, if present then refresh token automatically obtains a new token
+		// For an SSO user, the "Password" field may contain a refresh token. If one exists, try to obtain a new token.
 		if credentials.Password != "" {
-			return a.refreshCCloudSSOToken(client, credentials.Password)
-		} else {
-			return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
+			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.Password); err == nil {
+				return token, refreshToken, nil
+			}
 		}
+		return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
 	}
+
 	client.HttpClient.Timeout = 30 * time.Second
 	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password)
 	return token, "", err
