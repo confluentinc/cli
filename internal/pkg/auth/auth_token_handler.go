@@ -18,7 +18,7 @@ import (
 )
 
 type AuthTokenHandler interface {
-	GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error)
+	GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
 	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
 }
 
@@ -31,23 +31,23 @@ func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
 }
 
 // Second string returned is refresh token if the user performs SSO login
-func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error) {
+func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 	if credentials.IsSSO {
 		// SSO password is the refresh token, if not present then user must perform SSO login, if present then refresh token automatically obtains a new token
 		if credentials.Password != "" {
-			token, err := a.refreshCCloudSSOToken(client, credentials.Password)
+			token, err := a.refreshCCloudSSOToken(client, credentials.Password, orgResourceId)
 			return token, "", err
 		} else {
-			return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
+			return a.getCCloudSSOToken(client, noBrowser, credentials.Username, orgResourceId)
 		}
 	}
 	client.HttpClient.Timeout = 30 * time.Second
-	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password)
+	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
 	return token, "", err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email string) (string, string, error) {
-	userSSO, err := a.getCCloudUserSSO(client, email)
+func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email string, orgResourceId string) (string, string, error) {
+	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 	if err != nil {
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
 	}
@@ -58,19 +58,20 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	if err != nil {
 		return "", "", err
 	}
-	token, err := client.Auth.Login(context.Background(), idToken, "", "")
+	token, err := client.Auth.Login(context.Background(), idToken, "", "", "")
 	if err != nil {
 		return "", "", err
 	}
 	return token, refreshToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email string) (string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email string, orgResourceId string) (string, error) {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
 	loginRealmReply, err := client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
-			Email:    email,
-			ClientId: auth0ClientId,
+			Email:         email,
+			ClientId:      auth0ClientId,
+			OrgResourceId: orgResourceId,
 		})
 	if err != nil {
 		return "", err
@@ -81,12 +82,12 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, error) {
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string, orgResourceId string) (string, error) {
 	idToken, err := sso.GetNewIDTokenFromRefreshToken(client.BaseURL, refreshToken, a.logger)
 	if err != nil {
 		return "", err
 	}
-	token, err := client.Auth.Login(context.Background(), idToken, "", "")
+	token, err := client.Auth.Login(context.Background(), idToken, "", "", orgResourceId)
 	if err != nil {
 		return "", err
 	}

@@ -137,14 +137,15 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		},
 		CountryCode: countryCode,
 	}
-
-	if _, err := client.Signup.Create(context.Background(), req); err != nil {
+	signupReply, err := client.Signup.Create(context.Background(), req)
+	if err != nil {
 		if strings.Contains(err.Error(), "email already exists") {
 			return errors.NewErrorWithSuggestions("failed to signup", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
 		}
 		return err
 
 	}
+	org := signupReply.Organization
 
 	utils.Printf(cmd, "A verification email has been sent to %s.\n", fEmailName.Responses["email"].(string))
 	v := form.New(form.Field{ID: "verified", Prompt: `Type "y" once verified, or type "n" to resend.`, IsYesOrNo: true})
@@ -164,7 +165,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		}
 		var token string
 		var err error
-		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string)); err != nil {
+		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string), org.ResourceId); err != nil {
 			if err.Error() == "username or password is invalid" {
 				utils.ErrPrintln(cmd, "Sorry, your email is not verified. Another verification email was sent to your address. Please click the verification link in that message to verify your email.")
 				continue
@@ -174,7 +175,7 @@ func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), token, client.BaseURL)
-		_, err = pauth.PersistCCloudLoginToConfig(c.Config.Config, fEmailName.Responses["email"].(string), client.BaseURL, token, authorizedClient)
+		_, err = pauth.PersistCCloudLoginToConfig(c.Config.Config, fEmailName.Responses["email"].(string), client.BaseURL, token, authorizedClient, org.ResourceId)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil

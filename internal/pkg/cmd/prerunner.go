@@ -349,7 +349,12 @@ func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
-	token, credentials, err := r.getCCloudTokenAndCredentials(cmd)
+	var orgResourceId string
+	if r.Config.Context() != nil {
+		// re-login to the same org
+		orgResourceId = r.Config.Context().GetCurrentOrganizationId()
+	}
+	token, credentials, err := r.getCCloudTokenAndCredentials(cmd, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -358,7 +363,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -368,7 +373,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 	return nil
 }
 
-func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, orgResourceId string) (string, *pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     pauth.CCloudURL,
@@ -383,7 +388,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 	}
 
 	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
-	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false, orgResourceId)
 	if err != nil {
 		return "", nil, err
 	}
@@ -824,8 +829,12 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 
 	var token string
 	if r.Config.IsCloudLogin() {
+		var orgResourceId string
+		if r.Config.Context() != nil {
+			orgResourceId = r.Config.Context().GetCurrentOrganizationId()
+		}
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false, orgResourceId)
 		if err != nil {
 			return "", err
 		}

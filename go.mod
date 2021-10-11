@@ -15,13 +15,13 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
 	github.com/confluentinc/cc-structs/kafka/core v0.753.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.812.0
-	github.com/confluentinc/cc-structs/kafka/org v0.812.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.945.0
+	github.com/confluentinc/cc-structs/kafka/org v0.945.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.753.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.85
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.89
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
@@ -39,7 +39,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
-	github.com/gogo/protobuf v1.3.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.41.1
 	github.com/google/go-cmp v0.5.5
@@ -52,7 +52,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.2.1
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
-	github.com/iancoleman/strcase v0.1.2
+	github.com/iancoleman/strcase v0.1.3
 	github.com/imdario/mergo v0.3.12
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.2.0
@@ -95,5 +95,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v1 => ../ccloud-sdk-go
 
 go 1.16

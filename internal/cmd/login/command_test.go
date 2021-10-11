@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -102,7 +103,7 @@ var (
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool) (s string, s2 string, e error) {
+		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
 			return testToken, "refreshToken", nil
 		},
 		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
@@ -166,7 +167,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
+	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, "", ""), ctx.Name)
 
 	req.Equal(testToken, ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
@@ -204,6 +205,10 @@ func TestLoginSuccess(t *testing.T) {
 			args: []string{"--url=http://localhost:8090"},
 		},
 		{
+			isCloud: true,
+			args:    []string{"--organization-id=o-123"},
+		},
+		{
 			setEnv: true,
 		},
 	}
@@ -217,7 +222,13 @@ func TestLoginSuccess(t *testing.T) {
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		verifyLoggedInState(t, cfg, s.isCloud)
+		var orgId string
+		for _, arg := range s.args {
+			if strings.HasPrefix(arg, "--organization-id=") {
+				orgId = strings.TrimPrefix(arg, "--organization-id=")
+			}
+		}
+		verifyLoggedInState(t, cfg, s.isCloud, orgId)
 		if s.setEnv {
 			_ = os.Unsetenv(pauth.ConfluentPlatformMDSURL)
 		}
@@ -675,7 +686,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		verifyLoggedInState(t, cfg, s.isCloud)
+		verifyLoggedInState(t, cfg, s.isCloud, "")
 
 		// Set kafka related states for the logged in context
 		ctx := cfg.Context()
@@ -693,7 +704,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		verifyLoggedInState(t, cfg, s.isCloud)
+		verifyLoggedInState(t, cfg, s.isCloud, "")
 
 		// verify that kafka cluster info persists between logging back in again
 		req.Equal(kafkaCluster.ID, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
@@ -806,12 +817,16 @@ func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*logout.Comm
 	return logoutCmd, cfg
 }
 
-func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool) {
+func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResourceId string) {
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 	req.Equal(testToken, ctx.State.AuthToken)
-	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
+	var orgIdName string
+	if orgResourceId != "" {
+		orgIdName = "?organizationid="+orgResourceId
+	}
+	contextName := fmt.Sprintf("login-%s-%s%s", promptUser, ctx.Platform.Server, orgIdName)
 	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
 	req.Contains(cfg.Platforms, ctx.Platform.Name)
 	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])

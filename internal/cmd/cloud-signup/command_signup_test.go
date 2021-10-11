@@ -155,8 +155,15 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 		Config: v1.UnauthenticatedCloudConfigMock(),
 	}
 
-	err := cloudSignupCmd.Signup(cmd, prompt, mockCcloudClient())
+	mockCcloudClient := mockCcloudClient()
+	err := cloudSignupCmd.Signup(cmd, prompt, mockCcloudClient)
 	require.NoError(t, err)
+	mockSignup := mockCcloudClient.Signup.(*ccloudmock.Signup)
+	require.Equal(t, 1, len(mockSignup.CreateCalls()))
+	require.Equal(t, "bstrauch@confluent.io", mockSignup.CreateCalls()[0].Arg1.User.Email)
+	mockLogin :=  mockCcloudClient.Auth.(*ccloudmock.Auth)
+	require.Equal(t, 1, len(mockLogin.LoginToOrgCalls()))
+	require.Equal(t, "o-123", mockLogin.LoginToOrgCalls()[0].OrgResourceId)
 
 	for _, x := range expected {
 		require.Contains(t, buf.String(), x)
@@ -195,14 +202,14 @@ func mockCcloudClient() *ccloud.Client {
 	return &ccloud.Client{
 		Signup: &ccloudmock.Signup{
 			CreateFunc: func(_ context.Context, _ *orgv1.SignupRequest) (*orgv1.SignupReply, error) {
-				return nil, nil
+				return &orgv1.SignupReply{Organization: &orgv1.Organization{ResourceId: "o-123"}}, nil
 			},
 			SendVerificationEmailFunc: func(_ context.Context, _ *orgv1.User) error {
 				return nil
 			},
 		},
 		Auth: &ccloudmock.Auth{
-			LoginFunc: func(_ context.Context, _ string, _ string, _ string) (string, error) {
+			LoginToOrgFunc: func(ctx context.Context, _ string, _ string, _ string, _ string) (string, error) {
 				return "", nil
 			},
 		},

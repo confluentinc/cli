@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -64,6 +65,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
 	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
+	loginCmd.Flags().String("organization-id", "", "The Confluent Cloud Organization to log in to. If empty, logs in to the user's default Organization")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
 	loginCmd.Flags().SortFlags = false
@@ -110,15 +112,20 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
+	orgResourceId, err := c.getOrgResourceId(cmd)
+	if err != nil {
+		return err
+	}
+
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser)
+	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser, orgResourceId)
 	if err != nil {
 		return err
 	}
 
 	client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -184,7 +191,7 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 	if caCertPath == "" {
-		contextName := pauth.GenerateContextName(credentials.Username, url, "")
+		contextName := pauth.GenerateContextName(credentials.Username, url, "", "")
 		caCertPath, err = c.checkLegacyContextCACertPath(cmd, contextName)
 		if err != nil {
 			return err
@@ -270,6 +277,20 @@ func (c *Command) getURL(cmd *cobra.Command) (string, error) {
 	}
 
 	return pauth.CCloudURL, nil
+}
+
+func (a *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
+	orgResourceId, err := cmd.Flags().GetString("organization-id")
+	if err != nil {
+		return "", err
+	}
+	if orgResourceId == "" {
+		orgResourceId = os.Getenv(pauth.ConfluentCloudOrganizationIdEnvVar)
+		if a.logger.GetLevel() >= log.WARN {
+			utils.ErrPrintf(cmd, errors.FoundOrganizationIdMsg, orgResourceId, pauth.ConfluentCloudOrganizationIdEnvVar)
+		}
+	}
+	return orgResourceId, nil
 }
 
 func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
