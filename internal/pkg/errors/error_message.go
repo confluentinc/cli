@@ -320,7 +320,7 @@ const (
 	GenerateRandomSSOProviderErrorMsg  = "unable to generate random bytes for SSO provider state"
 	GenerateRandomCodeVerifierErrorMsg = "unable to generate random bytes for code verifier"
 	ComputeHashErrorMsg                = "unable to compute hash for code challenge"
-	MissingIDTokenFieldErrorMsg        = "oauth token response body did not contain id_token field"
+	FmtMissingOAuthFieldErrorMsg       = `oauth token response body did not contain field "%s"`
 	ConstructOAuthRequestErrorMsg      = "failed to construct oauth token request"
 	UnmarshalOAuthTokenErrorMsg        = "failed to unmarshal response body in oauth token request"
 
