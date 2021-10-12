@@ -430,7 +430,7 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
-func (suite *KafkaClusterTestSuite) Test_getLkcForDescribe() {
+func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
 	conf := v1.AuthenticatedCloudConfigMock()
 	cmd := suite.newCmd(conf)

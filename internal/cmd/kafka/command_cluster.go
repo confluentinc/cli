@@ -501,13 +501,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
 		return args[0], nil
-	} else {
-		lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
-		if lkc == "" {
-			return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
-		}
-		return lkc, nil
 	}
+	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	if lkc == "" {
+		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
+	}
+	return lkc, nil
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
