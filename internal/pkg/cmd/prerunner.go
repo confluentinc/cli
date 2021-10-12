@@ -910,7 +910,7 @@ func (r *PreRun) printWarnings(cmd *cobra.Command) {
 		{prefix: "confluent local", text: "The local commands are intended for a single-node development environment only,\nNOT for production usage. Documentation: https://docs.confluent.io/confluent-cli/current/command-reference/local/index.html\n"},
 
 		// deprecation warnings
-		{prefix: "ccloud", text: "The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.\nFor more details: https://docs.confluent.io/ccloud-cli/current/index.html\n"},
+		{prefix: "ccloud", text: "The Confluent Cloud CLI is deprecated and will stop working on May 1, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html\nTo update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html\n"},
 		{prefix: "ccloud admin user", text: fmt.Sprintf(fmtRename, "ccloud admin user", "confluent iam user")},
 		{prefix: "ccloud api-key list", text: fmt.Sprintf(fmtBreakingChange, "the `--service-account` flag no longer accepts user IDs.")},
 		{prefix: "ccloud config context get", text: fmt.Sprintf(fmtRename, "ccloud config context get", "confluent context describe")},

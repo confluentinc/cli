@@ -1,5 +1,5 @@
-The `ccloud` CLI is scheduled for deprecation. All `ccloud` features have been moved to the `confluent` CLI.
-For more details: https://docs.confluent.io/ccloud-cli/current/index.html
+The Confluent Cloud CLI is deprecated and will stop working on May 1, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
 
 Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.
 Email: First Name: Last Name: Two-letter country code (https://github.com/confluentinc/countrycode/blob/master/codes.go): You entered US for United States of America / USA. Is that correct? (y/n): Organization: Password (must contain at least 8 characters, including 1 lowercase character, 1 uppercase character, and 1 number): I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/) (y/n): By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/) (y/n): A verification email has been sent to test-signup@confluent.io.
