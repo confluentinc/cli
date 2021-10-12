@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
 	"time"
 
@@ -426,6 +428,23 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	req.True(suite.kafkaMock.DeleteCalled())
 	// TODO add back with analytics
 	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
+}
+
+func (suite *KafkaClusterTestSuite) Test_getLkcForDescribe() {
+	req := require.New(suite.T())
+	conf := v1.AuthenticatedCloudConfigMock()
+	cmd := suite.newCmd(conf)
+	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil)
+	lkc, err := cmd.getLkcForDescribe([]string{"lkc-123"})
+	req.Equal("lkc-123", lkc)
+	req.NoError(err)
+	lkc, err = cmd.getLkcForDescribe([]string{})
+	req.Equal(cmd.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId(), lkc)
+	req.NoError(err)
+	cmd.Config.Context().KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = ""
+	lkc, err = cmd.getLkcForDescribe([]string{})
+	req.Equal("", lkc)
+	req.Equal(errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions).Error(), err.Error())
 }
 
 func TestKafkaClusterTestSuite(t *testing.T) {
