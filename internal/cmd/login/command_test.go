@@ -918,6 +918,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
 		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
 		req.Equal(orgId, ctx.State.Auth.Organization.ResourceId)
+		req.Equal(orgId, ctx.Config.GetLastUsedOrgId())
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}

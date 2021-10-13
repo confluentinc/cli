@@ -45,6 +45,10 @@ func MockKafkaClusterId() string {
 }
 
 func AuthenticatedCloudConfigMock() *Config {
+	return AuthenticatedToOrgCloudConfigMock(mockOrganizationId, MockOrgResourceId)
+}
+
+func AuthenticatedToOrgCloudConfigMock(orgId int32, orgResourceId string) *Config {
 	params := mockConfigParams{
 		contextName:    mockContextName,
 		userId:         mockUserId,
@@ -52,8 +56,8 @@ func AuthenticatedCloudConfigMock() *Config {
 		username:       mockEmail,
 		url:            testserver.TestCloudURL.String(),
 		envId:          MockEnvironmentId,
-		orgId:          mockOrganizationId,
-		orgResourceId:  MockOrgResourceId,
+		orgId:          orgId,
+		orgResourceId:  orgResourceId,
 		credentialName: usernameCredentialName,
 	}
 	return AuthenticatedConfigMock(params)
@@ -251,6 +255,9 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	conf.Contexts[ctx.Name].Config = conf
 	conf.CurrentContext = ctx.Name
 	conf.IsTest = true
+	if contextState.Auth != nil {
+		conf.UpdateLastUsedOrgId(contextState.Auth.Organization.ResourceId)
+	}
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}

@@ -349,11 +349,7 @@ func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
-	var orgResourceId string
-	if r.Config.Context() != nil {
-		// re-login to the same org
-		orgResourceId = r.Config.Context().GetCurrentOrganizationId()
-	}
+	orgResourceId := r.Config.GetLastUsedOrgId()
 	token, credentials, err := r.getCCloudTokenAndCredentials(cmd, orgResourceId)
 	if err != nil {
 		return err
@@ -829,10 +825,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 
 	var token string
 	if r.Config.IsCloudLogin() {
-		var orgResourceId string
-		if r.Config.Context() != nil {
-			orgResourceId = r.Config.Context().GetCurrentOrganizationId()
-		}
+		orgResourceId := r.Config.GetLastUsedOrgId()
 		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
 		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false, orgResourceId)
 		if err != nil {

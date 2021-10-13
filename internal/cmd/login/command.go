@@ -56,10 +56,10 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
 		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
+			fmt.Sprintf("You can log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationIdEnvVar) +
 			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag." +
-			fmt.Sprintf("You can log in to a specific Confluent Cloud Organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationIdEnvVar),
+			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args:              cobra.NoArgs,
 		RunE:              pcmd.NewCLIRunE(c.login),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
@@ -68,7 +68,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
 	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
-	loginCmd.Flags().String("organization-id", "", "The Confluent Cloud Organization to log in to. If empty, logs in to the user's default Organization")
+	loginCmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
 	loginCmd.Flags().SortFlags = false

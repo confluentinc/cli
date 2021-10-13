@@ -117,14 +117,6 @@ func (c *Context) DeleteUserAuth() error {
 	return nil
 }
 
-func (c *Context) GetCurrentOrganizationId() string {
-	// non organization contexts
-	if c.State.Auth == nil {
-		return ""
-	}
-	return c.State.Auth.Organization.ResourceId
-}
-
 func (c *Context) GetCurrentEnvironmentId() string {
 	// non environment contexts
 	if c.State.Auth == nil {

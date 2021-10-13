@@ -152,6 +152,8 @@ func getCCloudContextState(config *v1.Config, ctxName string, email string, url 
 	state.Auth.User = user.User
 	state.Auth.Accounts = user.Accounts
 	state.Auth.Organization = user.Organization
+	// cache the last used org id so we can log back into the same org next time
+	config.UpdateLastUsedOrgId(user.Organization.ResourceId)
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
@@ -187,11 +189,10 @@ func GenerateCloudContextName(username string, url string) string {
 // if CP users use cacertpath then include that in the context name
 // (legacy CP users may still have context without cacertpath in the name but have cacertpath stored)
 func GenerateContextName(username string, url string, caCertPath string) string {
-	ctxName := fmt.Sprintf("login-%s-%s", username, url)
-	if caCertPath != "" {
-		ctxName += fmt.Sprintf("?cacertpath=%s", caCertPath)
+	if caCertPath == "" {
+		return fmt.Sprintf("login-%s-%s", username, url)
 	}
-	return ctxName
+	return fmt.Sprintf("login-%s-%s?cacertpath=%s", username, url, caCertPath)
 }
 
 func generateCredentialName(username string) string {

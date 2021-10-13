@@ -452,6 +452,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 									Email:     "",
 									FirstName: "",
 								},
+								Organization: &orgv1.Organization{ResourceId: "o-123"},
 								Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
@@ -537,6 +538,64 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		})
 	}
 }
+
+func Test_ReLoginToLastOrgUsed(t *testing.T) {
+	ccloudCreds := &pauth.Credentials{
+		Username: "csreesangkom",
+		Password: "csreepassword",
+	}
+	r := getPreRunBase()
+	r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			return &ccloud.Client{Auth: &sdkMock.Auth{
+				UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+					return &orgv1.GetUserReply{
+						User: &orgv1.User{
+							Id:        23,
+							Email:     "",
+							FirstName: "",
+						},
+						Organization: &orgv1.Organization{ResourceId: "o-123"},
+						Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+					}, nil
+				},
+			}}
+		},
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+			return &ccloud.Client{}
+		},
+	}
+	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
+		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
+			require.Equal(t, "o-555", orgResourceId)
+			return validAuthToken, "", nil
+		},
+	}
+	r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+		GetCredentialsFromNetrcFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcFunc,
+		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return ccloudCreds, nil
+			}
+		},
+	}
+
+	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
+	err := pauth.PersistLogoutToConfig(cfg)
+	require.NoError(t, err)
+
+	r.Config = cfg
+
+	root := &cobra.Command{
+		Run: func(cmd *cobra.Command, args []string) {},
+	}
+	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
+	root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+	_, err = pcmd.ExecuteCommand(rootCmd.Command)
+	require.NoError(t, err)
+}
+
 
 func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {

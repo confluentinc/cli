@@ -42,6 +42,7 @@ type Config struct {
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
+	lastUsedOrgId          string
 }
 
 func (c *Config) SetOverwrittenAccount(acct *orgv1.Account) {
@@ -471,4 +472,13 @@ func (c *Config) IsCloudLogin() bool {
 func (c *Config) IsOnPremLogin() bool {
 	ctx := c.Context()
 	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
+}
+
+func (c *Config) GetLastUsedOrgId() string {
+	return c.lastUsedOrgId
+}
+
+func (c *Config) UpdateLastUsedOrgId(orgResourceId string) {
+	// keep track of the cloud organization we're logged in to so we can log back into the same one next time
+	c.lastUsedOrgId = orgResourceId
 }
