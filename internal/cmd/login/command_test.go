@@ -10,6 +10,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"math/big"
 	"net/http"
 	"os"
@@ -42,11 +43,14 @@ import (
 const (
 	envUser        = "env-user"
 	envPassword    = "env-password"
-	testToken      = "y0ur.jwt.T0kEn"
+	testToken      = "org-1-y0ur.jwt.T0kEn"
+	testToken2     = "org-2-y0ur.jwt.T0kEn"
 	promptUser     = "prompt-user@confluent.io"
 	promptPassword = " prompt-password "
 	netrcFile      = "netrc-file"
 	ccloudURL      = "https://confluent.cloud"
+	orgId          = "o-123"
+	org2Id         = "o-234"
 )
 
 var (
@@ -62,6 +66,7 @@ var (
 					Email:     "",
 					FirstName: "",
 				},
+				Organization: &orgv1.Organization{ResourceId: orgId},
 				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
@@ -104,7 +109,13 @@ var (
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
-			return testToken, "refreshToken", nil
+			if orgResourceId == "" || orgResourceId == orgId {
+				return testToken, "refreshToken", nil
+			} else if orgResourceId == org2Id {
+				return testToken2, "refreshToken", nil
+			} else {
+				return "", "", &corev1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
+			}
 		},
 		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
 			return testToken, nil
@@ -127,9 +138,6 @@ var (
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
-			return testToken, nil
-		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
 			return &orgv1.GetUserReply{
 				User: &orgv1.User{
@@ -137,6 +145,7 @@ func TestCredentialsOverride(t *testing.T) {
 					Email:     envUser,
 					FirstName: "Cody",
 				},
+				Organization: &orgv1.Organization{ResourceId: orgId},
 				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
@@ -167,7 +176,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, "", ""), ctx.Name)
+	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
 
 	req.Equal(testToken, ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
@@ -176,9 +185,6 @@ func TestCredentialsOverride(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
-			return testToken, nil
-		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
 			return &orgv1.GetUserReply{
 				User: &orgv1.User{
@@ -186,6 +192,7 @@ func TestLoginSuccess(t *testing.T) {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
+				Organization: &orgv1.Organization{ResourceId: orgId},
 				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
@@ -206,7 +213,11 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			isCloud: true,
-			args:    []string{"--organization-id=o-123"},
+			args:    []string{"--organization-id="+orgId},
+		},
+		{
+			isCloud: true,
+			args:    []string{"--organization-id="+org2Id},
 		},
 		{
 			setEnv: true,
@@ -633,9 +644,6 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
-			return testToken, nil
-		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
 			return &orgv1.GetUserReply{
 				User: &orgv1.User{
@@ -643,6 +651,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
+				Organization: &orgv1.Organization{ResourceId: orgId},
 				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
@@ -821,12 +830,12 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	req.Equal(testToken, ctx.State.AuthToken)
-	var orgIdName string
-	if orgResourceId != "" {
-		orgIdName = "?organizationid="+orgResourceId
+	if orgResourceId == orgId {
+		req.Equal(testToken, ctx.State.AuthToken)
+	} else if orgResourceId == org2Id {
+		req.Equal(testToken2, ctx.State.AuthToken)
 	}
-	contextName := fmt.Sprintf("login-%s-%s%s", promptUser, ctx.Platform.Server, orgIdName)
+	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
 	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
 	req.Contains(cfg.Platforms, ctx.Platform.Name)
 	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
@@ -838,6 +847,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
 		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
+		req.Equal(orgId, ctx.State.Auth.Organization.ResourceId)
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}

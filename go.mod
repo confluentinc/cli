@@ -96,6 +96,4 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 )
 
-replace github.com/confluentinc/ccloud-sdk-go-v1 => ../ccloud-sdk-go
-
 go 1.16

@@ -56,8 +56,9 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
 			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
-		Args:              cobra.NoArgs,
+			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag." +
+			fmt.Sprintf("You can log in to a specific Confluent Cloud Organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationIdEnvVar),
+			Args:              cobra.NoArgs,
 		RunE:              pcmd.NewCLIRunE(c.login),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
 	}
@@ -125,7 +126,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client, orgResourceId)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
 	}
@@ -191,7 +192,7 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 	if caCertPath == "" {
-		contextName := pauth.GenerateContextName(credentials.Username, url, "", "")
+		contextName := pauth.GenerateContextName(credentials.Username, url, "")
 		caCertPath, err = c.checkLegacyContextCACertPath(cmd, contextName)
 		if err != nil {
 			return err

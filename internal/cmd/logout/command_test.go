@@ -116,9 +116,6 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
 	// run login command
 	auth := &sdkMock.Auth{
-		LoginFunc: func(ctx context.Context, idToken string, username string, password string) (string, error) {
-			return testToken, nil
-		},
 		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
 			return &orgv1.GetUserReply{
 				User: &orgv1.User{
