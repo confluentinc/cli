@@ -71,6 +71,17 @@ var (
 			}
 		},
 	}
+	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
+		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
+			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromArgs(cmd)
+		},
+		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
+			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromEnvVar(cmd)
+		},
+		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
+			return pauth.NewLoginOrganizationManagerImp(log.New()).GetDefaultLoginOrganization()
+		},
+	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
 			return testToken, "refreshToken", nil
@@ -128,7 +139,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 		},
 	}
 	user := &sdkMock.User{}
-	loginCmd, _ := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	loginCmd, _ := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
 
@@ -140,7 +151,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 }
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*login.Command, *v1.Config) {
+	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
+	loginOrganizationManager pauth.LoginOrganizationManager) (*login.Command, *v1.Config) {
 	cfg := v1.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if !isCloud {
@@ -171,8 +183,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := login.New(prerunner, log.New(), ccloudClientFactory, mdsClientManager,
-		cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := login.New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 

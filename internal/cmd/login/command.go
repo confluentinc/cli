@@ -3,7 +3,6 @@ package login
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 
@@ -22,28 +21,31 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	logger                  *log.Logger
-	analyticsClient         analytics.Client
-	ccloudClientFactory     pauth.CCloudClientFactory
-	mdsClientManager        pauth.MDSClientManager
-	netrcHandler            netrc.NetrcHandler
-	loginCredentialsManager pauth.LoginCredentialsManager
-	authTokenHandler        pauth.AuthTokenHandler
-	isTest                  bool
+	logger                   *log.Logger
+	analyticsClient          analytics.Client
+	ccloudClientFactory      pauth.CCloudClientFactory
+	mdsClientManager         pauth.MDSClientManager
+	netrcHandler             netrc.NetrcHandler
+	loginCredentialsManager  pauth.LoginCredentialsManager
+	loginOrganizationManager pauth.LoginOrganizationManager
+	authTokenHandler         pauth.AuthTokenHandler
+	isTest                   bool
 }
 
 func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
-	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+	loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager,
+	authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &Command{
-		logger:                  log,
-		analyticsClient:         analyticsClient,
-		mdsClientManager:        mdsClientManager,
-		ccloudClientFactory:     ccloudClientFactory,
-		netrcHandler:            netrcHandler,
-		loginCredentialsManager: loginCredentialsManager,
-		authTokenHandler:        authTokenHandler,
-		isTest:                  isTest,
+		logger:                   log,
+		analyticsClient:          analyticsClient,
+		mdsClientManager:         mdsClientManager,
+		ccloudClientFactory:      ccloudClientFactory,
+		netrcHandler:             netrcHandler,
+		loginCredentialsManager:  loginCredentialsManager,
+		loginOrganizationManager: loginOrganizationManager,
+		authTokenHandler:         authTokenHandler,
+		isTest:                   isTest,
 	}
 	cmd.init(prerunner)
 	return cmd
@@ -280,20 +282,6 @@ func (c *Command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (a *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
-	orgResourceId, err := cmd.Flags().GetString("organization-id")
-	if err != nil {
-		return "", err
-	}
-	if orgResourceId == "" {
-		orgResourceId = os.Getenv(pauth.ConfluentCloudOrganizationIdEnvVar)
-		if a.logger.GetLevel() >= log.WARN {
-			utils.ErrPrintf(cmd, errors.FoundOrganizationIdMsg, orgResourceId, pauth.ConfluentCloudOrganizationIdEnvVar)
-		}
-	}
-	return orgResourceId, nil
-}
-
 func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
 	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
@@ -356,4 +344,12 @@ func (c *Command) isCCloudURL(url string) bool {
 	}
 
 	return false
+}
+
+func (c *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
+	return pauth.GetLoginOrganization(
+		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
+		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),
+		c.loginOrganizationManager.GetDefaultLoginOrganization(),
+	)
 }

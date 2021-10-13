@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -107,6 +106,17 @@ var (
 			}
 		},
 	}
+	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
+		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
+			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromArgs(cmd)
+		},
+		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
+			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromEnvVar(cmd)
+		},
+		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
+			return pauth.NewLoginOrganizationManagerImp(log.New()).GetDefaultLoginOrganization()
+		},
+	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
 			if orgResourceId == "" || orgResourceId == orgId {
@@ -168,7 +178,7 @@ func TestCredentialsOverride(t *testing.T) {
 			}
 		},
 	}
-	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
@@ -180,6 +190,68 @@ func TestCredentialsOverride(t *testing.T) {
 
 	req.Equal(testToken, ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
+}
+
+func TestOrgIdOverride(t *testing.T) {
+	req := require.New(t)
+	auth := &sdkMock.Auth{
+		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
+			return &orgv1.GetUserReply{
+				User: &orgv1.User{
+					Id:        23,
+					Email:     promptUser,
+					FirstName: "Cody",
+				},
+				Organization: &orgv1.Organization{ResourceId: orgId},
+				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
+	user := &sdkMock.User{}
+	type test struct {
+		setEnv bool
+		setDefault bool
+	}
+	tests := []*test{
+		{
+			setEnv: true,
+		}, {
+			setDefault: true,
+		},
+	}
+
+	for _, tt := range tests {
+		loginOrganizationManager := &cliMock.MockLoginOrganizationManager{
+			GetLoginOrganizationFromArgsFunc: mockLoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
+			GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
+				if tt.setEnv {
+					return func() (string, error) { return org2Id, nil }
+				} else {
+					return mockLoginOrganizationManager.GetLoginOrganizationFromEnvVarFunc(cmd)
+				}
+			},
+			GetDefaultLoginOrganizationFunc: func() func() (string, error) {
+				if tt.setDefault {
+					return func() (string, error) { return org2Id, nil }
+				} else {
+					return mockLoginOrganizationManager.GetDefaultLoginOrganization()
+				}
+			},
+		}
+		loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+
+		output, err := pcmd.ExecuteCommand(loginCmd.Command)
+		req.NoError(err)
+		req.Empty("", output)
+
+		ctx := cfg.Context()
+		req.NotNil(ctx)
+		req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
+
+		req.Equal(testToken2, ctx.State.AuthToken)
+		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
+		verifyLoggedInState(t, cfg, true, org2Id)
+	}
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -202,6 +274,7 @@ func TestLoginSuccess(t *testing.T) {
 	suite := []struct {
 		isCloud bool
 		args    []string
+		orgId   string
 		setEnv  bool
 	}{
 		{
@@ -213,11 +286,11 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			isCloud: true,
-			args:    []string{"--organization-id="+orgId},
+			orgId: orgId,
 		},
 		{
 			isCloud: true,
-			args:    []string{"--organization-id="+org2Id},
+			orgId: org2Id,
 		},
 		{
 			setEnv: true,
@@ -229,17 +302,14 @@ func TestLoginSuccess(t *testing.T) {
 		if s.setEnv {
 			_ = os.Setenv(pauth.ConfluentPlatformMDSURL, "http://localhost:8090")
 		}
-		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+		if s.orgId != "" {
+			s.args = append(s.args, "--organization-id="+s.orgId)
+		}
+		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		var orgId string
-		for _, arg := range s.args {
-			if strings.HasPrefix(arg, "--organization-id=") {
-				orgId = strings.TrimPrefix(arg, "--organization-id=")
-			}
-		}
-		verifyLoggedInState(t, cfg, s.isCloud, orgId)
+		verifyLoggedInState(t, cfg, s.isCloud, s.orgId)
 		if s.setEnv {
 			_ = os.Unsetenv(pauth.ConfluentPlatformMDSURL)
 		}
@@ -364,7 +434,8 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				}
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager)
+
+			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager, mockLoginOrganizationManager)
 			var loginArgs []string
 			if !tt.isCloud {
 				loginArgs = []string{"--url=http://localhost:8090"}
@@ -433,7 +504,7 @@ func TestPromptLoginFlag(t *testing.T) {
 					}
 				},
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !tt.isCloud {
 				loginArgs = append(loginArgs, "--url=http://localhost:8090")
@@ -469,7 +540,7 @@ func TestLoginFail(t *testing.T) {
 			}
 		},
 	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
 	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
@@ -634,8 +705,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(prerunner, log.New(), nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler,
-		mockLoginCredentialsManager, mockAuthTokenHandler, true)
+	loginCmd := New(prerunner, log.New(), nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginCredentialsManager, mockLoginOrganizationManager, mockAuthTokenHandler, true)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return loginCmd
@@ -689,7 +759,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
@@ -785,7 +855,8 @@ func TestValidateUrl(t *testing.T) {
 }
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*Command, *v1.Config) {
+	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
+	loginOrganizationManager pauth.LoginOrganizationManager) (*Command, *v1.Config) {
 	cfg := v1.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if !isCloud {
@@ -816,8 +887,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(),
-		netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 
@@ -830,7 +900,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	if orgResourceId == orgId {
+	if orgResourceId == orgId || orgResourceId == "" {
 		req.Equal(testToken, ctx.State.AuthToken)
 	} else if orgResourceId == org2Id {
 		req.Equal(testToken2, ctx.State.AuthToken)

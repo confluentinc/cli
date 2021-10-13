@@ -88,6 +88,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	jwtValidator := pcmd.NewJWTValidator(logger)
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cfg, ccloudClientFactory))
+	loginOrganizationManager := pauth.NewLoginOrganizationManagerImp(logger)
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 
 	prerunner := &pcmd.PreRun{
@@ -128,7 +129,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
 	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
 	cli.AddCommand(local.New(prerunner))
-	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
+	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest).Command)
 	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(price.New(prerunner))
 	cli.AddCommand(prompt.New(prerunner, &ps1.Prompt{}, logger))
