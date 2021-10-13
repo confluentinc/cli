@@ -114,6 +114,11 @@ func (s *CLITestSuite) SetupSuite() {
 
 	err = os.Setenv("XX_CCLOUD_RBAC_DATAPLANE", "yes")
 	req.NoError(err)
+
+	// Temporarily change $HOME, so the current config file isn't altered.
+	err = os.Setenv("HOME", os.TempDir())
+	req.NoError(err)
+
 	if _, err := os.Stat(binaryPath(s.T(), testBin)); os.IsNotExist(err) || !*noRebuild {
 		var makeArgs string
 		if testBin == testBinRace {
@@ -346,7 +351,6 @@ func resetConfiguration(t *testing.T) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := v1.New(new(config.Params))
-	cfg.DisableUpdateCheck = true
 
 	err := cfg.Save()
 	require.NoError(t, err)

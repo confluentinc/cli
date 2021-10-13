@@ -70,15 +70,16 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string, logger *l
 	return state.SSOProviderIDToken, state.SSOProviderRefreshToken, nil
 }
 
-func GetNewIDTokenFromRefreshToken(authURL string, refreshToken string, logger *log.Logger) (idToken string, err error) {
+func RefreshTokens(authURL string, refreshToken string, logger *log.Logger) (string, string, error) {
 	state, err := newState(authURL, false, logger)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	state.SSOProviderRefreshToken = refreshToken
-	err = state.refreshOAuthToken()
-	if err != nil {
-		return "", err
+
+	if err := state.refreshOAuthToken(); err != nil {
+		return "", "", err
 	}
-	return state.SSOProviderIDToken, err
+
+	return state.SSOProviderIDToken, state.SSOProviderRefreshToken, nil
 }

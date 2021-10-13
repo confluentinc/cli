@@ -1,6 +1,7 @@
 package sso
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -175,6 +176,8 @@ func TestGetAuthorizationUrl(t *testing.T) {
 }
 
 func TestGetOAuthToken(t *testing.T) {
+	mockRefreshToken := "foo"
+
 	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
 
 	expectedUri := "/oauth/token"
@@ -194,7 +197,7 @@ func TestGetOAuthToken(t *testing.T) {
 		require.Equal(t, expectedPayload, string(body))
 
 		// mock response
-		_, err = rw.Write([]byte(`{"id_token": "` + mockIDToken + `"}`))
+		_, err = rw.Write([]byte(fmt.Sprintf(`{"id_token": "%s", "refresh_token": "%s"}`, mockIDToken, mockRefreshToken)))
 		require.NoError(t, err)
 	}))
 	defer server.Close()
@@ -210,13 +213,16 @@ func TestGetOAuthToken(t *testing.T) {
 }
 
 func TestRefreshOAuthToken(t *testing.T) {
+	mockRefreshToken1 := "foo"
+	mockRefreshToken2 := "bar"
+
 	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
-	mockRefreshToken := "bar"
-	state.SSOProviderRefreshToken = mockRefreshToken
+	state.SSOProviderRefreshToken = mockRefreshToken1
+
 	expectedUri := "/oauth/token"
 	expectedPayload := "grant_type=refresh_token" +
 		"&client_id=" + state.SSOProviderClientID +
-		"&refresh_token=" + mockRefreshToken +
+		"&refresh_token=" + state.SSOProviderRefreshToken +
 		"&redirect_uri=" + state.SSOProviderCallbackUrl
 
 	mockIDToken := "foobar"
@@ -229,7 +235,7 @@ func TestRefreshOAuthToken(t *testing.T) {
 		require.Equal(t, expectedPayload, string(body))
 
 		// mock response
-		_, err = rw.Write([]byte(`{"id_token": "` + mockIDToken + `"}`))
+		_, err = rw.Write([]byte(fmt.Sprintf(`{"id_token": "%s", "refresh_token": "%s"}`, mockIDToken, mockRefreshToken2)))
 		require.NoError(t, err)
 	}))
 	defer server.Close()
@@ -242,4 +248,5 @@ func TestRefreshOAuthToken(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
+	require.Equal(t, mockRefreshToken2, state.SSOProviderRefreshToken)
 }
