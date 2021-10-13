@@ -126,7 +126,7 @@ var v2RbacRoles = map[string]string{
 }
 
 var v2RoutesAndReplies = map[string]string{
-	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin": `[]`,
+	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin":      `[]`,
 	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/ResourceOwner/bindings": `[]`,
 	"/api/metadata/security/v2alpha1/roleNames": `[
 			"CCloudRoleBindingAdmin",
@@ -292,6 +292,6 @@ var v2RoutesAndReplies = map[string]string{
 	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
 			"User:u-33ccc", "User:u-44ddd"
 		]`,
-	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/food":           `["User:u-11aaa"]`,
+	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/food":          `["User:u-11aaa"]`,
 	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/shire-parties": `["User:u-11aaa"]`,
 }

@@ -60,7 +60,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag." +
 			fmt.Sprintf("You can log in to a specific Confluent Cloud Organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationIdEnvVar),
-			Args:              cobra.NoArgs,
+		Args:              cobra.NoArgs,
 		RunE:              pcmd.NewCLIRunE(c.login),
 		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
 	}

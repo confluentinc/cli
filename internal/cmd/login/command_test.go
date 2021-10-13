@@ -66,7 +66,7 @@ var (
 					FirstName: "",
 				},
 				Organization: &orgv1.Organization{ResourceId: orgId},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -156,7 +156,7 @@ func TestCredentialsOverride(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &orgv1.Organization{ResourceId: orgId},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -203,13 +203,13 @@ func TestOrgIdOverride(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &orgv1.Organization{ResourceId: orgId},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
 	user := &sdkMock.User{}
 	type test struct {
-		setEnv bool
+		setEnv     bool
 		setDefault bool
 	}
 	tests := []*test{
@@ -265,7 +265,7 @@ func TestLoginSuccess(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &orgv1.Organization{ResourceId: orgId},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -286,11 +286,11 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			isCloud: true,
-			orgId: orgId,
+			orgId:   orgId,
 		},
 		{
 			isCloud: true,
-			orgId: org2Id,
+			orgId:   org2Id,
 		},
 		{
 			setEnv: true,
@@ -722,7 +722,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &orgv1.Organization{ResourceId: orgId},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}

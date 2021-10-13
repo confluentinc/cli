@@ -161,7 +161,7 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	mockSignup := mockCcloudClient.Signup.(*ccloudmock.Signup)
 	require.Equal(t, 1, len(mockSignup.CreateCalls()))
 	require.Equal(t, "bstrauch@confluent.io", mockSignup.CreateCalls()[0].Arg1.User.Email)
-	mockLogin :=  mockCcloudClient.Auth.(*ccloudmock.Auth)
+	mockLogin := mockCcloudClient.Auth.(*ccloudmock.Auth)
 	require.Equal(t, 1, len(mockLogin.LoginCalls()))
 	require.Equal(t, "o-123", mockLogin.LoginCalls()[0].OrgResourceId)
 
