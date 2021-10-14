@@ -171,9 +171,10 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 	c.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:         "describe <id>",
+		Use:         "describe [id]",
 		Short:       "Describe a Kafka cluster.",
-		Args:        cobra.ExactArgs(1),
+		Long:  		 "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
+		Args:        cobra.MaximumNArgs(1),
 		RunE:        pcmd.NewCLIRunE(c.describe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
@@ -485,12 +486,27 @@ func stringToSku(s string) (productv1.Sku, error) {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
+	lkc, err := c.getLkcForDescribe(args)
+	if err != nil {
+		return err
+	}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0])
 	}
 	return outputKafkaClusterDescription(cmd, cluster)
+}
+
+func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
+	if len(args) > 0 {
+		return args[0], nil
+	}
+	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	if lkc == "" {
+		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
+	}
+	return lkc, nil
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
