@@ -48,8 +48,8 @@ const (
 	promptPassword = " prompt-password "
 	netrcFile      = "netrc-file"
 	ccloudURL      = "https://confluent.cloud"
-	orgId          = "o-123"
-	org2Id         = "o-234"
+	orgId          = "o-001"
+	org2Id         = "o-002"
 )
 
 var (
@@ -118,7 +118,7 @@ var (
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
+		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 			if orgResourceId == "" || orgResourceId == orgId {
 				return testToken, "refreshToken", nil
 			} else if orgResourceId == org2Id {
@@ -213,11 +213,8 @@ func TestOrgIdOverride(t *testing.T) {
 		setDefault bool
 	}
 	tests := []*test{
-		{
-			setEnv: true,
-		}, {
-			setDefault: true,
-		},
+		{ setEnv: true },
+		{ setDefault: true },
 	}
 
 	for _, tt := range tests {

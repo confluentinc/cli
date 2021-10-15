@@ -75,7 +75,7 @@ var (
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
+		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 			return "", "", nil
 		},
 		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
@@ -463,7 +463,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			}
 			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
-				GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
+				GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
 				GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
@@ -541,8 +541,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 func Test_ReLoginToLastOrgUsed(t *testing.T) {
 	ccloudCreds := &pauth.Credentials{
-		Username: "csreesangkom",
-		Password: "csreepassword",
+		Username: "username",
+		Password: "password",
 	}
 	r := getPreRunBase()
 	r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
