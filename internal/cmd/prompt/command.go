@@ -1,10 +1,12 @@
 package prompt
 
 import (
+	"fmt"
+
+	"github.com/confluentinc/go-ps1"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/ps1"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -118,6 +120,8 @@ func New(cfg *v1.Config) *cobra.Command {
 	})
 
 	cmd := prompt.NewCobraCommand()
+	cmd.Short = fmt.Sprintf("Add %s context to your terminal prompt.", pversion.FullCLIName)
+
 	cmd.ResetFlags()
 	cmd.Flags().StringP("format", "f", "(confluent|%C)", "The format string to use. See the help for details.")
 	cmd.Flags().IntP("timeout", "t", 200, "The maximum execution time in milliseconds.")
