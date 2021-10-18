@@ -125,6 +125,7 @@ func New(cfg *v1.Config) *cobra.Command {
 	cmd.ResetFlags()
 	cmd.Flags().StringP("format", "f", "(confluent|%C)", "The format string to use. See the help for details.")
 	cmd.Flags().IntP("timeout", "t", 200, "The maximum execution time in milliseconds.")
+	cmd.Flags().SortFlags = false
 
 	return cmd
 }
