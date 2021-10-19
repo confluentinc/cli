@@ -1,4 +1,4 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip alpine_amd64.tar.gz
+ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz windows_amd64.zip
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -40,20 +40,29 @@ define copy-stag-content-to-prod
 	done
 endef
 
-# The Alpine container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
-.PHONY: gorelease-alpine
-gorelease-alpine:
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
+.PHONY: switch-librdkafka-arm64
+switch-librdkafka-arm64:
+	sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a
+	sudo cp librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a
 
-.PHONY: gorelease-windows
-gorelease-windows:
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-windows.yml && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-windows.yml
+.PHONY: restore-librdkafka-amd64
+restore-librdkafka-amd64:
+	sudo rm $(RDKAFKA_PATH)/librdkafka_darwin.a
+	sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a
 
-# This builds the Darwin and Linux (non-Alpine) binaries using goreleaser on the host computer.  goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.  However, we then have to separately build the Alpine/Windows binaries/archives in a Docker container (since we need to use an OS which has the Alpine C runtimes instead of the C runtimes on macOS).  We then also have to manually upload the Alpine/Windows build artifacts to S3 since the goreleaser inside the Docker container doesn't have the S3 credentials from the host.
+.PHONY: gorelease-test
+gorelease-test:
+	make build-darwin-amd64
+
+	make switch-librdkafka-arm64
+	make build-darwin-arm64
+	make restore-librdkafka-amd64
+
+	make build-linux
+
+	make build-windows
+
+# This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
@@ -61,18 +70,6 @@ gorelease:
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
-	./build_windows.sh && \
-	for binary in ccloud confluent; do \
-		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_windows_amd64.zip $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_windows_amd64.zip; \
-		aws s3 cp dist/$${binary}/$${binary}_windows_amd64/$${binary} $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_windows_amd64; \
-		cat dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums_windows.txt >> dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt; \
-	done
-	./build_alpine.sh && \
-	for binary in ccloud confluent; do \
-		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_alpine_amd64.tar.gz; \
-		aws s3 cp dist/$${binary}/$${binary}_alpine_amd64/$${binary} $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_alpine_amd64; \
-		cat dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums_alpine.txt >> dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt; \
-	done
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -97,7 +94,6 @@ set-acls:
 
 # goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
 # Chose not to change install script to expect no-v because older versions use the format with 'v'.
-# Also, we first re-upload the checksums file because we concatenate the Alpine checksums to the checksums file after goreleaser has already published it (without the Alpine checksums) to S3
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
 	$(caasenv-authenticate); \

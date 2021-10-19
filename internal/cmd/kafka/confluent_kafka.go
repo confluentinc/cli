@@ -90,6 +90,7 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 	// Retrieve schema from cluster only if schema is specified.
 	schemaID := int32(binary.BigEndian.Uint32(value[1:5])) // schema id is stored as a part of message meta info
+	// TODO: msgs produced before registering a schema doesn't have valid schema id in those bytes, then consuming with a specified schema would cause errors when trying to get a schema with invalid id.
 
 	// Create temporary file to store schema retrieved (also for cache)
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")

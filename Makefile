@@ -17,6 +17,7 @@ REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
+RDKAFKA_PATH := $(shell find $(HOME)/go/pkg/mod -name librdkafka_vendor)
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -40,8 +41,12 @@ deps:
 	go get github.com/mitchellh/golicense@v0.2.0
 
 ifeq ($(shell uname),Darwin)
-GORELEASER_SUFFIX ?= -mac.yml
 SHASUM ?= gsha256sum
+	ifeq ($(shell uname -m),x86_64)
+	GORELEASER_SUFFIX ?= -darwin-amd64.yml
+	else 
+	GORELEASER_SUFFIX ?= -darwin-arm64.yml
+	endif
 else ifneq (,$(findstring NT,$(shell uname)))
 GORELEASER_SUFFIX ?= -windows.yml
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
@@ -56,6 +61,7 @@ endif
 
 show-args:
 	@echo "VERSION: $(VERSION)"
+	@echo "RDKAFKA_PATH: $(RDKAFKA_PATH)"
 
 #
 # START DEVELOPMENT HELPERS
@@ -95,6 +101,22 @@ run-confluent:
 build:
 	make build-ccloud
 	make build-confluent
+
+.PHONY: build-darwin-amd64
+build-darwin-amd64:
+	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-darwin-amd64.yml
+
+.PHONY: build-darwin-arm64
+build-darwin-arm64:
+	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-darwin-arm64.yml
+
+.PHONY: build-linux
+build-linux:
+	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-linux.yml
+
+.PHONY: build-windows
+build-windows:
+	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-windows.yml
 
 .PHONY: build-ccloud
 build-ccloud:
