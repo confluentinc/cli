@@ -23,8 +23,9 @@ type clusterCommandOnPrem struct {
 func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
 		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage ksqlDB clusters.",
+			Use:         "cluster",
+			Short:       "Manage ksqlDB clusters.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		},
 		prerunner, OnPremClusterSubcommandFlags)
 	cmd := &clusterCommandOnPrem{

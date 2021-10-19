@@ -6,7 +6,7 @@ The CLI codebase stores the strings of all messages in one location: the errors 
 - `""` surrounding names and ID’s
     - e.g. `Check that the resource "lkc-abc" exists.`, `Error: topic "bob" does not exist`
 - ```` `` ```` surrounding commands or flags
-    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka in your context with `ccloud kafka cluster use`.``
+    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka in your context with `confluent kafka cluster use`.``
 
 ## Creating an Error
 ### Message Format
@@ -30,16 +30,16 @@ examples:
 Error: Kafka cluster "lkc-asfdsaf" not found
 
 Suggestions:
-    List Kafka clusters with `ccloud kafka cluster list`.
+    List Kafka clusters with `confluent kafka cluster list`.
 ```
 ```
 Error: no API key selected for resource "lkc-dvnr7"
 
 Suggestions:
-    Select an API key for resource "lkc-dvnr7" with `ccloud api-key use <API_KEY> --resource lkc-dvnr7`.
+    Select an API key for resource "lkc-dvnr7" with `confluent api-key use <API_KEY> --resource lkc-dvnr7`.
     To do so, you must have either already created or stored an API key for the resource.
-    To create an API key use `ccloud api-key create --resource lkc-dvnr7`.
-    To store an existing API key use `ccloud api-key store --resource lkc-dvnr7`.
+    To create an API key use `confluent api-key create --resource lkc-dvnr7`.
+    To store an existing API key use `confluent api-key store --resource lkc-dvnr7`.
 ```
 ```
 Error: Kafka cluster "lkc-yydnp" not ready
@@ -66,7 +66,7 @@ return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ResolvingConfigPath
 
 ```
 LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
-LookUpRoleSuggestions           = "To check for valid roles, use `confluent role list`."
+LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
 
 return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
 ```

@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go v1.38.35
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/chromedp/chromedp v0.5.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
@@ -26,9 +25,9 @@ require (
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.5
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
-	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.27
+	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.11
 	github.com/davecgh/go-spew v1.1.1
@@ -45,7 +44,7 @@ require (
 	github.com/google/go-github/v25 v25.0.2
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0
-	github.com/goreleaser/goreleaser v0.162.1
+	github.com/goreleaser/goreleaser v0.164.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/go-multierror v1.1.1
@@ -56,10 +55,8 @@ require (
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.2.0
 	github.com/linkedin/goavro/v2 v2.9.8
-	github.com/lithammer/dedent v1.1.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-tty v0.0.3 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4

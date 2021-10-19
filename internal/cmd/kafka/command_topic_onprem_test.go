@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -129,7 +129,7 @@ func checkURL(url string) error {
 	return nil
 }
 
-// Create a new topicCommand. Should be called before each test case.
+// Create a new authenticatedTopicCommand. Should be called before each test case.
 func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	// Define testAPIClient
 	suite.testClient = kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
@@ -233,9 +233,10 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			return *suite.replicaList, nil, nil
 		},
 	}
+	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, v3.AuthenticatedConfluentConfigMock())
-	return NewTopicCommandOnPrem(testPrerunner)
+	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, conf)
+	return NewTopicCommand(conf, testPrerunner, nil, "").authenticatedTopicCommand.Command
 }
 
 // Executes the given command with the given args, returns the command executed, stdout and error.

@@ -1,6 +1,7 @@
 package sso
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -26,7 +27,7 @@ func TestNewStateDev(t *testing.T) {
 			(state.CodeChallenge != state.SSOProviderState))
 	// dev configs
 	require.Equal(t, "https://login.confluent-dev.io", state.SSOProviderHost)
-	require.Equal(t, "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA", state.SSOProviderClientID)
+	require.Equal(t, "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg", state.SSOProviderClientID)
 	require.Equal(t, "http://127.0.0.1:26635/cli_callback", state.SSOProviderCallbackUrl)
 	require.Equal(t, "https://confluent-dev.auth0.com/api/v2/", state.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -36,7 +37,7 @@ func TestNewStateDev(t *testing.T) {
 	stateStag, err := newState("https://stag.cpdev.cloud", false, log.New())
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io", stateStag.SSOProviderHost)
-	require.Equal(t, "Lk2u2MHszzpmmiJ1LetzZw3ur41nqLrw", stateStag.SSOProviderClientID)
+	require.Equal(t, "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w", stateStag.SSOProviderClientID)
 	require.Equal(t, "http://127.0.0.1:26635/cli_callback", stateStag.SSOProviderCallbackUrl)
 	require.Equal(t, "https://confluent-stag.auth0.com/api/v2/", stateStag.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -46,7 +47,7 @@ func TestNewStateDev(t *testing.T) {
 	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", false, log.New())
 	require.NoError(t, err)
 	require.Equal(t, "https://login-cpd.confluent-dev.io", stateCpd.SSOProviderHost)
-	require.Equal(t, "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb", stateCpd.SSOProviderClientID)
+	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
 	require.Equal(t, "http://127.0.0.1:26635/cli_callback", stateCpd.SSOProviderCallbackUrl)
 	require.Equal(t, "https://confluent-cpd.auth0.com/api/v2/", stateCpd.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -68,7 +69,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 
 	// dev configs
 	require.Equal(t, "https://login.confluent-dev.io", state.SSOProviderHost)
-	require.Equal(t, "XKlqgOEo39iyonTl3Yv3IHWIXGKDP3fA", state.SSOProviderClientID)
+	require.Equal(t, "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg", state.SSOProviderClientID)
 	require.Equal(t, "https://devel.cpdev.cloud/cli_callback", state.SSOProviderCallbackUrl)
 	require.Equal(t, "https://confluent-dev.auth0.com/api/v2/", state.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -78,7 +79,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	stateStag, err := newState("https://stag.cpdev.cloud", true, log.New())
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io", stateStag.SSOProviderHost)
-	require.Equal(t, "Lk2u2MHszzpmmiJ1LetzZw3ur41nqLrw", stateStag.SSOProviderClientID)
+	require.Equal(t, "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w", stateStag.SSOProviderClientID)
 	require.Equal(t, "https://stag.cpdev.cloud/cli_callback", stateStag.SSOProviderCallbackUrl)
 	require.Equal(t, "https://confluent-stag.auth0.com/api/v2/", stateStag.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -88,7 +89,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true, log.New())
 	require.NoError(t, err)
 	require.Equal(t, "https://login-cpd.confluent-dev.io", stateCpd.SSOProviderHost)
-	require.Equal(t, "Ru1HRWIyKdu2xNOOwuEuL6n0cjtbSeQb", stateCpd.SSOProviderClientID)
+	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
 	require.Equal(t, "https://aware-monkfish.gcp.priv.cpdev.cloud/cli_callback", stateCpd.SSOProviderCallbackUrl)
 	require.Equal(t, "https://confluent-cpd.auth0.com/api/v2/", stateCpd.SSOProviderIdentifier)
 	require.Empty(t, stateCpd.SSOProviderAuthenticationCode)
@@ -108,7 +109,7 @@ func TestNewStateProd(t *testing.T) {
 			(state.CodeVerifier != state.SSOProviderState) &&
 			(state.CodeChallenge != state.SSOProviderState))
 	require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
-	require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
+	require.Equal(t, state.SSOProviderClientID, "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs")
 	require.Equal(t, state.SSOProviderCallbackUrl, "http://127.0.0.1:26635/cli_callback")
 	require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
 	require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -130,7 +131,7 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 				(state.CodeChallenge != state.SSOProviderState))
 
 		require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
-		require.Equal(t, state.SSOProviderClientID, "hPbGZM8G55HSaUsaaieiiAprnJaEc9rH")
+		require.Equal(t, state.SSOProviderClientID, "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs")
 		require.Equal(t, state.SSOProviderCallbackUrl, "https://confluent.cloud/cli_callback")
 		require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
 		require.Empty(t, state.SSOProviderAuthenticationCode)
@@ -175,6 +176,8 @@ func TestGetAuthorizationUrl(t *testing.T) {
 }
 
 func TestGetOAuthToken(t *testing.T) {
+	mockRefreshToken := "foo"
+
 	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
 
 	expectedUri := "/oauth/token"
@@ -194,7 +197,7 @@ func TestGetOAuthToken(t *testing.T) {
 		require.Equal(t, expectedPayload, string(body))
 
 		// mock response
-		_, err = rw.Write([]byte(`{"id_token": "` + mockIDToken + `"}`))
+		_, err = rw.Write([]byte(fmt.Sprintf(`{"id_token": "%s", "refresh_token": "%s"}`, mockIDToken, mockRefreshToken)))
 		require.NoError(t, err)
 	}))
 	defer server.Close()
@@ -210,13 +213,16 @@ func TestGetOAuthToken(t *testing.T) {
 }
 
 func TestRefreshOAuthToken(t *testing.T) {
+	mockRefreshToken1 := "foo"
+	mockRefreshToken2 := "bar"
+
 	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
-	mockRefreshToken := "bar"
-	state.SSOProviderRefreshToken = mockRefreshToken
+	state.SSOProviderRefreshToken = mockRefreshToken1
+
 	expectedUri := "/oauth/token"
 	expectedPayload := "grant_type=refresh_token" +
 		"&client_id=" + state.SSOProviderClientID +
-		"&refresh_token=" + mockRefreshToken +
+		"&refresh_token=" + state.SSOProviderRefreshToken +
 		"&redirect_uri=" + state.SSOProviderCallbackUrl
 
 	mockIDToken := "foobar"
@@ -229,7 +235,7 @@ func TestRefreshOAuthToken(t *testing.T) {
 		require.Equal(t, expectedPayload, string(body))
 
 		// mock response
-		_, err = rw.Write([]byte(`{"id_token": "` + mockIDToken + `"}`))
+		_, err = rw.Write([]byte(fmt.Sprintf(`{"id_token": "%s", "refresh_token": "%s"}`, mockIDToken, mockRefreshToken2)))
 		require.NoError(t, err)
 	}))
 	defer server.Close()
@@ -242,4 +248,5 @@ func TestRefreshOAuthToken(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
+	require.Equal(t, mockRefreshToken2, state.SSOProviderRefreshToken)
 }

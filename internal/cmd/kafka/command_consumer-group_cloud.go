@@ -164,7 +164,7 @@ func (g *groupCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all consumer groups.",
-				Code: "ccloud kafka consumer-group list",
+				Code: "confluent kafka consumer-group list",
 			},
 		),
 		Hidden: true,
@@ -180,8 +180,8 @@ func (g *groupCommand) init() {
 		RunE:  pcmd.NewCLIRunE(g.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the `my_consumer_group` consumer group.",
-				Code: "ccloud kafka consumer-group describe my_consumer_group",
+				Text: "Describe the `my-consumer-group` consumer group.",
+				Code: "confluent kafka consumer-group describe my-consumer-group",
 			},
 		),
 		Hidden: true,
@@ -350,8 +350,8 @@ func (lagCmd *lagCommand) init() {
 		RunE:  pcmd.NewCLIRunE(lagCmd.summarizeLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Summarize the lag for the `my_consumer_group` consumer-group.",
-				Code: "ccloud kafka consumer-group lag summarize my_consumer_group",
+				Text: "Summarize the lag for the `my-consumer-group` consumer-group.",
+				Code: "confluent kafka consumer-group lag summarize my-consumer-group",
 			},
 		),
 		Hidden: true,
@@ -367,8 +367,8 @@ func (lagCmd *lagCommand) init() {
 		RunE:  pcmd.NewCLIRunE(lagCmd.listLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all consumer lags for consumers in the `my_consumer_group` consumer-group.",
-				Code: "ccloud kafka consumer-group lag list my_consumer_group",
+				Text: "List all consumer lags for consumers in the `my-consumer-group` consumer-group.",
+				Code: "confluent kafka consumer-group lag list my-consumer-group",
 			},
 		),
 		Hidden: true,
@@ -385,8 +385,8 @@ func (lagCmd *lagCommand) init() {
 		RunE:  pcmd.NewCLIRunE(lagCmd.getLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get the consumer lag for topic `my_topic` partition `0` consumed by consumer-group `my_consumer_group`.",
-				Code: "ccloud kafka consumer-group lag get my_consumer_group --topic my_topic --partition 0",
+				Text: "Get the consumer lag for topic `my-topic` partition `0` consumed by consumer-group `my-consumer-group`.",
+				Code: "confluent kafka consumer-group lag get my-consumer-group --topic my-topic --partition 0",
 			},
 		),
 		Hidden: true,

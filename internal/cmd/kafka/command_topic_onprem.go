@@ -8,10 +8,9 @@ import (
 	"sort"
 
 	"github.com/antihax/optional"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,12 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
-
-// Info needed to complete kafka topic ...
-type topicCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
-}
 
 type PartitionData struct {
 	TopicName              string  `json:"topic" yaml:"topic"`
@@ -42,28 +35,13 @@ type TopicData struct {
 	Configs           map[string]string `json:"config" yaml:"config"`
 }
 
-// Return the command to be registered to the kafka topic slot
-func NewTopicCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
-	topicCmd := &topicCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
-			&cobra.Command{
-				Use:   "topic",
-				Short: "Manage Kafka topics.",
-			}, prerunner, OnPremTopicSubcommandFlags),
-		prerunner: prerunner,
-	}
-	topicCmd.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(topicCmd.AuthenticatedCLICommand))
-	topicCmd.init()
-	return topicCmd.Command
-}
-
 // Register each of the verbs and expected args
-func (topicCmd *topicCommand) init() {
+func (c *authenticatedTopicCommand) onPremInit() {
 	// Register list command
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(topicCmd.listTopics),
+		RunE:  pcmd.NewCLIRunE(c.onPremList),
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -76,13 +54,13 @@ func (topicCmd *topicCommand) init() {
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
-	topicCmd.AddCommand(listCmd)
+	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1), // <topic>
-		RunE:  pcmd.NewCLIRunE(topicCmd.createTopic),
+		RunE:  pcmd.NewCLIRunE(c.onPremCreate),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
@@ -99,13 +77,13 @@ func (topicCmd *topicCommand) init() {
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	createCmd.Flags().SortFlags = false
-	topicCmd.AddCommand(createCmd)
+	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(topicCmd.deleteTopic),
+		RunE:  pcmd.NewCLIRunE(c.onPremDelete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topic `my_topic` at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.",
@@ -114,13 +92,13 @@ func (topicCmd *topicCommand) init() {
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	deleteCmd.Flags().SortFlags = false
-	topicCmd.AddCommand(deleteCmd)
+	c.AddCommand(deleteCmd)
 
 	updateCmd := &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(topicCmd.updateTopicConfig),
+		RunE:  pcmd.NewCLIRunE(c.onPremUpdate),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).",
@@ -131,12 +109,12 @@ func (topicCmd *topicCommand) init() {
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	updateCmd.Flags().SortFlags = false
-	topicCmd.AddCommand(updateCmd)
+	c.AddCommand(updateCmd)
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(topicCmd.describeTopic),
+		RunE:  pcmd.NewCLIRunE(c.onPremDescribe),
 		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -148,7 +126,7 @@ func (topicCmd *topicCommand) init() {
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
-	topicCmd.AddCommand(describeCmd)
+	c.AddCommand(describeCmd)
 }
 
 //List Kafka topics.
@@ -164,8 +142,8 @@ func (topicCmd *topicCommand) init() {
 //--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
 //-o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 //--context string            CLI Context name.
-func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) error {
-	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
+func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) error {
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -208,10 +186,10 @@ func (topicCmd *topicCommand) listTopics(cmd *cobra.Command, args []string) erro
 //--config strings             A comma-separated list of topic configuration ('key=value') overrides for the topic being created.
 //--if-not-exists              Exit gracefully if topic already exists.
 //--context string             CLI Context name.
-func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
-	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -294,10 +272,10 @@ func (topicCmd *topicCommand) createTopic(cmd *cobra.Command, args []string) err
 //--client-key-path string    Path to client private key, include for mTLS authentication.
 //--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
 //--context string            CLI Context name.
-func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
-	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -327,7 +305,7 @@ func (topicCmd *topicCommand) deleteTopic(cmd *cobra.Command, args []string) err
 //--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
 //--config strings            A comma-separated list of topics configuration ('key=value') overrides for the topic being created.
 //--context string            CLI Context name.
-func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 	// Parse Argument
 	topicName := args[0]
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -336,7 +314,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 	} else if !output.IsValidFormatString(format) { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
-	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -413,7 +391,7 @@ func (topicCmd *topicCommand) updateTopicConfig(cmd *cobra.Command, args []strin
 //--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
 //-o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 //--context string            CLI Context name.
-func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -422,7 +400,7 @@ func (topicCmd *topicCommand) describeTopic(cmd *cobra.Command, args []string) e
 	} else if !output.IsValidFormatString(format) { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
-	restClient, restContext, err := initKafkaRest(topicCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,7 @@ import (
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	climock "github.com/confluentinc/cli/mock"
 )
 
@@ -26,7 +26,7 @@ func TestPromoAdd(t *testing.T) {
 		},
 	}
 
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	cmd := New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "add", "XXXXX")
@@ -44,7 +44,7 @@ func TestPromoListEmpty(t *testing.T) {
 		},
 	}
 
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	cmd := New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "list")

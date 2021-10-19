@@ -8,10 +8,11 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/quit"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/shell/prompt"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -20,27 +21,22 @@ const (
 )
 
 type command struct {
-	Command          *cobra.Command
-	RootCmd          *cobra.Command
-	cliName          string
-	config           *v3.Config
-	configLoadingErr error
-	prerunner        pcmd.PreRunner
-	completer        *completer.ShellCompleter
-	jwtValidator     pcmd.JWTValidator
+	Command      *cobra.Command
+	RootCmd      *cobra.Command
+	config       *v1.Config
+	prerunner    pcmd.PreRunner
+	completer    *completer.ShellCompleter
+	jwtValidator pcmd.JWTValidator
 }
 
 // NewShellCmd returns the Cobra command for the shell.
-func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName string, config *v3.Config, configLoadingErr error,
-	completer *completer.ShellCompleter, jwtValidator pcmd.JWTValidator) *cobra.Command {
+func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, config *v1.Config, completer *completer.ShellCompleter, jwtValidator pcmd.JWTValidator) *cobra.Command {
 	cliCmd := &command{
-		RootCmd:          rootCmd,
-		config:           config,
-		configLoadingErr: configLoadingErr,
-		cliName:          cliName,
-		prerunner:        prerunner,
-		completer:        completer,
-		jwtValidator:     jwtValidator,
+		RootCmd:      rootCmd,
+		config:       config,
+		prerunner:    prerunner,
+		completer:    completer,
+		jwtValidator: jwtValidator,
 	}
 
 	cliCmd.init()
@@ -49,23 +45,20 @@ func NewShellCmd(rootCmd *cobra.Command, prerunner pcmd.PreRunner, cliName strin
 
 func (c *command) init() {
 	c.Command = &cobra.Command{
-		Use:   "shell",
-		Short: fmt.Sprintf("Run the %s shell.", c.cliName),
-		RunE:  pcmd.NewCLIRunE(c.shell),
-		Args:  cobra.NoArgs,
+		Use:         "shell",
+		Short:       fmt.Sprintf("Run the %s shell.", version.CLIName),
+		RunE:        pcmd.NewCLIRunE(c.shell),
+		Args:        cobra.NoArgs,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 }
 
 func (c *command) shell(cmd *cobra.Command, args []string) error {
-	if c.config == nil {
-		return c.configLoadingErr
-	}
-
 	// remove shell command from the shell
 	c.RootCmd.RemoveCommand(c.Command)
 
 	// add shell only quit command
-	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner, c.config))
+	c.RootCmd.AddCommand(quit.NewQuitCmd(c.prerunner))
 
 	msg := errors.AlreadyAuthenticatedMsg
 	if cmd.Annotations == nil {
@@ -81,7 +74,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	}
 
 	// run the shell
-	fmt.Printf(errors.ShellWelcomeMsg, c.cliName, msg)
+	fmt.Printf(errors.ShellWelcomeMsg, version.CLIName, msg)
 	fmt.Println(errors.ShellExitInstructionsMsg)
 
 	opts := prompt.DefaultPromptOptions()
@@ -96,7 +89,7 @@ func (c *command) shell(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func livePrefixFunc(prompt *goprompt.Prompt, config *v3.Config, jwtValidator pcmd.JWTValidator) func() (prefix string, useLivePrefix bool) {
+func livePrefixFunc(prompt *goprompt.Prompt, config *v1.Config, jwtValidator pcmd.JWTValidator) func() (prefix string, useLivePrefix bool) {
 	return func() (prefix string, useLivePrefix bool) {
 		text, color := prefixState(jwtValidator, config)
 		if err := goprompt.OptionPrefixTextColor(color)(prompt); err != nil {
@@ -109,10 +102,10 @@ func livePrefixFunc(prompt *goprompt.Prompt, config *v3.Config, jwtValidator pcm
 }
 
 // prefixState returns the text and color of the prompt prefix.
-func prefixState(jwtValidator pcmd.JWTValidator, config *v3.Config) (text string, color goprompt.Color) {
+func prefixState(jwtValidator pcmd.JWTValidator, config *v1.Config) (text string, color goprompt.Color) {
 	prefixColor := watermelonRed
 	if err := jwtValidator.Validate(config.Context()); err == nil {
 		prefixColor = candyAppleGreen
 	}
-	return fmt.Sprintf("%s > ", config.CLIName), prefixColor
+	return fmt.Sprintf("%s > ", version.CLIName), prefixColor
 }

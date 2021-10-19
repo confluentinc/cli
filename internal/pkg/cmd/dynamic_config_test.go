@@ -9,25 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
-	config := v3.AuthenticatedCloudConfigMock()
+	config := v1.AuthenticatedCloudConfigMock()
 	dynamicConfigBase := pcmd.NewDynamicConfig(config, &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
 	}, pmock.NewClientMock())
 
-	config = v3.AuthenticatedCloudConfigMock()
+	config = v1.AuthenticatedCloudConfigMock()
 	dynamicConfigFlag := pcmd.NewDynamicConfig(config, &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
 	}, pmock.NewClientMock())
-	dynamicConfigFlag.Contexts["test-context"] = &v3.Context{
+	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{
 		Name: "test-context",
 	}
 	tests := []struct {
@@ -50,7 +50,7 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 			name:    "bad-context specified with flag",
 			context: "bad-context",
 			dConfig: dynamicConfigFlag,
-			errMsg:  fmt.Sprintf(errors.ContextNotExistErrorMsg, "bad-context"),
+			errMsg:  fmt.Sprintf(errors.ContextDoesNotExistErrorMsg, "bad-context"),
 		},
 	}
 	for _, tt := range tests {

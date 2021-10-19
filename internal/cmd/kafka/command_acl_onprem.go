@@ -1,9 +1,8 @@
 package kafka
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,29 +15,12 @@ var (
 	onPremAclListStructuredRenames = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 )
 
-type aclOnPremCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-}
-
-func NewAclCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
-	aclCmd := &aclOnPremCommand{
-		pcmd.NewAuthenticatedStateFlagCommand(
-			&cobra.Command{
-				Use:   "acl",
-				Short: "Manage Kafka ACLs.",
-			}, prerunner, OnPremTopicSubcommandFlags),
-	}
-	aclCmd.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(aclCmd.AuthenticatedCLICommand))
-	aclCmd.init()
-	return aclCmd.Command
-}
-
-func (aclCmd *aclOnPremCommand) init() {
+func (c *aclCommand) onPremInit() {
 	createCmd = &cobra.Command{
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(aclCmd.create),
+		RunE:  pcmd.NewCLIRunE(c.onPremCreate),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: `cluster-scope`, `consumer-group`, `topic`, or `transactional-id`. For example, for a consumer to read a topic, you need to grant `READ` and `DESCRIBE` both on the `consumer-group` and the `topic` resources, issuing two separate commands:",
@@ -49,13 +31,13 @@ func (aclCmd *aclOnPremCommand) init() {
 	createCmd.Flags().AddFlagSet(aclutil.CreateACLFlags())
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	createCmd.Flags().SortFlags = false
-	aclCmd.AddCommand(createCmd)
+	c.AddCommand(createCmd)
 
 	deleteCmd = &cobra.Command{
 		Use:   "delete",
 		Short: "Delete Kafka ACLs matching the search criteria.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(aclCmd.delete),
+		RunE:  pcmd.NewCLIRunE(c.onPremDelete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete all READ access ACLs for the specified user:",
@@ -66,13 +48,13 @@ func (aclCmd *aclOnPremCommand) init() {
 	deleteCmd.Flags().AddFlagSet(aclutil.DeleteACLFlags())
 	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	deleteCmd.Flags().SortFlags = false
-	aclCmd.AddCommand(deleteCmd)
+	c.AddCommand(deleteCmd)
 
 	listCmd = &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka ACLs.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(aclCmd.list),
+		RunE:  pcmd.NewCLIRunE(c.onPremList),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the local ACLs for the Kafka cluster:",
@@ -87,15 +69,15 @@ func (aclCmd *aclOnPremCommand) init() {
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().AddFlagSet(aclutil.AclFlags())
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	aclCmd.AddCommand(listCmd)
+	c.AddCommand(listCmd)
 }
 
-func (aclCmd *aclOnPremCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *aclCommand) onPremList(cmd *cobra.Command, _ []string) error {
 	acl := aclutil.ParseAclRequest(cmd)
 	if acl.Errors != nil {
 		return acl.Errors
 	}
-	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -111,13 +93,13 @@ func (aclCmd *aclOnPremCommand) list(cmd *cobra.Command, _ []string) error {
 	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data, cmd.OutOrStdout(), onPremAclListFields, onPremAclListStructuredRenames)
 }
 
-func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
+func (c *aclCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	acl := aclutil.ParseAclRequest(cmd)
 	acl = aclutil.ValidateCreateDeleteAclRequestData(acl)
 	if acl.Errors != nil {
 		return acl.Errors
 	}
-	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -134,13 +116,13 @@ func (aclCmd *aclOnPremCommand) create(cmd *cobra.Command, _ []string) error {
 	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData}, cmd.OutOrStdout(), onPremAclListFields, onPremAclListStructuredRenames)
 }
 
-func (aclCmd *aclOnPremCommand) delete(cmd *cobra.Command, _ []string) error {
+func (c *aclCommand) onPremDelete(cmd *cobra.Command, _ []string) error {
 	acl := aclutil.ParseAclRequest(cmd)
 	acl = aclutil.ValidateCreateDeleteAclRequestData(acl)
 	if acl.Errors != nil {
 		return acl.Errors
 	}
-	restClient, restContext, err := initKafkaRest(aclCmd.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

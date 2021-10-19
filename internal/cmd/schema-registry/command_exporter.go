@@ -1,16 +1,17 @@
 package schemaregistry
 
 import (
-	"fmt"
+	"strconv"
+	"strings"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
-	"strconv"
-	"strings"
 )
 
 type exporterCommand struct {
@@ -43,21 +44,22 @@ var (
 	describeStatusStructuredRenames = map[string]string{"Name": "name", "State": "state", "Offset": "offset", "Timestamp": "timestamp", "Trace": "trace"}
 )
 
-func NewExporterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewExporterCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "exporter",
-			Short: "Manage Schema Registry exporters.",
+			Use:         "exporter",
+			Short:       "Manage Schema Registry exporters.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, ExporterSubcommandFlags)
 	exporterCmd := &exporterCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		srClient:                      srClient,
 	}
-	exporterCmd.init(cliName)
+	exporterCmd.init()
 	return exporterCmd.Command
 }
 
-func (c *exporterCommand) init(cliName string) {
+func (c *exporterCommand) init() {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all schema exporters.",
@@ -66,7 +68,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all schema exporters.",
-				Code: fmt.Sprintf("%s schema-registry exporter list", cliName),
+				Code: "confluent schema-registry exporter list",
 			},
 		),
 	}
@@ -82,7 +84,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config-file config.txt", cliName),
+				Code: "confluent schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config-file config.txt",
 			},
 		),
 	}
@@ -104,12 +106,11 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter"+
-					" --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context", cliName),
+				Code: "confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context",
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --config-file ~/config.txt", cliName),
+				Code: "confluent schema-registry exporter update my-exporter --config-file ~/config.txt",
 			},
 		),
 	}
@@ -130,7 +131,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the information of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter describe my-exporter", cliName),
+				Code: "confluent schema-registry exporter describe my-exporter",
 			},
 		),
 	}
@@ -146,7 +147,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the configurations of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter get-config my-exporter", cliName),
+				Code: "confluent schema-registry exporter get-config my-exporter",
 			},
 		),
 	}
@@ -162,7 +163,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the status of schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter get-status my-exporter", cliName),
+				Code: "confluent schema-registry exporter get-status my-exporter",
 			},
 		),
 	}
@@ -178,7 +179,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter pause my-exporter", cliName),
+				Code: "confluent schema-registry exporter pause my-exporter",
 			},
 		),
 	}
@@ -194,7 +195,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Resume schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter resume my-exporter", cliName),
+				Code: "confluent schema-registry exporter resume my-exporter",
 			},
 		),
 	}
@@ -210,7 +211,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Reset schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter reset my-exporter", cliName),
+				Code: "confluent schema-registry exporter reset my-exporter",
 			},
 		),
 	}
@@ -226,7 +227,7 @@ func (c *exporterCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter delete my-exporter", cliName),
+				Code: "confluent schema-registry exporter delete my-exporter",
 			},
 		),
 	}

@@ -6,55 +6,29 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	cliDownLoadLink = map[string]string{
-		"confluent": "https://docs.confluent.io/current/cli/installing.html",
-		"ccloud":    "https://docs.confluent.io/current/cloud/cli/install.html",
-	}
-)
-
 type CLITypedError interface {
 	error
 	UserFacingError() error
 }
 
-type NotLoggedInError struct {
-	CLIName string
-}
+type NotLoggedInError struct{}
 
 func (e *NotLoggedInError) Error() string {
-	return e.CLIName
+	return NotLoggedInErrorMsg
 }
 
 func (e *NotLoggedInError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(NotLoggedInSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(NotLoggedInErrorMsg, NotLoggedInSuggestions)
 }
 
-type SRNotAuthenticatedError struct {
-	CLIName string
-}
+type SRNotAuthenticatedError struct{}
 
 func (e *SRNotAuthenticatedError) Error() string {
-	return e.CLIName
+	return SRNotAuthenticatedErrorMsg
 }
 
 func (e *SRNotAuthenticatedError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(SRNotAuthenticatedSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, suggestionsMsg)
-}
-
-type NoContextError struct {
-	CLIName string
-}
-
-func (e *NoContextError) Error() string {
-	return e.CLIName
-}
-
-func (e *NoContextError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(NotLoggedInSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, SRNotAuthenticatedSuggestions)
 }
 
 type KafkaClusterNotFoundError struct {
@@ -101,7 +75,7 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-func NewCorruptedConfigError(format string, contextName string, cliName string, configFile string, logger *log.Logger) CLITypedError {
+func NewCorruptedConfigError(format, contextName, configFile string, logger *log.Logger) CLITypedError {
 	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
@@ -112,7 +86,7 @@ func NewCorruptedConfigError(format string, contextName string, cliName string, 
 	// logging stack trace of the error use pkg/errors error type
 	logger.Debugf("%+v", errorWithStackTrace)
 	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
-	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile, cliName, cliName)
+	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
 	return e
 }
 
@@ -129,13 +103,12 @@ func (e *CorruptedConfigError) UserFacingError() error {
 	return NewErrorWithSuggestions(e.errorMsg, e.suggestionsMsg)
 }
 
-func NewUpdateClientWrapError(err error, errorMsg string, cliName string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error(), cliName: cliName}
+func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
+	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
 }
 
 type UpdateClientError struct {
 	errorMsg string
-	cliName  string
 }
 
 func (e *UpdateClientError) Error() string {
@@ -144,6 +117,5 @@ func (e *UpdateClientError) Error() string {
 
 func (e *UpdateClientError) UserFacingError() error {
 	errMsg := fmt.Sprintf(prefixFormat, UpdateClientFailurePrefix, e.errorMsg)
-	suggestionsMsg := fmt.Sprintf(UpdateClientFailureSuggestions, cliDownLoadLink[e.cliName])
-	return NewErrorWithSuggestions(errMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(errMsg, UpdateClientFailureSuggestions)
 }

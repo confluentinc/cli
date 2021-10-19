@@ -14,12 +14,13 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type describeDisplay struct {
@@ -44,74 +45,107 @@ var (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+	prerunner       pcmd.PreRunner
 	logger          *log.Logger
 	srClient        *srsdk.APIClient
 	analyticsClient analytics.Client
 }
 
-func NewClusterCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-		&cobra.Command{
-			Use:   "cluster",
-			Short: "Manage Schema Registry cluster.",
-		}, prerunner, ClusterSubcommandFlags)
-	clusterCmd := &clusterCommand{
-		AuthenticatedStateFlagCommand: cliCmd,
-		srClient:                      srClient,
-		logger:                        logger,
-		analyticsClient:               analyticsClient,
+func NewClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "cluster",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
-	clusterCmd.init(cliName)
-	return clusterCmd.Command
+
+	if cfg.IsCloudLogin() {
+		cmd.Short = "Manage Schema Registry cluster."
+		cmd.Long = "Manage the Schema Registry cluster for the current environment."
+	} else {
+		cmd.Short = "Manage Schema Registry clusters."
+	}
+
+	c := &clusterCommand{
+		prerunner:       prerunner,
+		srClient:        srClient,
+		logger:          logger,
+		analyticsClient: analyticsClient,
+	}
+
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+	}
+
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(c.newEnableCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newUpdateCommand())
+
+	return c.Command
 }
 
-func (c *clusterCommand) init(cliName string) {
-	createCmd := &cobra.Command{
-		Use:   "enable",
-		Short: "Enable Schema Registry for this environment.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.enable),
+func (c *clusterCommand) newEnableCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "enable",
+		Short:       "Enable Schema Registry for this environment.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.enable),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Enable Schema Registry, using Google Cloud Platform in the US:",
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", cliName),
+				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", version.CLIName),
 			},
 		),
 	}
-	createCmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
-	_ = createCmd.MarkFlagRequired("cloud")
-	createCmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
-	_ = createCmd.MarkFlagRequired("geo")
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
-	c.AddCommand(createCmd)
 
-	describeCmd := &cobra.Command{
-		Use:   "describe",
-		Short: "Describe the Schema Registry cluster for this environment.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+	cmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
+	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	cmd.Flags().SortFlags = false
+
+	_ = cmd.MarkFlagRequired("cloud")
+	_ = cmd.MarkFlagRequired("geo")
+
+	return cmd
+}
+
+func (c *clusterCommand) newDescribeCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "describe",
+		Short:       "Describe the Schema Registry cluster for this environment.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.describe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
-	c.AddCommand(describeCmd)
 
-	updateCmd := &cobra.Command{
-		Use:   "update",
-		Short: "Update global mode or compatibility of Schema Registry.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	cmd.Flags().SortFlags = false
+
+	return cmd
+}
+
+func (c *clusterCommand) newUpdateCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "update",
+		Short:       "Update global mode or compatibility of Schema Registry.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.update),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update top level compatibility or mode of Schema Registry.",
-				Code: fmt.Sprintf("%s schema-registry cluster update --compatibility=BACKWARD\n%s schema-registry cluster update --mode=READWRITE", cliName, cliName),
+				Code: fmt.Sprintf("%s schema-registry cluster update --compatibility=BACKWARD\n%s schema-registry cluster update --mode=READWRITE", version.CLIName, version.CLIName),
 			},
 		),
 	}
-	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
-	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
-	updateCmd.Flags().SortFlags = false
-	c.AddCommand(updateCmd)
+
+	cmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
+	cmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	cmd.Flags().SortFlags = false
+
+	return cmd
 }
 
 func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
@@ -149,7 +183,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		}
 		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
-		v2Cluster := &v2.SchemaRegistryCluster{
+		v2Cluster := &v1.SchemaRegistryCluster{
 			Id:                     newCluster.Id,
 			SchemaRegistryEndpoint: newCluster.Endpoint,
 		}

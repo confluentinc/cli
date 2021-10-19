@@ -3,6 +3,8 @@ package examples
 import (
 	"fmt"
 	"strings"
+
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type Example struct {
@@ -25,7 +27,7 @@ func BuildExampleString(examples ...Example) string {
 func formatCodeBlock(lines string) string {
 	var str strings.Builder
 	for _, line := range strings.Split(lines, "\n") {
-		if strings.HasPrefix(line, "confluent") || strings.HasPrefix(line, "ccloud") {
+		if strings.HasPrefix(line, pversion.CLIName) {
 			line = "$ " + line
 		}
 		str.WriteString(fmt.Sprintf("  %s\n", line))

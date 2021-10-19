@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type subjectCommand struct {
@@ -20,21 +21,22 @@ type subjectCommand struct {
 }
 
 // NewSubjectCommand returns the Cobra command for Schema Registry subject list
-func NewSubjectCommand(cliName string, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func NewSubjectCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "subject",
-			Short: "Manage Schema Registry subjects.",
+			Use:         "subject",
+			Short:       "Manage Schema Registry subjects.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, SubjectSubcommandFlags)
 	subjectCmd := &subjectCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
 		srClient:                      srClient,
 	}
-	subjectCmd.init(cliName)
+	subjectCmd.init()
 	return subjectCmd.Command
 }
 
-func (c *subjectCommand) init(cliName string) {
+func (c *subjectCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List subjects.",
@@ -43,7 +45,7 @@ func (c *subjectCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Retrieve all subjects available in a Schema Registry:",
-				Code: fmt.Sprintf("%s schema-registry subject list", cliName),
+				Code: fmt.Sprintf("%s schema-registry subject list", version.CLIName),
 			},
 		),
 	}
@@ -61,7 +63,7 @@ func (c *subjectCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update subject level compatibility or mode of Schema Registry:",
-				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE", cliName, cliName),
+				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE", version.CLIName, version.CLIName),
 			},
 		),
 	}
@@ -78,7 +80,7 @@ func (c *subjectCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Retrieve all versions registered under a given subject and its compatibility level.",
-				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name>", cliName),
+				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name>", version.CLIName),
 			},
 		),
 	}

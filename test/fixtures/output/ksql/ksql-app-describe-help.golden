@@ -1,7 +1,7 @@
 Describe a ksqlDB app.
 
 Usage:
-  ccloud ksql app describe <id> [flags]
+  confluent ksql app describe <id> [flags]
 
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

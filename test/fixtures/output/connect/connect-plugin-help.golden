@@ -1,0 +1,14 @@
+Show plugins and their configurations.
+
+Usage:
+  confluent connect plugin [command]
+
+Available Commands:
+  describe    Describe a connector plugin type.
+  list        List connector plugin types.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent connect plugin [command] --help" for more information about a command.

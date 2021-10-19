@@ -10,7 +10,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -67,16 +67,17 @@ var (
 )
 
 type command struct {
-	*cmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedCLICommand
 }
 
-func New(prerunner cmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{
-		cmd.NewAuthenticatedCLICommand(
+		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
-				Use:   "price",
-				Short: "See Confluent Cloud pricing information.",
-				Args:  cobra.NoArgs,
+				Use:         "price",
+				Short:       "See Confluent Cloud pricing information.",
+				Args:        cobra.NoArgs,
+				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 			},
 			prerunner,
 		),
@@ -92,13 +93,13 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "Print an organization's price list.",
 		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 
 	// Required flags
 	command.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", mapToList(formatCloud)))
 	_ = command.MarkFlagRequired("cloud")
-	command.Flags().String("region", "", "Cloud region ID for cluster (use `ccloud kafka region list` to see all).")
+	command.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
 	_ = command.MarkFlagRequired("region")
 
 	// Extra filtering flags

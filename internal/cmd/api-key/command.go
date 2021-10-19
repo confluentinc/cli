@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -33,15 +32,7 @@ machine, the secret is not available for CLI use until you "store" it. This is b
 secrets are irretrievable after creation.
 
 You must have an API secret stored locally for certain CLI commands to
-work. For example, the Kafka topic consume and produce commands require an API secret.
-
-There are five ways to pass the secret:
-1. api-key store <key> <secret>.
-2. api-key store; you will be prompted for both API key and secret.
-3. api-key store <key>; you will be prompted for API secret.
-4. api-key store <key> -; for piping API secret.
-5. api-key store <key> @<filepath>.
-`
+work. For example, the Kafka topic consume and produce commands require an API secret.`
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
@@ -53,9 +44,9 @@ type command struct {
 }
 
 var (
-	listFields              = []string{"Key", "Description", "UserId", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels         = []string{"Key", "Description", "Owner", "Owner Resource Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels    = []string{"key", "description", "owner", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
+	listFields              = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	listHumanLabels         = []string{"Key", "Description", "Owner Resource Id", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	listStructuredLabels    = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 	createFields            = []string{"Key", "Secret"}
 	createHumanRenames      = map[string]string{"Key": "API Key"}
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
@@ -66,8 +57,9 @@ var (
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "api-key",
-			Short: "Manage the API keys.",
+			Use:         "api-key",
+			Short:       "Manage the API keys.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, SubcommandFlags)
 	cmd := &command{
 		AuthenticatedStateFlagCommand: cliCmd,
@@ -88,7 +80,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List the API keys that belong to service account with resource ID `sa-lqv3mm` on cluster `lkc-xyz`",
-				Code: `ccloud api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
+				Code: `confluent api-key list --resource lkc-xyz --service-account sa-lqv3mm `,
 			},
 		),
 	}
@@ -108,7 +100,7 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`",
-				Code: `ccloud api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
+				Code: `confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm`,
 			},
 		),
 	}
@@ -141,11 +133,33 @@ func (c *command) init() {
 	c.AddCommand(deleteCmd)
 
 	storeCmd := &cobra.Command{
-		Use:   "store <api-key> <secret>",
+		Use:   "store [api-key] [secret]",
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),
 		RunE:  pcmd.NewCLIRunE(c.store),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Pass the API key and secret as arguments",
+				Code: "ccloud api-key store my-key my-secret",
+			},
+			examples.Example{
+				Text: "Get prompted for both the API key and secret",
+				Code: "ccloud api-key store",
+			},
+			examples.Example{
+				Text: "Get prompted for only the API secret",
+				Code: "ccloud api-key store my-key",
+			},
+			examples.Example{
+				Text: "Pipe the API secret",
+				Code: "ccloud api-key store my-key -",
+			},
+			examples.Example{
+				Text: "Provide the API secret in a file",
+				Code: "ccloud api-key store my-key @my-secret.txt",
+			},
+		),
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "The resource ID of the resource the API key is for.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
@@ -177,7 +191,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	type keyDisplay struct {
 		Key            string
 		Description    string
-		UserId         int32
 		UserResourceId string
 		UserEmail      string
 		ResourceType   string
@@ -195,7 +208,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
 	}
 
-	serviceAccountId, err := cmd.Flags().GetString("service-account")
+	serviceAccountID, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -212,21 +225,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	userId := int32(0)
 	serviceAccount := false
-	if serviceAccountId != "" {
+	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
 		serviceAccount = true
-		if isResourceId(serviceAccountId) { // if user inputs resource ID, get corresponding numeric ID
-			userIdMap, err := c.mapResourceIdToUserId(allUsers)
-			if err != nil {
-				return err
-			}
-			var ok bool
-			userId, ok = userIdMap[serviceAccountId]
-			if !ok {
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountId), errors.ServiceAccountNotFoundSuggestions)
-			}
-		} else { // if user inputs numeric ID, convert it to int32
-			userIdp, _ := strconv.Atoi(serviceAccountId)
-			userId = int32(userIdp)
+		validFormat := strings.HasPrefix(serviceAccountID, "sa-")
+		if !validFormat {
+			return errors.New(errors.BadServiceAccountIDErrorMsg)
+		}
+		userIdMap := c.mapResourceIdToUserId(allUsers)
+		var ok bool
+		userId, ok = userIdMap[serviceAccountID]
+		if !ok {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID), errors.ServiceAccountNotFoundSuggestions)
 		}
 	}
 
@@ -252,10 +261,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(users)
-	resourceIdMap, err := c.mapUserIdToResourceId(allUsers)
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(allUsers)
 
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
@@ -301,7 +307,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
-				UserId:         apiKey.UserId,
 				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   pcmd.CloudResourceType,
@@ -317,7 +322,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
-				UserId:         apiKey.UserId,
 				UserResourceId: userResourceId,
 				UserEmail:      email,
 				ResourceType:   lc.Type,
@@ -379,7 +383,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	serviceAccountId, err := cmd.Flags().GetString("service-account")
+	serviceAccountID, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -390,11 +394,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	key := &schedv1.ApiKey{
-		Description: description,
-		AccountId:   c.EnvironmentId(),
+		UserResourceId: serviceAccountID,
+		Description:    description,
+		AccountId:      c.EnvironmentId(),
 	}
 
-	key, err = c.completeKeyId(key, serviceAccountId) // get corresponding numeric/resource ID if the cmd has a service-account flag
+	key, err = c.completeKeyUserId(key) // get corresponding numeric ID if the cmd has a service-account flag
 	if err != nil {
 		return err
 	}
@@ -466,7 +471,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) store(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	var cluster *configv1.KafkaClusterConfig
+	var cluster *v1.KafkaClusterConfig
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster
@@ -669,27 +674,19 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return append(serviceAccounts, adminUsers...), nil
 }
 
-func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey, error) {
-	if Id != "" { // it has a service-account flag
-		key.ServiceAccount = true
+func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
+	if key.UserResourceId != "" { // it has a service-account flag
+		validFormat := strings.HasPrefix(key.UserResourceId, "sa-")
+		if !validFormat {
+			return nil, errors.New(errors.BadServiceAccountIDErrorMsg)
+		}
 		users, err := c.getAllUsers()
 		if err != nil {
 			return key, err
 		}
-		idp, err := strconv.Atoi(Id)
-		if err != nil { // it's a resource id
-			key.UserResourceId = Id
-			for _, user := range users {
-				if Id == user.ResourceId {
-					key.UserId = user.Id
-				}
-			}
-		} else { // it's a numeric id
-			key.UserId = int32(idp)
-			for _, user := range users {
-				if int32(idp) == user.Id {
-					key.UserResourceId = user.ResourceId
-				}
+		for _, user := range users {
+			if key.UserResourceId == user.ResourceId {
+				key.UserId = user.Id
 			}
 		}
 	} else {
@@ -698,23 +695,18 @@ func (c *command) completeKeyId(key *schedv1.ApiKey, Id string) (*schedv1.ApiKey
 	return key, nil
 }
 
-func (c *command) mapUserIdToResourceId(users []*orgv1.User) (map[int32]string, error) {
+func (c *command) mapUserIdToResourceId(users []*orgv1.User) map[int32]string {
 	idMap := make(map[int32]string)
 	for _, user := range users {
 		idMap[user.Id] = user.ResourceId
 	}
-	return idMap, nil
+	return idMap
 }
 
-func (c *command) mapResourceIdToUserId(users []*orgv1.User) (map[string]int32, error) {
+func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
 	}
-	return idMap, nil
-}
-
-func isResourceId(Id string) bool {
-	_, err := strconv.Atoi(Id)
-	return err != nil
+	return idMap
 }

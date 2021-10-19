@@ -20,58 +20,59 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	ksqlClusterID     = "lksqlc-12345"
-	physicalClusterID = "pksqlc-zxcvb"
-	outputTopicPrefix = "pksqlc-abcde"
-	keyString         = "key"
-	keySecretString   = "secret"
-	serviceAcctID     = int32(123)
-	expectedACLs      = `  ServiceAccountId | Permission |    Operation     |     Resource     |             Name             |   Type    
--------------------+------------+------------------+------------------+------------------------------+-----------
-  User:123         | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL   
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL   
-  User:123         | ALLOW      | CREATE           | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | CREATE           | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | CREATE           | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER            | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | ALTER            | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER            | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER_CONFIGS    | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | ALTER_CONFIGS    | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | ALTER_CONFIGS    | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | READ             | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | READ             | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | READ             | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | WRITE            | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | WRITE            | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | WRITE            | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DELETE           | TOPIC            | pksqlc-abcde                 | PREFIXED  
-  User:123         | ALLOW      | DELETE           | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DELETE           | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED  
-  User:123         | ALLOW      | DESCRIBE         | TOPIC            | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE         | GROUP            | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE_CONFIGS | GROUP            | *                            | LITERAL   
-  User:123         | ALLOW      | DESCRIBE         | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL   
-  User:123         | ALLOW      | WRITE            | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL   
+	ksqlClusterID         = "lksqlc-12345"
+	physicalClusterID     = "pksqlc-zxcvb"
+	outputTopicPrefix     = "pksqlc-abcde"
+	keyString             = "key"
+	keySecretString       = "secret"
+	serviceAcctID         = int32(123)
+	serviceAcctResourceID = "sa-12345"
+	expectedACLs          = `  Principal | Permission |    Operation     |   ResourceType   |         ResourceName         | PatternType  
+------------+------------+------------------+------------------+------------------------------+--------------
+  User:123  | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL      
+  User:123  | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL      
+  User:123  | ALLOW      | CREATE           | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | CREATE           | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | CREATE           | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE         | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE         | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE         | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | ALTER            | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | ALTER            | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | ALTER            | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE_CONFIGS | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | ALTER_CONFIGS    | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | ALTER_CONFIGS    | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | ALTER_CONFIGS    | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | READ             | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | READ             | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | READ             | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | WRITE            | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | WRITE            | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | WRITE            | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DELETE           | TOPIC            | pksqlc-abcde                 | PREFIXED     
+  User:123  | ALLOW      | DELETE           | TOPIC            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DELETE           | GROUP            | _confluent-ksql-pksqlc-abcde | PREFIXED     
+  User:123  | ALLOW      | DESCRIBE         | TOPIC            | *                            | LITERAL      
+  User:123  | ALLOW      | DESCRIBE         | GROUP            | *                            | LITERAL      
+  User:123  | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | *                            | LITERAL      
+  User:123  | ALLOW      | DESCRIBE_CONFIGS | GROUP            | *                            | LITERAL      
+  User:123  | ALLOW      | DESCRIBE         | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL      
+  User:123  | ALLOW      | WRITE            | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL      
 `
 )
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf            *v3.Config
+	conf            *v1.Config
 	kafkaCluster    *schedv1.KafkaCluster
 	ksqlCluster     *schedv1.KSQLCluster
 	serviceAcct     *orgv1.User
@@ -83,7 +84,7 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:   "lkc-123",
 		Name: "kafka",
@@ -92,6 +93,7 @@ func (suite *KSQLTestSuite) SetupSuite() {
 		ServiceAccount: true,
 		ServiceName:    "KSQL." + ksqlClusterID,
 		Id:             serviceAcctID,
+		ResourceId:     serviceAcctResourceID,
 	}
 }
 
@@ -143,7 +145,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), &cliMock.ServerSideCompleter{}, suite.analyticsClient)
+	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), &cliMock.ServerSideCompleter{}, suite.analyticsClient)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -219,7 +221,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 
 func (suite *KSQLTestSuite) TestCreateKSQL() {
 	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID}
+	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -256,7 +258,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both --api-key and --api-secret must be provided", err.Error())
+	req.Equal("required flag(s) \"api-key\" not set", err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
@@ -267,12 +269,23 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
 	req := require.New(suite.T())
 	req.Error(err)
 	req.False(suite.ksqlc.CreateCalled())
-	req.Equal("both --api-key and --api-secret must be provided", err.Error())
+	req.Equal("required flag(s) \"api-secret\" not set", err.Error())
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKeyAndSecret() {
+	cmd := suite.newCMD()
+	cmd.SetArgs([]string{"app", "create", ksqlClusterID})
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Error(err)
+	req.False(suite.ksqlc.CreateCalled())
+	req.Equal(`required flag(s) "api-key", "api-secret" not set`, err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID, "--image", "foo"}
+	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())

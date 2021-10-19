@@ -220,6 +220,34 @@ func TestIsShorthandCountFlag(t *testing.T) {
 	}
 }
 
+func TestAbbreviate(t *testing.T) {
+	tests := []struct {
+		input    string
+		maxLen   int
+		expected string
+	}{
+		{
+			input:    "helloooooo",
+			maxLen:   3,
+			expected: "hel...",
+		},
+		{
+			input:    "helloooooo",
+			maxLen:   50,
+			expected: "helloooooo",
+		},
+		{
+			input:    "hi",
+			maxLen:   2,
+			expected: "hi",
+		},
+	}
+	for _, tt := range tests {
+		out := Abbreviate(tt.input, tt.maxLen)
+		require.Equal(t, tt.expected, out)
+	}
+}
+
 func getFlagMap() map[string]*pflag.Flag {
 	cmd := &cobra.Command{
 		Use: "cmd",
@@ -290,5 +318,19 @@ func validateConfigMap(req *require.Assertions, expected map[string]string, out 
 	req.Equal(len(expected), len(out))
 	for k, v := range out {
 		req.Equal(expected[k], v)
+	}
+}
+
+func TestCropString(t *testing.T) {
+	for _, tt := range []struct {
+		s       string
+		n       int
+		cropped string
+	}{
+		{"ABCDE", 4, "A..."},
+		{"ABCDE", 5, "ABCDE"},
+		{"ABCDE", 8, "ABCDE"},
+	} {
+		require.Equal(t, tt.cropped, CropString(tt.s, tt.n))
 	}
 }

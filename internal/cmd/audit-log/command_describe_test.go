@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	climock "github.com/confluentinc/cli/mock"
 )
 
@@ -32,7 +32,7 @@ func TestAuditLogDescribeUnconfigured(t *testing.T) {
 
 func mockAuditLogCommand(configured bool) *cobra.Command {
 	client := &ccloud.Client{}
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 	if configured {
 		cfg.Context().State.Auth.Organization.AuditLog = &orgv1.AuditLog{
 			ClusterId:        "lkc-ab123",
@@ -41,5 +41,6 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 			TopicName:        "confluent-audit-log-events",
 		}
 	}
-	return New("ccloud", climock.NewPreRunnerMock(client, nil, nil, cfg))
+
+	return New(climock.NewPreRunnerMock(client, nil, nil, cfg))
 }

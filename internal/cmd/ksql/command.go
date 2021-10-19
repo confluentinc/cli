@@ -3,6 +3,7 @@ package ksql
 import (
 	"github.com/spf13/cobra"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -17,11 +18,12 @@ type command struct {
 }
 
 // New returns the default command object for interacting with KSQL.
-func New(cliName string, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter, analyticsClient analytics.Client) *cobra.Command {
 	cliCmd := pcmd.NewCLICommand(
 		&cobra.Command{
-			Use:   "ksql",
-			Short: "Manage ksqlDB applications.",
+			Use:         "ksql",
+			Short:       "Manage ksqlDB applications.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 		}, prerunner)
 	cmd := &command{
 		CLICommand:      cliCmd,
@@ -29,16 +31,17 @@ func New(cliName string, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 		serverCompleter: serverCompleter,
 		analyticsClient: analyticsClient,
 	}
-	cmd.init(cliName)
+	cmd.init(cfg)
 	return cmd.Command
 }
 
-func (c *command) init(cliName string) {
-	if cliName == "ccloud" {
-		clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
-		c.AddCommand(clusterCmd.Command)
+func (c *command) init(cfg *v1.Config) {
+	clusterCmd := NewClusterCommand(c.prerunner, c.analyticsClient)
+
+	c.AddCommand(clusterCmd.Command)
+	c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+
+	if cfg.IsCloudLogin() {
 		c.serverCompleter.AddCommand(clusterCmd)
-	} else {
-		c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
 	}
 }

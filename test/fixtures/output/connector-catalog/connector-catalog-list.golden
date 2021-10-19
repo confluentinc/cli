@@ -1,4 +1,0 @@
-   PluginName   | Type  
-----------------+-------
-  AzureBlobSink | Sink  
-  GcsSink       | Sink  

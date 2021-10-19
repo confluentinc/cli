@@ -58,7 +58,7 @@ func (c *command) describeRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if card == nil {
-		utils.Println(cmd, "Payment method not found. Add one using \"ccloud admin payment update\".")
+		utils.Println(cmd, "Payment method not found. Add one using `confluent admin payment update`.")
 		return nil
 	}
 	utils.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)

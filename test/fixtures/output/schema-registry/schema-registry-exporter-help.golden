@@ -1,7 +1,7 @@
 Manage Schema Registry exporters.
 
 Usage:
-  ccloud schema-registry exporter [command]
+  confluent schema-registry exporter [command]
 
 Available Commands:
   create      Create new schema exporter.
@@ -19,4 +19,4 @@ Global Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "ccloud schema-registry exporter [command] --help" for more information about a command.
+Use "confluent schema-registry exporter [command] --help" for more information about a command.

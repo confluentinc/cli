@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -23,7 +23,7 @@ type ConfigKeyStore struct {
 func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error) {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return false, &errors.NoContextError{CLIName: c.Config.CLIName}
+		return false, new(errors.NotLoggedInError)
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
@@ -37,13 +37,13 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return &errors.NoContextError{CLIName: c.Config.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
 	if err != nil {
 		return err
 	}
-	kcc.APIKeys[key.Key] = &v0.APIKeyPair{
+	kcc.APIKeys[key.Key] = &v1.APIKeyPair{
 		Key:    key.Key,
 		Secret: key.Secret,
 	}
@@ -53,7 +53,7 @@ func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd 
 func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return &errors.NoContextError{CLIName: c.Config.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	ctx.KafkaClusterContext.DeleteAPIKey(key)
 	return c.Config.Save()

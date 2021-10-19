@@ -39,15 +39,15 @@ func (c netrcCredentialType) String() string {
 }
 
 type NetrcHandler interface {
-	WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error
-	RemoveNetrcCredentials(cliName string, ctxName string) (string, error)
-	CheckCredentialExist(cliName string, ctxName string) (bool, error)
-	GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error)
+	WriteNetrcCredentials(isCloud, isSSO bool, ctxName string, username string, password string) error
+	RemoveNetrcCredentials(isCloud bool, ctxName string) (string, error)
+	CheckCredentialExist(isCloud bool, ctxName string) (bool, error)
+	GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error)
 	GetFileName() string
 }
 
-type GetMatchingNetrcMachineParams struct {
-	CLIName string
+type NetrcMachineParams struct {
+	IsCloud bool
 	IsSSO   bool
 	CtxName string
 	URL     string
@@ -68,13 +68,13 @@ type NetrcHandlerImpl struct {
 	FileName string
 }
 
-func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctxName string, username string, password string) error {
+func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, username, password string) error {
 	netrcFile, err := getOrCreateNetrc(n.FileName)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
-	machineName := getNetrcMachineName(cliName, isSSO, ctxName)
+	machineName := getNetrcMachineName(isCloud, isSSO, ctxName)
 
 	machine := netrcFile.FindMachine(machineName)
 	if machine == nil {
@@ -83,18 +83,20 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(cliName string, isSSO bool, ctx
 		machine.UpdateLogin(username)
 		machine.UpdatePassword(password)
 	}
+
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
-	err = ioutil.WriteFile(n.FileName, netrcBytes, 0600)
-	if err != nil {
+
+	if err := ioutil.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
+
 	return nil
 }
 
-func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string) (string, error) {
+func (n *NetrcHandlerImpl) RemoveNetrcCredentials(isCloud bool, ctxName string) (string, error) {
 	netrcFile, err := getNetrc(n.FileName)
 	if err != nil {
 		return "", err
@@ -105,7 +107,7 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(cliName string, ctxName string
 	var user string
 	found := false
 	for _, isSSO := range []bool{true, false} {
-		machineName := getNetrcMachineName(cliName, isSSO, ctxName)
+		machineName := getNetrcMachineName(isCloud, isSSO, ctxName)
 		machine := netrcFile.FindMachine(machineName)
 		if machine != nil {
 			found = true
@@ -195,11 +197,9 @@ func getOrCreateNetrc(filename string) (*gonetrc.Netrc, error) {
 	return n, nil
 }
 
-func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
-	var credType netrcCredentialType
-	if cliName == "confluent" {
-		credType = mdsUsernamePassword
-	} else {
+func getNetrcMachineName(isCloud bool, isSSO bool, ctxName string) string {
+	credType := mdsUsernamePassword
+	if isCloud {
 		if isSSO {
 			credType = ccloudSSORefreshToken
 		} else {
@@ -212,10 +212,7 @@ func getNetrcMachineName(cliName string, isSSO bool, ctxName string) string {
 // Using the parameters to filter and match machine name
 // Returns the first match
 // For SSO case the password is the refreshToken
-func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachineParams) (*Machine, error) {
-	if params.CLIName == "" {
-		return nil, errors.New(errors.NetrcCLINameMissingErrorMsg)
-	}
+func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error) {
 	machines, err := gonetrc.GetMachines(n.FileName)
 	if err != nil {
 		return nil, err
@@ -231,7 +228,7 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params GetMatchingNetrcMachin
 	return nil, nil
 }
 
-func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
+func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
 	if params.CtxName != "" {
 		contextNameRegex = escapeSpecialRegexChars(params.CtxName)
@@ -243,7 +240,7 @@ func getMachineNameRegex(params GetMatchingNetrcMachineParams) *regexp.Regexp {
 	}
 
 	var regexString string
-	if params.CLIName == "ccloud" {
+	if params.IsCloud {
 		if params.IsSSO {
 			regexString = "^" + fmt.Sprintf(netrcCredentialStringFormat, ccloudSSORefreshTokenString, contextNameRegex)
 		} else {
@@ -291,15 +288,15 @@ func GetNetrcFilePath(isIntegrationTest bool) string {
 	}
 }
 
-func (n *NetrcHandlerImpl) CheckCredentialExist(cliName string, ctxName string) (bool, error) {
+func (n *NetrcHandlerImpl) CheckCredentialExist(isCloud bool, ctxName string) (bool, error) {
 	netrcFile, err := getNetrc(n.FileName)
 	if err != nil {
 		return false, err
 	}
-	machineName1 := getNetrcMachineName(cliName, true, ctxName)
+	machineName1 := getNetrcMachineName(isCloud, true, ctxName)
 	machine1 := netrcFile.FindMachine(machineName1)
 
-	machineName2 := getNetrcMachineName(cliName, false, ctxName)
+	machineName2 := getNetrcMachineName(isCloud, false, ctxName)
 	machine2 := netrcFile.FindMachine(machineName2)
 
 	if machine1 == nil && machine2 == nil {

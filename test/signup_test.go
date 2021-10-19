@@ -6,15 +6,15 @@ import (
 	"github.com/confluentinc/bincover"
 )
 
-func (s *CLITestSuite) TestSignup() {
+func (s *CLITestSuite) TestCloudSignup() {
 	tests := []CLITest{
 		{
-			args:        "signup --url=" + s.TestBackend.GetCloudUrl(),
+			args:        "cloud-signup --url=" + s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nUS\ny\nConfluent\nPa$$word12\nn\ny\nN\nY\nn\ny\n"))},
 			fixture:     "signup/signup-reprompt-on-no-success.golden",
 		},
 		{
-			args:        "signup --url=" + s.TestBackend.GetCloudUrl(),
+			args:        "cloud-signup --url=" + s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nUS\ny\nConfluent\nPa$$word12\ny\ny\ny\n"))},
 			fixture:     "signup/signup-success.golden",
 		},

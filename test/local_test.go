@@ -16,7 +16,7 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local destroy", fixture: "local/destroy-error.golden", wantErrCode: 1},
+		{args: "local destroy", fixture: "local/destroy-error.golden", login: "default", wantErrCode: 1},
 		{args: "local current", fixture: "local/current.golden", regex: true},
 		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
 	}
@@ -39,6 +39,7 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 	}
 
 	for _, tt := range tests {
+		tt.login = "default"
 		s.runConfluentTest(tt)
 	}
 }
@@ -55,6 +56,7 @@ func (s *CLITestSuite) TestLocalVersion() {
 	}
 
 	for _, tt := range tests {
+		tt.login = "default"
 		s.runConfluentTest(tt)
 	}
 }
@@ -70,6 +72,7 @@ func (s *CLITestSuite) TestLocalServicesList() {
 	}
 
 	for _, tt := range tests {
+		tt.login = "default"
 		s.runConfluentTest(tt)
 	}
 }
@@ -87,6 +90,7 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	}
 
 	for _, tt := range tests {
+		tt.login = "default"
 		s.runConfluentTest(tt)
 	}
 }
@@ -106,6 +110,7 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	}
 
 	for _, tt := range tests {
+		tt.login = "default"
 		s.runConfluentTest(tt)
 	}
 }

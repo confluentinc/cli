@@ -116,9 +116,7 @@ func TestPromptExecutorFunc(t *testing.T) {
 }
 
 func newTestCommandWithExpectedFlag(t *testing.T, expectedFlag string, commandCalled *bool) *cobra.Command {
-	cli := &cobra.Command{
-		Use: "ccloud",
-	}
+	cli := new(cobra.Command)
 	apiCommand := &cobra.Command{
 		Use: "api",
 		Run: func(cmd *cobra.Command, args []string) {

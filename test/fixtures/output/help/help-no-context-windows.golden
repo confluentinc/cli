@@ -1,0 +1,23 @@
+Manage your Confluent Cloud or Confluent Platform. Log in to see all available commands.
+
+Usage:
+  confluent [command]
+
+Available Commands:
+  cloud-signup    Sign up for Confluent Cloud.
+  completion      Print shell completion code.
+  context         Manage CLI configuration contexts.
+  help            Help about any command
+  kafka           Manage Apache Kafka.
+  login           Log in to Confluent Cloud or Confluent Platform.
+  logout          Log out of Confluent Cloud or Confluent Platform.
+  prompt          Print Confluent CLI context for your terminal prompt.
+  update          Update the Confluent CLI.
+  version         Show version of the Confluent CLI.
+
+Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+      --version         Show version of the Confluent CLI.
+
+Use "confluent [command] --help" for more information about a command.

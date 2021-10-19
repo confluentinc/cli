@@ -18,4 +18,4 @@ run-system-tests:
 .PHONY: replace-cli-binary
 replace-cli-binary:
 	echo $$(ls)
-	cp ./dist/ccloud/ccloud_linux_amd64/ccloud $(CC_SYSTEM_TEST_CHECKOUT_DIR)/test/cli/cli_bin/linux_amd64/ccloud 
+	cp ./dist/confluent_linux_amd64/confluent $(CC_SYSTEM_TEST_CHECKOUT_DIR)/test/cli/cli_bin/linux_amd64/confluent 

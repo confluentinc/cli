@@ -28,7 +28,7 @@ func (k *KafkaApiRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseW
 					Operation:      schedv1.ACLOperations_READ,
 					PermissionType: schedv1.ACLPermissionTypes_ALLOW,
 					Host:           "*",
-					Principal:      "User:sa-123",
+					Principal:      "User:12345",
 				},
 			},
 		}

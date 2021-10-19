@@ -14,47 +14,47 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	cliName string
 }
 
 // NewACLCommand returns the Cobra command for ACLs.
-func NewACLCommand(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(&cobra.Command{
 			Use:   "acl",
 			Short: "Manage Kafka ACLs (5.4+ only).",
 		}, prerunner, AclSubcommandFlags),
-		cliName: cliName,
 	}
 
-	cmd.init(cliName)
+	cmd.init()
 
 	return cmd.Command
 }
 
-func (c *aclCommand) init(cliName string) {
+func (c *aclCommand) init() {
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a Kafka ACL.",
-		Long:  "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		Use:         "create",
+		Short:       "Create a Kafka ACL.",
+		Long:        "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.create),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
-				Code: cliName + " iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>",
+				Code: version.CLIName + " iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
 				Text: "Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster.",
-				Code: cliName + " iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>",
+				Code: version.CLIName + " iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
 				Text: "Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster.",
-				Code: cliName + " iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>",
+				Code: version.CLIName + " iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>",
 			},
 		),
 	}
@@ -72,7 +72,7 @@ func (c *aclCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster:",
-				Code: cliName + " iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test",
+				Code: version.CLIName + " iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test",
 			},
 		),
 	}
@@ -90,11 +90,11 @@ func (c *aclCommand) init(cliName string) {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the ACLs for the specified Kafka cluster:",
-				Code: cliName + " iam acl list --kafka-cluster-id <kafka-cluster-id>",
+				Code: version.CLIName + " iam acl list --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
 				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
-				Code: cliName + " iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
+				Code: version.CLIName + " iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
 			},
 		),
 	}
@@ -223,8 +223,8 @@ func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 }
 
 func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
-	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "Resource", "Name", "Type"}
-	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource", "name", "type"}
+	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
+	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 
 	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
 	_, err := cmd.Flags().GetString(output.FlagName)
@@ -244,9 +244,9 @@ func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 			Permission     mds.AclPermissionType
 			Operation      mds.AclOperation
 			Host           string
-			Resource       mds.AclResourceType
-			Name           string
-			Type           mds.PatternType
+			ResourceType   mds.AclResourceType
+			ResourceName   string
+			PatternType    mds.PatternType
 		}{
 			kafkaClusterId,
 			binding.Entry.Principal,

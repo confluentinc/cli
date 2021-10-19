@@ -46,16 +46,15 @@ def job = {
                             mkdir -p $GOROOT/bin
                             export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                             echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                            make deps
-                            make build-confluent
-                            cd dist/confluent
-                            targz=$(ls *.tar.gz| head -1)
-                            nn=confluent_SNAPSHOT-${HASH}_linux_amd64.tar.gz
-                            mv $targz $nn
-                            nnn=${nn%.tar.gz}
-                            mkdir $nnn ; tar -C $(pwd)/$nnn -xzvf $nn ; rm $nn ; tar -cvzf ${nn} ${nnn}
-                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --body ${nn}
-                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/${nn} --acl public-read
+                            make jenkins-deps || exit 1
+                            make build
+                            cd dist
+                            dir=confluent_SNAPSHOT-${HASH}_linux_amd64
+                            mv confluent_linux_amd64 $dir
+                            tarball=$dir.tar.gz
+                            tar -czf $tarball $dir
+                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
+                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
                         '''
                     }
                 }
@@ -81,7 +80,7 @@ def job = {
                             export confluent_s3="https://s3-us-west-2.amazonaws.com"
                             git clone git@github.com:confluentinc/muckrake.git
                             cd muckrake
-                            git checkout 6.2.x
+                            git checkout 6.2.x-cli-unification
                             sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                             sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                             sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -106,7 +105,7 @@ def job = {
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                 ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                 withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=6.2.x"]) {
+                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=6.2.x-cli-unification"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",

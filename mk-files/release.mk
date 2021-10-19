@@ -56,6 +56,7 @@ gorelease-test:
 
 	make switch-librdkafka-arm64
 	make build-darwin-arm64
+	||
 	make restore-librdkafka-amd64
 
 	make build-linux

@@ -141,7 +141,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/cluster-linking/promote-mirror-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.login = "default"

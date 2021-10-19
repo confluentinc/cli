@@ -12,21 +12,22 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type configCommand struct {
-	*cmd.AuthenticatedStateFlagCommand
-	prerunner cmd.PreRunner
+	*pcmd.AuthenticatedStateFlagCommand
+	prerunner pcmd.PreRunner
 }
 
 // NewRouteCommand returns the sub-command object for interacting with audit log route rules.
-func NewConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedWithMDSStateFlagCommand(
+func NewConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
 		&cobra.Command{
-			Use:   "config",
-			Short: "Manage the audit log configuration specification.",
-			Long:  "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
+			Use:         "config",
+			Short:       "Manage the audit log configuration specification.",
+			Long:        "Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		}, prerunner, ConfigSubcommandFlags)
 	command := &configCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
@@ -42,7 +43,7 @@ func (c *configCommand) init() {
 		Short: "Prints the audit log configuration spec object.",
 		Long:  `Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.`,
 		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.describe),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	c.AddCommand(describeCmd)
 
@@ -51,7 +52,7 @@ func (c *configCommand) init() {
 		Short: "Submits audit-log config spec object to the API.",
 		Long:  "Submits an audit-log configuration specification JSON object to the API.",
 		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.update),
+		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
 	updateCmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
@@ -63,7 +64,7 @@ func (c *configCommand) init() {
 		Short: "Edit the audit-log config spec interactively.",
 		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
 		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.edit),
+		RunE:  pcmd.NewCLIRunE(c.edit),
 	}
 	c.AddCommand(editCmd)
 }

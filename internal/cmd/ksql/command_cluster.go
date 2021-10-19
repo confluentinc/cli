@@ -49,8 +49,9 @@ type clusterCommand struct {
 func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "app",
-			Short: "Manage ksqlDB apps.",
+			Use:         "app",
+			Short:       "Manage ksqlDB apps.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		}, prerunner, SubcommandFlags)
 	cmd := &clusterCommand{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.prerunner = prerunner
@@ -103,8 +104,10 @@ func (c *clusterCommand) init() {
 	}
 	createCmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (recommended).")
-	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key (recommended).")
+	createCmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use.")
+	createCmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
+	_ = createCmd.MarkFlagRequired("api-key")
+	_ = createCmd.MarkFlagRequired("api-secret")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
 	createCmd.Flags().SortFlags = false
@@ -190,8 +193,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			Key:    kafkaApiKey,
 			Secret: kafkaApiKeySecret,
 		}
-	} else if (kafkaApiKey == "" && kafkaApiKeySecret != "") || (kafkaApiKeySecret == "" && kafkaApiKey != "") {
-		return fmt.Errorf(errors.APIKeyAndSecretBothRequired)
 	} else {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
 	}

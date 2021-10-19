@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/client9/gospell"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	linter "github.com/confluentinc/cli/internal/pkg/lint-cli"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -22,8 +22,6 @@ var (
 
 	vocab *gospell.GoSpell
 
-	cliNames = []string{"confluent", "ccloud"}
-
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
 		"Connect", "Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
@@ -32,25 +30,14 @@ var (
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "apikey", "apisecret", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
-		"deserializers", "env", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init", "io",
-		"json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "pem", "plaintext",
-		"producer.config", "protobuf", "rbac", "readwrite", "recv", "rolebinding", "rolebindings", "signup",
-		"single-zone", "sr", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us", "v2", "vpc",
-		"whitelist", "yaml", "zstd",
+		"deserializers", "env", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init",
+		"io", "json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "pem",
+		"plaintext", "prem", "producer.config", "protobuf", "rbac", "readwrite", "recv", "role-binding", "role-bindings",
+		"signup", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us",
+		"v2", "vpc", "whitelist", "yaml", "zstd",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",
-	}
-	ccloudClusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("ccloud kafka acl", "ccloud kafka topic"),
-		// only on children of kafka topic commands
-		linter.ExcludeCommand("kafka topic"),
-		//only on children of kafka acl commands
-		linter.ExcludeCommand("kafka acl"),
-	}
-	confluentClusterScopedCommands = []linter.RuleFilter{
-		linter.IncludeCommandContains("confluent kafka topic"),
-		linter.ExcludeCommand("kafka topic"),
 	}
 	resourceScopedCommands = []linter.RuleFilter{
 		linter.IncludeCommandContains("api-key use", "api-key create", "api-key store"),
@@ -73,19 +60,23 @@ var rules = []linter.Rule{
 		linter.OnlyLeafCommands, linter.ExcludeCommand(utilityCommands...),
 		// skip resource container commands
 		linter.ExcludeUse("list", "auth"),
+		// skip partition get-reassignments since it takes an optional param [id]
+		linter.ExcludeCommand("kafka partition get-reassignments [id]"),
+		// skip broker commands which take an optional id in format [id]
+		linter.ExcludeCommandContains("kafka broker"),
 		// skip ACLs which don't have an identity (value objects rather than entities)
 		linter.ExcludeCommandContains("kafka acl"),
 		linter.ExcludeCommandContains("iam acl"),
 		// skip api-key create since you don't get to choose a name for API keys
 		linter.ExcludeCommandContains("api-key create"),
 		// skip connector create since you don't get to choose id for connector
-		linter.ExcludeCommandContains("connector create"),
+		linter.ExcludeCommandContains("connect create"),
 		// skip local which delegates to external bash scripts
 		linter.ExcludeCommandContains("local"),
 		// skip for api-key store command since KEY is not last argument
 		linter.ExcludeCommand("api-key store <api-key> <secret>"),
-		// skip for rolebindings since they don't have names/IDs
-		linter.ExcludeCommandContains("iam rolebinding"),
+		// skip for rbac role-binding command since they don't have names/IDs
+		linter.ExcludeCommandContains("iam rbac role-binding"),
 		// skip for register command since they don't have names/IDs
 		linter.ExcludeCommandContains("cluster register"),
 		// skip for unregister command since they don't have names/IDs
@@ -99,32 +90,20 @@ var rules = []linter.Rule{
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name
-		linter.ExcludeCommandContains("connector-catalog describe"),
+		linter.ExcludeCommandContains("connect plugin describe"),
 		// skip connector event describe as it shows connector log events configuration for an org
-		linter.ExcludeCommandContains("connector event describe"),
-		// skip feedback command
+		linter.ExcludeCommandContains("connect event describe"),
 		linter.ExcludeCommand("feedback"),
-		// skip signup command
-		linter.ExcludeCommandContains("signup"),
-		// config context commands
-		linter.ExcludeCommand("config context current"),
-		linter.ExcludeCommandContains("config context get"),
-		linter.ExcludeCommandContains("config context set"),
+		linter.ExcludeCommandContains("cloud-signup"),
+		linter.ExcludeCommandContains("context"),
 		linter.ExcludeCommandContains("audit-log"),
 		// skip admin commands since they have two args
 		linter.ExcludeCommandContains("admin"),
+		linter.ExcludeCommandContains("iam user"),
 		// skip cluster linking commands
 		linter.ExcludeCommandContains("kafka link"),
 		linter.ExcludeCommandContains("kafka mirror"),
 	),
-	// TODO: ensuring --cluster is optional DOES NOT actually ensure that the cluster context is used
-	linter.Filter(linter.RequireFlag("cluster", true), ccloudClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("cluster", "string"), ccloudClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("cluster", "Kafka cluster ID."), ccloudClusterScopedCommands...),
-	// Require on-prem kafka topic commands to have required --url flag to specify rest API endpoint.
-	linter.Filter(linter.RequireFlag("url", true), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagType("url", "string"), confluentClusterScopedCommands...),
-	linter.Filter(linter.RequireFlagDescription("url", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL."), confluentClusterScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
@@ -145,10 +124,10 @@ var rules = []linter.Rule{
 	),
 	linter.RequireStartWithCapital("Short"),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.RequireStartWithCapital("Long"),
 	linter.RequireEndWithPunctuation("Long", true),
-	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, cliNames)),
+	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
 		linter.ExcludeCommandContains("secret", "mirror"),
@@ -233,15 +212,28 @@ func main() {
 		Debug:     *debug,
 	}
 
-	var issues *multierror.Error
-	for _, cliName := range cliNames {
-		cli := cmd.NewConfluentCommand(cliName, true, &version.Version{Binary: cliName})
+	// Lint all three subsets of commands: no context, cloud, and on-prem
+	configs := []*v1.Config{
+		{
+			CurrentContext: "no context",
+		},
+		{
+			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: v1.CCloudHostnames[0]}},
+			CurrentContext: "cloud",
+		},
+		{
+			Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
+			CurrentContext: "on-prem",
+		},
+	}
+
+	code := 0
+	for _, cfg := range configs {
+		cli := cmd.NewConfluentCommand(cfg, true, new(version.Version))
 		if err := l.Lint(cli.Command); err != nil {
-			issues = multierror.Append(issues, err)
+			fmt.Printf("For context \"%s\", %v", cfg.CurrentContext, err)
+			code = 1
 		}
 	}
-	if issues.ErrorOrNil() != nil {
-		fmt.Println(issues)
-		os.Exit(1)
-	}
+	os.Exit(code)
 }

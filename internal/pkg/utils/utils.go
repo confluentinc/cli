@@ -60,6 +60,15 @@ func Contains(haystack []string, needle string) bool {
 	return false
 }
 
+func Remove(haystack []string, needle string) []string {
+	for i, x := range haystack {
+		if x == needle {
+			return append(haystack[:i], haystack[i+1:]...)
+		}
+	}
+	return haystack
+}
+
 func DoesPathExist(path string) bool {
 	if path == "" {
 		return false
@@ -107,6 +116,13 @@ func ValidateEmail(email string) bool {
 	return matched
 }
 
+func Abbreviate(s string, maxLength int) string {
+	if len(s) <= maxLength {
+		return s
+	}
+	return s[0:maxLength] + "..."
+}
+
 func ToMap(configs []string) (map[string]string, error) {
 	configMap := make(map[string]string)
 	for _, cfg := range configs {
@@ -140,4 +156,15 @@ func ReadConfigsFromFile(configFile string) (map[string]string, error) {
 	}
 
 	return ToMap(configs)
+}
+
+func CropString(s string, n int) string {
+	const suffix = "..."
+	if n-len(suffix) < len(s) {
+		cropped := s[:n-len(suffix)] + suffix
+		if len(cropped) < len(s) {
+			return cropped
+		}
+	}
+	return s
 }

@@ -3,7 +3,6 @@ package prompt
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -17,36 +16,36 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-const longDescriptionTemplate = `Use this command to add {{.CLIName}} information in your terminal prompt.
+const longDescription = `Use this command to add Confluent information in your terminal prompt.
 
 For Bash, you'll want to do something like this:
 
 ::
 
-  export PS1="\$({{.CLIName}} prompt) $PS1"
+  export PS1="\$(confluent prompt) $PS1"
 
 ZSH users should be aware that they will have to set the 'PROMPT_SUBST' option first:
 
 ::
 
   setopt prompt_subst
-  export PS1="\$({{.CLIName}} prompt) $PS1"
+  export PS1='$(confluent prompt) '$PS1
 
-You can customize the prompt by calling passing a '--format' flag, such as '-f "{{.CLIName}}|%E:%K"'.
+You can customize the prompt by calling passing a '--format' flag, such as '-f "confluent|%E:%K"'.
 If you want to create a more sophisticated prompt (such as using the built-in color functions),
 it'll be easiest for you if you use an environment variable rather than try to escape the quotes.
 
 ::
 
-  export {{.CLIName | ToUpper}}_PROMPT_FMT='({{color "blue" "{{.CLIName}}"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
-  export PS1="\$({{.CLIName}} prompt -f '${{.CLIName | ToUpper}}_PROMPT_FMT') $PS1"
+  export CONFLUENT_PROMPT_FMT='({{color "blue" "confluent"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})'
+  export PS1="\$(confluent prompt -f '$CONFLUENT_PROMPT_FMT') $PS1"
 
 To make this permanent, you must add it to your bash or zsh profile.
 
 Formats
 ~~~~~~~
 
-'{{.CLIName}} prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
+'confluent prompt' comes with a number of formatting tokens. What follows is a list of all tokens:
 
 * '%C' or {{.ContextName}}
 
@@ -115,39 +114,35 @@ type promptCommand struct {
 }
 
 // Returns the Cobra command for the PS1 prompt.
-func New(cliName string, prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
+func New(prerunner pcmd.PreRunner, ps1 *ps1.Prompt, logger *log.Logger) *cobra.Command {
 	cmd := &promptCommand{
 		ps1:    ps1,
 		logger: logger,
 	}
-	cmd.init(cliName, prerunner)
+	cmd.init(prerunner)
 	return cmd.Command
 }
 
-func (c *promptCommand) init(cliName string, prerunner pcmd.PreRunner) {
+func (c *promptCommand) init(prerunner pcmd.PreRunner) {
 	promptCmd := &cobra.Command{
 		Use:   "prompt",
-		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.GetFullCLIName(cliName)),
-		Long:  parseTemplate(longDescriptionTemplate, cliName),
+		Short: fmt.Sprintf("Print %s context for your terminal prompt.", version.FullCLIName),
+		Long:  longDescription,
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.prompt),
 	}
-	// Ideally we'd default to %c but contexts are implicit today with uber-verbose names like `login-cody@confluent.io-https://devel.cpdev.cloud`
-	defaultFormat := `({{color "blue" "ccloud"}}|{{color "red" "%E"}}:{{color "cyan" "%K"}})`
-	if cliName == "confluent" {
-		defaultFormat = `({{color "blue" "confluent"}}|{{color "cyan" "%K"}})`
-	}
-	promptCmd.Flags().StringP("format", "f", defaultFormat, "The format string to use. See the help for details.")
+
+	promptCmd.Flags().StringP("format", "f", `(confluent|{{color "black" "%C"}})`, "The format string to use. See the help for details.")
 	promptCmd.Flags().BoolP("no-color", "g", false, "Do not include ANSI color codes in the output.")
 	promptCmd.Flags().StringP("timeout", "t", "200ms", "The maximum execution time in milliseconds.")
 	promptCmd.Flags().SortFlags = false
+
 	c.CLICommand = pcmd.NewAnonymousCLICommand(promptCmd, prerunner)
 }
 
 // Output context about the current CLI config suitable for a PS1 prompt.
 // It allows custom user formatting the configuration by parsing format flags.
 func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
-	c.ps1.Config = c.Config.Config
 	format, err := cmd.Flags().GetString("format")
 	if err != nil {
 		return err
@@ -176,6 +171,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	retCh := make(chan string)
 	errCh := make(chan error)
 	go func() {
+		c.ps1.Config = c.Config.Config
 		prompt, err := c.ps1.Get(format)
 		if err != nil {
 			errCh <- err
@@ -194,14 +190,7 @@ func (c *promptCommand) prompt(cmd *cobra.Command, _ []string) error {
 	case <-time.After(timeout):
 		// log the timeout and just print nothing
 		c.logger.Warnf("timed out after %s", timeout)
-		return nil
 	}
 
 	return nil
-}
-
-func parseTemplate(template, cliName string) string {
-	template = strings.ReplaceAll(template, "{{.CLIName}}", cliName)
-	template = strings.ReplaceAll(template, "{{.CLIName | ToUpper}}", strings.ToUpper(cliName))
-	return template
 }

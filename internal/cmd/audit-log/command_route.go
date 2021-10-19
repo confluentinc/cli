@@ -8,21 +8,22 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type routeCommand struct {
-	*cmd.AuthenticatedStateFlagCommand
-	prerunner cmd.PreRunner
+	*pcmd.AuthenticatedStateFlagCommand
+	prerunner pcmd.PreRunner
 }
 
 // NewRouteCommand returns the sub-command object for interacting with audit log route rules.
-func NewRouteCommand(prerunner cmd.PreRunner) *cobra.Command {
-	cliCmd := cmd.NewAuthenticatedWithMDSStateFlagCommand(
+func NewRouteCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cliCmd := pcmd.NewAuthenticatedWithMDSStateFlagCommand(
 		&cobra.Command{
-			Use:   "route",
-			Short: "Return the audit log route rules.",
-			Long:  "Return the routing rules that determine which auditable events are logged, and where.",
+			Use:         "route",
+			Short:       "Return the audit log route rules.",
+			Long:        "Return the routing rules that determine which auditable events are logged, and where.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		}, prerunner, RouteSubcommandFlags)
 	command := &routeCommand{
 		AuthenticatedStateFlagCommand: cliCmd,
@@ -38,7 +39,7 @@ func (c *routeCommand) init() {
 		Short: "List routes matching a resource & sub-resources.",
 		Long:  "List the routes that match either the queried resource or its sub-resources.",
 		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP("resource", "r", "", "The Confluent resource name (CRN) that is the subject of the query.")
 	check(listCmd.MarkFlagRequired("resource"))
@@ -50,7 +51,7 @@ func (c *routeCommand) init() {
 		Short: "Return the matching audit-log route rule.",
 		Long:  "Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  cmd.NewCLIRunE(c.lookup),
+		RunE:  pcmd.NewCLIRunE(c.lookup),
 	}
 	c.AddCommand(lookupCmd)
 }

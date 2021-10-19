@@ -123,9 +123,9 @@ func (c *registryCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error)
 	hostInfos := make([]mds.HostInfo, 0)
 	for _, host := range strings.Split(hostStr, ",") {
 		hostInfo := strings.Split(host, ":")
-		port := 0
+		port := int64(0)
 		if len(hostInfo) > 1 {
-			port, _ = strconv.Atoi(hostInfo[1])
+			port, _ = strconv.ParseInt(hostInfo[1], 10, 32)
 		}
 		hostInfos = append(hostInfos, mds.HostInfo{Host: hostInfo[0], Port: int32(port)})
 	}

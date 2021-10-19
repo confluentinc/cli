@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"time"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
@@ -29,17 +30,18 @@ func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
 	return &AuthTokenHandlerImpl{logger}
 }
 
-// Second string returned is refresh token if the user performs SSO login
 func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error) {
 	if credentials.IsSSO {
-		// SSO password is the refresh token, if not present then user must perform SSO login, if present then refresh token automatically obtains a new token
+		// For an SSO user, the "Password" field may contain a refresh token. If one exists, try to obtain a new token.
 		if credentials.Password != "" {
-			token, err := a.refreshCCloudSSOToken(client, credentials.Password)
-			return token, "", err
-		} else {
-			return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
+			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.Password); err == nil {
+				return token, refreshToken, nil
+			}
 		}
+		return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
 	}
+
+	client.HttpClient.Timeout = 30 * time.Second
 	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password)
 	return token, "", err
 }
@@ -79,16 +81,18 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, error) {
-	idToken, err := sso.GetNewIDTokenFromRefreshToken(client.BaseURL, refreshToken, a.logger)
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, string, error) {
+	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken, a.logger)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
+
 	token, err := client.Auth.Login(context.Background(), idToken, "", "")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return token, nil
+
+	return token, refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {

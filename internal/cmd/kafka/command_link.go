@@ -66,8 +66,9 @@ type linkCommand struct {
 func NewLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
-			Use:   "link",
-			Short: "Manages inter-cluster links.",
+			Use:         "link",
+			Short:       "Manages inter-cluster links.",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		},
 		prerunner, LinkSubcommandFlags)
 	cmd := &linkCommand{
@@ -82,14 +83,8 @@ func (c *linkCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List previously created cluster links.",
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List every link.",
-				Code: "ccloud kafka link list",
-			},
-		),
-		RunE: c.list,
-		Args: cobra.NoArgs,
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 	}
 	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -100,17 +95,17 @@ func (c *linkCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create <link>",
 		Short: "Create a new cluster link.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "ccloud kafka link create my_link --source-cluster-id lkc-abced " +
-					"--source-bootstrap-server myhost:1234 --config-file ~/myfile.txt \n" +
-					"ccloud kafka link create my_link --source-cluster-id lkc-abced " +
-					"--source-bootstrap-server myhost:1234 --source-api-key abcde --source-api-secret 88888 \n",
+				Code: "confluent kafka link create my-link --source-cluster-id lkc-abcde --source-bootstrap-server my-host:1234 --config-file config.txt",
+			},
+			examples.Example{
+				Code: "confluent kafka link create my-link --source-cluster-id lkc-abcde --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
 			},
 		),
-		RunE: c.create,
-		Args: cobra.ExactArgs(1),
 	}
 	createCmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
 	createCmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
@@ -129,35 +124,23 @@ func (c *linkCommand) init() {
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will NOT validate the link to the source cluster before creation.")
+	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
 		Use:   "delete <link>",
 		Short: "Delete a previously created cluster link.",
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Deletes a cluster link.",
-				Code: "ccloud kafka link delete my_link",
-			},
-		),
-		RunE: c.delete,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.delete,
 	}
 	c.AddCommand(deleteCmd)
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <link>",
 		Short: "Describe a previously created cluster link.",
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Describes a cluster link.",
-				Code: "ccloud kafka link describe my_link",
-			},
-		),
-		RunE: c.describe,
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.describe,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
@@ -167,14 +150,14 @@ func (c *linkCommand) init() {
 	updateCmd := &cobra.Command{
 		Use:   "update <link>",
 		Short: "Update link configs.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Updates configs for the cluster link.",
-				Code: "ccloud kafka link update my_link --config-file ~/config.txt",
+				Text: "Update configuration values for the cluster link `my-link`.",
+				Code: "confluent kafka link update my-link --config-file my-config.txt",
 			},
 		),
-		RunE: c.update,
-		Args: cobra.ExactArgs(1),
 	}
 	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")

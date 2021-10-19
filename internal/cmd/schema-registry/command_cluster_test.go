@@ -19,7 +19,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -30,7 +30,7 @@ const (
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf            *v3.Config
+	conf            *v1.Config
 	kafkaCluster    *schedv1.KafkaCluster
 	srCluster       *schedv1.SchemaRegistryCluster
 	srMock          *ccsdkmock.SchemaRegistry
@@ -42,7 +42,7 @@ type ClusterTestSuite struct {
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
@@ -103,7 +103,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		SchemaRegistry: suite.srMock,
 		MetricsApi:     suite.metricsApi,
 	}
-	cmd := New("ccloud", cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.logger, suite.analyticsClient)
+	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.logger, suite.analyticsClient)
 	return cmd
 }
 

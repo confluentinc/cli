@@ -11,11 +11,11 @@ import (
 )
 
 // Returns the Cobra command for the version.
-func New(cliName string, prerunner pcmd.PreRunner, v *version.Version) *cobra.Command {
+func New(prerunner pcmd.PreRunner, v *version.Version) *cobra.Command {
 	cliCmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "version",
-			Short: fmt.Sprintf("Show version of the %s.", version.GetFullCLIName(cliName)),
+			Short: fmt.Sprintf("Show version of the %s.", version.FullCLIName),
 			Run: func(cmd *cobra.Command, _ []string) {
 				utils.Println(cmd, v)
 			},

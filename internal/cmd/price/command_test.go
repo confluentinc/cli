@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/mock"
 )
 
@@ -120,7 +120,7 @@ func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string
 		},
 	}
 
-	cfg := v3.AuthenticatedCloudConfigMock()
+	cfg := v1.AuthenticatedCloudConfigMock()
 
 	return New(mock.NewPreRunnerMock(client, nil, nil, cfg))
 }

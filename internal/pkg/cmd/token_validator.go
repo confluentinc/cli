@@ -5,14 +5,14 @@ import (
 	"github.com/jonboulle/clockwork"
 	"gopkg.in/square/go-jose.v2/jwt"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type JWTValidator interface {
-	Validate(context *v3.Context) error
+	Validate(context *v1.Context) error
 }
 
 type JWTValidatorImpl struct {
@@ -30,7 +30,7 @@ func NewJWTValidator(logger *log.Logger) *JWTValidatorImpl {
 
 // Validate returns an error if the JWT in the specified context is invalid.
 // The JWT is invalid if it's not parsable or expired.
-func (v *JWTValidatorImpl) Validate(context *v3.Context) error {
+func (v *JWTValidatorImpl) Validate(context *v1.Context) error {
 	var authToken string
 	if context != nil {
 		authToken = context.State.AuthToken
