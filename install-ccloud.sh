@@ -137,7 +137,7 @@ s3_releases() {
   versions=$(echo "$xml" | sed -n 's/</\
 </gp' | sed -n "s/<Prefix>${PROJECT_NAME}\/archives\/\(.*\)\//\1/p") || return 1
   test -z "$versions" && return 1
-  echo "$versions"
+  echo "$versions" | sort --version-sort
 }
 s3_release() {
   version=$1
