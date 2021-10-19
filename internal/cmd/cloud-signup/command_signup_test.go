@@ -185,7 +185,7 @@ func newCmd(conf *v1.Config) *command {
 					FirstName: "Cody",
 				},
 				Organization: &orgv1.Organization{ResourceId: "o-123"},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}

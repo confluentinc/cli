@@ -213,8 +213,8 @@ func TestOrgIdOverride(t *testing.T) {
 		setDefault bool
 	}
 	tests := []*test{
-		{ setEnv: true },
-		{ setDefault: true },
+		{setEnv: true},
+		{setDefault: true},
 	}
 
 	for _, tt := range tests {

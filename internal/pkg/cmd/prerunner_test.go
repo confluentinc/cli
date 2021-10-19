@@ -453,7 +453,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 									FirstName: "",
 								},
 								Organization: &orgv1.Organization{ResourceId: "o-123"},
-								Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+								Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
 					}}
@@ -556,7 +556,7 @@ func Test_ReLoginToLastOrgUsed(t *testing.T) {
 							FirstName: "",
 						},
 						Organization: &orgv1.Organization{ResourceId: "o-123"},
-						Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+						Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 					}, nil
 				},
 			}}
@@ -595,7 +595,6 @@ func Test_ReLoginToLastOrgUsed(t *testing.T) {
 	_, err = pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
 }
-
 
 func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {

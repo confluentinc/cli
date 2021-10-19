@@ -35,7 +35,7 @@ func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error)
 }
 
 func NewLoginOrganizationManagerImp(logger *log.Logger) *LoginOrganizationManagerImpl {
-	return &LoginOrganizationManagerImpl{ logger: logger }
+	return &LoginOrganizationManagerImpl{logger: logger}
 }
 
 func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromArgs(cmd *cobra.Command) func() (string, error) {
