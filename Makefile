@@ -6,7 +6,25 @@ RELEASE_BRANCH  ?= main
 
 .PHONY: build
 build:
-	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+ifeq ($(GOARCH),arm64)
+    # build for darwin arm64
+	make switch-librdkafka-arm64
+	@GOPRIVATE=github.com/confluentinc GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot || true
+	make restore-librdkafka-amd64
+else
+  # build for amd64 arch
+  ifeq ($(GOOS),windows)
+	$(eval CGO_ENABLED=1)
+	$(eval CC=x86_64-w64-mingw32-gcc)
+	$(eval CXX=x86_64-w64-mingw32-g++)
+  else ifeq ($(GOOS),linux) 
+	$(eval CGO_ENABLED=1)
+	$(eval CC=x86_64-linux-musl-gcc)
+	$(eval CXX=x86_64-linux-musl-g++)
+	$(eval CGO_LDFLAGS="-static")
+  endif
+	@GOPRIVATE=github.com/confluentinc GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+endif
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -48,16 +66,10 @@ jenkins-deps:
 
 ifeq ($(shell uname),Darwin)
 SHASUM ?= gsha256sum
-	ifeq ($(shell uname -m),x86_64)
-	GORELEASER_SUFFIX ?= -darwin-amd64.yml
-	else 
-	GORELEASER_SUFFIX ?= -darwin-arm64.yml
-	endif
 else ifneq (,$(findstring NT,$(shell uname)))
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
 SHASUM ?= CertUtil SHA256 -hashfile
 else ifneq (,$(findstring Windows,$(shell systeminfo)))
-GORELEASER_SUFFIX ?= -windows.yml
 SHASUM ?= CertUtil SHA256 -hashfile
 else
 SHASUM ?= sha256sum
@@ -88,35 +100,6 @@ run:
 #
 # END DEVELOPMENT HELPERS
 #
-
-.PHONY: build
-build:
-	make build-ccloud
-	make build-confluent
-
-.PHONY: build-darwin-amd64
-build-darwin-amd64:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-darwin-amd64.yml
-
-.PHONY: build-darwin-arm64
-build-darwin-arm64:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-darwin-arm64.yml
-
-.PHONY: build-linux
-build-linux:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-linux.yml
-
-.PHONY: build-windows
-build-windows:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud-windows.yml
-
-.PHONY: build-ccloud
-build-ccloud:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
-
-.PHONY: build-confluent
-build-confluent:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:

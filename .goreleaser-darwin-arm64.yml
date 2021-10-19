@@ -14,45 +14,7 @@ before:
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   - binary: confluent
-    main: cmd/confluent/main.go
-    flags:
-      - -mod=readonly
-      - -tags=musl
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
-    gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
-    asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-linux-musl-gcc
-      - CXX=x86_64-linux-musl-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
-    goos:
-      - linux
-    goarch:
-      - amd64
-  - binary: confluent
-    main: cmd/confluent/main.go
-    flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}  -X main.host={{.Env.HOSTNAME}} -X main.cliName=confluent -buildmode=exe
-    gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
-    asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-    goos:
-      - windows
-    goarch:
-      - amd64
-  - binary: confluent
-    id: signed-amd64
+    id: signed-arm64
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -65,14 +27,16 @@ builds:
     goos:
       - darwin
     goarch:
-      - amd64
+      - arm64
     hooks:
       post:
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/signed-amd64_darwin_amd64/confluent
-        - cmd: gon gon_confluent_amd64.hcl
+            - LICENSE_BIN_PATH=./dist/signed-arm64_darwin_arm64/confluent
+            - CGO_ENABLED=1
+            - SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk
+        - cmd: gon gon_confluent_arm64.hcl
 
 archives:
   - id: binary
