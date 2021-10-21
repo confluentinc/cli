@@ -74,24 +74,20 @@ goreleaser-patches:
 .PHONY: set-acls
 set-acls:
 	$(caasenv-authenticate) && \
-	for binary in ccloud confluent; do \
-		for file_type in binaries archives; do \
-			folder_path=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
-			echo "SETTING ACLS: $${folder_path}"; \
-			aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
-		done; \
+	for file_type in binaries archives; do \
+		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
+		echo "SETTING ACLS: $${folder_path}"; \
+		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
 	done
 
-# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
+# goreleaser uploads the checksum for archives as confluent_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. confluent_v1.19.0_checksums.txt
 # Chose not to change install script to expect no-v because older versions use the format with 'v'.
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
 	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
-		aws s3 cp dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt;\
-		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
-	done
+	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt;\
+	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
@@ -105,12 +101,10 @@ copy-stag-archives-to-latest:
 # second argument: S3 folder destination for latest archives
 define copy-archives-files-to-latest
 	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		archives_folder=$1/$${binary}-cli/archives/$(CLEAN_VERSION); \
-		latest_folder=$2/$${binary}-cli/archives/latest; \
-		for suffix in $(ARCHIVE_TYPES); do \
-			aws s3 cp $${archives_folder}/$${binary}_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/$${binary}_latest_$${suffix} --acl public-read; \
-		done ; \
+	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
+	latest_folder=$2/confluent-cli/archives/latest; \
+	for suffix in $(ARCHIVE_TYPES); do \
+		aws s3 cp $${archives_folder}/confluent_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
 	done
 endef
 
@@ -121,14 +115,12 @@ endef
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
-		latest_checksums=$${binary}_latest_checksums.txt; \
-		cd $(TEMP_DIR) ; \
-		aws s3 cp $1/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
-		cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
-		aws s3 cp $${latest_checksums} $2/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
-	done
+	version_checksums=confluent_v$(CLEAN_VERSION)_checksums.txt; \
+	latest_checksums=confluent_latest_checksums.txt; \
+	cd $(TEMP_DIR) ; \
+	aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
+	cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
+	aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read
 	rm -rf $(TEMP_DIR)
 endef
 
@@ -141,9 +133,8 @@ download-licenses:
 	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
 	echo Successfully downloaded licenses
 
-.PHONY: publish-installers
+.PHONY: publish-installer
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
-publish-installers:
+publish-installer:
 	$(caasenv-authenticate) && \
-	aws s3 cp install-ccloud.sh $(S3_BUCKET_PATH)/ccloud-cli/install.sh --acl public-read && \
-	aws s3 cp install-confluent.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
+	aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read

@@ -736,13 +736,13 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {
-		return fmt.Errorf("failed to create producer: %v.\n", err)
+		return fmt.Errorf("failed to create producer: %v", err)
 	}
 	defer producer.Close()
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		return fmt.Errorf("failed to create admin client: %v.\n", err)
+		return fmt.Errorf("failed to create admin client: %v", err)
 	}
 	defer adminClient.Close()
 
