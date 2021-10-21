@@ -193,6 +193,10 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, 
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.StripeToken)
+
+			res := &orgv1.UpdatePaymentInfoReply{}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
 		case "GET": // admin payment describe
 			res := orgv1.GetPaymentInfoReply{
 				Card: &orgv1.Card{
