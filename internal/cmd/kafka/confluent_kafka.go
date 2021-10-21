@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -88,6 +89,10 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 }
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
+	if len(value) < 5 {
+		return "", errors.New(errors.FailedToFindSchemaIDErrorMsg)
+	}
+
 	// Retrieve schema from cluster only if schema is specified.
 	schemaID := int32(binary.BigEndian.Uint32(value[1:5])) // schema id is stored as a part of message meta info
 	// TODO: msgs produced before registering a schema doesn't have valid schema id in those bytes, then consuming with a specified schema would cause errors when trying to get a schema with invalid id.

@@ -856,7 +856,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		if m.TopicPartition.Error != nil { // catch all other errors
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
-		key = ""
 		go scan()
 	}
 	close(deliveryChan)
