@@ -23,11 +23,11 @@ endif
 .PHONY: build-native
 build-native:
 ifneq "" "$(findstring NT,$(shell uname))"
-	CC=gcc CXX=g++ make builder
+	CC=gcc CXX=g++ make cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-	CC=gcc CXX=g++ GORELEASER_SUFFIX=-glibc make builder
+	CC=gcc CXX=g++ GORELEASER_SUFFIX=-glibc make cli-builder
 else 
-	make builder
+	make cli-builder
 endif
 
 .PHONY: cli-builder
