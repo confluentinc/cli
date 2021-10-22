@@ -173,7 +173,7 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 	describeCmd := &cobra.Command{
 		Use:         "describe [id]",
 		Short:       "Describe a Kafka cluster.",
-		Long:  		 "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
+		Long:        "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
 		Args:        cobra.MaximumNArgs(1),
 		RunE:        pcmd.NewCLIRunE(c.describe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
@@ -198,7 +198,7 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		),
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
-	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only.")
+	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
 	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
