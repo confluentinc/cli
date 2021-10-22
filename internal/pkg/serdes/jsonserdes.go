@@ -72,8 +72,12 @@ type JsonDeserializationProvider struct {
 func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
 	sl := gojsonschema.NewSchemaLoader()
 	for referenceName, referencePath := range referencePathMap {
-		referenceLoader := gojsonschema.NewReferenceLoader("file://" + referencePath)
-		err := sl.AddSchema("/" + referenceName, referenceLoader)
+		refSchema, err := ioutil.ReadFile(referencePath)
+		if err != nil {
+			return err
+		}
+		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
+		err = sl.AddSchema("/" + referenceName, referenceLoader)
 		if err != nil {
 			return err
 		}
