@@ -728,6 +728,11 @@ func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, sub
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
+	var level log.Level
+	if h.Config.Logger != nil {
+		level = h.Config.Logger.GetLevel()
+	}
+
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
@@ -736,12 +741,19 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {
+		if level >= log.WARN {
+			h.logger.Tracef("failed to create producer: %v", err)
+		}
 		return fmt.Errorf("failed to create producer: %v", err)
 	}
 	defer producer.Close()
+	h.logger.Tracef("Create producer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
+		if level >= log.WARN {
+			h.logger.Tracef("failed to create admin client: %v", err)
+		}
 		return fmt.Errorf("failed to create admin client: %v", err)
 	}
 	defer adminClient.Close()
@@ -850,7 +862,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
-		// Reset key prior to reuse
 		e := <-deliveryChan
 		m := e.(*ckafka.Message)
 		if m.TopicPartition.Error != nil { // catch all other errors
@@ -863,6 +874,11 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
+	var level log.Level
+	if h.Config.Logger != nil {
+		level = h.Config.Logger.GetLevel()
+	}
+
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
@@ -920,12 +936,20 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		return fmt.Errorf("failed to create consumer: %v.\n", err)
+		if level >= log.WARN {
+			h.logger.Tracef("failed to create consumer: %v", err)
+		}
+		return fmt.Errorf("failed to create consumer: %v", err)
 	}
+	defer consumer.Close()
+	h.logger.Tracef("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		return fmt.Errorf("failed to create admin client: %v.\n", err)
+		if level >= log.WARN {
+			h.logger.Tracef("failed to create admin client: %v", err)
+		}
+		return fmt.Errorf("failed to create admin client: %v", err)
 	}
 	defer adminClient.Close()
 
@@ -957,7 +981,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 
-	// start consuming msg
+	// start consuming messages
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -974,7 +998,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			}
 			switch e := ev.(type) {
 			case *ckafka.Message:
-				err = ConsumeMsg(e, groupHandler)
+				err = ConsumeMessage(e, groupHandler)
 				if err != nil {
 					return err
 				}
@@ -1077,7 +1101,6 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
-	var err error
 	if valueFormat != "string" && len(schemaPath) > 0 {
 		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
 		if err != nil {
@@ -1093,7 +1116,7 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 		}
 		metaInfo = info
 	}
-	return metaInfo, err
+	return metaInfo, nil
 }
 
 func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {

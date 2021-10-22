@@ -16,6 +16,8 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
+const messageOffset = 5
+
 type ConsumerProperties struct {
 	PrintKey   bool
 	Delimiter  string
@@ -72,15 +74,15 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 }
 
 func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
+	configMap := getCommonConfig(kafka, clientID)
+	if err := configMap.SetKey("group.id", group); err != nil {
+		return nil, err
+	}
 	var autoOffsetReset string
 	if beginning {
 		autoOffsetReset = "earliest"
 	} else {
 		autoOffsetReset = "latest"
-	}
-	configMap := getCommonConfig(kafka, clientID)
-	if err := configMap.SetKey("group.id", group); err != nil {
-		return nil, err
 	}
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
 		return nil, err
@@ -89,22 +91,17 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 }
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
-	if len(value) < 5 {
+	if len(value) < messageOffset {
 		return "", errors.New(errors.FailedToFindSchemaIDErrorMsg)
 	}
 
 	// Retrieve schema from cluster only if schema is specified.
-	schemaID := int32(binary.BigEndian.Uint32(value[1:5])) // schema id is stored as a part of message meta info
-	// TODO: msgs produced before registering a schema doesn't have valid schema id in those bytes, then consuming with a specified schema would cause errors when trying to get a schema with invalid id.
+	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
 
-	// Create temporary file to store schema retrieved (also for cache)
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
 	if !fileExists(tempStorePath) {
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
-		if err != nil {
-			return "", err
-		}
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		_, err := h.retryWriteSchemaToPath(3, schemaID, tempStorePath)
 		if err != nil {
 			return "", err
 		}
@@ -112,7 +109,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 	return tempStorePath, nil
 }
 
-func ConsumeMsg(e *ckafka.Message, h *GroupHandler) error {
+func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	value := e.Value
 	if h.Properties.PrintKey {
 		key := e.Key
@@ -139,7 +136,7 @@ func ConsumeMsg(e *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 		// Message body is encoded after 5 bytes of meta information.
-		value = value[5:]
+		value = value[messageOffset:]
 		err = deserializationProvider.LoadSchema(schemaPath)
 		if err != nil {
 			return err
@@ -162,4 +159,21 @@ func ConsumeMsg(e *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 	return nil
+}
+
+func (h *GroupHandler) retryWriteSchemaToPath(retry, schemaID int32, tempStorePath string) (string, error) {
+	var err1, err2 error
+	for i := int32(0); i < retry; i++ {
+		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
+		err1 = err
+		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		err2 = err
+		if err1 == nil && err2 == nil {
+			return "", nil
+		}
+	}
+	if err1 != nil {
+		return "", err1
+	}
+	return "", err2
 }

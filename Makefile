@@ -8,26 +8,31 @@ RELEASE_BRANCH  ?= main
 build:
 ifeq ($(GOARCH),arm64) # build for darwin arm64
 	make switch-librdkafka-arm64
-	@GOPRIVATE=github.com/confluentinc GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot || true
+	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk make cli-builder
 	make restore-librdkafka-amd64
 else # build for amd64 arch
   ifeq ($(GOOS),windows)
-	$(eval CGO_ENABLED=1) $(eval CC=x86_64-w64-mingw32-gcc) $(eval CXX=x86_64-w64-mingw32-g++)
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
   else ifeq ($(GOOS),linux) 
-	$(eval CGO_ENABLED=1) $(eval CC=x86_64-linux-musl-gcc) $(eval CXX=x86_64-linux-musl-g++) $(eval CGO_LDFLAGS="-static")
+	CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" make cli-builder
+  else # build for Darwin amd64
+	make cli-builder
   endif
-	@GOPRIVATE=github.com/confluentinc GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 endif
 
-.PHONY: build-azure-pipelines
-build-azure-pipelines:
+.PHONY: build-native
+build-native:
 ifneq "" "$(findstring NT,$(shell uname))"
-	@GOPRIVATE=github.com/confluentinc CC=gcc CXX=g++ VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	CC=gcc CXX=g++ make builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-	@GOPRIVATE=github.com/confluentinc CC=gcc CXX=g++ VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build-glibc.yml --rm-dist --single-target --snapshot
+	CC=gcc CXX=g++ GORELEASER_SUFFIX=-glibc make builder
 else 
-	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	make builder
 endif
+
+.PHONY: cli-builder
+cli-builder:
+	@GOPRIVATE=github.com/confluentinc CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) SDKROOT=$(SDKROOT) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build$(GORELEASER_SUFFIX).yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -189,7 +194,7 @@ lint-installers:
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses
-lint-licenses: build-azure-pipelines
+lint-licenses: build-native
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	echo Licenses for confluent binary ; \
 	[ -t 0 ] && args="" || args="-plain" ; \

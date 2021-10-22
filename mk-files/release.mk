@@ -33,11 +33,9 @@ release-to-prod:
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
 
 define copy-stag-content-to-prod
-	for binary in ccloud confluent; do \
-		folder_path=$${binary}-cli/$1/$2; \
-		echo "COPYING: $${folder_path}"; \
-		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1; \
-	done
+	folder_path=confluent-cli/$1/$2; \
+	echo "COPYING: $${folder_path}"; \
+	aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1
 endef
 
 .PHONY: switch-librdkafka-arm64
