@@ -156,10 +156,11 @@ const (
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
-	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
-	JsonDocumentInvalidErrorMsg  = "the json document is invalid"
-	ProtoSchemaInvalidErrorMsg   = "the protobuf schema is invalid"
-	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
+	JsonSchemaInvalidErrorMsg         = "the json schema is invalid"
+	JsonDocumentInvalidErrorMsg       = "the json document is invalid"
+	AvroReferenceNotSupportedErrorMsg = "avro reference not supported in cloud CLI"
+	ProtoSchemaInvalidErrorMsg        = "the protobuf schema is invalid"
+	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
 	APIKeyAndSecretBothRequired    = "both --api-key and --api-secret must be provided"

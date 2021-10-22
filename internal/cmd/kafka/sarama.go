@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -102,13 +103,13 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 		}
 
 		if h.Format != "string" {
-			schemaPath, err := h.RequestSchema(value)
+			schemaPath, referencePathMap, err := h.RequestSchema(value)
 			if err != nil {
 				return err
 			}
 			// Message body is encoded after 5 bytes of meta information.
 			value = value[5:]
-			err = deserializationProvider.LoadSchema(schemaPath)
+			err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
 			if err != nil {
 				return err
 			}
@@ -127,23 +128,61 @@ func (h *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 	return nil
 }
 
-func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
+func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	// Retrieve schema from cluster only if schema is specified.
 	schemaID := int32(binary.BigEndian.Uint32(value[1:5]))
 
 	// Create temporary file to store schema retrieved (also for cache)
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
-	if !fileExists(tempStorePath) {
+	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".ref")
+	referencePathMap := map[string]string{}
+	var references []srsdk.SchemaReference
+	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
 		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
 		if err != nil {
-			return "", err
+			return "", nil, err
+		}
+
+		refBytes, err := json.Marshal(schemaString.References)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		if err != nil {
+			return "", nil, err
+		}
+		references = schemaString.References
+	} else {
+		refBlob, err := ioutil.ReadFile(tempRefStorePath)
+		if err != nil {
+			return "", nil, err
+		}
+		err = json.Unmarshal(refBlob, &references)
+		if err != nil {
+			return "", nil, err
 		}
 	}
-	return tempStorePath, nil
+
+	for _, ref := range references {
+		tempRefContentPath := filepath.Join(filepath.Join(h.Properties.SchemaPath, ref.Name) + ".txt")
+		if !fileExists(tempRefContentPath) {
+			schema, _, err := h.SrClient.DefaultApi.GetSchemaByVersion(h.Ctx, ref.Subject, strconv.Itoa(int(ref.Version)),&srsdk.GetSchemaByVersionOpts{})
+			if err != nil {
+				return "", nil, err
+			}
+			err = ioutil.WriteFile(tempRefContentPath, []byte(schema.Schema), 0644)
+			if err != nil {
+				return "", nil, err
+			}
+		}
+		referencePathMap[ref.Name] = tempRefContentPath
+	}
+
+	return tempStorePath, referencePathMap, nil
 }
 
 // saramaConf converts KafkaClusterConfig to sarama.Config
