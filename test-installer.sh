@@ -41,6 +41,7 @@ echo $output
 ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
 [[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
 
+rm ~/.confluent/config.json
 ./bin/${binary} -h 2>&1 >/dev/null | grep -q "Manage your .*" || ( echo "Unable to execute installed ${binary} CLI" && exit 1 )
 
 #rm -rf ${tmpdir}  # too scary for now
