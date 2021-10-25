@@ -1,0 +1,8 @@
+repos:
+-  repo: https://github.com/confluentinc/gitleaks
+    rev: v7.6.1.1
+    hooks:
+    - id: gitleaks
+        name: default-rules
+        args:
+          - --verbose
