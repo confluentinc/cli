@@ -815,11 +815,11 @@ func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			connectorPlugin1 := &opv1.ConnectorPluginInfo{
-				Class: "AzureBlobSink",
+				Class: "GcsSink",
 				Type:  "Sink",
 			}
 			connectorPlugin2 := &opv1.ConnectorPluginInfo{
-				Class: "GcsSink",
+				Class: "AzureBlobSink",
 				Type:  "Sink",
 			}
 			listReply, err := json.Marshal([]*opv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
