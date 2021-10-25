@@ -89,6 +89,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	for _, conn := range catalog {
 		outputWriter.AddElement(conn)
 	}
+	outputWriter.StableSort()
 	return outputWriter.Out()
 }
 
