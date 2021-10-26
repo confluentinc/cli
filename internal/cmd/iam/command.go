@@ -41,6 +41,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 	c.AddCommand(NewRBACCommand(cfg, c.prerunner))
 	c.AddCommand(serviceAccountCmd.Command)
 	c.AddCommand(NewUserCommand(c.prerunner))
+	c.AddCommand(NewInvitationCommand(c.prerunner))
 
 	if cfg.IsCloudLogin() {
 		serverCompleter.AddCommand(serviceAccountCmd)
