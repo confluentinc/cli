@@ -93,14 +93,14 @@ func New() *cobra.Command {
 	}
 }
 
-func completion(cmd *cobra.Command, shell string) (string, error) {
+func completion(root *cobra.Command, shell string) (string, error) {
 	buf := new(bytes.Buffer)
 	var err error
 
 	if shell == "zsh" {
-		err = cmd.Root().GenZshCompletion(buf)
+		err = root.GenZshCompletion(buf)
 	} else {
-		err = cmd.Root().GenBashCompletion(buf)
+		err = root.GenBashCompletion(buf)
 	}
 
 	return buf.String(), err
