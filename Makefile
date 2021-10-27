@@ -4,12 +4,10 @@ GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
 
-.PHONY: build
-build:
+.PHONY: cross-build
+cross-build:
 ifeq ($(GOARCH),arm64) # build for darwin arm64. set TAGS="" to kill 'map has no entry' error. 
-	make switch-librdkafka-arm64
-	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk TAGS="" make cli-builder || true 
-	make restore-librdkafka-amd64
+	make build-darwin-arm64
 else # build for amd64 arch
     ifeq ($(GOOS),windows)
 		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ TAGS="" make cli-builder
@@ -20,19 +18,29 @@ else # build for amd64 arch
     endif
 endif
 
-.PHONY: build-native
-build-native:
-ifneq "" "$(findstring NT,$(shell uname))"
+.PHONY: build
+build:
+ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
 	CC=gcc CXX=g++ TAGS="" make cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-    ifneq (,$(findstring musl,$(shell ldd --version))) 
+    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
 		CC=gcc CXX=g++ TAGS=musl make cli-builder
-    else
+    else # build for glibc Linux
 		CC=gcc CXX=g++ TAGS="" make cli-builder
     endif
-else 
-	TAGS="" make cli-builder
+else
+    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
+		TAGS="" make cli-builder
+    else # build for Darwin/arm64
+		make build-darwin-arm64
+    endif
 endif
+
+.PHONY: build-darwin-arm64
+build-darwin-arm64:
+	make switch-librdkafka-arm64
+	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk TAGS="" make cli-builder || true 
+	make restore-librdkafka-amd64
 
 .PHONY: cli-builder
 cli-builder:
@@ -198,7 +206,7 @@ lint-installers:
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses
-lint-licenses: build-native
+lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	echo Licenses for confluent binary ; \
 	[ -t 0 ] && args="" || args="-plain" ; \

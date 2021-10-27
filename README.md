@@ -42,7 +42,7 @@ The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform de
 
 ## Install
 
-The CLI has pre-built binaries for macOS, Linux, and Windows, on both i386 and x86_64 architectures.
+The CLI has pre-built binaries for macOS, Linux, and Windows.
 
 You can download a tarball with the binaries. These are both on Github releases and in S3.
 
@@ -167,13 +167,21 @@ Things under `internal/cmd` are commands, things under `internal/pkg` are packag
 When you add a new command or resource, assuming it's already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 
-### Build Other Platforms
+### Cross Compile For Other Platforms
 
-If you have a need to build a binary for a platform that is not the current one, use the following:
+Cross compilation from a Darwin/amd64 machine to Darwin/arm64, Linux/amd64 and Windows/amd64 platforms is supported. To build for Darwin/arm64, run the following:
 
-    GOOS=linux make build
-    GOOS=mac make build
-    GOOS=windows make build
+    GOARCH=arm64 make cross-build
+
+To cross compile for Linux (glibc or musl), install cross compiler `musl-cross` with homebrew:
+
+    brew install FiloSottile/musl-cross/musl-cross
+    GOOS=linux make cross-build
+
+To cross compile for Windows/amd64, install `Mingw-w64` compilers with homebrew:
+
+    brew install mingw-w64
+    GOOS=windows make cross-build
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment

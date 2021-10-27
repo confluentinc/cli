@@ -75,16 +75,15 @@ is_supported_platform() {
   case "$platform" in
     alpine/amd64) found=0 ;;
     linux/amd64) found=0 ;;
-    linux/386) found=0 ;;
     darwin/amd64) found=0 ;;
     darwin/arm64) found=0 ;;
-    darwin/386) found=0 ;;
     windows/amd64) found=0 ;;
-    windows/386) found=0 ;;
   esac
   case "$platform" in
     alpine/386) found=1 ;;
+    linux/386) found=1 ;;
     darwin/386) found=1 ;;
+    windows/386) found=1 ;;
   esac
   return $found
 }
@@ -122,11 +121,10 @@ adjust_format() {
 adjust_os() {
   # adjust archive name based on OS
   case ${OS} in
-    386) OS=i386 ;;
     amd64) OS=x86_64 ;;
     darwin) OS=darwin ;;
     linux) OS=linux ;;
-    alpine) OS=alpine ;;
+    alpine) OS=linux ;;
     windows) OS=windows ;;
   esac
   true
@@ -215,7 +213,7 @@ uname_os() {
     cygwin*) os="windows" ;;
   esac
   case "$osid" in
-    alpine*) os="alpine" ;;
+    alpine*) os="linux" ;;
   esac
   echo "$os"
 }
@@ -223,9 +221,6 @@ uname_arch() {
   arch=$(uname -m)
   case $arch in
     x86_64) arch="amd64" ;;
-    x86) arch="386" ;;
-    i686) arch="386" ;;
-    i386) arch="386" ;;
     arm64) arch="arm64" ;;
     aarch64) arch="arm64" ;;
     armv5*) arch="armv5" ;;
@@ -256,7 +251,6 @@ uname_os_check() {
 uname_arch_check() {
   arch=$(uname_arch)
   case "$arch" in
-    386) return 0 ;;
     amd64) return 0 ;;
     arm64) return 0 ;;
     armv5) return 0 ;;
