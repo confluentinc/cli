@@ -14,7 +14,7 @@ else # build for amd64 arch
     ifeq ($(GOOS),windows)
 		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
     else ifeq ($(GOOS),linux) 
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" make cli-builder
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
     else # build for Darwin amd64
 		make cli-builder
     endif
@@ -25,14 +25,18 @@ build-native:
 ifneq "" "$(findstring NT,$(shell uname))"
 	CC=gcc CXX=g++ make cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-	CC=gcc CXX=g++ GORELEASER_SUFFIX=-glibc make cli-builder
+    ifneq (,$(findstring musl,$(shell ldd --version))) 
+		CC=gcc CXX=g++ TAGS=musl make cli-builder
+    else
+		CC=gcc CXX=g++ make cli-builder
+    endif
 else 
 	make cli-builder
 endif
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) SDKROOT=$(SDKROOT) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build$(GORELEASER_SUFFIX).yml --rm-dist --single-target --snapshot
+	@GOPRIVATE=github.com/confluentinc CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) SDKROOT=$(SDKROOT) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk

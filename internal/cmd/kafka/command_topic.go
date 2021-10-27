@@ -735,7 +735,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	fmt.Println("After get cluster.")
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {

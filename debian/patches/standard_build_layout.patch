@@ -1,6 +1,6 @@
---- cli/Makefile	2021-10-22 14:45:20.000000000 -0700
-+++ debian/Makefile	2021-09-29 19:17:30.000000000 -0700
-@@ -1,255 +1,130 @@
+--- cli/Makefile	2021-10-27 17:01:23.000000000 -0400
++++ debian/Makefile	2021-10-26 18:02:25.000000000 -0400
+@@ -1,259 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -11,31 +11,38 @@
 -build:
 -ifeq ($(GOARCH),arm64) # build for darwin arm64
 -	make switch-librdkafka-arm64
--	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk make cli-builder
+-	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk make cli-builder || true
 -	make restore-librdkafka-amd64
 -else # build for amd64 arch
--  ifeq ($(GOOS),windows)
--	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
--  else ifeq ($(GOOS),linux) 
--	CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" make cli-builder
--  else # build for Darwin amd64
--	make cli-builder
--  endif
+-    ifeq ($(GOOS),windows)
+-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
+-    else ifeq ($(GOOS),linux) 
+-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+-    else # build for Darwin amd64
+-		make cli-builder
+-    endif
 -endif
--
++SHELL=/bin/bash
+ 
 -.PHONY: build-native
 -build-native:
 -ifneq "" "$(findstring NT,$(shell uname))"
 -	CC=gcc CXX=g++ make cli-builder
 -else ifneq (,$(findstring Linux,$(shell uname)))
--	CC=gcc CXX=g++ GORELEASER_SUFFIX=-glibc make cli-builder
+-    ifneq (,$(findstring musl,$(shell ldd --version))) 
+-		CC=gcc CXX=g++ TAGS=musl make cli-builder
+-    else
+-		CC=gcc CXX=g++ make cli-builder
+-    endif
 -else 
 -	make cli-builder
--endif
--
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
+ endif
+ 
 -.PHONY: cli-builder
 -cli-builder:
--	@GOPRIVATE=github.com/confluentinc CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) SDKROOT=$(SDKROOT) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build$(GORELEASER_SUFFIX).yml --rm-dist --single-target --snapshot
+-	@GOPRIVATE=github.com/confluentinc CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) SDKROOT=$(SDKROOT) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 -
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
@@ -55,14 +62,16 @@
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+SHELL=/bin/bash
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
  
 -.PHONY: clean
 -clean:
 -	rm -rf $(shell pwd)/dist
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
-+endif
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
  
 -.PHONY: generate
 -generate:
@@ -80,28 +89,16 @@
 -	go get github.com/goreleaser/goreleaser@v0.164.0
 -
 -ifeq ($(shell uname),Darwin)
--SHASUM ?= gsha256sum
+-    SHASUM ?= gsha256sum
 -else ifneq (,$(findstring NT,$(shell uname)))
 -# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
--SHASUM ?= CertUtil SHA256 -hashfile
+-    SHASUM ?= CertUtil SHA256 -hashfile
 -else ifneq (,$(findstring Windows,$(shell systeminfo)))
--SHASUM ?= CertUtil SHA256 -hashfile
+-    SHASUM ?= CertUtil SHA256 -hashfile
 -else
--SHASUM ?= sha256sum
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
-+
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
-+
+-    SHASUM ?= sha256sum
+-endif
 +APPLY_PATCHES?=yes
-+
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
- endif
  
 -show-args:
 -	@echo "VERSION: $(VERSION)"
@@ -119,8 +116,11 @@
 -  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 -  # ...and turn them into do-nothing targets
 -  $(eval $(RUN_ARGS):;@:)
--endif
--
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
+ endif
+ 
 -.PHONY: run
 -run:
 -	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
@@ -194,8 +194,18 @@
 -	@make lint-go
 -	@make lint-cli
 -	@make lint-installers
--endif
--
++all: install
++
++archive: install
++	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
++	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
++
++apply-patches: $(wildcard debian/patches/*)
++ifeq ($(APPLY_PATCHES),yes)
++	git reset --hard HEAD
++	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
+ endif
+ 
 -.PHONY: lint-go
 -lint-go:
 -	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
@@ -236,18 +246,6 @@
 -	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -  endif
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-+all: install
-+
-+archive: install
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
-+
-+apply-patches: $(wildcard debian/patches/*)
-+ifeq ($(APPLY_PATCHES),yes)
-+	git reset --hard HEAD
-+	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
-+endif
-+
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -309,8 +307,9 @@
 -  else
 -	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -  endif
--endif
--
++	RPM_RELEASE_ID=$(REVISION)
+ endif
+ 
 -.PHONY: coverage-integ
 -coverage-integ:
 -      ifdef CI
@@ -344,9 +343,6 @@
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
 -	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
-+	RPM_RELEASE_ID=$(REVISION)
-+endif
-+
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
