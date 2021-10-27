@@ -16,6 +16,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
+// Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 const messageOffset = 5
 
 type ConsumerProperties struct {

@@ -728,23 +728,21 @@ func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, sub
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
-	var level log.Level
-	if h.Config.Logger != nil {
-		level = h.Config.Logger.GetLevel()
-	}
+	level := h.Config.Logger.GetLevel()
 
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
 	}
+	fmt.Println("After get cluster.")
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef("failed to create producer: %v", err)
+			h.logger.Tracef(errors.FailedToCreateProducerMsg, err)
 		}
-		return fmt.Errorf("failed to create producer: %v", err)
+		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
 	h.logger.Tracef("Create producer succeeded")
@@ -752,9 +750,9 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef("failed to create admin client: %v", err)
+			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
 		}
-		return fmt.Errorf("failed to create admin client: %v", err)
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
 
@@ -874,10 +872,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
-	var level log.Level
-	if h.Config.Logger != nil {
-		level = h.Config.Logger.GetLevel()
-	}
+	level := h.Config.Logger.GetLevel()
 
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
@@ -937,9 +932,9 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef("failed to create consumer: %v", err)
+			h.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
 		}
-		return fmt.Errorf("failed to create consumer: %v", err)
+		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
 	defer consumer.Close()
 	h.logger.Tracef("Create consumer succeeded")
@@ -947,9 +942,9 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef("failed to create admin client: %v", err)
+			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
 		}
-		return fmt.Errorf("failed to create admin client: %v", err)
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
 

@@ -8,16 +8,16 @@ RELEASE_BRANCH  ?= main
 build:
 ifeq ($(GOARCH),arm64) # build for darwin arm64
 	make switch-librdkafka-arm64
-	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk make cli-builder
+	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk make cli-builder || true
 	make restore-librdkafka-amd64
 else # build for amd64 arch
-  ifeq ($(GOOS),windows)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
-  else ifeq ($(GOOS),linux) 
-	CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" make cli-builder
-  else # build for Darwin amd64
-	make cli-builder
-  endif
+    ifeq ($(GOOS),windows)
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
+    else ifeq ($(GOOS),linux) 
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" make cli-builder
+    else # build for Darwin amd64
+		make cli-builder
+    endif
 endif
 
 .PHONY: build-native
@@ -73,14 +73,14 @@ jenkins-deps:
 	go get github.com/goreleaser/goreleaser@v0.164.0
 
 ifeq ($(shell uname),Darwin)
-SHASUM ?= gsha256sum
+    SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
-SHASUM ?= CertUtil SHA256 -hashfile
+    SHASUM ?= CertUtil SHA256 -hashfile
 else ifneq (,$(findstring Windows,$(shell systeminfo)))
-SHASUM ?= CertUtil SHA256 -hashfile
+    SHASUM ?= CertUtil SHA256 -hashfile
 else
-SHASUM ?= sha256sum
+    SHASUM ?= sha256sum
 endif
 
 show-args:

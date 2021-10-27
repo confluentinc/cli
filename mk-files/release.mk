@@ -40,12 +40,13 @@ endef
 
 .PHONY: switch-librdkafka-arm64
 switch-librdkafka-arm64:
+	@echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)"
 	sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a
 	sudo cp librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a
 
 .PHONY: restore-librdkafka-amd64
 restore-librdkafka-amd64:
-	sudo rm $(RDKAFKA_PATH)/librdkafka_darwin.a
+	@echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)"
 	sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
@@ -84,7 +85,6 @@ set-acls:
 rename-archives-checksums:
 	$(caasenv-authenticate); \
 	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt;\
 	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging
