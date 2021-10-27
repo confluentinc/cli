@@ -1,4 +1,4 @@
---- cli/Makefile	2021-10-27 17:01:23.000000000 -0400
+--- cli/Makefile	2021-10-27 17:42:59.000000000 -0400
 +++ debian/Makefile	2021-10-26 18:02:25.000000000 -0400
 @@ -1,259 +1,130 @@
 -SHELL           := /bin/bash
@@ -9,17 +9,17 @@
 -
 -.PHONY: build
 -build:
--ifeq ($(GOARCH),arm64) # build for darwin arm64
+-ifeq ($(GOARCH),arm64) # build for darwin arm64. set TAGS="" to kill 'map has no entry' error. 
 -	make switch-librdkafka-arm64
--	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk make cli-builder || true
+-	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk TAGS="" make cli-builder || true 
 -	make restore-librdkafka-amd64
 -else # build for amd64 arch
 -    ifeq ($(GOOS),windows)
--		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
+-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ TAGS="" make cli-builder
 -    else ifeq ($(GOOS),linux) 
 -		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
 -    else # build for Darwin amd64
--		make cli-builder
+-		TAGS="" make cli-builder
 -    endif
 -endif
 +SHELL=/bin/bash
@@ -27,15 +27,15 @@
 -.PHONY: build-native
 -build-native:
 -ifneq "" "$(findstring NT,$(shell uname))"
--	CC=gcc CXX=g++ make cli-builder
+-	CC=gcc CXX=g++ TAGS="" make cli-builder
 -else ifneq (,$(findstring Linux,$(shell uname)))
 -    ifneq (,$(findstring musl,$(shell ldd --version))) 
 -		CC=gcc CXX=g++ TAGS=musl make cli-builder
 -    else
--		CC=gcc CXX=g++ make cli-builder
+-		CC=gcc CXX=g++ TAGS="" make cli-builder
 -    endif
 -else 
--	make cli-builder
+-	TAGS="" make cli-builder
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
  endif
