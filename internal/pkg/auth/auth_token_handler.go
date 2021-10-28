@@ -42,7 +42,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credential
 	}
 
 	client.HttpClient.Timeout = 30 * time.Second
-	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password)
+	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, "")
 	return token, "", err
 }
 
@@ -58,7 +58,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	if err != nil {
 		return "", "", err
 	}
-	token, err := client.Auth.Login(context.Background(), idToken, "", "")
+	token, err := client.Auth.Login(context.Background(), idToken, "", "", "")
 	if err != nil {
 		return "", "", err
 	}
@@ -87,7 +87,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 		return "", "", err
 	}
 
-	token, err := client.Auth.Login(context.Background(), idToken, "", "")
+	token, err := client.Auth.Login(context.Background(), idToken, "", "", "")
 	if err != nil {
 		return "", "", err
 	}

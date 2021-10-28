@@ -194,6 +194,10 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, 
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.StripeToken)
+
+			res := &orgv1.UpdatePaymentInfoReply{}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
 		case "GET": // admin payment describe
 			res := orgv1.GetPaymentInfoReply{
 				Card: &orgv1.Card{
@@ -838,11 +842,11 @@ func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			connectorPlugin1 := &opv1.ConnectorPluginInfo{
-				Class: "AzureBlobSink",
+				Class: "GcsSink",
 				Type:  "Sink",
 			}
 			connectorPlugin2 := &opv1.ConnectorPluginInfo{
-				Class: "GcsSink",
+				Class: "AzureBlobSink",
 				Type:  "Sink",
 			}
 			listReply, err := json.Marshal([]*opv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})

@@ -92,6 +92,7 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 	for _, conn := range plugins {
 		outputWriter.AddElement(conn)
 	}
+	outputWriter.StableSort()
 	return outputWriter.Out()
 }
 

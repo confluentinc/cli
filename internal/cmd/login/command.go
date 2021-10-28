@@ -65,7 +65,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
+	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 	loginCmd.Flags().SortFlags = false
 
 	c.CLICommand = pcmd.NewAnonymousCLICommand(loginCmd, prerunner)

@@ -301,14 +301,27 @@ func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Clus
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
 func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsGetOpts {
-	opts := kafkarestv3.ClustersClusterIdAclsGetOpts{
-		ResourceType: optional.NewInterface(acl.ResourceType),
-		ResourceName: optional.NewString(acl.ResourceName),
-		PatternType:  optional.NewInterface(acl.PatternType),
-		Principal:    optional.NewString(acl.Principal),
-		Host:         optional.NewString(acl.Host),
-		Operation:    optional.NewInterface(acl.Operation),
-		Permission:   optional.NewInterface(acl.Permission),
+	opts := kafkarestv3.ClustersClusterIdAclsGetOpts{}
+	if acl.ResourceType != "" {
+		opts.ResourceType = optional.NewInterface(acl.ResourceType)
+	}
+	if acl.ResourceName != "" {
+		opts.ResourceName = optional.NewString(acl.ResourceName)
+	}
+	if acl.PatternType != "" {
+		opts.PatternType = optional.NewInterface(acl.PatternType)
+	}
+	if acl.Principal != "" {
+		opts.Principal = optional.NewString(acl.Principal)
+	}
+	if acl.Host != "" {
+		opts.Host = optional.NewString(acl.Host)
+	}
+	if acl.Operation != "" {
+		opts.Operation = optional.NewInterface(acl.Operation)
+	}
+	if acl.Permission != "" {
+		opts.Permission = optional.NewInterface(acl.Permission)
 	}
 	return &opts
 }

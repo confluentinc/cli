@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -445,8 +446,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
 				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 					return &ccloud.Client{Auth: &sdkMock.Auth{
-						UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-							return &orgv1.GetUserReply{
+						UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+							return &flowv1.GetMeReply{
 								User: &orgv1.User{
 									Id:        23,
 									Email:     "",
