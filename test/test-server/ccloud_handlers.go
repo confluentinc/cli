@@ -3,7 +3,6 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -284,7 +284,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWrit
 }
 
 // Handler for: "/api/service_accounts"
-func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
@@ -337,6 +337,26 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(updateReply))
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/api/service_accounts/{id}"
+func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := mux.Vars(r)["id"]
+		_, err := strconv.Atoi(idStr)
+		require.NoError(t, err)
+
+		switch r.Method {
+		case "GET":
+			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{ResourceId: serviceAccountResourceID}}
+
+			data, err := json.Marshal(res)
+			require.NoError(t, err)
+
+			_, err = w.Write(data)
 			require.NoError(t, err)
 		}
 	}

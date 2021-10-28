@@ -22,6 +22,7 @@ const (
 	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
 	serviceAccounts     = "/api/service_accounts"
+	serviceAccount      = "/api/service_accounts/{id}"
 	schemaRegistries    = "/api/schema_registries"
 	schemaRegistry      = "/api/schema_registries/{id}"
 	ksql                = "/api/ksqls/{id}"
@@ -77,7 +78,6 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
-	c.HandleFunc(serviceAccounts, c.HandleServiceAccount(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
@@ -89,6 +89,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
 	c.addMetricsQueryRoutes(t)
+	c.addServiceAccountRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -163,4 +164,9 @@ func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
 	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
 	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
+}
+
+func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {
+	c.HandleFunc(serviceAccounts, c.HandleServiceAccounts(t))
+	c.HandleFunc(serviceAccount, c.HandleServiceAccount(t))
 }
