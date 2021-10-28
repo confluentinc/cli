@@ -935,7 +935,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
-	defer consumer.Close()
 	h.logger.Tracef("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
