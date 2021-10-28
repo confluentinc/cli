@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -15,7 +17,7 @@ type eventCommand struct {
 type connectLogEventsInfo struct {
 	ClusterId        string
 	EnvironmentId    string
-	ServiceAccountId int32
+	ServiceAccountId string
 	TopicName        string
 }
 
@@ -68,11 +70,18 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 		c.State.Auth.Organization.AuditLog.ClusterId == "" {
 		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
 	}
+
 	auditLog := c.State.Auth.Organization.AuditLog
+
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	if err != nil {
+		return err
+	}
+
 	return output.DescribeObject(cmd, &connectLogEventsInfo{
 		ClusterId:        auditLog.ClusterId,
 		EnvironmentId:    auditLog.AccountId,
-		ServiceAccountId: auditLog.ServiceAccountId,
+		ServiceAccountId: serviceAccount.ResourceId,
 		TopicName:        "confluent-connect-log-events",
 	}, connectLogListFields, humanLabelMap, structuredLabelMap)
 }
