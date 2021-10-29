@@ -29,11 +29,12 @@ import (
 )
 
 var (
-	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
-	describeHumanRenames = map[string]string{
+	listFields                         = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
+	listHumanLabels                    = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
+	listStructuredLabels               = []string{"id", "name", "type", "provider", "region", "availability", "status"}
+	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
+	describeHumanRenames               = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
@@ -742,22 +743,18 @@ func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []
 }
 
 func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaCluster) error {
-	// insert field "ApiEndpoint" into describeFields after "Endpoint"
-	describeFields := append(basicDescribeFields, "")
-	copy(describeFields[11+1:], describeFields[11:])
-	describeFields[11] = "ApiEndpoint"
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, describeFields), describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint), describeHumanRenames, describeStructuredRenames)
 }
 
 func outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *schedv1.KafkaCluster, all bool) error {
 	fields := basicDescribeFields
-	renames := describeStructuredRenames
-	delete(renames, "ApiEndpoint")
+	structureRenames := describeStructuredRenames
+	delete(structureRenames, "ApiEndpoint")
 	if all { // expose KAPI when --all flag is set
 		fields = append(fields, "KAPI")
-		renames["KAPI"] = "kapi"
+		structureRenames["KAPI"] = "kapi"
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster), getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, renames)
+	return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster), getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, structureRenames)
 }
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
