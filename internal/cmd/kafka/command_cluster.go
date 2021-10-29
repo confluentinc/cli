@@ -32,7 +32,7 @@ var (
 	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
 	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
 	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
@@ -53,24 +53,6 @@ var (
 		"Status":             "status",
 		"Endpoint":           "endpoint",
 		"ApiEndpoint":        "api_endpoint",
-		"EncryptionKeyId":    "encryption_key_id",
-		"RestEndpoint":       "rest_endpoint",
-	}
-	basicDescribeFieldsWithoutKAPI       = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
-	describeStructuredRenamesWithoutKAPI = map[string]string{
-		"Id":                 "id",
-		"Name":               "name",
-		"Type":               "type",
-		"ClusterSize":        "cluster_size",
-		"PendingClusterSize": "pending_cluster_size",
-		"NetworkIngress":     "ingress",
-		"NetworkEgress":      "egress",
-		"Storage":            "storage",
-		"ServiceProvider":    "provider",
-		"Region":             "region",
-		"Availability":       "availability",
-		"Status":             "status",
-		"Endpoint":           "endpoint",
 		"EncryptionKeyId":    "encryption_key_id",
 		"RestEndpoint":       "rest_endpoint",
 	}
@@ -524,7 +506,7 @@ func stringToSku(s string) (productv1.Sku, error) {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	exposeKAPI, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
@@ -537,7 +519,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0])
 	}
-	return outputKafkaClusterDescriptionWithKAPI(cmd, cluster, exposeKAPI)
+	return outputKafkaClusterDescriptionWithKAPI(cmd, cluster, all)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -760,18 +742,22 @@ func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []
 }
 
 func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaCluster) error {
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, basicDescribeFields), describeHumanRenames, describeStructuredRenames)
+	// insert field "ApiEndpoint" into describeFields after "Endpoint"
+	describeFields := append(basicDescribeFields, "")
+	copy(describeFields[11+1:], describeFields[11:])
+	describeFields[11] = "ApiEndpoint"
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, describeFields), describeHumanRenames, describeStructuredRenames)
 }
 
 func outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *schedv1.KafkaCluster, all bool) error {
-	if all {
-		describeStructuredRenamesWithKAPI := describeStructuredRenamesWithoutKAPI
-		describeStructuredRenamesWithKAPI["KAPI"] = "kapi"
-		return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster), getKafkaClusterDescribeFields(cluster, append(basicDescribeFieldsWithoutKAPI, "KAPI")), describeHumanRenames, describeStructuredRenamesWithKAPI)
-
+	fields := basicDescribeFields
+	renames := describeStructuredRenames
+	delete(renames, "ApiEndpoint")
+	if all { // expose KAPI when --all flag is set
+		fields = append(fields, "KAPI")
+		renames["KAPI"] = "kapi"
 	}
-	// hide KAPI when --all flag is not set
-	return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster), getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithoutKAPI), describeHumanRenames, describeStructuredRenamesWithoutKAPI)
+	return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster), getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, renames)
 }
 
 func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
