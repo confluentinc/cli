@@ -796,6 +796,42 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 	}
 }
 
+// Handler for: "/api/invitations"
+func (c *CloudRouter) HandleInvitation(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
+				Invitations: []*orgv1.Invitation{
+					buildInvitation("1", "u-11aaa@confluent.io",  "u-11aaa", "VERIFIED"),
+					buildInvitation("2", "u-22bbb@confluent.io",  "u-22bbb", "SENT"),
+				},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		} else if r.Method == "POST" {
+			body, _ := ioutil.ReadAll(r.Body)
+			bs := string(body)
+			var res flowv1.CreateInvitationReply
+			switch {
+			case strings.Contains(bs, "user@exists.com"):
+				res = flowv1.CreateInvitationReply{
+					Error: &corev1.Error{Message: "User is already active"},
+				}
+			default:
+				res = flowv1.CreateInvitationReply{
+					Error: nil,
+					Invitation:  buildInvitation("1", "miles@confluent.io",  "user1", "SENT"),
+				}
+			}
+			data, err := json.Marshal(res)
+			require.NoError(t, err)
+			_, err = w.Write(data)
+			require.NoError(t, err)
+		}
+	}
+}
+
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
 func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

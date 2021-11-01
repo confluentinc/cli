@@ -2,8 +2,11 @@ package iam
 
 import (
 	"context"
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -43,6 +46,7 @@ func NewInvitationCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 	c.AddCommand(c.newInvitationListCommand())
+	c.AddCommand(c.newInvitationCreationCommand())
 	return c.Command
 }
 
@@ -51,14 +55,14 @@ func (c invitationCommand) newInvitationListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List the organization's invitations.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.invitationList),
+		RunE:  pcmd.NewCLIRunE(c.listInvitation),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	return listCmd
 }
 
-func (c invitationCommand) invitationList(cmd *cobra.Command, _ []string) error {
+func (c invitationCommand) listInvitation(cmd *cobra.Command, _ []string) error {
 	invitations, err := c.Client.User.ListInvitations(context.Background())
 	if err != nil {
 		return err
@@ -90,4 +94,32 @@ func (c invitationCommand) invitationList(cmd *cobra.Command, _ []string) error 
 		})
 	}
 	return outputWriter.Out()
+}
+
+func (c invitationCommand) newInvitationCreationCommand() *cobra.Command {
+	createCmd := &cobra.Command{
+		Use:   "create <email>",
+		Short: "Invite a user to join your organization.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.createInvitation),
+	}
+	return createCmd
+}
+
+func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) error {
+	email := args[0]
+	matched := utils.ValidateEmail(email)
+	if !matched {
+		return errors.New(errors.BadEmailFormatErrorMsg)
+	}
+	newUser := &orgv1.User{Email: email}
+	user, err := c.Client.User.CreateInvitation(context.Background(), &flowv1.CreateInvitationRequest{
+		User: newUser,
+		SendInvitation: true,
+	})
+	if err != nil {
+		return err
+	}
+	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
+	return nil
 }

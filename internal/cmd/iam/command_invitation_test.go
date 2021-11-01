@@ -53,6 +53,13 @@ func (suite *InvitationTestSuite) SetupTest() {
 				},
 			}, nil
 		},
+		CreateInvitationFunc: func(_ context.Context, arg1 *flowv1.CreateInvitationRequest) (*orgv1.Invitation, error) {
+			return &orgv1.Invitation{
+				Id: "invitation1",
+				Email: "cli@confluent.io",
+			}, nil
+		},
+
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
@@ -63,13 +70,13 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		User: suite.userMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	return NewInvitationCommand(prerunner)
+	return NewUserCommand(prerunner)
 }
 
 func (suite *InvitationTestSuite) TestInvitationList() {
 
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"list"}
+	args := []string{"invitation", "list"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -77,6 +84,17 @@ func (suite *InvitationTestSuite) TestInvitationList() {
 	req.Equal(2, len(suite.userMock.GetUserProfileCalls()))
 	req.Equal("user1", suite.userMock.GetUserProfileCalls()[0].Arg1.ResourceId)
 	req.Equal("user2", suite.userMock.GetUserProfileCalls()[1].Arg1.ResourceId)
+}
+
+func (suite *InvitationTestSuite) TestCreateInvitation() {
+
+	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
+	args := []string{"invitation", "create", "cli@confluent.io"}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.userMock.CreateInvitationCalled())
+	req.Equal("cli@confluent.io", suite.userMock.CreateInvitationCalls()[0].Arg1.User.Email)
 }
 
 func TestUserTestSuite(t *testing.T) {

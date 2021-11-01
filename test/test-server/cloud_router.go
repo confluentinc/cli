@@ -31,6 +31,7 @@ const (
 	paymentInfo         = "/api/organizations/{id}/payment_info"
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
+	invitation          = "/api/invitations"
 	user                = "/api/users/{id}"
 	users               = "/api/users"
 	user_profile        = "/api/user_profiles/{id}"
@@ -125,6 +126,7 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 	c.HandleFunc(paymentInfo, c.HandlePaymentInfo(t))
 	c.HandleFunc(promoCodeClaims, c.HandlePromoCodeClaims(t))
 	c.HandleFunc(invites, c.HandleInvite(t))
+	c.HandleFunc(invitation, c.HandleInvitation(t))
 }
 
 func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
