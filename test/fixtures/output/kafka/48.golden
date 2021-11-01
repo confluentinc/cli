@@ -11,4 +11,5 @@
 | Status       | PROVISIONING              |
 | Endpoint     | SASL_SSL://kafka-endpoint |
 | RestEndpoint | http://kafka-rest-url     |
+| KAPI         | http://kafka-api-url      |
 +--------------+---------------------------+
