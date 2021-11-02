@@ -10,6 +10,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	poutput "github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -137,6 +138,15 @@ func (c *command) newListCommand() *cobra.Command {
 		return clouds, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	_ = cmd.RegisterFlagCompletionFunc("region", func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		cloud, _ := cmd.Flags().GetString("cloud")
+		return c.autocompleteRegions(cloud), cobra.ShellCompDirectiveNoFileComp
+	})
+
 	_ = cmd.RegisterFlagCompletionFunc("availability", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return availabilities, cobra.ShellCompDirectiveNoFileComp
 	})
@@ -158,6 +168,20 @@ func (c *command) newListCommand() *cobra.Command {
 	})
 
 	return cmd
+}
+
+func (c *command) autocompleteRegions(cloud string) []string {
+	regions, err := kafka.ListRegions(c.Client, cloud)
+	if err != nil {
+		return nil
+	}
+
+	names := make([]string, len(regions))
+	for i, region := range regions {
+		names[i] = region.RegionId
+	}
+
+	return names
 }
 
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
