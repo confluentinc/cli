@@ -1,5 +1,5 @@
-  CloudId |       CloudName       |    RegionId     |         RegionName           
-----------+-----------------------+-----------------+------------------------------
-  gcp     | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
-  gcp     | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       
-  aws     | Amazon Web Services   | us-east-1       | us-east-1 (N. Virginia)      
+  Cloud ID |      Cloud Name       |    Region ID    |         Region Name          
+-----------+-----------------------+-----------------+------------------------------
+  gcp      | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
+  gcp      | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       
+  aws      | Amazon Web Services   | us-east-1       | us-east-1 (N. Virginia)      
