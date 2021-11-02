@@ -16,7 +16,7 @@ import (
 
 var (
 	invitationListFields    = []string{"Id", "Email", "FirstName", "LastName", "UserResourceId", "Status"}
-	invitationHumanLabels   = []string{"ID", "Email", "First Name", "Last Name", "User Resource ID", "Status"}
+	invitationHumanLabels   = []string{"ID", "Email", "First Name", "Last Name", "User ID", "Status"}
 	invitationStructuredLabels   = []string{"id", "email", "first_name", "last_name", "user_resource_id", "status"}
 )
 
@@ -33,20 +33,19 @@ type invitationStruct struct {
 	Status               string
 }
 
-func NewInvitationCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newInvitationCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &invitationCommand{
 		pcmd.NewAuthenticatedCLICommand(
 			&cobra.Command{
 				Use:         "invitation",
-				Short:       "Manage invitation.",
+				Short:       "Manage invitations.",
 				Args:        cobra.NoArgs,
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 			},
 			prerunner,
 		),
 	}
 	c.AddCommand(c.newInvitationListCommand())
-	c.AddCommand(c.newInvitationCreationCommand())
+	c.AddCommand(c.newInvitationCreateCommand())
 	return c.Command
 }
 
@@ -55,14 +54,14 @@ func (c invitationCommand) newInvitationListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List the organization's invitations.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.listInvitation),
+		RunE:  pcmd.NewCLIRunE(c.listInvitations),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().SortFlags = false
 	return listCmd
 }
 
-func (c invitationCommand) listInvitation(cmd *cobra.Command, _ []string) error {
+func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error {
 	invitations, err := c.Client.User.ListInvitations(context.Background())
 	if err != nil {
 		return err
@@ -96,14 +95,13 @@ func (c invitationCommand) listInvitation(cmd *cobra.Command, _ []string) error 
 	return outputWriter.Out()
 }
 
-func (c invitationCommand) newInvitationCreationCommand() *cobra.Command {
-	createCmd := &cobra.Command{
+func (c invitationCommand) newInvitationCreateCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:   "create <email>",
 		Short: "Invite a user to join your organization.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.createInvitation),
 	}
-	return createCmd
 }
 
 func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) error {
@@ -120,6 +118,6 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 	if err != nil {
 		return err
 	}
-	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
+	utils.Printf(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
 	return nil
 }

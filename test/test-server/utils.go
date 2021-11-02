@@ -180,7 +180,7 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 	}
 }
 
-func buildInvitation(id string, email string, resourceId string, status string) *orgv1.Invitation {
+func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
 	return &orgv1.Invitation{
 		Id:             id,
 		Email:          email,

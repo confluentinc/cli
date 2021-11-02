@@ -797,7 +797,7 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 }
 
 // Handler for: "/api/invitations"
-func (c *CloudRouter) HandleInvitation(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
@@ -813,12 +813,11 @@ func (c *CloudRouter) HandleInvitation(t *testing.T) func(http.ResponseWriter, *
 			body, _ := ioutil.ReadAll(r.Body)
 			bs := string(body)
 			var res flowv1.CreateInvitationReply
-			switch {
-			case strings.Contains(bs, "user@exists.com"):
+			if strings.Contains(bs, "user@exists.com") {
 				res = flowv1.CreateInvitationReply{
 					Error: &corev1.Error{Message: "User is already active"},
 				}
-			default:
+			} else {
 				res = flowv1.CreateInvitationReply{
 					Error: nil,
 					Invitation:  buildInvitation("1", "miles@confluent.io",  "user1", "SENT"),

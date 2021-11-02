@@ -218,7 +218,7 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserCreateInvitation() {
+func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 	tests := []CLITest{
 		{args: "iam user invitation create miles@confluent.io", fixture: "iam/user/invite.golden"},
 		{args: "iam user invitation create bad-email.com", wantErrCode: 1, fixture: "iam/user/bad-email.golden"},
