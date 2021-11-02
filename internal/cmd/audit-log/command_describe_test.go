@@ -23,7 +23,7 @@ func TestAuditLogDescribe(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestAuditLogDescribe_Unconfigured(t *testing.T) {
+func TestAuditLogDescribeUnconfigured(t *testing.T) {
 	cmd := mockAuditLogCommand(false)
 
 	_, err := pcmd.ExecuteCommand(cmd, "describe")
