@@ -2,7 +2,7 @@
   {
     "link_name": "link-1",
     "source_cluster_id": "cluster-1"
-  }, 
+  },
   {
     "link_name": "link-2",
     "source_cluster_id": "cluster-1"

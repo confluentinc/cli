@@ -2,7 +2,7 @@
   {
     "name": "compression.type",
     "value": "gzip"
-  }, 
+  },
   {
     "name": "retention.ms",
     "value": "1"
