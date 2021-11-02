@@ -21,7 +21,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
