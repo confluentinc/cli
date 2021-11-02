@@ -184,8 +184,8 @@ func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
 	return &orgv1.Invitation{
 		Id:             id,
 		Email:          email,
-		UserResourceId:     resourceId,
-		Status: status,
+		UserResourceId: resourceId,
+		Status:         status,
 	}
 }
 

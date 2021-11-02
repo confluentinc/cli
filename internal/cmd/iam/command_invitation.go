@@ -118,6 +118,6 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 	if err != nil {
 		return err
 	}
-	utils.Printf(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
+	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
 	return nil
 }
