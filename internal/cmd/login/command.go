@@ -116,6 +116,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	orgResourceId, err := c.getOrgResourceId(cmd)
+	fmt.Println("login ord id " + orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -350,6 +351,7 @@ func (c *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
 	return pauth.GetLoginOrganization(
 		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
 		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),
+		//c.loginOrganizationManager.GetLoginOrganizationFromContext(cmd),
 		c.loginOrganizationManager.GetDefaultLoginOrganization(),
 	)
 }

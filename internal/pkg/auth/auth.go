@@ -86,6 +86,7 @@ func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, tok
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("config.getLastUsedOrgId()" + config.GetLastUsedOrgId())
 	return state.Auth.Account, nil
 }
 
@@ -151,6 +152,7 @@ func getCCloudContextState(config *v1.Config, ctxName string, email string, url 
 	// between CLI sessions.
 	state.Auth.User = user.User
 	state.Auth.Accounts = user.Accounts
+	fmt.Println("writing this org as last org " + user.Organization.Name + " " + user.Organization.ResourceId)
 	state.Auth.Organization = user.Organization
 	// cache the last used org id so we can log back into the same org next time
 	config.UpdateLastUsedOrgId(user.Organization.ResourceId)
