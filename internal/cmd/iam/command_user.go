@@ -77,8 +77,8 @@ func NewUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	c.AddCommand(c.newUserDescribeCommand())
 	c.AddCommand(c.newUserListCommand())
-	c.AddCommand(c.newUserInviteCommand())
 	c.AddCommand(c.newUserDeleteCommand())
+	c.AddCommand(newInvitationCommand(prerunner))
 	return c.Command
 }
 
@@ -183,31 +183,6 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		})
 	}
 	return outputWriter.Out()
-}
-
-func (c userCommand) newUserInviteCommand() *cobra.Command {
-	createCmd := &cobra.Command{
-		Use:   "invite <email>",
-		Short: "Invite a user to join your organization.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.invite),
-	}
-	return createCmd
-}
-
-func (c userCommand) invite(cmd *cobra.Command, args []string) error {
-	email := args[0]
-	matched := utils.ValidateEmail(email)
-	if !matched {
-		return errors.New(errors.BadEmailFormatErrorMsg)
-	}
-	newUser := &orgv1.User{Email: email}
-	user, err := c.Client.User.Invite(context.Background(), newUser)
-	if err != nil {
-		return err
-	}
-	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
-	return nil
 }
 
 func (c userCommand) newUserDeleteCommand() *cobra.Command {

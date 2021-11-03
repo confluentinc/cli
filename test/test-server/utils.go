@@ -180,6 +180,15 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 	}
 }
 
+func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
+	return &orgv1.Invitation{
+		Id:             id,
+		Email:          email,
+		UserResourceId: resourceId,
+		Status:         status,
+	}
+}
+
 func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool, *orgv1.Account) {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
