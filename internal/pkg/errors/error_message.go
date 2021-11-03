@@ -135,10 +135,14 @@ const (
 	UnknownTopicErrorMsg = "unknown topic \"%s\""
 
 	// kafka topic commands
+	FailedToCreateProducerMsg            = "failed to create producer: %v"
+	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
+	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
 	FailedToParseConfigErrMsg            = `failed to parse "key=value" pattern from configuration: %s`
+	FailedToFindSchemaIDErrorMsg         = "failed to find schema ID in topic data"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""

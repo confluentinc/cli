@@ -1,4 +1,4 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip alpine_amd64.tar.gz
+ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz windows_amd64.zip
 
 .PHONY: release
 release: get-release-image commit-release tag-release
@@ -38,23 +38,29 @@ define copy-stag-content-to-prod
 	aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1
 endef
 
-# The Alpine container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
-.PHONY: gorelease-alpine
-gorelease-alpine:
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-alpine.yml
+.PHONY: switch-librdkafka-arm64
+switch-librdkafka-arm64:
+	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)" ;\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a ;\
+		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
+	fi
 
-# This builds the Darwin, Linux (non-Alpine), and Windows binaries using goreleaser on the host computer.  goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.  However, we then have to separately build the Alpine binaries/archives in a Docker container (since we need to use an OS which has the Alpine C runtimes instead of the C runtimes on macOS).  We then also have to manually upload the Alpine build artifacts to S3 since the goreleaser inside the Docker container doesn't have the S3 credentials from the host.
+.PHONY: restore-librdkafka-amd64
+restore-librdkafka-amd64:
+	@if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+        echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)";\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
+	fi
+
+# This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml && \
-	./build_alpine.sh && \
-	aws s3 cp dist/confluent_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_alpine_amd64.tar.gz; \
-	aws s3 cp dist/confluent_alpine_amd64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_alpine_amd64; \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_alpine.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml || true && \
+	make restore-librdkafka-amd64
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -77,12 +83,10 @@ set-acls:
 
 # goreleaser uploads the checksum for archives as confluent_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. confluent_v1.19.0_checksums.txt
 # Chose not to change install script to expect no-v because older versions use the format with 'v'.
-# Also, we first re-upload the checksums file because we concatenate the Alpine checksums to the checksums file after goreleaser has already published it (without the Alpine checksums) to S3
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
 	$(caasenv-authenticate); \
 	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt;\
 	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging

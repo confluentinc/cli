@@ -17,18 +17,40 @@ builds:
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
+      - -tags=musl
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
       - all=-trimpath={{.Env.GOPATH}}
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-linux-musl-gcc
+      - CXX=x86_64-linux-musl-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
     goos:
       - linux
+    goarch:
+      - amd64
+  - binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -buildmode=exe  
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goos:
       - windows
     goarch:
       - amd64
-      - 386
   - binary: confluent
     id: signed-amd64
     main: cmd/confluent/main.go
@@ -67,11 +89,15 @@ builds:
     goarch:
       - arm64
     hooks:
+      pre:
+        - cmd: make switch-librdkafka-arm64
       post:
+        - cmd: make restore-librdkafka-amd64
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=confluent
             - LICENSE_BIN_PATH=./dist/signed-arm64_darwin_arm64/confluent
+            - CGO_ENABLED=1
         - cmd: gon gon_confluent_arm64.hcl
 
 archives:

@@ -12,29 +12,26 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
+	"github.com/antihax/optional"
 	"github.com/c-bata/go-prompt"
-
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
-	"github.com/Shopify/sarama"
-	"github.com/antihax/optional"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/go-printer"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/serdes"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -728,16 +725,37 @@ func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, sub
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
+	level := h.Config.Logger.GetLevel()
+
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
 	if err != nil {
 		return err
 	}
-	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, false)
+
+	producer, err := NewProducer(cluster, h.clientID)
+	if err != nil {
+		if level >= log.WARN {
+			h.logger.Tracef(errors.FailedToCreateProducerMsg, err)
+		}
+		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
+	}
+	defer producer.Close()
+	h.logger.Tracef("Create producer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	if err != nil {
+		if level >= log.WARN {
+			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+		}
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = h.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
 	}
-	saramaClient.Close() //client is not resused for produce
 
 	delim, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
@@ -768,36 +786,13 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-
 	// Meta info contains magic byte and schema ID (4 bytes).
-	// For plain string encoding, meta info is empty.
-	metaInfo := []byte{}
-
-	// Registering schema when specified, and fill metaInfo array.
-	if valueFormat != "string" && len(schemaPath) > 0 {
-		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
-		if err != nil {
-			return err
-		}
-		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
-		if err != nil {
-			return err
-		}
-		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
-		if err != nil {
-			return err
-		}
-		metaInfo = info
+	metaInfo, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider)
+	if err != nil {
+		return err
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
-
-	InitSarama(h.logger)
-	producer, err := NewSaramaProducer(cluster, h.clientID)
-	if err != nil {
-		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
-		return err
-	}
 
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
@@ -832,61 +827,49 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	// Prime reader
 	go scan()
 
-	var key sarama.Encoder
+	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		if len(data) == 0 {
 			go scan()
 			continue
 		}
-		var valueString string
-		if parseKey {
-			record := strings.SplitN(data, delim, 2)
-			valueString = strings.TrimSpace(record[len(record)-1])
 
-			if len(record) == 2 {
-				key = sarama.StringEncoder(strings.TrimSpace(record[0]))
-			} else {
-				return errors.New(errors.MissingKeyErrorMsg)
-			}
-		} else {
-			valueString = strings.TrimSpace(data)
-		}
-		encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+		key, value, err := getMsgKeyAndValue(metaInfo, data, delim, parseKey, serializationProvider)
 		if err != nil {
 			return err
 		}
-		encoded := append(metaInfo, encodedMessage...)
-		value := sarama.StringEncoder(string(encoded))
 
-		msg := &sarama.ProducerMessage{Topic: topic, Key: key, Value: value}
-		_, offset, err := producer.SendMessage(msg)
+		msg := &ckafka.Message{
+			TopicPartition: ckafka.TopicPartition{Topic: &topic, Partition: ckafka.PartitionAny},
+			Key:            []byte(key),
+			Value:          []byte(value),
+		}
+
+		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
-			isTopicNotExistError, err := errors.CatchTopicNotExistError(err, topic, cluster.ID)
-			if isTopicNotExistError {
-				scanErr = err
-				close(input)
-				break
-			}
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
 				close(input)
 				break
 			}
-			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, offset, err)
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
-		// Reset key prior to reuse
-		key = nil
+		e := <-deliveryChan                // read a ckafka event from the channel
+		m := e.(*ckafka.Message)           // extract the message from the event
+		if m.TopicPartition.Error != nil { // catch all other errors
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+		}
 		go scan()
 	}
-	if scanErr != nil {
-		return scanErr
-	}
-	return producer.Close()
+	close(deliveryChan)
+	return scanErr
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
+	level := h.Config.Logger.GetLevel()
+
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
@@ -899,10 +882,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	saramaClient, err := h.validateTopic(topic, cluster, h.clientID, beginning)
 	if err != nil {
 		return err
 	}
@@ -946,27 +925,28 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		srClient, ctx = nil, nil
 	}
 
-	InitSarama(h.logger)
-	consumer, err := NewSaramaConsumer(group, saramaClient)
+	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		err = errors.CatchClusterUnreachableError(err, cluster.ID, cluster.APIKey)
+		if level >= log.WARN {
+			h.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
+		}
+		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+	}
+	h.logger.Tracef("Create consumer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		if level >= log.WARN {
+			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+		}
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = h.validateTopic(adminClient, topic, cluster)
+	if err != nil {
 		return err
 	}
-
-	// Trap SIGINT to trigger a shutdown.
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		<-signals
-		utils.ErrPrintln(cmd, errors.StoppingConsumer)
-		consumer.Close()
-	}()
-
-	go func() {
-		for err := range consumer.Errors() {
-			utils.ErrPrintln(cmd, "ERROR", err)
-		}
-	}()
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
@@ -978,6 +958,11 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
+	err = consumer.Subscribe(topic, nil)
+	if err != nil {
+		return err
+	}
+
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
@@ -985,42 +970,65 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Out:        cmd.OutOrStdout(),
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
-	err = consumer.Consume(context.Background(), []string{topic}, groupHandler)
-	_, err = errors.CatchTopicNotExistError(err, topic, cluster.ID)
-	if err != nil {
-		return err
+
+	// start consuming messages
+	run := true
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for run {
+		select {
+		case <-signals: // Trap SIGINT to trigger a shutdown.
+			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			consumer.Close()
+			run = false
+		default:
+			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
+			if ev == nil {
+				continue
+			}
+			switch e := ev.(type) {
+			case *ckafka.Message:
+				err = ConsumeMessage(e, groupHandler)
+				if err != nil {
+					return err
+				}
+			case ckafka.Error:
+				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckafka.ErrAllBrokersDown {
+					run = false
+				}
+			}
+		}
 	}
 	err = os.RemoveAll(dir)
 	return err
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (h *hasAPIKeyTopicCommand) validateTopic(topic string, cluster *v1.KafkaClusterConfig, clientID string, beginning bool) (sarama.Client, error) {
-	h.logger.Tracef("validateTopic begins")
-	client, err := NewSaramaClient(cluster, clientID, beginning)
+func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+	timeout := 10 * time.Second
+	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
-		h.logger.Tracef("validateTopic failed due to error initializing client")
-		return nil, err
+		if err.Error() == ckafka.ErrTransport.String() {
+			err = errors.New("API key may not be provisioned")
+		}
+		return fmt.Errorf("failed to obtain topics from client: %v", err)
 	}
-	topics, err := client.Topics()
-	if err != nil {
-		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
-		return nil, err
-	}
+
 	var foundTopic bool
-	for _, t := range topics {
-		h.logger.Tracef("validateTopic: found topic " + t)
-		if topic == t {
+	for _, t := range metadata.Topics {
+		h.logger.Tracef("validateTopic: found topic " + t.Topic)
+		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
 		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		client.Close()
-		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
+
 	h.logger.Tracef("validateTopic succeeded")
-	return client, nil
+	return nil
 }
 
 func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
@@ -1082,4 +1090,49 @@ func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.To
 	}
 
 	return resp, err
+}
+
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
+	// For plain string encoding, meta info is empty.
+	// Registering schema when specified, and fill metaInfo array.
+	metaInfo := []byte{}
+	if valueFormat != "string" && len(schemaPath) > 0 {
+		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		if err != nil {
+			return metaInfo, err
+		}
+		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		if err != nil {
+			return metaInfo, err
+		}
+		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
+		if err != nil {
+			return metaInfo, err
+		}
+		metaInfo = info
+	}
+	return metaInfo, nil
+}
+
+func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
+	var key, valueString string
+	if parseKey {
+		record := strings.SplitN(data, delim, 2)
+		valueString = strings.TrimSpace(record[len(record)-1])
+
+		if len(record) == 2 {
+			key = strings.TrimSpace(record[0])
+		} else {
+			return "", "", errors.New(errors.MissingKeyErrorMsg)
+		}
+	} else {
+		valueString = strings.TrimSpace(data)
+	}
+	encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+	if err != nil {
+		return "", "", err
+	}
+	encoded := append(metaInfo, encodedMessage...)
+	value := string(encoded)
+	return key, value, nil
 }
