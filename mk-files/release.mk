@@ -40,14 +40,18 @@ endef
 
 .PHONY: switch-librdkafka-arm64
 switch-librdkafka-arm64:
-	@echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)"
-	sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a
-	sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a
+	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)" ;\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a ;\
+		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
+	fi
 
 .PHONY: restore-librdkafka-amd64
 restore-librdkafka-amd64:
-	@echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)"
-	sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a
+	@if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+        echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)";\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
+	fi
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
@@ -55,7 +59,8 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml || true && \
+	make restore-librdkafka-amd64
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
