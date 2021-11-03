@@ -209,7 +209,7 @@ func printExamples(buf *bytes.Buffer, cmd *cobra.Command) {
 
 func printWarnings(buf *bytes.Buffer, cmd *cobra.Command, depth int) {
 	if strings.HasPrefix(cmd.CommandPath(), "ccloud") {
-		warning := "The Confluent Cloud CLI is deprecated and will stop working on May 1, 2022. All `ccloud` features have been moved to the :confluent-cli:`Confluent CLI|index.html`. To update to the new CLI, run `ccloud update --major`. See the :ref:`ccloud-migrate-cli` for more details."
+		warning := "The Confluent Cloud CLI is deprecated and will stop working on May 9, 2022. All `ccloud` features have been moved to the :confluent-cli:`Confluent CLI|index.html`. To update to the new CLI, run `ccloud update --major`. See the :ref:`ccloud-migrate-cli` for more details."
 		buf.WriteString(sphinxBlock("attention", warning, nil))
 	}
 
