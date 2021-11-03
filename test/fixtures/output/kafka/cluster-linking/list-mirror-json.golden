@@ -7,7 +7,7 @@
     "num_partition": "3",
     "source_topic_name": "src-topic-1",
     "status_time_ms": "111111111"
-  }, 
+  },
   {
     "link_name": "link-2",
     "max_per_partition_mirror_lag": "0",

@@ -8,7 +8,7 @@
     "partition_mirror_lag": "142857",
     "source_topic_name": "src-topic-1",
     "status_time_ms": "111111111"
-  }, 
+  },
   {
     "last_source_fetch_offset": "28340404",
     "link_name": "link-1",
@@ -18,7 +18,7 @@
     "partition_mirror_lag": "285714",
     "source_topic_name": "src-topic-1",
     "status_time_ms": "111111111"
-  }, 
+  },
   {
     "last_source_fetch_offset": "5739304",
     "link_name": "link-1",

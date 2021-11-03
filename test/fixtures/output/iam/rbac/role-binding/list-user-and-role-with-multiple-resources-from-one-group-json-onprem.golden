@@ -5,7 +5,7 @@
     "principal": "Group:hobbits",
     "resource_type": "Topic",
     "role": "DeveloperRead"
-  }, 
+  },
   {
     "name": "food",
     "pattern_type": "LITERAL",
