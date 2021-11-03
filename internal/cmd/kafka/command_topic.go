@@ -12,29 +12,27 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
-	"github.com/c-bata/go-prompt"
-
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"time"
 
 	"github.com/antihax/optional"
+	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/go-printer"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/zimmski/osutil"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/serdes"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -1009,11 +1007,24 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 // validate that a topic exists before attempting to produce/consume messages
 func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
-	metadata, err := client.GetMetadata(nil, true, 60*1000) // timeout of 60 * 1000ms
+	var metadata *ckafka.Metadata
+	var cErr error
+
+	_, err := osutil.CaptureWithCGo(func() {
+		timeout := 10 * time.Second
+		metadata, cErr = client.GetMetadata(nil, true, int(timeout.Milliseconds()))
+	})
 	if err != nil {
-		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return err
 	}
+
+	if cErr != nil {
+		if cErr.Error() == ckafka.ErrTransport.String() {
+			cErr = errors.New("API key may not be provisioned")
+		}
+		return fmt.Errorf("failed to obtain topics from client: %v", cErr)
+	}
+
 	var foundTopic bool
 	for _, t := range metadata.Topics {
 		h.logger.Tracef("validateTopic: found topic " + t.Topic)
@@ -1025,6 +1036,7 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
+
 	h.logger.Tracef("validateTopic succeeded")
 	return nil
 }

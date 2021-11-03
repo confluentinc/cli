@@ -1443,6 +1443,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/zclconf/go-cty v0.0.0-20180815031001-58bb2bc0302a h1:x70ZZ4caA8eY4abjpcCnf6uvIPY3cpgRFrXE47JF4Sc=
 github.com/zclconf/go-cty v0.0.0-20180815031001-58bb2bc0302a/go.mod h1:xnAOWiHeOqg2nWS62VtQ7pbOu17FtxJNW8RLEih+O3s=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
+github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac h1:uiFRlKzyIzHeLOthe0ethUkSGW7POlqxU3Tc21R8QpQ=
+github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac/go.mod h1:wJ9WGevuM/rw8aB2pQPFMUgXZWeaouI0ueFamR0DUPE=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.4/go.mod h1:G5EMThwa9y8QZGBClrRx5EY+Yw9kAhnjy3bSjsnlVTQ=
