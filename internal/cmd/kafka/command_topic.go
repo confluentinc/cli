@@ -23,7 +23,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"github.com/zimmski/osutil"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -1007,22 +1006,13 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 // validate that a topic exists before attempting to produce/consume messages
 func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
-	var metadata *ckafka.Metadata
-	var cErr error
-
-	_, err := osutil.CaptureWithCGo(func() {
-		timeout := 10 * time.Second
-		metadata, cErr = client.GetMetadata(nil, true, int(timeout.Milliseconds()))
-	})
+	timeout := 10 * time.Second
+	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
-		return err
-	}
-
-	if cErr != nil {
-		if cErr.Error() == ckafka.ErrTransport.String() {
-			cErr = errors.New("API key may not be provisioned")
+		if err.Error() == ckafka.ErrTransport.String() {
+			err = errors.New("API key may not be provisioned")
 		}
-		return fmt.Errorf("failed to obtain topics from client: %v", cErr)
+		return fmt.Errorf("failed to obtain topics from client: %v", err)
 	}
 
 	var foundTopic bool
