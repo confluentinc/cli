@@ -62,6 +62,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka region list --cloud azure", fixture: "kafka/11.golden"},
 
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
+		{args: "kafka cluster describe lkc-describe --all", fixture: "kafka/48.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
 
