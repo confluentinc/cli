@@ -106,6 +106,8 @@ $ make build
 $ dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 ```
 
+Please update your system to MacOS 11.0 or later, if you are developing for Darwin/arm64.
+
 If `make deps` fails with an "unknown revision" error, you probably need to put your username and a
 [github personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
 in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/1072829). The access token needs to be
@@ -167,7 +169,7 @@ Things under `internal/cmd` are commands, things under `internal/pkg` are packag
 When you add a new command or resource, assuming it's already in the SDK, you generally just need to create
 * `internal/cmd/<command>/<command>.go` (and test)
 
-### Cross Compile For Other Platforms
+### Cross Compile for Other Platforms
 
 Cross compilation from a Darwin/amd64 machine to Darwin/arm64, Linux/amd64 and Windows/amd64 platforms is supported. To build for Darwin/arm64, run the following:
 
@@ -183,7 +185,7 @@ To cross compile for Windows/amd64, install `Mingw-w64` compilers with homebrew:
     brew install mingw-w64
     GOOS=windows make cross-build
 
-Cross compilation from M1 Macbook (Darwin/arm64) to other platforms are also supported. For a detailed documentation, refer to [How to Build CLI with Confluent-Kafka-go for All Platforms](https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2610299218/How+to+Build+CLI+with+Confluent-Kafka-go+for+All+Platforms)
+Cross compilation from M1 Macbook (Darwin/arm64) to other platforms is also supported. For detailed documentation, refer to [How to Build CLI with Confluent-Kafka-go for All Platforms](https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2610299218/How+to+Build+CLI+with+Confluent-Kafka-go+for+All+Platforms)
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment

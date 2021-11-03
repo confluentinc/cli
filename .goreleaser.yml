@@ -73,6 +73,32 @@ builds:
             - LICENSE_BIN=confluent
             - LICENSE_BIN_PATH=./dist/signed-amd64_darwin_amd64/confluent
         - cmd: gon gon_confluent_amd64.hcl
+  - binary: confluent
+    id: signed-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    hooks:
+      pre:
+        - cmd: make switch-librdkafka-arm64
+      post:
+        - cmd: make restore-librdkafka-amd64
+        - cmd: make download-licenses
+          env:
+            - LICENSE_BIN=confluent
+            - LICENSE_BIN_PATH=./dist/signed-arm64_darwin_arm64/confluent
+            - CGO_ENABLED=1
+        - cmd: gon gon_confluent_arm64.hcl
 
 archives:
   - id: binary

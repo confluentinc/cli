@@ -6,34 +6,34 @@ RELEASE_BRANCH  ?= main
 
 .PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
 cross-build:
-ifeq ($(GOARCH),arm64) # build for darwin/arm64. set TAGS="" to kill 'map has no entry' error. 
+ifeq ($(GOARCH),arm64) # build for darwin/arm64.
 	make build-darwin-arm64
 else # build for amd64 arch
     ifeq ($(GOOS),windows)
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ TAGS="" make cli-builder
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
     else ifeq ($(GOOS),linux) 
 		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
     else # build for Darwin/amd64
-		CGO_ENABLED=1 TAGS="" make cli-builder
+		CGO_ENABLED=1 make cli-builder
     endif
 endif
 
 .PHONY: build # compile natively based on the system
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
-	CC=gcc CXX=g++ TAGS="" make cli-builder
+	CC=gcc CXX=g++ make cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
     ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
 		CC=gcc CXX=g++ TAGS=musl make cli-builder
     else # build for glibc Linux
-		CC=gcc CXX=g++ TAGS="" make cli-builder
+		CC=gcc CXX=g++ make cli-builder
     endif
 else
     ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
-		TAGS="" make cli-builder
+		make cli-builder
     else # build for Darwin/arm64
 		make switch-librdkafka-arm64
-		TAGS="" make cli-builder || true 
+		make cli-builder || true 
 		make restore-librdkafka-amd64
     endif
 endif
@@ -41,12 +41,12 @@ endif
 .PHONY: build-darwin-arm64
 build-darwin-arm64:
 	make switch-librdkafka-arm64
-	CGO_ENABLED=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk TAGS="" make cli-builder || true 
+	CGO_ENABLED=1 make cli-builder || true 
 	make restore-librdkafka-amd64
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) SDKROOT=$(SDKROOT) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -61,7 +61,7 @@ REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
-RDKAFKA_PATH := $(shell find $(HOME)/go/pkg/mod -name librdkafka_vendor)
+RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name librdkafka_vendor)
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag

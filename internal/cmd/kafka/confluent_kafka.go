@@ -102,7 +102,12 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
 	if !fileExists(tempStorePath) {
-		_, err := h.retryWriteSchemaToPath(3, schemaID, tempStorePath)
+		// TODO: add handler for writing schema failure
+		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
+		if err != nil {
+			return "", err
+		}
+		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
 		if err != nil {
 			return "", err
 		}
@@ -160,21 +165,4 @@ func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 	return nil
-}
-
-func (h *GroupHandler) retryWriteSchemaToPath(retry, schemaID int32, tempStorePath string) (string, error) {
-	var err1, err2 error
-	for i := int32(0); i < retry; i++ {
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
-		err1 = err
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-		err2 = err
-		if err1 == nil && err2 == nil {
-			return "", nil
-		}
-	}
-	if err1 != nil {
-		return "", err1
-	}
-	return "", err2
 }

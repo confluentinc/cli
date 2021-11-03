@@ -859,8 +859,8 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
-		e := <-deliveryChan
-		m := e.(*ckafka.Message)
+		e := <-deliveryChan                // read a ckafka event from the channel
+		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
@@ -985,7 +985,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			consumer.Close()
 			run = false
 		default:
-			ev := consumer.Poll(100)
+			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
 			if ev == nil {
 				continue
 			}
@@ -1009,7 +1009,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 // validate that a topic exists before attempting to produce/consume messages
 func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
-	metadata, err := client.GetMetadata(nil, true, 60*1000)
+	metadata, err := client.GetMetadata(nil, true, 60*1000) // timeout of 60 * 1000ms
 	if err != nil {
 		h.logger.Tracef("validateTopic failed due to error obtaining topics from client")
 		return err

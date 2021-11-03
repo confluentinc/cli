@@ -42,7 +42,7 @@ endef
 switch-librdkafka-arm64:
 	@echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)"
 	sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a
-	sudo cp librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a
+	sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a
 
 .PHONY: restore-librdkafka-amd64
 restore-librdkafka-amd64:
