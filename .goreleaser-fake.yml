@@ -26,17 +26,13 @@ builds:
       - all=-trimpath={{.Env.GOPATH}}
     goos:
       - linux
-      - darwin
-      - windows
     goarch:
       - amd64
-      - 386
-    ignore:
-      - goos: darwin
-        goarch: 386
+    hooks:
+      pre:
+        - cmd: make switch-librdkafka-arm64
+      post:
+        - cmd: make restore-librdkafka-amd64
 release:
   disable: true
-
-archive:
-  format: binary
 
