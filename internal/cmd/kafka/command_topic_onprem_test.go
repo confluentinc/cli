@@ -30,7 +30,7 @@ const (
 - name: topic-2
 - name: topic-3
 `
-	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  }, \n  {\n    \"name\": \"topic-2\"\n  }, \n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
+	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  },\n  {\n    \"name\": \"topic-2\"\n  },\n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
 )
 
 type KafkaTopicOnPremTestSuite struct {
