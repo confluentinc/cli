@@ -87,12 +87,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 	if err != nil {
 		return "", "", err
 	}
-
-<<<<<<< HEAD
 	token, err := client.Auth.Login(context.Background(), idToken, "", "", orgResourceId)
-=======
-	token, err := client.Auth.Login(context.Background(), idToken, "", "", "")
->>>>>>> 547809ffd970c8f051c005e427fc5f172dbaac34
 	if err != nil {
 		return "", "", err
 	}

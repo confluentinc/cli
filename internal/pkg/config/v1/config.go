@@ -483,11 +483,11 @@ func (c *Config) IsOnPremLogin() bool {
 }
 
 func (c *Config) GetLastUsedOrgId() string {
-	return c.Context().LastOrgId
+	return c.Context().State.Auth.Organization.ResourceId
 }
 
-func (c *Config) UpdateLastUsedOrgId(orgResourceId string) {
-	// keep track of the cloud organization we're logged in to so we can log back into the same one next time
-	c.Context().LastOrgId = orgResourceId
-	c.Save()
-}
+//func (c *Config) UpdateLastUsedOrgId(orgResourceId string) {
+//	// keep track of the cloud organization we're logged in to so we can log back into the same one next time
+//	c.Context().LastOrgId = orgResourceId
+//	c.Save()
+//}

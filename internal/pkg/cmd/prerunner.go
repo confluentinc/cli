@@ -245,6 +245,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			return err
 		}
 		r.Logger.Flush()
+		command.Config.Logger = r.Logger
 
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
@@ -252,6 +253,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		if r.Config != nil {
 			ctx := command.Config.Context()
+			ctx.Logger = r.Logger
 			err := r.ValidateToken(cmd, command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:

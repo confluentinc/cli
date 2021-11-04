@@ -23,7 +23,7 @@ type Context struct {
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Logger                 *log.Logger                       `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
-	LastOrgId			   string							 `json:"last_org_id" hcl:"las_org_id"`
+	//LastOrgId			   string							 `json:"last_org_id" hcl:"las_org_id"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,

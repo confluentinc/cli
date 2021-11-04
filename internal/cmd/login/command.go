@@ -116,7 +116,6 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	orgResourceId, err := c.getOrgResourceId(cmd)
-	fmt.Println("login ord id " + orgResourceId)
 	if err != nil {
 		return err
 	}
