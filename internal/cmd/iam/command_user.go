@@ -17,19 +17,19 @@ import (
 )
 
 var (
-	listFields    = []string{"ResourceId", "Email", "FirstName", "LastName", "Status", "AuthenticationMethod"}
-	humanLabels   = []string{"Resource ID", "Email", "First Name", "Last Name", "Status", "Authentication Method"}
+	listFields    = []string{"Id", "Email", "FirstName", "LastName", "Status", "AuthenticationMethod"}
+	humanLabels   = []string{"ID", "Email", "First Name", "Last Name", "Status", "Authentication Method"}
 	humanLabelMap = map[string]string{
-		"ResourceId":           "Resource ID",
+		"Id":                   "ID",
 		"Email":                "Email",
 		"FirstName":            "First Name",
 		"LastName":             "Last Name",
 		"Status":               "Status",
 		"AuthenticationMethod": "Authentication Method",
 	}
-	structuredLabels   = []string{"resource_id", "email", "first_name", "last_name", "status", "authentication_method"}
+	structuredLabels   = []string{"id", "email", "first_name", "last_name", "status", "authentication_method"}
 	structuredLabelMap = map[string]string{
-		"ResourceId":           "resource_id",
+		"Id":                   "id",
 		"Email":                "email",
 		"FirstName":            "first_name",
 		"LastName":             "last_name",
@@ -55,7 +55,7 @@ type userCommand struct {
 }
 
 type userStruct struct {
-	ResourceId           string
+	Id                   string
 	Email                string
 	FirstName            string
 	LastName             string
@@ -77,14 +77,14 @@ func NewUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	c.AddCommand(c.newUserDescribeCommand())
 	c.AddCommand(c.newUserListCommand())
-	c.AddCommand(c.newUserInviteCommand())
 	c.AddCommand(c.newUserDeleteCommand())
+	c.AddCommand(newInvitationCommand(prerunner))
 	return c.Command
 }
 
 func (c userCommand) newUserDescribeCommand() *cobra.Command {
 	describeCmd := &cobra.Command{
-		Use:   "describe <resource id>",
+		Use:   "describe <id>",
 		Short: "Describe a user.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
@@ -121,7 +121,7 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	return output.DescribeObject(cmd, &userStruct{
-		ResourceId:           userProfile.ResourceId,
+		Id:                   userProfile.ResourceId,
 		Email:                userProfile.Email,
 		FirstName:            userProfile.FirstName,
 		LastName:             userProfile.LastName,
@@ -174,7 +174,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		outputWriter.AddElement(&userStruct{
-			ResourceId:           userProfile.ResourceId,
+			Id:                   userProfile.ResourceId,
 			Email:                userProfile.Email,
 			FirstName:            userProfile.FirstName,
 			LastName:             userProfile.LastName,
@@ -185,34 +185,9 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (c userCommand) newUserInviteCommand() *cobra.Command {
-	createCmd := &cobra.Command{
-		Use:   "invite <email>",
-		Short: "Invite a user to join your organization.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.invite),
-	}
-	return createCmd
-}
-
-func (c userCommand) invite(cmd *cobra.Command, args []string) error {
-	email := args[0]
-	matched := utils.ValidateEmail(email)
-	if !matched {
-		return errors.New(errors.BadEmailFormatErrorMsg)
-	}
-	newUser := &orgv1.User{Email: email}
-	user, err := c.Client.User.Invite(context.Background(), newUser)
-	if err != nil {
-		return err
-	}
-	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
-	return nil
-}
-
 func (c userCommand) newUserDeleteCommand() *cobra.Command {
 	deleteCmd := &cobra.Command{
-		Use:   "delete <resource id>",
+		Use:   "delete <id>",
 		Short: "Delete a user from your organization.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.delete),

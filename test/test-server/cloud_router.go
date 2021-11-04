@@ -21,25 +21,27 @@ const (
 	cluster             = "/api/clusters/{id}"
 	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
-	serviceAccounts     = "/api/service_accounts"
-	schemaRegistries    = "/api/schema_registries"
-	schemaRegistry      = "/api/schema_registries/{id}"
-	ksql                = "/api/ksqls/{id}"
-	ksqls               = "/api/ksqls"
-	priceTable          = "/api/organizations/{id}/price_table"
-	paymentInfo         = "/api/organizations/{id}/payment_info"
-	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
-	invites             = "/api/organizations/{id}/invites"
-	user                = "/api/users/{id}"
-	users               = "/api/users"
-	user_profile        = "/api/user_profiles/{id}"
-	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-	connectorPause      = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-	connectorResume     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-	connectorUpdate     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-	connectors          = "/api/accounts/{env}/clusters/{cluster}/connectors"
-	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
-	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
+	serviceAccounts  = "/api/service_accounts"
+	serviceAccount   = "/api/service_accounts/{id}"
+	schemaRegistries = "/api/schema_registries"
+	schemaRegistry   = "/api/schema_registries/{id}"
+	ksql             = "/api/ksqls/{id}"
+	ksqls            = "/api/ksqls"
+	priceTable       = "/api/organizations/{id}/price_table"
+	paymentInfo      = "/api/organizations/{id}/payment_info"
+	promoCodeClaims  = "/api/organizations/{id}/promo_code_claims"
+	invites          = "/api/organizations/{id}/invites"
+	invitations      = "/api/invitations"
+	user             = "/api/users/{id}"
+	users            = "/api/users"
+	user_profile     = "/api/user_profiles/{id}"
+	connector        = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
+	connectorPause   = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
+	connectorResume  = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
+	connectorUpdate  = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
+	connectors       = "/api/accounts/{env}/clusters/{cluster}/connectors"
+	connectorPlugins = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
+	connectCatalog   = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
@@ -77,7 +79,6 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
-	c.HandleFunc(serviceAccounts, c.HandleServiceAccount(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
@@ -89,6 +90,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
 	c.addMetricsQueryRoutes(t)
+	c.addServiceAccountRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -124,6 +126,7 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 	c.HandleFunc(paymentInfo, c.HandlePaymentInfo(t))
 	c.HandleFunc(promoCodeClaims, c.HandlePromoCodeClaims(t))
 	c.HandleFunc(invites, c.HandleInvite(t))
+	c.HandleFunc(invitations, c.HandleInvitations(t))
 }
 
 func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
@@ -163,4 +166,9 @@ func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
 	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
 	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
+}
+
+func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {
+	c.HandleFunc(serviceAccounts, c.HandleServiceAccounts(t))
+	c.HandleFunc(serviceAccount, c.HandleServiceAccount(t))
 }

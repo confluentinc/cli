@@ -35,7 +35,7 @@ docs: clean-docs
 publish-docs: docs clone-docs-repos
 	echo -n "Publish docs? (y/n) "; read line; \
 	if [ $$line = "y" ] || [ $$line = "Y" ]; then \
-		make publish-docs-internal; \
+		CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-docs-internal; \
     fi
 
 .PHONY: publish-docs-internal
@@ -68,11 +68,11 @@ cut-docs-branches:
 	cd $(CONFLUENT_DOCS_DIR) && \
 	git fetch && \
 	if [[ "$(BUMP)" == "patch" ]]; then \
-		git checkout $(MINOR_BRANCH) && \
+		git checkout $(MINOR_BRANCH); \
 	else \
 		git checkout $(DOCS_BASE_BRANCH) && \
 		git checkout -b $(MINOR_BRANCH) && \
-		git push -u origin $(MINOR_BRANCH) && \
+		git push -u origin $(MINOR_BRANCH); \
 	fi && \
 	git checkout -b $(CLEAN_VERSION)-post && \
 	git push -u origin $(CLEAN_VERSION)-post
@@ -89,7 +89,7 @@ update-settings-and-conf:
 		sed -i '' "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		git push; \
-	fi
+	fi && \
 	git checkout $(MINOR_BRANCH) && \
 	sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
 	sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \

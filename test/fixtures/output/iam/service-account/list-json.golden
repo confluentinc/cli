@@ -1,7 +1,7 @@
 [
   {
     "description": "at your service.",
-    "name": "service_account",
-    "resource_id": "sa-12345"
+    "id": "sa-12345",
+    "name": "service_account"
   }
 ]

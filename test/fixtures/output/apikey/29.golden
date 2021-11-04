@@ -7,7 +7,7 @@
     "owner_resource_id": "sa-6666",
     "resource_id": "lkc-bob",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "first-key",
@@ -16,7 +16,7 @@
     "owner_resource_id": "u11",
     "resource_id": "lkc-bob",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",
@@ -25,7 +25,7 @@
     "owner_resource_id": "u-17",
     "resource_id": "lkc-abc",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",
@@ -34,7 +34,7 @@
     "owner_resource_id": "u-44ddd",
     "resource_id": "lkc-bob",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",
@@ -43,7 +43,7 @@
     "owner_resource_id": "sa-12345",
     "resource_id": "lkc-bob",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",
@@ -52,7 +52,7 @@
     "owner_resource_id": "u-22bbb",
     "resource_id": "lkc-cool1",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",
@@ -61,7 +61,7 @@
     "owner_resource_id": "u-22bbb",
     "resource_id": "lkc-other1",
     "resource_type": "kafka"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",
@@ -70,7 +70,7 @@
     "owner_resource_id": "u-22bbb",
     "resource_id": "lksqlc-ksql1",
     "resource_type": "ksql"
-  }, 
+  },
   {
     "created": "1999-02-24T00:00:00Z",
     "description": "",

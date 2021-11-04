@@ -218,11 +218,22 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserInvite() {
+func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 	tests := []CLITest{
-		{args: "iam user invite miles@confluent.io", fixture: "iam/user/invite.golden"},
-		{args: "iam user invite bad-email.com", wantErrCode: 1, fixture: "iam/user/bad-email.golden"},
-		{args: "iam user invite user@exists.com", wantErrCode: 1, fixture: "iam/user/invite-user-already-active.golden"},
+		{args: "iam user invitation create miles@confluent.io", fixture: "iam/user/invite.golden"},
+		{args: "iam user invitation create bad-email.com", wantErrCode: 1, fixture: "iam/user/bad-email.golden"},
+		{args: "iam user invitation create user@exists.com", wantErrCode: 1, fixture: "iam/user/invite-user-already-active.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "default"
+		s.runCcloudTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMUserListInvitation() {
+	tests := []CLITest{
+		{args: "iam user invitation list", fixture: "iam/user/invitation_list.golden"},
 	}
 
 	for _, test := range tests {

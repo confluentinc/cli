@@ -17,6 +17,7 @@ import (
 	"reflect"
 	"testing"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -58,8 +59,8 @@ var (
 		Password: envPassword,
 	}
 	mockAuth = &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     "",
@@ -148,8 +149,11 @@ var (
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     envUser,
@@ -254,8 +258,11 @@ func TestOrgIdOverride(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     promptUser,
@@ -711,8 +718,11 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     promptUser,

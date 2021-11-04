@@ -4,13 +4,13 @@
     "cloud_name": "Google Cloud Platform",
     "region_id": "asia-southeast1",
     "region_name": "asia-southeast1 (Singapore)"
-  }, 
+  },
   {
     "cloud_id": "gcp",
     "cloud_name": "Google Cloud Platform",
     "region_id": "asia-east2",
     "region_name": "asia-east2 (Hong Kong)"
-  }, 
+  },
   {
     "cloud_id": "aws",
     "cloud_name": "Amazon Web Services",

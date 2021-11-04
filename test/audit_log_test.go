@@ -8,6 +8,10 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
+func (s *CLITestSuite) TestAuditLogDescribe() {
+	s.runCcloudTest(CLITest{args: "audit-log describe", login: "default", fixture: "auditlog/describe.golden"})
+}
+
 func (s *CLITestSuite) TestAuditLogConfig() {
 	tests := []CLITest{
 		{

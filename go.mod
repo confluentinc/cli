@@ -1,8 +1,6 @@
 module github.com/confluentinc/cli
 
 require (
-	github.com/DataDog/zstd v1.4.1 // indirect
-	github.com/Shopify/sarama v1.23.1
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
@@ -21,11 +19,13 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.753.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.89
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
+	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
+	github.com/confluentinc/go-ps1 v1.0.0
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37
@@ -33,9 +33,8 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.11
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.3.0
-	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
-	github.com/fatih/color v1.12.0
+	github.com/fatih/color v1.13.0
 	github.com/gliderlabs/ssh v0.3.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
@@ -57,23 +56,22 @@ require (
 	github.com/jhump/protoreflect v1.7.0
 	github.com/jonboulle/clockwork v0.2.0
 	github.com/linkedin/goavro/v2 v2.9.8
-	github.com/mattn/go-isatty v0.0.12
+	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
 	github.com/segmentio/analytics-go v3.1.0+incompatible
 	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
-	github.com/tidwall/gjson v1.6.5
-	github.com/tidwall/pretty v1.0.2
+	github.com/tidwall/gjson v1.9.3
+	github.com/tidwall/pretty v1.2.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/travisjeffery/mocker v1.1.0
 	github.com/xeipuuv/gojsonschema v1.2.0
@@ -81,7 +79,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
-	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 	mvdan.cc/sh/v3 v3.2.2

@@ -3,7 +3,6 @@ package test_server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -194,6 +194,10 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, 
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.StripeToken)
+
+			res := &orgv1.UpdatePaymentInfoReply{}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
 		case "GET": // admin payment describe
 			res := orgv1.GetPaymentInfoReply{
 				Card: &orgv1.Card{
@@ -280,7 +284,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWrit
 }
 
 // Handler for: "/api/service_accounts"
-func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
@@ -333,6 +337,26 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(updateReply))
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/api/service_accounts/{id}"
+func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := mux.Vars(r)["id"]
+		_, err := strconv.Atoi(idStr)
+		require.NoError(t, err)
+
+		switch r.Method {
+		case "GET":
+			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{ResourceId: serviceAccountResourceID}}
+
+			data, err := json.Marshal(res)
+			require.NoError(t, err)
+
+			_, err = w.Write(data)
 			require.NoError(t, err)
 		}
 	}
@@ -772,6 +796,41 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 	}
 }
 
+// Handler for: "/api/invitations"
+func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
+				Invitations: []*orgv1.Invitation{
+					buildInvitation("1", "u-11aaa@confluent.io",  "u-11aaa", "VERIFIED"),
+					buildInvitation("2", "u-22bbb@confluent.io",  "u-22bbb", "SENT"),
+				},
+			})
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		} else if r.Method == "POST" {
+			body, _ := ioutil.ReadAll(r.Body)
+			bs := string(body)
+			var res flowv1.CreateInvitationReply
+			if strings.Contains(bs, "user@exists.com") {
+				res = flowv1.CreateInvitationReply{
+					Error: &corev1.Error{Message: "User is already active"},
+				}
+			} else {
+				res = flowv1.CreateInvitationReply{
+					Error: nil,
+					Invitation:  buildInvitation("1", "miles@confluent.io",  "user1", "SENT"),
+				}
+			}
+			data, err := json.Marshal(res)
+			require.NoError(t, err)
+			_, err = w.Write(data)
+			require.NoError(t, err)
+		}
+	}
+}
+
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
 func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -838,11 +897,11 @@ func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			connectorPlugin1 := &opv1.ConnectorPluginInfo{
-				Class: "AzureBlobSink",
+				Class: "GcsSink",
 				Type:  "Sink",
 			}
 			connectorPlugin2 := &opv1.ConnectorPluginInfo{
-				Class: "GcsSink",
+				Class: "AzureBlobSink",
 				Type:  "Sink",
 			}
 			listReply, err := json.Marshal([]*opv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})

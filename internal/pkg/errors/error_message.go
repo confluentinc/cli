@@ -135,10 +135,14 @@ const (
 	UnknownTopicErrorMsg = "unknown topic \"%s\""
 
 	// kafka topic commands
+	FailedToCreateProducerMsg            = "failed to create producer: %v"
+	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
+	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
 	FailedToParseConfigErrMsg            = `failed to parse "key=value" pattern from configuration: %s`
+	FailedToFindSchemaIDErrorMsg         = "failed to find schema ID in topic data"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
@@ -369,6 +373,7 @@ const (
 	KafkaNotReadySuggestions          = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg           = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions        = "You must pass `--cluster` flag with the command or set an active kafka in your context with `confluent kafka cluster use`."
+	NoKafkaForDescribeSuggestions     = "You must provide the cluster ID argument or set an active kafka in your context with `ccloud kafka cluster use`."
 	UnableToConnectToKafkaErrorMsg    = "unable to connect to Kafka cluster"
 	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
 		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +

@@ -13,7 +13,7 @@ unrelease-stag: unrelease-warn
 
 .PHONY: reset-tag-and-commit
 reset-tag-and-commit:
-	git checkout master
+	git checkout main # WARNING: master for 1.x, main for 2.x
 	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag

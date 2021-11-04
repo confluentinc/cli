@@ -126,7 +126,10 @@ var rules = []linter.Rule{
 	linter.RequireEndWithPunctuation("Short", false),
 	linter.RequireCapitalizeProperNouns("Short", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.RequireStartWithCapital("Long"),
-	linter.RequireEndWithPunctuation("Long", true),
+	linter.Filter(
+		linter.RequireEndWithPunctuation("Long", true),
+		linter.ExcludeCommand("prompt"),
+	),
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),

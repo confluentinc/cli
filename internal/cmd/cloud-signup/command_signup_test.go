@@ -5,6 +5,7 @@ import (
 	"context"
 	"testing"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -177,8 +178,8 @@ func newCmd(conf *v1.Config) *command {
 		LoginFunc: func(ctx context.Context, idToken, username, password, orgResourceId string) (string, error) {
 			return testToken, nil
 		},
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     promptUser,

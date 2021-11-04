@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -127,8 +128,11 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
 	// run login command
 	auth := &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
+			return testToken, nil
+		},
+		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     promptUser,

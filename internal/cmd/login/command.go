@@ -70,7 +70,7 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	loginCmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to local .netrc file.")
+	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 	loginCmd.Flags().SortFlags = false
 
 	c.CLICommand = pcmd.NewAnonymousCLICommand(loginCmd, prerunner)

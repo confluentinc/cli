@@ -6,11 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dghubble/sling"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/dghubble/sling"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -78,7 +77,7 @@ func PersistConfluentLoginToConfig(config *v1.Config, username string, url strin
 
 func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
 	ctxName := GenerateCloudContextName(email, url)
-	state, err := getCCloudContextState(config, ctxName, email, url, token, client)
+	state, err := getCCloudContextState(config, ctxName, token, client)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +128,8 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v1.Config, ctxName string, email string, url string, token string, client *ccloud.Client) (*v1.ContextState, error) {
-	user, err := getCCloudUser(token, client)
+func getCCloudContextState(config *v1.Config, ctxName, token string, client *ccloud.Client) (*v1.ContextState, error) {
+	user, err := getCCloudUser(client)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +172,7 @@ func getCCloudContextState(config *v1.Config, ctxName string, email string, url 
 	return state, nil
 }
 
-func getCCloudUser(token string, client *ccloud.Client) (*orgv1.GetUserReply, error) {
+func getCCloudUser(client *ccloud.Client) (*flowv1.GetMeReply, error) {
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return nil, err

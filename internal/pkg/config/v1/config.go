@@ -100,7 +100,16 @@ func (c *Config) Load() error {
 	if c.Ver.Compare(currentVersion) < 0 {
 		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
 	} else if c.Ver.Compare(Version) > 0 {
-		return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)
+		if c.Ver.Equal(version.Must(version.NewVersion("3.0.0"))) {
+			// The user is a CP user who downloaded the v2 CLI instead of running `confluent update --major`,
+			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
+			c.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
+			for name := range c.Contexts {
+				c.Contexts[name].NetrcMachineName = name
+			}
+		} else {
+			return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)
+		}
 	}
 	if err != nil {
 		return errors.Wrapf(err, errors.ParseConfigErrorMsg, filename)

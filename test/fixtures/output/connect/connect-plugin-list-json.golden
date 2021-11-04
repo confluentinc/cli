@@ -2,7 +2,7 @@
   {
     "plugin_name": "AzureBlobSink",
     "type": "Sink"
-  }, 
+  },
   {
     "plugin_name": "GcsSink",
     "type": "Sink"

@@ -141,23 +141,23 @@ func (c *command) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pass the API key and secret as arguments",
-				Code: "ccloud api-key store my-key my-secret",
+				Code: "confluent api-key store my-key my-secret",
 			},
 			examples.Example{
 				Text: "Get prompted for both the API key and secret",
-				Code: "ccloud api-key store",
+				Code: "confluent api-key store",
 			},
 			examples.Example{
 				Text: "Get prompted for only the API secret",
-				Code: "ccloud api-key store my-key",
+				Code: "confluent api-key store my-key",
 			},
 			examples.Example{
 				Text: "Pipe the API secret",
-				Code: "ccloud api-key store my-key -",
+				Code: "confluent api-key store my-key -",
 			},
 			examples.Example{
 				Text: "Provide the API secret in a file",
-				Code: "ccloud api-key store my-key @my-secret.txt",
+				Code: "confluent api-key store my-key @my-secret.txt",
 			},
 		),
 	}

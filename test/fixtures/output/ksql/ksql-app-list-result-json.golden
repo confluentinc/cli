@@ -7,7 +7,7 @@
     "status": "PROVISIONING",
     "storage": "101",
     "topic_prefix": "pksqlc-abcde"
-  }, 
+  },
   {
     "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-woooo",

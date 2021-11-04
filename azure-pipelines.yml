@@ -9,6 +9,9 @@ strategy:
 
 pool:
   vmImage: $(imageName)
+  variables:
+    CC: gcc-11.2
+    CXX: g++-11.2
 
 variables:
   # Fixes checksum errors when downloading chrome
@@ -19,6 +22,13 @@ steps:
 - template: azure-pipelines-templates/setup-secrets.yml
 
 - template: azure-pipelines-templates/setup-go.yml
+
+- task: CmdLine@2
+  inputs:
+    script: |
+      gcc --version
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: 'Display GCC version (Windows)'
 
 - script: |
     curl -Ls https://github.com/github/hub/releases/download/v2.11.1/hub-linux-amd64-2.11.1.tgz | sudo tar -xvz -C /usr/bin --strip-components=2 hub-linux-amd64-2.11.1/bin/hub

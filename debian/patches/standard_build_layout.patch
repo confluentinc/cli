@@ -1,15 +1,58 @@
---- cli/Makefile	2021-10-07 11:10:55.000000000 -0700
-+++ debian/Makefile	2021-09-27 13:48:33.000000000 -0700
-@@ -1,216 +1,130 @@
+--- cli/Makefile	2021-11-03 13:54:39.000000000 -0700
++++ debian/Makefile	2021-11-03 10:23:29.000000000 -0700
+@@ -1,269 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
 -MAIN_BRANCH     ?= main
 -RELEASE_BRANCH  ?= main
 -
--.PHONY: build
+-.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+-cross-build:
+-ifeq ($(GOARCH),arm64) # build for darwin/arm64.
+-	make build-darwin-arm64
+-else # build for amd64 arch
+-    ifeq ($(GOOS),windows)
+-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
+-    else ifeq ($(GOOS),linux) 
+-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+-    else # build for Darwin/amd64
+-		CGO_ENABLED=1 make cli-builder
+-    endif
+-endif
++SHELL=/bin/bash
+ 
+-.PHONY: build # compile natively based on the system
 -build:
--	@GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+-ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
+-	CC=gcc CXX=g++ make cli-builder
+-else ifneq (,$(findstring Linux,$(shell uname)))
+-    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
+-		CC=gcc CXX=g++ TAGS=musl make cli-builder
+-    else # build for glibc Linux
+-		CC=gcc CXX=g++ make cli-builder
+-    endif
+-else
+-    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
+-		make cli-builder
+-    else # build for Darwin/arm64
+-		make switch-librdkafka-arm64
+-		make cli-builder || true 
+-		make restore-librdkafka-amd64
+-    endif
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
+ endif
+ 
+-.PHONY: build-darwin-arm64
+-build-darwin-arm64:
+-	make switch-librdkafka-arm64
+-	CGO_ENABLED=1 make cli-builder || true 
+-	make restore-librdkafka-amd64
+-
+-.PHONY: cli-builder
+-cli-builder:
+-	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 -
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
@@ -24,18 +67,21 @@
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
+-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name librdkafka_vendor)
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+SHELL=/bin/bash
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
  
 -.PHONY: clean
 -clean:
 -	rm -rf $(shell pwd)/dist
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
-+endif
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
  
 -.PHONY: generate
 -generate:
@@ -53,38 +99,21 @@
 -	go get github.com/goreleaser/goreleaser@v0.164.0
 -
 -ifeq ($(shell uname),Darwin)
--SHASUM ?= gsha256sum
+-    SHASUM ?= gsha256sum
 -else ifneq (,$(findstring NT,$(shell uname)))
 -# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
--SHASUM ?= CertUtil SHA256 -hashfile
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
-+
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
-+
+-    SHASUM ?= CertUtil SHA256 -hashfile
+-else ifneq (,$(findstring Windows,$(shell systeminfo)))
+-    SHASUM ?= CertUtil SHA256 -hashfile
+-else
+-    SHASUM ?= sha256sum
+-endif
 +APPLY_PATCHES?=yes
-+
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
-+endif
-+
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
--SHASUM ?= sha256sum
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
- endif
  
 -show-args:
 -	@echo "VERSION: $(VERSION)"
-+all: install
- 
+-	@echo "RDKAFKA_PATH: $(RDKAFKA_PATH)"
+-
 -#
 -# START DEVELOPMENT HELPERS
 -# Usage: make run -- version
@@ -97,8 +126,11 @@
 -  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 -  # ...and turn them into do-nothing targets
 -  $(eval $(RUN_ARGS):;@:)
--endif
--
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
+ endif
+ 
 -.PHONY: run
 -run:
 -	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
@@ -152,8 +184,28 @@
 -	true
 -else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 -	make release
--else
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
 -	true
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
+ endif
+ 
+-.PHONY: lint
+-lint:
+-ifeq ($(shell uname),Darwin)
+-	true
+-else ifneq (,$(findstring NT,$(shell uname)))
+-	true
+-else
+-	@echo "Linting..."
+-	@make lint-go
+-	@make lint-cli
+-	@make lint-installers
++all: install
++
 +archive: install
 +	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 +	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
@@ -164,12 +216,46 @@
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
  endif
  
--.PHONY: lint
--lint:
--ifeq ($(shell uname),Darwin)
--	true
--else ifneq (,$(findstring NT,$(shell uname)))
--	true
+-.PHONY: lint-go
+-lint-go:
+-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+-	@echo "✅  golangci-lint"
+-
+-.PHONY: lint-cli
+-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+-	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-	@echo "✅  cmd/lint/main.go"
+-
+-cmd/lint/en_US.aff:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+-
+-cmd/lint/en_US.dic:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+-
+-.PHONY: lint-installers
+-lint-installers:
+-	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
+-	@echo "✅  installation script linter"
+-
+-.PHONY: lint-licenses
+-## Scan and validate third-party dependency licenses
+-lint-licenses: build
+-	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
+-	echo Licenses for confluent binary ; \
+-	[ -t 0 ] && args="" || args="-plain" ; \
+-	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
+-
+-.PHONY: coverage-unit
+-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
+-coverage-unit:
+-ifdef CI
+-	@# Run unit tests with coverage.
+-  ifeq "$(OS)" "Windows_NT"
+-	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  else
+-	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  endif
+-	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -187,7 +273,7 @@
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
 +	cd $(DESTDIR)$(LIBPATH) ; \
-+	for dir in darwin_amd64 darwin_arm64 linux_386 linux_amd64 windows_386 windows_amd64; do \
++	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
 +		mkdir -p $${dir} ; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
 +		filepath=$${dir}/confluent$${ext} ; \
@@ -225,52 +311,15 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	@echo "Linting..."
--	@make lint-go
--	@make lint-cli
--	@make lint-installers
--endif
--
--.PHONY: lint-go
--lint-go:
--	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
--	@echo "✅  golangci-lint"
--
--.PHONY: lint-cli
--lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
--	@echo "✅  cmd/lint/main.go"
--
--cmd/lint/en_US.aff:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
--
--cmd/lint/en_US.dic:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
--
--.PHONY: lint-installers
--lint-installers:
--	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
--	@echo "✅  installation script linter"
--
--.PHONY: lint-licenses
--## Scan and validate third-party dependency licenses
--lint-licenses: build
--	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
--	echo Licenses for confluent binary ; \
--	[ -t 0 ] && args="" || args="-plain" ; \
--	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
--
--.PHONY: coverage-unit
--coverage-unit:
--      ifdef CI
--	@# Run unit tests with coverage.
--	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
--	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
--      else
 -	@# Run unit tests.
--	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS)
--      endif
--
+-  ifeq "$(OS)" "Windows_NT"
+-	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  else
+-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  endif
++	RPM_RELEASE_ID=$(REVISION)
+ endif
+ 
 -.PHONY: coverage-integ
 -coverage-integ:
 -      ifdef CI
@@ -304,9 +353,6 @@
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
 -	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
-+	RPM_RELEASE_ID=$(REVISION)
-+endif
-+
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<

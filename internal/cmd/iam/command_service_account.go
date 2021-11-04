@@ -23,8 +23,8 @@ type serviceAccountCommand struct {
 
 var (
 	describeFields            = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "Resource ID"}
-	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "resource_id"}
+	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "ID"}
+	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "id"}
 )
 
 const nameLength = 64
@@ -105,7 +105,7 @@ func (c *serviceAccountCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of a service account with resource ID `sa-lqv3mm`",
+				Text: "Update the description of service account `sa-lqv3mm`",
 				Code: `confluent service-account update sa-lqv3mm --description "Update demo service account information."`,
 			},
 		),
@@ -122,7 +122,7 @@ func (c *serviceAccountCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete a service account with resource ID `sa-lqv3mm`",
+				Text: "Delete service account `sa-lqv3mm`",
 				Code: "confluent service-account delete sa-lqv3mm",
 			},
 		),
@@ -209,8 +209,8 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 
 	var (
 		listFields           = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-		listHumanLabels      = []string{"Resource ID", "Name", "Description"}
-		listStructuredLabels = []string{"resource_id", "name", "description"}
+		listHumanLabels      = []string{"ID", "Name", "Description"}
+		listStructuredLabels = []string{"id", "name", "description"}
 	)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
