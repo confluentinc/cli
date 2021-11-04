@@ -25,7 +25,7 @@ test-installer:
 verify-binaries:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	@$(caasenv-authenticate) && \
-	for os in linux darwin windows alpine; do \
+	for os in linux darwin windows; do \
 		for arch in arm64 amd64; do \
 			if [ "$${os}" != "darwin" ] && [ "$${arch}" = "arm64" ] ; then \
 				continue; \
