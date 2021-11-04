@@ -14,6 +14,7 @@ before:
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   - binary: confluent
+    id: confluent-linux-amd64
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -34,6 +35,7 @@ builds:
     goarch:
       - amd64
   - binary: confluent
+    id: confluent-windows-amd64
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
