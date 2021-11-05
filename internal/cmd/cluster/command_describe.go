@@ -71,9 +71,8 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
 			Short: "Describe a Kafka cluster.",
-			Long: fmt.Sprintf("Describe a Kafka cluster by the url.\n") +
-				fmt.Sprintf("If not passing `--url` or `--ca-cert-path` flags, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
-			Args: cobra.NoArgs,
+			Long:  fmt.Sprintf("Describe a Kafka cluster.\nEnvironment variable `%s` can replace the `--url` flag, and `%s` can replace the `--ca-cert-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
+			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
 					Text: "Discover the cluster ID and Kafka ID for Connect.",
@@ -151,8 +150,8 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 	return printDescribe(cmd, meta, outputOption)
 }
 
-// Order of precedence: flags > env vars
 func getURL(cmd *cobra.Command) (string, error) {
+	// Order of precedence: flags > env vars
 	if url, err := cmd.Flags().GetString("url"); url != "" || err != nil {
 		return url, err
 	}
@@ -164,8 +163,8 @@ func getURL(cmd *cobra.Command) (string, error) {
 	return "", errors.New(errors.ClusterUrlNotFoundSuggestions)
 }
 
-// Order of precedence: flags > env vars
 func getCACertPath(cmd *cobra.Command) (string, error) {
+	// Order of precedence: flags > env vars
 	if path, err := cmd.Flags().GetString("ca-cert-path"); path != "" || err != nil {
 		return path, err
 	}
