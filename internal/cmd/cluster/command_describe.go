@@ -160,7 +160,7 @@ func getURL(cmd *cobra.Command) (string, error) {
 		return url, nil
 	}
 
-	return "", errors.New(errors.ClusterUrlNotFoundSuggestions)
+	return "", errors.New(errors.MdsUrlNotFoundSuggestions)
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
