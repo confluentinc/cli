@@ -92,7 +92,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			want: confluentMachine,
 			params: NetrcMachineParams{
 				IsCloud: false,
-				CtxName: mdsContext,
+				Name:    mdsContext,
 			},
 			file: netrcFilePath,
 		},
@@ -101,7 +101,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			want: ccloudMachine,
 			params: NetrcMachineParams{
 				IsCloud: true,
-				CtxName: ccloudLoginContext,
+				Name:    ccloudLoginContext,
 			},
 			file: netrcFilePath,
 		},
@@ -110,7 +110,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			want: ccloudSSOMachine,
 			params: NetrcMachineParams{
 				IsCloud: true,
-				CtxName: ccloudSSOContext,
+				Name:    ccloudSSOContext,
 				IsSSO:   true,
 			},
 			file: netrcFilePath,
@@ -119,7 +119,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			name: "No file error",
 			params: NetrcMachineParams{
 				IsCloud: false,
-				CtxName: mdsContext,
+				Name:    mdsContext,
 			},
 			wantErr: true,
 			file:    "wrong-file",
@@ -129,7 +129,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			want: nil,
 			params: NetrcMachineParams{
 				IsCloud: true,
-				CtxName: "non-existent-context",
+				Name:    "non-existent-context",
 			},
 			file: netrcFilePath,
 		},
@@ -138,7 +138,7 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			want: specialCharsMachine,
 			params: NetrcMachineParams{
 				IsCloud: true,
-				CtxName: specialCharsContext,
+				Name:    specialCharsContext,
 			},
 			file: netrcFilePath,
 		},
@@ -375,7 +375,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 			name: "ccloud-ctx-name-regex",
 			params: NetrcMachineParams{
 				IsCloud: true,
-				CtxName: ccloudCtxName,
+				Name:    ccloudCtxName,
 			},
 			matchNames: []string{
 				getNetrcMachineName(true, true, ccloudCtxName),
@@ -423,7 +423,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 			name: "confluent-ctx-name-regex",
 			params: NetrcMachineParams{
 				IsCloud: false,
-				CtxName: confluentCtxName,
+				Name:    confluentCtxName,
 			},
 			matchNames: []string{
 				getNetrcMachineName(false, false, confluentCtxName),
@@ -452,7 +452,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 			name: "ccloud-special-chars",
 			params: NetrcMachineParams{
 				IsCloud: true,
-				CtxName: specialCharsCtxName,
+				Name:    specialCharsCtxName,
 			},
 			matchNames: []string{
 				getNetrcMachineName(true, false, specialCharsCtxName),
@@ -467,7 +467,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 			name: "confluent-special-chars",
 			params: NetrcMachineParams{
 				IsCloud: false,
-				CtxName: specialCharsCtxName,
+				Name:    specialCharsCtxName,
 			},
 			matchNames: []string{
 				getNetrcMachineName(false, false, specialCharsCtxName),
