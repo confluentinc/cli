@@ -340,12 +340,13 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 				fmt.Println(output)
 			}
 			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
+			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[6], "|")[2])
 			output = runCommand(t, ccloudTestBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
 			if *debug {
 				fmt.Println(output)
 			}
 		}
+
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
 		output := runCommand(t, ccloudTestBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 		if *debug {

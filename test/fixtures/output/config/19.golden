@@ -1,1 +1,3 @@
+In the next major version update, `confluent config context` has been renamed to `confluent context`.
+
 login-fake@user.com-http://127.0.0.1:12345

@@ -248,8 +248,10 @@ func (r *PreRun) Anonymous(command *CLICommand) func(cmd *cobra.Command, args []
 			return err
 		}
 		r.Logger.Flush()
+
 		r.notifyIfUpdateAvailable(cmd, r.CLIName, command.Version.Version)
-		r.warnIfConfluentLocal(cmd)
+		r.printWarnings(cmd)
+
 		if r.Config != nil {
 			ctx := command.Config.Context()
 			err := r.ValidateToken(cmd, command.Config)
@@ -892,9 +894,51 @@ func isUpdateCommand(cmd *cobra.Command) bool {
 	return strings.Contains(cmd.CommandPath(), "update")
 }
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
+func (r *PreRun) printWarnings(cmd *cobra.Command) {
+	if output, err := cmd.Flags().GetString("output"); err == nil && (output == "json" || output == "yaml") {
+		return
+	}
+
+	fmtBreakingChange := "In the next major version update, %s\n"
+	fmtRename := fmt.Sprintf(fmtBreakingChange, "`%s` has been renamed to `%s`.")
+
+	for _, warning := range []struct {
+		prefix string
+		text   string
+	}{
+		// general warnings
+		{prefix: "confluent local", text: "The local commands are intended for a single-node development environment only,\nNOT for production usage. Documentation: https://docs.confluent.io/confluent-cli/current/command-reference/local/index.html\n"},
+
+		// deprecation warnings
+		{prefix: "ccloud", text: "The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html\nTo update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html\n"},
+		{prefix: "ccloud admin user", text: fmt.Sprintf(fmtRename, "ccloud admin user", "confluent iam user")},
+		{prefix: "ccloud admin user invite", text: fmt.Sprintf(fmtRename, "ccloud admin user invite", "confluent iam user invitation create")},
+		{prefix: "ccloud admin user list", text: fmt.Sprintf(fmtBreakingChange, "`resource_id` has been renamed to `id`.")},
+		{prefix: "ccloud api-key list", text: fmt.Sprintf(fmtBreakingChange, "the `--service-account` flag no longer accepts user IDs.")},
+		{prefix: "ccloud config context", text: fmt.Sprintf(fmtRename, "ccloud config context", "confluent context")},
+		{prefix: "ccloud config context get", text: fmt.Sprintf(fmtRename, "ccloud config context get", "confluent context describe")},
+		{prefix: "ccloud config context set", text: fmt.Sprintf(fmtRename, "ccloud config context set", "confluent context update")},
+		{prefix: "ccloud connector", text: fmt.Sprintf(fmtRename, "ccloud connector", "confluent connect")},
+		{prefix: "ccloud connector-catalog", text: fmt.Sprintf(fmtRename, "ccloud connector-catalog", "confluent connect plugin")},
+		{prefix: "ccloud iam role", text: fmt.Sprintf(fmtRename, "ccloud iam role", "confluent iam rbac role")},
+		{prefix: "ccloud iam rolebinding", text: fmt.Sprintf(fmtRename, "ccloud iam rolebinding", "confluent iam rbac role-binding")},
+		{prefix: "ccloud init", text: fmt.Sprintf(fmtRename, "ccloud init", "confluent context create")},
+		{prefix: "ccloud kafka acl", text: fmt.Sprintf(fmtBreakingChange, "the following output labels/keys were renamed: ServiceAccountId to Principal, Resource to ResourceType, Name to ResourceName, and Type to PatternType.")},
+		{prefix: "ccloud kafka cluster describe", text: fmt.Sprintf(fmtBreakingChange, "`ApiEndpoint` has been renamed to `KAPI` and is only visible if the `--all` flag is passed.")},
+		{prefix: "ccloud kafka topic describe", text: fmt.Sprintf(fmtBreakingChange, "topic partition and replica data has been removed.")},
+		{prefix: "ccloud ksql app create", text: fmt.Sprintf(fmtBreakingChange, "`ccloud ksql app create` requires the `--api-key` and `--api-secret` flags.")},
+		{prefix: "ccloud service-account", text: fmt.Sprintf(fmtRename, "ccloud service-account", "confluent iam service-account")},
+		{prefix: "ccloud service-account list", text: fmt.Sprintf(fmtBreakingChange, "`resource_id` has been renamed to `id`.")},
+		{prefix: "ccloud signup", text: fmt.Sprintf(fmtRename, "ccloud signup", "confluent cloud-signup")},
+		{prefix: "confluent config context", text: fmt.Sprintf(fmtRename, "confluent config context", "confluent context")},
+		{prefix: "confluent iam acl", text: fmt.Sprintf(fmtBreakingChange, "the following output labels/keys were renamed: Resource to ResourceType, Name to ResourceName, and Type to PatternType.")},
+		{prefix: "confluent iam role", text: fmt.Sprintf(fmtRename, "confluent iam role", "confluent iam rbac")},
+		{prefix: "confluent iam rolebinding", text: fmt.Sprintf(fmtRename, "confluent iam rolebinding", "confluent iam rbac")},
+		{prefix: "confluent secret", text: fmt.Sprintf(fmtBreakingChange, "this command requires login.")},
+	} {
+		if strings.HasPrefix(cmd.CommandPath(), warning.prefix+" ") || cmd.CommandPath() == warning.prefix {
+			utils.ErrPrintln(cmd, warning.text)
+		}
 	}
 }
 

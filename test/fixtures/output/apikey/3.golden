@@ -1,3 +1,8 @@
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+In the next major version update, the `--service-account` flag no longer accepts user IDs.
+
     Key    | Description | Owner | Owner Resource Id |     Owner Email     | Resource Type | Resource ID |       Created         
 -----------+-------------+-------+-------------------+---------------------+---------------+-------------+-----------------------
     MYKEY2 |             |     2 | u-17              | mtodzo@confluent.io | kafka         | lkc-abc     | 1999-02-24T00:00:00Z  
