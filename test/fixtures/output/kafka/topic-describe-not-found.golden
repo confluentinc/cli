@@ -1,7 +1,7 @@
-The Confluent Cloud CLI is deprecated and will stop working on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
 To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
 
-In the next major version update, the upper table has been removed.
+In the next major version update, topic parition and replica data has been removed.
 
 Error: CCloud backend error: 1 error occurred:
 	* error describing topic topic1: topic not found
