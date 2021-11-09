@@ -103,6 +103,11 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
 	}
 	err = json.Unmarshal(input, c)
+
+	if c.Ver.Version == nil {
+		c.Ver = config.Version{Version: Version}
+	}
+
 	if c.Ver.Compare(currentVersion) < 0 {
 		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
 	} else if c.Ver.Compare(Version) > 0 {
