@@ -105,9 +105,9 @@ func (c *Config) Load() error {
 	err = json.Unmarshal(input, c)
 
 	// The config file does not exist or is empty, so we default its version to the current version to avoid errors.
-	//if c.Ver.Version == nil {
-	//	c.Ver = config.Version{Version: Version}
-	//}
+	if c.Ver.Version == nil {
+		c.Ver = config.Version{Version: Version}
+	}
 
 	if c.Ver.Compare(currentVersion) < 0 {
 		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
