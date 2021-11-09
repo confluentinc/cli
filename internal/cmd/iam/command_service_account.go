@@ -198,8 +198,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{ResourceId: args[0]}
-	err := c.Client.User.DeleteServiceAccount(context.Background(), user)
-	if err != nil {
+	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
 		return err
 	}
 	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
