@@ -84,7 +84,7 @@ type structuredRow struct {
 }
 
 func (c *promoCommand) listRunE(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.User.OrganizationId}
+	org := &orgv1.Organization{Id: c.State.Auth.Account.OrganizationId}
 
 	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
