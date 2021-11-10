@@ -16,6 +16,7 @@ import (
 
 func main() {
 	// Prevent printing the user's HOME in docs when generating confluent local services kafka
+	currentHOME := os.Getenv("HOME")
 	if err := os.Setenv("HOME", "$HOME"); err != nil {
 		panic(err)
 	}
@@ -45,6 +46,11 @@ func main() {
 	}
 
 	if err := docs.GenerateDocTree(tabs, "docs", 0); err != nil {
+		panic(err)
+	}
+
+	// restore $HOME value
+	if err := os.Setenv("HOME", currentHOME); err != nil {
 		panic(err)
 	}
 }
