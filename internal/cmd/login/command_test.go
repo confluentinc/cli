@@ -156,6 +156,8 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
+		},
 	}
 	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 
