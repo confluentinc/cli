@@ -43,7 +43,6 @@ func (c *aclCommand) init() {
 		Long:        "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.create),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
@@ -70,7 +69,6 @@ func (c *aclCommand) init() {
 		Long:  "Delete a Kafka ACL.\n\nThis command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.delete),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster:",
@@ -89,7 +87,6 @@ func (c *aclCommand) init() {
 		Long:  "List Kafka ACLs for a resource.\n\nThis command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the ACLs for the specified Kafka cluster:",
