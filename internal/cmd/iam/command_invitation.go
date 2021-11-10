@@ -78,12 +78,12 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	}
 	for _, invitation := range invitations {
 		var firstName, lastName string
-		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{
+		user, err := c.Client.User.Describe(context.Background(), &orgv1.User{
 			ResourceId: invitation.UserResourceId,
 		})
 		if err == nil {
-			firstName = userProfile.FirstName
-			lastName = userProfile.LastName
+			firstName = user.FirstName
+			lastName = user.LastName
 		}
 		outputWriter.AddElement(&invitationStruct{
 			Id:             invitation.Id,
