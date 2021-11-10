@@ -108,7 +108,7 @@ func APICredentialConfigMock() *Config {
 
 	conf := New(&config.Params{Logger: log.New()})
 
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf)
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf, "")
 	if err != nil {
 		panic(err)
 	}
@@ -156,7 +156,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 	conf := New(&config.Params{Logger: log.New()})
 	conf.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf, params.orgResourceId)
 	if err != nil {
 		panic(err)
 	}

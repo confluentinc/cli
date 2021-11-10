@@ -42,6 +42,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credential
 	}
 
 	client.HttpClient.Timeout = 30 * time.Second
+	a.logger.Debug("Making login request for " + credentials.Username + " for org id " + orgResourceId)
 	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
 	return token, "", err
 }

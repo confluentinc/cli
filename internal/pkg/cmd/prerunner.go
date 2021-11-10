@@ -253,7 +253,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		if r.Config != nil {
 			ctx := command.Config.Context()
-			ctx.Logger = r.Logger
 			err := r.ValidateToken(cmd, command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
@@ -264,6 +263,9 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				if err := r.Analytics.SessionTimedOut(); err != nil {
 					r.Logger.Debug(err.Error())
 				}
+			}
+			if ctx != nil {
+				ctx.Logger = r.Logger
 			}
 		}
 
@@ -360,8 +362,8 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 		r.Logger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, "https://devel.cpdev.cloud")
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, "https://devel.cpdev.cloud", token, client, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -377,7 +379,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, orgResourceId 
 		URL:     pauth.CCloudURL,
 	}
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
@@ -385,7 +387,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, orgResourceId 
 		return "", nil, err
 	}
 
-	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+	client := r.CCloudClientFactory.AnonHTTPClientFactory("https://devel.cpdev.cloud")
 	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false, orgResourceId)
 	if err != nil {
 		return "", nil, err

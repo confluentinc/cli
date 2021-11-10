@@ -72,23 +72,23 @@ func PersistConfluentLoginToConfig(config *v1.Config, username string, url strin
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath)
+	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
+func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client, orgResourceId string) (*orgv1.Account, error) {
 	ctxName := GenerateCloudContextName(email, url)
 	state, err := getCCloudContextState(config, ctxName, token, client)
 	if err != nil {
 		return nil, err
 	}
-	err = addOrUpdateContext(config, ctxName, email, url, state, "")
+	err = addOrUpdateContext(config, ctxName, email, url, state, "", orgResourceId)
 	if err != nil {
 		return nil, err
 	}
 	return state.Auth.Account, nil
 }
 
-func addOrUpdateContext(config *v1.Config, ctxName string, username string, url string, state *v1.ContextState, caCertPath string) error {
+func addOrUpdateContext(config *v1.Config, ctxName string, username string, url string, state *v1.ContextState, caCertPath string, orgResourceId string) error {
 	credName := generateCredentialName(username)
 	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -118,8 +118,10 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
+		fmt.Println("ACTIVE ORG WRITTEN TO CONFIG " + orgResourceId)
+		ctx.LastOrgId = orgResourceId
 	} else {
-		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state); err != nil {
+		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state, orgResourceId); err != nil {
 			return err
 		}
 	}

@@ -105,17 +105,17 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
-	credentials, err := c.getCCloudCredentials(cmd, url)
+	orgResourceId, err := c.getOrgResourceId(cmd)
+	if err != nil {
+		return err
+	}
+
+	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
 		return err
 	}
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
-	if err != nil {
-		return err
-	}
-
-	orgResourceId, err := c.getOrgResourceId(cmd)
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
 	if url != pauth.CCloudURL { // by default, LoginManager client uses prod url
 		client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 		c.loginCredentialsManager.SetCloudClient(client)
@@ -161,16 +161,16 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.C
 	}
 
 	if promptOnly {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd))
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
-		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }
 
@@ -350,7 +350,6 @@ func (c *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
 	return pauth.GetLoginOrganization(
 		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
 		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),
-		//c.loginOrganizationManager.GetLoginOrganizationFromContext(cmd),
 		c.loginOrganizationManager.GetDefaultLoginOrganization(),
 	)
 }

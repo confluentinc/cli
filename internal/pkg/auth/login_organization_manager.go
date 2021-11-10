@@ -54,12 +54,6 @@ func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvVar(cmd *cobra
 	}
 }
 
-//func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromContext(cmd *cobra.Command) func() (string, error) {
-//	return func() (string, error) {
-//
-//	}
-//}
-
 func (h *LoginOrganizationManagerImpl) GetDefaultLoginOrganization() func() (string, error) {
 	return func() (string, error) {
 		// empty org resource id will be interpreted as the default org by the login API
