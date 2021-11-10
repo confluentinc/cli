@@ -1,9 +1,9 @@
 {
   "topic_name": "topic-exist",
   "config": {
-    "PartitionCount": "3",
     "cleanup.policy": "delete",
     "compression.type": "producer",
+    "num.partitions": "3",
     "retention.ms": "604800000"
   }
 }

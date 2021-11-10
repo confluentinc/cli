@@ -491,7 +491,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			for _, config := range configsResp.Data {
 				topicData.Config[config.Name] = *config.Value
 			}
-			topicData.Config["PartitionCount"] = strconv.Itoa(len(partitionsResp.Data))
+			topicData.Config["num.partitions"] = strconv.Itoa(len(partitionsResp.Data))
 
 			if outputOption == output.Human.String() {
 				return printHumanDescribe(cmd, topicData)
@@ -1068,7 +1068,7 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 		Name  string
 		Value string
 	}{
-		"PartitionCount",
+		"num.partitions",
 		strconv.Itoa(len(resp.Partitions)),
 	}
 	entries = append(entries, printer.ToRow(partitionRecord, titleRow))
@@ -1086,7 +1086,7 @@ func printStructuredTopicDescription(resp *schedv1.TopicDescription, format stri
 	for _, entry := range resp.Config {
 		structuredDisplay.Config[entry.Name] = entry.Value
 	}
-	structuredDisplay.Config["PartitionCount"] = strconv.Itoa(len(resp.Partitions))
+	structuredDisplay.Config["num.partitions"] = strconv.Itoa(len(resp.Partitions))
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
