@@ -25,8 +25,9 @@ type aclCommand struct {
 func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &aclCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(&cobra.Command{
-			Use:   "acl",
-			Short: "Manage Kafka ACLs (5.4+ only).",
+			Use:         "acl",
+			Short:       "Manage Kafka ACLs (5.4+ only).",
+			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		}, prerunner, AclSubcommandFlags),
 	}
 
@@ -37,12 +38,11 @@ func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *aclCommand) init() {
 	cmd := &cobra.Command{
-		Use:         "create",
-		Short:       "Create a Kafka ACL.",
-		Long:        "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
-		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.create),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+		Use:   "create",
+		Short: "Create a Kafka ACL.",
+		Long:  "Create a Kafka ACL.\n\nThis command only works with centralized ACLs.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
