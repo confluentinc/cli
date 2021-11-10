@@ -37,6 +37,12 @@ func (suite *InvitationTestSuite) SetupTest() {
 				LastName: "lastname",
 			}, nil
 		},
+		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				FirstName: "TEST",
+				LastName: "lastname",
+			}, nil
+		},
 		ListInvitationsFunc: func(_ context.Context) ([]*orgv1.Invitation, error) {
 			return []*orgv1.Invitation{
 				{
