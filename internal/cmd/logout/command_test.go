@@ -69,6 +69,8 @@ var (
 				return nil, nil
 			}
 		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
+		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool) (string, string, error) {

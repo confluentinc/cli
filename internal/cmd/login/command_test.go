@@ -99,6 +99,8 @@ var (
 				return nil, nil
 			}
 		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
+		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool) (s string, s2 string, e error) {
@@ -155,6 +157,8 @@ func TestCredentialsOverride(t *testing.T) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
+		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
 		},
 	}
 	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
@@ -314,6 +318,8 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
+				SetCloudClientFunc: func(arg0 *ccloud.Client) {
+				},
 			}
 			if tt.setNetrcUser {
 				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -405,6 +411,8 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
+				SetCloudClientFunc: func(arg0 *ccloud.Client) {
+				},
 			}
 			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
 			loginArgs := []string{"--prompt"}
@@ -440,6 +448,8 @@ func TestLoginFail(t *testing.T) {
 			return func() (*pauth.Credentials, error) {
 				return nil, &ccloud.InvalidLoginError{}
 			}
+		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
 		},
 	}
 	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
