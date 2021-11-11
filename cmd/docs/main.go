@@ -49,7 +49,6 @@ func main() {
 		panic(err)
 	}
 
-	// restore $HOME value
 	if err := os.Setenv("HOME", currentHOME); err != nil {
 		panic(err)
 	}
