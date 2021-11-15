@@ -45,6 +45,16 @@ type clusterCommand struct {
 	analyticsClient         analytics.Client
 }
 
+type ksqlCluster struct {
+	Id                string
+	Name              string
+	OutputTopicPrefix string
+	KafkaClusterId    string
+	Storage           int32
+	Endpoint          string
+	Status            string
+}
+
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
 func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
@@ -158,7 +168,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, cluster := range clusters {
-		outputWriter.AddElement(cluster)
+		outputWriter.AddElement(c.ksqlWithStatus(cluster))
 	}
 	return outputWriter.Out()
 }
@@ -229,7 +239,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.ksqlWithStatus(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -423,5 +433,23 @@ func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Com
 func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
 		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
+	}
+}
+
+func (c *clusterCommand) ksqlWithStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
+	var status string
+	if cluster.IsPaused {
+		status = "PAUSED"
+	} else {
+		status = cluster.Status.String()
+	}
+	return &ksqlCluster{
+		Id:                cluster.Id,
+		Name:              cluster.Name,
+		OutputTopicPrefix: cluster.OutputTopicPrefix,
+		KafkaClusterId:    cluster.KafkaClusterId,
+		Storage:           cluster.Storage,
+		Endpoint:          cluster.Endpoint,
+		Status:            status,
 	}
 }

@@ -320,6 +320,8 @@ github.com/confluentinc/cc-structs/kafka/product/core v0.410.0/go.mod h1:FF4M+qX
 github.com/confluentinc/cc-structs/kafka/product/core v0.719.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
 github.com/confluentinc/cc-structs/kafka/product/core v0.753.0 h1:ynN//8KKoMrNIUEaVFKCQWbi2nBirQQmhUL8zK8VnrY=
 github.com/confluentinc/cc-structs/kafka/product/core v0.753.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
+github.com/confluentinc/cc-structs/kafka/product/core v0.1006.0 h1:rtV54ZTic4nvXrhswi/8CoYhnF6nxZvzArxb+hzO9xs=
+github.com/confluentinc/cc-structs/kafka/product/core v0.1006.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.408.0/go.mod h1:VzT5EDgrn2JRsRPkY+12iN6L8hP+UzH4Zbn0IfxB0sc=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.410.0/go.mod h1:VzT5EDgrn2JRsRPkY+12iN6L8hP+UzH4Zbn0IfxB0sc=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.560.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
@@ -327,6 +329,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0/go.mod h1:kVPBJEDa1rPfaw3GcSFYCr9LuT/YzzwSmgsEOMW4bVQ=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0 h1:ClW6rSIOZvn41+VreGHnkHxTDBFJXt70Z1xjN2+9H34=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0 h1:pUqL03tNF6J5DpMZOq6RDvJYMn6BFw1ReMnab1LJz1o=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0/go.mod h1:MEHUgqGrZOYmB+4/x3Fh0dh4u01dz7b1qIEwDVU3VYQ=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0/go.mod h1:lj7y2SOcCqcdz3xlwfh98dMaonfT9D9YOoRvIOEnNk8=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
@@ -338,7 +342,10 @@ github.com/confluentinc/cc-structs/kafka/util v0.753.0/go.mod h1:zK+BAdNsqeeEbGW
 github.com/confluentinc/cc-structs/operator v0.405.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
 github.com/confluentinc/cc-structs/operator v0.753.0 h1:/7iehTE/W8bJrJ8A9b/JFhWovHGYoU6p60joR8sKNCo=
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92 h1:vTcLNIx+jStH1O6K0dYVqxDu5kosJZCJ3MzbD9KXuQ0=
+github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1QE6hUG3WkzpYjPsjUbg=
+github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91 h1:DW5G4f8mJ+Vpc7Ay5gu9SKul+GCFkA9JVnqUVrdgItc=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91/go.mod h1:A7vR8Me1rDKWnWADVGj5bweYIce4bzPQ+R05bZIAU90=github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92 h1:vTcLNIx+jStH1O6K0dYVqxDu5kosJZCJ3MzbD9KXuQ0=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92/go.mod h1:A7vR8Me1rDKWnWADVGj5bweYIce4bzPQ+R05bZIAU90=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
@@ -542,6 +549,7 @@ github.com/go-redis/redis v6.15.8+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8w
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
+github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
 github.com/go-test/deep v1.0.1/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
