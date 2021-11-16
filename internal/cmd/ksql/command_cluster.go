@@ -45,6 +45,8 @@ type clusterCommand struct {
 	analyticsClient         analytics.Client
 }
 
+// Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
+// in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
 	Id                string
 	Name              string
@@ -436,12 +438,10 @@ func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest
 	}
 }
 
-func (c *clusterCommand) ksqlWithStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
-	var status string
+func (c *clusterCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
+	status := cluster.Status.String()
 	if cluster.IsPaused {
 		status = "PAUSED"
-	} else {
-		status = cluster.Status.String()
 	}
 	return &ksqlCluster{
 		Id:                cluster.Id,
