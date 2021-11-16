@@ -48,13 +48,13 @@ type clusterCommand struct {
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
 // in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
-	Id                string
-	Name              string
-	OutputTopicPrefix string
-	KafkaClusterId    string
-	Storage           int32
-	Endpoint          string
-	Status            string
+	Id                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	OutputTopicPrefix string `json:"output_topic_prefix,omitempty"`
+	KafkaClusterId    string `json:"kafka_cluster_id,omitempty"`
+	Storage           int32  `json:"storage,omitempty"`
+	Endpoint          string `json:"endpoint,omitempty"`
+	Status            string `json:"status,omitempty"`
 }
 
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
@@ -170,7 +170,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, cluster := range clusters {
-		outputWriter.AddElement(c.ksqlWithStatus(cluster))
+		outputWriter.AddElement(c.updateKsqlClusterStatus(cluster))
 	}
 	return outputWriter.Out()
 }
@@ -241,7 +241,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
-	return output.DescribeObject(cmd, c.ksqlWithStatus(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterStatus(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
