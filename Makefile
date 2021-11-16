@@ -4,20 +4,6 @@ GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
 
-.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
-cross-build:
-ifeq ($(GOARCH),arm64) # build for darwin/arm64.
-	make build-darwin-arm64
-else # build for amd64 arch
-    ifeq ($(GOOS),windows)
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
-    else ifeq ($(GOOS),linux) 
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
-    else # build for Darwin/amd64
-		CGO_ENABLED=1 make cli-builder
-    endif
-endif
-
 .PHONY: build # compile natively based on the system
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
@@ -35,6 +21,20 @@ else
 		make switch-librdkafka-arm64
 		make cli-builder || true 
 		make restore-librdkafka-amd64
+    endif
+endif
+
+.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+cross-build:
+ifeq ($(GOARCH),arm64) # build for darwin/arm64.
+	make build-darwin-arm64
+else # build for amd64 arch
+    ifeq ($(GOOS),windows)
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
+    else ifeq ($(GOOS),linux) 
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+    else # build for Darwin/amd64
+		CGO_ENABLED=1 make cli-builder
     endif
 endif
 
