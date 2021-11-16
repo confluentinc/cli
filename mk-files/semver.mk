@@ -75,11 +75,13 @@ show-version:
 
 .PHONY: tag-release
 tag-release:
-	# Delete tag if it already exists
+	# Delete tag from the remote in case it already exists
 	git tag -d $(BUMPED_VERSION) || true
-	git push $(GIT_REMOTE_NAME) :$(BUMPED_VERSION) || true
+	git push -d $(GIT_REMOTE_NAME) $(BUMPED_VERSION) || true
+
+	# Add tag to the remote
 	git tag $(BUMPED_VERSION)
-	git push $(GIT_REMOTE_NAME) $(RELEASE_BRANCH) --tags
+	git push $(GIT_REMOTE_NAME) $(BUMPED_VERSION)
 
 .PHONY: get-release-image
 get-release-image:
