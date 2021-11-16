@@ -69,7 +69,9 @@ S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 .PHONY: clean
 clean:
-	rm -rf $(shell pwd)/dist
+	@for dir in bin dist docs legal; do \
+		[ -d $$dir ] && rm -r $$dir || true ; \
+	done
 
 .PHONY: generate
 generate:
