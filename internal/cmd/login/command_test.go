@@ -73,12 +73,12 @@ var (
 	}
 	mockUser                    = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -87,12 +87,12 @@ var (
 			}
 		},
 
-		GetConfluentCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetConfluentCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -166,7 +166,7 @@ func TestCredentialsOverride(t *testing.T) {
 	}
 	user := &sdkMock.User{}
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return envCreds, nil
 			}
@@ -176,7 +176,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -199,8 +199,8 @@ func TestCredentialsOverride(t *testing.T) {
 func TestOrgIdOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*orgv1.GetUserReply, error) {
-			return &orgv1.GetUserReply{
+		UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
+			return &flowv1.GetMeReply{
 				User: &orgv1.User{
 					Id:        23,
 					Email:     promptUser,
@@ -380,12 +380,12 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -394,12 +394,12 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				},
 
-				GetConfluentCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				GetOnPremCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetConfluentCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+				GetOnPremCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -423,7 +423,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			}
 			if tt.isCloud {
 				if tt.setEnvVar {
-					loginCredentialsManager.GetCCloudCredentialsFromEnvVarFunc = func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
 						}
@@ -431,7 +431,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			} else {
 				if tt.setEnvVar {
-					loginCredentialsManager.GetConfluentCredentialsFromEnvVarFunc = func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+					loginCredentialsManager.GetOnPremCredentialsFromEnvVarFunc = func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
 						}

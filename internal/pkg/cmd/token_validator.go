@@ -47,8 +47,7 @@ func (v *JWTValidatorImpl) Validate(context *v1.Context) error {
 	if !ok {
 		return errors.New(errors.MalformedJWTNoExprErrorMsg)
 	}
-	if float64(v.Clock.Now().Unix() + 3540) > exp {
-	//if float64(v.Clock.Now().Unix()) > exp {
+	if float64(v.Clock.Now().Unix()) > exp {
 		v.Logger.Debug("Token expired.")
 		return new(ccloud.ExpiredTokenError)
 	}
