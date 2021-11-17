@@ -16,7 +16,7 @@ import (
 
 var (
 	ssoProviderCallbackEndpoint = "/cli_callback"
-	ssoProviderCallbackLocalURL = "http://127.0.0.1:26635" + ssoProviderCallbackEndpoint
+	ssoProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + ssoProviderCallbackEndpoint
 
 	ssoConfigs = map[string]ssoConfig{
 		"cpd": {
