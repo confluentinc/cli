@@ -582,7 +582,8 @@ func Test_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 
 	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
-	cfg.Context().DeleteUserAuth()
+	err := cfg.Context().DeleteUserAuth()
+	require.NoError(t, err)
 	r.Config = cfg
 
 	root := &cobra.Command{
@@ -591,7 +592,7 @@ func Test_ReLoginToLastOrgUsed(t *testing.T) {
 	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 
-	_, err := pcmd.ExecuteCommand(rootCmd.Command)
+	_, err = pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
 }
 
