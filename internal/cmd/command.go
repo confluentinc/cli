@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/stream-share"
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -136,6 +137,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cli.AddCommand(version.New(prerunner, ver))
+	cli.AddCommand(stream_share.New(prerunner, analyticsClient))
 
 	if cfg.IsCloudLogin() {
 		serverCompleter.AddCommand(apiKeyCmd)
