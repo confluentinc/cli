@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,6 +38,7 @@ import (
 
 const (
 	defaultReplicationFactor = 3
+	partitionCount           = "num.partitions"
 )
 
 type kafkaTopicCommand struct {
@@ -455,7 +457,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		_, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
+		partitionsResp, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -490,6 +492,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			for _, config := range configsResp.Data {
 				topicData.Config[config.Name] = *config.Value
 			}
+			topicData.Config[partitionCount] = strconv.Itoa(len(partitionsResp.Data))
 
 			if outputOption == output.Human.String() {
 				return printHumanDescribe(cmd, topicData)
@@ -1062,6 +1065,14 @@ func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescripti
 		}
 		entries = append(entries, printer.ToRow(record, titleRow))
 	}
+	partitionRecord := &struct {
+		Name  string
+		Value string
+	}{
+		partitionCount,
+		strconv.Itoa(len(resp.Partitions)),
+	}
+	entries = append(entries, printer.ToRow(partitionRecord, titleRow))
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i][0] < entries[j][0]
 	})
@@ -1076,6 +1087,7 @@ func printStructuredTopicDescription(resp *schedv1.TopicDescription, format stri
 	for _, entry := range resp.Config {
 		structuredDisplay.Config[entry.Name] = entry.Value
 	}
+	structuredDisplay.Config[partitionCount] = strconv.Itoa(len(resp.Partitions))
 	return output.StructuredOutput(format, structuredDisplay)
 }
 

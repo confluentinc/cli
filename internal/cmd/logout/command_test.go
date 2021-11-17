@@ -38,12 +38,12 @@ const (
 
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCCloudCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -51,13 +51,12 @@ var (
 				}, nil
 			}
 		},
-
-		GetConfluentCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetConfluentCredentialsFromPromptFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromPromptFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -65,11 +64,12 @@ var (
 				}, nil
 			}
 		},
-
-		GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
+		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
 		},
 	}
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
@@ -87,19 +87,19 @@ var (
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
 			return testToken, "refreshToken", nil
 		},
-		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
+		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
 			return testToken, nil
 		},
 	}
 	mockNetrcHandler = &pmock.MockNetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(isCloud, isSSO bool, ctxName, username, password string) error {
+		WriteNetrcCredentialsFunc: func(_, _ bool, _, _, _ string) error {
 			return nil
 		},
-		RemoveNetrcCredentialsFunc: func(isCloud bool, ctxName string) (string, error) {
+		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
 			return "", nil
 		},
-		CheckCredentialExistFunc: func(isCloud bool, ctxName string) (bool, error) {
+		CheckCredentialExistFunc: func(_ bool, _ string) (bool, error) {
 			return false, nil
 		},
 	}

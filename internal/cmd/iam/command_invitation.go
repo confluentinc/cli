@@ -77,17 +77,19 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return err
 	}
 	for _, invitation := range invitations {
-		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{
+		var firstName, lastName string
+		user, err := c.Client.User.Describe(context.Background(), &orgv1.User{
 			ResourceId: invitation.UserResourceId,
 		})
-		if err != nil {
-			return err
+		if err == nil {
+			firstName = user.FirstName
+			lastName = user.LastName
 		}
 		outputWriter.AddElement(&invitationStruct{
 			Id:             invitation.Id,
 			Email:          invitation.Email,
-			FirstName:      userProfile.FirstName,
-			LastName:       userProfile.LastName,
+			FirstName:      firstName,
+			LastName:       lastName,
 			UserResourceId: invitation.UserResourceId,
 			Status:         invitation.Status,
 		})

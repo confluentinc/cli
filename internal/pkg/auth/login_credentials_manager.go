@@ -63,8 +63,8 @@ type LoginCredentialsManager interface {
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
-	GetOnPremPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromEnvVar(*cobra.Command) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
 	SetCloudClient(client *ccloud.Client)
@@ -267,10 +267,9 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar(cmd *
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
 // URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
-	filterParams := netrc.NetrcMachineParams{IsCloud: false}
+func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command, netrcMachineParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		netrcMachine, err := h.getNetrcMachine(filterParams)
+		netrcMachine, err := h.getNetrcMachine(netrcMachineParams)
 		if err != nil {
 			h.logger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err

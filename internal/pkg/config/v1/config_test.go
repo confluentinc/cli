@@ -639,7 +639,7 @@ func TestConfig_AddContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.config.AddContext(tt.contextName, tt.platformName, tt.credentialName, tt.kafkaClusters, tt.kafka,
-				tt.schemaRegistryClusters, tt.state)
+				tt.schemaRegistryClusters, tt.state, MockOrgResourceId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, tt.wantErr)
 			}

@@ -77,11 +77,13 @@ func PersistConfluentLoginToConfig(config *v1.Config, username string, url strin
 
 func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client, orgResourceId string) (*orgv1.Account, error) {
 	ctxName := GenerateCloudContextName(email, url)
-	state, err := getCCloudContextState(config, ctxName, token, client)
+	user, err := getCCloudUser(client)
 	if err != nil {
 		return nil, err
 	}
-	err = addOrUpdateContext(config, ctxName, email, url, state, "", orgResourceId)
+	state := getCCloudContextState(config, ctxName, token, user)
+
+	err = addOrUpdateContext(config, ctxName, email, url, state, "", user.Organization.ResourceId)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +120,7 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
-		fmt.Println("ACTIVE ORG WRITTEN TO CONFIG " + orgResourceId)
+		fmt.Println("WRITING ORG " + orgResourceId)
 		ctx.LastOrgId = orgResourceId
 	} else {
 		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state, orgResourceId); err != nil {
@@ -129,11 +131,7 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v1.Config, ctxName, token string, client *ccloud.Client) (*v1.ContextState, error) {
-	user, err := getCCloudUser(client)
-	if err != nil {
-		return nil, err
-	}
+func getCCloudContextState(config *v1.Config, ctxName, token string, user *flowv1.GetMeReply) *v1.ContextState {
 	var state *v1.ContextState
 	ctx, err := config.FindContext(ctxName)
 	if err == nil {
@@ -153,8 +151,6 @@ func getCCloudContextState(config *v1.Config, ctxName, token string, client *ccl
 	state.Auth.User = user.User
 	state.Auth.Accounts = user.Accounts
 	state.Auth.Organization = user.Organization
-	// cache the last used org id so we can log back into the same org next time
-	//config.UpdateLastUsedOrgId(user.Organization.ResourceId)
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
@@ -169,7 +165,7 @@ func getCCloudContextState(config *v1.Config, ctxName, token string, client *ccl
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	return state, nil
+	return state
 }
 
 func getCCloudUser(client *ccloud.Client) (*flowv1.GetMeReply, error) {

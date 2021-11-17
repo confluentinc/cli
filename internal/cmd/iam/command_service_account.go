@@ -193,12 +193,16 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	return nil
 }
 
-func (c *serviceAccountCommand) delete(_ *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{ResourceId: args[0]}
-	return c.Client.User.DeleteServiceAccount(context.Background(), user)
+	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
+		return err
+	}
+	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
+	return nil
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {

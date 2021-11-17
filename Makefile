@@ -10,7 +10,7 @@ ifeq ($(GOARCH),arm64) # build for darwin/arm64.
 	make build-darwin-arm64
 else # build for amd64 arch
     ifeq ($(GOOS),windows)
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ make cli-builder
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
     else ifeq ($(GOOS),linux) 
 		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
     else # build for Darwin/amd64
