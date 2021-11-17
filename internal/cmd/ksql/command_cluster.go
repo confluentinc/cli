@@ -45,6 +45,18 @@ type clusterCommand struct {
 	analyticsClient         analytics.Client
 }
 
+// Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
+// in scheduler but changes Status to a string so we can have a `PAUSED` option
+type ksqlCluster struct {
+	Id                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	OutputTopicPrefix string `json:"output_topic_prefix,omitempty"`
+	KafkaClusterId    string `json:"kafka_cluster_id,omitempty"`
+	Storage           int32  `json:"storage,omitempty"`
+	Endpoint          string `json:"endpoint,omitempty"`
+	Status            string `json:"status,omitempty"`
+}
+
 // NewClusterCommand returns the Cobra clusterCommand for Ksql Cluster.
 func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
@@ -158,7 +170,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, cluster := range clusters {
-		outputWriter.AddElement(cluster)
+		outputWriter.AddElement(c.updateKsqlClusterStatus(cluster))
 	}
 	return outputWriter.Out()
 }
@@ -229,7 +241,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterStatus(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
@@ -423,5 +435,21 @@ func (c *clusterCommand) ServerCompletableFlagChildren() map[string][]*cobra.Com
 func (c *clusterCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
 	return map[string]func() []prompt.Suggest{
 		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
+	}
+}
+
+func (c *clusterCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
+	status := cluster.Status.String()
+	if cluster.IsPaused {
+		status = "PAUSED"
+	}
+	return &ksqlCluster{
+		Id:                cluster.Id,
+		Name:              cluster.Name,
+		OutputTopicPrefix: cluster.OutputTopicPrefix,
+		KafkaClusterId:    cluster.KafkaClusterId,
+		Storage:           cluster.Storage,
+		Endpoint:          cluster.Endpoint,
+		Status:            status,
 	}
 }

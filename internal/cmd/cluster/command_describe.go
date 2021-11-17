@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -70,6 +71,7 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 		CLICommand: pcmd.NewAnonymousCLICommand(&cobra.Command{
 			Use:   "describe",
 			Short: "Describe a Kafka cluster.",
+			Long:  fmt.Sprintf("Describe a Kafka cluster.\nEnvironment variable `%s` can replace the `--url` flag, and `%s` can replace the `--ca-cert-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
 			Args:  cobra.NoArgs,
 			Example: examples.BuildExampleString(
 				examples.Example{
@@ -82,7 +84,6 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	}
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	describeCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-	check(describeCmd.MarkFlagRequired("url"))
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	describeCmd.RunE = pcmd.NewCLIRunE(describeCmd.describe)
@@ -126,12 +127,12 @@ func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*Scope
 }
 
 func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
-	url, err := cmd.Flags().GetString("url")
+	url, err := getURL(cmd)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	caCertPath, err := getCACertPath(cmd)
 	if err != nil {
 		return err
 	}
@@ -147,6 +148,28 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 	}
 
 	return printDescribe(cmd, meta, outputOption)
+}
+
+func getURL(cmd *cobra.Command) (string, error) {
+	// Order of precedence: flags > env vars
+	if url, err := cmd.Flags().GetString("url"); url != "" || err != nil {
+		return url, err
+	}
+
+	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
+		return url, nil
+	}
+
+	return "", errors.New(errors.MdsUrlNotFoundSuggestions)
+}
+
+func getCACertPath(cmd *cobra.Command) (string, error) {
+	// Order of precedence: flags > env vars
+	if path, err := cmd.Flags().GetString("ca-cert-path"); path != "" || err != nil {
+		return path, err
+	}
+
+	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {

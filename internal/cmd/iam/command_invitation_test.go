@@ -37,6 +37,12 @@ func (suite *InvitationTestSuite) SetupTest() {
 				LastName: "lastname",
 			}, nil
 		},
+		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (*orgv1.User, error) {
+			return &orgv1.User{
+				FirstName: "TEST",
+				LastName: "lastname",
+			}, nil
+		},
 		ListInvitationsFunc: func(_ context.Context) ([]*orgv1.Invitation, error) {
 			return []*orgv1.Invitation{
 				{
@@ -80,9 +86,9 @@ func (suite *InvitationTestSuite) TestInvitationList() {
 	req := require.New(suite.T())
 	req.NoError(err)
 	req.True(suite.userMock.ListInvitationsCalled())
-	req.Equal(2, len(suite.userMock.GetUserProfileCalls()))
-	req.Equal("u-1234", suite.userMock.GetUserProfileCalls()[0].Arg1.ResourceId)
-	req.Equal("u-4321", suite.userMock.GetUserProfileCalls()[1].Arg1.ResourceId)
+	req.Equal(2, len(suite.userMock.DescribeCalls()))
+	req.Equal("u-1234", suite.userMock.DescribeCalls()[0].Arg1.ResourceId)
+	req.Equal("u-4321", suite.userMock.DescribeCalls()[1].Arg1.ResourceId)
 }
 
 func (suite *InvitationTestSuite) TestCreateInvitation() {

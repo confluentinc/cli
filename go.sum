@@ -325,8 +325,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.410.0/go.mod h1:VzT5EDgrn2
 github.com/confluentinc/cc-structs/kafka/scheduler v0.560.0/go.mod h1:ObI7Nx0HE/gAltBMzoDYDlUna0LITS8ZTLtyjxQYGY0=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0tD5DmCox4cTTTaq/LwEd+tCd8D7sHSMbI=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0/go.mod h1:kVPBJEDa1rPfaw3GcSFYCr9LuT/YzzwSmgsEOMW4bVQ=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0 h1:ClW6rSIOZvn41+VreGHnkHxTDBFJXt70Z1xjN2+9H34=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0 h1:pUqL03tNF6J5DpMZOq6RDvJYMn6BFw1ReMnab1LJz1o=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0/go.mod h1:MEHUgqGrZOYmB+4/x3Fh0dh4u01dz7b1qIEwDVU3VYQ=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0/go.mod h1:lj7y2SOcCqcdz3xlwfh98dMaonfT9D9YOoRvIOEnNk8=
 github.com/confluentinc/cc-structs/kafka/util v0.44.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
 github.com/confluentinc/cc-structs/kafka/util v0.405.0/go.mod h1:gsDgEuy4t2754lindeBd5ESWJPUQEO0byDd97RJkKA0=
@@ -336,8 +336,9 @@ github.com/confluentinc/cc-structs/kafka/util v0.735.0/go.mod h1:vKI+bAgLC0H1hhm
 github.com/confluentinc/cc-structs/kafka/util v0.753.0 h1:oux+PNOol2Fe1KayDbpjF5AuChbIppSnUPzFHhFGAW0=
 github.com/confluentinc/cc-structs/kafka/util v0.753.0/go.mod h1:zK+BAdNsqeeEbGWXM2lBlKoBK31BdeyNyPiu8TgwZ28=
 github.com/confluentinc/cc-structs/operator v0.405.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
-github.com/confluentinc/cc-structs/operator v0.753.0 h1:/7iehTE/W8bJrJ8A9b/JFhWovHGYoU6p60joR8sKNCo=
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
+github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1QE6hUG3WkzpYjPsjUbg=
+github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211117124349-3bfed9306563 h1:LrcJ2I0Wxqru/WbEE0FlohTcPmLhBDq4UL+AIbZzHgI=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211117124349-3bfed9306563/go.mod h1:sPY66wO4nszCGLdsl6vAiBZEqDbt/+qIE2VfuaK7Ons=
 github.com/confluentinc/cdx-schema v0.0.6 h1:5/lm7ITfsiW8qKmK3mFUR5MC572UQFUrRMmCK2JiGoc=

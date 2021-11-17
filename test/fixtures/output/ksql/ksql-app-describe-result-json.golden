@@ -1,9 +1,9 @@
 {
   "id": "lksqlc-12345",
   "name": "account ksql",
+  "topic_prefix": "pksqlc-zxcvb",
   "kafka": "lkc-abcde",
-  "endpoint": "SASL_SSL://ksql-endpoint",
   "storage": 130,
-  "status": "PROVISIONING",
-  "topic_prefix": "pksqlc-zxcvb"
+  "endpoint": "SASL_SSL://ksql-endpoint",
+  "status": "PROVISIONING"
 }

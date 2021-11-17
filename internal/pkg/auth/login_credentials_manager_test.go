@@ -336,9 +336,11 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromNetrc() {
+	var params netrc.NetrcMachineParams
+
 	// no cacertpath
 	netrcHandler := &mock.MockNetrcHandler{
-		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
+		GetMatchingNetrcMachineFunc: func(_ netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			return confluentNetrcPrerunMachine, nil
 		},
 		GetFileNameFunc: func() string {
@@ -346,13 +348,13 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 		},
 	}
 	loginCredentialsManager := NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.logger, suite.ccloudClient)
-	creds, err := loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(&cobra.Command{})()
+	creds, err := loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(&cobra.Command{}, params)()
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcPrerunCredentials, creds)
 
 	// with cacertpath
 	netrcHandler = &mock.MockNetrcHandler{
-		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
+		GetMatchingNetrcMachineFunc: func(_ netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			return confluentNetrcPrerunMachineWithCaCertPath, nil
 		},
 		GetFileNameFunc: func() string {
@@ -360,7 +362,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 		},
 	}
 	loginCredentialsManager = NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.logger, suite.ccloudClient)
-	creds, err = loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(&cobra.Command{})()
+	creds, err = loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(&cobra.Command{}, params)()
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcPrerunCredentialsWithCaCertPath, creds)
 }
