@@ -73,6 +73,15 @@ show-version:
 	@echo version post append: $(VERSION_POST)
 	@echo 'release svg: $(RELEASE_SVG)'
 
+.PHONY: commit-release
+commit-release:
+	echo '$(RELEASE_SVG)' > release.svg
+	git add release.svg
+
+	git diff --exit-code --cached --name-status || \
+	git commit -m "chore: $(BUMP) version bump $(BUMPED_VERSION) $(CI_SKIP)"
+	git push
+
 .PHONY: tag-release
 tag-release:
 	# Delete tag from the remote in case it already exists
@@ -82,13 +91,3 @@ tag-release:
 	# Add tag to the remote
 	git tag $(BUMPED_VERSION)
 	git push $(GIT_REMOTE_NAME) $(BUMPED_VERSION)
-
-.PHONY: get-release-image
-get-release-image:
-	echo '$(RELEASE_SVG)' > release.svg
-	git add release.svg
-
-.PHONY: commit-release
-commit-release:
-	git diff --exit-code --cached --name-status || \
-	git commit -m "chore: $(BUMP) version bump $(BUMPED_VERSION) $(CI_SKIP)"
