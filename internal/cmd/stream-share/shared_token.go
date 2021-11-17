@@ -182,3 +182,8 @@ func (c *sharedTokenCommand) create(cmd *cobra.Command, _ []string) error {
 func stringToPtr(s string) *string {
 	return &s
 }
+
+	utils.Printf(cmd, fmt.Sprintf("Generated token: %s", *sharedToken.Token))
+
+	return nil
+}
