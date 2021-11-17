@@ -120,7 +120,6 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
-		fmt.Println("WRITING ORG " + orgResourceId)
 		ctx.LastOrgId = orgResourceId
 	} else {
 		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state, orgResourceId); err != nil {
