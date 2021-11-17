@@ -19,7 +19,8 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.911.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211117124349-3bfed9306563
+	github.com/confluentinc/cdx-schema v0.0.6
 	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
@@ -77,7 +78,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
-	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
+	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect

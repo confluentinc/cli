@@ -423,4 +423,9 @@ const (
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
+
+	// Stream Share errors
+	TopicEmptyErrorMsg   = "topic cannot be empty"
+	ClusterEmptyErrorMsg = "cluster cannot be empty"
+	TokenEmptyErrorMsg   = "token cannot be empty"
 )
