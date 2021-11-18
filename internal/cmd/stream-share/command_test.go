@@ -123,7 +123,3 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedToken() {
 	req.Nil(err)
 	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
 }
-
-func stringToPtr(s string) *string {
-	return &s
-}
