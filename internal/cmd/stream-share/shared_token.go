@@ -71,16 +71,18 @@ func (c *sharedTokenCommand) redeem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	utils.Println(cmd, "Token redeemed successfully. Use the following information to consume from the kafka topic:")
+
 	utils.Println(cmd, fmt.Sprintf("Bootstrap URL: %s", redeemedToken.GetKafkaBootstrapUrl()))
 	utils.Println(cmd, fmt.Sprintf("API Key: %s", redeemedToken.GetApikey()))
-	utils.Println(cmd, fmt.Sprintf("Secret: %s", redeemedToken.GetSecret()))
+	utils.Println(cmd, fmt.Sprintf("API Key Secret: %s", redeemedToken.GetSecret()))
 
 	for _, r := range redeemedToken.GetResources() {
 		if r.CdxV1SharedGroup != nil {
-			utils.Println(cmd, fmt.Sprintf("Group Prefix: %s", r.CdxV1SharedGroup.GroupPrefix))
+			utils.Println(cmd, fmt.Sprintf("Shared Consumer Group Prefix: %s", r.CdxV1SharedGroup.GroupPrefix))
 		}
 		if r.CdxV1SharedTopic != nil {
-			utils.Println(cmd, fmt.Sprintf("Topic: %s", r.CdxV1SharedTopic.Topic))
+			utils.Println(cmd, fmt.Sprintf("Shared Topic: %s", r.CdxV1SharedTopic.Topic))
 		}
 	}
 
@@ -112,6 +114,7 @@ func (c *sharedTokenCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	createSharedTokenRequest := &v1.CdxV1CreateSharedTokenRequest{
+		EnvironmentId:  stringToPtr(c.EnvironmentId()),
 		KafkaClusterId: &cluster,
 		ConsumerRestriction: &v1.CdxV1CreateSharedTokenRequestConsumerRestrictionOneOf{
 			CdxV1Email: &v1.CdxV1Email{
@@ -131,8 +134,12 @@ func (c *sharedTokenCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
-	utils.Printf(cmd, fmt.Sprintf("Generated token: %s", *sharedToken.Token))
+	utils.Println(cmd, fmt.Sprintf("To share topic '%s' with %s, use the following token:", topic, email))
+	utils.Println(cmd, *sharedToken.Token)
 
 	return nil
+}
+
+func stringToPtr(s string) *string {
+	return &s
 }
