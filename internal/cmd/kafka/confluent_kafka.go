@@ -63,6 +63,76 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafk
 	}
 }
 
+func GetOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerification bool) *ckafka.ConfigMap {
+	return &ckafka.ConfigMap{
+		"ssl.endpoint.identification.algorithm": "https",
+		"client.id":                             clientID,
+		"bootstrap.servers":                     bootstrap,
+		"enable.ssl.certificate.verification":   enableSSLVerification,
+		"retry.backoff.ms":                      "250",
+		"request.timeout.ms":                    "10000",
+		// "schema.registry.basic.auth.user.info": "<sr-api-key>:<sr-api-secret>", // TODO
+		// "schema.registry.url":                  "<schema-registry-url>",
+	}
+}
+
+func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning, enableSSLVerification bool) (*ckafka.ConfigMap, error) {
+	configMap := &ckafka.ConfigMap{
+		"ssl.endpoint.identification.algorithm": "https",
+		"client.id":                             clientID,
+		"group.id":                              group,
+		"bootstrap.servers":                     bootstrap,
+		"enable.ssl.certificate.verification":   enableSSLVerification,
+		// "schema.registry.basic.auth.user.info": "<sr-api-key>:<sr-api-secret>", // TODO
+		// "schema.registry.url":                  "<schema-registry-url>",
+	}
+	var autoOffsetReset string
+	if beginning {
+		autoOffsetReset = "earliest"
+	} else {
+		autoOffsetReset = "latest"
+	}
+	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
+func SetSSLConfig(configMap *ckafka.ConfigMap, caLocation, certLocation, keyLocation, keyPassword string) (*ckafka.ConfigMap, error) {
+	if err := configMap.SetKey("security.protocol", "SSL"); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("ssl.certificate.location", certLocation); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("ssl.key.location", keyLocation); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("ssl.key.password", keyPassword); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
+func SetSASLConfig(configMap *ckafka.ConfigMap, username, password string) (*ckafka.ConfigMap, error) {
+	if err := configMap.SetKey("security.protocol", "SASL_SSL"); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("sasl.mechanism", "PLAIN"); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("sasl.username", username); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("sasl.password", password); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
 func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap := getCommonConfig(kafka, clientID)
 	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {

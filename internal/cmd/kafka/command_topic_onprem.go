@@ -2,20 +2,28 @@ package kafka
 
 // confluent kafka topic <commands>
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/signal"
 	"sort"
+	"strings"
+	"time"
 
 	"github.com/antihax/optional"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -127,6 +135,50 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
+
+	produceCmd := &cobra.Command{
+		Use:   "produce <topic>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.onPremProduce),
+		Short: "Produce messages to a Kafka topic.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Produce message to topic `my_topic` with SASL_SSL protocol (providing username and password).",
+				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap \":19091\" --username user --password secret",
+			},
+		),
+	}
+	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, username, password
+	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
+	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	produceCmd.Flags().SortFlags = false
+	c.AddCommand(produceCmd)
+
+	consumeCmd := &cobra.Command{
+		Use:   "consume <topic>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.onPremConsume),
+		Short: "Consume messages from a Kafka topic.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Consume message from topic `my_topic` with SSL protocol and SSL verification enabled.",
+				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap \":19091\" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key",
+			},
+		),
+	}
+	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
+	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
+	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	consumeCmd.Flags().SortFlags = false
+	c.AddCommand(consumeCmd)
 }
 
 //List Kafka topics.
@@ -511,4 +563,387 @@ func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Cont
 	}
 	clusterId := clusters.Data[0].ClusterId
 	return clusterId, nil
+}
+
+// func getClusterForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (kafkarestv3.ClusterData, error) {
+// 	clusters, _, _ := client.ClusterApi.ClustersGet(ctx)
+// 	return clusters.Data[0], nil
+// }
+
+func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+	if err != nil {
+		return err
+	}
+	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	if err != nil {
+		return err
+	}
+	topicName := args[0]
+
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	delim, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	bootstrap, err := cmd.Flags().GetString("bootstrap")
+	if err != nil {
+		return err
+	}
+
+	protocol, err := cmd.Flags().GetString("protocol")
+	if err != nil {
+		return err
+	}
+	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
+	if err != nil {
+		return err
+	}
+
+	configMap := GetOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification)
+	switch protocol {
+	case "SSL":
+		caLocation, err := cmd.Flags().GetString("ca-location")
+		if err != nil {
+			return err
+		}
+		certLocation, err := cmd.Flags().GetString("cert-location")
+		if err != nil {
+			return err
+		}
+		keyLocation, err := cmd.Flags().GetString("key-location")
+		if err != nil {
+			return err
+		}
+		keyPassword, err := cmd.Flags().GetString("key-password")
+		if err != nil {
+			return err
+		}
+		configMap, err = SetSSLConfig(configMap, caLocation, certLocation, keyLocation, keyPassword)
+		if err != nil {
+			return err
+		}
+	case "SASL_SSL":
+		username, err := cmd.Flags().GetString("username")
+		if err != nil {
+			return err
+		}
+		password, err := cmd.Flags().GetString("password")
+		if err != nil {
+			return err
+		}
+		configMap, err = SetSASLConfig(configMap, username, password)
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Println("-------------------------------------")
+	fmt.Println("Configs:", configMap)
+	fmt.Println("-------------------------------------")
+
+	producer, err := ckafka.NewProducer(configMap)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
+	}
+	defer producer.Close()
+	c.logger.Tracef("Create producer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = c.validateTopic(adminClient, topicName, clusterId)
+	if err != nil {
+		return err
+	}
+
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return err
+	}
+
+	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
+
+	// Line reader for producer input.
+	scanner := bufio.NewScanner(os.Stdin)
+	// CCloud Kafka messageMaxBytes:
+	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
+	const maxScanTokenSize = 1024*1024*2 + 12
+	scanner.Buffer(nil, maxScanTokenSize)
+	input := make(chan string, 1)
+	// Avoid blocking in for loop so ^C or ^D can exit immediately.
+	var scanErr error
+	scan := func() {
+		hasNext := scanner.Scan()
+		if !hasNext {
+			// Actual error.
+			if scanner.Err() != nil {
+				scanErr = scanner.Err()
+			}
+			// Otherwise just EOF.
+			close(input)
+		} else {
+			input <- scanner.Text()
+		}
+	}
+
+	// Trap SIGINT to trigger a shutdown.
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() {
+		<-signals
+		close(input)
+	}()
+	// Prime reader
+	go scan()
+
+	deliveryChan := make(chan ckafka.Event)
+	for data := range input {
+		if len(data) == 0 {
+			go scan()
+			continue
+		}
+
+		key, value, err := getMsgKeyAndValueOnPrem([]byte{}, data, delim, parseKey, serializationProvider)
+		if err != nil {
+			return err
+		}
+		offset, _ := ckafka.NewOffset(ckafka.OffsetBeginning)
+		msg := &ckafka.Message{
+			TopicPartition: ckafka.TopicPartition{Topic: &topicName, Partition: ckafka.PartitionAny, Offset: offset},
+			Key:            []byte(key),
+			Value:          []byte(value),
+		}
+		err = producer.Produce(msg, deliveryChan)
+		if err != nil {
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
+		}
+
+		e := <-deliveryChan                // read a ckafka event from the channel
+		m := e.(*ckafka.Message)           // extract the message from the event
+		if m.TopicPartition.Error != nil { // catch all other errors
+			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+		}
+		go scan()
+	}
+	close(deliveryChan)
+	return scanErr
+}
+
+func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+	if err != nil {
+		return err
+	}
+	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	if err != nil {
+		return err
+	}
+	topicName := args[0]
+
+	group, err := cmd.Flags().GetString("group")
+	if err != nil {
+		return err
+	}
+
+	beginning, err := cmd.Flags().GetBool("from-beginning")
+	if err != nil {
+		return err
+	}
+
+	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	bootstrap, err := cmd.Flags().GetString("bootstrap")
+	if err != nil {
+		return err
+	}
+
+	protocol, err := cmd.Flags().GetString("protocol")
+	if err != nil {
+		return err
+	}
+
+	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
+	if err != nil {
+		return err
+	}
+
+	configMap, err := GetOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification)
+	if err != nil {
+		return err
+	}
+	switch protocol {
+	case "SSL":
+		caLocation, err := cmd.Flags().GetString("ca-location")
+		if err != nil {
+			return err
+		}
+		certLocation, err := cmd.Flags().GetString("cert-location")
+		if err != nil {
+			return err
+		}
+		keyLocation, err := cmd.Flags().GetString("key-location")
+		if err != nil {
+			return err
+		}
+		keyPassword, err := cmd.Flags().GetString("key-password")
+		if err != nil {
+			return err
+		}
+		configMap, err = SetSSLConfig(configMap, caLocation, certLocation, keyLocation, keyPassword)
+		if err != nil {
+			return err
+		}
+	case "SASL_SSL":
+		username, err := cmd.Flags().GetString("username")
+		if err != nil {
+			return err
+		}
+		password, err := cmd.Flags().GetString("password")
+		if err != nil {
+			return err
+		}
+		configMap, err = SetSASLConfig(configMap, username, password)
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Println("-------------------------------------")
+	fmt.Println("Configs:", configMap)
+	fmt.Println("-------------------------------------")
+
+	consumer, err := ckafka.NewConsumer(configMap)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+	}
+	c.logger.Tracef("Create consumer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = c.validateTopic(adminClient, topicName, clusterId)
+	if err != nil {
+		return err
+	}
+
+	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+
+	err = consumer.Subscribe(topicName, nil)
+	if err != nil {
+		return err
+	}
+
+	groupHandler := &GroupHandler{
+		SrClient:   nil,
+		Ctx:        nil,
+		Format:     valueFormat,
+		Out:        cmd.OutOrStdout(),
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: ""},
+	}
+
+	// start consuming messages
+	run := true
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for run {
+		select {
+		case <-signals: // Trap SIGINT to trigger a shutdown.
+			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			consumer.Close()
+			run = false
+		default:
+			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
+			if ev == nil {
+				continue
+			}
+			switch e := ev.(type) {
+			case *ckafka.Message:
+				err = ConsumeMessage(e, groupHandler)
+				if err != nil {
+					return err
+				}
+			case ckafka.Error:
+				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckafka.ErrAllBrokersDown {
+					run = false
+				}
+			}
+		}
+	}
+	return err
+}
+
+func getMsgKeyAndValueOnPrem(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
+	var key, valueString string
+	if parseKey {
+		record := strings.SplitN(data, delim, 2)
+		valueString = strings.TrimSpace(record[len(record)-1])
+
+		if len(record) == 2 {
+			key = strings.TrimSpace(record[0])
+		} else {
+			return "", "", errors.New(errors.MissingKeyErrorMsg)
+		}
+	} else {
+		valueString = strings.TrimSpace(data)
+	}
+	encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+	if err != nil {
+		return "", "", err
+	}
+	encoded := append(metaInfo, encodedMessage...)
+	value := string(encoded)
+	return key, value, nil
+}
+
+// validate that a topic exists before attempting to produce/consume messages
+func (c *authenticatedTopicCommand) validateTopic(client *ckafka.AdminClient, topic, clusterId string) error {
+	timeout := 10 * time.Second
+	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
+	if err != nil {
+		return fmt.Errorf("failed to obtain topics from client: %v", err)
+	}
+
+	var foundTopic bool
+	for _, t := range metadata.Topics {
+		c.logger.Tracef("validateTopic: found topic " + t.Topic)
+		if topic == t.Topic {
+			foundTopic = true // no break so that we see all topics from the above printout
+		}
+	}
+	if !foundTopic {
+		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, clusterId, clusterId, clusterId))
+	}
+
+	c.logger.Tracef("validateTopic succeeded")
+	return nil
 }
