@@ -16,6 +16,7 @@ import (
 //go:embed sso_callback.html
 var ssoCallbackHTML string
 
+// Ideally we would randomize this value, but Auth0 requires that we hardcode a single port.
 const port = 26635
 
 /*
