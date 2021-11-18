@@ -311,7 +311,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if !output.IsValidFormatString(format) { // catch format flag
+	} else if !output.IsValidOutputString(format) { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
@@ -397,7 +397,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if !output.IsValidFormatString(format) { // catch format flag
+	} else if !output.IsValidOutputString(format) { // catch format flag
 		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)

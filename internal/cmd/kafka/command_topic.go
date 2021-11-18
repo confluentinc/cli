@@ -445,7 +445,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	if !output.IsValidFormatString(outputOption) {
+	if !output.IsValidOutputString(outputOption) {
 		return output.NewInvalidOutputFormatFlagError(outputOption)
 	}
 
