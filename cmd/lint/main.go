@@ -35,6 +35,7 @@ var (
 		"plaintext", "prem", "producer.config", "protobuf", "rbac", "readwrite", "recv", "role-binding", "role-bindings",
 		"signup", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us",
 		"v2", "vpc", "whitelist", "yaml", "zstd",
+		"ssl", "sasl_ssl",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",
