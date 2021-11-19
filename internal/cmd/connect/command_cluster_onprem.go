@@ -59,7 +59,7 @@ func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
 	}
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), connectClustertype)
 	if err != nil {
-		return print.HandleClusterError(cmd, err, response)
+		return print.HandleClusterError(err, response)
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
