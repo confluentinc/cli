@@ -33,9 +33,8 @@ var (
 		"deserializers", "env", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init",
 		"io", "json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "pem",
 		"plaintext", "prem", "producer.config", "protobuf", "rbac", "readwrite", "recv", "role-binding", "role-bindings",
-		"signup", "single-zone", "sr", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us",
+		"sasl", "signup", "single-zone", "sr", "ssl", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us",
 		"v2", "vpc", "whitelist", "yaml", "zstd",
-		"ssl", "sasl",
 	}
 	utilityCommands = []string{
 		"login", "logout", "version", "completion <shell>", "prompt", "update", "init <context-name>", "shell",

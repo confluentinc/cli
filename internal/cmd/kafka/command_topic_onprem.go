@@ -144,8 +144,8 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Short: "Produce messages to a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Produce message to topic `my_topic` with SASL_SSL protocol (providing Username and Password).",
-				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap \":19091\" --Username user --Password secret",
+				Text: "Produce message to topic `my_topic` with SASL_SSL protocol (providing username and password).",
+				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap \":19091\" --username user --password secret",
 			},
 		),
 	}
@@ -623,11 +623,11 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			return err
 		}
 	case "SASL_SSL":
-		username, err := cmd.Flags().GetString("Username")
+		username, err := cmd.Flags().GetString("username")
 		if err != nil {
 			return err
 		}
-		password, err := cmd.Flags().GetString("Password")
+		password, err := cmd.Flags().GetString("password")
 		if err != nil {
 			return err
 		}
@@ -851,11 +851,11 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 			return err
 		}
 	case "SASL_SSL":
-		username, err := cmd.Flags().GetString("Username")
+		username, err := cmd.Flags().GetString("username")
 		if err != nil {
 			return err
 		}
-		password, err := cmd.Flags().GetString("Password")
+		password, err := cmd.Flags().GetString("password")
 		if err != nil {
 			return err
 		}
