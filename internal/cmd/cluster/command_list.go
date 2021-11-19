@@ -39,11 +39,11 @@ func (c *listCommand) createContext() context.Context {
 func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), &mds.ClusterRegistryListOpts{})
 	if err != nil {
-		return print.HandleClusterError(cmd, err, response)
+		return print.HandleClusterError(err, response)
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
 	}
-	return print.PrintCluster(cmd, clusterInfos, format)
+	return print.PrintCluster(clusterInfos, format)
 }

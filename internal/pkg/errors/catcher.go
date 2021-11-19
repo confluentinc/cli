@@ -2,9 +2,10 @@ package errors
 
 import (
 	"fmt"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"regexp"
 	"strings"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/hashicorp/go-multierror"
 
@@ -90,21 +91,6 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
-/*
-Error: 1 error occurred:
-	* error checking email: User Not Found
-*/
-func CatchEmailNotFoundError(err error, email string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "error checking email: User Not Found") {
-		errorMsg := fmt.Sprintf(InvalidEmailErrorMsg, email)
-		return NewErrorWithSuggestions(errorMsg, InvalidEmailSuggestions)
-	}
-	return err
-}
-
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
@@ -135,17 +121,6 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
-	}
-	return err
-}
-
-func CatchSchemaRegistryNotFoundError(err error, clusterId string) error {
-	if err == nil {
-		return nil
-	}
-	if isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, SRNotFoundSuggestions)
 	}
 	return err
 }

@@ -119,12 +119,11 @@ func buildMockClient() *ccloud.Client {
 }
 
 func getBaseContext() *pcmd.DynamicContext {
-	config := v1.AuthenticatedCloudConfigMock()
-	context := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
+	cfg := v1.AuthenticatedCloudConfigMock()
+	return pcmd.NewDynamicContext(cfg.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
 	}, pmock.NewClientMock())
-	return context
 }
 
 func getClusterFlagContext() *pcmd.DynamicContext {

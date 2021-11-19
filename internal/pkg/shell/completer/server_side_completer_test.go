@@ -76,11 +76,11 @@ func (c *parentCompletableCommand) ServerFlagComplete() map[string]func() []prom
 	}
 }
 
-func prerunLoggedIn(cmd *cobra.Command, arg []string) error {
+func prerunLoggedIn(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func prerunNotLoggedIn(cmd *cobra.Command, arg []string) error {
+func prerunNotLoggedIn(_ *cobra.Command, _ []string) error {
 	return errors.New("Not logged in")
 }
 

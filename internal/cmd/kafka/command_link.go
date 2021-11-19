@@ -166,7 +166,7 @@ func (c *linkCommand) init() {
 	c.AddCommand(updateCmd)
 }
 
-func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 	includeTopics, err := cmd.Flags().GetBool(includeTopicsFlagName)
 	if err != nil {
 		return err

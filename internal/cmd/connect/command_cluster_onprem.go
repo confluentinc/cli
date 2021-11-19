@@ -65,5 +65,5 @@ func (c *clusterCommandOnPrem) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return print.PrintCluster(cmd, clusterInfos, format)
+	return print.PrintCluster(clusterInfos, format)
 }

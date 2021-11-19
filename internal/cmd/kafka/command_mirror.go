@@ -218,7 +218,7 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(resumeCmd)
 }
 
-func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
+func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	linkName, err := cmd.Flags().GetString(linkFlagName)
 	if err != nil {
 		return err

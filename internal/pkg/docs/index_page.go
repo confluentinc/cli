@@ -17,10 +17,8 @@ import (
 // generateIndexPage creates a file called index.rst which contains the command description and links to subcommands.
 // If there are multiple versions of a single command, tabs are used within index.rst.
 func generateIndexPage(tabs []Tab, dir string) error {
-	path := filepath.Join(dir, "index.rst")
 	rows := printIndexPage(tabs)
-
-	return writeFile(path, strings.Join(rows, "\n"))
+	return writeFile(filepath.Join(dir, "index.rst"), strings.Join(rows, "\n"))
 }
 
 func printIndexPage(tabs []Tab) []string {

@@ -73,11 +73,11 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Cli
 		prerunner:                     prerunner,
 		analyticsClient:               analyticsClient,
 	}
-	cmd.init(cfg)
+	cmd.init()
 	return cmd
 }
 
-func (c *command) init(cfg *v1.Config) {
+func (c *command) init() {
 	describeCmd := &cobra.Command{
 		Use:         "describe <id>",
 		Short:       "Describe a connector.",

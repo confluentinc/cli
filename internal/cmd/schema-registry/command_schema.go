@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type schemaCommand struct {
@@ -47,7 +47,7 @@ func (c *schemaCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema:",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", version.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Where schemafilepath may include these contents:",
@@ -86,7 +86,7 @@ func (c *schemaCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
-				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", version.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", pversion.CLIName),
 			},
 		),
 	}
@@ -106,11 +106,11 @@ func (c *schemaCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID:",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337", version.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema describe 1337", pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Describe the schema by both subject and version:",
-				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", version.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", pversion.CLIName),
 			},
 		),
 	}

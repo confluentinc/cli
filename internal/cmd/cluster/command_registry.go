@@ -182,7 +182,7 @@ func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 	}
 
 	// On Success display the newly added/updated entry
-	return print.PrintCluster(cmd, []mds.ClusterInfo{clusterInfo}, output.Human.String())
+	return print.PrintCluster([]mds.ClusterInfo{clusterInfo}, output.Human.String())
 }
 
 func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
