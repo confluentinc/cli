@@ -972,35 +972,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	// start consuming messages
-	run := true
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	for run {
-		select {
-		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumer)
-			consumer.Close()
-			run = false
-		default:
-			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
-			if ev == nil {
-				continue
-			}
-			switch e := ev.(type) {
-			case *ckafka.Message:
-				err = ConsumeMessage(e, groupHandler)
-				if err != nil {
-					return err
-				}
-			case ckafka.Error:
-				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
-				if e.Code() == ckafka.ErrAllBrokersDown {
-					run = false
-				}
-			}
-		}
-	}
-	err = os.RemoveAll(dir)
+	err = RunConsumer(cmd, consumer, groupHandler)
 	return err
 }
 

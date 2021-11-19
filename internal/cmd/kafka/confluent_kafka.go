@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
 )
 
 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -72,8 +76,6 @@ func GetOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerifica
 		"enable.ssl.certificate.verification":   enableSSLVerification,
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
-		// "schema.registry.basic.auth.user.info": "<sr-api-key>:<sr-api-secret>", // TODO
-		// "schema.registry.url":                  "<schema-registry-url>",
 	}
 }
 
@@ -84,14 +86,10 @@ func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning,
 		"group.id":                              group,
 		"bootstrap.servers":                     bootstrap,
 		"enable.ssl.certificate.verification":   enableSSLVerification,
-		// "schema.registry.basic.auth.user.info": "<sr-api-key>:<sr-api-secret>", // TODO
-		// "schema.registry.url":                  "<schema-registry-url>",
 	}
-	var autoOffsetReset string
+	autoOffsetReset := "latest"
 	if beginning {
 		autoOffsetReset = "earliest"
-	} else {
-		autoOffsetReset = "latest"
 	}
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
 		return nil, err
@@ -100,36 +98,30 @@ func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning,
 }
 
 func SetSSLConfig(configMap *ckafka.ConfigMap, caLocation, certLocation, keyLocation, keyPassword string) (*ckafka.ConfigMap, error) {
-	if err := configMap.SetKey("security.protocol", "SSL"); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("ssl.certificate.location", certLocation); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("ssl.key.location", keyLocation); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("ssl.key.password", keyPassword); err != nil {
-		return nil, err
+	sslMap := make(map[string]string)
+	sslMap["security.protocol"] = "SSL"
+	sslMap["ssl.ca.location"] = caLocation
+	sslMap["ssl.certificate.location"] = certLocation
+	sslMap["ssl.key.location"] = keyLocation
+	sslMap["ssl.key.password"] = keyPassword
+	for key, value := range sslMap {
+		if err := configMap.SetKey(key, value); err != nil {
+			return nil, err
+		}
 	}
 	return configMap, nil
 }
 
 func SetSASLConfig(configMap *ckafka.ConfigMap, username, password string) (*ckafka.ConfigMap, error) {
-	if err := configMap.SetKey("security.protocol", "SASL_SSL"); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("sasl.mechanism", "PLAIN"); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("sasl.username", username); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("sasl.password", password); err != nil {
-		return nil, err
+	saslMap := make(map[string]string)
+	saslMap["security.protocol"] = "SASL_SSL"
+	saslMap["sasl.mechanism"] = "PLAIN"
+	saslMap["sasl.username"] = username
+	saslMap["sasl.password"] = password
+	for key, value := range saslMap {
+		if err := configMap.SetKey(key, value); err != nil {
+			return nil, err
+		}
 	}
 	return configMap, nil
 }
@@ -150,11 +142,9 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	if err := configMap.SetKey("group.id", group); err != nil {
 		return nil, err
 	}
-	var autoOffsetReset string
+	autoOffsetReset := "latest"
 	if beginning {
 		autoOffsetReset = "earliest"
-	} else {
-		autoOffsetReset = "latest"
 	}
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
 		return nil, err
@@ -183,8 +173,39 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 			return "", err
 		}
 	}
-	fmt.Println(tempStorePath)
 	return tempStorePath, nil
+}
+
+func RunConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+	run := true
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for run {
+		select {
+		case <-signals: // Trap SIGINT to trigger a shutdown.
+			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			consumer.Close()
+			run = false
+		default:
+			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
+			if ev == nil {
+				continue
+			}
+			switch e := ev.(type) {
+			case *ckafka.Message:
+				err := ConsumeMessage(e, groupHandler)
+				if err != nil {
+					return err
+				}
+			case ckafka.Error:
+				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckafka.ErrAllBrokersDown {
+					run = false
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
@@ -209,14 +230,12 @@ func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if h.Format != "string" {
-		var schemaPath string
+		schemaPath := h.Properties.SchemaPath
 		if h.Properties.RequestSchema {
 			schemaPath, err = h.RequestSchema(value)
 			if err != nil {
 				return err
 			}
-		} else { // load from local copy of schema
-			schemaPath = h.Properties.SchemaPath
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]

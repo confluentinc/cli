@@ -149,11 +149,11 @@ func (c *authenticatedTopicCommand) onPremInit() {
 			},
 		),
 	}
-	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
-	produceCmd.Flags().String("schema", "", "The path to the schema file.")
-	produceCmd.Flags().Int32("schemaId", 0, "Schema ID to be used for producing messages.")
+	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
+	produceCmd.Flags().Int32("schema-id", 0, "Schema ID to be used for producing messages.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -167,15 +167,15 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Short: "Consume messages from a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Consume message from topic `my_topic` with SSL protocol and SSL verification enabled.",
-				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap \":19091\" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key",
+				Text: "Consume message from topic `my_topic` with SSL protocol and SSL verification enabled (providing certificate and private key).",
+				Code: "confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap \":19091\" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key",
 			},
 		),
 	}
-	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
-	consumeCmd.Flags().String("schema", "", "The path to the schema file.")
+	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	consumeCmd.Flags().String("schema", "", "The path to the local schema file.")
 	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -569,11 +569,6 @@ func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Cont
 	return clusterId, nil
 }
 
-// func getClusterForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (kafkarestv3.ClusterData, error) {
-// 	clusters, _, _ := client.ClusterApi.ClustersGet(ctx)
-// 	return clusters.Data[0], nil
-// }
-
 func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
@@ -675,7 +670,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaId, err := cmd.Flags().GetInt32("schemaId")
+	schemaId, err := cmd.Flags().GetInt32("schema-id")
 	if err != nil {
 		return err
 	}
@@ -890,42 +885,13 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}
 
 	groupHandler := &GroupHandler{
-		SrClient:   nil,
-		Ctx:        nil,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: schemaPath, RequestSchema: false},
 	}
 
 	// start consuming messages
-	run := true
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	for run {
-		select {
-		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumer)
-			consumer.Close()
-			run = false
-		default:
-			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
-			if ev == nil {
-				continue
-			}
-			switch e := ev.(type) {
-			case *ckafka.Message:
-				err = ConsumeMessage(e, groupHandler)
-				if err != nil {
-					return err
-				}
-			case ckafka.Error:
-				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
-				if e.Code() == ckafka.ErrAllBrokersDown {
-					run = false
-				}
-			}
-		}
-	}
+	err = RunConsumer(cmd, consumer, groupHandler)
 	return err
 }
 
@@ -953,9 +919,9 @@ func getMsgKeyAndValueOnPrem(metaInfo []byte, data, delim string, parseKey bool,
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *authenticatedTopicCommand) validateTopic(client *ckafka.AdminClient, topic, clusterId string) error {
+func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic, clusterId string) error {
 	timeout := 10 * time.Second
-	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
+	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
 		return fmt.Errorf("failed to obtain topics from client: %v", err)
 	}
