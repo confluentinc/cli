@@ -4,6 +4,7 @@ package kafka
 import (
 	"bufio"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -143,14 +144,16 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Short: "Produce messages to a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Produce message to topic `my_topic` with SASL_SSL protocol (providing username and password).",
-				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap \":19091\" --username user --password secret",
+				Text: "Produce message to topic `my_topic` with SASL_SSL protocol (providing Username and Password).",
+				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap \":19091\" --Username user --Password secret",
 			},
 		),
 	}
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, username, password
+	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	produceCmd.Flags().String("schema", "", "The path to the schema file.")
+	produceCmd.Flags().Int32("schemaId", 0, "Schema ID to be used for producing messages.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -172,6 +175,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
+	consumeCmd.Flags().String("schema", "", "The path to the schema file.")
 	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -581,21 +585,6 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	}
 	topicName := args[0]
 
-	parseKey, err := cmd.Flags().GetBool("parse-key")
-	if err != nil {
-		return err
-	}
-
-	delim, err := cmd.Flags().GetString("delimiter")
-	if err != nil {
-		return err
-	}
-
-	valueFormat, err := cmd.Flags().GetString("value-format")
-	if err != nil {
-		return err
-	}
-
 	bootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
 		return err
@@ -634,11 +623,11 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			return err
 		}
 	case "SASL_SSL":
-		username, err := cmd.Flags().GetString("username")
+		username, err := cmd.Flags().GetString("Username")
 		if err != nil {
 			return err
 		}
-		password, err := cmd.Flags().GetString("password")
+		password, err := cmd.Flags().GetString("Password")
 		if err != nil {
 			return err
 		}
@@ -647,9 +636,6 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			return err
 		}
 	}
-	fmt.Println("-------------------------------------")
-	fmt.Println("Configs:", configMap)
-	fmt.Println("-------------------------------------")
 
 	producer, err := ckafka.NewProducer(configMap)
 	if err != nil {
@@ -669,10 +655,44 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	delim, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
+
+	schemaId, err := cmd.Flags().GetInt32("schemaId")
+	if err != nil {
+		return err
+	}
+
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
 	}
+	err = serializationProvider.LoadSchema(schemaPath)
+	if err != nil {
+		return err
+	}
+	// Meta info contains magic byte and schema ID (4 bytes).
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
+	metaInfo = append(metaInfo, schemaIdBuffer...)
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
@@ -716,13 +736,13 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			continue
 		}
 
-		key, value, err := getMsgKeyAndValueOnPrem([]byte{}, data, delim, parseKey, serializationProvider)
+		key, value, err := getMsgKeyAndValueOnPrem(metaInfo, data, delim, parseKey, serializationProvider)
 		if err != nil {
 			return err
 		}
-		offset, _ := ckafka.NewOffset(ckafka.OffsetBeginning)
+
 		msg := &ckafka.Message{
-			TopicPartition: ckafka.TopicPartition{Topic: &topicName, Partition: ckafka.PartitionAny, Offset: offset},
+			TopicPartition: ckafka.TopicPartition{Topic: &topicName, Partition: ckafka.PartitionAny},
 			Key:            []byte(key),
 			Value:          []byte(value),
 		}
@@ -734,6 +754,12 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
+			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
+			if isProduceToCompactedTopicError {
+				scanErr = err
+				close(input)
+				break
+			}
 			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
@@ -774,6 +800,11 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}
 
 	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -820,11 +851,11 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 			return err
 		}
 	case "SASL_SSL":
-		username, err := cmd.Flags().GetString("username")
+		username, err := cmd.Flags().GetString("Username")
 		if err != nil {
 			return err
 		}
-		password, err := cmd.Flags().GetString("password")
+		password, err := cmd.Flags().GetString("Password")
 		if err != nil {
 			return err
 		}
@@ -833,9 +864,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 			return err
 		}
 	}
-	fmt.Println("-------------------------------------")
-	fmt.Println("Configs:", configMap)
-	fmt.Println("-------------------------------------")
 
 	consumer, err := ckafka.NewConsumer(configMap)
 	if err != nil {
@@ -866,7 +894,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		Ctx:        nil,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: ""},
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: schemaPath, RequestSchema: false},
 	}
 
 	// start consuming messages

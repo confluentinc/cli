@@ -20,9 +20,10 @@ import (
 const messageOffset = 5
 
 type ConsumerProperties struct {
-	PrintKey   bool
-	Delimiter  string
-	SchemaPath string
+	PrintKey      bool
+	Delimiter     string
+	SchemaPath    string
+	RequestSchema bool
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -182,6 +183,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
 			return "", err
 		}
 	}
+	fmt.Println(tempStorePath)
 	return tempStorePath, nil
 }
 
@@ -207,9 +209,14 @@ func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if h.Format != "string" {
-		schemaPath, err := h.RequestSchema(value)
-		if err != nil {
-			return err
+		var schemaPath string
+		if h.Properties.RequestSchema {
+			schemaPath, err = h.RequestSchema(value)
+			if err != nil {
+				return err
+			}
+		} else { // load from local copy of schema
+			schemaPath = h.Properties.SchemaPath
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]
