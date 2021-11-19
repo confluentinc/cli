@@ -51,7 +51,6 @@ func NewDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	c.RunE = pcmd.NewCLIRunE(c.describe)
 	c.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	c.Flags().SortFlags = false
 	return c.Command
 }
 

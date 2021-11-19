@@ -111,8 +111,6 @@ func (c *command) newListCommand() *cobra.Command {
 	command.Flags().Bool("legacy", false, "Show legacy cluster types.")
 	command.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 
-	command.Flags().SortFlags = false
-
 	return command
 }
 

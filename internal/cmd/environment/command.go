@@ -51,7 +51,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	useCmd := &cobra.Command{
@@ -69,7 +68,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
@@ -80,7 +78,6 @@ func (c *command) init() {
 	}
 	updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
 	check(updateCmd.MarkFlagRequired("name"))
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{

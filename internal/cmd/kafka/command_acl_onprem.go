@@ -30,7 +30,6 @@ func (c *aclCommand) onPremInit() {
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	createCmd.Flags().AddFlagSet(aclutil.CreateACLFlags())
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd = &cobra.Command{
@@ -47,7 +46,6 @@ func (c *aclCommand) onPremInit() {
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	deleteCmd.Flags().AddFlagSet(aclutil.DeleteACLFlags())
 	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	deleteCmd.Flags().SortFlags = false
 	c.AddCommand(deleteCmd)
 
 	listCmd = &cobra.Command{

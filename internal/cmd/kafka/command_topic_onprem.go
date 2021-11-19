@@ -53,7 +53,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -76,7 +75,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	createCmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
@@ -91,7 +89,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 			}),
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	deleteCmd.Flags().SortFlags = false
 	c.AddCommand(deleteCmd)
 
 	updateCmd := &cobra.Command{
@@ -108,7 +105,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	describeCmd := &cobra.Command{
@@ -125,7 +121,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	}
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
 

@@ -61,7 +61,6 @@ func (c *eventCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
 

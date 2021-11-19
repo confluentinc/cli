@@ -46,7 +46,6 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 	}
 
 	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
-	c.Flags().SortFlags = false
 
 	c.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
 

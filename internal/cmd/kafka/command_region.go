@@ -44,7 +44,6 @@ func (c *regionCommand) init() {
 	}
 	listCmd.Flags().String("cloud", "", "The cloud ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 }
 

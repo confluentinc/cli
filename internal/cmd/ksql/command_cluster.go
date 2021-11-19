@@ -105,7 +105,6 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -122,7 +121,6 @@ func (c *clusterCommand) init() {
 	_ = createCmd.MarkFlagRequired("api-secret")
 	createCmd.Flags().String("image", "", "Image to run (internal).")
 	_ = createCmd.Flags().MarkHidden("image")
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
@@ -132,7 +130,6 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	deleteCmd := &cobra.Command{
@@ -150,7 +147,6 @@ func (c *clusterCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.configureACLs),
 	}
 	aclsCmd.Flags().BoolVar(&aclsDryRun, "dry-run", false, "If specified, print the ACLs that will be set and exit.")
-	aclsCmd.Flags().SortFlags = false
 	c.AddCommand(aclsCmd)
 
 	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, aclsCmd}

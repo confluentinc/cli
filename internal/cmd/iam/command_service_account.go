@@ -77,7 +77,6 @@ func (c *serviceAccountCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -95,7 +94,6 @@ func (c *serviceAccountCommand) init() {
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
@@ -112,7 +110,6 @@ func (c *serviceAccountCommand) init() {
 	}
 	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{

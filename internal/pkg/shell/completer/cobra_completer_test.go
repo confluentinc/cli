@@ -122,7 +122,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Flags().String("flag", "default", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -142,7 +141,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Commands()[0].Flags().String("flag", "", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -162,7 +160,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Flags().StringP("flag", "f", "", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -182,7 +179,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Commands()[1].Flags().StringP("flag", "f", "", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -202,7 +198,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Commands()[1].Commands()[0].Flags().StringP("flag", "f", "", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -222,7 +217,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Commands()[1].Flags().StringP("flag", "f", "", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -242,7 +236,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 				RootCmd: func() *cobra.Command {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Commands()[1].Flags().StringP("flag", "f", "", "Just a flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -281,7 +274,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 					cmd := createNestedCommands(2, 1) // No hidden param.
 					cmd.PersistentFlags().StringP("one", "o", "", "Just a flag")
 					cmd.PersistentFlags().StringP("two", "t", "", "Just another flag")
-					cmd.Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -299,7 +291,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 					cmd := createNestedCommands(2, 2) // No hidden param.
 					cmd.Commands()[0].Flags().StringP("one", "o", "", "Just a flag")
 					cmd.Commands()[0].Flags().StringP("two", "t", "", "Just another flag")
-					cmd.Commands()[0].Flags().SortFlags = false
 					return cmd
 				}(),
 			},
@@ -320,7 +311,6 @@ func TestCobraCompleter_Complete(t *testing.T) {
 					cmd := createNestedCommands(2, 1) // No hidden param.
 					cmd.Commands()[0].Flags().StringP("one", "o", "", "Just a flag")
 					cmd.Commands()[0].Flags().StringP("two", "t", "", "Just another flag")
-					cmd.Commands()[0].Flags().SortFlags = false
 					return cmd
 				}(),
 			},

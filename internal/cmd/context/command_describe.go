@@ -23,7 +23,6 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	cmd.Flags().Bool("api-key", false, "Get the API key for a context.")
 	cmd.Flags().Bool("username", false, "Get the username for a context.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	return cmd
 }

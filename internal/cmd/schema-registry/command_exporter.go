@@ -73,7 +73,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -95,7 +94,6 @@ func (c *exporterCommand) init() {
 	cmd.Flags().String("config-file", "", "Exporter config file.")
 
 	_ = cmd.MarkFlagRequired("config-file")
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -120,7 +118,6 @@ func (c *exporterCommand) init() {
 	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "The context name of the exporter.")
 	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -136,7 +133,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -152,7 +148,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "json", output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -168,7 +163,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -184,7 +178,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -200,7 +193,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -216,7 +208,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -232,7 +223,6 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
 

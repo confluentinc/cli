@@ -88,7 +88,6 @@ func (c *command) init() {
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().String("service-account", "", "The service account ID to filter by.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -108,7 +107,6 @@ func (c *command) init() {
 	createCmd.Flags().String("service-account", "", "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	if err := createCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
 	}
@@ -121,7 +119,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.update),
 	}
 	updateCmd.Flags().String("description", "", "Description of the API key.")
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -163,7 +160,6 @@ func (c *command) init() {
 	}
 	storeCmd.Flags().String(resourceFlagName, "", "The resource ID of the resource the API key is for.")
 	storeCmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
-	storeCmd.Flags().SortFlags = false
 	c.AddCommand(storeCmd)
 
 	useCmd := &cobra.Command{
@@ -174,7 +170,6 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.use),
 	}
 	useCmd.Flags().String(resourceFlagName, "", "The resource ID.")
-	useCmd.Flags().SortFlags = false
 	if err := useCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
 	}

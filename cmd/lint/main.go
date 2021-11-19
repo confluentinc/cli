@@ -108,11 +108,6 @@ var rules = []linter.Rule{
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
-	linter.Filter(
-		linter.RequireFlagSort(false),
-		linter.OnlyLeafCommands,
-		linter.ExcludeCommandContains("local"),
-	),
 	linter.RequireLowerCase("Use"),
 	linter.Filter(
 		linter.RequireSingular("Use"),
