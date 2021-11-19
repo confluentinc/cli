@@ -43,7 +43,6 @@ func (c *routeCommand) init() {
 	}
 	listCmd.Flags().StringP("resource", "r", "", "The Confluent resource name (CRN) that is the subject of the query.")
 	check(listCmd.MarkFlagRequired("resource"))
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	lookupCmd := &cobra.Command{

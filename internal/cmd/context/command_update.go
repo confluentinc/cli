@@ -21,7 +21,6 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Set the name of the context.")
 	cmd.Flags().String("kafka-cluster", "", "Set the active Kafka cluster for the context.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	return cmd
 }

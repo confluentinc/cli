@@ -81,7 +81,6 @@ func (c *roleCommand) init() {
 		RunE:  cmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -91,7 +90,6 @@ func (c *roleCommand) init() {
 		RunE:  cmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
 

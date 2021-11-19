@@ -59,7 +59,6 @@ func (c *pluginCommand) init() {
 		),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	listCmd := &cobra.Command{
@@ -75,7 +74,6 @@ func (c *pluginCommand) init() {
 		),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 	c.completableChildren = []*cobra.Command{describeCmd}
 }

@@ -175,7 +175,6 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
 	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
-	command.Flags().SortFlags = false
 	s.AuthenticatedCLICommand.AddCommand(command)
 }
 
@@ -187,7 +186,6 @@ func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
 	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
 	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
-	command.Flags().SortFlags = false
 	s.Command.AddCommand(command)
 }
 

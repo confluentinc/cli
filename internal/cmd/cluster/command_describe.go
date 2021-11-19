@@ -85,7 +85,6 @@ func NewDescribeCommand(prerunner pcmd.PreRunner, client Metadata) *cobra.Comman
 	describeCmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	describeCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	describeCmd.RunE = pcmd.NewCLIRunE(describeCmd.describe)
 
 	return describeCmd.Command

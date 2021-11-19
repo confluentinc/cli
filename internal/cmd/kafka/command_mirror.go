@@ -99,7 +99,6 @@ func (c *mirrorCommand) init() {
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
 	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -117,7 +116,6 @@ func (c *mirrorCommand) init() {
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
 	check(describeCmd.MarkFlagRequired(linkFlagName))
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	createCmd := &cobra.Command{
@@ -142,7 +140,6 @@ func (c *mirrorCommand) init() {
 	createCmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
 	createCmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. "+
 		"Each property should be on its own line with the format: key=value.")
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	promoteCmd := &cobra.Command{

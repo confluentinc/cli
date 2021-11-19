@@ -56,7 +56,6 @@ func (c *configCommand) init() {
 	}
 	updateCmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
 	updateCmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	editCmd := &cobra.Command{

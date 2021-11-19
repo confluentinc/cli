@@ -49,7 +49,6 @@ func (c *secureFileCommand) init() {
 	encryptCmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	check(encryptCmd.MarkFlagRequired("remote-secrets-file"))
 	encryptCmd.Flags().String("config", "", "List of configuration keys.")
-	encryptCmd.Flags().SortFlags = false
 	c.AddCommand(encryptCmd)
 
 	decryptCmd := &cobra.Command{
@@ -69,7 +68,6 @@ func (c *secureFileCommand) init() {
 	check(decryptCmd.MarkFlagRequired("output-file"))
 
 	decryptCmd.Flags().String("config", "", "List of configuration keys.")
-	decryptCmd.Flags().SortFlags = false
 	c.AddCommand(decryptCmd)
 
 	addCmd := &cobra.Command{
@@ -90,7 +88,6 @@ func (c *secureFileCommand) init() {
 
 	addCmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 	check(addCmd.MarkFlagRequired("config"))
-	addCmd.Flags().SortFlags = false
 	c.AddCommand(addCmd)
 
 	updateCmd := &cobra.Command{
@@ -111,7 +108,6 @@ func (c *secureFileCommand) init() {
 
 	updateCmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 	check(updateCmd.MarkFlagRequired("config"))
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	removeCmd := &cobra.Command{
@@ -128,7 +124,6 @@ func (c *secureFileCommand) init() {
 
 	removeCmd.Flags().String("config", "", "List of configuration keys.")
 	check(removeCmd.MarkFlagRequired("config"))
-	removeCmd.Flags().SortFlags = false
 	c.AddCommand(removeCmd)
 
 	rotateKeyCmd := &cobra.Command{
@@ -145,7 +140,6 @@ func (c *secureFileCommand) init() {
 	check(rotateKeyCmd.MarkFlagRequired("local-secrets-file"))
 	rotateKeyCmd.Flags().String("passphrase", "", `Master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 	rotateKeyCmd.Flags().String("passphrase-new", "", `New master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
-	rotateKeyCmd.Flags().SortFlags = false
 	c.AddCommand(rotateKeyCmd)
 }
 

@@ -51,7 +51,6 @@ func NewRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	check(registerCmd.MarkFlagRequired("hosts"))
 	registerCmd.Flags().String("protocol", "", "Security protocol.")
 	check(registerCmd.MarkFlagRequired("protocol"))
-	registerCmd.Flags().SortFlags = false
 	registerCmd.RunE = pcmd.NewCLIRunE(registerCmd.register)
 	return registerCmd.Command
 }
@@ -70,7 +69,6 @@ func NewUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	unregisterCmd.Flags().String("cluster-name", "", "Cluster Name.")
 	check(unregisterCmd.MarkFlagRequired("cluster-name"))
 	unregisterCmd.RunE = pcmd.NewCLIRunE(unregisterCmd.unregister)
-	unregisterCmd.Flags().SortFlags = false
 	return unregisterCmd.Command
 }
 

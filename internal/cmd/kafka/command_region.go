@@ -69,7 +69,6 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().String("cloud", "", "The cloud ID to filter by.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	return cmd
 }

@@ -52,7 +52,6 @@ func (c *subjectCommand) init() {
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	listCmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	listCmd.Flags().String("prefix", ":*:", "Subject prefix.")
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	updateCmd := &cobra.Command{
@@ -69,7 +68,6 @@ func (c *subjectCommand) init() {
 	}
 	updateCmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
 	updateCmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	describeCmd := &cobra.Command{
@@ -86,7 +84,6 @@ func (c *subjectCommand) init() {
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 }
 
