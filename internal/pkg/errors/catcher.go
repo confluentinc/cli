@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
