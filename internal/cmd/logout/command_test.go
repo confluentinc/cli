@@ -74,17 +74,17 @@ var (
 	}
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromArgs(cmd)
+			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetLoginOrganizationFromArgs(cmd)
 		},
 		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromEnvVar(cmd)
+			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetLoginOrganizationFromEnvVar(cmd)
 		},
 		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImp(log.New()).GetDefaultLoginOrganization()
+			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetDefaultLoginOrganization()
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
+		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool, _ string) (s string, s2 string, e error) {
 			return testToken, "refreshToken", nil
 		},
 		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
@@ -188,7 +188,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := login.New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, true)
+	loginCmd := login.New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 

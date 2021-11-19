@@ -20,7 +20,7 @@ const (
 
 	ConfluentCloudEmail                = "CONFLUENT_CLOUD_EMAIL"
 	ConfluentCloudPassword             = "CONFLUENT_CLOUD_PASSWORD"
-	ConfluentCloudOrganizationIdEnvVar = "CONFLUENT_CLOUD_ORGANIZATION_ID"
+	ConfluentCloudOrganizationId	   = "CONFLUENT_CLOUD_ORGANIZATION_ID"
 	ConfluentPlatformUsername          = "CONFLUENT_PLATFORM_USERNAME"
 	ConfluentPlatformPassword          = "CONFLUENT_PLATFORM_PASSWORD"
 	ConfluentPlatformMDSURL            = "CONFLUENT_PLATFORM_MDS_URL"

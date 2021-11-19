@@ -43,14 +43,15 @@ import (
 const (
 	envUser        = "env-user"
 	envPassword    = "env-password"
-	testToken      = "org-1-y0ur.jwt.T0kEn"
+	testToken1      = "org-1-y0ur.jwt.T0kEn"
 	testToken2     = "org-2-y0ur.jwt.T0kEn"
 	promptUser     = "prompt-user@confluent.io"
 	promptPassword = " prompt-password "
 	netrcFile      = "netrc-file"
 	ccloudURL      = "https://confluent.cloud"
-	orgId          = "o-001"
+	org1Id         = "o-001"
 	org2Id         = "o-002"
+	refreshToken   = "refreshToken"
 )
 
 var (
@@ -66,14 +67,14 @@ var (
 					Email:     "",
 					FirstName: "",
 				},
-				Organization: &orgv1.Organization{ResourceId: orgId},
+				Organization: &orgv1.Organization{ResourceId: org1Id},
 				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
 	mockUser                    = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -109,27 +110,27 @@ var (
 	}
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromArgs(cmd)
+			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetLoginOrganizationFromArgs(cmd)
 		},
 		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImp(log.New()).GetLoginOrganizationFromEnvVar(cmd)
+			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetLoginOrganizationFromEnvVar(cmd)
 		},
 		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImp(log.New()).GetDefaultLoginOrganization()
+			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetDefaultLoginOrganization()
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
-			if orgResourceId == "" || orgResourceId == orgId {
-				return testToken, "refreshToken", nil
+			if orgResourceId == "" || orgResourceId == org1Id {
+				return testToken1, refreshToken, nil
 			} else if orgResourceId == org2Id {
-				return testToken2, "refreshToken", nil
+				return testToken2, refreshToken, nil
 			} else {
 				return "", "", &corev1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
 		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
-			return testToken, nil
+			return testToken1, nil
 		},
 	}
 	mockNetrcHandler = &pmock.MockNetrcHandler{
@@ -150,7 +151,7 @@ func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken, nil
+			return testToken1, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			return &flowv1.GetMeReply{
@@ -159,7 +160,7 @@ func TestCredentialsOverride(t *testing.T) {
 					Email:     envUser,
 					FirstName: "Cody",
 				},
-				Organization: &orgv1.Organization{ResourceId: orgId},
+				Organization: &orgv1.Organization{ResourceId: org1Id},
 				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
@@ -194,7 +195,7 @@ func TestCredentialsOverride(t *testing.T) {
 	req.NotNil(ctx)
 	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
 
-	req.Equal(testToken, ctx.State.AuthToken)
+	req.Equal(testToken1, ctx.State.AuthToken)
 	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
 }
 
@@ -262,14 +263,14 @@ func TestLoginSuccess(t *testing.T) {
 	org2 := false
 	auth := &sdkMock.Auth{
 		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken, nil
+			return testToken1, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			var org string
 			if org2 {
 				org = org2Id
 			} else {
-				org = orgId
+				org = org1Id
 			}
 			return &flowv1.GetMeReply{
 				User: &orgv1.User{
@@ -299,7 +300,7 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			isCloud: true,
-			orgId:   orgId,
+			orgId:   org1Id,
 		},
 		{
 			isCloud: true,
@@ -324,7 +325,7 @@ func TestLoginSuccess(t *testing.T) {
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		if s.isCloud && s.orgId == "" {
-			s.orgId = orgId // orgId treated as default org
+			s.orgId = org1Id // org1Id treated as default org
 		}
 		verifyLoggedInState(t, cfg, s.isCloud, s.orgId)
 		if s.setEnv {
@@ -487,12 +488,12 @@ func TestPromptLoginFlag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
 					}
 				},
-				GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
@@ -707,7 +708,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			}
 			req.True(found, "Certificate not found in client.")
 			return mds.AuthenticationResponse{
-				AuthToken: testToken,
+				AuthToken: testToken1,
 				TokenType: "JWT",
 				ExpiresIn: 100,
 			}, nil, nil
@@ -724,7 +725,8 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(prerunner, log.New(), nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginCredentialsManager, mockLoginOrganizationManager, mockAuthTokenHandler, true)
+	loginCmd := New(prerunner, log.New(), nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
+	loginCmd.loginOrganizationManager = mockLoginOrganizationManager
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return loginCmd
@@ -734,7 +736,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
 		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken, nil
+			return testToken1, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			return &flowv1.GetMeReply{
@@ -743,7 +745,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Organization: &orgv1.Organization{ResourceId: orgId},
+				Organization: &orgv1.Organization{ResourceId: org1Id},
 				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
@@ -787,7 +789,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		verifyLoggedInState(t, cfg, s.isCloud, orgId)
+		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
 
 		// Set kafka related states for the logged in context
 		ctx := cfg.Context()
@@ -805,7 +807,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		verifyLoggedInState(t, cfg, s.isCloud, orgId)
+		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
 
 		// verify that kafka cluster info persists between logging back in again
 		req.Equal(kafkaCluster.ID, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
@@ -887,7 +889,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
 			GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
 				return mds.AuthenticationResponse{
-					AuthToken: testToken,
+					AuthToken: testToken1,
 					TokenType: "JWT",
 					ExpiresIn: 100,
 				}, nil, nil
@@ -909,7 +911,8 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, true)
+	loginCmd := New(prerunner, log.New(), ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd.loginOrganizationManager = loginOrganizationManager
 	return loginCmd, cfg
 }
 
@@ -922,8 +925,8 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	if orgResourceId == orgId || orgResourceId == "" {
-		req.Equal(testToken, ctx.State.AuthToken)
+	if orgResourceId == org1Id || orgResourceId == "" {
+		req.Equal(testToken1, ctx.State.AuthToken)
 	} else if orgResourceId == org2Id {
 		req.Equal(testToken2, ctx.State.AuthToken)
 	}

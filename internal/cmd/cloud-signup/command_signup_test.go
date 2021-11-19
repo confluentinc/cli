@@ -175,7 +175,7 @@ func newCmd(conf *v1.Config) *command {
 	client := mockCcloudClient()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
 	auth := &ccloudmock.Auth{
-		LoginFunc: func(ctx context.Context, idToken, username, password, orgResourceId string) (string, error) {
+		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
 			return testToken, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
@@ -211,7 +211,7 @@ func mockCcloudClient() *ccloud.Client {
 			},
 		},
 		Auth: &ccloudmock.Auth{
-			LoginFunc: func(ctx context.Context, _, _, _, _ string) (string, error) {
+			LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
 				return "", nil
 			},
 		},

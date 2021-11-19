@@ -4,7 +4,7 @@ package auth
 import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -21,20 +21,22 @@ type LoginOrganizationManagerImpl struct {
 
 func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error) {
 	var orgResourceId string
-	var err error
+	var multiErr, err error
 	for _, getFunc := range getOrgFuncs {
 		orgResourceId, err = getFunc()
 		if err == nil && orgResourceId != "" {
 			return orgResourceId, nil
+		} else if err != nil {
+			multiErr = multierror.Append(multiErr, err)
 		}
 	}
-	if err != nil {
-		return "", err
+	if multiErr != nil {
+		return "", multiErr
 	}
 	return orgResourceId, nil
 }
 
-func NewLoginOrganizationManagerImp(logger *log.Logger) *LoginOrganizationManagerImpl {
+func NewLoginOrganizationManagerImpl(logger *log.Logger) *LoginOrganizationManagerImpl {
 	return &LoginOrganizationManagerImpl{logger: logger}
 }
 
@@ -46,9 +48,9 @@ func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromArgs(cmd *cobra.C
 
 func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvVar(cmd *cobra.Command) func() (string, error) {
 	return func() (string, error) {
-		orgResourceId := os.Getenv(ConfluentCloudOrganizationIdEnvVar)
-		if h.logger.GetLevel() >= log.WARN && orgResourceId != "" {
-			utils.ErrPrintf(cmd, errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationIdEnvVar)
+		orgResourceId := os.Getenv(ConfluentCloudOrganizationId)
+		if orgResourceId != "" {
+			h.logger.Warn(errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationId)
 		}
 		return orgResourceId, nil
 	}

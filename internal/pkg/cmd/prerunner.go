@@ -365,8 +365,8 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 		r.Logger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, "https://devel.cpdev.cloud")
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, "https://devel.cpdev.cloud", token, client, orgResourceId)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client, orgResourceId)
 	if err != nil {
 		return err
 	}
