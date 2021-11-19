@@ -46,7 +46,7 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string, logger *l
 		server := newServer(state)
 		err = server.startServer()
 		if err != nil {
-			return "", "", err
+			return "", "", errors.Wrap(err, errors.StartHTTPServerErrorMsg)
 		}
 
 		// Get authorization code for making subsequent token request

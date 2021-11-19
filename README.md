@@ -21,6 +21,7 @@ The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform de
   - [File Layout](#file-layout)
   - [Build Other Platforms](#build-other-platforms)
   - [URLS](#urls)
+  - [Security](#security)
 - [Installer](#installer)
 - [Documentation](#documentation)
   - [README](#readme)
@@ -189,6 +190,16 @@ Cross compilation from M1 Macbook (Darwin/arm64) to other platforms is also supp
 
 ### URLS
 Use the `login` command with the `--url` option to point to a different development environment
+
+### Security
+We use precommit hooks and Gitleaks to prevent potential secrets from being committed to this repo. 
+Please enable precommit hooks:
+
+* follow this [link](https://confluentinc.atlassian.net/wiki/spaces/trustsecurity/pages/2564260728/Pre-commit+Secret+Detection+Hooks#Pre-commitSecretDetectionHooks-InstallPre-commitcommand) 
+  to install precommit tool locally.  
+* go to the working directory of this repo
+* Run `pre-commit install`
+
 
 ## Installer
 

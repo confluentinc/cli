@@ -103,6 +103,7 @@ var rules = []linter.Rule{
 		// skip cluster linking commands
 		linter.ExcludeCommandContains("kafka link"),
 		linter.ExcludeCommandContains("kafka mirror"),
+		linter.ExcludeCommandContains("completion"),
 	),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),

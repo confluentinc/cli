@@ -43,9 +43,6 @@ const (
 	MustSpecifyOneClusterIDErrorMsg  = "must specify at least one cluster ID"
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
-	// completion command
-	UnsupportedShellErrorMsg = "unsupported shell type \"%s\""
-
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
 	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
