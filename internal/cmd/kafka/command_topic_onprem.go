@@ -593,14 +593,14 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
+	caLocation, err := cmd.Flags().GetString("ca-location")
+	if err != nil {
+		return err
+	}
 
-	configMap := GetOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification)
+	configMap := GetOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification, caLocation)
 	switch protocol {
 	case "SSL":
-		caLocation, err := cmd.Flags().GetString("ca-location")
-		if err != nil {
-			return err
-		}
 		certLocation, err := cmd.Flags().GetString("cert-location")
 		if err != nil {
 			return err
@@ -613,7 +613,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		if err != nil {
 			return err
 		}
-		configMap, err = SetSSLConfig(configMap, caLocation, certLocation, keyLocation, keyPassword)
+		configMap, err = SetSSLConfig(configMap, certLocation, keyLocation, keyPassword)
 		if err != nil {
 			return err
 		}
@@ -818,17 +818,17 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
+	caLocation, err := cmd.Flags().GetString("ca-location")
+	if err != nil {
+		return err
+	}
 
-	configMap, err := GetOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification)
+	configMap, err := GetOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification, caLocation)
 	if err != nil {
 		return err
 	}
 	switch protocol {
 	case "SSL":
-		caLocation, err := cmd.Flags().GetString("ca-location")
-		if err != nil {
-			return err
-		}
 		certLocation, err := cmd.Flags().GetString("cert-location")
 		if err != nil {
 			return err
@@ -841,7 +841,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		if err != nil {
 			return err
 		}
-		configMap, err = SetSSLConfig(configMap, caLocation, certLocation, keyLocation, keyPassword)
+		configMap, err = SetSSLConfig(configMap, certLocation, keyLocation, keyPassword)
 		if err != nil {
 			return err
 		}

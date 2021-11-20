@@ -68,24 +68,26 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafk
 	}
 }
 
-func GetOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerification bool) *ckafka.ConfigMap {
+func GetOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerification bool, caLocation string) *ckafka.ConfigMap {
 	return &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
 		"bootstrap.servers":                     bootstrap,
 		"enable.ssl.certificate.verification":   enableSSLVerification,
+		"ssl.ca.location":                       caLocation,
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
 	}
 }
 
-func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning, enableSSLVerification bool) (*ckafka.ConfigMap, error) {
+func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning, enableSSLVerification bool, caLocation string) (*ckafka.ConfigMap, error) {
 	configMap := &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
 		"group.id":                              group,
 		"bootstrap.servers":                     bootstrap,
 		"enable.ssl.certificate.verification":   enableSSLVerification,
+		"ssl.ca.location":                       caLocation,
 	}
 	autoOffsetReset := "latest"
 	if beginning {
@@ -97,10 +99,9 @@ func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning,
 	return configMap, nil
 }
 
-func SetSSLConfig(configMap *ckafka.ConfigMap, caLocation, certLocation, keyLocation, keyPassword string) (*ckafka.ConfigMap, error) {
+func SetSSLConfig(configMap *ckafka.ConfigMap, certLocation, keyLocation, keyPassword string) (*ckafka.ConfigMap, error) {
 	sslMap := make(map[string]string)
 	sslMap["security.protocol"] = "SSL"
-	sslMap["ssl.ca.location"] = caLocation
 	sslMap["ssl.certificate.location"] = certLocation
 	sslMap["ssl.key.location"] = keyLocation
 	sslMap["ssl.key.password"] = keyPassword
