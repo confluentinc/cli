@@ -344,10 +344,6 @@ github.com/confluentinc/cc-structs/operator v0.405.0/go.mod h1:h80UL1NR+Q9Ey/umr
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1QE6hUG3WkzpYjPsjUbg=
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211118154103-f5e887579787 h1:Ds7ZrrQ1dX6GMv6kQ3A7HtGO5rqPYyBrFd1HoOYeCNg=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211118154103-f5e887579787/go.mod h1:sPY66wO4nszCGLdsl6vAiBZEqDbt/+qIE2VfuaK7Ons=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211118214818-f3e1a7ca21f1 h1:cm57J2ep7N4w9yojQu/r9wMOJvjggDyH5Ex8g7SEfik=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211118214818-f3e1a7ca21f1/go.mod h1:sPY66wO4nszCGLdsl6vAiBZEqDbt/+qIE2VfuaK7Ons=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211118225144-bba136eb6795 h1:xddyTMO5JnqlhgVS/ChCbjgUDXRo03rLdo3fKGzTQHM=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.93-0.20211118225144-bba136eb6795/go.mod h1:sPY66wO4nszCGLdsl6vAiBZEqDbt/+qIE2VfuaK7Ons=
 github.com/confluentinc/cdx-schema v0.0.6 h1:5/lm7ITfsiW8qKmK3mFUR5MC572UQFUrRMmCK2JiGoc=

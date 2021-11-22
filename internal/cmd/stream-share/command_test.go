@@ -115,11 +115,28 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedTokenReturnsErrorWhenTokenIsE
 	req.False(suite.streamShareClientMock.RedeemSharedTokenCalled())
 }
 
-func (suite *SharedTokenTestSuite) TestRedeemSharedToken() {
+func (suite *SharedTokenTestSuite) TestRedeemSharedTokenWritesToDefaultOutputFile() {
 	cmd := suite.newCmd()
+	outputPath := "./consumer.config"
 	args := []string{"shared-token", "redeem", "--token", "test_token"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	defer os.Remove(outputPath)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
+	_, err = os.Stat(outputPath)
+	req.NoError(err)
+}
+
+func (suite *SharedTokenTestSuite) TestRedeemSharedTokenWritesToOutputFile() {
+	cmd := suite.newCmd()
+	outputPath := "./file.text"
+	args := []string{"shared-token", "redeem", "--token", "test_token", "--output", outputPath}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	defer os.Remove(outputPath)
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
+	_, err = os.Stat(outputPath)
+	req.NoError(err)
 }
