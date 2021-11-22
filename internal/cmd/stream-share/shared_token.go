@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 type sharedTokenCommand struct {
@@ -50,11 +51,12 @@ func (c *sharedTokenCommand) init() {
 	// redeem sub-command
 	redeemCmd := &cobra.Command{
 		Use:   "redeem",
-		Short: "Redeem the shared token to access a specific topic",
+		Short: "Redeem the shared token to access a specific topic. Creates a config file at the path specified by the output flag.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.redeem),
 	}
 	redeemCmd.Flags().String("token", "", "Token received from the producer of topic data")
+	redeemCmd.Flags().String("output", "./consumer.config", "Optional path for config file")
 	c.AddCommand(redeemCmd)
 }
 
@@ -66,24 +68,61 @@ func (c *sharedTokenCommand) redeem(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.TokenEmptyErrorMsg)
 	}
 
+	outputPath, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return err
+	}
+
 	redeemedToken, err := c.Client.StreamShare.RedeemSharedToken(token)
 	if err != nil {
 		return err
 	}
 
-	utils.Println(cmd, "Token redeemed successfully. Use the following information to consume from the kafka topic:")
+	utils.Println(cmd, "Token redeemed successfully. Use the generated output file to consume from the kafka topic.")
 
-	utils.Println(cmd, fmt.Sprintf("Bootstrap URL: %s", redeemedToken.GetKafkaBootstrapUrl()))
-	utils.Println(cmd, fmt.Sprintf("API Key: %s", redeemedToken.GetApikey()))
-	utils.Println(cmd, fmt.Sprintf("API Key Secret: %s", redeemedToken.GetSecret()))
+	err = c.createConfigFile(redeemedToken, outputPath)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func (c *sharedTokenCommand) createConfigFile(redeemedToken *v1.CdxV1RedeemToken, outputPath string) error {
+	f, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	var topic, groupPrefix string
 	for _, r := range redeemedToken.GetResources() {
 		if r.CdxV1SharedGroup != nil {
-			utils.Println(cmd, fmt.Sprintf("Shared Consumer Group Prefix: %s", r.CdxV1SharedGroup.GroupPrefix))
+			groupPrefix = r.CdxV1SharedGroup.GroupPrefix
 		}
 		if r.CdxV1SharedTopic != nil {
-			utils.Println(cmd, fmt.Sprintf("Shared Topic: %s", r.CdxV1SharedTopic.Topic))
+			topic = r.CdxV1SharedTopic.Topic
 		}
+	}
+
+	_, err = f.WriteString(fmt.Sprintf(
+		"bootstrap.servers=%s\n"+
+			"sasl.username=%s\n"+
+			"sasl.password=%s\n"+
+			"topic=%s\n"+
+			"group.id=%s.go_demo_group_1\n"+
+			"sasl.mechanisms=PLAIN\n"+
+			"security.protocol=SASL_SSL\n"+
+			"auto.offset.reset=latest",
+		redeemedToken.GetKafkaBootstrapUrl(),
+		redeemedToken.GetApikey(),
+		redeemedToken.GetSecret(),
+		topic,
+		groupPrefix,
+	))
+	if err != nil {
+		return err
 	}
 
 	return nil
