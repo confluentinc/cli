@@ -39,7 +39,7 @@ type listMirrorWrite struct {
 	MirrorStatus             string
 	StatusTimeMs             int64
 	NumPartition             int32
-	MaxPerPartitionMirrorLag int64
+	MaxPerPartitionMirrorLag int32
 }
 
 type describeMirrorWrite struct {
@@ -49,7 +49,7 @@ type describeMirrorWrite struct {
 	MirrorStatus          string
 	StatusTimeMs          int64
 	Partition             int32
-	PartitionMirrorLag    int64
+	PartitionMirrorLag    int32
 	LastSourceFetchOffset int64
 }
 
@@ -58,7 +58,7 @@ type alterMirrorWrite struct {
 	Partition             int32
 	ErrorMessage          string
 	ErrorCode             string
-	PartitionMirrorLag    int64
+	PartitionMirrorLag    int32
 	LastSourceFetchOffset int64
 }
 
@@ -248,15 +248,15 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	var httpResp *http.Response
 
 	if linkName == "" {
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingApi.
-			ClustersClusterIdLinksMirrorsGet(
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.
+			ListKafkaMirrorTopics(
 				kafkaREST.Context, lkc,
-				&kafkarestv3.ClustersClusterIdLinksMirrorsGetOpts{MirrorStatus: mirrorStatusOpt})
+				&kafkarestv3.ListKafkaMirrorTopicsOpts{MirrorStatus: mirrorStatusOpt})
 	} else {
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingApi.
-			ClustersClusterIdLinksLinkNameMirrorsGet(
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.
+			ListKafkaMirrorTopicsUnderLink(
 				kafkaREST.Context, lkc, linkName,
-				&kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsGetOpts{MirrorStatus: mirrorStatusOpt})
+				&kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: mirrorStatusOpt})
 	}
 
 	if err != nil {
@@ -270,7 +270,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
-		var maxLag int64 = 0
+		var maxLag int32 = 0
 		for _, mirrorLag := range mirror.MirrorLags {
 			if mirrorLag.Lag > maxLag {
 				maxLag = mirrorLag.Lag
@@ -315,8 +315,8 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsMirrorTopicNameGet(
+	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.
+		ReadKafkaMirrorTopic(
 			kafkaREST.Context, lkc, linkName, mirrorTopicName)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
@@ -380,7 +380,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts{
+	createMirrorOpt := &kafkarestv3.CreateKafkaMirrorTopicOpts{
 		CreateMirrorTopicRequestData: optional.NewInterface(
 			kafkarestv3.CreateMirrorTopicRequestData{
 				SourceTopicName:   sourceTopicName,
@@ -390,8 +390,8 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsPost(kafkaREST.Context, lkc, linkName, createMirrorOpt)
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.
+		CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt)
 	if err == nil {
 		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
 	}
@@ -423,7 +423,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promoteMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorspromotePostOpts{
+	promoteMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsPromoteOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
 				MirrorTopicNames: args,
@@ -432,8 +432,8 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorspromotePost(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.
+		UpdateKafkaMirrorTopicsPromote(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -465,7 +465,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	failoverMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsfailoverPostOpts{
+	failoverMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsFailoverOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
 				MirrorTopicNames: args,
@@ -474,8 +474,8 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsfailoverPost(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.
+		UpdateKafkaMirrorTopicsFailover(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -507,7 +507,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pauseMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorspausePostOpts{
+	pauseMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsPauseOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
 				MirrorTopicNames: args,
@@ -516,8 +516,8 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorspausePost(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.
+		UpdateKafkaMirrorTopicsPause(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -549,7 +549,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resumeMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsresumePostOpts{
+	resumeMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsResumeOpts{
 		AlterMirrorsRequestData: optional.NewInterface(
 			kafkarestv3.AlterMirrorsRequestData{
 				MirrorTopicNames: args,
@@ -558,8 +558,8 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		ValidateOnly: optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.
-		ClustersClusterIdLinksLinkNameMirrorsresumePost(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.
+		UpdateKafkaMirrorTopicsResume(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

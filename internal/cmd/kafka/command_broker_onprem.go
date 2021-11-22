@@ -37,7 +37,7 @@ type brokerTaskData struct {
 	ClusterId         string                     `json:"cluster_id" yaml:"cluster_id"`
 	BrokerId          int32                      `json:"broker_id" yaml:"broker_id"`
 	TaskType          kafkarestv3.BrokerTaskType `json:"task_type" yaml:"task_type"`
-	TaskStatus        string                     `json:"task_status" yaml:"task_status"`
+	TaskStatus        kafkarestv3.BrokerTaskStatus                    `json:"task_status" yaml:"task_status"`
 	CreatedAt         time.Time                  `json:"created_at" yaml:"created_at"`
 	UpdatedAt         time.Time                  `json:"updated_at" yaml:"updated_at"`
 	ShutdownScheduled bool                       `json:"shutdown_scheduled,omitempty" yaml:"shutdown_scheduled,omitempty"`
@@ -162,7 +162,7 @@ func (brokerCmd *brokerCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	// Get Brokers
-	brokersGetResp, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersGet(restContext, clusterId)
+	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -252,10 +252,10 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 	var err error
 	if configName != "" {
 		var brokerNameData kafkarestv3.BrokerConfigData
-		brokerNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
+		brokerNameData, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
 		brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
 	} else {
-		brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+		brokerConfig, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
 	}
 	if err != nil {
 		return brokerConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -270,10 +270,10 @@ func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext contex
 	var err error
 	if configName != "" { // Get config specified by configName
 		var configNameData kafkarestv3.ClusterConfigData
-		configNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsNameGet(restContext, clusterId, configName)
+		configNameData, resp, err = restClient.ConfigsV3Api.GetKafkaClusterConfig(restContext, clusterId, configName)
 		clusterConfig.Data = []kafkarestv3.ClusterConfigData{configNameData}
 	} else { // Get all configs
-		clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
+		clusterConfig, resp, err = restClient.ConfigsV3Api.ListKafkaClusterConfigs(restContext, clusterId)
 	}
 	if err != nil {
 		return clusterConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -311,15 +311,15 @@ func (brokerCmd *brokerCommand) update(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	if all {
-		resp, err := restClient.ConfigsApi.ClustersClusterIdBrokerConfigsalterPost(restContext, clusterId,
-			&kafkarestv3.ClustersClusterIdBrokerConfigsalterPostOpts{
+		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,
+			&kafkarestv3.UpdateKafkaClusterConfigsOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 			})
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 		}
 	} else {
-		resp, err := restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
+		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
 			&kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 			})
@@ -392,7 +392,7 @@ func (brokerCmd *brokerCommand) delete(cmd *cobra.Command, args []string) error 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{
 		ShouldShutdown: optional.NewBool(true),
 	}
-	_, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerId, &opts)
+	_, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerId, &opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

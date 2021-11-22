@@ -26,7 +26,6 @@ const (
 	saslJaasConfigPropertyName         = "sasl.jaas.config"
 	configFileFlagName                 = "config-file"
 	dryrunFlagName                     = "dry-run"
-	noValidateFlagName                 = "no-validate"
 	includeTopicsFlagName              = "include-topics"
 	linkFlagName                       = "link"
 )
@@ -123,7 +122,6 @@ func (c *linkCommand) init() {
 	createCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
-	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
@@ -181,7 +179,7 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksGet(
+	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaLinks(
 		kafkaREST.Context, lkc)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
@@ -198,8 +196,8 @@ func (c *linkCommand) list(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, link := range listLinksRespDataList.Data {
-			if len(link.TopicNames) > 0 {
-				for _, topic := range link.TopicNames {
+			if len(link.TopicsNames) > 0 {
+				for _, topic := range link.TopicsNames {
 					outputWriter.AddElement(
 						&LinkTopicWriter{
 							LinkName:        link.LinkName,
@@ -250,11 +248,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
-	if err != nil {
-		return err
-	}
-
-	skipValidatingLink, err := cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
@@ -314,16 +307,14 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createLinkOpt := &kafkarestv3.ClustersClusterIdLinksPostOpts{
-		ValidateOnly: optional.NewBool(validateOnly),
-		ValidateLink: optional.NewBool(!skipValidatingLink),
+	createLinkOpt := &kafkarestv3.CreateKafkaLinkOpts{
 		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
 			SourceClusterId: sourceClusterId,
 			Configs:         toCreateTopicConfigs(configMap),
 		}),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksPost(
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaLink(
 		kafkaREST.Context, lkc, linkName, createLinkOpt)
 
 	if err == nil {
@@ -353,7 +344,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameDelete(kafkaREST.Context, lkc, linkName)
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.DeleteKafkaLink(kafkaREST.Context, lkc, linkName)
 	if err == nil {
 		utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
 	}
@@ -376,7 +367,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	listLinkConfigsRespData, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(
+	listLinkConfigsRespData, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaLinkConfigs(
 		kafkaREST.Context, lkc, linkName)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
@@ -446,9 +437,9 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsalterPut(
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(
 		kafkaREST.Context, lkc, linkName,
-		&kafkarestv3.ClustersClusterIdLinksLinkNameConfigsalterPutOpts{
+		&kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
 			AlterConfigBatchRequestData: optional.NewInterface(
 				kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
 		})

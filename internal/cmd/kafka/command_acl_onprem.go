@@ -84,7 +84,7 @@ func (c *aclCommand) onPremList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	opts := aclutil.AclRequestToListAclReqest(acl)
-	aclGetResp, httpResp, err := restClient.ACLApi.ClustersClusterIdAclsGet(restContext, clusterId, opts)
+	aclGetResp, httpResp, err := restClient.ACLV3Api.GetKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}
@@ -106,7 +106,7 @@ func (c *aclCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	opts := aclutil.AclRequestToCreateAclReqest(acl)
-	httpResp, err := restClient.ACLApi.ClustersClusterIdAclsPost(restContext, clusterId, opts)
+	httpResp, err := restClient.ACLV3Api.CreateKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}
@@ -129,7 +129,7 @@ func (c *aclCommand) onPremDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	opts := aclutil.AclRequestToDeleteAclReqest(acl)
-	aclDeleteResp, httpResp, err := restClient.ACLApi.ClustersClusterIdAclsDelete(restContext, clusterId, opts)
+	aclDeleteResp, httpResp, err := restClient.ACLV3Api.DeleteKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}

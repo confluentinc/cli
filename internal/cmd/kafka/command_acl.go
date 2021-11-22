@@ -133,7 +133,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		aclGetResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsGet(kafkaREST.Context, lkc, &opts)
+		aclGetResp, httpResp, err := kafkaREST.Client.ACLV3Api.GetKafkaAcls(kafkaREST.Context, lkc, &opts)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -202,7 +202,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		kafkaRestExists := true
 		for i, binding := range bindings {
 			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
-			httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsPost(kafkaREST.Context, lkc, &opts)
+			httpResp, err := kafkaREST.Client.ACLV3Api.CreateKafkaAcls(kafkaREST.Context, lkc, &opts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {
@@ -290,7 +290,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		matchingBindingCount := 0
 		for i, filter := range filters {
 			deleteOpts := aclFilterToClustersClusterIdAclsDeleteOpts(filter)
-			deleteResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsDelete(kafkaREST.Context, lkc, &deleteOpts)
+			deleteResp, httpResp, err := kafkaREST.Client.ACLV3Api.DeleteKafkaAcls(kafkaREST.Context, lkc, &deleteOpts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {

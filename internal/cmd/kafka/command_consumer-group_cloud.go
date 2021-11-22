@@ -204,7 +204,7 @@ func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	groupCmdResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
+		kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(
 			kafkaREST.Context,
 			lkc)
 	if err != nil {
@@ -228,7 +228,7 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	groupCmdResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdGet(
+		kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroup(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
@@ -236,7 +236,7 @@ func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 	groupCmdConsumersResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(
+		kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumers(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
@@ -405,7 +405,7 @@ func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	lagSummaryResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(
+		kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
@@ -448,7 +448,7 @@ func (lagCmd *lagCommand) listLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	lagSummaryResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(
+		kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerLags(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId)
@@ -481,7 +481,7 @@ func (lagCmd *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	lagGetResp, httpResp, err :=
-		kafkaREST.Client.PartitionApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(
+		kafkaREST.Client.PartitionV3Api.GetKafkaConsumerLag(
 			kafkaREST.Context,
 			lkc,
 			consumerGroupId,
@@ -573,7 +573,7 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand, cobraCmd *c
 		return nil, err
 	}
 	groupCmdResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
+		kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(
 			kafkaREST.Context,
 			lkc)
 	if err != nil {

@@ -66,16 +66,6 @@ func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Req
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts: environments,
-			Organization: &orgv1.Organization{
-				Id: 42,
-				AuditLog: &orgv1.AuditLog{
-					ClusterId:        "lkc-ab123",
-					AccountId:        "env-987zy",
-					ServiceAccountId: 1337,
-					TopicName:        "confluent-audit-log-events",
-				},
-			},
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
