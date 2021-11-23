@@ -86,9 +86,10 @@ type listDisplay struct {
 
 func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "role-binding",
-		Short: "Manage RBAC and IAM role bindings.",
-		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+		Use:     "role-binding",
+		Aliases: []string{"rb"},
+		Short:   "Manage RBAC and IAM role bindings.",
+		Long:    "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
