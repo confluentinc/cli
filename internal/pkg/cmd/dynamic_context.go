@@ -88,7 +88,7 @@ func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.KafkaClusterConfig, error) {
-	clusterId, err := d.getKafkaClusterIDForCommand(cmd)
+	clusterId, err := d.getKafkaClusterIDForCommand()
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand(cmd *cobra.Command) (*v1.Kafk
 	return cluster, nil
 }
 
-func (d *DynamicContext) getKafkaClusterIDForCommand(cmd *cobra.Command) (string, error) {
+func (d *DynamicContext) getKafkaClusterIDForCommand() (string, error) {
 	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
@@ -240,7 +240,7 @@ func (d *DynamicContext) HasLogin(cmd *cobra.Command) (bool, error) {
 	credType := d.Credential.CredentialType
 	switch credType {
 	case v1.Username:
-		_, err := d.resolveEnvironmentId(cmd)
+		_, err := d.resolveEnvironmentId()
 		if err != nil {
 			return false, err
 		}
@@ -318,7 +318,7 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	return key, secret, nil
 }
 
-func (d *DynamicContext) resolveEnvironmentId(cmd *cobra.Command) (string, error) {
+func (d *DynamicContext) resolveEnvironmentId() (string, error) {
 	if d.State == nil || d.State.Auth == nil {
 		return "", new(errors.NotLoggedInError)
 	}

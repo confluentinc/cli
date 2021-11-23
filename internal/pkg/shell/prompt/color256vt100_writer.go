@@ -56,8 +56,7 @@ func writeColorString(w io.Writer, fg, bg goprompt.Color, attrs ...goprompt.Disp
 	defer write([]byte{'m'}) // final character
 	separator := []byte{';'}
 	for _, a := range attrs {
-		b := displayAttributeToBytes(goprompt.DisplayAttribute(a))
-		write(b)
+		write(displayAttributeToBytes(a))
 		write(separator)
 	}
 	// Begin writing 256 color strings.

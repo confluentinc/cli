@@ -483,13 +483,13 @@ func (c *Command) stopProcess(service string) error {
 		}
 	}
 
-	errors := make(chan error)
+	errs := make(chan error)
 	up := make(chan bool)
 	go func() {
 		for {
 			isUp, err := c.isRunning(service)
 			if err != nil {
-				errors <- err
+				errs <- err
 			}
 			if !isUp {
 				up <- isUp
@@ -499,7 +499,7 @@ func (c *Command) stopProcess(service string) error {
 	select {
 	case <-up:
 		break
-	case err := <-errors:
+	case err := <-errs:
 		return err
 	case <-time.After(10 * time.Second):
 		if err := c.killProcess(service); err != nil {

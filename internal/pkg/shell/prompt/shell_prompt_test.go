@@ -11,9 +11,9 @@ import (
 type Quotation int
 
 const (
-	NO_QUOTES Quotation = iota
-	SINGLE_QUOTES
-	DOUBLE_QUOTES
+	NoQuotes Quotation = iota
+	SingleQuotes
+	DoubleQuotes
 )
 
 func TestPromptExecutorFunc(t *testing.T) {
@@ -27,68 +27,68 @@ func TestPromptExecutorFunc(t *testing.T) {
 			name:         "no quotes basic flag value",
 			flagValue:    `describing`,
 			expectedFlag: `describing`,
-			quoteType:    NO_QUOTES,
+			quoteType:    NoQuotes,
 		},
 		{
 			name:         "single quotes basic flag value",
 			flagValue:    `describing`,
 			expectedFlag: `describing`,
-			quoteType:    SINGLE_QUOTES,
+			quoteType:    SingleQuotes,
 		},
 		{
 			name:         "double quotes basic flag value",
 			flagValue:    `describing`,
 			expectedFlag: `describing`,
-			quoteType:    DOUBLE_QUOTES,
+			quoteType:    DoubleQuotes,
 		},
 		{
 			name:         "no quotes with escaped quotes",
 			flagValue:    `\"describing\'`,
 			expectedFlag: `"describing'`,
-			quoteType:    NO_QUOTES,
+			quoteType:    NoQuotes,
 		},
 		{
 			name:         "no quotes value with space in between splits flag value",
 			flagValue:    `describing stuff`,
 			expectedFlag: `describing`,
-			quoteType:    NO_QUOTES,
+			quoteType:    NoQuotes,
 		},
 		{
 			name:         "double quotes flag value with space in between",
 			flagValue:    `describing stuff`,
 			expectedFlag: `describing stuff`,
-			quoteType:    DOUBLE_QUOTES,
+			quoteType:    DoubleQuotes,
 		},
 		{
 			name:         "single quotes flag value with space in between",
 			flagValue:    `describing stuff`,
 			expectedFlag: `describing stuff`,
-			quoteType:    SINGLE_QUOTES,
+			quoteType:    SingleQuotes,
 		},
 
 		{
 			name:         "single quotes nested in double quotes",
 			flagValue:    `describing 'complex' stuff`,
 			expectedFlag: `describing 'complex' stuff`,
-			quoteType:    DOUBLE_QUOTES,
+			quoteType:    DoubleQuotes,
 		},
 		{
 			name:         "escaped double quotes nested in double quotes",
 			flagValue:    `describing \"complex\" stuff`,
 			expectedFlag: `describing "complex" stuff`,
-			quoteType:    DOUBLE_QUOTES,
+			quoteType:    DoubleQuotes,
 		},
 		{
 			name:         "single quotes including escape character",
 			flagValue:    `describing \"complex\" stuff`,
 			expectedFlag: `describing \"complex\" stuff`,
-			quoteType:    SINGLE_QUOTES,
+			quoteType:    SingleQuotes,
 		},
 		{
 			name:         "double quotes nested in single quotes",
 			flagValue:    `describing "complex" stuff`,
 			expectedFlag: `describing "complex" stuff`,
-			quoteType:    SINGLE_QUOTES,
+			quoteType:    SingleQuotes,
 		},
 	}
 	for _, tt := range tests {
@@ -102,11 +102,11 @@ func TestPromptExecutorFunc(t *testing.T) {
 			executorFunc := promptExecutorFunc(shellPrompt)
 			var format string
 			switch tt.quoteType {
-			case NO_QUOTES:
+			case NoQuotes:
 				format = `api --description %s`
-			case SINGLE_QUOTES:
+			case SingleQuotes:
 				format = `api --description '%s'`
-			case DOUBLE_QUOTES:
+			case DoubleQuotes:
 				format = `api --description "%s"`
 			}
 			executorFunc(fmt.Sprintf(format, tt.flagValue))

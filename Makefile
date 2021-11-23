@@ -262,10 +262,6 @@ unit-test: test-prep coverage-unit
 .PHONY: int-test
 int-test: test-prep coverage-integ
 
-.PHONY: doctoc
-doctoc:
-	npx doctoc README.md
-
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch

@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"strconv"
 
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)

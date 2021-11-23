@@ -219,20 +219,19 @@ func (suite *APITestSuite) newCmd() *command {
 		KSQL:           suite.ksqlMock,
 		Metrics:        &ccsdkmock.Metrics{},
 	}
-	prompt := &mock.Prompt{
-		ReadLineFunc: func() (string, error) {
-			return promptReadString + "\n", nil
-		},
-		ReadLineMaskedFunc: func() (string, error) {
-			return promptReadPass + "\n", nil
-		},
-		IsPipeFunc: func() (b bool, e error) {
-			return suite.isPromptPipe, nil
-		},
-	}
 	resolverMock := &pcmd.FlagResolverImpl{
-		Prompt: prompt,
-		Out:    os.Stdout,
+		Prompt: &mock.Prompt{
+			ReadLineFunc: func() (string, error) {
+				return promptReadString + "\n", nil
+			},
+			ReadLineMaskedFunc: func() (string, error) {
+				return promptReadPass + "\n", nil
+			},
+			IsPipeFunc: func() (bool, error) {
+				return suite.isPromptPipe, nil
+			},
+		},
+		Out: os.Stdout,
 	}
 	prerunner := &cliMock.Commander{
 		FlagResolver: resolverMock,

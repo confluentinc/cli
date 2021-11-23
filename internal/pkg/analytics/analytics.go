@@ -18,7 +18,7 @@ import (
 type CommandType int
 
 const (
-	Other CommandType = iota
+	_ CommandType = iota
 	Login
 	Init
 	ContextUse

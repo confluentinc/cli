@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	CONFIG          = "config"
-	NAME            = "name"
-	CONNECTOR_CLASS = "connector.class"
+	Config         = "config"
+	Name           = "name"
+	ConnectorClass = "connector.class"
 )
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
-	fileName, err := cmd.Flags().GetString(CONFIG)
+	fileName, err := cmd.Flags().GetString(Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading --config as string")
 	}
@@ -25,8 +25,8 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to parse config %s", fileName)
 	}
-	_, nameExists := options[NAME]
-	_, classExists := options[CONNECTOR_CLASS]
+	_, nameExists := options[Name]
+	_, classExists := options[ConnectorClass]
 	if !nameExists || !classExists {
 		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, fileName)
 	}
@@ -54,13 +54,13 @@ func parseConfigFile(fileName string) (map[string]string, error) {
 		if val2, ok := val.(string); ok {
 			kvPairs[key] = val2
 		} else {
-			//We support object-as-a-value only for "config" key.
-			if key != CONFIG {
+			// We support object-as-a-value only for "config" key.
+			if key != Config {
 				return nil, errors.Errorf("Only string value is permitted for the configuration : %s", key)
 			}
 			configMap, ok := val.(map[string]interface{})
 			if !ok {
-				return nil, errors.Errorf("Value for the configuration : %s is malformed", CONFIG)
+				return nil, errors.Errorf("Value for the configuration : %s is malformed", Config)
 			}
 			for configKey, configVal := range configMap {
 				value, isString := configVal.(string)

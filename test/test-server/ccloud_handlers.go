@@ -802,8 +802,8 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
 				Invitations: []*orgv1.Invitation{
-					buildInvitation("1", "u-11aaa@confluent.io",  "u-11aaa", "VERIFIED"),
-					buildInvitation("2", "u-22bbb@confluent.io",  "u-22bbb", "SENT"),
+					buildInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
+					buildInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
 				},
 			})
 			require.NoError(t, err)
@@ -819,8 +819,8 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 				}
 			} else {
 				res = flowv1.CreateInvitationReply{
-					Error: nil,
-					Invitation:  buildInvitation("1", "miles@confluent.io",  "user1", "SENT"),
+					Error:      nil,
+					Invitation: buildInvitation("1", "miles@confluent.io", "user1", "SENT"),
 				}
 			}
 			data, err := json.Marshal(res)
@@ -832,21 +832,21 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnector() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorPause() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-func (c *CloudRouter) HandleConnectorResume(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorResume() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -978,7 +978,7 @@ func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWrite
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-func (c *CloudRouter) HandleConnectUpdate(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectUpdate() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
