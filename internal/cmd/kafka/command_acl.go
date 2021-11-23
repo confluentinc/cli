@@ -74,7 +74,6 @@ func (c *aclCommand) init() {
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 
 	c.AddCommand(createCmd)
 
@@ -85,7 +84,6 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	deleteCmd.Flags().AddFlagSet(aclConfigFlags())
-	deleteCmd.Flags().SortFlags = false
 
 	c.AddCommand(deleteCmd)
 
@@ -98,7 +96,6 @@ func (c *aclCommand) init() {
 	listCmd.Flags().AddFlagSet(resourceFlags())
 	listCmd.Flags().String("service-account", "", "Service account ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
 

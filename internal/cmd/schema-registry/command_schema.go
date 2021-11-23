@@ -75,7 +75,6 @@ func (c *schemaCommand) init() {
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -94,7 +93,6 @@ func (c *schemaCommand) init() {
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
 	_ = cmd.MarkFlagRequired("version")
 	cmd.Flags().BoolP("permanent", "P", false, "Permanently delete the schema.")
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -116,7 +114,6 @@ func (c *schemaCommand) init() {
 	}
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
-	cmd.Flags().SortFlags = false
 	c.AddCommand(cmd)
 }
 

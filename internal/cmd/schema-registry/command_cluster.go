@@ -103,7 +103,6 @@ func (c *clusterCommand) newEnableCommand() *cobra.Command {
 	cmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")
@@ -121,7 +120,6 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	return cmd
 }
@@ -143,7 +141,6 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
 	cmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
-	cmd.Flags().SortFlags = false
 
 	return cmd
 }

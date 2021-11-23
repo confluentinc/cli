@@ -78,7 +78,6 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version
 
 	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	c.Command.Flags().Bool("major", false, "Allow major version updates.")
-	c.Command.Flags().SortFlags = false
 
 	return c.Command
 }

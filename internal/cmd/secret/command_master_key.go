@@ -42,7 +42,6 @@ func (c *masterKeyCommand) init() {
 	}
 	generateCmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -";
 to read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
-	generateCmd.Flags().SortFlags = false
 	generateCmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	check(generateCmd.MarkFlagRequired("local-secrets-file"))
 	c.AddCommand(generateCmd)

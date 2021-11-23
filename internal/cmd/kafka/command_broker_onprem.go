@@ -72,7 +72,6 @@ func (brokerCmd *brokerCommand) init() {
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -96,7 +95,6 @@ func (brokerCmd *brokerCommand) init() {
 	describeCmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
@@ -120,7 +118,6 @@ func (brokerCmd *brokerCommand) init() {
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	check(updateCmd.MarkFlagRequired("config"))
-	updateCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -130,7 +127,6 @@ func (brokerCmd *brokerCommand) init() {
 		Short: "Delete a Kafka broker.",
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	deleteCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(deleteCmd)
 
 	getTasksCmd := &cobra.Command{
@@ -153,7 +149,6 @@ func (brokerCmd *brokerCommand) init() {
 	getTasksCmd.Flags().String("task-type", "", "Search by task type (add-broker or remove-broker).")
 	getTasksCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	getTasksCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	getTasksCmd.Flags().SortFlags = false
 	brokerCmd.AddCommand(getTasksCmd)
 }
 

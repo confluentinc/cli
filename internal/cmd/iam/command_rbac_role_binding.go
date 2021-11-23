@@ -186,7 +186,6 @@ func (c *roleBindingCommand) init() {
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
 
@@ -223,7 +222,6 @@ func (c *roleBindingCommand) init() {
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
 	c.AddCommand(createCmd)
@@ -255,7 +253,6 @@ func (c *roleBindingCommand) init() {
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
 	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
 	check(deleteCmd.MarkFlagRequired("role"))

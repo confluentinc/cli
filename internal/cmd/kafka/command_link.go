@@ -88,7 +88,6 @@ func (c *linkCommand) init() {
 	}
 	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
@@ -125,7 +124,6 @@ func (c *linkCommand) init() {
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	createCmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
 	createCmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	deleteCmd := &cobra.Command{
@@ -143,7 +141,6 @@ func (c *linkCommand) init() {
 		RunE:  c.describe,
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	c.AddCommand(describeCmd)
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).
@@ -162,7 +159,6 @@ func (c *linkCommand) init() {
 	updateCmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	check(updateCmd.MarkFlagRequired(configFileFlagName))
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 }
 

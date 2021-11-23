@@ -90,7 +90,6 @@ func (c userCommand) newUserDescribeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 	return describeCmd
 }
 
@@ -138,7 +137,6 @@ func (c userCommand) newUserListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	return listCmd
 }
 

@@ -66,7 +66,6 @@ func (c *promoCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	return cmd
 }

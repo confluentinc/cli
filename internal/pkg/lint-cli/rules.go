@@ -262,19 +262,6 @@ func RequireFlagType(flag, typeName string) Rule {
 	}
 }
 
-// RequireFlagSort checks whether flags should be auto sorted
-func RequireFlagSort(sort bool) Rule {
-	return func(cmd *cobra.Command) error {
-		if cmd.Flags().HasFlags() && cmd.Flags().SortFlags != sort {
-			if sort {
-				return fmt.Errorf("flags not sorted on %s", FullCommand(cmd))
-			}
-			return fmt.Errorf("flags unexpectedly sorted on %s", FullCommand(cmd))
-		}
-		return nil
-	}
-}
-
 // RequireFlagRealWords checks that a flag uses delimited-real-words, not --smushcaseflags
 func RequireFlagRealWords(delim rune) FlagRule {
 	return func(flag *pflag.Flag, cmd *cobra.Command) error {

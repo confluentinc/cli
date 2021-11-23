@@ -92,7 +92,6 @@ func (c *command) init() {
 		),
 	}
 	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	describeCmd.Flags().SortFlags = false
 
 	listCmd := &cobra.Command{
 		Use:         "list",
@@ -108,7 +107,6 @@ func (c *command) init() {
 		),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 
 	createCmd := &cobra.Command{
 		Use:         "create",
@@ -126,7 +124,6 @@ func (c *command) init() {
 	createCmd.Flags().String("config", "", "JSON connector config file.")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	panicOnError(createCmd.MarkFlagRequired("config"))
-	createCmd.Flags().SortFlags = false
 
 	deleteCmd := &cobra.Command{
 		Use:         "delete <id>",
@@ -151,7 +148,6 @@ func (c *command) init() {
 	}
 	updateCmd.Flags().String("config", "", "JSON connector config file.")
 	panicOnError(updateCmd.MarkFlagRequired("config"))
-	updateCmd.Flags().SortFlags = false
 
 	pauseCmd := &cobra.Command{
 		Use:         "pause <id>",

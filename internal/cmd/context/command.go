@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -45,4 +46,24 @@ func (c *command) context(args []string) (*pcmd.DynamicContext, error) {
 	} else {
 		return nil, errors.NewErrorWithSuggestions("no context selected", "Select an existing context with `confluent context use`, or supply a specific context name as an argument.")
 	}
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return autocompleteContexts(c.Config.Config)
+}
+
+func autocompleteContexts(cfg *v1.Config) []string {
+	var contexts []string
+	for context := range cfg.Contexts {
+		contexts = append(contexts, context)
+	}
+	return contexts
 }

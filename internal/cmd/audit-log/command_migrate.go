@@ -55,7 +55,6 @@ func (c *migrateCmd) init() {
 	configCmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the path to that cluster's server.properties file.`)
 	configCmd.Flags().StringArray("bootstrap-servers", nil, `A public hostname:port of a broker in the Kafka cluster that will receive audit log events.`)
 	configCmd.Flags().String("authority", "", `The CRN authority to use in all route patterns.`)
-	configCmd.Flags().SortFlags = false
 	c.AddCommand(configCmd)
 }
 

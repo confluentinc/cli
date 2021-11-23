@@ -129,7 +129,6 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", strings.Join(metrics, ", ")))
 	cmd.Flags().Bool("legacy", false, "Show legacy cluster types.")
 	cmd.Flags().StringP(poutput.FlagName, poutput.ShortHandFlag, poutput.DefaultValue, poutput.Usage)
-	cmd.Flags().SortFlags = false
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("region")
