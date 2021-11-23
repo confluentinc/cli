@@ -19,9 +19,11 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func autocompleteContexts(cfg *v1.Config) []string {
-	var contexts []string
+	suggestions := make([]string, len(cfg.Contexts))
+	i := 0
 	for context := range cfg.Contexts {
-		contexts = append(contexts, context)
+		suggestions[i] = context
+		i++
 	}
-	return contexts
+	return suggestions
 }
