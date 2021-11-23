@@ -843,15 +843,16 @@ func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string)
 func TestIsCCloudURL_True(t *testing.T) {
 	for _, url := range []string{
 		"confluent.cloud",
-		"confluent.cloud:8090",
 		"https://confluent.cloud",
-		"https://confluent.cloud/",
+
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
 	} {
 		c := new(Command)
-		require.True(t, c.isCCloudURL(url), url+" should return true")
+		isCCloud, err := c.isCCloudURL(url)
+		require.Nil(t, err)
+		require.True(t, isCCloud, url+" should return true")
 	}
 }
 
@@ -862,6 +863,19 @@ func TestIsCCloudURL_False(t *testing.T) {
 		"https://example.com",
 	} {
 		c := new(Command)
-		require.False(t, c.isCCloudURL(url), url+" should return false")
+		isCCloud, err := c.isCCloudURL(url)
+		require.Nil(t, err)
+		require.False(t, isCCloud, url+" should return false")
+	}
+}
+
+func TestIsCCloudURL_UnnecessaryFlagError(t *testing.T) {
+	for _, url := range []string{
+		"confluent.cloud:123",
+		"https://confluent.cloud/login/sso/company",
+	} {
+		c := new(Command)
+		_, err := c.isCCloudURL(url)
+		require.Equal(t, err.Error(), errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error())
 	}
 }

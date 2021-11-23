@@ -81,7 +81,10 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := c.isCCloudURL(url)
+	isCCloud, err := c.isCCloudURL(url)
+	if err != nil {
+		return err
+	}
 
 	url, valid, errMsg := validateURL(url, isCCloud)
 	if !valid {
@@ -320,16 +323,19 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 	return url, matched, strings.Join(msg, " and ")
 }
 
-func (c *Command) isCCloudURL(url string) bool {
+func (c *Command) isCCloudURL(url string) (bool, error) {
 	for _, hostname := range v1.CCloudHostnames {
 		if strings.Contains(url, hostname) {
-			return true
+			if !strings.HasSuffix(url, hostname) {
+				return true, errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
+			}
+			return true, nil
 		}
 	}
 
 	if c.isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host)
+		return strings.Contains(url, testserver.TestCloudURL.Host), nil
 	}
 
-	return false
+	return false, nil
 }
