@@ -110,7 +110,7 @@ func (k *KafkaApiRouter) HandleKafkaLink(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for: "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
-func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topic := vars["topic"]

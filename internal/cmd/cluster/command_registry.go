@@ -176,11 +176,11 @@ func (c *registryCommand) register(cmd *cobra.Command, _ []string) error {
 
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(c.createContext(), []mds.ClusterInfo{clusterInfo})
 	if err != nil {
-		return print.HandleClusterError(cmd, err, response)
+		return print.HandleClusterError(err, response)
 	}
 
 	// On Success display the newly added/updated entry
-	return print.PrintCluster(cmd, []mds.ClusterInfo{clusterInfo}, output.Human.String())
+	return print.PrintCluster([]mds.ClusterInfo{clusterInfo}, output.Human.String())
 }
 
 func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
@@ -191,7 +191,7 @@ func (c *registryCommand) unregister(cmd *cobra.Command, _ []string) error {
 
 	response, err := c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(c.createContext(), name)
 	if err != nil {
-		return print.HandleClusterError(cmd, err, response)
+		return print.HandleClusterError(err, response)
 	}
 
 	utils.Printf(cmd, errors.UnregisteredClusterMsg, name)
