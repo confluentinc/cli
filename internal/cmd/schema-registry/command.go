@@ -24,7 +24,8 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:         "schema-registry",
-			Short:       `Manage Schema Registry.`,
+			Aliases:     []string{"sr"},
+			Short:       "Manage Schema Registry.",
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 		}, prerunner)
 	cmd := &command{

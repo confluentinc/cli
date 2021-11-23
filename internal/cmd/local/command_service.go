@@ -23,12 +23,20 @@ import (
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := NewLocalCommand(
-		&cobra.Command{
-			Use:   service,
-			Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
-			Args:  cobra.NoArgs,
-		}, prerunner)
+	cmd := &cobra.Command{
+		Use:   service,
+		Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
+		Args:  cobra.NoArgs,
+	}
+
+	switch service {
+	case "zookeeper":
+		cmd.Aliases = []string{"zk"}
+	case "schema-registry":
+		cmd.Aliases = []string{"sr"}
+	}
+
+	c := NewLocalCommand(cmd, prerunner)
 
 	c.AddCommand(NewServiceLogCommand(service, prerunner))
 	c.AddCommand(NewServiceStartCommand(service, prerunner))

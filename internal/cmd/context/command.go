@@ -15,9 +15,10 @@ type command struct {
 
 func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "context",
-		Short: "Manage CLI configuration contexts.",
-		Long:  "Manage CLI configuration contexts. Contexts define the state of a Confluent Cloud or Confluent Platform login.",
+		Use:     "context",
+		Aliases: []string{"ctx"},
+		Short:   "Manage CLI configuration contexts.",
+		Long:    "Manage CLI configuration contexts. Contexts define the state of a Confluent Cloud or Confluent Platform login.",
 	}
 
 	c := &command{

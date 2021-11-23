@@ -35,6 +35,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
 		&cobra.Command{
 			Use:         "environment",
+			Aliases:     []string{"env"},
 			Short:       "Manage and select Confluent Cloud environments.",
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner, SubcommandFlags)
