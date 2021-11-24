@@ -1,4 +1,4 @@
-          Key          | Description | Owner Resource Id |    Owner Email    | Resource Type | Resource ID |       Created         
+          Key          | Description | Owner Resource ID |    Owner Email    | Resource Type | Resource ID |       Created         
 -----------------------+-------------+-------------------+-------------------+---------------+-------------+-----------------------
     MYKEY10            |             | sa-12345          | <service account> | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
     MYKEY9             |             | sa-12345          | <service account> | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
