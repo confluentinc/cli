@@ -483,13 +483,8 @@ func (c *Config) IsOnPremLogin() bool {
 }
 
 func (c *Config) GetLastUsedOrgId() string {
-	var lastOrgId string
-	ctx := c.Context()
-	if ctx != nil {
-		lastOrgId = ctx.LastOrgId
+	if ctx := c.Context(); ctx != nil && ctx.LastOrgId != "" {
+		return ctx.LastOrgId
 	}
-	if lastOrgId == "" {
-		return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
-	}
-	return lastOrgId
+	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
 }
