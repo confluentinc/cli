@@ -6,11 +6,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
+var clusterSubcommandFlags = map[string]*pflag.FlagSet{
 	"list": cmd.ContextSet(),
 }
 
-var SubcommandFlags = map[string]*pflag.FlagSet{
+var subcommandFlags = map[string]*pflag.FlagSet{
 	"describe": cmd.ClusterEnvironmentContextSet(),
 	"list":     cmd.ClusterEnvironmentContextSet(),
 	"create":   cmd.ClusterEnvironmentContextSet(),
