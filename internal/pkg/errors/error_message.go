@@ -36,7 +36,7 @@ const (
 	// login command
 	NoEnvironmentFoundErrorMsg					= "no environment found for authenticated user"
 	UnneccessaryUrlFlagForCloudLoginErrorMsg	= "there is no need to pass the url flag if you are logging in to Confluent Cloud"
-	UnneccessaryUrlFlagForCloudLoginSuggestions	= "Login to Confluent Cloud with `confluent login`"
+	UnneccessaryUrlFlagForCloudLoginSuggestions	= "Log in to Confluent Cloud with `confluent login`"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"

@@ -326,7 +326,7 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 func (c *Command) isCCloudURL(url string) (bool, error) {
 	for _, hostname := range v1.CCloudHostnames {
 		if strings.Contains(url, hostname) {
-			if !strings.HasSuffix(url, hostname) {
+			if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
 				return true, errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
 			}
 			return true, nil

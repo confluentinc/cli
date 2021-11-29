@@ -844,14 +844,14 @@ func TestIsCCloudURL_True(t *testing.T) {
 	for _, url := range []string{
 		"confluent.cloud",
 		"https://confluent.cloud",
-
+		"https://devel.cpdev.cloud/",
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
 	} {
 		c := new(Command)
 		isCCloud, err := c.isCCloudURL(url)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.True(t, isCCloud, url+" should return true")
 	}
 }
@@ -864,7 +864,7 @@ func TestIsCCloudURL_False(t *testing.T) {
 	} {
 		c := new(Command)
 		isCCloud, err := c.isCCloudURL(url)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.False(t, isCCloud, url+" should return false")
 	}
 }
@@ -873,6 +873,7 @@ func TestIsCCloudURL_UnnecessaryFlagError(t *testing.T) {
 	for _, url := range []string{
 		"confluent.cloud:123",
 		"https://confluent.cloud/login/sso/company",
+		"https://devel.cpdev.cloud//",
 	} {
 		c := new(Command)
 		_, err := c.isCCloudURL(url)
