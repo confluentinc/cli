@@ -10,12 +10,13 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"math/big"
 	"net/http"
 	"os"
 	"reflect"
 	"testing"
+
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ import (
 const (
 	envUser        = "env-user"
 	envPassword    = "env-password"
-	testToken1      = "org-1-y0ur.jwt.T0kEn"
+	testToken1     = "org-1-y0ur.jwt.T0kEn"
 	testToken2     = "org-2-y0ur.jwt.T0kEn"
 	promptUser     = "prompt-user@confluent.io"
 	promptPassword = " prompt-password "

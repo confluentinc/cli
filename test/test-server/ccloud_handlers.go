@@ -802,8 +802,8 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
 				Invitations: []*orgv1.Invitation{
-					buildInvitation("1", "u-11aaa@confluent.io",  "u-11aaa", "VERIFIED"),
-					buildInvitation("2", "u-22bbb@confluent.io",  "u-22bbb", "SENT"),
+					buildInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
+					buildInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
 				},
 			})
 			require.NoError(t, err)
@@ -819,8 +819,8 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 				}
 			} else {
 				res = flowv1.CreateInvitationReply{
-					Error: nil,
-					Invitation:  buildInvitation("1", "miles@confluent.io",  "user1", "SENT"),
+					Error:      nil,
+					Invitation: buildInvitation("1", "miles@confluent.io", "user1", "SENT"),
 				}
 			}
 			data, err := json.Marshal(res)

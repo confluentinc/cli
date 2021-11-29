@@ -84,7 +84,7 @@ var (
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool, _ string) (s string, s2 string, e error) {
+		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return testToken, "refreshToken", nil
 		},
 		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {

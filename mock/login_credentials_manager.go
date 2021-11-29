@@ -8,9 +8,10 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_ccloud_sdk_go_v1 "github.com/confluentinc/ccloud-sdk-go-v1"
+	github_com_spf13_cobra "github.com/spf13/cobra"
+
 	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/internal/pkg/netrc"
-	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // MockLoginCredentialsManager is a mock of LoginCredentialsManager interface

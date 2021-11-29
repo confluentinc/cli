@@ -2,11 +2,13 @@
 package auth
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	"os"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
-	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type LoginOrganizationManager interface {
@@ -20,10 +22,9 @@ type LoginOrganizationManagerImpl struct {
 }
 
 func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error) {
-	var orgResourceId string
-	var multiErr, err error
+	var multiErr error
 	for _, getFunc := range getOrgFuncs {
-		orgResourceId, err = getFunc()
+		orgResourceId, err := getFunc()
 		if err == nil && orgResourceId != "" {
 			return orgResourceId, nil
 		} else if err != nil {
@@ -33,7 +34,7 @@ func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error)
 	if multiErr != nil {
 		return "", multiErr
 	}
-	return orgResourceId, nil
+	return "", nil
 }
 
 func NewLoginOrganizationManagerImpl(logger *log.Logger) *LoginOrganizationManagerImpl {

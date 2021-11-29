@@ -493,9 +493,3 @@ func (c *Config) GetLastUsedOrgId() string {
 	}
 	return lastOrgId
 }
-
-//func (c *Config) UpdateLastUsedOrgId(orgResourceId string) {
-//	// keep track of the cloud organization we're logged in to so we can log back into the same one next time
-//	c.Context().LastOrgId = orgResourceId
-//	c.Save()
-//}

@@ -224,8 +224,8 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	h.logger.Debugf("auth0ClientId: %s", auth0ClientId)
 	loginRealmReply, err := h.client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
-			Email:    email,
-			ClientId: auth0ClientId,
+			Email:         email,
+			ClientId:      auth0ClientId,
 			OrgResourceId: orgId,
 		})
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
