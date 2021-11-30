@@ -172,7 +172,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	// terminate cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
 	if cluster.Status == schedv1.ClusterStatus_UP {
 		ctx := c.Config.Context()
-		state, err := ctx.AuthenticatedState(cmd)
+		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return err
 		}
@@ -388,7 +388,7 @@ func (c *clusterCommand) configureACLs(cmd *cobra.Command, args []string) error 
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

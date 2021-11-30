@@ -46,7 +46,6 @@ const (
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
 	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	PluginNameNotPassedErrorMsg        = "plugin name must be passed"
 	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
 

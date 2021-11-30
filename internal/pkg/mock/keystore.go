@@ -8,16 +8,15 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_cc_structs_kafka_scheduler_v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // KeyStore is a mock of KeyStore interface
 type KeyStore struct {
 	lockHasAPIKey sync.Mutex
-	HasAPIKeyFunc func(key, clusterId string, cmd *github_com_spf13_cobra.Command) (bool, error)
+	HasAPIKeyFunc func(key, clusterId string) (bool, error)
 
 	lockStoreAPIKey sync.Mutex
-	StoreAPIKeyFunc func(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error
+	StoreAPIKeyFunc func(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string) error
 
 	lockDeleteAPIKey sync.Mutex
 	DeleteAPIKeyFunc func(key string) error
@@ -26,12 +25,10 @@ type KeyStore struct {
 		HasAPIKey []struct {
 			Key       string
 			ClusterId string
-			Cmd       *github_com_spf13_cobra.Command
 		}
 		StoreAPIKey []struct {
 			Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
 			ClusterId string
-			Cmd       *github_com_spf13_cobra.Command
 		}
 		DeleteAPIKey []struct {
 			Key string
@@ -40,7 +37,7 @@ type KeyStore struct {
 }
 
 // HasAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) HasAPIKey(key, clusterId string, cmd *github_com_spf13_cobra.Command) (bool, error) {
+func (m *KeyStore) HasAPIKey(key, clusterId string) (bool, error) {
 	m.lockHasAPIKey.Lock()
 	defer m.lockHasAPIKey.Unlock()
 
@@ -51,16 +48,14 @@ func (m *KeyStore) HasAPIKey(key, clusterId string, cmd *github_com_spf13_cobra.
 	call := struct {
 		Key       string
 		ClusterId string
-		Cmd       *github_com_spf13_cobra.Command
 	}{
 		Key:       key,
 		ClusterId: clusterId,
-		Cmd:       cmd,
 	}
 
 	m.calls.HasAPIKey = append(m.calls.HasAPIKey, call)
 
-	return m.HasAPIKeyFunc(key, clusterId, cmd)
+	return m.HasAPIKeyFunc(key, clusterId)
 }
 
 // HasAPIKeyCalled returns true if HasAPIKey was called at least once.
@@ -75,7 +70,6 @@ func (m *KeyStore) HasAPIKeyCalled() bool {
 func (m *KeyStore) HasAPIKeyCalls() []struct {
 	Key       string
 	ClusterId string
-	Cmd       *github_com_spf13_cobra.Command
 } {
 	m.lockHasAPIKey.Lock()
 	defer m.lockHasAPIKey.Unlock()
@@ -84,7 +78,7 @@ func (m *KeyStore) HasAPIKeyCalls() []struct {
 }
 
 // StoreAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string, cmd *github_com_spf13_cobra.Command) error {
+func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string) error {
 	m.lockStoreAPIKey.Lock()
 	defer m.lockStoreAPIKey.Unlock()
 
@@ -95,16 +89,14 @@ func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cc_structs_kafka_sch
 	call := struct {
 		Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
 		ClusterId string
-		Cmd       *github_com_spf13_cobra.Command
 	}{
 		Key:       key,
 		ClusterId: clusterId,
-		Cmd:       cmd,
 	}
 
 	m.calls.StoreAPIKey = append(m.calls.StoreAPIKey, call)
 
-	return m.StoreAPIKeyFunc(key, clusterId, cmd)
+	return m.StoreAPIKeyFunc(key, clusterId)
 }
 
 // StoreAPIKeyCalled returns true if StoreAPIKey was called at least once.
@@ -119,7 +111,6 @@ func (m *KeyStore) StoreAPIKeyCalled() bool {
 func (m *KeyStore) StoreAPIKeyCalls() []struct {
 	Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
 	ClusterId string
-	Cmd       *github_com_spf13_cobra.Command
 } {
 	m.lockStoreAPIKey.Lock()
 	defer m.lockStoreAPIKey.Unlock()

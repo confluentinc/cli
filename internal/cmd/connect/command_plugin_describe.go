@@ -17,10 +17,11 @@ import (
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <plugin>",
-		Short: "Describe a connector plugin.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:               "describe <plugin>",
+		Short:             "Describe a connector plugin.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the required connector configuration parameters for connector plugin "MySource".`,
@@ -35,11 +36,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return errors.Errorf(errors.PluginNameNotPassedErrorMsg)
-	}
-
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}

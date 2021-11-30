@@ -119,7 +119,7 @@ func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
 	if cmd == nil {
 		return suggestions
 	}
-	topics, err := cmd.getTopics(cmd.Command)
+	topics, err := cmd.getTopics()
 	if err != nil {
 		return suggestions
 	}
@@ -272,7 +272,7 @@ func (a *authenticatedTopicCommand) init() {
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -305,7 +305,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	resp, err := a.getTopics(cmd)
+	resp, err := a.getTopics()
 	if err != nil {
 		return err
 	}
@@ -359,7 +359,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			i++
 		}
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -405,7 +405,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -496,7 +496,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 	}
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -535,7 +535,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if kafkaREST != nil && !dryRun {
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -584,7 +584,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fallback to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -632,7 +632,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -663,7 +663,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -725,7 +725,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	level := h.Config.Logger.GetLevel()
 
 	topic := args[0]
-	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -878,7 +878,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -1085,17 +1085,14 @@ func printStructuredTopicDescription(resp *schedv1.TopicDescription, format stri
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.TopicDescription, error) {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+func (a *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return []*schedv1.TopicDescription{}, err
 	}
-	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
-	if err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
-	}
 
-	return resp, err
+	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
+	return resp, errors.CatchClusterNotReadyError(err, cluster.Id)
 }
 
 func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {

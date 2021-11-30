@@ -15,25 +15,26 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:         "delete <id>",
-		Short:       "Delete a connector.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.delete),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "delete <id>",
+		Short:             "Delete a connector.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.delete),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect delete --config config.json",
+				Code: "confluent connect delete",
 			},
 			examples.Example{
-				Code: "confluent connect delete --config config.json --cluster lkc-123456",
+				Code: "confluent connect delete --cluster lkc-123456",
 			},
 		),
 	}
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}

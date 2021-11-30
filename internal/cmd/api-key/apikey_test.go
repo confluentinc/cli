@@ -10,7 +10,6 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -168,10 +167,10 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.keystore = &mock.KeyStore{
-		HasAPIKeyFunc: func(key, clusterId string, cmd *cobra.Command) (b bool, e error) {
+		HasAPIKeyFunc: func(key, clusterId string) (b bool, e error) {
 			return key == apiKeyVal, nil
 		},
-		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string) error {
 			return nil
 		},
 		DeleteAPIKeyFunc: func(key string) error {

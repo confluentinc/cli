@@ -34,11 +34,16 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]*opv1.ConnectorPluginInfo, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+func (c *pluginCommand) getPlugins() ([]*opv1.ConnectorPluginInfo, error) {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.Client.Connect.GetPlugins(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "")
+	connector := &schedv1.Connector{
+		AccountId:      c.EnvironmentId(),
+		KafkaClusterId: kafkaCluster.ID,
+	}
+
+	return c.Client.Connect.GetPlugins(context.Background(), connector, "")
 }

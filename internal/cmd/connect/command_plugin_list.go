@@ -37,7 +37,7 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.getPlugins(cmd)
+	plugins, err := c.getPlugins()
 	if err != nil {
 		return err
 	}
