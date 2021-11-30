@@ -21,26 +21,24 @@ type command struct {
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
-		&cobra.Command{
-			Use:         "schema-registry",
-			Short:       `Manage Schema Registry.`,
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
-		}, prerunner)
-	cmd := &command{
-		AuthenticatedCLICommand: cliCmd,
+	cmd := &cobra.Command{
+		Use:         "schema-registry",
+		Short:       "Manage Schema Registry.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+	}
+
+	c := &command{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
 		srClient:                srClient,
 		logger:                  logger,
 		prerunner:               prerunner,
 		analyticsClient:         analyticsClient,
 	}
-	cmd.init(cfg)
-	return cmd.Command
-}
 
-func (c *command) init(cfg *v1.Config) {
-	c.AddCommand(NewClusterCommand(cfg, c.prerunner, c.srClient, c.logger, c.analyticsClient))
-	c.AddCommand(NewExporterCommand(c.prerunner, c.srClient))
-	c.AddCommand(NewSchemaCommand(c.prerunner, c.srClient))
-	c.AddCommand(NewSubjectCommand(c.prerunner, c.srClient))
+	c.AddCommand(newClusterCommand(cfg, c.prerunner, c.srClient, c.logger, c.analyticsClient))
+	c.AddCommand(newExporterCommand(c.prerunner, c.srClient))
+	c.AddCommand(newSchemaCommand(c.prerunner, c.srClient))
+	c.AddCommand(newSubjectCommand(c.prerunner, c.srClient))
+
+	return c.Command
 }
