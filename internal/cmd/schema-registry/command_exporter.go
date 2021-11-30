@@ -84,7 +84,7 @@ func (c *exporterCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: "confluent schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --subject-format my-\\${subject} --config-file config.txt",
+				Code: `confluent schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --subject-format my-\${subject} --config-file config.txt`,
 			},
 		),
 	}
@@ -106,7 +106,7 @@ func (c *exporterCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: "confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --subject-format my-\\${subject}",
+				Code: `confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --subject-format my-\${subject}`,
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
