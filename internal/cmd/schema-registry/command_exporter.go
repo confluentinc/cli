@@ -90,7 +90,7 @@ func (c *exporterCommand) init() {
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().StringSlice("subjects", []string{"*"}, "Exporter subjects. Use a comma separated list, or specify the flag multiple times.")
-	cmd.Flags().String("subject-format", "", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
+	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 	cmd.Flags().String("context-type", "AUTO", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	cmd.Flags().String("config-file", "", "Exporter config file.")
@@ -116,7 +116,7 @@ func (c *exporterCommand) init() {
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	cmd.Flags().StringSlice("subjects", []string{}, "Exporter subjects. Use a comma separated list, or specify the flag multiple times.")
-	cmd.Flags().String("subject-format", "", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
+	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 	cmd.Flags().String("context-type", "", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	cmd.Flags().String("config-file", "", "Exporter config file.")
