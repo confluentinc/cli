@@ -22,9 +22,9 @@ type exporterCommand struct {
 type exporterInfoDisplay struct {
 	Name          string
 	Subjects      string
+	SubjectFormat string
 	ContextType   string
 	Context       string
-	SubjectFormat string
 	Config        string
 }
 
@@ -37,7 +37,7 @@ type exporterStatusDisplay struct {
 }
 
 var (
-	describeInfoLabels              = []string{"Name", "Subjects", "ContextType", "Context", "SubjectFormat", "Config"}
+	describeInfoLabels              = []string{"Name", "Subjects", "SubjectFormat", "ContextType", "Context", "Config"}
 	describeInfoHumanRenames        = map[string]string{"ContextType": "Context Type", "SubjectFormat": "Subject Format", "Config": "Remote Schema Registry Configs"}
 	describeInfoStructuredRenames   = map[string]string{"Name": "name", "Subjects": "subjects", "ContextType": "context_type", "Context": "context", "SubjectFormat": "subject_format", "Config": "config"}
 	describeStatusLabels            = []string{"Name", "State", "Offset", "Timestamp", "Trace"}

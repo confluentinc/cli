@@ -71,7 +71,7 @@ func (suite *ExporterTestSuite) SetupTest() {
 				return []string{exporterName}, nil, nil
 			},
 			GetExporterInfoFunc: func(_ context.Context, name string) (srsdk.ExporterInfo, *http.Response, error) {
-				return srsdk.ExporterInfo{Name: exporterName, Subjects: []string{subjectName}, ContextType: "AUTO", Config: map[string]string{}}, nil, nil
+				return srsdk.ExporterInfo{Name: exporterName, Subjects: []string{subjectName}, SubjectRenameFormat: "${subject}", ContextType: "AUTO", Config: map[string]string{}}, nil, nil
 			},
 			GetExporterStatusFunc: func(_ context.Context, name string) (srsdk.ExporterStatus, *http.Response, error) {
 				return srsdk.ExporterStatus{Name: exporterName, State: "PAUSED", Offset: 0, Ts: 0, Trace: ""}, nil, nil
@@ -157,8 +157,8 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 
 	req.Equal("+--------------------------------+-------------+\n"+
 		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n"+
-		"| Context Type                   | AUTO        |\n| Context                        |             |\n"+
-		"| Subject Format                 |             |\n| Remote Schema Registry Configs |             |\n"+
+		"| Subject Format                 | ${subject}  |\n| Context Type                   | AUTO        |\n"+
+		"| Context                        |             |\n| Remote Schema Registry Configs |             |\n"+
 		"+--------------------------------+-------------+\n", output.String())
 }
 
