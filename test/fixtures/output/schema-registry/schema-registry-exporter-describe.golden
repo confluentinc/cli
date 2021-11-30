@@ -3,6 +3,7 @@
 | Subjects                       | foo, bar      |
 | Context Type                   | CUSTOM        |
 | Context                        | mycontext     |
+| Subject Format                 | my-${subject} |
 | Remote Schema Registry Configs | key1="value1" |
 |                                | key2="value2" |
 +--------------------------------+---------------+

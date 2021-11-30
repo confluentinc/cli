@@ -158,7 +158,8 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 	req.Equal("+--------------------------------+-------------+\n"+
 		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n"+
 		"| Context Type                   | AUTO        |\n| Context                        |             |\n"+
-		"| Remote Schema Registry Configs |             |\n+--------------------------------+-------------+\n", output.String())
+		"| Subject Format                 |             |\n| Remote Schema Registry Configs |             |\n"+
+		"+--------------------------------+-------------+\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestStatusExporter() {

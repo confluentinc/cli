@@ -82,7 +82,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry exporter create",
-			args:    "schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --config-file " + exporterConfigPath + " --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
+			args:    "schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file " + exporterConfigPath + " --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-registry-exporter-create.golden",
 		},
 		{
@@ -92,7 +92,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry exporter update",
-			args:    "schema-registry exporter update myexporter --subjects foo,bar,test " + " --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
+			args:    "schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} " + " --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-registry-exporter-update.golden",
 		},
 		{

@@ -20,11 +20,12 @@ type exporterCommand struct {
 }
 
 type exporterInfoDisplay struct {
-	Name        string
-	Subjects    string
-	ContextType string
-	Context     string
-	Config      string
+	Name          string
+	Subjects      string
+	ContextType   string
+	Context       string
+	SubjectFormat string
+	Config        string
 }
 
 type exporterStatusDisplay struct {
@@ -36,9 +37,9 @@ type exporterStatusDisplay struct {
 }
 
 var (
-	describeInfoLabels              = []string{"Name", "Subjects", "ContextType", "Context", "Config"}
-	describeInfoHumanRenames        = map[string]string{"ContextType": "Context Type", "Config": "Remote Schema Registry Configs"}
-	describeInfoStructuredRenames   = map[string]string{"Name": "name", "Subjects": "subjects", "ContextType": "context_type", "Context": "context", "Config": "config"}
+	describeInfoLabels              = []string{"Name", "Subjects", "ContextType", "Context", "SubjectFormat", "Config"}
+	describeInfoHumanRenames        = map[string]string{"ContextType": "Context Type", "SubjectFormat": "Subject Format", "Config": "Remote Schema Registry Configs"}
+	describeInfoStructuredRenames   = map[string]string{"Name": "name", "Subjects": "subjects", "ContextType": "context_type", "Context": "context", "SubjectFormat": "subject_format", "Config": "config"}
 	describeStatusLabels            = []string{"Name", "State", "Offset", "Timestamp", "Trace"}
 	describeStatusHumanRenames      = map[string]string{"State": "Exporter State", "Offset": "Exporter Offset", "Timestamp": "Exporter Timestamp", "Trace": "Error Trace"}
 	describeStatusStructuredRenames = map[string]string{"Name": "name", "State": "state", "Offset": "offset", "Timestamp": "timestamp", "Trace": "trace"}
@@ -83,7 +84,7 @@ func (c *exporterCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create new schema exporter.",
-				Code: "confluent schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --config-file config.txt",
+				Code: "confluent schema-registry exporter create my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --subject-format my-\\${subject} --config-file config.txt",
 			},
 		),
 	}
@@ -92,6 +93,7 @@ func (c *exporterCommand) init() {
 	cmd.Flags().String("context-type", "AUTO", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	cmd.Flags().String("config-file", "", "Exporter config file.")
+	cmd.Flags().String("subject-format", "", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 
 	_ = cmd.MarkFlagRequired("config-file")
 	c.AddCommand(cmd)
@@ -104,7 +106,7 @@ func (c *exporterCommand) init() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: "confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context",
+				Code: "confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context --subject-format my-\\${subject}",
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
@@ -113,11 +115,12 @@ func (c *exporterCommand) init() {
 		),
 	}
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter. Should use"+
-		" comma separated list, or specify the flag multiple times.")
-	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
-	cmd.Flags().String("context-name", "", "The context name of the exporter.")
-	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
+	cmd.Flags().StringSlice("subjects", []string{}, "Exporter subjects. Use a comma separated list, or specify the flag multiple times.")
+	cmd.Flags().String("context-type", "", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
+	cmd.Flags().String("context-name", "", "Exporter context name.")
+	cmd.Flags().String("config-file", "", "Exporter config file.")
+	cmd.Flags().String("subject-format", "", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
+
 	c.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -280,6 +283,10 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 	} else if cmd.Flags().Changed("context-name") {
 		return errors.New("can only set context-name if context-type is CUSTOM")
 	}
+	subjectFormat, err := cmd.Flags().GetString("subject-format")
+	if err != nil {
+		return err
+	}
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -291,11 +298,12 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	_, _, err = srClient.DefaultApi.CreateExporter(ctx, srsdk.CreateExporterRequest{
-		Name:        name,
-		Subjects:    subjects,
-		ContextType: contextType,
-		Context:     context,
-		Config:      configMap,
+		Name:                name,
+		Subjects:            subjects,
+		ContextType:         contextType,
+		Context:             context,
+		SubjectRenameFormat: subjectFormat,
+		Config:              configMap,
 	})
 	if err != nil {
 		return err
@@ -343,6 +351,13 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 	if len(subjects) > 0 {
 		updateRequest.Subjects = subjects
 	}
+	subjectFormat, err := cmd.Flags().GetString("subject-format")
+	if err != nil {
+		return err
+	}
+	if subjectFormat != "" {
+		updateRequest.SubjectRenameFormat = subjectFormat
+	}
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -376,11 +391,12 @@ func (c *exporterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	data := &exporterInfoDisplay{
-		Name:        info.Name,
-		Subjects:    strings.Join(info.Subjects, ", "),
-		ContextType: info.ContextType,
-		Context:     info.Context,
-		Config:      convertMapToString(info.Config),
+		Name:          info.Name,
+		Subjects:      strings.Join(info.Subjects, ", "),
+		ContextType:   info.ContextType,
+		Context:       info.Context,
+		SubjectFormat: info.SubjectRenameFormat,
+		Config:        convertMapToString(info.Config),
 	}
 	return output.DescribeObject(cmd, data, describeInfoLabels, describeInfoHumanRenames, describeInfoStructuredRenames)
 }

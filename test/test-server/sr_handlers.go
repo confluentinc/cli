@@ -173,6 +173,7 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 				Subjects:    []string{"foo", "bar"},
 				ContextType: "CUSTOM",
 				Context:     "mycontext",
+				SubjectRenameFormat: "my-${subject}",
 				Config:      map[string]string{"key1": "value1", "key2": "value2"},
 			}
 			err := json.NewEncoder(w).Encode(info)
