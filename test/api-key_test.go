@@ -87,13 +87,13 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 
 		// create api-key for a service account
-		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/24.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/24.golden"}, // MYKEY9
 		{args: "api-key list --current-user", fixture: "apikey/23.golden"},
 		{args: "api-key list", fixture: "apikey/25.golden"},
 		{args: "api-key list --service-account sa-12345", fixture: "apikey/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "apikey/27.golden"},
 		{args: "api-key list --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/50.golden"},
-		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/51.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "apikey/51.golden"}, // MYKEY10
 		{args: "api-key list --service-account sa-12345", fixture: "apikey/52.golden"},
 		{name: "error listing api keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "apikey/53.golden"},
 

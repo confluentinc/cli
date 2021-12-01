@@ -351,7 +351,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 
 		switch r.Method {
 		case "GET":
-			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{ResourceId: serviceAccountResourceID}}
+			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{Id: serviceAccountID}}
 
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
