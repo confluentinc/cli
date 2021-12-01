@@ -1,6 +1,9 @@
 package stream_share
 
 import (
+	"os"
+	"testing"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	cdxv1 "github.com/confluentinc/cdx-schema/cdx/v1"
@@ -14,8 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"os"
-	"testing"
 )
 
 type SharedTokenTestSuite struct {
@@ -150,4 +151,14 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedToken() {
 
 func stringToPtr(s string) *string {
 	return &s
+}
+
+func (suite *SharedTokenTestSuite) TestDeactivateStreamShare() {
+	cmd := suite.newCmd()
+	args := []string{"shared-token", "deactivate", "--stream_share_id", "test_id"}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
+	req.NoError(err)
 }

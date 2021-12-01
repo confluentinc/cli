@@ -425,7 +425,8 @@ const (
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
 
 	// Stream Share errors
-	TopicEmptyErrorMsg   = "topic cannot be empty"
-	ClusterEmptyErrorMsg = "cluster cannot be empty"
-	TokenEmptyErrorMsg   = "token cannot be empty"
+	TopicEmptyErrorMsg         = "topic cannot be empty"
+	ClusterEmptyErrorMsg       = "cluster cannot be empty"
+	TokenEmptyErrorMsg         = "token cannot be empty"
+	StreamShareIdEmptyErrorMsg = "stream_share_id cannot be empty"
 )
