@@ -45,6 +45,11 @@ func (suite *SharedTokenTestSuite) SetupTest() {
 				Secret: stringToPtr("secret"),
 			}, nil
 		},
+		DeactivateStreamShareFunc: func(id string) (*cdxv1.CdxV1StreamShare, error) {
+			return &cdxv1.CdxV1StreamShare{
+				Id: stringToPtr(id),
+			}, nil
+		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
@@ -144,7 +149,7 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedTokenWritesToOutputFile() {
 
 func (suite *SharedTokenTestSuite) TestDeactivateStreamShare() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "deactivate", "--stream_share_id", "test_id"}
+	args := []string{"deactivate", "--stream-share-id", "test_id"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
