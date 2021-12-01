@@ -6,7 +6,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 	"os"
@@ -15,7 +14,6 @@ import (
 type sharedTokenCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner       pcmd.PreRunner
-	logger          *log.Logger
 	analyticsClient analytics.Client
 }
 
