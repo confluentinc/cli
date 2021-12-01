@@ -156,7 +156,7 @@ func (suite *KSQLTestSuite) newClusterCMD() *appCommand {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := NewClusterCommand(cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.analyticsClient)
+	cmd := newAppCommand(cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.analyticsClient)
 	return cmd
 }
 

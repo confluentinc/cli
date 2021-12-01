@@ -29,7 +29,7 @@ type ksqlCluster struct {
 	Status            string `json:"status,omitempty"`
 }
 
-func NewClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *appCommand {
+func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *appCommand {
 	cmd := &cobra.Command{
 		Use:         "app",
 		Short:       "Manage ksqlDB apps.",

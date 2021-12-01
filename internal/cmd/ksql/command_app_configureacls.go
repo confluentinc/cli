@@ -56,7 +56,7 @@ func (c *appCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	// Setup ACLs
-	aclsDryRun, err := cmd.Flags().GetBool("acls-dry-run")
+	aclsDryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
 	}
