@@ -68,6 +68,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("iam acl"),
 		// skip api-key create since you don't get to choose a name for API keys
 		linter.ExcludeCommandContains("api-key create"),
+		linter.ExcludeCommandContains("stream-share"),
 		// skip connector create since you don't get to choose id for connector
 		linter.ExcludeCommandContains("connect create"),
 		// skip local which delegates to external bash scripts

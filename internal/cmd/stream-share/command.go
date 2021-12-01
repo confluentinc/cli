@@ -41,12 +41,13 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.deactivate),
 	}
-	deactivateCommand.Flags().String("stream-share-id", "", "The ID of the stream share to deactivate")
+	deactivateCommand.Flags().String("id", "", "The ID of the stream share to deactivate.")
+	deactivateCommand.Flags().SortFlags = false
 	c.AddCommand(deactivateCommand)
 }
 
 func (c *command) deactivate(cmd *cobra.Command, _ []string) error {
-	id, err := cmd.Flags().GetString("stream-share-id")
+	id, err := cmd.Flags().GetString("id")
 	if err != nil {
 		return err
 	} else if id == "" {
