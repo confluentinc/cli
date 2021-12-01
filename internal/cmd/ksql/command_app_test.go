@@ -25,7 +25,7 @@ type KsqlClusterTestSuite struct {
 	suite.Suite
 }
 
-func (suite *KsqlClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
+func (suite *KsqlClusterTestSuite) newCmd(conf *v1.Config) *appCommand {
 	client := &ccloud.Client{
 		KSQL: &ccsdkmock.KSQL{
 			ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, err error) {
@@ -46,7 +46,7 @@ func (suite *KsqlClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 func (suite *KsqlClusterTestSuite) TestServerComplete() {
 	req := suite.Require()
 	type fields struct {
-		Command *clusterCommand
+		Command *appCommand
 	}
 	tests := []struct {
 		name   string

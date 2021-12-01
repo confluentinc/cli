@@ -150,7 +150,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	return cmd
 }
 
-func (suite *KSQLTestSuite) newClusterCMD() *clusterCommand {
+func (suite *KSQLTestSuite) newClusterCMD() *appCommand {
 	client := &ccloud.Client{
 		Kafka: suite.kafkac,
 		User:  suite.userc,
@@ -330,7 +330,7 @@ func (suite *KSQLTestSuite) TestServerClusterFlagComplete() {
 	flagName := "cluster"
 	req := suite.Require()
 	type fields struct {
-		Command *clusterCommand
+		Command *appCommand
 	}
 	tests := []struct {
 		name   string
