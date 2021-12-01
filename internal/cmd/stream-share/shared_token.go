@@ -22,7 +22,7 @@ func NewSharedTokenCommand(prerunner pcmd.PreRunner, analyticsClient analytics.C
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "shared-token",
-			Short: "Perform operations on shared token",
+			Short: "Perform operations on shared token.",
 		}, prerunner)
 	cmd := &sharedTokenCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -38,23 +38,29 @@ func (c *sharedTokenCommand) init() {
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Generate a shared token for a specific topic and recipient.",
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String("consumer_email", "", "Email id of consumer of stream share")
-	createCmd.Flags().String("topic", "", "Topic of stream share")
-	createCmd.Flags().String("cluster", "", "Cluster of stream share")
+	createCmd.Flags().String("consumer-email", "", "Email id of consumer of stream share.")
+	createCmd.Flags().String("topic", "", "Topic of stream share.")
+	createCmd.Flags().String("cluster", "", "Cluster of stream share.")
+	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
+
+	// confluent stream-share shared-token create "Token for sharing with Google" --topic
+
 
 	// redeem sub-command
 	redeemCmd := &cobra.Command{
 		Use:   "redeem",
-		Short: "Redeem the shared token to access a specific topic. Creates a config file at the path specified by the output flag.",
+		Short: "Redeem a stream share token.",
+		Long: "Redeem a stream share token to access a specific topic. Creates a config file at the path specified by the output flag.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.redeem),
 	}
-	redeemCmd.Flags().String("token", "", "Token received from the producer of topic data")
-	redeemCmd.Flags().String("output", "./consumer.config", "Optional path for config file")
+	redeemCmd.Flags().String("token", "", "Token received from the producer of topic data.")
+	redeemCmd.Flags().String("output", "./consumer.config", "Optional path for config file.")
+	redeemCmd.Flags().SortFlags = false
 	c.AddCommand(redeemCmd)
 }
 
@@ -127,7 +133,7 @@ func (c *sharedTokenCommand) createConfigFile(redeemedToken *v1.CdxV1RedeemToken
 }
 
 func (c *sharedTokenCommand) create(cmd *cobra.Command, _ []string) error {
-	email, err := cmd.Flags().GetString("consumer_email")
+	email, err := cmd.Flags().GetString("consumer-email")
 	if err != nil {
 		return err
 	}

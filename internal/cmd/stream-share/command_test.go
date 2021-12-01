@@ -72,7 +72,7 @@ func (suite *SharedTokenTestSuite) newCmd() *cobra.Command {
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenEmailIsInvalid() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "confluent.io"}
+	args := []string{"shared-token", "create", "--consumer-email", "confluent.io"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -82,7 +82,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenEmailIsI
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenTopicIsEmpty() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "stokkar+provider@confluent.io", "--topic", ""}
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", ""}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -92,7 +92,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenTopicIsE
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenClusterIsEmpty() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "stokkar+provider@confluent.io", "--topic", "test_topic",
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", "test_topic",
 		"--cluster", ""}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -103,7 +103,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenClusterI
 
 func (suite *SharedTokenTestSuite) TestCreateSharedToken() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "stokkar+provider@confluent.io", "--topic", "test_topic",
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", "test_topic",
 		"--cluster", "clstr"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -149,7 +149,7 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedTokenWritesToOutputFile() {
 
 func (suite *SharedTokenTestSuite) TestDeactivateStreamShare() {
 	cmd := suite.newCmd()
-	args := []string{"deactivate", "--stream-share-id", "test_id"}
+	args := []string{"deactivate", "--id", "test_id"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
