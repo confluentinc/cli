@@ -20,7 +20,7 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: "confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context",
+				Code: `confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
@@ -29,10 +29,11 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-file", "", "The file containing configurations of the exporter.")
-	cmd.Flags().StringSlice("subjects", []string{}, "The subjects of the exporter. Should use comma separated list, or specify the flag multiple times.")
-	cmd.Flags().String("context-type", "", `The context type of the exporter. Can be "AUTO", "CUSTOM" or "NONE".`)
-	cmd.Flags().String("context-name", "", "The context name of the exporter.")
+	cmd.Flags().String("config-file", "", "Exporter config file.")
+	cmd.Flags().StringSlice("subjects", []string{}, "Exporter subjects. Use a comma separated list, or specify the flag multiple times.")
+	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
+	cmd.Flags().String("context-type", "", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
+	cmd.Flags().String("context-name", "", "Exporter context name.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 
 	return cmd
@@ -79,6 +80,14 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	if len(subjects) > 0 {
 		updateRequest.Subjects = subjects
+	}
+
+	subjectFormat, err := cmd.Flags().GetString("subject-format")
+	if err != nil {
+		return err
+	}
+	if subjectFormat != "" {
+		updateRequest.SubjectRenameFormat = subjectFormat
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")

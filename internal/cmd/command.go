@@ -111,7 +111,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-	connectCmd := connect.New(cfg, prerunner, analyticsClient)
+	connectCmd := connect.New(prerunner, analyticsClient)
 	environmentCmd := environment.New(prerunner, analyticsClient)
 
 	cli.AddCommand(admin.New(prerunner, isTest))

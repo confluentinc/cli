@@ -13,11 +13,12 @@ type exporterCommand struct {
 }
 
 type exporterInfoDisplay struct {
-	Name        string
-	Subjects    string
-	ContextType string
-	Context     string
-	Config      string
+	Name          string
+	Subjects      string
+	SubjectFormat string
+	ContextType   string
+	Context       string
+	Config        string
 }
 
 type exporterStatusDisplay struct {

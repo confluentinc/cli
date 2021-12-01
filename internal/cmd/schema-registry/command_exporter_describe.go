@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	describeInfoLabels            = []string{"Name", "Subjects", "ContextType", "Context", "Config"}
-	describeInfoHumanRenames      = map[string]string{"ContextType": "Context Type", "Config": "Remote Schema Registry Configs"}
-	describeInfoStructuredRenames = map[string]string{"Name": "name", "Subjects": "subjects", "ContextType": "context_type", "Context": "context", "Config": "config"}
+	describeInfoLabels            = []string{"Name", "Subjects", "SubjectFormat", "ContextType", "Context", "Config"}
+	describeInfoHumanRenames      = map[string]string{"SubjectFormat": "Subject Format", "ContextType": "Context Type", "Config": "Remote Schema Registry Configs"}
+	describeInfoStructuredRenames = map[string]string{"Name": "name", "Subjects": "subjects", "SubjectFormat": "subject_format", "ContextType": "context_type", "Context": "context", "Config": "config"}
 )
 
 func (c *exporterCommand) newDescribeCommand() *cobra.Command {
@@ -40,11 +40,12 @@ func (c *exporterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	data := &exporterInfoDisplay{
-		Name:        info.Name,
-		Subjects:    strings.Join(info.Subjects, ", "),
-		ContextType: info.ContextType,
-		Context:     info.Context,
-		Config:      convertMapToString(info.Config),
+		Name:          info.Name,
+		Subjects:      strings.Join(info.Subjects, ", "),
+		SubjectFormat: info.SubjectRenameFormat,
+		ContextType:   info.ContextType,
+		Context:       info.Context,
+		Config:        convertMapToString(info.Config),
 	}
 	return output.DescribeObject(cmd, data, describeInfoLabels, describeInfoHumanRenames, describeInfoStructuredRenames)
 }

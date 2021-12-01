@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   create      Create a schema.
   delete      Delete one or more schemas.
-  describe    Get schema either by schema-id, or by subject/version.
+  describe    Get schema either by schema ID, or by subject/version.
 
 Global Flags:
   -h, --help            Show help for this command.

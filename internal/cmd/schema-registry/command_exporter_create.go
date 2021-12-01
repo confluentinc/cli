@@ -19,14 +19,15 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create new schema exporter.",
-				Code: "confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --context-type CUSTOM --context-name my-context",
+				Text: "Create a new schema exporter.",
+				Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
 			},
 		),
 	}
 
 	cmd.Flags().String("config-file", "", "Exporter config file.")
 	cmd.Flags().StringSlice("subjects", []string{"*"}, "Exporter subjects. Use a comma separated list, or specify the flag multiple times.")
+	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 	cmd.Flags().String("context-type", "AUTO", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -64,6 +65,11 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.New("can only set context-name if context-type is CUSTOM")
 	}
 
+	subjectFormat, err := cmd.Flags().GetString("subject-format")
+	if err != nil {
+		return err
+	}
+
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -75,11 +81,12 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	req := srsdk.CreateExporterRequest{
-		Name:        name,
-		Subjects:    subjects,
-		ContextType: contextType,
-		Context:     context,
-		Config:      configMap,
+		Name:                name,
+		Subjects:            subjects,
+		SubjectRenameFormat: subjectFormat,
+		ContextType:         contextType,
+		Context:             context,
+		Config:              configMap,
 	}
 
 	if _, _, err = srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
