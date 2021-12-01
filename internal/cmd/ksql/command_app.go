@@ -11,7 +11,6 @@ import (
 
 type appCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner               pcmd.PreRunner
 	completableChildren     []*cobra.Command
 	completableFlagChildren map[string][]*cobra.Command
 	analyticsClient         analytics.Client
@@ -39,7 +38,6 @@ func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *
 	c := &appCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
 		analyticsClient:               analyticsClient,
-		prerunner:                     prerunner,
 	}
 
 	createCmd := c.newCreateCommand()

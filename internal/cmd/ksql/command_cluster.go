@@ -10,7 +10,6 @@ const clusterType = "ksql-cluster"
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
 }
 
 func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
@@ -20,10 +19,7 @@ func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &clusterCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, onPremClusterSubcommandFlags),
-		prerunner:                     prerunner,
-	}
+	c := &clusterCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, onPremClusterSubcommandFlags)}
 
 	c.AddCommand(c.newListCommand())
 

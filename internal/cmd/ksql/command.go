@@ -12,7 +12,6 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	prerunner       pcmd.PreRunner
 	serverCompleter completer.ServerSideCompleter
 	analyticsClient analytics.Client
 }
@@ -26,15 +25,14 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 
 	c := &command{
 		CLICommand:      pcmd.NewCLICommand(cmd, prerunner),
-		prerunner:       prerunner,
 		serverCompleter: serverCompleter,
 		analyticsClient: analyticsClient,
 	}
 
-	appCmd := newAppCommand(c.prerunner, c.analyticsClient)
+	appCmd := newAppCommand(prerunner, c.analyticsClient)
 
 	c.AddCommand(appCmd.Command)
-	c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+	c.AddCommand(NewClusterCommandOnPrem(prerunner))
 
 	if cfg.IsCloudLogin() {
 		c.serverCompleter.AddCommand(appCmd)
