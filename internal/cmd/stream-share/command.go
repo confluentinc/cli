@@ -46,7 +46,7 @@ func (c *command) init() {
 }
 
 func (c *command) deactivate(cmd *cobra.Command, _ []string) error {
-	id, err := cmd.Flags().GetString("stream_share_id")
+	id, err := cmd.Flags().GetString("stream-share-id")
 	if err != nil {
 		return err
 	} else if id == "" {
