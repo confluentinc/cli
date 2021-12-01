@@ -50,8 +50,7 @@ const (
 	deactivatedUserID        = int32(6666)
 	deactivatedResourceID    = "sa-6666"
 
-	auditLogserviceAccountID         = int32(1337)
-	auditLogserviceAccountResourceID = "sa-1337"
+	auditLogserviceAccountID = int32(1337)
 )
 
 // Fill API keyStore with default data
