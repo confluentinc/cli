@@ -428,5 +428,5 @@ const (
 	TopicEmptyErrorMsg         = "topic cannot be empty"
 	ClusterEmptyErrorMsg       = "cluster cannot be empty"
 	TokenEmptyErrorMsg         = "token cannot be empty"
-	StreamShareIdEmptyErrorMsg = "stream_share_id cannot be empty"
+	StreamShareIdEmptyErrorMsg = "stream share id cannot be empty"
 )

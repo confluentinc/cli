@@ -41,7 +41,7 @@ func (c *command) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.deactivate),
 	}
-	deactivateCommand.Flags().String("stream_share_id", "", "The ID of the stream share to deactivate")
+	deactivateCommand.Flags().String("stream-share-id", "", "The ID of the stream share to deactivate")
 	c.AddCommand(deactivateCommand)
 }
 
