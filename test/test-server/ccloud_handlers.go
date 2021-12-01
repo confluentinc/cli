@@ -49,6 +49,9 @@ const (
 	serviceAccountResourceID = "sa-12345"
 	deactivatedUserID        = int32(6666)
 	deactivatedResourceID    = "sa-6666"
+
+	auditLogserviceAccountID         = int32(1337)
+	auditLogserviceAccountResourceID = "sa-1337"
 )
 
 // Fill API keyStore with default data
@@ -72,7 +75,7 @@ func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Req
 				AuditLog: &orgv1.AuditLog{
 					ClusterId:        "lkc-ab123",
 					AccountId:        "env-987zy",
-					ServiceAccountId: 1337,
+					ServiceAccountId: auditLogserviceAccountID,
 					TopicName:        "confluent-audit-log-events",
 				},
 			},
@@ -351,8 +354,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 
 		switch r.Method {
 		case "GET":
-			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{Id: serviceAccountID}}
-
+			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{Id: serviceAccountID, ResourceId: serviceAccountResourceID}}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 

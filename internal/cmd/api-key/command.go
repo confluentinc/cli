@@ -693,6 +693,7 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 		for _, user := range users {
 			if key.UserResourceId == user.ResourceId {
 				key.UserId = user.Id
+				break
 			}
 		}
 	} else {
