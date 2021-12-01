@@ -42,6 +42,7 @@ func (c *command) init() {
 		RunE:  pcmd.NewCLIRunE(c.deactivate),
 	}
 	deactivateCommand.Flags().String("id", "", "The ID of the stream share to deactivate.")
+	_ = deactivateCommand.MarkFlagRequired("id")
 	deactivateCommand.Flags().SortFlags = false
 	c.AddCommand(deactivateCommand)
 }
