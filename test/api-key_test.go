@@ -97,6 +97,10 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --service-account sa-12345", fixture: "apikey/52.golden"},
 		{name: "error listing api keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "apikey/53.golden"},
 
+		// create api-key for audit log
+		{args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "apikey/54.golden"}, // MYKEY11
+		{args: "api-key list", fixture: "apikey/55.golden"},
+
 		// create json yaml output
 		{args: "api-key create --description human-output --resource lkc-other1", fixture: "apikey/31.golden"},
 		{args: "api-key create --description json-output --resource lkc-other1 -o json", fixture: "apikey/32.golden"},
