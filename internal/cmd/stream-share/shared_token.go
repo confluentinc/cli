@@ -173,6 +173,7 @@ func (c *sharedTokenCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	utils.Println(cmd, fmt.Sprintf("Stream share id: %s created successfully", sharedToken.StreamShare.Id))
 	utils.Println(cmd, fmt.Sprintf("To share topic '%s' with %s, use the following token:", topic, email))
 	utils.Println(cmd, *sharedToken.Token)
 
