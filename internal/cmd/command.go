@@ -117,7 +117,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(admin.New(prerunner, isTest))
 	cli.AddCommand(apiKeyCmd.Command)
 	cli.AddCommand(auditlog.New(prerunner))
-	cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
+	cli.AddCommand(cluster.New(prerunner, ver.UserAgent, logger))
 	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	cli.AddCommand(completion.New())
 	cli.AddCommand(context.New(prerunner, flagResolver))
