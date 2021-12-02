@@ -15,25 +15,7 @@ type JsonSerializationProvider struct {
 }
 
 func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
-	sl := gojsonschema.NewSchemaLoader()
-	for referenceName, referencePath := range referencePathMap {
-		refSchema, err := ioutil.ReadFile(referencePath)
-		if err != nil {
-			return err
-		}
-		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
-		err = sl.AddSchema("/" + referenceName, referenceLoader)
-		if err != nil {
-			return err
-		}
-	}
-
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return errors.New(errors.JsonSchemaInvalidErrorMsg)
-	}
-
-	schemaLoader, err := sl.Compile(gojsonschema.NewStringLoader(string(schema)))
+	schemaLoader, err := parseSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -74,25 +56,7 @@ type JsonDeserializationProvider struct {
 }
 
 func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
-	sl := gojsonschema.NewSchemaLoader()
-	for referenceName, referencePath := range referencePathMap {
-		refSchema, err := ioutil.ReadFile(referencePath)
-		if err != nil {
-			return err
-		}
-		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
-		err = sl.AddSchema("/" + referenceName, referenceLoader)
-		if err != nil {
-			return err
-		}
-	}
-
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return errors.New(errors.JsonSchemaInvalidErrorMsg)
-	}
-
-	schemaLoader, err := sl.Compile(gojsonschema.NewStringLoader(string(schema)))
+	schemaLoader, err := parseSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -128,4 +92,31 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 		return "", err
 	}
 	return compactedBuffer.String(), nil
+}
+
+func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojsonschema.Schema, error) {
+	sl := gojsonschema.NewSchemaLoader()
+	for referenceName, referencePath := range referencePathMap {
+		refSchema, err := ioutil.ReadFile(referencePath)
+		if err != nil {
+			return nil, err
+		}
+		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
+		err = sl.AddSchema("/" + referenceName, referenceLoader)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, errors.New(errors.JsonSchemaInvalidErrorMsg)
+	}
+
+	schemaLoader, err := sl.Compile(gojsonschema.NewStringLoader(string(schema)))
+	if err != nil {
+		return nil, err
+	}
+
+	return schemaLoader, nil
 }

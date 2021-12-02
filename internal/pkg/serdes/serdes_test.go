@@ -228,11 +228,11 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	invalidBytes := []byte{123, 34, 102, 50, 34, 58, 34, 97, 115, 100, 34, 125}
 
 	_, err = serializationProvider.encode(invalidString)
-	req.EqualError(err, "the json document is invalid")
+	req.EqualError(err, "the JSON document is invalid")
 
 	data = invalidBytes
 	_, err = deserializationProvider.decode(data)
-	req.EqualError(err, "the json document is invalid")
+	req.EqualError(err, "the JSON document is invalid")
 
 	req.NoError(os.RemoveAll(dir))
 }

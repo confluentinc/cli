@@ -153,8 +153,8 @@ const (
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
-	JsonSchemaInvalidErrorMsg         = "the json schema is invalid"
-	JsonDocumentInvalidErrorMsg       = "the json document is invalid"
+	JsonSchemaInvalidErrorMsg         = "the JSON schema is invalid"
+	JsonDocumentInvalidErrorMsg       = "the JSON document is invalid"
 	AvroReferenceNotSupportedErrorMsg = "avro reference not supported in cloud CLI"
 	ProtoSchemaInvalidErrorMsg        = "the protobuf schema is invalid"
 	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"

@@ -765,7 +765,8 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	refPath, err := cmd.Flags().GetString("refs")
 	if err != nil {
 		return err
-	} else if refPath != "" {
+	}
+	if refPath != "" {
 		refBlob, err := ioutil.ReadFile(refPath)
 		if err != nil {
 			return err
@@ -787,7 +788,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	// Meta info contains magic byte and schema ID (4 bytes).
+	// Meta info contains a magic byte and schema ID (4 bytes).
 	metaInfo, referencePathMap, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err

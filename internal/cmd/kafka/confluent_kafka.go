@@ -102,8 +102,8 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
 
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
-	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".ref")
+	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%d.txt", schemaID))
+	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%d.ref", schemaID))
 	referencePathMap := map[string]string{}
 	var references []srsdk.SchemaReference
 	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
@@ -138,9 +138,9 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	for _, ref := range references {
-		tempRefContentPath := filepath.Join(filepath.Join(h.Properties.SchemaPath, ref.Name))
+		tempRefContentPath := filepath.Join(h.Properties.SchemaPath, ref.Name)
 		if !fileExists(tempRefContentPath) {
-			schema, _, err := h.SrClient.DefaultApi.GetSchemaByVersion(h.Ctx, ref.Subject, strconv.Itoa(int(ref.Version)),&srsdk.GetSchemaByVersionOpts{})
+			schema, _, err := h.SrClient.DefaultApi.GetSchemaByVersion(h.Ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
 			if err != nil {
 				return "", nil, err
 			}
