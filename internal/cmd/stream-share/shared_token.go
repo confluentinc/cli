@@ -47,9 +47,6 @@ func (c *sharedTokenCommand) init() {
 	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
-	// confluent stream-share shared-token create "Token for sharing with Google" --topic
-
-
 	// redeem sub-command
 	redeemCmd := &cobra.Command{
 		Use:   "redeem",
