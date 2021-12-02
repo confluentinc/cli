@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/cmd/stream-share"
 	"os"
+
+	stream_share "github.com/confluentinc/cli/internal/cmd/stream-share"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/jonboulle/clockwork"
@@ -11,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
-	"github.com/confluentinc/cli/internal/cmd/api-key"
-	"github.com/confluentinc/cli/internal/cmd/audit-log"
-	"github.com/confluentinc/cli/internal/cmd/cloud-signup"
+	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
+	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
 	"github.com/confluentinc/cli/internal/cmd/connect"
@@ -27,7 +28,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/schema-registry"
+	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -137,12 +138,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cli.AddCommand(version.New(prerunner, ver))
-	cli.AddCommand(stream_share.New(prerunner, analyticsClient))
 
 	if cfg.IsCloudLogin() {
 		serverCompleter.AddCommand(apiKeyCmd)
 		serverCompleter.AddCommand(connectCmd)
 		serverCompleter.AddCommand(environmentCmd)
+		cli.AddCommand(stream_share.New(prerunner, analyticsClient))
 	}
 
 	hideAndErrIfMissingRunRequirement(cli, cfg)
