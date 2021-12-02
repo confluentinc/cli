@@ -102,7 +102,7 @@ func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojson
 			return nil, err
 		}
 		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
-		err = sl.AddSchema("/" + referenceName, referenceLoader)
+		err = sl.AddSchema("/"+referenceName, referenceLoader)
 		if err != nil {
 			return nil, err
 		}
@@ -113,10 +113,5 @@ func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojson
 		return nil, errors.New(errors.JsonSchemaInvalidErrorMsg)
 	}
 
-	schemaLoader, err := sl.Compile(gojsonschema.NewStringLoader(string(schema)))
-	if err != nil {
-		return nil, err
-	}
-
-	return schemaLoader, nil
+	return sl.Compile(gojsonschema.NewStringLoader(string(schema)))
 }
