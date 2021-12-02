@@ -17,9 +17,10 @@ type command struct {
 // New returns the default command object to perform operations on stream share.
 func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "stream-share",
-		Short: "Manage stream share.",
-		Long:  "Create and redeem shared token for a stream share.",
+		Use:         "stream-share",
+		Short:       "Manage stream share.",
+		Long:        "Create and redeem shared token for a stream share.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &command{

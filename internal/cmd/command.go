@@ -138,12 +138,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
 	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cli.AddCommand(version.New(prerunner, ver))
+	cli.AddCommand(stream_share.New(prerunner, analyticsClient))
 
 	if cfg.IsCloudLogin() {
 		serverCompleter.AddCommand(apiKeyCmd)
 		serverCompleter.AddCommand(connectCmd)
 		serverCompleter.AddCommand(environmentCmd)
-		cli.AddCommand(stream_share.New(prerunner, analyticsClient))
 	}
 
 	hideAndErrIfMissingRunRequirement(cli, cfg)

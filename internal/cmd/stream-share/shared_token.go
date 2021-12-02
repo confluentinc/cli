@@ -42,7 +42,7 @@ func (c *sharedTokenCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String("consumer-email", "", "Email id of consumer of stream share.")
+	createCmd.Flags().String("consumer-email", "", "Email of consumer of stream share.")
 	createCmd.Flags().String("topic", "", "Topic of stream share.")
 	createCmd.Flags().String("cluster", "", "Cluster of stream share.")
 	_ = createCmd.MarkFlagRequired("consumer-email")
