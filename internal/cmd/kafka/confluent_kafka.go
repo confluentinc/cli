@@ -138,7 +138,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	for _, ref := range references {
-		tempRefContentPath := filepath.Join(filepath.Join(h.Properties.SchemaPath, ref.Name) + ".txt")
+		tempRefContentPath := filepath.Join(filepath.Join(h.Properties.SchemaPath, ref.Name))
 		if !fileExists(tempRefContentPath) {
 			schema, _, err := h.SrClient.DefaultApi.GetSchemaByVersion(h.Ctx, ref.Subject, strconv.Itoa(int(ref.Version)),&srsdk.GetSchemaByVersionOpts{})
 			if err != nil {
