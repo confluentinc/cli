@@ -94,7 +94,7 @@ func (k *KafkaApiRouter) buildKafkaApiHandler(t *testing.T) {
 	k.HandleFunc(aclsDelete, k.HandleKafkaACLsDelete(t))
 	k.HandleFunc(link, k.HandleKafkaLink(t))
 	k.HandleFunc(links, k.HandleKafkaLinks(t))
-	k.HandleFunc(topicMirrorStop, k.HandleKafkaTopicMirrorStop(t))
+	k.HandleFunc(topicMirrorStop, k.HandleKafkaTopicMirrorStop())
 	k.HandleFunc(topics, k.HandleKafkaListCreateTopic(t))
 	k.HandleFunc(topic, k.HandleKafkaDescribeDeleteTopic(t))
 	k.HandleFunc(topicConfig, k.HandleKafkaTopicListConfig(t))

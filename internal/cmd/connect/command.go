@@ -1,26 +1,10 @@
 package connect
 
 import (
-	"context"
-	"fmt"
-	"os"
-
-	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
-	"github.com/confluentinc/go-printer"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type command struct {
@@ -39,433 +23,46 @@ type connectorDescribeDisplay struct {
 	Trace  string `json:"trace,omitempty" yaml:"trace,omitempty"`
 }
 
-type taskDescribeDisplay struct {
-	TaskId int32  `json:"task_id" yaml:"task_id"`
-	State  string `json:"state" yaml:"state"`
-}
-type configDescribeDisplay struct {
-	Config string `json:"config" yaml:"config"`
-	Value  string `json:"value" yaml:"value"`
-}
-
-type structuredDescribeDisplay struct {
-	Connector *connectorDescribeDisplay `json:"connector" yaml:"connector"`
-	Tasks     []taskDescribeDisplay     `json:"tasks" yaml:"task"`
-	Configs   []configDescribeDisplay   `json:"configs" yaml:"configs"`
-}
-
 var (
-	describeRenames      = map[string]string{}
 	listFields           = []string{"ID", "Name", "Status", "Type", "Trace"}
 	listStructuredLabels = []string{"id", "name", "status", "type", "trace"}
 )
 
 // New returns the default command object for interacting with Connect.
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
-	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-		&cobra.Command{
-			Use:         "connect",
-			Short:       "Manage Kafka Connect.",
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
-		}, prerunner, SubcommandFlags)
-	cmd := &command{
-		AuthenticatedStateFlagCommand: cliCmd,
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+	cmd := &cobra.Command{
+		Use:         "connect",
+		Short:       "Manage Kafka Connect.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+	}
+
+	c := &command{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
 		prerunner:                     prerunner,
 		analyticsClient:               analyticsClient,
 	}
-	cmd.init(cfg)
-	return cmd
-}
 
-func (c *command) init(cfg *v1.Config) {
-	describeCmd := &cobra.Command{
-		Use:         "describe <id>",
-		Short:       "Describe a connector.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.describe),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connect describe <id>\n%s connect describe <id> --cluster <cluster-id>", pversion.CLIName, pversion.CLIName),
-			},
-		),
-	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	createCmd := c.newCreateCommand()
+	describeCmd := c.newDescribeCommand()
+	deleteCmd := c.newDeleteCommand()
+	listCmd := c.newListCommand()
+	pauseCmd := c.newPauseCommand()
+	resumeCmd := c.newResumeCommand()
+	updateCmd := c.newUpdateCommand()
 
-	listCmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List connectors.",
-		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.list),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List connectors in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connect list\n%s connect list --cluster <cluster-id>", pversion.CLIName, pversion.CLIName),
-			},
-		),
-	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-
-	createCmd := &cobra.Command{
-		Use:         "create",
-		Short:       "Create a connector.",
-		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.create),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Create a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connect create --config <file>\n%s connect create --cluster <cluster-id> --config <file>", pversion.CLIName, pversion.CLIName),
-			},
-		),
-	}
-	createCmd.Flags().String("config", "", "JSON connector config file.")
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	panicOnError(createCmd.MarkFlagRequired("config"))
-
-	deleteCmd := &cobra.Command{
-		Use:         "delete <id>",
-		Short:       "Delete a connector.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.delete),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Delete a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connect delete --config <file>\n%s connect delete --cluster <cluster-id> --config <file>", pversion.CLIName, pversion.CLIName),
-			},
-		),
-	}
-
-	updateCmd := &cobra.Command{
-		Use:         "update <id>",
-		Short:       "Update a connector configuration.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.update),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-	}
-	updateCmd.Flags().String("config", "", "JSON connector config file.")
-	panicOnError(updateCmd.MarkFlagRequired("config"))
-
-	pauseCmd := &cobra.Command{
-		Use:         "pause <id>",
-		Short:       "Pause a connector.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.pause),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Pause a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connect pause --config <file>\n%s connect pause --cluster <cluster-id> --config <file>", pversion.CLIName, pversion.CLIName),
-			},
-		),
-	}
-
-	resumeCmd := &cobra.Command{
-		Use:         "resume <id>",
-		Short:       "Resume a connector.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.resume),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Resume a connector in the current or specified Kafka cluster context.",
-				Code: fmt.Sprintf("%s connect resume --config <file>\n%s connect resume --cluster <cluster-id> --config <file>", pversion.CLIName, pversion.CLIName),
-			},
-		),
-	}
-
-	c.AddCommand(NewClusterCommandOnPrem(c.prerunner))
+	c.AddCommand(newClusterCommand(c.prerunner))
 	c.AddCommand(createCmd)
 	c.AddCommand(deleteCmd)
 	c.AddCommand(describeCmd)
-	c.AddCommand(NewEventCommand(c.prerunner))
+	c.AddCommand(newEventCommand(c.prerunner))
 	c.AddCommand(listCmd)
 	c.AddCommand(pauseCmd)
-	c.AddCommand(NewPluginCommand(c.prerunner))
+	c.AddCommand(newPluginCommand(c.prerunner))
 	c.AddCommand(resumeCmd)
 	c.AddCommand(updateCmd)
 
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
-	c.completableFlagChildren = map[string][]*cobra.Command{
-		"cluster": {createCmd},
-	}
-}
+	c.completableFlagChildren = map[string][]*cobra.Command{"cluster": {createCmd}}
 
-func (c *command) list(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	connectors, err := c.Client.Connect.ListWithExpansions(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "status,info,id")
-	if err != nil {
-		return err
-	}
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-	for name, connector := range connectors {
-		connector := &connectorDescribeDisplay{
-			Name:   name,
-			ID:     connector.Id.Id,
-			Status: connector.Status.Connector.State,
-			Type:   connector.Info.Type,
-			Trace:  connector.Status.Connector.Trace,
-		}
-		outputWriter.AddElement(connector)
-	}
-	return outputWriter.Out()
-}
-
-func (c *command) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
-	if err != nil {
-		return err
-	}
-
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-	if outputOption == output.Human.String() {
-		return printHumanDescribe(cmd, connector)
-	} else {
-		return printStructuredDescribe(connector, outputOption)
-	}
-}
-
-func (c *command) create(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	userConfigs, err := getConfig(cmd)
-	if err != nil {
-		return err
-	}
-	connector, err := c.Client.Connect.Create(context.Background(), &schedv1.ConnectorConfig{UserConfigs: *userConfigs, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Name: (*userConfigs)["name"], Plugin: (*userConfigs)["connector.class"]})
-	if err != nil {
-		return err
-	}
-	// Resolve Connector ID from Name of created connector
-	connectorExpansion, err := c.Client.Connect.GetExpansionByName(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Name: connector.Name})
-	if err != nil {
-		return err
-	}
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-	trace := connectorExpansion.Status.Connector.Trace
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.CreatedConnectorMsg, connector.Name, connectorExpansion.Id.Id)
-		if trace != "" {
-			utils.Printf(cmd, "Error Trace: %s\n", trace)
-		}
-	} else {
-		return output.StructuredOutput(outputFormat, &struct {
-			ConnectorName string `json:"name" yaml:"name"`
-			Id            string `json:"id" yaml:"id"`
-			Trace         string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
-		}{
-			ConnectorName: connector.Name,
-			Id:            connectorExpansion.Id.Id,
-			Trace:         trace,
-		})
-	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, connectorExpansion.Id.Id)
-	return nil
-}
-
-func (c *command) update(cmd *cobra.Command, args []string) error {
-	userConfigs, err := getConfig(cmd)
-	if err != nil {
-		return err
-	}
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	// Resolve Connector Name from ID
-	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
-	if err != nil {
-		return err
-	}
-	_, err = c.Client.Connect.Update(context.Background(), &schedv1.ConnectorConfig{UserConfigs: *userConfigs, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Name: connector.Info.Name, Plugin: (*userConfigs)["connector.class"]})
-	if err != nil {
-		return err
-	}
-	utils.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
-	return nil
-}
-
-func (c *command) delete(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
-	if err != nil {
-		return err
-	}
-	err = c.Client.Connect.Delete(context.Background(), &schedv1.Connector{Name: connector.Info.Name, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID})
-	if err != nil {
-		return err
-	}
-	utils.Printf(cmd, errors.DeletedConnectorMsg, args[0])
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, connector.Id.Id)
-	return nil
-}
-
-func (c *command) pause(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
-	if err != nil {
-		return err
-	}
-	err = c.Client.Connect.Pause(context.Background(), &schedv1.Connector{Name: connector.Info.Name, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID})
-	if err != nil {
-		return err
-	}
-	utils.Printf(cmd, errors.PausedConnectorMsg, args[0])
-	return nil
-}
-
-func (c *command) resume(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
-	if err != nil {
-		return err
-	}
-	connector, err := c.Client.Connect.GetExpansionById(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID, Id: args[0]})
-	if err != nil {
-		return err
-	}
-	err = c.Client.Connect.Resume(context.Background(), &schedv1.Connector{Name: connector.Info.Name, AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID})
-	if err != nil {
-		return err
-	}
-	utils.Printf(cmd, errors.ResumedConnectorMsg, args[0])
-	return nil
-}
-
-func panicOnError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) error {
-	utils.Println(cmd, "Connector Details")
-	data := &connectorDescribeDisplay{
-		Name:   connector.Status.Name,
-		ID:     connector.Id.Id,
-		Status: connector.Status.Connector.State,
-		Type:   connector.Info.Type,
-		Trace:  connector.Status.Connector.Trace,
-	}
-	_ = printer.RenderTableOut(data, listFields, describeRenames, os.Stdout)
-	utils.Println(cmd, "\n\nTask Level Details")
-	var tasks [][]string
-	titleRow := []string{"TaskId", "State"}
-	for _, task := range connector.Status.Tasks {
-		tasks = append(tasks, printer.ToRow(&taskDescribeDisplay{
-			task.Id,
-			task.State,
-		}, titleRow))
-	}
-	printer.RenderCollectionTable(tasks, titleRow)
-	utils.Println(cmd, "\n\nConfiguration Details")
-	var configs [][]string
-	titleRow = []string{"Config", "Value"}
-	for name, value := range connector.Info.Config {
-		configs = append(configs, printer.ToRow(&configDescribeDisplay{
-			name,
-			value,
-		}, titleRow))
-	}
-	printer.RenderCollectionTable(configs, titleRow)
-	return nil
-}
-
-func printStructuredDescribe(connector *opv1.ConnectorExpansion, format string) error {
-	structuredDisplay := &structuredDescribeDisplay{
-		Connector: &connectorDescribeDisplay{
-			Name:   connector.Status.Name,
-			ID:     connector.Id.Id,
-			Status: connector.Status.Connector.State,
-			Type:   connector.Info.Type,
-			Trace:  connector.Status.Connector.Trace,
-		},
-		Tasks:   []taskDescribeDisplay{},
-		Configs: []configDescribeDisplay{},
-	}
-	for _, task := range connector.Status.Tasks {
-		structuredDisplay.Tasks = append(structuredDisplay.Tasks, taskDescribeDisplay{
-			TaskId: task.Id,
-			State:  task.State,
-		})
-	}
-	for name, value := range connector.Info.Config {
-		structuredDisplay.Configs = append(structuredDisplay.Configs, configDescribeDisplay{
-			Config: name,
-			Value:  value,
-		})
-	}
-	return output.StructuredOutput(format, structuredDisplay)
-}
-
-func (c *command) Cmd() *cobra.Command {
-	return c.Command
-}
-
-func (c *command) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
-}
-
-func (c *command) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	connectors, err := c.fetchConnectors()
-	if err != nil {
-		return suggestions
-	}
-	for _, conn := range connectors {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        conn.Id.Id,
-			Description: conn.Info.Name,
-		})
-	}
-	return suggestions
-}
-
-func (c *command) fetchConnectors() (map[string]*opv1.ConnectorExpansion, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.Command)
-	if err != nil {
-		return nil, err
-	}
-	connectors, err := c.Client.Connect.ListWithExpansions(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "status,info,id")
-	if err != nil {
-		return nil, err
-	}
-	return connectors, nil
-
-}
-
-func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
-	return c.completableFlagChildren
-}
-
-func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
-	return map[string]func() []prompt.Suggest{
-		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
-	}
+	return c
 }

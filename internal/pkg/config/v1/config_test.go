@@ -1009,11 +1009,11 @@ func TestConfig_IsCloud_True(t *testing.T) {
 	}
 
 	for _, platform := range platforms {
-		config := &Config{
+		cfg := &Config{
 			Contexts:       map[string]*Context{"context": {PlatformName: platform}},
 			CurrentContext: "context",
 		}
-		require.True(t, config.IsCloudLogin(), platform+" should be true")
+		require.True(t, cfg.IsCloudLogin(), platform+" should be true")
 	}
 }
 
@@ -1026,17 +1026,17 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		},
 	}
 
-	for _, config := range configs {
-		require.False(t, config.IsCloudLogin())
+	for _, cfg := range configs {
+		require.False(t, cfg.IsCloudLogin())
 	}
 }
 
 func TestConfig_IsOnPrem_True(t *testing.T) {
-	config := &Config{
+	cfg := &Config{
 		Contexts:       map[string]*Context{"context": {PlatformName: "https://example.com"}},
 		CurrentContext: "context",
 	}
-	require.True(t, config.IsOnPremLogin())
+	require.True(t, cfg.IsOnPremLogin())
 }
 
 func TestConfig_IsOnPrem_False(t *testing.T) {
@@ -1052,7 +1052,7 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 		},
 	}
 
-	for _, config := range configs {
-		require.False(t, config.IsOnPremLogin())
+	for _, cfg := range configs {
+		require.False(t, cfg.IsOnPremLogin())
 	}
 }

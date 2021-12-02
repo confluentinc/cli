@@ -23,11 +23,11 @@ func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 	}
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), clustertype)
 	if err != nil {
-		return print.HandleClusterError(cmd, err, response)
+		return print.HandleClusterError(err, response)
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
 	}
-	return print.PrintCluster(cmd, clusterInfos, format)
+	return print.PrintCluster(clusterInfos, format)
 }

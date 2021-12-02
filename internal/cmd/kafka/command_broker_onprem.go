@@ -152,7 +152,7 @@ func (brokerCmd *brokerCommand) init() {
 	brokerCmd.AddCommand(getTasksCmd)
 }
 
-func (brokerCmd *brokerCommand) list(cmd *cobra.Command, args []string) error {
+func (brokerCmd *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, err := initKafkaRest(brokerCmd.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

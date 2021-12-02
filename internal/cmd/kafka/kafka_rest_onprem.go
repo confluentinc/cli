@@ -62,7 +62,7 @@ func getKafkaRestUrl(cmd *cobra.Command) (string, error) {
 		}
 		return url, nil
 	}
-	if restUrl := os.Getenv(CONFLUENT_REST_URL); restUrl != "" {
+	if restUrl := os.Getenv(ConfluentRestUrl); restUrl != "" {
 		return restUrl, nil
 	}
 	return "", errors.NewErrorWithSuggestions(errors.KafkaRestUrlNotFoundErrorMsg, errors.KafkaRestUrlNotFoundSuggestions)

@@ -169,11 +169,12 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 		switch r.Method {
 		case http.MethodGet:
 			info := srsdk.ExporterInfo{
-				Name:        name,
-				Subjects:    []string{"foo", "bar"},
-				ContextType: "CUSTOM",
-				Context:     "mycontext",
-				Config:      map[string]string{"key1": "value1", "key2": "value2"},
+				Name:                name,
+				Subjects:            []string{"foo", "bar"},
+				ContextType:         "CUSTOM",
+				Context:             "mycontext",
+				SubjectRenameFormat: "my-${subject}",
+				Config:              map[string]string{"key1": "value1", "key2": "value2"},
 			}
 			err := json.NewEncoder(w).Encode(info)
 			require.NoError(t, err)

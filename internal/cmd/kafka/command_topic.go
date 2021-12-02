@@ -489,7 +489,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData.Config[partitionCount] = strconv.Itoa(len(partitionsResp.Data))
 
 			if outputOption == output.Human.String() {
-				return printHumanDescribe(cmd, topicData)
+				return printHumanDescribe(topicData)
 			}
 
 			return output.StructuredOutput(outputOption, topicData)
@@ -508,7 +508,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	if outputOption == output.Human.String() {
-		return printHumanTopicDescription(cmd, resp)
+		return printHumanTopicDescription(resp)
 	} else {
 		return printStructuredTopicDescription(resp, outputOption)
 	}
@@ -1028,7 +1028,7 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	return nil
 }
 
-func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
+func printHumanDescribe(topicData *topicData) error {
 	configsTableLabels := []string{"Name", "Value"}
 	configsTableEntries := make([][]string, len(topicData.Config))
 	i := 0
@@ -1046,7 +1046,7 @@ func printHumanDescribe(cmd *cobra.Command, topicData *topicData) error {
 	return nil
 }
 
-func printHumanTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
+func printHumanTopicDescription(resp *schedv1.TopicDescription) error {
 	var entries [][]string
 	titleRow := []string{"Name", "Value"}
 	for _, entry := range resp.Config {
@@ -1101,7 +1101,7 @@ func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.To
 func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
-	metaInfo := []byte{}
+	var metaInfo []byte
 	if valueFormat != "string" && len(schemaPath) > 0 {
 		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
 		if err != nil {

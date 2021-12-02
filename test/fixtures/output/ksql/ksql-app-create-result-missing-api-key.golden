@@ -3,10 +3,10 @@ Usage:
   confluent ksql app create <name> [flags]
 
 Flags:
-      --csu int32            Number of CSUs to use in the cluster. (default 4)
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
       --api-key string       REQUIRED: Kafka API key for the ksqlDB cluster to use.
       --api-secret string    REQUIRED: Secret for the Kafka API key.
+      --csu int32            Number of CSUs to use in the cluster. (default 4)
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.

@@ -4,7 +4,7 @@ package auth
 import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
-	log "github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 

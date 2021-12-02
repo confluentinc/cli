@@ -82,20 +82,23 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
 		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
+
 	loader := new(properties.Loader)
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
-	//property.DisableExpansion = true
-	bytes, err := ioutil.ReadFile(path)
+
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	bytes = NormalizeByteArrayNewLines(bytes)
-	property, err := loader.LoadBytes(bytes)
+	data = NormalizeByteArrayNewLines(data)
+
+	property, err := loader.LoadBytes(data)
 	if err != nil {
 		return nil, err
 	}
 	property.DisableExpansion = true
+
 	return property, nil
 }
 

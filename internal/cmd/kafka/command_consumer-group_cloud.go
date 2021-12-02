@@ -199,7 +199,7 @@ func (g *groupCommand) init() {
 	}
 }
 
-func (g *groupCommand) list(cmd *cobra.Command, args []string) error {
+func (g *groupCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand, cmd)
 	if err != nil {
 		return err
