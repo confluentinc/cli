@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -151,6 +152,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
@@ -678,20 +680,10 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath, srAPIKey, srAPISecret string) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
-	}
-	var refs []srsdk.SchemaReference
-
-	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
-	if err != nil {
-		if err.Error() == errors.NotLoggedInErrorMsg {
-			return nil, new(errors.SRNotAuthenticatedError)
-		} else {
-			return nil, err
-		}
 	}
 
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: valueFormat, References: refs})
@@ -769,6 +761,21 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return err
+	} else if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return err
+		}
+	}
+
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return err
@@ -779,12 +786,14 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath)
+
+	// Meta info contains magic byte and schema ID (4 bytes).
+	metaInfo, referencePathMap, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err
 	}
-	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider)
+
+	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -1098,26 +1107,60 @@ func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.To
 	return resp, err
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	var metaInfo []byte
+	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
 		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
 		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
-		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
+
+		srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 		if err != nil {
-			return metaInfo, err
+			if err.Error() == "ccloud" {
+				return nil, nil, new(errors.SRNotAuthenticatedError)
+			} else {
+				return nil, nil, err
+			}
+		}
+
+		info, err := h.registerSchemaWithAPIKey(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		if err != nil {
+			return metaInfo, nil, err
 		}
 		metaInfo = info
+
+		dir := filepath.Join(os.TempDir(), "ccloud-schema")
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err = os.Mkdir(dir, 0755)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
+		for _, ref := range refs {
+			tempStorePath := filepath.Join(filepath.Join(dir, ref.Name) + ".txt")
+			if !fileExists(tempStorePath) {
+				schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)),&srsdk.GetSchemaByVersionOpts{})
+				if err != nil {
+					return nil, nil, err
+				}
+				err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
+				if err != nil {
+					return nil, nil, err
+				}
+			}
+			referencePathMap[ref.Name] = tempStorePath
+		}
 	}
-	return metaInfo, nil
+	return metaInfo, referencePathMap, nil
 }
 
 func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {

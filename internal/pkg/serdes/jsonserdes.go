@@ -11,16 +11,32 @@ import (
 )
 
 type JsonSerializationProvider struct {
-	schemaLoader gojsonschema.JSONLoader
+	schemaLoader *gojsonschema.Schema
 }
 
-func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string) error {
+func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	sl := gojsonschema.NewSchemaLoader()
+	for referenceName, referencePath := range referencePathMap {
+		refSchema, err := ioutil.ReadFile(referencePath)
+		if err != nil {
+			return err
+		}
+		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
+		err = sl.AddSchema("/" + referenceName, referenceLoader)
+		if err != nil {
+			return err
+		}
+	}
+
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return errors.New(errors.JsonSchemaInvalidErrorMsg)
 	}
 
-	schemaLoader := gojsonschema.NewStringLoader(string(schema))
+	schemaLoader, err := sl.Compile(gojsonschema.NewStringLoader(string(schema)))
+	if err != nil {
+		return err
+	}
 	jsonProvider.schemaLoader = schemaLoader
 	return nil
 }
@@ -33,7 +49,7 @@ func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// Json schema conducts validation on Json string before serialization.
-	result, err := gojsonschema.Validate(jsonProvider.schemaLoader, documentLoader)
+	result, err := jsonProvider.schemaLoader.Validate(documentLoader)
 	if err != nil {
 		return nil, err
 	}
@@ -54,16 +70,32 @@ func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error
 }
 
 type JsonDeserializationProvider struct {
-	schemaLoader gojsonschema.JSONLoader
+	schemaLoader *gojsonschema.Schema
 }
 
-func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string) error {
+func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	sl := gojsonschema.NewSchemaLoader()
+	for referenceName, referencePath := range referencePathMap {
+		refSchema, err := ioutil.ReadFile(referencePath)
+		if err != nil {
+			return err
+		}
+		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
+		err = sl.AddSchema("/" + referenceName, referenceLoader)
+		if err != nil {
+			return err
+		}
+	}
+
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return errors.New(errors.JsonSchemaInvalidErrorMsg)
 	}
 
-	schemaLoader := gojsonschema.NewStringLoader(string(schema))
+	schemaLoader, err := sl.Compile(gojsonschema.NewStringLoader(string(schema)))
+	if err != nil {
+		return err
+	}
 	jsonProvider.schemaLoader = schemaLoader
 	return nil
 }
@@ -78,7 +110,7 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// Json schema conducts validation on Json string before serialization.
-	result, err := gojsonschema.Validate(jsonProvider.schemaLoader, documentLoader)
+	result, err := jsonProvider.schemaLoader.Validate(documentLoader)
 	if err != nil {
 		return "", err
 	}

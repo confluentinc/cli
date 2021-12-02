@@ -5,6 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	parse "github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	"path/filepath"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -13,9 +14,13 @@ type ProtoSerializationProvider struct {
 	message proto.Message
 }
 
-func (protoProvider *ProtoSerializationProvider) LoadSchema(schemaPath string) error {
-	parser := parse.Parser{}
-	fileDescriptors, err := parser.ParseFiles(schemaPath)
+func (protoProvider *ProtoSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	importPaths := []string{filepath.Dir(schemaPath)}
+	for _, path := range referencePathMap {
+		importPaths = append(importPaths, filepath.Dir(path))
+	}
+	parser := parse.Parser{ImportPaths: importPaths}
+	fileDescriptors, err := parser.ParseFiles(filepath.Base(schemaPath))
 	if err != nil {
 		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
 	}
@@ -63,9 +68,13 @@ type ProtoDeserializationProvider struct {
 	message proto.Message
 }
 
-func (protoProvider *ProtoDeserializationProvider) LoadSchema(schemaPath string) error {
-	parser := parse.Parser{}
-	fileDescriptors, err := parser.ParseFiles(schemaPath)
+func (protoProvider *ProtoDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	importPaths := []string{filepath.Dir(schemaPath)}
+	for _, path := range referencePathMap {
+		importPaths = append(importPaths, filepath.Dir(path))
+	}
+	parser := parse.Parser{ImportPaths: importPaths}
+	fileDescriptors, err := parser.ParseFiles(filepath.Base(schemaPath))
 	if err != nil {
 		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
 	}
