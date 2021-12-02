@@ -145,6 +145,7 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedTokenWritesToOutputFile() {
 	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
 	_, err = os.Stat(outputPath)
 	req.NoError(err)
+}
 func (suite *SharedTokenTestSuite) TestRedeemSharedToken() {
 	cmd := suite.newCmd()
 	args := []string{"shared-token", "redeem", "--token", "test_token"}
@@ -152,10 +153,6 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedToken() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
-}
-
-func stringToPtr(s string) *string {
-	return &s
 }
 
 func (suite *SharedTokenTestSuite) TestDeactivateStreamShare() {

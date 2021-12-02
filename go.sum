@@ -382,8 +382,6 @@ github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mo
 github.com/confluentinc/protoc-gen-ccloud v0.0.3 h1:i2+J04C4iW1hoe0tvzWH8wXg05rmxN4G7Qz1LpusEBE=
 github.com/confluentinc/protoc-gen-ccloud v0.0.3/go.mod h1:aZRVEnVpDqGKlGNaR75eWMcMzXOFDDps7ByPJiPPwxg=
 github.com/confluentinc/prototools v0.0.3/go.mod h1:BeYyZpaHqLMJ3uFf5aGl30F6xnideWJLd0HsGm9QY2U=
-github.com/confluentinc/schema-registry-sdk-go v0.0.11 h1:chWZyfO6QxpfUFkF9aQfM5FF08SuIlGVXNVLLlSeNjw=
-github.com/confluentinc/schema-registry-sdk-go v0.0.11/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
 github.com/confluentinc/schema-registry-sdk-go v0.0.12 h1:cAbyMjl+osUwTlYipSG2XcMSrvcugBOK0JdVznfdUKg=
 github.com/confluentinc/schema-registry-sdk-go v0.0.12/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
 github.com/containerd/continuity v0.0.0-20190426062206-aaeac12a7ffc/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
@@ -1422,7 +1420,6 @@ github.com/travisjeffery/mocker v1.1.0 h1:Gx8BRwWoIfTuKqYKu7f4Dhp9MBj8U0m77LqFaV
 github.com/travisjeffery/mocker v1.1.0/go.mod h1:ezREEUpF+NpAhAcbduW0dLT4GIkNCZwdcsz0tsaTSCU=
 github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 h1:PYSpVMo7ihL46eJdNnu1KITaPG7h/YJ0TaSzE9Ijpek=
 github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87/go.mod h1:xcL7ttDidGRkmF2+B1PEMMgZKK0hm74DDVM/JhB+fY0=
-github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad/go.mod h1:hnLbHMwcvSihnDhEfx2/BzKp2xb0Y+ErdfYcrs9tkJQ=
 github.com/ugorji/go v1.1.2/go.mod h1:hnLbHMwcvSihnDhEfx2/BzKp2xb0Y+ErdfYcrs9tkJQ=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/ugorji/go v1.1.7 h1:/68gy2h+1mWMrwZFeD1kQialdSzAb432dtpeJ42ovdo=
