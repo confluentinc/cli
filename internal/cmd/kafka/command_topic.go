@@ -1137,31 +1137,41 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 			return metaInfo, nil, err
 		}
 		metaInfo = info
-
-		dir := filepath.Join(os.TempDir(), "ccloud-schema")
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			err = os.Mkdir(dir, 0755)
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-
-		for _, ref := range refs {
-			tempStorePath := filepath.Join(filepath.Join(dir, ref.Name) + ".txt")
-			if !fileExists(tempStorePath) {
-				schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)),&srsdk.GetSchemaByVersionOpts{})
-				if err != nil {
-					return nil, nil, err
-				}
-				err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
-				if err != nil {
-					return nil, nil, err
-				}
-			}
-			referencePathMap[ref.Name] = tempStorePath
+		// Store the references in temporary files
+		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)
+		if err != nil {
+			return metaInfo, nil, err
 		}
 	}
 	return metaInfo, referencePathMap, nil
+}
+
+func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	referencePathMap := map[string]string{}
+	for _, ref := range refs {
+		tempStorePath := filepath.Join(dir, ref.Name)
+		if !fileExists(tempStorePath) {
+			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
+			if err != nil {
+				return nil, err
+			}
+			err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
+			if err != nil {
+				return nil, err
+			}
+		}
+		referencePathMap[ref.Name] = tempStorePath
+	}
+
+	return referencePathMap, nil
 }
 
 func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {

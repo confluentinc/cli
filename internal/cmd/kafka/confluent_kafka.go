@@ -5,13 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"io"
 	"io/ioutil"
 	"path/filepath"
-	"strconv"
-
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -137,19 +135,10 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		}
 	}
 
-	for _, ref := range references {
-		tempRefContentPath := filepath.Join(h.Properties.SchemaPath, ref.Name)
-		if !fileExists(tempRefContentPath) {
-			schema, _, err := h.SrClient.DefaultApi.GetSchemaByVersion(h.Ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
-			if err != nil {
-				return "", nil, err
-			}
-			err = ioutil.WriteFile(tempRefContentPath, []byte(schema.Schema), 0644)
-			if err != nil {
-				return "", nil, err
-			}
-		}
-		referencePathMap[ref.Name] = tempRefContentPath
+	// Store the references in temporary files
+	referencePathMap, err := storeSchemaReferences(references, h.SrClient, h.Ctx)
+	if err != nil {
+		return "", nil, err
 	}
 
 	return tempStorePath, referencePathMap, nil
