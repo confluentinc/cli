@@ -1,0 +1,3 @@
+  Cluster ID | Broker ID | Topic Name  | Partition ID | Is Leader | Is In Sync  
+-------------+-----------+-------------+--------------+-----------+-------------
+  cluster-1  |         1 | topic-exist |            2 | true      | true        

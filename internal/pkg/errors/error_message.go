@@ -421,6 +421,11 @@ const (
 	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
 	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
 
+	// Replica commands
+	MustEnterValidFlagComboErrorMsg		 = "must pass a valid flag combination"
+	ValidReplicaFlagsSuggestions		 = "Valid flag combinations are topic and partition, just broker, or all three values."
+	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
+
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
 )

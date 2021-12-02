@@ -2,6 +2,7 @@ package kafka
 
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -32,8 +33,8 @@ func (replicaCommand *replicaCommand) init() {
 		Use:   "list",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
-		Short: "List Kafka partitions.",
-		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
+		Short: "List Kafka replicas.",
+		Long:  "List partition-replicas filtered by topic, partition, and broker via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List the partitions for `my_topic`.",
@@ -50,7 +51,10 @@ func (replicaCommand *replicaCommand) init() {
 }
 
 func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error {
-	// TODO logic ensuring valid flag combos are provided (i.e. topic && partitionID together)
+	topic, partitionId, brokerId, err := validateFlagCombo(cmd)
+	if err != nil {
+		return err
+	}
 	restClient, restContext, err := initKafkaRest(replicaCommand.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -59,30 +63,18 @@ func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error
 	if err != nil {
 		return nil
 	}
-	topic, err := cmd.Flags().GetString("topic")
-	if err != nil {
-		return err
-	}
-	partitionID, err := cmd.Flags().GetInt32("partition")
-	if err != nil {
-		return err
-	}
-	brokerId, err := cmd.Flags().GetInt32("broker")
-	if err != nil {
-		return err
-	}
 	var replicaDataList kafkarestv3.ReplicaDataList
 	var resp *http.Response
-	if cmd.Flags().Changed("broker") {
-		if cmd.Flags().Changed("partition") && cmd.Flags().Changed("topic"){
+	if partitionId != -1 && topic != "" {
+		if brokerId != -1 {
 			var replicaData kafkarestv3.ReplicaData
-			replicaData, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(restContext, clusterId, topic, partitionID, brokerId)
+			replicaData, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(restContext, clusterId, topic, partitionId, brokerId)
 			replicaDataList.Data = append(replicaDataList.Data, replicaData)
 		} else {
-			replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
+			replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
 		}
 	} else {
-		replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionID)
+		replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
 	}
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -96,3 +88,29 @@ func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error
 	}
 	return outputWriter.Out()
 }
+
+func validateFlagCombo(cmd *cobra.Command) (string, int32, int32, error) {
+	// valid flag combinations are topic+partition, topic+partition+broker, or just broker
+	topicSet := cmd.Flags().Changed("topic")
+	partitionSet := cmd.Flags().Changed("partition")
+	brokerSet := cmd.Flags().Changed("broker")
+
+	topic, err := cmd.Flags().GetString("topic")
+	if err != nil {
+		return "", -1, -1, err
+	}
+	brokerId, err := cmd.Flags().GetInt32("broker")
+	if err != nil {
+		return "", -1, -1, err
+	}
+	partitionId, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return "", -1, -1, err
+	}
+	if !topicSet && !brokerSet && !partitionSet {
+		return "", -1, -1, errors.NewErrorWithSuggestions(errors.MustEnterValidFlagComboErrorMsg, errors.ValidReplicaFlagsSuggestions)
+	} else if (topicSet && !partitionSet) || (!topicSet && partitionSet) {
+		return "", -1, -1, errors.NewErrorWithSuggestions(errors.MustSpecifyTopicAndPartitionErrorMsg, errors.ValidReplicaFlagsSuggestions)
+	}
+	return topic, partitionId, brokerId, nil
+ }

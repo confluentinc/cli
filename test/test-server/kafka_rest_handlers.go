@@ -1508,6 +1508,59 @@ func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersBrokerIdTasksGe
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas/{broker}"
+func (r KafkaRestProxyRouter) HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionId, err := strconv.ParseInt(vars["partition"], 10, 32)
+		require.NoError(t, err)
+		brokerId, err := strconv.ParseInt(vars["broker"], 10, 32)
+		require.NoError(t, err)
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(kafkarestv3.ReplicaData{
+			ClusterId: vars["cluster"],
+			TopicName: vars["topic"],
+			PartitionId: int32(partitionId),
+			BrokerId: int32(brokerId),
+			IsLeader: true,
+			IsInSync: true,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster}/brokers/{broker}/partition-replicas"
+func (r KafkaRestProxyRouter) HandleClustersClusterIdBrokersBrokerIdPartitionReplicasGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		brokerId, err := strconv.ParseInt(vars["broker"], 10, 32)
+		require.NoError(t, err)
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(kafkarestv3.ReplicaDataList{
+			Data: []kafkarestv3.ReplicaData{
+				{
+					ClusterId: vars["cluster"],
+					TopicName: vars["topic"],
+					PartitionId: 1,
+					BrokerId: int32(brokerId),
+					IsLeader: true,
+					IsInSync: true,
+				},
+				{
+					ClusterId: vars["cluster"],
+					TopicName: vars["topic"],
+					PartitionId: 2,
+					BrokerId: int32(brokerId),
+					IsLeader: false,
+					IsInSync: true,
+				},
+
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)
 	responseBody := fmt.Sprintf(`{

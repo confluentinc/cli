@@ -1,0 +1,4 @@
+Error: must pass a valid flag combination
+
+Suggestions:
+    Valid flag combinations are topic and partition, just broker, or all three values.
