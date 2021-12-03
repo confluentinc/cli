@@ -25,13 +25,13 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API keys for a given resource.",
-		Long:  "Create API keys for a given resource. A resource is some Confluent product or service for which an API key can be created, for example ksqlDB application ID, or \"cloud\" to create a Cloud API key.",
+		Long:  `Create API keys for a given resource. A resource is some Confluent product or service for which an API key can be created, for example ksqlDB application ID, or "cloud" to create a Cloud API key.`,
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an API key for service account "sa-lqv3mm" for cluster "lkc-xyz"`,
-				Code: "confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm",
+				Text: `Create an API key for service account "sa-123456" for cluster "lkc-123456".`,
+				Code: "confluent api-key create --resource lkc-123456 --service-account sa-123456",
 			},
 		),
 	}

@@ -3,9 +3,9 @@ Usage:
   confluent api-key create [flags]
 
 Examples:
-Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`
+Create an API key for service account "sa-123456" for cluster "lkc-123456".
 
-  $ confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm
+  $ confluent api-key create --resource lkc-123456 --service-account sa-123456
 
 Flags:
       --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.
