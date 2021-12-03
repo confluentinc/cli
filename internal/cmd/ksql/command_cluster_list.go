@@ -12,6 +12,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+const clusterType = "ksql-cluster"
+
 func (c *clusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",

@@ -14,11 +14,12 @@ import (
 
 func (c *command) newPauseCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:         "pause <id>",
-		Short:       "Pause a connector.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.pause),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "pause <id>",
+		Short:             "Pause a connector.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.pause),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause a connector in the current or specified Kafka cluster context.",
@@ -32,7 +33,7 @@ func (c *command) newPauseCommand() *cobra.Command {
 }
 
 func (c *command) pause(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}

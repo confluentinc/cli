@@ -35,11 +35,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return errors.Errorf(errors.PluginNameNotPassedErrorMsg)
-	}
-
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}

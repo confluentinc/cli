@@ -146,7 +146,7 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	if !c.canAcceptArgument(cmd, argTypeList) {
 		return []prompt.Suggest{}
 	}
-	suggestions := c.getSuggestionsForCommand(d, cmd)
+	suggestions := c.getSuggestionsForCommand(cmd)
 	return filterSuggestions(d, suggestions)
 }
 
@@ -280,7 +280,7 @@ func (c *ServerSideCompleterImpl) argCount(argTypeList []argType) int {
 }
 
 // Check the cache for suggestions
-func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cmd *cobra.Command) []prompt.Suggest {
+func (c *ServerSideCompleterImpl) getSuggestionsForCommand(cmd *cobra.Command) []prompt.Suggest {
 	var suggestions []prompt.Suggest
 	var cc ServerCompletableCommand
 	// Find the parent command that made the queries to update the cache

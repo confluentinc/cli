@@ -199,7 +199,7 @@ func (g *groupCommand) init() {
 }
 
 func (g *groupCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func (g *groupCommand) list(cmd *cobra.Command, _ []string) error {
 func (g *groupCommand) describe(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(g.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -400,7 +400,7 @@ func (lagCmd *lagCommand) init() {
 func (lagCmd *lagCommand) summarizeLag(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,7 @@ func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummar
 func (lagCmd *lagCommand) listLag(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -476,7 +476,7 @@ func (lagCmd *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand, cmd)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(lagCmd.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -524,7 +524,7 @@ func (g *groupCommand) Cmd() *cobra.Command {
 
 func (g *groupCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
-	consumerGroupDataList, err := listConsumerGroups(g.AuthenticatedStateFlagCommand, g.Command)
+	consumerGroupDataList, err := listConsumerGroups(g.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return suggestions
 	}
@@ -567,8 +567,8 @@ func (lagCmd *lagCommand) ServerCompletableChildren() []*cobra.Command {
 	return lagCmd.completableChildren
 }
 
-func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand, cobraCmd *cobra.Command) (*kafkarestv3.ConsumerGroupDataList, error) {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd, cobraCmd)
+func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarestv3.ConsumerGroupDataList, error) {
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd)
 	if err != nil {
 		return nil, err
 	}

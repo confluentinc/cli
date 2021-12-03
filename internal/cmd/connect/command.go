@@ -12,7 +12,6 @@ type command struct {
 	completableChildren     []*cobra.Command
 	completableFlagChildren map[string][]*cobra.Command
 	analyticsClient         analytics.Client
-	prerunner               pcmd.PreRunner
 }
 
 type connectorDescribeDisplay struct {
@@ -38,7 +37,6 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 
 	c := &command{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
-		prerunner:                     prerunner,
 		analyticsClient:               analyticsClient,
 	}
 
@@ -50,14 +48,14 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	resumeCmd := c.newResumeCommand()
 	updateCmd := c.newUpdateCommand()
 
-	c.AddCommand(newClusterCommand(c.prerunner))
+	c.AddCommand(newClusterCommand(prerunner))
 	c.AddCommand(createCmd)
 	c.AddCommand(deleteCmd)
 	c.AddCommand(describeCmd)
-	c.AddCommand(newEventCommand(c.prerunner))
+	c.AddCommand(newEventCommand(prerunner))
 	c.AddCommand(listCmd)
 	c.AddCommand(pauseCmd)
-	c.AddCommand(newPluginCommand(c.prerunner))
+	c.AddCommand(newPluginCommand(prerunner))
 	c.AddCommand(resumeCmd)
 	c.AddCommand(updateCmd)
 

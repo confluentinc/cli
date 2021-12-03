@@ -31,7 +31,7 @@ func (c *appCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	kafkaCluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

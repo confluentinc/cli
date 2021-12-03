@@ -99,7 +99,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 		srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
 		if len(endpoint) == 0 {
-			envId, err := ctx.AuthenticatedEnvId(cmd)
+			envId, err := ctx.AuthenticatedEnvId()
 			if err != nil {
 				return nil, nil, err
 			}

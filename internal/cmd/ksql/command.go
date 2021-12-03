@@ -32,7 +32,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, serverCompleter completer.Ser
 	appCmd := newAppCommand(prerunner, c.analyticsClient)
 
 	c.AddCommand(appCmd.Command)
-	c.AddCommand(NewClusterCommandOnPrem(prerunner))
+	c.AddCommand(newClusterCommand(prerunner))
 
 	if cfg.IsCloudLogin() {
 		c.serverCompleter.AddCommand(appCmd)

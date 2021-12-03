@@ -6,13 +6,11 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-const clusterType = "ksql-cluster"
-
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
+func newClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage ksqlDB clusters.",
