@@ -1,11 +1,6 @@
-Error: required flag(s) "resource" not set
-Usage:
-  confluent api-key use <api-key> [flags]
-
-Flags:
-      --resource string   REQUIRED: The resource ID.
-
-Global Flags:
-  -h, --help            Show help for this command.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
+It may take a couple of minutes for the API key to be ready.
+Save the API key and secret. The secret is not retrievable later.
++---------+------------+
+| API Key | MYKEY10    |
+| Secret  | MYSECRET10 |
++---------+------------+

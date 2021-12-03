@@ -1,4 +1,6 @@
-       Key      | Owner | Description | Resource Type | Resource ID   
-+---------------+-------+-------------+---------------+--------------+
-  * MYKEY6      |    23 | my-ksql-app | kafka         | lksqlc-ksql1  
-    UIAPIKEY102 |    25 |             | kafka         | lksqlc-ksql1  
+It may take a couple of minutes for the API key to be ready.
+Save the API key and secret. The secret is not retrievable later.
++---------+-----------+
+| API Key | MYKEY6    |
+| Secret  | MYSECRET6 |
++---------+-----------+

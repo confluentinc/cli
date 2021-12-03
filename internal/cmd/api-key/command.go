@@ -216,7 +216,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	allUsers := append(serviceAccounts, users...)
+	allUsers, err := c.getAllUsers()
+	if err != nil {
+		return err
+	}
 
 	userId := int32(0)
 	serviceAccount := false
@@ -662,6 +665,14 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
+	if enabled {
+		auditLogServiceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+		if err != nil {
+			return nil, err
+		}
+		serviceAccounts = append(serviceAccounts, auditLogServiceAccount)
+	}
 	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
@@ -682,6 +693,7 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 		for _, user := range users {
 			if key.UserResourceId == user.ResourceId {
 				key.UserId = user.Id
+				break
 			}
 		}
 	} else {

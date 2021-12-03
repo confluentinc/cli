@@ -193,6 +193,13 @@ func (suite *APITestSuite) SetupTest() {
 				},
 			}, nil
 		},
+		GetServiceAccountFunc: func(_ context.Context, _ int32) (*orgv1.User, error) {
+			return &orgv1.User{
+				Id:          serviceAccountId,
+				ResourceId:  userResourceId,
+				ServiceName: serviceAccountName,
+			}, nil
+		},
 		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
 			return []*orgv1.User{
 				{
