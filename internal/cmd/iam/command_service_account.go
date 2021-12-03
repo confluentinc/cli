@@ -34,7 +34,8 @@ func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:         "service-account",
-			Short:       `Manage service accounts.`,
+			Aliases:     []string{"sa"},
+			Short:       "Manage service accounts.",
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner)
 	cmd := &serviceAccountCommand{

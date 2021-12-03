@@ -21,6 +21,7 @@ type command struct {
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "audit-log",
+		Aliases:     []string{"al"},
 		Short:       "Manage audit log configuration.",
 		Long:        "Manage which auditable events are logged, and where the event logs are sent.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
