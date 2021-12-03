@@ -72,7 +72,7 @@ func (suite *SharedTokenTestSuite) newCmd() *cobra.Command {
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenEmailIsInvalid() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer-email", "confluent.io"}
+	args := []string{"shared-token", "create", "--consumer-email", "confluent.io", "--topic", "topic", "--cluster", "cluster"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -82,7 +82,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenEmailIsI
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenTopicIsEmpty() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", ""}
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", "", "--cluster", "cluster"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -163,4 +163,24 @@ func (suite *SharedTokenTestSuite) TestDeactivateStreamShare() {
 	req.Nil(err)
 	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
 	req.NoError(err)
+}
+
+func (suite *SharedTokenTestSuite) TestDeactivateStreamShareMissingId() {
+	cmd := suite.newCmd()
+	args := []string{"deactivate"}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.NotNil(err)
+	req.Equal(errors.StreamShareIdEmptyErrorMsg, err.Error())
+	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
+}
+
+func (suite *SharedTokenTestSuite) TestDeactivateStreamShareEmptyId() {
+	cmd := suite.newCmd()
+	args := []string{"deactivate", "--id", ""}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.NotNil(err)
+	req.Equal(errors.StreamShareIdEmptyErrorMsg, err.Error())
+	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
 }
