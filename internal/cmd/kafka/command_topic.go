@@ -152,7 +152,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("refs", "", "The path to the references file. Not supported when value-format is avro.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
