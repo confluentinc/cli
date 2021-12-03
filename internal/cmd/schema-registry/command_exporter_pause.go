@@ -17,7 +17,7 @@ func (c *exporterCommand) newPauseCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.pause),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }

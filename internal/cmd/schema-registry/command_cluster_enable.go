@@ -39,7 +39,7 @@ func (c *clusterCommand) newEnableCommand() *cobra.Command {
 
 	cmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")

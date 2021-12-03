@@ -15,7 +15,7 @@ func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.getConfig),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, "json", output.Usage)
+	output.AddFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
 }

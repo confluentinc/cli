@@ -16,14 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-const (
-	FlagName      = "output"
-	ShortHandFlag = "o"
-	Usage         = `Specify the output format as "human", "json", or "yaml".`
-)
-
-var DefaultValue = Human.String()
-
 type ListOutputWriter interface {
 	/*
 		AddElement - Add an element to the list to output for StructuredListWriter
@@ -34,7 +26,7 @@ type ListOutputWriter interface {
 		Out - Create the output to the IO channel passed in during construction
 	*/
 	Out() error
-	GetOutputFormat() Output
+	GetOutputFormat() output
 	StableSort()
 }
 
@@ -131,11 +123,11 @@ func StructuredOutputForCommand(cmd *cobra.Command, format string, obj interface
 // NewInvalidOutputFormatFlagError - create a new error to describe an invalid output format flag
 func NewInvalidOutputFormatFlagError(format string) error {
 	errorMsg := fmt.Sprintf(errors.InvalidFlagValueErrorMsg, format, FlagName)
-	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(ValidFlagValues, ", "))
+	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(validFlagValues, ", "))
 	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
 // IsValidOutputString - returns whether a format string is a valid format (human, json, yaml)
 func IsValidOutputString(output string) bool {
-	return utils.Contains(ValidFlagValues, output)
+	return utils.Contains(validFlagValues, output)
 }

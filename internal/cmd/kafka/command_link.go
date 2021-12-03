@@ -87,7 +87,7 @@ func (c *linkCommand) init() {
 		RunE:  c.list,
 	}
 	listCmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	// Note: this is subject to change as we iterate on options for how to specify a source cluster.
@@ -140,7 +140,7 @@ func (c *linkCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(describeCmd)
 	c.AddCommand(describeCmd)
 
 	// Note: this can change as we decide how to present this modification interface (allowing multiple properties, allowing override and delete, etc).

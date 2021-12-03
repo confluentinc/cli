@@ -52,7 +52,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		),
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -104,7 +104,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	}
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
-	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(updateCmd)
 	c.AddCommand(updateCmd)
 
 	describeCmd := &cobra.Command{
@@ -120,7 +120,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		),
 	}
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(describeCmd)
 	c.AddCommand(describeCmd)
 }
 

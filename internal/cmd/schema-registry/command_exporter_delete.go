@@ -17,7 +17,7 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }

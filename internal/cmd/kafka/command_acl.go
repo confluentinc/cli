@@ -73,7 +73,7 @@ func (c *aclCommand) init() {
 		),
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(createCmd)
 
 	c.AddCommand(createCmd)
 
@@ -95,7 +95,7 @@ func (c *aclCommand) init() {
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
 	listCmd.Flags().String("service-account", "", "Service account ID.")
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 
 	c.AddCommand(listCmd)
 

@@ -87,7 +87,7 @@ func (c *command) init() {
 	listCmd.Flags().String(resourceFlagName, "", "The resource ID to filter by. Use \"cloud\" to show only Cloud API keys.")
 	listCmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	listCmd.Flags().String("service-account", "", "The service account ID to filter by.")
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -106,7 +106,7 @@ func (c *command) init() {
 	createCmd.Flags().String(resourceFlagName, "", "The resource ID. Use \"cloud\" to create a Cloud API key.")
 	createCmd.Flags().String("service-account", "", "Service account ID. If not specified, the API key will have full access on the cluster.")
 	createCmd.Flags().String("description", "", "Description of API key.")
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(createCmd)
 	if err := createCmd.MarkFlagRequired(resourceFlagName); err != nil {
 		panic(err)
 	}

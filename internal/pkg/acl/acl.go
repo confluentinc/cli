@@ -35,7 +35,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		output.AddFlag(cmd)
 	}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
@@ -78,7 +78,7 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		output.AddFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -355,7 +355,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		output.AddFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -396,7 +396,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		output.AddFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
