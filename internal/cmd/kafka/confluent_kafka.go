@@ -2,14 +2,19 @@ package kafka
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
+	"strings"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -24,15 +29,16 @@ import (
 const messageOffset = 5
 
 type ConsumerProperties struct {
-	PrintKey      bool
-	Delimiter     string
-	SchemaPath    string
-	RequestSchema bool
+	PrintKey   bool
+	Delimiter  string
+	SchemaPath string
+	Cloud      bool
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
 	SrClient   *srsdk.APIClient
+	HttpClient http.Client
 	Ctx        context.Context
 	Format     string
 	Out        io.Writer
@@ -153,28 +159,148 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	return configMap, nil
 }
 
-func (h *GroupHandler) RequestSchema(value []byte) (string, error) {
+func GetCAClient(caCertPath string) *http.Client {
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		},
+	}
+	return client
+}
+
+func ConvertSchemaToRequestString(schema SchemaObject, valueFormat string) (string, error) {
+	request := SchemaRequest{SchemaType: strings.ToUpper(valueFormat)}
+	request.Schema = `[ { "type":"` + schema.SchemaType + `", "name":"` + schema.SchemaName + `", "fields": [ `
+	var fieldStrings []string
+	for _, field := range schema.Fields {
+		fieldString := `{`
+		for key, value := range field {
+			fieldString += `"` + key + `":"` + value + `"`
+		}
+		fieldString += `}`
+	}
+	request.Schema += strings.Join(fieldStrings, ",") + `]} ]`
+	requestBytes, err := json.Marshal(request)
+	if err != nil {
+		return "", err
+	}
+	return string(requestBytes), nil
+}
+
+func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	if len(value) < messageOffset {
-		return "", errors.New(errors.FailedToFindSchemaIDErrorMsg)
+		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
 	}
 
 	// Retrieve schema from cluster only if schema is specified.
 	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
 
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(h.Properties.SchemaPath, strconv.Itoa(int(schemaID))+".txt")
-	if !fileExists(tempStorePath) {
+	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%d.txt", schemaID))
+	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%d.ref", schemaID))
+	var references []srsdk.SchemaReference
+	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
 		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
 		if err != nil {
-			return "", err
+			return "", nil, err
+		}
+
+		refBytes, err := json.Marshal(schemaString.References)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		if err != nil {
+			return "", nil, err
+		}
+		references = schemaString.References
+	} else {
+		refBlob, err := ioutil.ReadFile(tempRefStorePath)
+		if err != nil {
+			return "", nil, err
+		}
+		err = json.Unmarshal(refBlob, &references)
+		if err != nil {
+			return "", nil, err
 		}
 	}
-	return tempStorePath, nil
+
+	// Store the references in temporary files
+	referencePathMap, err := storeSchemaReferences(references, h.SrClient, h.Ctx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return tempStorePath, referencePathMap, nil
+}
+
+func (h *GroupHandler) GetSchemaOnPrem(schemaId int32) (string, error) {
+	return "", nil
+}
+
+func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
+	value := e.Value
+	if h.Properties.PrintKey {
+		key := e.Key
+		var keyString string
+		if len(key) == 0 {
+			keyString = "null"
+		} else {
+			keyString = string(key)
+		}
+		_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
+		if err != nil {
+			return err
+		}
+	}
+
+	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
+	if err != nil {
+		return err
+	}
+
+	if h.Format != "string" {
+		schemaPath, referencePathMap, err := h.RequestSchema(value, h.Properties.Cloud)
+		if err != nil {
+			return err
+		}
+		// Message body is encoded after 5 bytes of meta information.
+		value = value[messageOffset:]
+		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
+		if err != nil {
+			return err
+		}
+	}
+	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(h.Out, jsonMessage)
+	if err != nil {
+		return err
+	}
+
+	if e.Headers != nil {
+		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func RunConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
@@ -204,61 +330,6 @@ func RunConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 					run = false
 				}
 			}
-		}
-	}
-	return nil
-}
-
-func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
-	value := e.Value
-	if h.Properties.PrintKey {
-		key := e.Key
-		var keyString string
-		if len(key) == 0 {
-			keyString = "null"
-		} else {
-			keyString = string(key)
-		}
-		_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
-		if err != nil {
-			return err
-		}
-	}
-
-	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
-	if err != nil {
-		return err
-	}
-
-	if h.Format != "string" {
-		schemaPath := h.Properties.SchemaPath
-		if h.Properties.RequestSchema {
-			schemaPath, err = h.RequestSchema(value)
-			if err != nil {
-				return err
-			}
-		}
-		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
-		err = deserializationProvider.LoadSchema(schemaPath)
-		if err != nil {
-			return err
-		}
-	}
-	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintln(h.Out, jsonMessage)
-	if err != nil {
-		return err
-	}
-
-	if e.Headers != nil {
-		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
-		if err != nil {
-			return err
 		}
 	}
 	return nil

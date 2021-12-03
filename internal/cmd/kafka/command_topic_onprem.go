@@ -3,13 +3,18 @@ package kafka
 // confluent kafka topic <commands>
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,6 +47,18 @@ type TopicData struct {
 	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
 	Partitions        []PartitionData   `json:"partitions" yaml:"partitions"`
 	Configs           map[string]string `json:"config" yaml:"config"`
+}
+
+type SchemaObject struct {
+	Namespace  string                `json:"namespace"`
+	SchemaType string                `json:"type"`
+	SchemaName string                `json:"name"`
+	Fields     [](map[string]string) `json:"fields"`
+}
+
+type SchemaRequest struct {
+	Schema     string `json:"schema"`
+	SchemaType string `json:"schemaType"`
 }
 
 // Register each of the verbs and expected args
@@ -153,10 +170,13 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
-	produceCmd.Flags().Int32("schema-id", 0, "Schema ID to be used for producing messages.")
+	produceCmd.Flags().String("tester", "", "The path to the local schema file.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	produceCmd.Flags().String("sr-endpoint", "", "url to schema registry cluster.")
+	produceCmd.Flags().String("sr-username", "", "Username for connecting to schema registry cluster.")
+	produceCmd.Flags().String("sr-password", "", "Password for connecting to schema registry cluster.")
 	produceCmd.Flags().SortFlags = false
 	c.AddCommand(produceCmd)
 
@@ -175,12 +195,15 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
-	consumeCmd.Flags().String("schema", "", "The path to the local schema file.")
 	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	consumeCmd.Flags().String("sr-endpoint", "", "url to schema registry cluster.")
+	consumeCmd.Flags().String("sr-username", "", "Username for connecting to schema registry cluster.")
+	consumeCmd.Flags().String("sr-password", "", "Password for connecting to schema registry cluster.")
+
 	consumeCmd.Flags().SortFlags = false
 	c.AddCommand(consumeCmd)
 }
@@ -670,11 +693,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaId, err := cmd.Flags().GetInt32("schema-id")
-	if err != nil {
-		return err
-	}
-
+	subject := topicName + "-value"
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
@@ -684,10 +703,14 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
-	metaInfo = append(metaInfo, schemaIdBuffer...)
+	metaInfo, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider)
+	if err != nil {
+		return err
+	}
+	// metaInfo := []byte{0x0}
+	// schemaIdBuffer := make([]byte, 4)
+	// binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
+	// metaInfo = append(metaInfo, schemaIdBuffer...)
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
@@ -799,11 +822,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return err
-	}
-
 	bootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
 		return err
@@ -879,6 +897,14 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = consumer.Subscribe(topicName, nil)
 	if err != nil {
 		return err
@@ -887,12 +913,36 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	groupHandler := &GroupHandler{
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: schemaPath, RequestSchema: false},
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir, Cloud: false},
 	}
 
 	// start consuming messages
 	err = RunConsumer(cmd, consumer, groupHandler)
 	return err
+}
+
+// validate that a topic exists before attempting to produce/consume messages
+func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic, clusterId string) error {
+	timeout := 10 * time.Second
+	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
+	if err != nil {
+		return fmt.Errorf("failed to obtain topics from client: %v", err)
+	}
+
+	var foundTopic bool
+	for _, t := range metadata.Topics {
+		c.logger.Tracef("validateTopic: found topic " + t.Topic)
+		if topic == t.Topic {
+			foundTopic = true // no break so that we see all topics from the above printout
+		}
+	}
+	if !foundTopic {
+		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, clusterId, clusterId, clusterId))
+	}
+
+	c.logger.Tracef("validateTopic succeeded")
+	return nil
 }
 
 func getMsgKeyAndValueOnPrem(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
@@ -918,26 +968,90 @@ func getMsgKeyAndValueOnPrem(metaInfo []byte, data, delim string, parseKey bool,
 	return key, value, nil
 }
 
-// validate that a topic exists before attempting to produce/consume messages
-func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic, clusterId string) error {
-	timeout := 10 * time.Second
-	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
-	if err != nil {
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
-	}
-
-	var foundTopic bool
-	for _, t := range metadata.Topics {
-		c.logger.Tracef("validateTopic: found topic " + t.Topic)
-		if topic == t.Topic {
-			foundTopic = true // no break so that we see all topics from the above printout
+func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
+	// For plain string encoding, meta info is empty.
+	// Registering schema when specified, and fill metaInfo array.
+	metaInfo := []byte{}
+	if valueFormat != "string" && len(schemaPath) > 0 {
+		srUsername, err := cmd.Flags().GetString("sr-username")
+		if err != nil {
+			return metaInfo, err
 		}
+		srPassword, err := cmd.Flags().GetString("sr-password")
+		if err != nil {
+			return metaInfo, err
+		}
+		info, err := c.registerSchemaWithUserInfo(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srUsername, srPassword)
+		if err != nil {
+			return metaInfo, err
+		}
+		metaInfo = info
 	}
-	if !foundTopic {
-		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, clusterId, clusterId, clusterId))
+	return metaInfo, nil
+}
+
+func (c *authenticatedTopicCommand) registerSchemaWithUserInfo(cmd *cobra.Command, subject, valueFormat, schemaPath, srUsername, srPassword string) ([]byte, error) {
+	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return nil, err
+	}
+	requestUrl := srEndpoint + "/subjects/" + subject + "/versions"
+
+	// load schema into memory
+	schemaBytes, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+	schema := SchemaObject{}
+	json.Unmarshal([]byte(schemaBytes), &schema)
+
+	// convert marshalled json object into json request string
+	requestString, err := ConvertSchemaToRequestString(schema, valueFormat)
+	if err != nil {
+		return nil, err
+	}
+	requestReader := strings.NewReader(requestString)
+
+	req, err := http.NewRequest("POST", requestUrl, requestReader)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(srUsername, srPassword)
+	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
+
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return nil, err
+	}
+	client := GetCAClient(caCertPath)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response:", resp)
+	schemaId, err := extractSchemaId(resp)
+	if err != nil {
+		return nil, err
 	}
 
-	c.logger.Tracef("validateTopic succeeded")
-	return nil
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, schemaId)
+	metaInfo = append(metaInfo, schemaIdBuffer...)
+	return metaInfo, nil
+}
+
+func extractSchemaId(response *http.Response) (uint32, error) {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(response.Body)
+	responseBody := buf.String()
+	schemaId, err := strconv.ParseInt(responseBody[6:len(responseBody)-2], 10, 32)
+	fmt.Println("Got schema id:", schemaId)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(schemaId), nil
 }
