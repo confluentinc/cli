@@ -51,6 +51,9 @@ func (c *serviceAccountCommand) Cmd() *cobra.Command {
 
 func (c *serviceAccountCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
+	if c.Client == nil {
+		return suggestions
+	}
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return suggestions
