@@ -23,6 +23,7 @@ Available Commands:
   prompt          Add Confluent CLI context to your terminal prompt.
   schema-registry Manage Schema Registry.
   shell           Run the confluent shell.
+  stream-share    Manage stream share.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.
 

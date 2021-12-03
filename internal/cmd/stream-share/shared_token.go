@@ -2,20 +2,19 @@ package stream_share
 
 import (
 	"fmt"
-	"github.com/confluentinc/cdx-schema/cdx/v1"
+	"os"
+
+	v1 "github.com/confluentinc/cdx-schema/cdx/v1"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 type sharedTokenCommand struct {
 	*pcmd.AuthenticatedCLICommand
 	prerunner       pcmd.PreRunner
-	logger          *log.Logger
 	analyticsClient analytics.Client
 }
 
@@ -24,7 +23,7 @@ func NewSharedTokenCommand(prerunner pcmd.PreRunner, analyticsClient analytics.C
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "shared-token",
-			Short: "Perform operations on shared token",
+			Short: "Perform operations on shared token.",
 		}, prerunner)
 	cmd := &sharedTokenCommand{
 		AuthenticatedCLICommand: cliCmd,
@@ -43,20 +42,25 @@ func (c *sharedTokenCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
-	createCmd.Flags().String("consumer_email", "", "Email id of consumer of stream share")
-	createCmd.Flags().String("topic", "", "Topic of stream share")
-	createCmd.Flags().String("cluster", "", "Cluster of stream share")
+	createCmd.Flags().String("consumer-email", "", "Email of consumer of stream share.")
+	createCmd.Flags().String("topic", "", "Topic of stream share.")
+	createCmd.Flags().String("cluster", "", "Cluster of stream share.")
+	_ = createCmd.MarkFlagRequired("consumer-email")
+	_ = createCmd.MarkFlagRequired("topic")
+	_ = createCmd.MarkFlagRequired("cluster")
 	c.AddCommand(createCmd)
 
 	// redeem sub-command
 	redeemCmd := &cobra.Command{
 		Use:   "redeem",
-		Short: "Redeem the shared token to access a specific topic. Creates a config file at the path specified by the output flag.",
+		Short: "Redeem a stream share token.",
+		Long:  "Redeem a stream share token to access a specific topic. Creates a config file at the path specified by the output flag.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.redeem),
 	}
-	redeemCmd.Flags().String("token", "", "Token received from the producer of topic data")
-	redeemCmd.Flags().String("output", "./consumer.config", "Optional path for config file")
+	redeemCmd.Flags().String("token", "", "Token received from the producer of topic data.")
+	redeemCmd.Flags().String("output", "./consumer.config", "Optional path for config file.")
+	_ = createCmd.MarkFlagRequired("token")
 	c.AddCommand(redeemCmd)
 }
 
@@ -129,7 +133,7 @@ func (c *sharedTokenCommand) createConfigFile(redeemedToken *v1.CdxV1RedeemToken
 }
 
 func (c *sharedTokenCommand) create(cmd *cobra.Command, _ []string) error {
-	email, err := cmd.Flags().GetString("consumer_email")
+	email, err := cmd.Flags().GetString("consumer-email")
 	if err != nil {
 		return err
 	}

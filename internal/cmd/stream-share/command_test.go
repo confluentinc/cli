@@ -1,6 +1,9 @@
 package stream_share
 
 import (
+	"os"
+	"testing"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	cdxv1 "github.com/confluentinc/cdx-schema/cdx/v1"
@@ -14,8 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"os"
-	"testing"
 )
 
 type SharedTokenTestSuite struct {
@@ -44,6 +45,11 @@ func (suite *SharedTokenTestSuite) SetupTest() {
 				Secret: stringToPtr("secret"),
 			}, nil
 		},
+		DeactivateStreamShareFunc: func(id string) (*cdxv1.CdxV1StreamShare, error) {
+			return &cdxv1.CdxV1StreamShare{
+				Id: stringToPtr(id),
+			}, nil
+		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
@@ -66,7 +72,7 @@ func (suite *SharedTokenTestSuite) newCmd() *cobra.Command {
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenEmailIsInvalid() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "confluent.io"}
+	args := []string{"shared-token", "create", "--consumer-email", "confluent.io", "--topic", "topic", "--cluster", "cluster"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -76,7 +82,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenEmailIsI
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenTopicIsEmpty() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "stokkar+provider@confluent.io", "--topic", ""}
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", "", "--cluster", "cluster"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -86,7 +92,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenTopicIsE
 
 func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenClusterIsEmpty() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "stokkar+provider@confluent.io", "--topic", "test_topic",
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", "test_topic",
 		"--cluster", ""}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -97,7 +103,7 @@ func (suite *SharedTokenTestSuite) TestCreateSharedTokenReturnsErrorWhenClusterI
 
 func (suite *SharedTokenTestSuite) TestCreateSharedToken() {
 	cmd := suite.newCmd()
-	args := []string{"shared-token", "create", "--consumer_email", "stokkar+provider@confluent.io", "--topic", "test_topic",
+	args := []string{"shared-token", "create", "--consumer-email", "stokkar+provider@confluent.io", "--topic", "test_topic",
 		"--cluster", "clstr"}
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -139,4 +145,42 @@ func (suite *SharedTokenTestSuite) TestRedeemSharedTokenWritesToOutputFile() {
 	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
 	_, err = os.Stat(outputPath)
 	req.NoError(err)
+}
+func (suite *SharedTokenTestSuite) TestRedeemSharedToken() {
+	cmd := suite.newCmd()
+	args := []string{"shared-token", "redeem", "--token", "test_token"}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.streamShareClientMock.RedeemSharedTokenCalled())
+}
+
+func (suite *SharedTokenTestSuite) TestDeactivateStreamShare() {
+	cmd := suite.newCmd()
+	args := []string{"deactivate", "--id", "test_id"}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
+	req.NoError(err)
+}
+
+func (suite *SharedTokenTestSuite) TestDeactivateStreamShareMissingId() {
+	cmd := suite.newCmd()
+	args := []string{"deactivate"}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.NotNil(err)
+	req.Equal("required flag(s) \"id\" not set", err.Error())
+	req.False(suite.streamShareClientMock.DeactivateStreamShareCalled())
+}
+
+func (suite *SharedTokenTestSuite) TestDeactivateStreamShareEmptyId() {
+	cmd := suite.newCmd()
+	args := []string{"deactivate", "--id", ""}
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	req := require.New(suite.T())
+	req.NotNil(err)
+	req.Equal(errors.StreamShareIdEmptyErrorMsg, err.Error())
+	req.False(suite.streamShareClientMock.DeactivateStreamShareCalled())
 }
