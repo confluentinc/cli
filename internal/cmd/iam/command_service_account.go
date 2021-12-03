@@ -34,7 +34,8 @@ func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:         "service-account",
-			Short:       `Manage service accounts.`,
+			Aliases:     []string{"sa"},
+			Short:       "Manage service accounts.",
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner)
 	cmd := &serviceAccountCommand{
@@ -50,6 +51,9 @@ func (c *serviceAccountCommand) Cmd() *cobra.Command {
 
 func (c *serviceAccountCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
+	if c.Client == nil {
+		return suggestions
+	}
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return suggestions
@@ -77,7 +81,6 @@ func (c *serviceAccountCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -95,7 +98,6 @@ func (c *serviceAccountCommand) init() {
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{
@@ -112,7 +114,6 @@ func (c *serviceAccountCommand) init() {
 	}
 	updateCmd.Flags().String("description", "", "Description of the service account.")
 	_ = updateCmd.MarkFlagRequired("description")
-	updateCmd.Flags().SortFlags = false
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -193,12 +194,16 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	return nil
 }
 
-func (c *serviceAccountCommand) delete(_ *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 	user := &orgv1.User{ResourceId: args[0]}
-	return c.Client.User.DeleteServiceAccount(context.Background(), user)
+	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
+		return err
+	}
+	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
+	return nil
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {

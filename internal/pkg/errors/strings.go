@@ -66,7 +66,7 @@ const (
 	CreatedMirrorMsg         = "Created mirror topic \"%s\".\n"
 
 	// kafka acl commands
-	InvalidServiceAccountMsg = "Invalid service account ID \"%s\".\n"
+	DeletedServiceAccountMsg = "Deleted service account \"%s\".\n"
 	DeletedACLsMsg           = "Deleted ACLs.\n"
 	DeletedACLsCountMsg      = "Deleted %d ACLs.\n"
 	ACLsNotFoundMsg          = "ACL not found; ACL may have been misspelled or already deleted.\n"

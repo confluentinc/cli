@@ -1,4 +1,6 @@
-       Key      | Description  | Owner Resource Id |     Owner Email      | Resource Type | Resource ID |       Created         
-----------------+--------------+-------------------+----------------------+---------------+-------------+-----------------------
-  * MYKEY5      | my-other-app | u-44ddd           | mhe@confluent.io     | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  
-    UIAPIKEY101 |              | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  
+It may take a couple of minutes for the API key to be ready.
+Save the API key and secret. The secret is not retrievable later.
++---------+-----------+
+| API Key | MYKEY5    |
+| Secret  | MYSECRET5 |
++---------+-----------+

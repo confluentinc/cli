@@ -3,6 +3,9 @@ Manage Schema Registry.
 Usage:
   confluent schema-registry [command]
 
+Aliases:
+  schema-registry, sr
+
 Available Commands:
   cluster     Manage Schema Registry cluster.
   exporter    Manage Schema Registry exporters.

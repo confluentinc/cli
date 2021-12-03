@@ -71,9 +71,9 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		_ = help.WriteHelpTemplate(cmd)
 	})
 
+	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 
 	logger := log.New()
 
@@ -111,15 +111,15 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-	connectCmd := connect.New(cfg, prerunner, analyticsClient)
+	connectCmd := connect.New(prerunner, analyticsClient)
 	environmentCmd := environment.New(prerunner, analyticsClient)
 
 	cli.AddCommand(admin.New(prerunner, isTest))
 	cli.AddCommand(apiKeyCmd.Command)
 	cli.AddCommand(auditlog.New(prerunner))
-	cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
+	cli.AddCommand(cluster.New(prerunner, ver.UserAgent, logger))
 	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
-	cli.AddCommand(completion.New(cli))
+	cli.AddCommand(completion.New())
 	cli.AddCommand(context.New(prerunner, flagResolver))
 	cli.AddCommand(connectCmd.Command)
 	cli.AddCommand(environmentCmd.Command)
@@ -144,6 +144,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	hideAndErrIfMissingRunRequirement(cli, cfg)
+	disableFlagSorting(cli)
 
 	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
 }
@@ -212,6 +213,15 @@ func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
 
 	for _, subcommand := range cmd.Commands() {
 		hideAndErrIfMissingRunRequirement(subcommand, cfg)
+	}
+}
+
+// disableFlagSorting recursively disables the default option to sort flags, for all commands.
+func disableFlagSorting(cmd *cobra.Command) {
+	cmd.Flags().SortFlags = false
+
+	for _, subcommand := range cmd.Commands() {
+		disableFlagSorting(subcommand)
 	}
 }
 

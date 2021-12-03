@@ -35,7 +35,6 @@ terraform.d
 .netrc
 
 coverage.txt
-confluent_test
 integ_coverage.txt
 unit_coverage.txt
 *.sw*

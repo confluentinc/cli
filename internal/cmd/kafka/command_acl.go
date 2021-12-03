@@ -74,7 +74,6 @@ func (c *aclCommand) init() {
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 
 	c.AddCommand(createCmd)
 
@@ -85,7 +84,6 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 	deleteCmd.Flags().AddFlagSet(aclConfigFlags())
-	deleteCmd.Flags().SortFlags = false
 
 	c.AddCommand(deleteCmd)
 
@@ -98,7 +96,6 @@ func (c *aclCommand) init() {
 	listCmd.Flags().AddFlagSet(resourceFlags())
 	listCmd.Flags().String("service-account", "", "Service account ID.")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
 
@@ -130,7 +127,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if kafkaREST != nil {
 		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
 
-		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -155,7 +152,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
@@ -196,7 +193,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -243,7 +240,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	// Kafka REST is not available, fallback to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
@@ -281,7 +278,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -333,7 +330,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	// Kafka REST is not available, fallback to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(cmd, c.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

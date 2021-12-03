@@ -86,9 +86,10 @@ type listDisplay struct {
 
 func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "role-binding",
-		Short: "Manage RBAC and IAM role bindings.",
-		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+		Use:     "role-binding",
+		Aliases: []string{"rb"},
+		Short:   "Manage RBAC and IAM role bindings.",
+		Long:    "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
@@ -186,7 +187,6 @@ func (c *roleBindingCommand) init() {
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
 
 	c.AddCommand(listCmd)
 
@@ -223,7 +223,6 @@ func (c *roleBindingCommand) init() {
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
 	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
 	c.AddCommand(createCmd)
@@ -255,7 +254,6 @@ func (c *roleBindingCommand) init() {
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
 	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	deleteCmd.Flags().SortFlags = false
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
 	check(deleteCmd.MarkFlagRequired("role"))
@@ -692,7 +690,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		*scope)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
-			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
+			return c.listPrincipalResourcesV1(scope, principal, role)
 		}
 		return err
 	}
@@ -743,7 +741,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(mdsScope *mds.MdsScope, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {

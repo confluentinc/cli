@@ -30,7 +30,6 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("api-key", "", "API key.")
 	cmd.Flags().String("api-secret", "", "API secret. Can be specified as plaintext, as a file, starting with '@', or as stdin, starting with '-'.")
 	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
 
 	_ = cmd.MarkFlagRequired("bootstrap")
 	_ = cmd.MarkFlagRequired("api-key")

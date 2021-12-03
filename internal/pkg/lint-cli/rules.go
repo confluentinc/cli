@@ -66,39 +66,6 @@ func RequireEndWithPunctuation(field string, ignoreIfEndsWithCodeBlock bool) Rul
 	}
 }
 
-// RequireNotEndWithPunctuation checks that a field does not end with a period
-func RequireNotEndWithPunctuation(field string) Rule {
-	return func(cmd *cobra.Command) error {
-		fieldValue := getValueByName(cmd, field)
-		if fieldValue[len(fieldValue)-1] == '.' {
-			return fmt.Errorf("%s should not end with punctuation on %s", normalizeDesc(field), FullCommand(cmd))
-		}
-		return nil
-	}
-}
-
-// RequirePrefix checks that a field begins with a given suffix
-func RequirePrefix(field, suffix string) Rule {
-	return func(cmd *cobra.Command) error {
-		fieldValue := getValueByName(cmd, field)
-		if !strings.HasPrefix(fieldValue, suffix) {
-			return fmt.Errorf("%s on %s should begin with %s", normalizeDesc(field), FullCommand(cmd), suffix)
-		}
-		return nil
-	}
-}
-
-// RequireSuffix checks that a field ends with a given suffix
-func RequireSuffix(field, suffix string) Rule {
-	return func(cmd *cobra.Command) error {
-		fieldValue := getValueByName(cmd, field)
-		if !strings.HasSuffix(fieldValue, suffix) {
-			return fmt.Errorf("%s on %s should end with %s", normalizeDesc(field), FullCommand(cmd), suffix)
-		}
-		return nil
-	}
-}
-
 // RequireStartWithCapital checks that a field starts with a capital letter
 func RequireStartWithCapital(field string) Rule {
 	return func(cmd *cobra.Command) error {
@@ -290,35 +257,6 @@ func RequireFlagType(flag, typeName string) Rule {
 			if typeName != "" && f.Value.Type() != typeName {
 				return fmt.Errorf("standard --%s flag has the wrong type on %s", flag, FullCommand(cmd))
 			}
-		}
-		return nil
-	}
-}
-
-// RequireFlagDescription checks that a flag has the specified usage string, if it exists.
-// Please use RequireFlag to check that it exists first.
-func RequireFlagDescription(flag, description string) Rule {
-	return func(cmd *cobra.Command) error {
-		f := cmd.Flag(flag)
-		if f != nil {
-			// check that --flag has the standard description (so its not a different meaning)
-			if description != "" && f.Usage != description {
-				return fmt.Errorf("bad usage string: expected standard description for --%s on %s",
-					flag, FullCommand(cmd))
-			}
-		}
-		return nil
-	}
-}
-
-// RequireFlagSort checks whether flags should be auto sorted
-func RequireFlagSort(sort bool) Rule {
-	return func(cmd *cobra.Command) error {
-		if cmd.Flags().HasFlags() && cmd.Flags().SortFlags != sort {
-			if sort {
-				return fmt.Errorf("flags not sorted on %s", FullCommand(cmd))
-			}
-			return fmt.Errorf("flags unexpectedly sorted on %s", FullCommand(cmd))
 		}
 		return nil
 	}

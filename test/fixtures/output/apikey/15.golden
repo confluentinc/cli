@@ -1,4 +1,4 @@
-Error: Unknown API key UNKNOWN
-
-Suggestions:
-    Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`.
+       Key      | Description | Owner Resource Id |     Owner Email      | Resource Type | Resource ID  |       Created         
+----------------+-------------+-------------------+----------------------+---------------+--------------+-----------------------
+    MYKEY6      | my-ksql-app | u-44ddd           | mhe@confluent.io     | ksql          | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+    UIAPIKEY102 |             | u-22bbb           | u-22bbb@confluent.io | ksql          | lksqlc-ksql1 | 1999-02-24T00:00:00Z  

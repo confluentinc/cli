@@ -49,7 +49,7 @@ type NetrcHandler interface {
 type NetrcMachineParams struct {
 	IsCloud bool
 	IsSSO   bool
-	CtxName string
+	Name    string
 	URL     string
 }
 
@@ -230,8 +230,8 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*
 
 func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
-	if params.CtxName != "" {
-		contextNameRegex = escapeSpecialRegexChars(params.CtxName)
+	if params.Name != "" {
+		contextNameRegex = escapeSpecialRegexChars(params.Name)
 	} else if params.URL != "" {
 		url := strings.ReplaceAll(params.URL, ".", `\.`)
 		contextNameRegex = fmt.Sprintf(".*-%s", url)

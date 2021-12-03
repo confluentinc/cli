@@ -1,3 +1,4 @@
-       Key      | Description | Owner Resource Id |     Owner Email      | Resource Type | Resource ID |       Created         
-----------------+-------------+-------------------+----------------------+---------------+-------------+-----------------------
-    UIAPIKEY101 |             | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  
+{
+  "key": "MYKEY13",
+  "secret": "MYSECRET13"
+}

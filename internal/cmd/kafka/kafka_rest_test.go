@@ -84,11 +84,11 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts()
 
 	r := aclBindingToClustersClusterIdAclsPostOpts(&binding).CreateAclRequestData.Value().(kafkarestv3.CreateAclRequestData)
 	req.True(r.Host == "myhost")
-	req.True(r.Operation == kafkarestv3.AclOperation("READ"))
+	req.True(r.Operation == "READ")
 	req.True(r.ResourceName == "mycluster")
 	req.True(r.Principal == "myprincipal")
-	req.True(r.Permission == kafkarestv3.AclPermission("DENY"))
-	req.True(r.PatternType == kafkarestv3.AclPatternType("LITERAL"))
+	req.True(r.Permission == "DENY")
+	req.True(r.PatternType == "LITERAL")
 }
 
 func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts() {

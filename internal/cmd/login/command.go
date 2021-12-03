@@ -66,7 +66,6 @@ func (c *Command) init(prerunner pcmd.PreRunner) {
 	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
-	loginCmd.Flags().SortFlags = false
 
 	c.CLICommand = pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
 }
@@ -141,10 +140,9 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
-	if url != pauth.CCloudURL { // by default, LoginManager client uses prod url
-		client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-		c.loginCredentialsManager.SetCloudClient(client)
-	}
+	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
+	c.loginCredentialsManager.SetCloudClient(client)
+
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err

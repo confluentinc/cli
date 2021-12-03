@@ -77,7 +77,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	}
 
 	// First examine existing credentials. If check fails(saved credentials no longer works or user enters
-	//incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.
+	// incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.
 	shouldPrompt := false
 
 	for {
@@ -99,7 +99,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 		srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
 		if len(endpoint) == 0 {
-			envId, err := ctx.AuthenticatedEnvId(cmd)
+			envId, err := ctx.AuthenticatedEnvId()
 			if err != nil {
 				return nil, nil, err
 			}

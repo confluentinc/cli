@@ -16,21 +16,21 @@ require (
 	github.com/confluentinc/cc-structs/kafka/flow v0.945.0
 	github.com/confluentinc/cc-structs/kafka/org v0.945.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.753.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.812.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
-	github.com/confluentinc/cc-structs/operator v0.753.0
+	github.com/confluentinc/cc-structs/operator v0.911.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
 	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
-	github.com/confluentinc/go-ps1 v1.0.0
+	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.11
+	github.com/confluentinc/schema-registry-sdk-go v0.0.12
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.3.0
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.7.1
+	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.9.3
@@ -86,8 +86,6 @@ require (
 
 replace (
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
-	github.com/spf13/cobra => github.com/spf13/cobra v1.1.3-0.20210218152603-eb3b6397b1b5
-	github.com/ugorji/go v1.1.4 => github.com/ugorji/go v0.0.0-20190316192920-e2bddce071ad
 	k8s.io/api => k8s.io/api v0.0.0-20190126160459-e86510ea3fe7
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d

@@ -35,7 +35,6 @@ func NewACLConfig() *ACLConfiguration {
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
 func aclConfigFlags() *pflag.FlagSet {
 	flgSet := aclEntryFlags()
-	flgSet.SortFlags = false
 	flgSet.AddFlagSet(resourceFlags())
 	return flgSet
 }

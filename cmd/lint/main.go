@@ -24,8 +24,8 @@ var (
 
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
-		"Connect", "Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
-		"Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
+		"Connect", "Control Center", "Enterprise", "IAM", "ID", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka",
+		"RBAC", "Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
 	}
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "apikey", "apisecret", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
@@ -49,7 +49,6 @@ var rules = []linter.Rule{
 		linter.RequireNamedArgument(
 			linter.NamedArgumentConfig{CreateCommandArg: "<name>", OtherCommandsArg: "<id>"},
 			map[string]linter.NamedArgumentConfig{
-				"environment":    {CreateCommandArg: "<name>", OtherCommandsArg: "<environment-id>"},
 				"role":           {CreateCommandArg: "<name>", OtherCommandsArg: "<name>"},
 				"topic":          {CreateCommandArg: "<topic>", OtherCommandsArg: "<topic>"},
 				"api-key":        {CreateCommandArg: "N/A", OtherCommandsArg: "<api-key>"},
@@ -103,16 +102,12 @@ var rules = []linter.Rule{
 		// skip cluster linking commands
 		linter.ExcludeCommandContains("kafka link"),
 		linter.ExcludeCommandContains("kafka mirror"),
+		linter.ExcludeCommandContains("completion"),
 	),
 	linter.Filter(linter.RequireFlag("resource", false), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlag("resource", true), linter.IncludeCommandContains("api-key list")),
 	linter.Filter(linter.RequireFlagType("resource", "string"), resourceScopedCommands...),
 	linter.Filter(linter.RequireFlagType("resource", "string"), linter.IncludeCommandContains("api-key list")),
-	linter.Filter(
-		linter.RequireFlagSort(false),
-		linter.OnlyLeafCommands,
-		linter.ExcludeCommandContains("local"),
-	),
 	linter.RequireLowerCase("Use"),
 	linter.Filter(
 		linter.RequireSingular("Use"),

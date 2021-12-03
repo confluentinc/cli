@@ -26,3 +26,19 @@ func NewCLIPreRunnerE(prerunnerE ...func(*cobra.Command, []string) error) func(*
 		return nil
 	}
 }
+
+// NewValidArgsFunction is a wrapper around `cobra.ValidArgsFunction()` that ignores the `toComplete`
+// argument and `ShellCompDirective` return value, which are almost always ignored and "NoFileComp", respectively.
+func NewValidArgsFunction(f func(*cobra.Command, []string) []string) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return f(cmd, args), cobra.ShellCompDirectiveNoFileComp
+	}
+}
+
+// RegisterFlagCompletionFunc is a wrapper around `cobra.RegisterFlagCompletionFunc()` that ignores the `toComplete`
+// argument and `ShellCompDirective` return value, which are almost always ignored and "NoFileComp", respectively.
+func RegisterFlagCompletionFunc(cmd *cobra.Command, flag string, f func(*cobra.Command, []string) []string) {
+	_ = cmd.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return f(cmd, args), cobra.ShellCompDirectiveNoFileComp
+	})
+}
