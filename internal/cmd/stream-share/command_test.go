@@ -171,8 +171,8 @@ func (suite *SharedTokenTestSuite) TestDeactivateStreamShareMissingId() {
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.NotNil(err)
-	req.Equal(errors.StreamShareIdEmptyErrorMsg, err.Error())
-	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
+	req.Equal("required flag(s) \"id\" not set", err.Error())
+	req.False(suite.streamShareClientMock.DeactivateStreamShareCalled())
 }
 
 func (suite *SharedTokenTestSuite) TestDeactivateStreamShareEmptyId() {
@@ -182,5 +182,5 @@ func (suite *SharedTokenTestSuite) TestDeactivateStreamShareEmptyId() {
 	req := require.New(suite.T())
 	req.NotNil(err)
 	req.Equal(errors.StreamShareIdEmptyErrorMsg, err.Error())
-	req.True(suite.streamShareClientMock.DeactivateStreamShareCalled())
+	req.False(suite.streamShareClientMock.DeactivateStreamShareCalled())
 }
