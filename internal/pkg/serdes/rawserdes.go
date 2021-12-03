@@ -2,7 +2,7 @@ package serdes
 
 type RawSerializationProvider struct{}
 
-func (rawProvider *RawSerializationProvider) LoadSchema(_ string) error {
+func (rawProvider *RawSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
@@ -17,7 +17,7 @@ func (rawProvider *RawSerializationProvider) encode(str string) ([]byte, error) 
 
 type RawDeserializationProvider struct{}
 
-func (rawProvider *RawDeserializationProvider) LoadSchema(_ string) error {
+func (rawProvider *RawDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
