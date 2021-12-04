@@ -22,6 +22,7 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
@@ -165,6 +166,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
+	produceCmd.Flags().String("refs", "", "The path to the references file.")
 	produceCmd.Flags().String("tester", "", "The path to the local schema file.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
@@ -693,19 +695,15 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath)
-	if err != nil {
-		return err
-	}
 	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider)
+	metaInfo, _, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), nil)
 	if err != nil {
 		return err
 	}
-	// metaInfo := []byte{0x0}
-	// schemaIdBuffer := make([]byte, 4)
-	// binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
-	// metaInfo = append(metaInfo, schemaIdBuffer...)
+	err = serializationProvider.LoadSchema(schemaPath, nil)
+	if err != nil {
+		return err
+	}
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
@@ -963,26 +961,93 @@ func getMsgKeyAndValueOnPrem(metaInfo []byte, data, delim string, parseKey bool,
 	return key, value, nil
 }
 
-func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
+func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
+	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
 		srUsername, err := cmd.Flags().GetString("sr-username")
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
 		srPassword, err := cmd.Flags().GetString("sr-password")
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
-		info, err := c.registerSchemaWithUserInfo(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srUsername, srPassword)
+		info, err := c.registerSchemaWithUserInfo(cmd, subject, schemaType, schemaPath, srUsername, srPassword)
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
 		metaInfo = info
+		referencePathMap, err = c.storeSchemaReferencesOnPrem(cmd, refs)
+		if err != nil {
+			return metaInfo, nil, err
+		}
 	}
-	return metaInfo, nil
+	return metaInfo, referencePathMap, nil
+}
+
+func (c *authenticatedTopicCommand) storeSchemaReferencesOnPrem(cmd *cobra.Command, refs []srsdk.SchemaReference) (map[string]string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	referencePathMap := map[string]string{}
+	for _, ref := range refs {
+		tempStorePath := filepath.Join(dir, ref.Name)
+		if !fileExists(tempStorePath) {
+			err := getAndWriteSchemaByVersion(cmd, tempStorePath, ref.Subject, strconv.Itoa(int(ref.Version)))
+			if err != nil {
+				return nil, err
+			}
+		}
+		referencePathMap[ref.Name] = tempStorePath
+	}
+
+	return referencePathMap, nil
+}
+
+func getAndWriteSchemaByVersion(cmd *cobra.Command, tempStorePath, subject, version string) error {
+	// retrieve schema by subject and version, write to temp path
+	schema := SchemaObject{}
+
+	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return err
+	}
+	requestUrl := srEndpoint + "/subjects/" + subject + "/versions/" + version
+
+	req, err := http.NewRequest("GET", requestUrl, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth("superUser", "superUser")
+
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return err
+	}
+	client := GetCAClient(caCertPath)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&schema)
+	if err != nil {
+		return err
+	}
+
+	file, _ := json.MarshalIndent(schema, "", " ")
+	err = ioutil.WriteFile(tempStorePath, file, 0644)
+	return err
 }
 
 func (c *authenticatedTopicCommand) registerSchemaWithUserInfo(cmd *cobra.Command, subject, valueFormat, schemaPath, srUsername, srPassword string) ([]byte, error) {
@@ -1042,9 +1107,8 @@ func (c *authenticatedTopicCommand) registerSchemaWithUserInfo(cmd *cobra.Comman
 func extractSchemaId(response *http.Response) (uint32, error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(response.Body)
-	responseBody := buf.String()
-	schemaId, err := strconv.ParseInt(responseBody[6:len(responseBody)-2], 10, 32)
-	fmt.Println("Got schema id:", schemaId)
+	responseBody := buf.String() // {"id":9}
+	schemaId, err := strconv.ParseInt(responseBody[6:len(responseBody)-1], 10, 32)
 	if err != nil {
 		return 0, err
 	}

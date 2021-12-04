@@ -16,9 +16,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
@@ -198,7 +195,7 @@ func ConvertSchemaToRequestString(schema SchemaObject, valueFormat string) (stri
 	return string(requestBytes), nil
 }
 
-func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
+func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[string]string, error) {
 	if len(value) < messageOffset {
 		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
 	}
