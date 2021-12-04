@@ -25,7 +25,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 
 	c.AddCommand(newDescribeCommand(prerunner))
 	c.AddCommand(newMigrateCommand(prerunner))
