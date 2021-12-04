@@ -37,20 +37,19 @@ type auditLogStruct struct {
 	TopicName        string
 }
 
-func NewDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	c := &describeCmd{
-		pcmd.NewAuthenticatedCLICommand(
-			&cobra.Command{
-				Use:         "describe",
-				Short:       "Describe the audit log configuration for this organization.",
-				Args:        cobra.NoArgs,
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
-			},
-			prerunner,
-		),
+func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "describe",
+		Short:       "Describe the audit log configuration for this organization.",
+		Args:        cobra.NoArgs,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
+
+	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.RunE = pcmd.NewCLIRunE(c.describe)
+
 	c.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+
 	return c.Command
 }
 
