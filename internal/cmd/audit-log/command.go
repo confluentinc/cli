@@ -14,10 +14,8 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	prerunner pcmd.PreRunner
 }
 
-// New returns the default command object for interacting with audit logs.
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "audit-log",
@@ -27,20 +25,14 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		prerunner:  prerunner,
-	}
-	c.init()
+	c := &command{CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+
+	c.AddCommand(newDescribeCommand(prerunner))
+	c.AddCommand(newMigrateCommand(prerunner))
+	c.AddCommand(newConfigCommand(prerunner))
+	c.AddCommand(newRouteCommand(prerunner))
 
 	return c.Command
-}
-
-func (c *command) init() {
-	c.AddCommand(NewDescribeCommand(c.prerunner))
-	c.AddCommand(NewMigrateCommand(c.prerunner))
-	c.AddCommand(NewConfigCommand(c.prerunner))
-	c.AddCommand(NewRouteCommand(c.prerunner))
 }
 
 type errorMessage struct {
