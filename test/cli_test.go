@@ -31,13 +31,12 @@ var (
 	update       = flag.Bool("update", false, "update golden files")
 	debug        = flag.Bool("debug", true, "enable verbose output")
 	cover        = false
-	testBin      = testBinNormal
+	testBin      = "bin/confluent_test"
 	covCollector *bincover.CoverageCollector
 )
 
 const (
-	testBinNormal          = "confluent_test"
-	testBinRace            = "confluent_test_race"
+	testBinRace            = "bin/confluent_test_race"
 	mergedCoverageFilename = "integ_coverage.txt"
 )
 
@@ -89,12 +88,12 @@ func TestCLI(t *testing.T) {
 }
 
 func init() {
-	collectCoverage := os.Getenv("INTEG_COVER")
-	cover = collectCoverage == "on"
-	ciEnv := os.Getenv("CI")
-	if ciEnv == "on" {
+	cover = os.Getenv("INTEG_COVER") == "on"
+
+	if os.Getenv("CI") == "on" {
 		testBin = testBinRace
 	}
+
 	if runtime.GOOS == "windows" {
 		testBin = testBin + ".exe"
 	}

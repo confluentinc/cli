@@ -86,9 +86,10 @@ type listDisplay struct {
 
 func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "role-binding",
-		Short: "Manage RBAC and IAM role bindings.",
-		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+		Use:     "role-binding",
+		Aliases: []string{"rb"},
+		Short:   "Manage RBAC and IAM role bindings.",
+		Long:    "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
@@ -689,7 +690,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		*scope)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
-			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
+			return c.listPrincipalResourcesV1(scope, principal, role)
 		}
 		return err
 	}
@@ -740,7 +741,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(mdsScope *mds.MdsScope, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {

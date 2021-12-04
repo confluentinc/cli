@@ -10,7 +10,6 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -168,10 +167,10 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.keystore = &mock.KeyStore{
-		HasAPIKeyFunc: func(key, clusterId string, cmd *cobra.Command) (b bool, e error) {
+		HasAPIKeyFunc: func(key, clusterId string) (b bool, e error) {
 			return key == apiKeyVal, nil
 		},
-		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string) error {
 			return nil
 		},
 		DeleteAPIKeyFunc: func(key string) error {
@@ -191,6 +190,13 @@ func (suite *APITestSuite) SetupTest() {
 					ResourceId:  userResourceId,
 					ServiceName: serviceAccountName,
 				},
+			}, nil
+		},
+		GetServiceAccountFunc: func(_ context.Context, _ int32) (*orgv1.User, error) {
+			return &orgv1.User{
+				Id:          serviceAccountId,
+				ResourceId:  userResourceId,
+				ServiceName: serviceAccountName,
 			}, nil
 		},
 		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
@@ -219,20 +225,19 @@ func (suite *APITestSuite) newCmd() *command {
 		KSQL:           suite.ksqlMock,
 		Metrics:        &ccsdkmock.Metrics{},
 	}
-	prompt := &mock.Prompt{
-		ReadLineFunc: func() (string, error) {
-			return promptReadString + "\n", nil
-		},
-		ReadLineMaskedFunc: func() (string, error) {
-			return promptReadPass + "\n", nil
-		},
-		IsPipeFunc: func() (b bool, e error) {
-			return suite.isPromptPipe, nil
-		},
-	}
 	resolverMock := &pcmd.FlagResolverImpl{
-		Prompt: prompt,
-		Out:    os.Stdout,
+		Prompt: &mock.Prompt{
+			ReadLineFunc: func() (string, error) {
+				return promptReadString + "\n", nil
+			},
+			ReadLineMaskedFunc: func() (string, error) {
+				return promptReadPass + "\n", nil
+			},
+			IsPipeFunc: func() (bool, error) {
+				return suite.isPromptPipe, nil
+			},
+		},
+		Out: os.Stdout,
 	}
 	prerunner := &cliMock.Commander{
 		FlagResolver: resolverMock,

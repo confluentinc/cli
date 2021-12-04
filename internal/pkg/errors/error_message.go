@@ -46,7 +46,6 @@ const (
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
 	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	PluginNameNotPassedErrorMsg        = "plugin name must be passed"
 	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
 
@@ -54,7 +53,6 @@ const (
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
 	EnvNotFoundSuggestions = "List available environments with `confluent environment list`."
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
-	EnvRefreshErrorMsg     = "unable to save user auth while refreshing environment list"
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -92,7 +90,6 @@ const (
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
-	OnlyKafkaAuthErrorMsg         = "only `kafka-auth` is currently supported"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
 	// kafka cluster commands
@@ -111,8 +108,6 @@ const (
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
 	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
-	TopicDoesNotExistErrorMsg                     = "topic \"%s\" does not exist"
-	TopicDoesNotExistSuggestions                  = ListTopicSuggestions
 	TopicDoesNotExistOrMissingACLsErrorMsg        = "topic \"%s\" does not exist or your api key does not have the ACLs required to describe it"
 	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`."
 	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
@@ -157,13 +152,13 @@ const (
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
-	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
-	JsonDocumentInvalidErrorMsg  = "the json document is invalid"
-	ProtoSchemaInvalidErrorMsg   = "the protobuf schema is invalid"
-	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
+	JsonSchemaInvalidErrorMsg         = "the JSON schema is invalid"
+	JsonDocumentInvalidErrorMsg       = "the JSON document is invalid"
+	AvroReferenceNotSupportedErrorMsg = "avro reference not supported in cloud CLI"
+	ProtoSchemaInvalidErrorMsg        = "the protobuf schema is invalid"
+	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
-	APIKeyAndSecretBothRequired    = "both --api-key and --api-secret must be provided"
 	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"
 	KsqlDBTerminateClusterMsg      = "Failed to terminate ksqlDB app \"%s\" due to \"%s\".\n"
 
@@ -181,17 +176,12 @@ const (
 	JavaExecNotFondErrorMsg  = "could not find java executable, please install java or set JAVA_HOME"
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
-	// prompt command
-	ParseTimeOutErrorMsg      = "invalid value \"%s\" for `-t, --timeout` flag: unable to parse %s as duration or milliseconds"
-	ParsePromptFormatErrorMsg = "error parsing prompt format string \"%s\""
-
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg    = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg   = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg        = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg          = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions       = "Schema ID must be an integer."
-	SchemaExporterNotFoundErrorMsg = "schema exporter \"%s\" not found"
+	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions     = "Schema ID must be an integer."
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
@@ -263,10 +253,7 @@ const (
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
 	ContextStateNotMappedErrorMsg      = "context state mapping error for context \"%s\""
-	ClearInvalidAPIFailErrorMsg        = "unable to clear invalid API key pairs"
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
-	ResetInvalidAPIKeyErrorMsg         = "unable to reset invalid active API key"
-	NoIDClusterErrorMsg                = "Kafka cluster under context \"%s\" has no ID"
 
 	// local package
 	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
@@ -363,23 +350,17 @@ const (
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
 		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql app list`."
-	KafkaNotFoundErrorMsg             = "Kafka cluster \"%s\" not found"
-	KafkaNotFoundSuggestions          = "To list Kafka clusters, use `confluent kafka cluster list`."
-	KSQLNotFoundSuggestions           = "To list KSQL clusters, use `confluent ksql app list`."
-	SRNotFoundSuggestions             = "Check the schema-registry cluster ID with `confluent schema-registry cluster describe`."
-	KafkaNotReadyErrorMsg             = "Kafka cluster \"%s\" not ready"
-	KafkaNotReadySuggestions          = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
-	NoKafkaSelectedErrorMsg           = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions        = "You must pass `--cluster` flag with the command or set an active kafka in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions     = "You must provide the cluster ID argument or set an active kafka in your context with `ccloud kafka cluster use`."
-	UnableToConnectToKafkaErrorMsg    = "unable to connect to Kafka cluster"
-	UnableToConnectToKafkaSuggestions = "For recently created Kafka clusters and API keys, it may take a few minutes before the resources are ready.\n" +
-		"Otherwise, verify that for Kafka cluster \"%s\" the active API key \"%s\" used is the right one.\n" +
-		"Also verify that the correct API secret is stored for the API key.\n" +
-		"If the API secret is incorrect, override with `confluent api-key store %s --resource %s --force`.\n" +
-		"Finally, ensure the API key being used was not deleted by another user or via the UI (check with `confluent api-key list`)."
-	NoAPISecretStoredErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
-	NoAPISecretStoredSuggestions = "Store the API secret with `confluent api-key store %s --resource %s`."
+	KafkaNotFoundErrorMsg         = "Kafka cluster \"%s\" not found"
+	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
+	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql app list`."
+	SRNotFoundSuggestions         = "Check the schema-registry cluster ID with `confluent schema-registry cluster describe`."
+	KafkaNotReadyErrorMsg         = "Kafka cluster \"%s\" not ready"
+	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
+	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
+	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active kafka in your context with `confluent kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active kafka in your context with `ccloud kafka cluster use`."
+	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
+	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "Internal server error"

@@ -2,7 +2,7 @@ package test
 
 func (s *CLITestSuite) TestEnvironment() {
 	tests := []CLITest{
-		// only login at the begginning so active env is not reset
+		// Only log in at the beginning so active env is not reset
 		// tt.workflow=true so login is not reset
 		{args: "environment list", fixture: "environment/1.golden", login: "default"},
 		{args: "environment use not-595", fixture: "environment/2.golden"},

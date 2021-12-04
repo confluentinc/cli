@@ -1,4 +1,6 @@
-Error: refusing to overwrite existing secret for API Key "UIAPIKEY100"
-
-Suggestions:
-    If you would like to override the existing secret stored for API key "UIAPIKEY100", use `--force` flag.
+It may take a couple of minutes for the API key to be ready.
+Save the API key and secret. The secret is not retrievable later.
++---------+-----------+
+| API Key | MYKEY7    |
+| Secret  | MYSECRET7 |
++---------+-----------+

@@ -125,8 +125,8 @@ func validate(field Field, val string) (interface{}, error) {
 	}
 
 	if field.Regex != "" {
-		field_rgx, _ := regexp.Compile(field.Regex)
-		if regex_match := field_rgx.MatchString(val); !regex_match {
+		re, _ := regexp.Compile(field.Regex)
+		if match := re.MatchString(val); !match {
 			return nil, fmt.Errorf(errors.InvalidInputFormatErrorMsg, val, field.ID)
 		}
 	}

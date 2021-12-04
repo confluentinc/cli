@@ -7,14 +7,14 @@ import (
 type ServerSideCompleter struct {
 }
 
-func (*ServerSideCompleter) Complete(doc prompt.Document) []prompt.Suggest {
+func (*ServerSideCompleter) Complete(_ prompt.Document) []prompt.Suggest {
 	return []prompt.Suggest{}
 }
 
-func (*ServerSideCompleter) AddCommand(cmd interface{}) {
+func (*ServerSideCompleter) AddCommand(_ interface{}) {
 
 }
 
-func (*ServerSideCompleter) AddStaticFlagCompletion(flagName string, suggestions []prompt.Suggest, commandPaths []string) {
+func (*ServerSideCompleter) AddStaticFlagCompletion(_ string, _ []prompt.Suggest, _ []string) {
 
 }

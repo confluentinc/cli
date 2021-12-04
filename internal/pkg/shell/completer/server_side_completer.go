@@ -146,7 +146,7 @@ func (c *ServerSideCompleterImpl) Complete(d prompt.Document) []prompt.Suggest {
 	if !c.canAcceptArgument(cmd, argTypeList) {
 		return []prompt.Suggest{}
 	}
-	suggestions := c.getSuggestionsForCommand(d, cmd)
+	suggestions := c.getSuggestionsForCommand(cmd)
 	return filterSuggestions(d, suggestions)
 }
 
@@ -280,7 +280,7 @@ func (c *ServerSideCompleterImpl) argCount(argTypeList []argType) int {
 }
 
 // Check the cache for suggestions
-func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cmd *cobra.Command) []prompt.Suggest {
+func (c *ServerSideCompleterImpl) getSuggestionsForCommand(cmd *cobra.Command) []prompt.Suggest {
 	var suggestions []prompt.Suggest
 	var cc ServerCompletableCommand
 	// Find the parent command that made the queries to update the cache
@@ -290,7 +290,7 @@ func (c *ServerSideCompleterImpl) getSuggestionsForCommand(d prompt.Document, cm
 	// If found parent then we expect suggestions in the cache
 	// If not found in cache it is either not in a completable state or the cache is not yet updated which shouldn't really happen
 	// If it is the case that the cache is not yet updated, an empty suggestions is returned as querying now would hang for the user
-	suggestions, _ = c.getCachedSuggestions(d, cc)
+	suggestions, _ = c.getCachedSuggestions(cc)
 	return suggestions
 }
 
@@ -355,7 +355,7 @@ func (c *ServerSideCompleterImpl) getParentServerCompletableFlag(cmd *cobra.Comm
 	return nil
 }
 
-func (c *ServerSideCompleterImpl) getCachedSuggestions(d prompt.Document, cc ServerCompletableCommand) ([]prompt.Suggest, bool) {
+func (c *ServerSideCompleterImpl) getCachedSuggestions(cc ServerCompletableCommand) ([]prompt.Suggest, bool) {
 	key := c.commandKey(cc.Cmd())
 	v, ok := c.cachedSuggestionsByPath.Load(key)
 	if !ok {
@@ -395,7 +395,7 @@ func (c *ServerSideCompleterImpl) getCompletableCommand(cmd *cobra.Command) Serv
 }
 
 func filterSuggestions(d prompt.Document, suggestions []prompt.Suggest) []prompt.Suggest {
-	filtered := []prompt.Suggest{}
+	var filtered []prompt.Suggest
 	for _, suggestion := range suggestions {
 		// only suggest if it does not appear anywhere in the input,
 		// or if the suggestion is just a message to the user.

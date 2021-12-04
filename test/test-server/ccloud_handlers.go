@@ -33,6 +33,7 @@ var (
 	keyStore        = map[int32]*schedv1.ApiKey{}
 	keyIndex        = int32(1)
 	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	resourceIdMap   = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 )
 
 const (
@@ -49,6 +50,9 @@ const (
 	serviceAccountResourceID = "sa-12345"
 	deactivatedUserID        = int32(6666)
 	deactivatedResourceID    = "sa-6666"
+
+	auditLogServiceAccountID         = int32(1337)
+	auditLogServiceAccountResourceID = "sa-1337"
 )
 
 // Fill API keyStore with default data
@@ -65,6 +69,16 @@ func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Req
 				Email:      "cody@confluent.io",
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
+			},
+			Accounts: environments,
+			Organization: &orgv1.Organization{
+				Id: 42,
+				AuditLog: &orgv1.AuditLog{
+					ClusterId:        "lkc-ab123",
+					AccountId:        "env-987zy",
+					ServiceAccountId: auditLogServiceAccountID,
+					TopicName:        "confluent-audit-log-events",
+				},
 			},
 		})
 		require.NoError(t, err)
@@ -336,13 +350,18 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
-		_, err := strconv.Atoi(idStr)
+		id, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
+		userId := int32(id)
 
 		switch r.Method {
 		case "GET":
-			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{ResourceId: serviceAccountResourceID}}
-
+			res := &orgv1.GetServiceAccountReply{
+				User: &orgv1.User{
+					Id:         userId,
+					ResourceId: resourceIdMap[userId],
+				},
+			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 
@@ -792,8 +811,8 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 		if r.Method == "GET" {
 			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
 				Invitations: []*orgv1.Invitation{
-					buildInvitation("1", "u-11aaa@confluent.io",  "u-11aaa", "VERIFIED"),
-					buildInvitation("2", "u-22bbb@confluent.io",  "u-22bbb", "SENT"),
+					buildInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
+					buildInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
 				},
 			})
 			require.NoError(t, err)
@@ -809,8 +828,8 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 				}
 			} else {
 				res = flowv1.CreateInvitationReply{
-					Error: nil,
-					Invitation:  buildInvitation("1", "miles@confluent.io",  "user1", "SENT"),
+					Error:      nil,
+					Invitation: buildInvitation("1", "miles@confluent.io", "user1", "SENT"),
 				}
 			}
 			data, err := json.Marshal(res)
@@ -822,21 +841,21 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-func (c *CloudRouter) HandleConnector(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnector() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-func (c *CloudRouter) HandleConnectorPause(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorPause() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-func (c *CloudRouter) HandleConnectorResume(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorResume() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -968,7 +987,7 @@ func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWrite
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-func (c *CloudRouter) HandleConnectUpdate(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectUpdate() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}

@@ -216,7 +216,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	allUsers := append(serviceAccounts, users...)
+	allUsers, err := c.getAllUsers()
+	if err != nil {
+		return err
+	}
 
 	userId := int32(0)
 	serviceAccount := false
@@ -423,7 +426,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if resourceType == pcmd.KafkaResourceType {
-		if err := c.keystore.StoreAPIKey(userKey, clusterId, cmd); err != nil {
+		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}
 	}
@@ -475,12 +478,12 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		if resourceType != pcmd.KafkaResourceType {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 		}
-		cluster, err = c.Context.FindKafkaCluster(cmd, clusterId)
+		cluster, err = c.Context.FindKafkaCluster(clusterId)
 		if err != nil {
 			return err
 		}
 	} else {
-		cluster, err = c.Context.GetKafkaClusterForCommand(cmd)
+		cluster, err = c.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -531,14 +534,14 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// API key exists server-side... now check if API key exists locally already
-	if found, err := c.keystore.HasAPIKey(key, cluster.ID, cmd); err != nil {
+	if found, err := c.keystore.HasAPIKey(key, cluster.ID); err != nil {
 		return err
 	} else if found && !force {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.RefuseToOverrideSecretErrorMsg, key),
 			fmt.Sprintf(errors.RefuseToOverrideSecretSuggestions, key))
 	}
 
-	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID, cmd); err != nil {
+	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
 	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
@@ -555,11 +558,11 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if resourceType != pcmd.KafkaResourceType {
 		return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 	}
-	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
+	cluster, err := c.Context.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err
 	}
-	err = c.Context.UseAPIKey(cmd, apiKey, cluster.ID)
+	err = c.Context.UseAPIKey(apiKey, cluster.ID)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
 	}
@@ -662,6 +665,14 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
+	if enabled {
+		auditLogServiceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+		if err != nil {
+			return nil, err
+		}
+		serviceAccounts = append(serviceAccounts, auditLogServiceAccount)
+	}
 	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
@@ -682,6 +693,7 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 		for _, user := range users {
 			if key.UserResourceId == user.ResourceId {
 				key.UserId = user.Id
+				break
 			}
 		}
 	} else {

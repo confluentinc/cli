@@ -63,17 +63,6 @@ func ExcludeUse(excluded ...string) RuleFilter {
 	}
 }
 
-func ExcludeParentUse(excluded ...string) RuleFilter {
-	blacklist := map[string]struct{}{}
-	for _, e := range excluded {
-		blacklist[e] = struct{}{}
-	}
-	return func(cmd *cobra.Command) bool {
-		_, found := blacklist[cmd.Parent().Use]
-		return !found
-	}
-}
-
 // ExcludeCommandContains specifies a blacklist of commands to which this rule does not apply
 func ExcludeCommandContains(excluded ...string) RuleFilter {
 	return func(cmd *cobra.Command) bool {

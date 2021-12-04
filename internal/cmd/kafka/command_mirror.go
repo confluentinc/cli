@@ -215,7 +215,7 @@ func (c *mirrorCommand) init() {
 	c.AddCommand(resumeCmd)
 }
 
-func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
+func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	linkName, err := cmd.Flags().GetString(linkFlagName)
 	if err != nil {
 		return err
@@ -234,7 +234,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -375,7 +375,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -460,7 +460,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -502,7 +502,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
@@ -544,7 +544,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand, cmd)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}

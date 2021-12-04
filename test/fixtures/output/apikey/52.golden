@@ -1,5 +1,21 @@
-          Key          | Description | Owner Resource Id |    Owner Email    | Resource Type | Resource ID |       Created         
------------------------+-------------+-------------------+-------------------+---------------+-------------+-----------------------
-    MYKEY10            |             | sa-12345          | <service account> | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
-    MYKEY9             |             | sa-12345          | <service account> | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
-    SERVICEACCOUNTKEY1 |             | sa-12345          | <service account> | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
+Error: required flag(s) "resource" not set
+Usage:
+  confluent api-key create [flags]
+
+Examples:
+Create an API key for service account with resource ID `sa-lqv3mm` for cluster `lkc-xyz`
+
+  $ confluent api-key create --resource lkc-xyz --service-account sa-lqv3mm
+
+Flags:
+      --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.
+      --service-account string   Service account ID. If not specified, the API key will have full access on the cluster.
+      --description string       Description of API key.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+      --environment string       Environment ID.
+      --context string           CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

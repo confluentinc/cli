@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var clusterType = "schema-registry-cluster"
+const clusterType = "schema-registry-cluster"
 
 func (c *clusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -29,21 +29,19 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
-}
-
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	schemaClustertype := &mds.ClusterRegistryListOpts{
-		ClusterType: optional.NewString(clusterType),
-	}
-	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), schemaClustertype)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	opts := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
+
+	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
 	if err != nil {
-		return print.HandleClusterError(cmd, err, response)
+		return print.HandleClusterError(err, response)
 	}
+
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
 	}
-	return print.PrintCluster(cmd, clusterInfos, format)
+
+	return print.PrintCluster(clusterInfos, format)
 }
