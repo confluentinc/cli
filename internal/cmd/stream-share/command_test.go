@@ -36,7 +36,8 @@ func (suite *SharedTokenTestSuite) SetupTest() {
 	suite.streamShareClientMock = &ccsdkmock.StreamShare{
 		CreateSharedTokenFunc: func(input *cdxv1.CdxV1CreateSharedTokenRequest) (*cdxv1.CdxV1SharedToken, error) {
 			return &cdxv1.CdxV1SharedToken{
-				Token: stringToPtr("token"),
+				StreamShare: &cdxv1.ObjectReference{Id: "ss-123", Kind: stringToPtr("StreamShare")},
+				Token:       stringToPtr("token"),
 			}, nil
 		},
 		RedeemSharedTokenFunc: func(token string) (*cdxv1.CdxV1RedeemToken, error) {
