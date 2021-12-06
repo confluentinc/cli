@@ -118,7 +118,7 @@ func (c *sharedTokenCommand) createConfigFile(redeemedToken *v1.CdxV1RedeemToken
 			"group.id=%s.go_demo_group_1\n"+
 			"sasl.mechanisms=PLAIN\n"+
 			"security.protocol=SASL_SSL\n"+
-			"auto.offset.reset=latest",
+			"auto.offset.reset=latest\n",
 		redeemedToken.GetKafkaBootstrapUrl(),
 		redeemedToken.GetApikey(),
 		redeemedToken.GetSecret(),
