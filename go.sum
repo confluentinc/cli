@@ -346,6 +346,8 @@ github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.94-0.20211201175004-2c3b5be77750 h1:+BBD0rrGneWmx1mgjTCLFj3zCJajv3CkCiJDQRDgxW0=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.94-0.20211201175004-2c3b5be77750/go.mod h1:sPY66wO4nszCGLdsl6vAiBZEqDbt/+qIE2VfuaK7Ons=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.94-0.20211206180050-6a8ef796d878 h1:Fe01CQvmkxhrgtwL0DvAF0ljr2X3YoEVuJi/o8ZCD2Q=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.94-0.20211206180050-6a8ef796d878/go.mod h1:sPY66wO4nszCGLdsl6vAiBZEqDbt/+qIE2VfuaK7Ons=
 github.com/confluentinc/cdx-schema v0.0.6 h1:5/lm7ITfsiW8qKmK3mFUR5MC572UQFUrRMmCK2JiGoc=
 github.com/confluentinc/cdx-schema v0.0.6/go.mod h1:AHvm+stPgYLF+5hLct/ybGL94emE2x0NItHjjYRUhLA=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
