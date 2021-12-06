@@ -5,7 +5,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	poutput "github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) autocompleteFlags(cmd *cobra.Command) {
@@ -14,7 +13,6 @@ func (c *command) autocompleteFlags(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "cluster-type", func(_ *cobra.Command, _ []string) []string { return clusterTypes })
 	pcmd.RegisterFlagCompletionFunc(cmd, "network-type", func(_ *cobra.Command, _ []string) []string { return networkTypes })
 	pcmd.RegisterFlagCompletionFunc(cmd, "metric", func(_ *cobra.Command, _ []string) []string { return metrics })
-	pcmd.RegisterFlagCompletionFunc(cmd, poutput.FlagName, func(_ *cobra.Command, _ []string) []string { return poutput.ValidFlagValues })
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {

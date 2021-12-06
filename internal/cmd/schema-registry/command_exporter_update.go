@@ -34,7 +34,7 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 	cmd.Flags().String("context-type", "", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }

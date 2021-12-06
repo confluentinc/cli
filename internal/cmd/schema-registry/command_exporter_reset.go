@@ -17,7 +17,7 @@ func (c *exporterCommand) newResetCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.reset),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }

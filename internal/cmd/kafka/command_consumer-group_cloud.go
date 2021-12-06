@@ -170,7 +170,7 @@ func (g *groupCommand) init() {
 		),
 		Hidden: true,
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	g.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -186,7 +186,7 @@ func (g *groupCommand) init() {
 		),
 		Hidden: true,
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(describeCmd)
 	g.AddCommand(describeCmd)
 
 	lagCmd := NewLagCommand(g.prerunner, g)
@@ -355,7 +355,7 @@ func (lagCmd *lagCommand) init() {
 		),
 		Hidden: true,
 	}
-	summarizeLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(summarizeLagCmd)
 	lagCmd.AddCommand(summarizeLagCmd)
 
 	listLagCmd := &cobra.Command{
@@ -371,7 +371,7 @@ func (lagCmd *lagCommand) init() {
 		),
 		Hidden: true,
 	}
-	listLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listLagCmd)
 	lagCmd.AddCommand(listLagCmd)
 
 	getLagCmd := &cobra.Command{
@@ -388,7 +388,7 @@ func (lagCmd *lagCommand) init() {
 		),
 		Hidden: true,
 	}
-	getLagCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(getLagCmd)
 	getLagCmd.Flags().String("topic", "", "Topic name.")
 	getLagCmd.Flags().Int32("partition", 0, "Partition ID.")
 	check(getLagCmd.MarkFlagRequired("topic"))

@@ -12,7 +12,7 @@ import (
 )
 
 type StructuredListWriter struct {
-	outputFormat Output
+	outputFormat output
 	data         []map[string]string
 	listFields   []string
 	listLabels   []string
@@ -52,7 +52,7 @@ func (o *StructuredListWriter) Out() error {
 	return err
 }
 
-func (o *StructuredListWriter) GetOutputFormat() Output {
+func (o *StructuredListWriter) GetOutputFormat() output {
 	return o.outputFormat
 }
 

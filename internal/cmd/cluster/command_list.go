@@ -26,7 +26,7 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.RunE = pcmd.NewCLIRunE(c.list)
 
-	c.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(c.Command)
 
 	return c.Command
 }

@@ -25,7 +25,7 @@ func (c *appCommand) newDescribeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }

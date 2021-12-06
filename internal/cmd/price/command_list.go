@@ -127,7 +127,7 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", strings.Join(networkTypes, ", ")))
 	cmd.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", strings.Join(metrics, ", ")))
 	cmd.Flags().Bool("legacy", false, "Show legacy cluster types.")
-	cmd.Flags().StringP(poutput.FlagName, poutput.ShortHandFlag, poutput.DefaultValue, poutput.Usage)
+	poutput.AddFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("region")

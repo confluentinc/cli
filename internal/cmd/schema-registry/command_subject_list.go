@@ -31,7 +31,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }
