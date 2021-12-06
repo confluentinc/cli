@@ -1,5 +1,18 @@
-  Cluster ID | Broker ID | Topic Name  | Partition ID | Is Leader | Is In Sync  
--------------+-----------+-------------+--------------+-----------+-------------
-  cluster-1  |      1001 | topic-exist |            2 | false     | false       
-  cluster-1  |      1002 | topic-exist |            2 | false     | false       
-  cluster-1  |      1003 | topic-exist |            2 | true      | true        
+- broker_id: "1001"
+  cluster_id: cluster-1
+  is_in_sync: "false"
+  is_leader: "false"
+  partition_id: "2"
+  topic_name: topic-exist
+- broker_id: "1002"
+  cluster_id: cluster-1
+  is_in_sync: "false"
+  is_leader: "false"
+  partition_id: "2"
+  topic_name: topic-exist
+- broker_id: "1003"
+  cluster_id: cluster-1
+  is_in_sync: "true"
+  is_leader: "true"
+  partition_id: "2"
+  topic_name: topic-exist

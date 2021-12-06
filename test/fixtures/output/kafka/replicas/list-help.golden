@@ -4,9 +4,13 @@ Usage:
   confluent kafka replica list [flags]
 
 Examples:
-List the partitions for `my_topic`.
+List the replicas for partition 1 of "my_topic" .
 
-  $ confluent kafka partition list --topic my_topic
+  $ confluent kafka replica list --topic my_topic --partition 1
+
+List the replicas on broker 1.
+
+  $ confluent kafka replica list --broker 1
 
 Flags:
       --topic string              Topic name.

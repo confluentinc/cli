@@ -14,6 +14,11 @@ type replicaCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
+var (
+	replicaListFields = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsInSync"}
+	replicaHumanFields = []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Leader", "In Sync"}
+)
+
 func NewReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	replicaCommand := &replicaCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
@@ -37,8 +42,12 @@ func (replicaCommand *replicaCommand) init() {
 		Long:  "List partition-replicas filtered by topic, partition, and broker via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the partitions for `my_topic`.",
-				Code: "confluent kafka partition list --topic my_topic",
+				Text: "List the replicas for partition 1 of \"my_topic\" .",
+				Code: "confluent kafka replica list --topic my_topic --partition 1",
+			},
+			examples.Example{
+				Text: "List the replicas on broker 1.",
+				Code: "confluent kafka replica list --broker 1",
 			},
 		),
 	}
@@ -79,7 +88,7 @@ func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsInSync"}, []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Is Leader", "Is In Sync"}, []string{"cluster_id", "broker_id", "topic_name", "partition_id", "is_leader", "is_in_sync"})
+	outputWriter, err := output.NewListOutputWriter(cmd, replicaListFields, replicaHumanFields, camelToSnake(replicaListFields))
 	if err != nil {
 		return err
 	}
@@ -109,7 +118,7 @@ func validateFlagCombo(cmd *cobra.Command) (string, int32, int32, error) {
 	}
 	if !topicSet && !brokerSet && !partitionSet {
 		return "", -1, -1, errors.NewErrorWithSuggestions(errors.MustEnterValidFlagComboErrorMsg, errors.ValidReplicaFlagsSuggestions)
-	} else if (topicSet && !partitionSet) || (!topicSet && partitionSet) {
+	} else if topicSet != partitionSet {
 		return "", -1, -1, errors.NewErrorWithSuggestions(errors.MustSpecifyTopicAndPartitionErrorMsg, errors.ValidReplicaFlagsSuggestions)
 	}
 	return topic, partitionId, brokerId, nil
