@@ -1,114 +1,25 @@
 package auditlog
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type migrateCmd struct {
 	*pcmd.CLICommand
-	prerunner pcmd.PreRunner
 }
 
-func NewMigrateCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewCLICommand(
-		&cobra.Command{
-			Use:         "migrate",
-			Short:       "Migrate legacy audit log configurations.",
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-		}, prerunner)
-	command := &migrateCmd{
-		CLICommand: cliCmd,
-		prerunner:  prerunner,
-	}
-	command.init()
-	return command.Command
-}
-
-func (c *migrateCmd) init() {
-	configCmd := &cobra.Command{
-		Use:   "config",
-		Short: "Migrate legacy audit log configurations.",
-		Long: "Migrate legacy audit log configurations. " +
-			"Use `--combine` to read in multiple Kafka broker `server.properties` files, " +
-			"combine the values of their `confluent.security.event.router.config` properties, " +
-			"and output a combined configuration suitable for centralized audit log " +
-			"management. This is sent to standard output along with any warnings to standard error.",
-		RunE: c.migrate,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Combine two audit log configuration files for clusters 'clusterA' and 'clusterB' with the following bootstrap servers and authority.",
-				Code: "confluent audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
-					"--bootstrap-servers logs.example.com:9092 --bootstrap-servers logs.example.com:9093 --authority mds.example.com",
-			},
-		),
-		Args: cobra.NoArgs,
-	}
-	configCmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the path to that cluster's server.properties file.`)
-	configCmd.Flags().StringArray("bootstrap-servers", nil, `A public hostname:port of a broker in the Kafka cluster that will receive audit log events.`)
-	configCmd.Flags().String("authority", "", `The CRN authority to use in all route patterns.`)
-	c.AddCommand(configCmd)
-}
-
-func (c *migrateCmd) migrate(cmd *cobra.Command, _ []string) error {
-	var err error
-
-	crnAuthority, err := cmd.Flags().GetString("authority")
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
+func newMigrateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "migrate",
+		Short:       "Migrate legacy audit log configurations.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	bootstrapServers := []string{}
-	if cmd.Flags().Changed("bootstrap-servers") {
-		bootstrapServers, err = cmd.Flags().GetStringArray("bootstrap-servers")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
-	}
+	c := &migrateCmd{pcmd.NewCLICommand(cmd, prerunner)}
 
-	clusterConfigs := map[string]string{}
-	if cmd.Flags().Changed("combine") {
-		fileNameMap, err := cmd.Flags().GetStringToString("combine")
-		if err != nil {
-			return errors.HandleCommon(err, cmd)
-		}
+	c.AddCommand(c.newConfigCommand())
 
-		for clusterId, filePath := range fileNameMap {
-			propertyFile, err := utils.LoadPropertiesFile(filePath)
-			if err != nil {
-				return errors.HandleCommon(err, cmd)
-			}
-
-			routerConfig, ok := propertyFile.Get("confluent.security.event.router.config")
-			if !ok {
-				fmt.Printf("Ignoring property file %s because it does not contain a router configuration.\n", filePath)
-				continue
-			}
-			clusterConfigs[clusterId] = routerConfig
-		}
-	}
-
-	combinedSpec, warnings, err := AuditLogConfigTranslation(clusterConfigs, bootstrapServers, crnAuthority)
-	if err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	for _, warning := range warnings {
-		fmt.Fprintln(os.Stderr, warning)
-		fmt.Println()
-	}
-
-	enc := json.NewEncoder(c.OutOrStdout())
-	enc.SetIndent("", "  ")
-	if err = enc.Encode(combinedSpec); err != nil {
-		return errors.HandleCommon(err, cmd)
-	}
-	return nil
+	return c.Command
 }
