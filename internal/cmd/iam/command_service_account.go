@@ -3,17 +3,12 @@ package iam
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/c-bata/go-prompt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type serviceAccountCommand struct {
@@ -21,28 +16,65 @@ type serviceAccountCommand struct {
 	completableChildren []*cobra.Command
 }
 
-var (
-	describeFields            = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "ID"}
-	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "id"}
-)
-
-const nameLength = 64
-const descriptionLength = 128
-
 func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
-	cliCmd := pcmd.NewAuthenticatedCLICommand(
-		&cobra.Command{
-			Use:         "service-account",
-			Aliases:     []string{"sa"},
-			Short:       "Manage service accounts.",
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		}, prerunner)
-	cmd := &serviceAccountCommand{
-		AuthenticatedCLICommand: cliCmd,
+	cmd := &cobra.Command{
+		Use:         "service-account",
+		Aliases:     []string{"sa"},
+		Short:       "Manage service accounts.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.init()
-	return cmd
+
+	c := &serviceAccountCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	deleteCmd := c.newDeleteCommand()
+	updateCmd := c.newUpdateCommand()
+
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(deleteCmd)
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(updateCmd)
+
+	c.completableChildren = []*cobra.Command{updateCmd, deleteCmd}
+
+	return c
+}
+
+func AddServiceAccountFlag(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().String("service-account", "", "Service account ID.")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "service-account", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return autocompleteServiceAccounts(command.Client)
+	})
+}
+
+func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return autocompleteServiceAccounts(c.Client)
+}
+
+func autocompleteServiceAccounts(client *ccloud.Client) []string {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(serviceAccounts))
+	for i, serviceAccount := range serviceAccounts {
+		description := fmt.Sprintf("%s: %s", serviceAccount.ServiceName, serviceAccount.ServiceDescription)
+		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.ResourceId, description)
+	}
+	return suggestions
 }
 
 func (c *serviceAccountCommand) Cmd() *cobra.Command {
@@ -73,157 +105,10 @@ func (c *serviceAccountCommand) ServerCompletableChildren() []*cobra.Command {
 	return c.completableChildren
 }
 
-func (c *serviceAccountCommand) init() {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List service accounts.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
-	}
-	output.AddFlag(listCmd)
-	c.AddCommand(listCmd)
-
-	createCmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a service account.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Create a service account named `DemoServiceAccount`.",
-				Code: `confluent service-account create DemoServiceAccount --description "This is a demo service account."`,
-			},
-		),
-	}
-	createCmd.Flags().String("description", "", "Description of the service account.")
-	_ = createCmd.MarkFlagRequired("description")
-	output.AddFlag(createCmd)
-	c.AddCommand(createCmd)
-
-	updateCmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a service account.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Update the description of service account `sa-lqv3mm`",
-				Code: `confluent service-account update sa-lqv3mm --description "Update demo service account information."`,
-			},
-		),
-	}
-	updateCmd.Flags().String("description", "", "Description of the service account.")
-	_ = updateCmd.MarkFlagRequired("description")
-	c.AddCommand(updateCmd)
-
-	deleteCmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a service account.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Delete service account `sa-lqv3mm`",
-				Code: "confluent service-account delete sa-lqv3mm",
-			},
-		),
-	}
-	c.AddCommand(deleteCmd)
-	c.completableChildren = []*cobra.Command{updateCmd, deleteCmd}
-}
-
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
 		return fmt.Errorf(field+" length should not exceed %d characters.", maxLen)
 	}
 
 	return nil
-}
-
-func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
-	if err := requireLen(name, nameLength, "service name"); err != nil {
-		return err
-	}
-
-	description, err := cmd.Flags().GetString("description")
-	if err != nil {
-		return err
-	}
-
-	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return err
-	}
-
-	user := &orgv1.User{
-		ServiceName:        name,
-		ServiceDescription: description,
-		ServiceAccount:     true,
-	}
-	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
-	if err != nil {
-		return err
-	}
-	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
-}
-
-func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error {
-	description, err := cmd.Flags().GetString("description")
-	if err != nil {
-		return err
-	}
-
-	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return err
-	}
-
-	if !strings.HasPrefix(args[0], "sa-") {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
-	}
-	user := &orgv1.User{
-		ResourceId:         args[0],
-		ServiceDescription: description,
-	}
-
-	if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
-		return err
-	}
-
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
-	return nil
-}
-
-func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	if !strings.HasPrefix(args[0], "sa-") {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
-	}
-	user := &orgv1.User{ResourceId: args[0]}
-	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
-		return err
-	}
-	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
-	return nil
-}
-
-func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return err
-	}
-
-	var (
-		listFields           = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-		listHumanLabels      = []string{"ID", "Name", "Description"}
-		listStructuredLabels = []string{"id", "name", "description"}
-	)
-
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-	for _, u := range users {
-		outputWriter.AddElement(u)
-	}
-	return outputWriter.Out()
 }
