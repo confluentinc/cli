@@ -61,7 +61,7 @@ func (c *command) deactivate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Println(cmd, "Stream share deactivated successfully.")
+	utils.Printf(cmd, "Stream share \"%s\" deactivated successfully.", id)
 
 	return nil
 
