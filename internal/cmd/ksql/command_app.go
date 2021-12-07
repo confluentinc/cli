@@ -2,6 +2,7 @@ package ksql
 
 import (
 	"context"
+	"fmt"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
@@ -61,61 +62,19 @@ func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *
 	return c
 }
 
-func (c *appCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster, ) *ksqlCluster {
-	ctx := c.Config.Context()
+func (c *appCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
 	status := cluster.Status.String()
 	if cluster.IsPaused {
 		status = "PAUSED"
 	} else if status == "UP" {
-		state, err := ctx.AuthenticatedState()
+		provisioningFailed, err := c.checkProvisioningFailed(cluster)
 		if err != nil {
-			return &ksqlCluster{
-				Id:                cluster.Id,
-				Name:              cluster.Name,
-				OutputTopicPrefix: cluster.OutputTopicPrefix,
-				KafkaClusterId:    cluster.KafkaClusterId,
-				Storage:           cluster.Storage,
-				Endpoint:          cluster.Endpoint,
-				Status:            status,
-			}
-		}
-		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
-		if err != nil {
-			return &ksqlCluster{
-				Id:                cluster.Id,
-				Name:              cluster.Name,
-				OutputTopicPrefix: cluster.OutputTopicPrefix,
-				KafkaClusterId:    cluster.KafkaClusterId,
-				Storage:           cluster.Storage,
-				Endpoint:          cluster.Endpoint,
-				Status:            status,
-			}
-		}
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
-
-		slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
-		var failure map[string]interface{}
-		response, err := slingClient.New().Get("/info").Receive(nil, &failure)
-		if err != nil || response == nil {
-			return &ksqlCluster{
-				Id:                cluster.Id,
-				Name:              cluster.Name,
-				OutputTopicPrefix: cluster.OutputTopicPrefix,
-				KafkaClusterId:    cluster.KafkaClusterId,
-				Storage:           cluster.Storage,
-				Endpoint:          cluster.Endpoint,
-				Status:            status,
-			}
-		}
-
-		if response.StatusCode == 503 {
-			errorCode := int(failure["error_code"].(float64))
-			// If we have a 50321 we know that ACLs are misconfigured
-			if errorCode == 50321 {
-				status = "PROVISIONING FAILED"
-			}
+			status = "UNKNOWN"
+		} else if provisioningFailed {
+			status = "PROVISIONING FAILED"
 		}
 	}
+
 	return &ksqlCluster{
 		Id:                cluster.Id,
 		Name:              cluster.Name,
@@ -125,4 +84,36 @@ func (c *appCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster, ) *ks
 		Endpoint:          cluster.Endpoint,
 		Status:            status,
 	}
+}
+
+func (c *appCommand) checkProvisioningFailed(cluster *schedv1.KSQLCluster) (bool, error) {
+	ctx := c.Config.Context()
+	state, err := ctx.AuthenticatedState()
+	if err != nil {
+		return false, err
+	}
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+	if err != nil {
+		return false, err
+	}
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+
+	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
+	var failure map[string]interface{}
+	response, err := slingClient.New().Get("/info").Receive(nil, &failure)
+	if err != nil || response == nil {
+		return false, err
+	}
+
+	if response.StatusCode == 503 {
+		errorCode, ok := failure["error_code"].(float64)
+		if !ok {
+			return false, fmt.Errorf("failed to cast 'error_code' to float64")
+		}
+		// If we have a 50321 we know that ACLs are misconfigured
+		if int(errorCode) == 50321 {
+			return true, nil
+		}
+	}
+	return false, nil
 }
