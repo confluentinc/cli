@@ -1,15 +1,35 @@
 package output
 
-type Output int
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+)
+
+type output int
+
+func (o output) String() string {
+	return validFlagValues[o]
+}
 
 const (
-	Human Output = iota
+	Human output = iota
 	JSON
 	YAML
 )
 
-var ValidFlagValues = []string{"human", "json", "yaml"}
+const FlagName = "output"
 
-func (o Output) String() string {
-	return ValidFlagValues[o]
+var validFlagValues = []string{"human", "json", "yaml"}
+
+func AddFlag(cmd *cobra.Command) {
+	AddFlagWithDefaultValue(cmd, Human.String())
+}
+
+func AddFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
+	cmd.Flags().StringP(FlagName, "o", defaultValue, `Specify the output format as "human", "json", or "yaml".`)
+
+	pcmd.RegisterFlagCompletionFunc(cmd, FlagName, func(_ *cobra.Command, _ []string) []string {
+		return validFlagValues
+	})
 }

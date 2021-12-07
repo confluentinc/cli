@@ -3,7 +3,6 @@ package keystore
 
 import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -11,8 +10,8 @@ import (
 )
 
 type KeyStore interface {
-	HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error)
-	StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error
+	HasAPIKey(key string, clusterId string) (bool, error)
+	StoreAPIKey(key *schedv1.ApiKey, clusterId string) error
 	DeleteAPIKey(key string) error
 }
 
@@ -20,12 +19,12 @@ type ConfigKeyStore struct {
 	Config *cmd.DynamicConfig
 }
 
-func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error) {
+func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return false, new(errors.NotLoggedInError)
 	}
-	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId)
 	if err != nil {
 		return false, err
 	}
@@ -34,12 +33,12 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err
 	}

@@ -1,16 +1,3 @@
-          Key          | Description | Owner Resource Id |      Owner Email      |  Resource Type  | Resource ID  |       Created         
------------------------+-------------+-------------------+-----------------------+-----------------+--------------+-----------------------
-    DEACTIVATEDUSERKEY |             | sa-6666           | <deactivated user>    | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    MYKEY1             | first-key   | u11               | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    MYKEY2             |             | u-17              | mtodzo@confluent.io   | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
-    MYKEY3             |             | u-44ddd           | mhe@confluent.io      | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    MYKEY4             | my-cool-app | u-44ddd           | mhe@confluent.io      | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-    MYKEY6             | my-ksql-app | u-44ddd           | mhe@confluent.io      | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-    MYKEY7             |             | u-44ddd           | mhe@confluent.io      | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
-    MYKEY8             |             | u-44ddd           | mhe@confluent.io      | cloud           |              | 1999-02-24T00:00:00Z  
-    MYKEY9             |             | sa-12345          | <service account>     | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-    SERVICEACCOUNTKEY1 |             | sa-12345          | <service account>     | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    UIAPIKEY100        |             | u-22bbb           | u-22bbb@confluent.io  | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-    UIAPIKEY101        |             | u-22bbb           | u-22bbb@confluent.io  | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
-    UIAPIKEY102        |             | u-22bbb           | u-22bbb@confluent.io  | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-    UIAPIKEY103        |             | u-22bbb           | u-22bbb@confluent.io  | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+       Key      | Description | Owner Resource ID |     Owner Email      | Resource Type | Resource ID |       Created         
+----------------+-------------+-------------------+----------------------+---------------+-------------+-----------------------
+    UIAPIKEY101 |             | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  

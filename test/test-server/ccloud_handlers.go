@@ -33,6 +33,7 @@ var (
 	keyStore        = map[int32]*schedv1.ApiKey{}
 	keyIndex        = int32(1)
 	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	resourceIdMap   = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 )
 
 const (
@@ -49,6 +50,9 @@ const (
 	serviceAccountResourceID = "sa-12345"
 	deactivatedUserID        = int32(6666)
 	deactivatedResourceID    = "sa-6666"
+
+	auditLogServiceAccountID         = int32(1337)
+	auditLogServiceAccountResourceID = "sa-1337"
 )
 
 // Fill API keyStore with default data
@@ -72,7 +76,7 @@ func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Req
 				AuditLog: &orgv1.AuditLog{
 					ClusterId:        "lkc-ab123",
 					AccountId:        "env-987zy",
-					ServiceAccountId: 1337,
+					ServiceAccountId: auditLogServiceAccountID,
 					TopicName:        "confluent-audit-log-events",
 				},
 			},
@@ -346,13 +350,18 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
-		_, err := strconv.Atoi(idStr)
+		id, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
+		userId := int32(id)
 
 		switch r.Method {
 		case "GET":
-			res := &orgv1.GetServiceAccountReply{User: &orgv1.User{ResourceId: serviceAccountResourceID}}
-
+			res := &orgv1.GetServiceAccountReply{
+				User: &orgv1.User{
+					Id:         userId,
+					ResourceId: resourceIdMap[userId],
+				},
+			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 

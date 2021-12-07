@@ -34,7 +34,8 @@ func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:         "service-account",
-			Short:       `Manage service accounts.`,
+			Aliases:     []string{"sa"},
+			Short:       "Manage service accounts.",
 			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		}, prerunner)
 	cmd := &serviceAccountCommand{
@@ -50,6 +51,9 @@ func (c *serviceAccountCommand) Cmd() *cobra.Command {
 
 func (c *serviceAccountCommand) ServerComplete() []prompt.Suggest {
 	var suggestions []prompt.Suggest
+	if c.Client == nil {
+		return suggestions
+	}
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return suggestions
@@ -76,7 +80,7 @@ func (c *serviceAccountCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -93,7 +97,7 @@ func (c *serviceAccountCommand) init() {
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(createCmd)
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{

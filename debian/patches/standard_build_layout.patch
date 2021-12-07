@@ -1,5 +1,5 @@
---- cli/Makefile	2021-11-19 13:14:53.000000000 -0800
-+++ debian/Makefile	2021-11-18 10:51:22.000000000 -0800
+--- cli/Makefile	2021-11-29 16:05:53.000000000 -0800
++++ debian/Makefile	2021-11-22 17:13:36.000000000 -0800
 @@ -1,267 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -148,7 +148,7 @@
 -
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
--	binary="confluent_test" ; \
+-	binary="bin/confluent_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 -	go test ./cmd/confluent -ldflags="-s -w \
 -		-X $(RESOLVED_PATH).commit=$(REF) \
@@ -160,7 +160,7 @@
 -
 -.PHONY: build-integ-race
 -build-integ-race:
--	binary="confluent_test_race" ; \
+-	binary="bin/confluent_test_race" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 -	go test ./cmd/confluent -ldflags="-s -w \
 -		-X $(RESOLVED_PATH).commit=$(REF) \

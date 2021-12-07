@@ -86,9 +86,10 @@ type listDisplay struct {
 
 func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "role-binding",
-		Short: "Manage RBAC and IAM role bindings.",
-		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+		Use:     "role-binding",
+		Aliases: []string{"rb"},
+		Short:   "Manage RBAC and IAM role bindings.",
+		Long:    "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
@@ -185,7 +186,7 @@ func (c *roleBindingCommand) init() {
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 
 	c.AddCommand(listCmd)
 
@@ -221,7 +222,7 @@ func (c *roleBindingCommand) init() {
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(createCmd)
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
 	c.AddCommand(createCmd)
@@ -252,7 +253,7 @@ func (c *roleBindingCommand) init() {
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
-	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(deleteCmd)
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
 	check(deleteCmd.MarkFlagRequired("role"))

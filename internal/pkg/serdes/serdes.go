@@ -49,7 +49,7 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 }
 
 type SerializationProvider interface {
-	LoadSchema(string) error
+	LoadSchema(string, map[string]string) error
 	encode(string) ([]byte, error)
 	GetSchemaName() string
 }
@@ -59,7 +59,7 @@ func Serialize(provider SerializationProvider, str string) ([]byte, error) {
 }
 
 type DeserializationProvider interface {
-	LoadSchema(string) error
+	LoadSchema(string, map[string]string) error
 	decode([]byte) (string, error)
 	GetSchemaName() string
 }

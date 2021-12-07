@@ -132,7 +132,7 @@ build-integ:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	binary="confluent_test" ; \
+	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
@@ -144,7 +144,7 @@ build-integ-nonrace:
 
 .PHONY: build-integ-race
 build-integ-race:
-	binary="confluent_test_race" ; \
+	binary="bin/confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \

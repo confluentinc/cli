@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -119,7 +120,7 @@ func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
 	if cmd == nil {
 		return suggestions
 	}
-	topics, err := cmd.getTopics(cmd.Command)
+	topics, err := cmd.getTopics()
 	if err != nil {
 		return suggestions
 	}
@@ -149,13 +150,14 @@ func (h *hasAPIKeyTopicCommand) init() {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 	h.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -173,7 +175,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	}
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
@@ -196,7 +198,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	a.AddCommand(listCmd)
 
 	createCmd = &cobra.Command{
@@ -231,7 +233,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(describeCmd)
 	a.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
@@ -272,7 +274,7 @@ func (a *authenticatedTopicCommand) init() {
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -305,7 +307,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	resp, err := a.getTopics(cmd)
+	resp, err := a.getTopics()
 	if err != nil {
 		return err
 	}
@@ -359,7 +361,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			i++
 		}
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -405,7 +407,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -445,7 +447,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -496,7 +498,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 	}
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -535,7 +537,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if kafkaREST != nil && !dryRun {
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -584,7 +586,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fallback to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -632,7 +634,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -663,7 +665,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return err
 	}
@@ -678,20 +680,10 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath, srAPIKey, srAPISecret string) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, valueFormat, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
-	}
-	var refs []srsdk.SchemaReference
-
-	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
-	if err != nil {
-		if err.Error() == errors.NotLoggedInErrorMsg {
-			return nil, new(errors.SRNotAuthenticatedError)
-		} else {
-			return nil, err
-		}
 	}
 
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: valueFormat, References: refs})
@@ -725,7 +717,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	level := h.Config.Logger.GetLevel()
 
 	topic := args[0]
-	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -769,6 +761,22 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return err
+	}
+	if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return err
+		}
+	}
+
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return err
@@ -779,12 +787,14 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath)
+
+	// Meta info contains a magic byte and schema ID (4 bytes).
+	metaInfo, referencePathMap, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err
 	}
-	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider)
+
+	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -878,7 +888,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -1085,39 +1095,80 @@ func printStructuredTopicDescription(resp *schedv1.TopicDescription, format stri
 	return output.StructuredOutput(format, structuredDisplay)
 }
 
-func (a *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]*schedv1.TopicDescription, error) {
-	cluster, err := pcmd.KafkaCluster(cmd, a.Context)
+func (a *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
+	cluster, err := pcmd.KafkaCluster(a.Context)
 	if err != nil {
 		return []*schedv1.TopicDescription{}, err
 	}
-	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
-	if err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
-	}
 
-	return resp, err
+	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
+	return resp, errors.CatchClusterNotReadyError(err, cluster.Id)
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject string, serializationProvider serdes.SerializationProvider) ([]byte, error) {
+func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	var metaInfo []byte
+	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
 		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
 		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
 		if err != nil {
-			return metaInfo, err
+			return metaInfo, nil, err
 		}
-		info, err := h.registerSchemaWithAPIKey(cmd, subject, serializationProvider.GetSchemaName(), schemaPath, srAPIKey, srAPISecret)
+
+		srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
 		if err != nil {
-			return metaInfo, err
+			if err.Error() == "ccloud" {
+				return nil, nil, new(errors.SRNotAuthenticatedError)
+			} else {
+				return nil, nil, err
+			}
+		}
+
+		info, err := h.registerSchemaWithAPIKey(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		if err != nil {
+			return metaInfo, nil, err
 		}
 		metaInfo = info
+		// Store the references in temporary files
+		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)
+		if err != nil {
+			return metaInfo, nil, err
+		}
 	}
-	return metaInfo, nil
+	return metaInfo, referencePathMap, nil
+}
+
+func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	referencePathMap := map[string]string{}
+	for _, ref := range refs {
+		tempStorePath := filepath.Join(dir, ref.Name)
+		if !fileExists(tempStorePath) {
+			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
+			if err != nil {
+				return nil, err
+			}
+			err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
+			if err != nil {
+				return nil, err
+			}
+		}
+		referencePathMap[ref.Name] = tempStorePath
+	}
+
+	return referencePathMap, nil
 }
 
 func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {

@@ -80,7 +80,7 @@ func (c *roleCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  cmd.NewCLIRunE(c.list),
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -89,7 +89,7 @@ func (c *roleCommand) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  cmd.NewCLIRunE(c.describe),
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(describeCmd)
 	c.AddCommand(describeCmd)
 }
 

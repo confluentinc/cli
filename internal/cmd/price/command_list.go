@@ -10,7 +10,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	poutput "github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -128,59 +127,14 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", strings.Join(networkTypes, ", ")))
 	cmd.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", strings.Join(metrics, ", ")))
 	cmd.Flags().Bool("legacy", false, "Show legacy cluster types.")
-	cmd.Flags().StringP(poutput.FlagName, poutput.ShortHandFlag, poutput.DefaultValue, poutput.Usage)
+	poutput.AddFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("region")
 
-	_ = cmd.RegisterFlagCompletionFunc("cloud", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return clouds, cobra.ShellCompDirectiveNoFileComp
-	})
-
-	_ = cmd.RegisterFlagCompletionFunc("region", func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		cloud, _ := cmd.Flags().GetString("cloud")
-		return c.autocompleteRegions(cloud), cobra.ShellCompDirectiveNoFileComp
-	})
-
-	_ = cmd.RegisterFlagCompletionFunc("availability", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return availabilities, cobra.ShellCompDirectiveNoFileComp
-	})
-
-	_ = cmd.RegisterFlagCompletionFunc("cluster-type", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return clusterTypes, cobra.ShellCompDirectiveNoFileComp
-	})
-
-	_ = cmd.RegisterFlagCompletionFunc("network-type", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return networkTypes, cobra.ShellCompDirectiveNoFileComp
-	})
-
-	_ = cmd.RegisterFlagCompletionFunc("metric", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return metrics, cobra.ShellCompDirectiveNoFileComp
-	})
-
-	_ = cmd.RegisterFlagCompletionFunc(poutput.FlagName, func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return poutput.ValidFlagValues, cobra.ShellCompDirectiveNoFileComp
-	})
+	c.autocompleteFlags(cmd)
 
 	return cmd
-}
-
-func (c *command) autocompleteRegions(cloud string) []string {
-	regions, err := kafka.ListRegions(c.Client, cloud)
-	if err != nil {
-		return nil
-	}
-
-	names := make([]string, len(regions))
-	for i, region := range regions {
-		names[i] = region.RegionId
-	}
-
-	return names
 }
 
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {

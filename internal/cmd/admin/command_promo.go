@@ -65,7 +65,7 @@ func (c *promoCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.listRunE),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(cmd)
 
 	return cmd
 }
@@ -113,13 +113,13 @@ func (c *promoCommand) listRunE(cmd *cobra.Command, _ []string) error {
 
 	for _, code := range codes {
 		switch o {
-		case "human":
+		case output.Human.String():
 			w.AddElement(&humanRow{
 				code:       code.Code,
 				balance:    formatBalance(code.Balance, code.Amount),
 				expiration: formatExpiration(code.CreditExpirationDate.Seconds),
 			})
-		case "json", "yaml":
+		case output.JSON.String(), output.YAML.String():
 			w.AddElement(&structuredRow{
 				code:       code.Code,
 				balance:    convertToUSD(code.Balance),

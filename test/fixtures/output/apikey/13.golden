@@ -1,4 +1,4 @@
-       Key      | Owner | Description | Resource Type | Resource ID   
-+---------------+-------+-------------+---------------+--------------+
-  * MYKEY6      |    23 | my-ksql-app | kafka         | lksqlc-ksql1  
-    UIAPIKEY102 |    25 |             | kafka         | lksqlc-ksql1  
+       Key      | Description  | Owner Resource ID |     Owner Email      | Resource Type | Resource ID |       Created         
+----------------+--------------+-------------------+----------------------+---------------+-------------+-----------------------
+    MYKEY5      | my-other-app | u-44ddd           | mhe@confluent.io     | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  
+    UIAPIKEY101 |              | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-other1  | 1999-02-24T00:00:00Z  

@@ -71,7 +71,7 @@ func (brokerCmd *brokerCommand) init() {
 		Long:  "List Kafka brokers using Confluent Kafka REST.",
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(listCmd)
 	brokerCmd.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
@@ -94,7 +94,7 @@ func (brokerCmd *brokerCommand) init() {
 	describeCmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
 	describeCmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(describeCmd)
 	brokerCmd.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
@@ -116,7 +116,7 @@ func (brokerCmd *brokerCommand) init() {
 	updateCmd.Flags().Bool("all", false, "Apply config update to all brokers in the cluster.")
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the broker being updated.")
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(updateCmd)
 	check(updateCmd.MarkFlagRequired("config"))
 	brokerCmd.AddCommand(updateCmd)
 
@@ -148,7 +148,7 @@ func (brokerCmd *brokerCommand) init() {
 	getTasksCmd.Flags().Bool("all", false, "List broker tasks for the cluster.")
 	getTasksCmd.Flags().String("task-type", "", "Search by task type (add-broker or remove-broker).")
 	getTasksCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	getTasksCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	output.AddFlag(getTasksCmd)
 	brokerCmd.AddCommand(getTasksCmd)
 }
 
