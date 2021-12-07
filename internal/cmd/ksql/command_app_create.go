@@ -92,7 +92,7 @@ func (c *appCommand) create(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		count += 1
+		count++
 	}
 
 	if cluster.Endpoint == "" {
