@@ -55,13 +55,13 @@ func (c *command) deactivate(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.StreamShareIdEmptyErrorMsg)
 	}
 
-	_, err = c.Client.StreamShare.DeactivateStreamShare(id)
+	err = c.Client.StreamShare.DeactivateStreamShare(id)
 
 	if err != nil {
 		return err
 	}
 
-	utils.Println(cmd, "Stream share deactivated successfully.")
+	utils.Printf(cmd, "Stream share \"%s\" deactivated successfully.\n", id)
 
 	return nil
 

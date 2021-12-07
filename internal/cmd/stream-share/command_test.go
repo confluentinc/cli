@@ -46,10 +46,8 @@ func (suite *SharedTokenTestSuite) SetupTest() {
 				Secret: stringToPtr("secret"),
 			}, nil
 		},
-		DeactivateStreamShareFunc: func(id string) (*cdxv1.CdxV1StreamShare, error) {
-			return &cdxv1.CdxV1StreamShare{
-				Id: stringToPtr(id),
-			}, nil
+		DeactivateStreamShareFunc: func(id string) error {
+			return nil
 		},
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
