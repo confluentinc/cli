@@ -29,7 +29,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
