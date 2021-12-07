@@ -6,10 +6,9 @@ import (
 )
 
 const baseURL = "https://clientsdk.launchdarkly.com/sdk/eval/%s/users/%s"
-const LD_PRODUCTION_ENV_ID = 5c636508aa445d32c86f26b1
-stag = 5c63651f1df21432a45fc773
-devel = 5c63653912b6db32db950445
-cpd = 5c6365ffaa445d32c86f26c0
+const LD_PRODUCTION_ENV_CLIENT_ID = "61af57740127630ce47de5be"
+const LD_TEST_ENV_CLIENT_ID = "61af57740127630ce47de5bd"
+
 type LaunchDarklyManager interface {
 	EvaluateStringFlag(flagName string, defaultVal string) string
 	EvaluateBoolFlag(flagName string, defaultVal bool) bool
