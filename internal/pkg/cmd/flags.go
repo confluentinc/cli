@@ -11,14 +11,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-// --cloud
-
 func AddCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", strings.Join(kafka.Clouds, ", ")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
-
-// --output
 
 func AddOutputFlag(cmd *cobra.Command) {
 	AddOutputFlagWithDefaultValue(cmd, output.Human.String())
@@ -31,8 +27,6 @@ func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
 		return output.ValidFlagValues
 	})
 }
-
-// --region
 
 func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
