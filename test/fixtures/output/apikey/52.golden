@@ -3,7 +3,11 @@ Usage:
   confluent api-key create [flags]
 
 Examples:
-Create an API key for service account "sa-123456" for cluster "lkc-123456".
+Create an API key with full access to cluster "lkc-123456":
+
+  $ confluent api-key create --resource lkc-123456
+
+Create an API key for cluster "lkc-123456" and service account "sa-123456":
 
   $ confluent api-key create --resource lkc-123456 --service-account sa-123456
 

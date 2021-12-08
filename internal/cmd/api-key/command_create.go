@@ -30,7 +30,11 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an API key for service account "sa-123456" for cluster "lkc-123456".`,
+				Text: `Create an API key with full access to cluster "lkc-123456":`,
+				Code: "confluent api-key create --resource lkc-123456",
+			},
+			examples.Example{
+				Text: `Create an API key for cluster "lkc-123456" and service account "sa-123456":`,
 				Code: "confluent api-key create --resource lkc-123456 --service-account sa-123456",
 			},
 		),
