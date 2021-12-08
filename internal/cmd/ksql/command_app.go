@@ -3,8 +3,10 @@ package ksql
 import (
 	"context"
 	"fmt"
+  
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/dghubble/sling"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
@@ -116,4 +118,30 @@ func (c *appCommand) checkProvisioningFailed(cluster *schedv1.KSQLCluster) (bool
 		}
 	}
 	return false, nil
+}
+
+func (c *appCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return autocompleteClusters(c.EnvironmentId(), c.Client)
+}
+
+func autocompleteClusters(environment string, client *ccloud.Client) []string {
+	req := &schedv1.KSQLCluster{AccountId: environment}
+	clusters, err := client.KSQL.List(context.Background(), req)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	}
+	return suggestions
 }

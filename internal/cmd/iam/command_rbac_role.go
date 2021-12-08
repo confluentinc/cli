@@ -16,7 +16,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -28,7 +28,7 @@ var (
 )
 
 type roleCommand struct {
-	*cmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedStateFlagCommand
 	cfg                        *v1.Config
 	ccloudRbacDataplaneEnabled bool
 }
@@ -39,17 +39,17 @@ type prettyRole struct {
 }
 
 // NewRoleCommand returns the sub-command object for interacting with RBAC roles.
-func NewRoleCommand(cfg *v1.Config, prerunner cmd.PreRunner) *cobra.Command {
+func NewRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cobraRoleCmd := &cobra.Command{
 		Use:   "role",
 		Short: "Manage RBAC and IAM roles.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
-	var cliCmd *cmd.AuthenticatedStateFlagCommand
+	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
-		cliCmd = cmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRoleCmd, prerunner, RoleSubcommandFlags)
+		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cobraRoleCmd, prerunner, RoleSubcommandFlags)
 	} else {
-		cliCmd = cmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
+		cliCmd = pcmd.NewAuthenticatedStateFlagCommand(cobraRoleCmd, prerunner, nil)
 	}
 	ccloudRbacDataplaneEnabled := false
 	if os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "" {
@@ -78,18 +78,18 @@ func (c *roleCommand) init() {
 		Short: "List the available RBAC roles.",
 		Long:  "List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.",
 		Args:  cobra.NoArgs,
-		RunE:  cmd.NewCLIRunE(c.list),
+		RunE:  pcmd.NewCLIRunE(c.list),
 	}
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	describeCmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  cmd.NewCLIRunE(c.describe),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
-	output.AddFlag(describeCmd)
+	pcmd.AddOutputFlag(describeCmd)
 	c.AddCommand(describeCmd)
 }
 

@@ -27,7 +27,7 @@ func (c *appCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("api-key")
 	_ = cmd.MarkFlagRequired("api-secret")
@@ -92,7 +92,7 @@ func (c *appCommand) create(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		count += 1
+		count++
 	}
 
 	if cluster.Endpoint == "" {

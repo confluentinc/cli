@@ -12,14 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type command struct {
-	*pcmd.AuthenticatedCLICommand
-	logger          *log.Logger
-	srClient        *srsdk.APIClient
-	prerunner       pcmd.PreRunner
-	analyticsClient analytics.Client
-}
-
 func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "schema-registry",
@@ -28,18 +20,26 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		srClient:                srClient,
-		logger:                  logger,
-		prerunner:               prerunner,
-		analyticsClient:         analyticsClient,
-	}
+	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-	c.AddCommand(newClusterCommand(cfg, c.prerunner, c.srClient, c.logger, c.analyticsClient))
-	c.AddCommand(newExporterCommand(c.prerunner, c.srClient))
-	c.AddCommand(newSchemaCommand(c.prerunner, c.srClient))
-	c.AddCommand(newSubjectCommand(c.prerunner, c.srClient))
+	c.AddCommand(newClusterCommand(cfg, prerunner, srClient, logger, analyticsClient))
+	c.AddCommand(newExporterCommand(prerunner, srClient))
+	c.AddCommand(newSchemaCommand(prerunner, srClient))
+	c.AddCommand(newSubjectCommand(prerunner, srClient))
 
 	return c.Command
+}
+
+func addCompatibilityFlag(cmd *cobra.Command) {
+	cmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "compatibility", func(_ *cobra.Command, _ []string) []string {
+		return []string{"BACKWARD", "BACKWARD_TRANSITIVE", "FORWARD", "FORWARD_TRANSITIVE", "FULL", "FULL_TRANSITIVE", "NONE"}
+	})
+}
+
+func addModeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string {
+		return []string{"READWRITE", "READ", "WRITE"}
+	})
 }

@@ -22,7 +22,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 
 	cmd.Flags().Bool("api-key", false, "Get the API key for a context.")
 	cmd.Flags().Bool("username", false, "Get the username for a context.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -20,7 +19,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Set the name of the context.")
 	cmd.Flags().String("kafka-cluster", "", "Set the active Kafka cluster for the context.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
