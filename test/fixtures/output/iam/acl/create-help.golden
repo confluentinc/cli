@@ -1,12 +1,10 @@
-Create a Kafka ACL.
-
-This command only works with centralized ACLs.
+Create a Kafka ACL. This command only works with centralized ACLs.
 
 Usage:
   confluent iam acl create [flags]
 
 Examples:
-Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:
+Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster.
 
   $ confluent iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>
 

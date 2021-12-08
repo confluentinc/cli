@@ -16,8 +16,8 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete an ACL that granted the specified user access to the Test topic in the specified cluster.",
-				Code: "confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic Test",
+				Text: `Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.`,
+				Code: "confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic test",
 			},
 		),
 	}
