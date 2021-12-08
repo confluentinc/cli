@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -33,6 +35,9 @@ type ConsumerProperties struct {
 	Delimiter  string
 	SchemaPath string
 	Cloud      bool
+	srEndpoint string
+	caCertPath string
+	mdsToken   string
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -106,11 +111,12 @@ func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning,
 }
 
 func SetSSLConfig(configMap *ckafka.ConfigMap, certLocation, keyLocation, keyPassword string) (*ckafka.ConfigMap, error) {
-	sslMap := make(map[string]string)
-	sslMap["security.protocol"] = "SSL"
-	sslMap["ssl.certificate.location"] = certLocation
-	sslMap["ssl.key.location"] = keyLocation
-	sslMap["ssl.key.password"] = keyPassword
+	sslMap := map[string]string{
+		"security.protocol":        "SSL",
+		"ssl.certificate.location": certLocation,
+		"ssl.key.location":         keyLocation,
+		"ssl.key.password":         keyPassword,
+	}
 	for key, value := range sslMap {
 		if err := configMap.SetKey(key, value); err != nil {
 			return nil, err
@@ -120,11 +126,12 @@ func SetSSLConfig(configMap *ckafka.ConfigMap, certLocation, keyLocation, keyPas
 }
 
 func SetSASLConfig(configMap *ckafka.ConfigMap, username, password string) (*ckafka.ConfigMap, error) {
-	saslMap := make(map[string]string)
-	saslMap["security.protocol"] = "SASL_SSL"
-	saslMap["sasl.mechanism"] = "PLAIN"
-	saslMap["sasl.username"] = username
-	saslMap["sasl.password"] = password
+	saslMap := map[string]string{
+		"security.protocol": "SASL_SSL",
+		"sasl.mechanism":    "PLAIN",
+		"sasl.username":     username,
+		"sasl.password":     password,
+	}
 	for key, value := range saslMap {
 		if err := configMap.SetKey(key, value); err != nil {
 			return nil, err
@@ -176,23 +183,85 @@ func GetCAClient(caCertPath string) *http.Client {
 	return client
 }
 
+func ExtractSchemaIdFromResponse(response *http.Response) (int32, error) {
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(response.Body)
+	if err != nil {
+		return 0, err
+	}
+	responseBody := buf.String() // {"id":9}
+	schemaId, err := strconv.ParseInt(responseBody[6:len(responseBody)-1], 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(schemaId), nil
+}
+
 func ConvertSchemaToRequestString(schema SchemaObject, valueFormat string) (string, error) {
 	request := SchemaRequest{SchemaType: strings.ToUpper(valueFormat)}
 	request.Schema = `[ { "type":"` + schema.SchemaType + `", "name":"` + schema.SchemaName + `", "fields": [ `
-	var fieldStrings []string
+	var fields []string
 	for _, field := range schema.Fields {
-		fieldString := `{`
+		var components []string
 		for key, value := range field {
-			fieldString += `"` + key + `":"` + value + `"`
+			f := `"` + key + `":"` + value + `"`
+			components = append(components, f)
 		}
-		fieldString += `}`
+		fields = append(fields, "{"+strings.Join(components, ",")+"}")
 	}
-	request.Schema += strings.Join(fieldStrings, ",") + `]} ]`
+	request.Schema += strings.Join(fields, ",") + `]} ]`
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return "", err
 	}
 	return string(requestBytes), nil
+}
+
+func GetAndWriteSchemaBySubject(srEndpoint, caCertPath, tempStorePath, subject, version, mdsToken string) error {
+	requestUrl := srEndpoint + "/subjects/" + subject + "/versions/" + version
+	return requestAndWriteSchema(requestUrl, caCertPath, tempStorePath, mdsToken)
+}
+
+func GetAndWriteSchemaById(srEndpoint, caCertPath, tempStorePath, schemaID, mdsToken string) error {
+	requestUrl := srEndpoint + "/schemas/ids/" + schemaID
+	return requestAndWriteSchema(requestUrl, caCertPath, tempStorePath, mdsToken)
+}
+
+func requestAndWriteSchema(requestUrl, caCertPath, tempStorePath, mdsToken string) error {
+	req, err := http.NewRequest("GET", requestUrl, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+mdsToken)
+	client := GetCAClient(caCertPath)
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(resp.Body)
+	if err != nil {
+		return err
+	}
+	responseBody := buf.String()
+
+	schemaResponse := SchemaResponse{}
+	err = json.Unmarshal([]byte(responseBody), &schemaResponse)
+	if err != nil {
+		return err
+	}
+	schemaString := schemaResponse.Schema[1 : len(schemaResponse.Schema)-1] // ignore the outmost `[]`
+
+	schema := SchemaObject{}
+	err = json.Unmarshal([]byte(schemaString), &schema)
+	if err != nil {
+		return err
+	}
+
+	file, _ := json.MarshalIndent(schema, "", " ")
+	return ioutil.WriteFile(tempStorePath, file, 0644)
 }
 
 func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[string]string, error) {
@@ -209,24 +278,31 @@ func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[stri
 	var references []srsdk.SchemaReference
 	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
-		if err != nil {
-			return "", nil, err
-		}
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-		if err != nil {
-			return "", nil, err
-		}
+		if cloud {
+			schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
+			if err != nil {
+				return "", nil, err
+			}
+			err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+			if err != nil {
+				return "", nil, err
+			}
 
-		refBytes, err := json.Marshal(schemaString.References)
-		if err != nil {
-			return "", nil, err
+			refBytes, err := json.Marshal(schemaString.References)
+			if err != nil {
+				return "", nil, err
+			}
+			err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+			if err != nil {
+				return "", nil, err
+			}
+			references = schemaString.References
+		} else {
+			err := GetAndWriteSchemaById(h.Properties.srEndpoint, h.Properties.caCertPath, tempStorePath, strconv.Itoa(int(schemaID)), h.Properties.mdsToken)
+			if err != nil {
+				return "", nil, err
+			}
 		}
-		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
-		if err != nil {
-			return "", nil, err
-		}
-		references = schemaString.References
 	} else {
 		refBlob, err := ioutil.ReadFile(tempRefStorePath)
 		if err != nil {
@@ -245,10 +321,6 @@ func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[stri
 	}
 
 	return tempStorePath, referencePathMap, nil
-}
-
-func (h *GroupHandler) GetSchemaOnPrem(schemaId int32) (string, error) {
-	return "", nil
 }
 
 func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {

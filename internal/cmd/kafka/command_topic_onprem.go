@@ -3,7 +3,6 @@ package kafka
 // confluent kafka topic <commands>
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -60,6 +59,10 @@ type SchemaObject struct {
 type SchemaRequest struct {
 	Schema     string `json:"schema"`
 	SchemaType string `json:"schemaType"`
+}
+
+type SchemaResponse struct {
+	Schema string `json:"schema"`
 }
 
 // Register each of the verbs and expected args
@@ -157,24 +160,21 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Short: "Produce messages to a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Produce message to topic `my_topic` with SASL_SSL protocol (providing username and password).",
-				Code: "confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap \":19091\" --username user --password secret",
+				Text: `Produce message to topic "my_topic" with SASL_SSL protocol (providing username and password).`,
+				Code: `confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap ":19091" --username user --password secret`,
 			},
 		),
 	}
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
-	produceCmd.Flags().String("refs", "", "The path to the references file.")
+	produceCmd.Flags().String("refs", "", "The path to the references file.") // TODO
 	produceCmd.Flags().String("tester", "", "The path to the local schema file.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	produceCmd.Flags().String("sr-endpoint", "", "url to schema registry cluster.")
-	produceCmd.Flags().String("sr-username", "", "Username for connecting to schema registry cluster.")
-	produceCmd.Flags().String("sr-password", "", "Password for connecting to schema registry cluster.")
-	produceCmd.Flags().SortFlags = false
+	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(produceCmd)
 
 	consumeCmd := &cobra.Command{
@@ -184,13 +184,11 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Short: "Consume messages from a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Consume message from topic `my_topic` with SSL protocol and SSL verification enabled (providing certificate and private key).",
-				Code: "confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap \":19091\" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key",
-			},
+				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
+				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap ":19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
 		),
 	}
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
@@ -198,10 +196,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	consumeCmd.Flags().String("sr-endpoint", "", "url to schema registry cluster.")
-	consumeCmd.Flags().String("sr-username", "", "Username for connecting to schema registry cluster.")
-	consumeCmd.Flags().String("sr-password", "", "Password for connecting to schema registry cluster.")
-
-	consumeCmd.Flags().SortFlags = false
+	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(consumeCmd)
 }
 
@@ -598,7 +593,6 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	topicName := args[0]
 
 	bootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
@@ -620,23 +614,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	configMap := GetOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification, caLocation)
 	switch protocol {
-	case "SSL":
-		certLocation, err := cmd.Flags().GetString("cert-location")
-		if err != nil {
-			return err
-		}
-		keyLocation, err := cmd.Flags().GetString("key-location")
-		if err != nil {
-			return err
-		}
-		keyPassword, err := cmd.Flags().GetString("key-password")
-		if err != nil {
-			return err
-		}
-		configMap, err = SetSSLConfig(configMap, certLocation, keyLocation, keyPassword)
-		if err != nil {
-			return err
-		}
+	case "SSL": // cert-locaion, key-location, key-password are not needed for authentication
 	case "SASL_SSL":
 		username, err := cmd.Flags().GetString("username")
 		if err != nil {
@@ -665,6 +643,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	}
 	defer adminClient.Close()
 
+	topicName := args[0]
 	err = c.validateTopic(adminClient, topicName, clusterId)
 	if err != nil {
 		return err
@@ -730,15 +709,13 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		}
 	}
 
-	// Trap SIGINT to trigger a shutdown.
-	signals := make(chan os.Signal, 1)
+	signals := make(chan os.Signal, 1) // Trap SIGINT to trigger a shutdown.
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
 		close(input)
 	}()
-	// Prime reader
-	go scan()
+	go scan() // Prime reader
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
@@ -788,7 +765,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	topicName := args[0]
 
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
@@ -820,6 +796,11 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
+	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return err
+	}
+
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -833,29 +814,17 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return err
+	}
 
 	configMap, err := GetOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification, caLocation)
 	if err != nil {
 		return err
 	}
 	switch protocol {
-	case "SSL":
-		certLocation, err := cmd.Flags().GetString("cert-location")
-		if err != nil {
-			return err
-		}
-		keyLocation, err := cmd.Flags().GetString("key-location")
-		if err != nil {
-			return err
-		}
-		keyPassword, err := cmd.Flags().GetString("key-password")
-		if err != nil {
-			return err
-		}
-		configMap, err = SetSSLConfig(configMap, certLocation, keyLocation, keyPassword)
-		if err != nil {
-			return err
-		}
+	case "SSL": // cert-locaion, key-location, key-password are not needed for authentication
 	case "SASL_SSL":
 		username, err := cmd.Flags().GetString("username")
 		if err != nil {
@@ -883,6 +852,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}
 	defer adminClient.Close()
 
+	topicName := args[0]
 	err = c.validateTopic(adminClient, topicName, clusterId)
 	if err != nil {
 		return err
@@ -890,7 +860,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	dir := filepath.Join(os.TempDir(), "confluent-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
@@ -906,7 +876,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	groupHandler := &GroupHandler{
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir, Cloud: false},
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir, Cloud: false, srEndpoint: srEndpoint, caCertPath: caCertPath, mdsToken: c.AuthToken()},
 	}
 
 	// start consuming messages
@@ -967,20 +937,12 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
-		srUsername, err := cmd.Flags().GetString("sr-username")
-		if err != nil {
-			return metaInfo, nil, err
-		}
-		srPassword, err := cmd.Flags().GetString("sr-password")
-		if err != nil {
-			return metaInfo, nil, err
-		}
-		info, err := c.registerSchemaWithUserInfo(cmd, subject, schemaType, schemaPath, srUsername, srPassword)
+		info, err := registerSchemaWithToken(cmd, c.AuthToken(), subject, schemaType, schemaPath)
 		if err != nil {
 			return metaInfo, nil, err
 		}
 		metaInfo = info
-		referencePathMap, err = c.storeSchemaReferencesOnPrem(cmd, refs)
+		referencePathMap, err = storeSchemaReferencesOnPrem(cmd, refs, c.AuthToken())
 		if err != nil {
 			return metaInfo, nil, err
 		}
@@ -988,8 +950,8 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 	return metaInfo, referencePathMap, nil
 }
 
-func (c *authenticatedTopicCommand) storeSchemaReferencesOnPrem(cmd *cobra.Command, refs []srsdk.SchemaReference) (map[string]string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+func storeSchemaReferencesOnPrem(cmd *cobra.Command, refs []srsdk.SchemaReference, mdsToken string) (map[string]string, error) {
+	dir := filepath.Join(os.TempDir(), "confluent-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
@@ -1001,7 +963,15 @@ func (c *authenticatedTopicCommand) storeSchemaReferencesOnPrem(cmd *cobra.Comma
 	for _, ref := range refs {
 		tempStorePath := filepath.Join(dir, ref.Name)
 		if !fileExists(tempStorePath) {
-			err := getAndWriteSchemaByVersion(cmd, tempStorePath, ref.Subject, strconv.Itoa(int(ref.Version)))
+			srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
+			if err != nil {
+				return nil, err
+			}
+			caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+			if err != nil {
+				return nil, err
+			}
+			err = GetAndWriteSchemaBySubject(srEndpoint, caCertPath, tempStorePath, ref.Subject, strconv.Itoa(int(ref.Version)), mdsToken)
 			if err != nil {
 				return nil, err
 			}
@@ -1012,58 +982,67 @@ func (c *authenticatedTopicCommand) storeSchemaReferencesOnPrem(cmd *cobra.Comma
 	return referencePathMap, nil
 }
 
-func getAndWriteSchemaByVersion(cmd *cobra.Command, tempStorePath, subject, version string) error {
-	// retrieve schema by subject and version, write to temp path
-	schema := SchemaObject{}
-
-	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
-	if err != nil {
-		return err
-	}
-	requestUrl := srEndpoint + "/subjects/" + subject + "/versions/" + version
-
-	req, err := http.NewRequest("GET", requestUrl, nil)
-	if err != nil {
-		return err
-	}
-	req.SetBasicAuth("superUser", "superUser")
-
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-	if err != nil {
-		return err
-	}
-	client := GetCAClient(caCertPath)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&schema)
-	if err != nil {
-		return err
-	}
-
-	file, _ := json.MarshalIndent(schema, "", " ")
-	err = ioutil.WriteFile(tempStorePath, file, 0644)
-	return err
-}
-
-func (c *authenticatedTopicCommand) registerSchemaWithUserInfo(cmd *cobra.Command, subject, valueFormat, schemaPath, srUsername, srPassword string) ([]byte, error) {
+func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, valueFormat, schemaPath string) ([]byte, error) {
 	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
 	if err != nil {
 		return nil, err
 	}
 	requestUrl := srEndpoint + "/subjects/" + subject + "/versions"
 
-	// load schema into memory
+	req, err := getRegisterSchemaRequest(requestUrl, mdsToken, valueFormat, schemaPath)
+	if err != nil {
+		return nil, err
+	}
+
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return nil, err
+	}
+	client := GetCAClient(caCertPath)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	schemaId, err := ExtractSchemaIdFromResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return nil, err
+	}
+	if outputFormat == output.Human.String() {
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, schemaId)
+	} else {
+		err = output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{schemaId})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
+	metaInfo = append(metaInfo, schemaIdBuffer...)
+	return metaInfo, nil
+}
+
+func getRegisterSchemaRequest(requestUrl, mdsToken, valueFormat, schemaPath string) (*http.Request, error) {
 	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
 	schema := SchemaObject{}
-	json.Unmarshal([]byte(schemaBytes), &schema)
+	err = json.Unmarshal([]byte(schemaBytes), &schema)
+	if err != nil {
+		return nil, err
+	}
 
 	// convert marshalled json object into json request string
 	requestString, err := ConvertSchemaToRequestString(schema, valueFormat)
@@ -1076,41 +1055,7 @@ func (c *authenticatedTopicCommand) registerSchemaWithUserInfo(cmd *cobra.Comman
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(srUsername, srPassword)
+	req.Header.Set("Authorization", "Bearer "+mdsToken)
 	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
-
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-	if err != nil {
-		return nil, err
-	}
-	client := GetCAClient(caCertPath)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	fmt.Println("response:", resp)
-	schemaId, err := extractSchemaId(resp)
-	if err != nil {
-		return nil, err
-	}
-
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, schemaId)
-	metaInfo = append(metaInfo, schemaIdBuffer...)
-	return metaInfo, nil
-}
-
-func extractSchemaId(response *http.Response) (uint32, error) {
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(response.Body)
-	responseBody := buf.String() // {"id":9}
-	schemaId, err := strconv.ParseInt(responseBody[6:len(responseBody)-1], 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(schemaId), nil
+	return req, nil
 }
