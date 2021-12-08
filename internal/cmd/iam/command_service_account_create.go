@@ -37,7 +37,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("description")
 

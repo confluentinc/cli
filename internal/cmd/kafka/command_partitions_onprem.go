@@ -48,7 +48,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	listCmd.Flags().String("topic", "", "Topic name to list partitions of.")
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 	_ = listCmd.MarkFlagRequired("topic")
 	partitionCmd.AddCommand(listCmd)
 
@@ -66,7 +66,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	describeCmd.Flags().String("topic", "", "Topic name to list partitions of.")
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	output.AddFlag(describeCmd)
+	pcmd.AddOutputFlag(describeCmd)
 	_ = describeCmd.MarkFlagRequired("topic")
 	partitionCmd.AddCommand(describeCmd)
 
@@ -92,7 +92,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	reassignmentsCmd.Flags().String("topic", "", "Topic name to search by.")
 	reassignmentsCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	output.AddFlag(reassignmentsCmd)
+	pcmd.AddOutputFlag(reassignmentsCmd)
 	partitionCmd.AddCommand(reassignmentsCmd)
 }
 

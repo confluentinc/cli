@@ -437,9 +437,6 @@ func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (st
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", nil
 	}
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") == "" && !strings.Contains(cmd.Name(), "link") && !strings.Contains(cmd.Name(), "mirror") {
-		return "", nil
-	}
 	clusterConfig, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err

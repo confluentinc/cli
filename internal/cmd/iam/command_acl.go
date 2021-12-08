@@ -97,7 +97,7 @@ func (c *aclCommand) init() {
 		),
 	}
 	cmd.Flags().AddFlagSet(listACLFlags())
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	c.AddCommand(cmd)
 }
@@ -226,7 +226,7 @@ func PrintACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		output.AddFlag(cmd)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields, structuredRenames)

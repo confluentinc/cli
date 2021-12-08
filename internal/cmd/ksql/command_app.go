@@ -1,6 +1,10 @@
 package ksql
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -72,4 +76,30 @@ func (c *appCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksql
 		Endpoint:          cluster.Endpoint,
 		Status:            status,
 	}
+}
+
+func (c *appCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return autocompleteClusters(c.EnvironmentId(), c.Client)
+}
+
+func autocompleteClusters(environment string, client *ccloud.Client) []string {
+	req := &schedv1.KSQLCluster{AccountId: environment}
+	clusters, err := client.KSQL.List(context.Background(), req)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	}
+	return suggestions
 }

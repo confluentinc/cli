@@ -33,7 +33,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("config", "", "JSON connector config file.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("config")
 

@@ -40,7 +40,7 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd.Flags().String(resourceFlagName, "", `The resource ID to filter by. Use "cloud" to show only Cloud API keys.`)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	iam.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

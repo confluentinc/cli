@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -84,6 +85,34 @@ func (c *command) parseFlagResolverPromptValue(source, prompt string, secure boo
 		return "", err
 	}
 	return strings.TrimSpace(val), nil
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return AutocompleteApiKeys(c.EnvironmentId(), c.Client)
+}
+
+func AutocompleteApiKeys(environment string, client *ccloud.Client) []string {
+	apiKeys, err := client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: environment})
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(apiKeys))
+	for i, apiKey := range apiKeys {
+		if apiKey.UserId == 0 {
+			continue
+		}
+		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.Key, apiKey.Description)
+	}
+	return suggestions
 }
 
 func (c *command) Cmd() *cobra.Command {

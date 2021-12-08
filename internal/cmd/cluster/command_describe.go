@@ -58,7 +58,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string, logger *log.
 
 	c.Flags().String("url", "", "URL to a Confluent cluster.")
 	c.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-	output.AddFlag(c.Command)
+	pcmd.AddOutputFlag(c.Command)
 
 	return c.Command
 }
