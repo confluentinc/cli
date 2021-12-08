@@ -186,7 +186,7 @@ func (c *roleBindingCommand) init() {
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 
 	c.AddCommand(listCmd)
 
@@ -222,7 +222,7 @@ func (c *roleBindingCommand) init() {
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
-	output.AddFlag(createCmd)
+	pcmd.AddOutputFlag(createCmd)
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
 	c.AddCommand(createCmd)
@@ -253,7 +253,7 @@ func (c *roleBindingCommand) init() {
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 	}
-	output.AddFlag(deleteCmd)
+	pcmd.AddOutputFlag(deleteCmd)
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
 	check(deleteCmd.MarkFlagRequired("role"))

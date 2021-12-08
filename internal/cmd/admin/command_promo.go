@@ -65,7 +65,7 @@ func (c *promoCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.listRunE),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

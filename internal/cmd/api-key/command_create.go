@@ -38,7 +38,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd.Flags().String(resourceFlagName, "", `The resource ID. Use "cloud" to create a Cloud API key.`)
 	cmd.Flags().String("service-account", "", "Service account ID. If not specified, the API key will have full access on the cluster.")
 	cmd.Flags().String("description", "", "Description of API key.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(resourceFlagName)
 

@@ -13,10 +13,11 @@ import (
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <api-key>",
-		Short: "Update an API key.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:               "update <api-key>",
+		Short:             "Update an API key.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.update),
 	}
 
 	cmd.Flags().String("description", "", "Description of the API key.")

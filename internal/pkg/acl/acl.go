@@ -15,6 +15,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -35,7 +36,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		output.AddFlag(cmd)
+		pcmd.AddOutputFlag(cmd)
 	}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
@@ -78,7 +79,7 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		output.AddFlag(cmd)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -355,7 +356,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		output.AddFlag(cmd)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -396,7 +397,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		output.AddFlag(cmd)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}

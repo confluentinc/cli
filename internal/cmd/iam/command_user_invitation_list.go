@@ -34,7 +34,7 @@ func (c invitationCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.listInvitations),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

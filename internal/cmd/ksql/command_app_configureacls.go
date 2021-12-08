@@ -16,10 +16,11 @@ import (
 
 func (c *appCommand) newConfigureAclsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "configure-acls <id> TOPICS...",
-		Short: "Configure ACLs for a ksqlDB cluster.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.configureACLs),
+		Use:               "configure-acls <id> TOPICS...",
+		Short:             "Configure ACLs for a ksqlDB cluster.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.configureACLs),
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
