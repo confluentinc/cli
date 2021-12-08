@@ -31,18 +31,20 @@ func (c *clusterCommand) newEnableCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Enable Schema Registry, using Google Cloud Platform in the US:",
+				Text: "Enable Schema Registry, using Google Cloud Platform in the US.",
 				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", version.CLIName),
 			},
 		),
 	}
 
-	cmd.Flags().String("cloud", "", "Cloud provider (e.g. 'aws', 'azure', or 'gcp').")
+	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return []string{"apac", "eu", "us"} })
 
 	return cmd
 }

@@ -80,7 +80,7 @@ func (c *serviceAccountCommand) init() {
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -97,7 +97,7 @@ func (c *serviceAccountCommand) init() {
 	}
 	createCmd.Flags().String("description", "", "Description of the service account.")
 	_ = createCmd.MarkFlagRequired("description")
-	output.AddFlag(createCmd)
+	pcmd.AddOutputFlag(createCmd)
 	c.AddCommand(createCmd)
 
 	updateCmd := &cobra.Command{

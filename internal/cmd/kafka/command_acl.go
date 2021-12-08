@@ -19,7 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -73,7 +72,7 @@ func (c *aclCommand) init() {
 		),
 	}
 	createCmd.Flags().AddFlagSet(aclConfigFlags())
-	output.AddFlag(createCmd)
+	pcmd.AddOutputFlag(createCmd)
 
 	c.AddCommand(createCmd)
 
@@ -95,7 +94,7 @@ func (c *aclCommand) init() {
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
 	listCmd.Flags().String("service-account", "", "Service account ID.")
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 
 	c.AddCommand(listCmd)
 

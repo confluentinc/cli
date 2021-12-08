@@ -96,7 +96,7 @@ func (c *mirrorCommand) init() {
 			},
 		),
 	}
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 	listCmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
 	listCmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	c.AddCommand(listCmd)
@@ -113,7 +113,7 @@ func (c *mirrorCommand) init() {
 			},
 		),
 	}
-	output.AddFlag(describeCmd)
+	pcmd.AddOutputFlag(describeCmd)
 	describeCmd.Flags().String(linkFlagName, "", "Cluster link name.")
 	check(describeCmd.MarkFlagRequired(linkFlagName))
 	c.AddCommand(describeCmd)
@@ -154,7 +154,7 @@ func (c *mirrorCommand) init() {
 			},
 		),
 	}
-	output.AddFlag(promoteCmd)
+	pcmd.AddOutputFlag(promoteCmd)
 	promoteCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	promoteCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	check(promoteCmd.MarkFlagRequired(linkFlagName))
@@ -172,7 +172,7 @@ func (c *mirrorCommand) init() {
 			},
 		),
 	}
-	output.AddFlag(failoverCmd)
+	pcmd.AddOutputFlag(failoverCmd)
 	failoverCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	failoverCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	check(failoverCmd.MarkFlagRequired(linkFlagName))
@@ -190,7 +190,7 @@ func (c *mirrorCommand) init() {
 			},
 		),
 	}
-	output.AddFlag(pauseCmd)
+	pcmd.AddOutputFlag(pauseCmd)
 	pauseCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	pauseCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	check(pauseCmd.MarkFlagRequired(linkFlagName))
@@ -208,7 +208,7 @@ func (c *mirrorCommand) init() {
 			},
 		),
 	}
-	output.AddFlag(resumeCmd)
+	pcmd.AddOutputFlag(resumeCmd)
 	resumeCmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	resumeCmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	check(resumeCmd.MarkFlagRequired(linkFlagName))
