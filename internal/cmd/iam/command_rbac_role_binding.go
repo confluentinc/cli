@@ -190,6 +190,20 @@ func (c *roleBindingCommand) init() {
 
 	c.AddCommand(listCmd)
 
+	var createCmdExampleText, createCmdExampleCode  string
+	if isCloud {
+		if c.ccloudRbacDataplaneEnabled {
+			createCmdExampleText = "Create a role binding for the principal permitting it produce to the topic users."
+			createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde"
+		} else {
+			createCmdExampleText = "Create a role binding for the principal giving it the CloudClusterAdmin role for the specified cluster and environment."
+			createCmdExampleCode = version.CLIName + " iam rbac role-binding create --role CloudClusterAdmin --principal User:u-ab1234 --cloud-cluster lkc-ab123 --environment env-abcde"
+		}
+	} else {
+		createCmdExampleText = "Create a role binding for the principal permitting it produce to the topic users."
+		createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID"
+	}
+
 	createCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a role binding.",
@@ -197,8 +211,8 @@ func (c *roleBindingCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a role binding for the client permitting it produce to the topic users.",
-				Code: version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+				Text: createCmdExampleText,
+				Code: createCmdExampleCode,
 			},
 		),
 	}
