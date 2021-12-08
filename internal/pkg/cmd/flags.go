@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -49,6 +50,32 @@ func autocompleteRegions(client *ccloud.Client, cloud string) []string {
 	suggestions := make([]string, len(regions))
 	for i, region := range regions {
 		suggestions[i] = region.RegionId
+	}
+	return suggestions
+}
+
+func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("service-account", "", "Service account ID.")
+
+	RegisterFlagCompletionFunc(cmd, "service-account", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteServiceAccounts(command.Client)
+	})
+}
+
+func AutocompleteServiceAccounts(client *ccloud.Client) []string {
+	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(serviceAccounts))
+	for i, serviceAccount := range serviceAccounts {
+		description := fmt.Sprintf("%s: %s", serviceAccount.ServiceName, serviceAccount.ServiceDescription)
+		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.ResourceId, description)
 	}
 	return suggestions
 }

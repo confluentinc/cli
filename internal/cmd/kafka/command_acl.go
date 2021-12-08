@@ -93,7 +93,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
-	listCmd.Flags().String("service-account", "", "Service account ID.")
+	pcmd.AddServiceAccountFlag(listCmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(listCmd)
 
 	c.AddCommand(listCmd)
