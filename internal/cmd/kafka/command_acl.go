@@ -13,7 +13,6 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
-	"github.com/confluentinc/cli/internal/cmd/iam"
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -94,7 +93,7 @@ func (c *aclCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 	listCmd.Flags().AddFlagSet(resourceFlags())
-	iam.AddServiceAccountFlag(listCmd, c.AuthenticatedCLICommand)
+	pcmd.AddServiceAccountFlag(listCmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(listCmd)
 
 	c.AddCommand(listCmd)

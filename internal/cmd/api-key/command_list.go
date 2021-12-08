@@ -10,7 +10,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/cmd/iam"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -39,7 +38,7 @@ func (c *command) newListCommand() *cobra.Command {
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID to filter by. Use "cloud" to show only Cloud API keys.`)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
-	iam.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/c-bata/go-prompt"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -39,18 +38,6 @@ func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	return c
 }
 
-func AddServiceAccountFlag(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().String("service-account", "", "Service account ID.")
-
-	pcmd.RegisterFlagCompletionFunc(cmd, "service-account", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
-
-		return autocompleteServiceAccounts(command.Client)
-	})
-}
-
 func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
@@ -60,21 +47,7 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 		return nil
 	}
 
-	return autocompleteServiceAccounts(c.Client)
-}
-
-func autocompleteServiceAccounts(client *ccloud.Client) []string {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(serviceAccounts))
-	for i, serviceAccount := range serviceAccounts {
-		description := fmt.Sprintf("%s: %s", serviceAccount.ServiceName, serviceAccount.ServiceDescription)
-		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.ResourceId, description)
-	}
-	return suggestions
+	return pcmd.AutocompleteServiceAccounts(c.Client)
 }
 
 func (c *serviceAccountCommand) Cmd() *cobra.Command {
