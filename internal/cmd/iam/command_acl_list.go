@@ -17,11 +17,11 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all the ACLs for the specified Kafka cluster.",
+				Text: "List all the ACLs for the specified Kafka cluster:",
 				Code: "confluent iam acl list --kafka-cluster-id <kafka-cluster-id>",
 			},
 			examples.Example{
-				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane.",
+				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
 				Code: "confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
 			},
 		),

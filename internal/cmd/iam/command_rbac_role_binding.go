@@ -197,7 +197,7 @@ func (c *roleBindingCommand) init() {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a role binding for the client permitting it produce to the topic users.",
+				Text: "Create a role binding for the client permitting it produce to the topic users:",
 				Code: version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
 			},
 		),
