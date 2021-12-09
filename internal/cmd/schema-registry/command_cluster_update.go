@@ -32,6 +32,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 
 	addCompatibilityFlag(cmd)
 	addModeFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

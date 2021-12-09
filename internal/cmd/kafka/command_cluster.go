@@ -132,7 +132,7 @@ func NewClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 
 	c.init(cfg)
@@ -154,6 +154,7 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		listCmd.Long = "List Kafka clusters that are registered with the MDS cluster registry."
 		listCmd.RunE = pcmd.NewCLIRunE(c.onPremList)
 	}
+	pcmd.AddContextFlag(listCmd, c.CLICommand)
 	pcmd.AddOutputFlag(listCmd)
 	c.AddCommand(listCmd)
 
@@ -176,7 +177,6 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 			},
 		),
 	}
-
 	pcmd.AddCloudFlag(createCmd)
 	pcmd.AddRegionFlag(createCmd, c.AuthenticatedCLICommand)
 	check(createCmd.MarkFlagRequired("cloud"))
@@ -185,6 +185,7 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
+	pcmd.AddContextFlag(createCmd, c.CLICommand)
 	pcmd.AddOutputFlag(createCmd)
 	c.AddCommand(createCmd)
 
@@ -196,8 +197,9 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		RunE:        pcmd.NewCLIRunE(c.describe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	pcmd.AddOutputFlag(describeCmd)
 	describeCmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
+	pcmd.AddContextFlag(describeCmd, c.CLICommand)
+	pcmd.AddOutputFlag(describeCmd)
 	c.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
@@ -217,6 +219,7 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
+	pcmd.AddContextFlag(updateCmd, c.CLICommand)
 	pcmd.AddOutputFlag(updateCmd)
 	c.AddCommand(updateCmd)
 
@@ -227,7 +230,9 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		RunE:        pcmd.NewCLIRunE(c.delete),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(deleteCmd, c.CLICommand)
 	c.AddCommand(deleteCmd)
+
 	useCmd := &cobra.Command{
 		Use:         "use <id>",
 		Short:       "Make the Kafka cluster active for use in other commands.",
@@ -235,7 +240,9 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		RunE:        pcmd.NewCLIRunE(c.use),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(useCmd, c.CLICommand)
 	c.AddCommand(useCmd)
+
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
 }
 

@@ -28,6 +28,7 @@ func (c *aclCommand) onPremInit() {
 	}
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	createCmd.Flags().AddFlagSet(aclutil.CreateACLFlags())
+	pcmd.AddContextFlag(createCmd, c.CLICommand)
 	pcmd.AddOutputFlag(createCmd)
 	c.AddCommand(createCmd)
 
@@ -44,6 +45,7 @@ func (c *aclCommand) onPremInit() {
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	deleteCmd.Flags().AddFlagSet(aclutil.DeleteACLFlags())
+	pcmd.AddContextFlag(deleteCmd, c.CLICommand)
 	pcmd.AddOutputFlag(deleteCmd)
 	c.AddCommand(deleteCmd)
 
@@ -65,6 +67,7 @@ func (c *aclCommand) onPremInit() {
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().AddFlagSet(aclutil.AclFlags())
+	pcmd.AddContextFlag(listCmd, c.CLICommand)
 	pcmd.AddOutputFlag(listCmd)
 	c.AddCommand(listCmd)
 }

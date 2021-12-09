@@ -10,6 +10,7 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
@@ -41,7 +42,7 @@ func NewACLCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
 		Short: "Manage Kafka ACLs.",
 	}
 
-	flagMap := OnPremTopicSubcommandFlags
+	var flagMap map[string]*pflag.FlagSet
 	if cfg.IsCloudLogin() {
 		flagMap = AclSubcommandFlags
 	}

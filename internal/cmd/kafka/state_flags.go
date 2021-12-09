@@ -3,45 +3,37 @@ package kafka
 import (
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var AclSubcommandFlags = map[string]*pflag.FlagSet{
-	"acl": cmd.ClusterEnvironmentContextSet(),
+	"acl": pcmd.ClusterEnvironmentContextSet(),
 }
 
 var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"cluster": cmd.EnvironmentContextSet(),
+	"cluster": pcmd.EnvironmentContextSet(),
 }
 
 var GroupSubcommandFlags = map[string]*pflag.FlagSet{
-	"consumer-group": cmd.ClusterEnvironmentContextSet(),
+	"consumer-group": pcmd.ClusterEnvironmentContextSet(),
 }
 
 var LagSubcommandFlags = map[string]*pflag.FlagSet{
-	"lag": cmd.ClusterEnvironmentContextSet(),
+	"lag": pcmd.ClusterEnvironmentContextSet(),
 }
 
 var TopicSubcommandFlags = map[string]*pflag.FlagSet{
-	"topic": cmd.ClusterEnvironmentContextSet(),
+	"topic": pcmd.ClusterEnvironmentContextSet(),
 }
 
 var LinkSubcommandFlags = map[string]*pflag.FlagSet{
-	"link": cmd.ClusterEnvironmentContextSet(),
+	"link": pcmd.ClusterEnvironmentContextSet(),
 }
 
 var MirrorSubcommandFlags = map[string]*pflag.FlagSet{
-	"mirror": cmd.ClusterEnvironmentContextSet(),
+	"mirror": pcmd.ClusterEnvironmentContextSet(),
 }
 
 var ProduceAndConsumeFlags = map[string]*pflag.FlagSet{
-	"topic": cmd.CombineFlagSet(cmd.ClusterEnvironmentContextSet(), cmd.KeySecretSet()),
-}
-
-var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"cluster": cmd.ContextSet(),
-}
-
-var OnPremTopicSubcommandFlags = map[string]*pflag.FlagSet{
-	"topic": cmd.ContextSet(),
+	"topic": pcmd.CombineFlagSet(pcmd.ClusterEnvironmentContextSet(), pcmd.KeySecretSet()),
 }

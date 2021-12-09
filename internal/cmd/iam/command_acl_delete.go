@@ -23,6 +23,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(deleteACLFlags())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

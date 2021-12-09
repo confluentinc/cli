@@ -34,6 +34,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 	if d.resolver == nil {
 		return nil
 	}
+
 	envId, err := d.resolver.ResolveEnvironmentFlag(cmd)
 	if err != nil {
 		return err
@@ -61,6 +62,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 			}
 		}
 	}
+
 	clusterId, err := d.resolver.ResolveClusterFlag(cmd)
 	if err != nil {
 		return err
@@ -73,6 +75,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		d.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	}
+
 	return nil
 }
 

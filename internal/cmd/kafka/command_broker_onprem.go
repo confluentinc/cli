@@ -55,7 +55,7 @@ func NewBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Use:         "broker",
 				Short:       "Manage Kafka brokers.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, OnPremTopicSubcommandFlags),
+			}, prerunner, nil),
 	}
 	brokerCmd.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(brokerCmd.AuthenticatedCLICommand))
 	brokerCmd.init()
@@ -71,6 +71,7 @@ func (brokerCmd *brokerCommand) init() {
 		Long:  "List Kafka brokers using Confluent Kafka REST.",
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddContextFlag(listCmd, brokerCmd.CLICommand)
 	pcmd.AddOutputFlag(listCmd)
 	brokerCmd.AddCommand(listCmd)
 
@@ -94,6 +95,7 @@ func (brokerCmd *brokerCommand) init() {
 	describeCmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
 	describeCmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddContextFlag(describeCmd, brokerCmd.CLICommand)
 	pcmd.AddOutputFlag(describeCmd)
 	brokerCmd.AddCommand(describeCmd)
 
@@ -116,6 +118,7 @@ func (brokerCmd *brokerCommand) init() {
 	updateCmd.Flags().Bool("all", false, "Apply config update to all brokers in the cluster.")
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the broker being updated.")
 	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddContextFlag(updateCmd, brokerCmd.CLICommand)
 	pcmd.AddOutputFlag(updateCmd)
 	check(updateCmd.MarkFlagRequired("config"))
 	brokerCmd.AddCommand(updateCmd)
@@ -127,6 +130,7 @@ func (brokerCmd *brokerCommand) init() {
 		Short: "Delete a Kafka broker.",
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddContextFlag(deleteCmd, brokerCmd.CLICommand)
 	brokerCmd.AddCommand(deleteCmd)
 
 	getTasksCmd := &cobra.Command{
@@ -148,6 +152,7 @@ func (brokerCmd *brokerCommand) init() {
 	getTasksCmd.Flags().Bool("all", false, "List broker tasks for the cluster.")
 	getTasksCmd.Flags().String("task-type", "", "Search by task type (add-broker or remove-broker).")
 	getTasksCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddContextFlag(getTasksCmd, brokerCmd.CLICommand)
 	pcmd.AddOutputFlag(getTasksCmd)
 	brokerCmd.AddCommand(getTasksCmd)
 }

@@ -16,6 +16,7 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 	}
 
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

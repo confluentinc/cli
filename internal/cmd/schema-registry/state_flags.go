@@ -3,27 +3,23 @@ package schemaregistry
 import (
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"enable":   cmd.EnvironmentContextSet(),
-	"describe": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
-	"update":   cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
+	"enable":   pcmd.EnvironmentContextSet(),
+	"describe": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
+	"update":   pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
 }
 
 var SubjectSubcommandFlags = map[string]*pflag.FlagSet{
-	"subject": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
+	"subject": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
 }
 
 var SchemaSubcommandFlags = map[string]*pflag.FlagSet{
-	"schema": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
+	"schema": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
 }
 
 var ExporterSubcommandFlags = map[string]*pflag.FlagSet{
-	"exporter": cmd.CombineFlagSet(cmd.KeySecretSet(), cmd.EnvironmentContextSet()),
-}
-
-var OnPremClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"cluster": cmd.ContextSet(),
+	"exporter": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
 }

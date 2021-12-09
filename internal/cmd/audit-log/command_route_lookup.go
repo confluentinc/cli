@@ -11,13 +11,17 @@ import (
 )
 
 func (c *routeCommand) newLookupCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "lookup <crn>",
 		Short: "Return the matching audit-log route rule.",
 		Long:  "Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.lookup),
 	}
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	return cmd
 }
 
 func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
