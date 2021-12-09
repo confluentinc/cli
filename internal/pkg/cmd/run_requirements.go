@@ -43,7 +43,7 @@ var (
 	)
 	requireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
 		"you must enable updates to use this command",
-		`In ~/.confluent/config.json, set "disable_updates": false`,
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
 	)
 )
 
