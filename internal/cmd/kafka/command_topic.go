@@ -157,7 +157,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 	h.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -198,7 +198,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	output.AddFlag(listCmd)
+	pcmd.AddOutputFlag(listCmd)
 	a.AddCommand(listCmd)
 
 	createCmd = &cobra.Command{
@@ -233,7 +233,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	output.AddFlag(describeCmd)
+	pcmd.AddOutputFlag(describeCmd)
 	a.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{

@@ -179,7 +179,6 @@ func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 }
 
 func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
-	command.PersistentPreRunE = a.PersistentPreRunE
 	a.Command.AddCommand(command)
 }
 

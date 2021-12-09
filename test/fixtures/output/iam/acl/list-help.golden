@@ -1,6 +1,4 @@
-List Kafka ACLs for a resource.
-
-This command only works with centralized ACLs.
+List Kafka ACLs for a resource. This command only works with centralized ACLs.
 
 Usage:
   confluent iam acl list [flags]

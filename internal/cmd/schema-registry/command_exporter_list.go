@@ -17,7 +17,7 @@ func (c *exporterCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

@@ -50,7 +50,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

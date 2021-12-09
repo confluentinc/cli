@@ -23,7 +23,7 @@ func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.getStatus),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

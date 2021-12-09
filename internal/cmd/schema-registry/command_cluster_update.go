@@ -30,8 +30,8 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("compatibility", "", "Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.")
-	cmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	addCompatibilityFlag(cmd)
+	addModeFlag(cmd)
 
 	return cmd
 }

@@ -123,11 +123,11 @@ func StructuredOutputForCommand(cmd *cobra.Command, format string, obj interface
 // NewInvalidOutputFormatFlagError - create a new error to describe an invalid output format flag
 func NewInvalidOutputFormatFlagError(format string) error {
 	errorMsg := fmt.Sprintf(errors.InvalidFlagValueErrorMsg, format, FlagName)
-	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(validFlagValues, ", "))
+	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(ValidFlagValues, ", "))
 	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
 // IsValidOutputString - returns whether a format string is a valid format (human, json, yaml)
 func IsValidOutputString(output string) bool {
-	return utils.Contains(validFlagValues, output)
+	return utils.Contains(ValidFlagValues, output)
 }

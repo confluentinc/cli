@@ -29,7 +29,7 @@ func (c *command) newListCommand() *cobra.Command {
 		),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

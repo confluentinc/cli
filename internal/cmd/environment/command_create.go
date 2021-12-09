@@ -25,7 +25,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 
-	output.AddFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
