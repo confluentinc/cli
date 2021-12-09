@@ -111,8 +111,8 @@ func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 }
 
 func (c *roleBindingCommand) getCreateExample(cloud bool) examples.Example {
-	var createCmdExampleText, createCmdExampleCode  string
-	createCmdExampleText = `Create a role binding for the principal permitting it produce to the "users" topic.`
+	createCmdExampleText := `Create a role binding for the principal permitting it produce to the "users" topic.`
+	createCmdExampleCode := version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID"
 	if cloud {
 		if c.ccloudRbacDataplaneEnabled {
 			createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde"
@@ -120,8 +120,6 @@ func (c *roleBindingCommand) getCreateExample(cloud bool) examples.Example {
 			createCmdExampleText = "Create a role binding for the principal giving it the CloudClusterAdmin role for the specified cluster and environment."
 			createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:u-ab1234 --role CloudClusterAdmin --cloud-cluster lkc-ab123 --environment env-abcde"
 		}
-	} else {
-		createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID"
 	}
 	return examples.Example{Code: createCmdExampleCode, Text: createCmdExampleText}
 }
@@ -207,10 +205,10 @@ func (c *roleBindingCommand) init() {
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a role binding.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		Use:     "create",
+		Short:   "Create a role binding.",
+		Args:    cobra.NoArgs,
+		RunE:    pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(c.getCreateExample(isCloud)),
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
