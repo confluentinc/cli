@@ -710,62 +710,73 @@ func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
 	suite := []struct {
 		urlIn      string
-		valid      bool
 		urlOut     string
 		warningMsg string
 		isCCloud   bool
+		errMsg	   string
 	}{
 		{
 			urlIn:      "https:///test.com",
-			valid:      false,
 			urlOut:     "",
 			warningMsg: "default MDS port 8090",
+			errMsg:		errors.InvalidLoginURLMsg,
 		},
 		{
 			urlIn:      "test.com",
-			valid:      true,
 			urlOut:     "http://test.com:8090",
 			warningMsg: "http protocol and default MDS port 8090",
 		},
 		{
 			urlIn:      "test.com:80",
-			valid:      true,
 			urlOut:     "http://test.com:80",
 			warningMsg: "http protocol",
 		},
 		{
 			urlIn:      "http://test.com",
-			valid:      true,
 			urlOut:     "http://test.com:8090",
 			warningMsg: "default MDS port 8090",
 		},
 		{
 			urlIn:      "https://127.0.0.1:8090",
-			valid:      true,
 			urlOut:     "https://127.0.0.1:8090",
 			warningMsg: "",
 		},
 		{
 			urlIn:      "127.0.0.1",
-			valid:      true,
 			urlOut:     "http://127.0.0.1:8090",
 			warningMsg: "http protocol and default MDS port 8090",
 		},
 		{
-			urlIn:      "devel.cpdev.cloud",
-			valid:      true,
-			urlOut:     "https://devel.cpdev.cloud",
+			urlIn:      "devel.cpdev.cloud/",
+			urlOut:     "https://devel.cpdev.cloud/",
 			warningMsg: "https protocol",
 			isCCloud:   true,
 		},
+		{
+			urlIn:		"confluent.cloud:123",
+			isCCloud: 	true,
+			errMsg: 	errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+		},
+		{
+			urlIn:		"https://confluent.cloud/login/sso/company",
+			isCCloud: 	true,
+			errMsg: 	errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+		},
+		{
+			urlIn:		"https://devel.cpdev.cloud//",
+			isCCloud: 	true,
+			errMsg: 	errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+		},
 	}
 	for _, s := range suite {
-		url, matched, msg := validateURL(s.urlIn, s.isCCloud)
-		req.Equal(s.valid, matched)
-		if s.valid {
+		url, warningMsg, err := validateURL(s.urlIn, s.isCCloud)
+		if s.errMsg == "" {
+			req.NoError(err)
 			req.Equal(s.urlOut, url)
+			req.Equal(s.warningMsg, warningMsg)
+		} else {
+			req.Equal(s.errMsg, err.Error())
 		}
-		req.Equal(s.warningMsg, msg)
 	}
 }
 
@@ -843,15 +854,15 @@ func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string)
 func TestIsCCloudURL_True(t *testing.T) {
 	for _, url := range []string{
 		"confluent.cloud",
-		"confluent.cloud:8090",
 		"https://confluent.cloud",
-		"https://confluent.cloud/",
+		"https://devel.cpdev.cloud/",
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
 	} {
 		c := new(Command)
-		require.True(t, c.isCCloudURL(url), url+" should return true")
+		isCCloud := c.isCCloudURL(url)
+		require.True(t, isCCloud, url+" should return true")
 	}
 }
 
@@ -862,6 +873,7 @@ func TestIsCCloudURL_False(t *testing.T) {
 		"https://example.com",
 	} {
 		c := new(Command)
-		require.False(t, c.isCCloudURL(url), url+" should return false")
+		isCCloud := c.isCCloudURL(url)
+		require.False(t, isCCloud, url+" should return false")
 	}
 }
