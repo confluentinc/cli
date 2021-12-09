@@ -83,12 +83,12 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 
 	isCCloud := c.isCCloudURL(url)
 
-	url, valid, errMsg := validateURL(url, isCCloud)
-	if !valid {
-		return errors.New(errors.InvalidLoginURLMsg)
+	url, warningMsg, err := validateURL(url, isCCloud)
+	if err != nil {
+		return err
 	}
-	if errMsg != "" {
-		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+	if warningMsg != "" {
+		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, warningMsg)
 	}
 
 	if isCCloud {
@@ -287,7 +287,18 @@ func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 	return nil
 }
 
-func validateURL(url string, isCCloud bool) (string, bool, string) {
+func validateURL(url string, isCCloud bool) (string, string, error) {
+	if isCCloud {
+		for _, hostname := range v1.CCloudHostnames {
+			if strings.Contains(url, hostname) {
+				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
+					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
+				} else {
+					break
+				}
+			}
+		}
+	}
 	protocolRgx, _ := regexp.Compile(`(\w+)://`)
 	portRgx, _ := regexp.Compile(`:(\d+\/?)`)
 
@@ -316,8 +327,11 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
 	}
 	matched, _ := regexp.MatchString(pattern, url)
+	if !matched {
+		return url, "", errors.New(errors.InvalidLoginURLMsg)
+	}
 
-	return url, matched, strings.Join(msg, " and ")
+	return url, strings.Join(msg, " and "), nil
 }
 
 func (c *Command) isCCloudURL(url string) bool {
@@ -326,10 +340,8 @@ func (c *Command) isCCloudURL(url string) bool {
 			return true
 		}
 	}
-
 	if c.isTest {
 		return strings.Contains(url, testserver.TestCloudURL.Host)
 	}
-
 	return false
 }
