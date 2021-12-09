@@ -7,8 +7,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -47,22 +45,6 @@ type TopicData struct {
 	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
 	Partitions        []PartitionData   `json:"partitions" yaml:"partitions"`
 	Configs           map[string]string `json:"config" yaml:"config"`
-}
-
-type SchemaObject struct {
-	Namespace  string                `json:"namespace"`
-	SchemaType string                `json:"type"`
-	SchemaName string                `json:"name"`
-	Fields     [](map[string]string) `json:"fields"`
-}
-
-type SchemaRequest struct {
-	Schema     string `json:"schema"`
-	SchemaType string `json:"schemaType"`
-}
-
-type SchemaResponse struct {
-	Schema string `json:"schema"`
 }
 
 // Register each of the verbs and expected args
@@ -173,7 +155,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
-	produceCmd.Flags().String("sr-endpoint", "", "url to schema registry cluster.")
+	produceCmd.Flags().String("sr-endpoint", "", "The url to schema registry cluster.")
 	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(produceCmd)
 
@@ -195,7 +177,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
-	consumeCmd.Flags().String("sr-endpoint", "", "url to schema registry cluster.")
+	consumeCmd.Flags().String("sr-endpoint", "", "The url to schema registry cluster.")
 	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(consumeCmd)
 }
@@ -982,14 +964,14 @@ func storeSchemaReferencesOnPrem(cmd *cobra.Command, refs []srsdk.SchemaReferenc
 	return referencePathMap, nil
 }
 
-func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, valueFormat, schemaPath string) ([]byte, error) {
+func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, schemaType, schemaPath string) ([]byte, error) {
 	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
 	if err != nil {
 		return nil, err
 	}
 	requestUrl := srEndpoint + "/subjects/" + subject + "/versions"
 
-	req, err := getRegisterSchemaRequest(requestUrl, mdsToken, valueFormat, schemaPath)
+	req, err := GetRegisterSchemaRequest(requestUrl, mdsToken, schemaType, schemaPath)
 	if err != nil {
 		return nil, err
 	}
@@ -1031,31 +1013,4 @@ func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, valueFormat,
 	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
 	metaInfo = append(metaInfo, schemaIdBuffer...)
 	return metaInfo, nil
-}
-
-func getRegisterSchemaRequest(requestUrl, mdsToken, valueFormat, schemaPath string) (*http.Request, error) {
-	schemaBytes, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-	schema := SchemaObject{}
-	err = json.Unmarshal([]byte(schemaBytes), &schema)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert marshalled json object into json request string
-	requestString, err := ConvertSchemaToRequestString(schema, valueFormat)
-	if err != nil {
-		return nil, err
-	}
-	requestReader := strings.NewReader(requestString)
-
-	req, err := http.NewRequest("POST", requestUrl, requestReader)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+mdsToken)
-	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
-	return req, nil
 }

@@ -1,22 +1,17 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -164,104 +159,6 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		return nil, err
 	}
 	return configMap, nil
-}
-
-func GetCAClient(caCertPath string) *http.Client {
-	caCert, err := ioutil.ReadFile(caCertPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: caCertPool,
-			},
-		},
-	}
-	return client
-}
-
-func ExtractSchemaIdFromResponse(response *http.Response) (int32, error) {
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(response.Body)
-	if err != nil {
-		return 0, err
-	}
-	responseBody := buf.String() // {"id":9}
-	schemaId, err := strconv.ParseInt(responseBody[6:len(responseBody)-1], 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return int32(schemaId), nil
-}
-
-func ConvertSchemaToRequestString(schema SchemaObject, valueFormat string) (string, error) {
-	request := SchemaRequest{SchemaType: strings.ToUpper(valueFormat)}
-	request.Schema = `[ { "type":"` + schema.SchemaType + `", "name":"` + schema.SchemaName + `", "fields": [ `
-	var fields []string
-	for _, field := range schema.Fields {
-		var components []string
-		for key, value := range field {
-			f := `"` + key + `":"` + value + `"`
-			components = append(components, f)
-		}
-		fields = append(fields, "{"+strings.Join(components, ",")+"}")
-	}
-	request.Schema += strings.Join(fields, ",") + `]} ]`
-	requestBytes, err := json.Marshal(request)
-	if err != nil {
-		return "", err
-	}
-	return string(requestBytes), nil
-}
-
-func GetAndWriteSchemaBySubject(srEndpoint, caCertPath, tempStorePath, subject, version, mdsToken string) error {
-	requestUrl := srEndpoint + "/subjects/" + subject + "/versions/" + version
-	return requestAndWriteSchema(requestUrl, caCertPath, tempStorePath, mdsToken)
-}
-
-func GetAndWriteSchemaById(srEndpoint, caCertPath, tempStorePath, schemaID, mdsToken string) error {
-	requestUrl := srEndpoint + "/schemas/ids/" + schemaID
-	return requestAndWriteSchema(requestUrl, caCertPath, tempStorePath, mdsToken)
-}
-
-func requestAndWriteSchema(requestUrl, caCertPath, tempStorePath, mdsToken string) error {
-	req, err := http.NewRequest("GET", requestUrl, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", "Bearer "+mdsToken)
-	client := GetCAClient(caCertPath)
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(resp.Body)
-	if err != nil {
-		return err
-	}
-	responseBody := buf.String()
-
-	schemaResponse := SchemaResponse{}
-	err = json.Unmarshal([]byte(responseBody), &schemaResponse)
-	if err != nil {
-		return err
-	}
-	schemaString := schemaResponse.Schema[1 : len(schemaResponse.Schema)-1] // ignore the outmost `[]`
-
-	schema := SchemaObject{}
-	err = json.Unmarshal([]byte(schemaString), &schema)
-	if err != nil {
-		return err
-	}
-
-	file, _ := json.MarshalIndent(schema, "", " ")
-	return ioutil.WriteFile(tempStorePath, file, 0644)
 }
 
 func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[string]string, error) {
