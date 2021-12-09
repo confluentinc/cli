@@ -4,7 +4,7 @@ Usage:
   confluent iam rbac role-binding create [flags]
 
 Examples:
-Create a role binding for the principal permitting it produce to the topic users.
+Create a role binding for the principal permitting it produce to the "users" topic.
 
   $ confluent iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde
 
