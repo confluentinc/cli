@@ -54,7 +54,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
-	if _, enabled := pcmd.IsAuditLogsEnabled(c.State); !enabled {
+	if _, enabled := pcmd.AreAuditLogsEnabled(c.State); !enabled {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
 
