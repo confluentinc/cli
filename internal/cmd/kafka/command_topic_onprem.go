@@ -12,7 +12,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/antihax/optional"
@@ -27,6 +26,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -151,9 +151,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
-	produceCmd.Flags().String("sString", "", "The string of the schema.")
-	produceCmd.Flags().String("refs", "", "The path to the references file.") // TODO
-	produceCmd.Flags().String("tester", "", "The path to the local schema file.")
+	produceCmd.Flags().String("refs", "", "The path to the references file.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
@@ -176,9 +174,9 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	consumeCmd.Flags().String("sr-endpoint", "", "The url to schema registry cluster.")
 	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(consumeCmd)
@@ -569,6 +567,7 @@ func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Cont
 }
 
 func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
+	level := c.Config.Logger.GetLevel()
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -598,17 +597,13 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	configMap := GetOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification, caLocation)
 	switch protocol {
-	case "SSL": // cert-locaion, key-location, key-password are not needed for authentication
+	case "SSL":
+		configMap, err = SetSSLConfig(cmd, configMap)
+		if err != nil {
+			return err
+		}
 	case "SASL_SSL":
-		username, err := cmd.Flags().GetString("username")
-		if err != nil {
-			return err
-		}
-		password, err := cmd.Flags().GetString("password")
-		if err != nil {
-			return err
-		}
-		configMap, err = SetSASLConfig(configMap, username, password)
+		configMap, err = SetSASLConfig(cmd, configMap)
 		if err != nil {
 			return err
 		}
@@ -616,6 +611,9 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	producer, err := ckafka.NewProducer(configMap)
 	if err != nil {
+		if level >= log.WARN {
+			c.logger.Tracef(errors.FailedToCreateProducerMsg, err)
+		}
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
@@ -623,6 +621,9 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
+		if level >= log.WARN {
+			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -638,7 +639,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	delim, err := cmd.Flags().GetString("delimiter")
+	delimiter, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
 		return err
 	}
@@ -653,20 +654,9 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	refs, err := readSchemaRefs(cmd)
 	if err != nil {
 		return err
-	}
-	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(refBlob, &refs)
-		if err != nil {
-			return err
-		}
 	}
 
 	subject := topicName + "-value"
@@ -724,7 +714,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			continue
 		}
 
-		key, value, err := getMsgKeyAndValueOnPrem(metaInfo, data, delim, parseKey, serializationProvider)
+		key, value, err := getMsgKeyAndValue(metaInfo, data, delimiter, parseKey, serializationProvider)
 		if err != nil {
 			return err
 		}
@@ -757,6 +747,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 }
 
 func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
+	level := c.Config.Logger.GetLevel()
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -815,17 +806,13 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 	switch protocol {
-	case "SSL": // cert-locaion, key-location, key-password are not needed for authentication
+	case "SSL":
+		configMap, err = SetSSLConfig(cmd, configMap)
+		if err != nil {
+			return err
+		}
 	case "SASL_SSL":
-		username, err := cmd.Flags().GetString("username")
-		if err != nil {
-			return err
-		}
-		password, err := cmd.Flags().GetString("password")
-		if err != nil {
-			return err
-		}
-		configMap, err = SetSASLConfig(configMap, username, password)
+		configMap, err = SetSASLConfig(cmd, configMap)
 		if err != nil {
 			return err
 		}
@@ -849,12 +836,18 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	consumer, err := ckafka.NewConsumer(configMap)
 	if err != nil {
+		if level >= log.WARN {
+			c.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
+		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
 	c.logger.Tracef("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
+		if level >= log.WARN {
+			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -879,7 +872,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
@@ -887,8 +879,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		Out:        cmd.OutOrStdout(),
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
-
-	// start consuming messages
 	err = RunConsumer(cmd, consumer, groupHandler)
 	return err
 }
@@ -915,29 +905,6 @@ func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClien
 
 	c.logger.Tracef("validateTopic succeeded")
 	return nil
-}
-
-func getMsgKeyAndValueOnPrem(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
-	var key, valueString string
-	if parseKey {
-		record := strings.SplitN(data, delim, 2)
-		valueString = strings.TrimSpace(record[len(record)-1])
-
-		if len(record) == 2 {
-			key = strings.TrimSpace(record[0])
-		} else {
-			return "", "", errors.New(errors.MissingKeyErrorMsg)
-		}
-	} else {
-		valueString = strings.TrimSpace(data)
-	}
-	encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
-	if err != nil {
-		return "", "", err
-	}
-	encoded := append(metaInfo, encodedMessage...)
-	value := string(encoded)
-	return key, value, nil
 }
 
 func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {

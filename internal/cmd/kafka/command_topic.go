@@ -761,20 +761,9 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	refs, err := readSchemaRefs(cmd)
 	if err != nil {
 		return err
-	}
-	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(refBlob, &refs)
-		if err != nil {
-			return err
-		}
 	}
 
 	parseKey, err := cmd.Flags().GetBool("parse-key")
@@ -969,7 +958,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
@@ -977,10 +965,27 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Out:        cmd.OutOrStdout(),
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
-
-	// start consuming messages
 	err = RunConsumer(cmd, consumer, groupHandler)
 	return err
+}
+
+func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return nil, err
+	}
+	if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return refs, nil
 }
 
 // validate that a topic exists before attempting to produce/consume messages
@@ -1132,7 +1137,6 @@ func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("Got schema:", schema.Schema)
 			err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
 			if err != nil {
 				return nil, err

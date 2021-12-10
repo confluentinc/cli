@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,7 +32,6 @@ type ConsumerProperties struct {
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
 	SrClient   *srsdk.APIClient
-	HttpClient http.Client
 	Ctx        context.Context
 	Format     string
 	Out        io.Writer
@@ -100,7 +98,19 @@ func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning,
 	return configMap, nil
 }
 
-func SetSSLConfig(configMap *ckafka.ConfigMap, certLocation, keyLocation, keyPassword string) (*ckafka.ConfigMap, error) {
+func SetSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+	certLocation, err := cmd.Flags().GetString("cert-location")
+	if err != nil {
+		return nil, err
+	}
+	keyLocation, err := cmd.Flags().GetString("key-location")
+	if err != nil {
+		return nil, err
+	}
+	keyPassword, err := cmd.Flags().GetString("key-password")
+	if err != nil {
+		return nil, err
+	}
 	sslMap := map[string]string{
 		"security.protocol":        "SSL",
 		"ssl.certificate.location": certLocation,
@@ -115,7 +125,15 @@ func SetSSLConfig(configMap *ckafka.ConfigMap, certLocation, keyLocation, keyPas
 	return configMap, nil
 }
 
-func SetSASLConfig(configMap *ckafka.ConfigMap, username, password string) (*ckafka.ConfigMap, error) {
+func SetSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+	username, err := cmd.Flags().GetString("username")
+	if err != nil {
+		return nil, err
+	}
+	password, err := cmd.Flags().GetString("password")
+	if err != nil {
+		return nil, err
+	}
 	saslMap := map[string]string{
 		"security.protocol": "SASL_SSL",
 		"sasl.mechanism":    "PLAIN",

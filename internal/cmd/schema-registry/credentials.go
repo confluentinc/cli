@@ -166,7 +166,6 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 	srCtx := context.WithValue(context.Background(), srsdk.ContextAccessToken, mdsToken)
 
 	srConfig.BasePath = endpoint
-
 	srConfig.UserAgent = ver.UserAgent
 	srConfig.HTTPClient = GetCAClient(caCertPath)
 	srClient := srsdk.NewAPIClient(srConfig)
@@ -174,7 +173,6 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil { // validate client
 		return nil, nil, errors.New("Failed to validate schema registry client with token.")
 	}
-
 	return srClient, srCtx, nil
 }
 
