@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -180,8 +181,14 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	for flag, val := range defaults {
-		switch val := val.(type) {
+	var flags []string
+	for flag := range defaults {
+		flags = append(flags, flag)
+	}
+	sort.Strings(flags)
+
+	for _, flag := range flags {
+		switch val := defaults[flag].(type) {
 		case bool:
 			c.Flags().Bool(flag, val, usage[flag])
 		case int:
