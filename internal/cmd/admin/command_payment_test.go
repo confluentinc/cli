@@ -50,7 +50,7 @@ func TestPaymentUpdate(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := c.update(cmd, test.prompt)
+		err := c.updateWithPrompt(cmd, test.prompt)
 		for _, expectedOutput := range test.expected {
 			require.Contains(t, buf.String(), expectedOutput)
 		}
@@ -120,7 +120,7 @@ func TestPaymentRegexValidation(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		err := c.update(cmd, test.prompt)
+		err := c.updateWithPrompt(cmd, test.prompt)
 		for _, expectedOutput := range test.expected {
 			require.Contains(t, buf.String(), expectedOutput)
 		}
