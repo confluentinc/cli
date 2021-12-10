@@ -7,11 +7,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -150,6 +151,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
+	produceCmd.Flags().String("sString", "", "The string of the schema.")
 	produceCmd.Flags().String("refs", "", "The path to the references file.") // TODO
 	produceCmd.Flags().String("tester", "", "The path to the local schema file.")
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -651,17 +653,33 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return err
+	}
+	if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return err
+		}
+	}
+
 	subject := topicName + "-value"
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
 	}
 	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo, _, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), nil)
+	metaInfo, referencePathMap, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath, nil)
+	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -778,11 +796,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
-	if err != nil {
-		return err
-	}
-
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -793,10 +806,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 	caLocation, err := cmd.Flags().GetString("ca-location")
-	if err != nil {
-		return err
-	}
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return err
 	}
@@ -820,6 +829,22 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		if err != nil {
 			return err
 		}
+	}
+
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		if err != nil {
+			if err.Error() == errors.NotLoggedInErrorMsg {
+				return new(errors.SRNotAuthenticatedError)
+			} else {
+				return err
+			}
+		}
+	} else {
+		srClient, ctx = nil, nil
 	}
 
 	consumer, err := ckafka.NewConsumer(configMap)
@@ -856,9 +881,11 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}
 
 	groupHandler := &GroupHandler{
+		SrClient:   srClient,
+		Ctx:        ctx,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir, Cloud: false, srEndpoint: srEndpoint, caCertPath: caCertPath, mdsToken: c.AuthToken()},
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 
 	// start consuming messages
@@ -919,12 +946,16 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
-		info, err := registerSchemaWithToken(cmd, c.AuthToken(), subject, schemaType, schemaPath)
+		srClient, ctx, err := sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		if err != nil {
+			return metaInfo, nil, err
+		}
+		info, err := c.registerSchemaWithToken(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}
 		metaInfo = info
-		referencePathMap, err = storeSchemaReferencesOnPrem(cmd, refs, c.AuthToken())
+		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}
@@ -932,63 +963,13 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 	return metaInfo, referencePathMap, nil
 }
 
-func storeSchemaReferencesOnPrem(cmd *cobra.Command, refs []srsdk.SchemaReference, mdsToken string) (map[string]string, error) {
-	dir := filepath.Join(os.TempDir(), "confluent-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	referencePathMap := map[string]string{}
-	for _, ref := range refs {
-		tempStorePath := filepath.Join(dir, ref.Name)
-		if !fileExists(tempStorePath) {
-			srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
-			if err != nil {
-				return nil, err
-			}
-			caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-			if err != nil {
-				return nil, err
-			}
-			err = GetAndWriteSchemaBySubject(srEndpoint, caCertPath, tempStorePath, ref.Subject, strconv.Itoa(int(ref.Version)), mdsToken)
-			if err != nil {
-				return nil, err
-			}
-		}
-		referencePathMap[ref.Name] = tempStorePath
-	}
-
-	return referencePathMap, nil
-}
-
-func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, schemaType, schemaPath string) ([]byte, error) {
-	srEndpoint, err := cmd.Flags().GetString("sr-endpoint")
-	if err != nil {
-		return nil, err
-	}
-	requestUrl := srEndpoint + "/subjects/" + subject + "/versions"
-
-	req, err := GetRegisterSchemaRequest(requestUrl, mdsToken, schemaType, schemaPath)
+func (c *authenticatedTopicCommand) registerSchemaWithToken(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
+	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
 
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
-	if err != nil {
-		return nil, err
-	}
-	client := GetCAClient(caCertPath)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	schemaId, err := ExtractSchemaIdFromResponse(resp)
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
 	if err != nil {
 		return nil, err
 	}
@@ -998,11 +979,11 @@ func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, schemaType, 
 		return nil, err
 	}
 	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, schemaId)
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
 		err = output.StructuredOutput(outputFormat, &struct {
 			Id int32 `json:"id" yaml:"id"`
-		}{schemaId})
+		}{response.Id})
 		if err != nil {
 			return nil, err
 		}
@@ -1010,7 +991,7 @@ func registerSchemaWithToken(cmd *cobra.Command, mdsToken, subject, schemaType, 
 
 	metaInfo := []byte{0x0}
 	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
 	metaInfo = append(metaInfo, schemaIdBuffer...)
 	return metaInfo, nil
 }

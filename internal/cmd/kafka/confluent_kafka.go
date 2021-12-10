@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -29,10 +28,6 @@ type ConsumerProperties struct {
 	PrintKey   bool
 	Delimiter  string
 	SchemaPath string
-	Cloud      bool
-	srEndpoint string
-	caCertPath string
-	mdsToken   string
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -161,7 +156,7 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	return configMap, nil
 }
 
-func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[string]string, error) {
+func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	if len(value) < messageOffset {
 		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
 	}
@@ -175,31 +170,24 @@ func (h *GroupHandler) RequestSchema(value []byte, cloud bool) (string, map[stri
 	var references []srsdk.SchemaReference
 	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		if cloud {
-			schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
-			if err != nil {
-				return "", nil, err
-			}
-			err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-			if err != nil {
-				return "", nil, err
-			}
-
-			refBytes, err := json.Marshal(schemaString.References)
-			if err != nil {
-				return "", nil, err
-			}
-			err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
-			if err != nil {
-				return "", nil, err
-			}
-			references = schemaString.References
-		} else {
-			err := GetAndWriteSchemaById(h.Properties.srEndpoint, h.Properties.caCertPath, tempStorePath, strconv.Itoa(int(schemaID)), h.Properties.mdsToken)
-			if err != nil {
-				return "", nil, err
-			}
+		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
+		if err != nil {
+			return "", nil, err
 		}
+		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		if err != nil {
+			return "", nil, err
+		}
+
+		refBytes, err := json.Marshal(schemaString.References)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		if err != nil {
+			return "", nil, err
+		}
+		references = schemaString.References
 	} else {
 		refBlob, err := ioutil.ReadFile(tempRefStorePath)
 		if err != nil {
@@ -242,7 +230,7 @@ func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if h.Format != "string" {
-		schemaPath, referencePathMap, err := h.RequestSchema(value, h.Properties.Cloud)
+		schemaPath, referencePathMap, err := h.RequestSchema(value)
 		if err != nil {
 			return err
 		}

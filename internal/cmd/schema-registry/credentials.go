@@ -2,6 +2,11 @@ package schemaregistry
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -141,4 +146,51 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		return srClient, srCtx, nil
 	}
+}
+
+func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	srConfig := srsdk.NewConfiguration()
+
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	endpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(endpoint) == 0 {
+		return nil, nil, errors.New("No schema registry endpoint specified.")
+	}
+
+	srCtx := context.WithValue(context.Background(), srsdk.ContextAccessToken, mdsToken)
+
+	srConfig.BasePath = endpoint
+
+	srConfig.UserAgent = ver.UserAgent
+	srConfig.HTTPClient = GetCAClient(caCertPath)
+	srClient := srsdk.NewAPIClient(srConfig)
+
+	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil { // validate client
+		return nil, nil, errors.New("Failed to validate schema registry client with token.")
+	}
+
+	return srClient, srCtx, nil
+}
+
+func GetCAClient(caCertPath string) *http.Client {
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		},
+	}
+	return client
 }
