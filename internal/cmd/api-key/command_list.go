@@ -143,7 +143,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
 			email = "<service account>"
 		} else {
-			auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
+			auditLog, enabled := pcmd.AreAuditLogsEnabled(c.State)
 			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
 				email = "<auditlog service account>"
 			} else {

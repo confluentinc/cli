@@ -190,23 +190,26 @@ func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
 }
 
 func (c *command) getAllUsers() ([]*orgv1.User, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	auditLog, enabled := pcmd.IsAuditLogsEnabled(c.State)
-	if enabled {
-		auditLogServiceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+
+	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok {
+		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
 		if err != nil {
 			return nil, err
 		}
-		serviceAccounts = append(serviceAccounts, auditLogServiceAccount)
+		users = append(users, serviceAccount)
 	}
+
 	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	return append(serviceAccounts, adminUsers...), nil
+	users = append(users, adminUsers...)
+
+	return users, nil
 }
 
 func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolver, client *ccloud.Client) (resourceType string, clusterId string, currentKey string, err error) {
