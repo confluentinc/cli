@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -58,6 +59,8 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	// True if audit-log is enabled
+	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
 	// Fixed string to check if output contains
@@ -105,8 +108,8 @@ func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 	err := covCollector.Setup()
 	req.NoError(err)
-	s.TestBackend = testserver.StartTestBackend(s.T())
-
+	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default not disable audit-log
+	os.Setenv("disable-audit-log", "false")
 	// dumb but effective
 	err = os.Chdir("..")
 	req.NoError(err)
@@ -190,6 +193,14 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
+		disableAuditLog := os.Getenv("disable-audit-log") == "true"
+		if disableAuditLog != tt.disableAuditLog {
+			s.TestBackend.Close()
+			s.TestBackend = nil
+			os.Setenv("disable-audit-log", strconv.FormatBool(tt.disableAuditLog))
+			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
+		}
+
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
@@ -221,6 +232,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 				fmt.Println(output)
 			}
 		}
+
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
 		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 		if *debug {

@@ -18,6 +18,7 @@ const (
 	accounts            = "/api/accounts"
 	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
+	auditLog            = "/api/audit_log"
 	cluster             = "/api/clusters/{id}"
 	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
@@ -58,9 +59,9 @@ type CloudRouter struct {
 }
 
 // New CloudRouter with all cloud handlers
-func NewCloudRouter(t *testing.T) *CloudRouter {
+func NewCloudRouter(t *testing.T, disableAuditLog bool) *CloudRouter {
 	c := NewEmptyCloudRouter()
-	c.buildCcloudRouter(t)
+	c.buildCcloudRouter(t, disableAuditLog)
 	return c
 }
 
@@ -72,9 +73,9 @@ func NewEmptyCloudRouter() *CloudRouter {
 }
 
 // Add handlers for cloud endpoints
-func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
+func (c *CloudRouter) buildCcloudRouter(t *testing.T, disableAuditLog bool) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
-	c.HandleFunc(me, c.HandleMe(t))
+	c.HandleFunc(me, c.HandleMe(t, disableAuditLog))
 	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))

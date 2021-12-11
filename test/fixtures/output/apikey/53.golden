@@ -1,0 +1,11 @@
+Error: required flag(s) "resource" not set
+Usage:
+  confluent api-key use <api-key> [flags]
+
+Flags:
+      --resource string   REQUIRED: The resource ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

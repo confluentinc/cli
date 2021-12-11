@@ -1,4 +1,4 @@
-Error: unable to set active API key: Unknown API key UNKNOWN
+Error: refusing to overwrite existing secret for API Key "UIAPIKEY100"
 
 Suggestions:
-    If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store UNKNOWN <secret>`.
+    If you would like to override the existing secret stored for API key "UIAPIKEY100", use `--force` flag.

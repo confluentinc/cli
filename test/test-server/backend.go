@@ -1,10 +1,14 @@
 package test_server
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"os/exec"
+	"syscall"
 	"testing"
 )
 
@@ -21,8 +25,8 @@ type TestBackend struct {
 	sr             *httptest.Server
 }
 
-func StartTestBackend(t *testing.T) *TestBackend {
-	cloudRouter := NewCloudRouter(t)
+func StartTestBackend(t *testing.T, auditLog bool) *TestBackend {
+	cloudRouter := NewCloudRouter(t, auditLog)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
 	srRouter := NewSRRouter(t)
@@ -56,6 +60,10 @@ func newTestCloudServer(handler http.Handler) *httptest.Server {
 		panic(err)
 	}
 
+	// cleanup if processes listening to the port
+	command := fmt.Sprintf("lsof -ti tcp:%s | grep LISTEN | awk '{print $2}' | xargs kill -9", "127")
+	exec_cmd(exec.Command("bash", "-c", command))
+
 	// Create a new listener with the hardcoded port
 	l, err := net.Listen("tcp", TestCloudURL.Host)
 	if err != nil {
@@ -66,6 +74,19 @@ func newTestCloudServer(handler http.Handler) *httptest.Server {
 	server.Start()
 
 	return server
+}
+
+func exec_cmd(cmd *exec.Cmd) {
+	if err := cmd.Run(); err != nil {
+		if err != nil {
+			os.Stderr.WriteString(fmt.Sprintf("Error: %s\n", err.Error()))
+		}
+		if exitError, ok := err.(*exec.ExitError); ok {
+			_ = exitError.Sys().(syscall.WaitStatus)
+		}
+	} else {
+		_ = cmd.ProcessState.Sys().(syscall.WaitStatus)
+	}
 }
 
 func (b *TestBackend) Close() {
