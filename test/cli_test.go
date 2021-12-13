@@ -59,7 +59,7 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
-	// True if audit-log is enabled
+	// True if audit-log is disabled
 	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
@@ -108,7 +108,7 @@ func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 	err := covCollector.Setup()
 	req.NoError(err)
-	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default not disable audit-log
+	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
 	os.Setenv("disable-audit-log", "false")
 	// dumb but effective
 	err = os.Chdir("..")
@@ -193,8 +193,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
-		disableAuditLog := os.Getenv("disable-audit-log") == "true"
-		if disableAuditLog != tt.disableAuditLog {
+		disableAuditLogEnvVar := os.Getenv("disable-audit-log") == "true"
+		if disableAuditLogEnvVar != tt.disableAuditLog {
 			s.TestBackend.Close()
 			s.TestBackend = nil
 			os.Setenv("disable-audit-log", strconv.FormatBool(tt.disableAuditLog))
