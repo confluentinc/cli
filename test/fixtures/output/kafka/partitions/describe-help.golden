@@ -16,7 +16,6 @@ Flags:
       --client-key-path string    Path to client private key, include for mTLS authentication.
       --no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
       --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
-      --context string            CLI context name.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
