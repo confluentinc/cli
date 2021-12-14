@@ -109,7 +109,7 @@ func (s *CLITestSuite) SetupSuite() {
 	err := covCollector.Setup()
 	req.NoError(err)
 	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
-	os.Setenv("disable-audit-log", "false")
+	os.Setenv("DISABLE_AUDIT_LOG", "false")
 	// dumb but effective
 	err = os.Chdir("..")
 	req.NoError(err)
@@ -193,11 +193,11 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
-		disableAuditLogEnvVar := os.Getenv("disable-audit-log") == "true"
+		disableAuditLogEnvVar := os.Getenv("DISABLE_AUDIT_LOG") == "true"
 		if disableAuditLogEnvVar != tt.disableAuditLog {
 			s.TestBackend.Close()
 			s.TestBackend = nil
-			os.Setenv("disable-audit-log", strconv.FormatBool(tt.disableAuditLog))
+			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
 			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
 		}
 
