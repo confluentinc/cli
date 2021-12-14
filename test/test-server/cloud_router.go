@@ -18,7 +18,6 @@ const (
 	accounts            = "/api/accounts"
 	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
-	auditLog            = "/api/audit_log"
 	cluster             = "/api/clusters/{id}"
 	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
