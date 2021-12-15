@@ -156,7 +156,7 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 		Config: v1.UnauthenticatedCloudConfigMock(),
 	}
 
-	err := cloudSignupCmd.Signup(cmd, prompt, mockCcloudClient())
+	err := cloudSignupCmd.signup(cmd, prompt, mockCcloudClient())
 	require.NoError(t, err)
 
 	for _, x := range expected {

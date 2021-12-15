@@ -31,23 +31,21 @@ type command struct {
 }
 
 func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
-	c := &command{
-		pcmd.NewAnonymousCLICommand(
-			&cobra.Command{
-				Use:   "cloud-signup",
-				Short: "Sign up for Confluent Cloud.",
-				Args:  cobra.NoArgs,
-			},
-			prerunner,
-		),
-		logger,
-		userAgent,
-		ccloudClientFactory,
+	cmd := &cobra.Command{
+		Use:   "cloud-signup",
+		Short: "Sign up for Confluent Cloud.",
+		Args:  cobra.NoArgs,
 	}
 
-	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
-
+	c := &command{
+		CLICommand:    pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		logger:        logger,
+		userAgent:     userAgent,
+		clientFactory: ccloudClientFactory,
+	}
 	c.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
+
+	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 
 	return c
 }
@@ -69,10 +67,10 @@ func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
 		Logger:     c.logger,
 	})
 
-	return c.Signup(cmd, form.NewPrompt(os.Stdin), client)
+	return c.signup(cmd, form.NewPrompt(os.Stdin), client)
 }
 
-func (c *command) Signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
+func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
 	utils.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
 	fEmailName := form.New(
 		form.Field{ID: "email", Prompt: "Email", Regex: "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"},

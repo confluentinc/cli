@@ -2,7 +2,7 @@ def config = jobConfig {
     nodeLabel = 'docker-oraclejdk8'
     properties = [
         parameters([
-            string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/acl_cli_test.py muckrake/tests/password_protection_cli_test.py muckrake/tests/rbac_kafka_cli_test.py', description: 'Use this to specify a test or subset of tests to run.'),
+            string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/acl_cli_test.py muckrake/tests/cli_partitions_test.py muckrake/tests/cli_topics_test.py muckrake/tests/password_protection_cli_test.py muckrake/tests/rbac_kafka_cli_test.py', description: 'Use this to specify a test or subset of tests to run.'),
             string(name: 'NUM_WORKERS', defaultValue: '15', description: 'Number of EC2 nodes to use when running the tests.'),
             string(name: 'INSTALL_TYPE', defaultValue: 'source', choices: ['distro', 'source', 'tarball'], description: 'Use tarball or source or distro'),
             string(name: 'RESOURCE_URL', defaultValue: '', description: 'If using tarball or distro [deb, rpm], specify S3 URL to download artifacts from'),
@@ -80,7 +80,7 @@ def job = {
                             export confluent_s3="https://s3-us-west-2.amazonaws.com"
                             git clone git@github.com:confluentinc/muckrake.git
                             cd muckrake
-                            git checkout 6.2.x-cli-unification
+                            git checkout 7.1.x
                             sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                             sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                             sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -105,7 +105,7 @@ def job = {
                 ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                 ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                 withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=6.2.x-cli-unification"]) {
+                    "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.1.x"]) {
                     withVaultFile([["maven/jenkins_maven_global_settings", "settings_xml",
                         "/home/jenkins/.m2/settings.xml", "MAVEN_GLOBAL_SETTINGS_FILE"],
                         ["gradle/gradle_properties_maven", "gradle_properties_file",
