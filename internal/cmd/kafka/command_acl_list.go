@@ -22,6 +22,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(resourceFlags())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 

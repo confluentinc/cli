@@ -93,7 +93,7 @@ func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
-		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, RoleBindingSubcommandFlags)
+		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	} else {
 		cliCmd = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
 	}
@@ -199,6 +199,7 @@ func (c *roleBindingCommand) init() {
 		listCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(listCmd, c.CLICommand)
 	}
 	pcmd.AddOutputFlag(listCmd)
 
@@ -230,6 +231,7 @@ func (c *roleBindingCommand) init() {
 		createCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(createCmd, c.CLICommand)
 	}
 	pcmd.AddOutputFlag(createCmd)
 	check(createCmd.MarkFlagRequired("role"))
@@ -261,6 +263,7 @@ func (c *roleBindingCommand) init() {
 		deleteCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(deleteCmd, c.CLICommand)
 	}
 	pcmd.AddOutputFlag(deleteCmd)
 	check(createCmd.MarkFlagRequired("role"))

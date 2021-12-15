@@ -95,6 +95,7 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

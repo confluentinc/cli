@@ -98,7 +98,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand.init()
 	} else {
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, OnPremTopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
@@ -157,6 +157,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	h.AddCommand(cmd)
 
@@ -181,6 +182,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
 	h.AddCommand(cmd)
 }
 
@@ -198,6 +200,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(listCmd, a.CLICommand)
 	pcmd.AddOutputFlag(listCmd)
 	a.AddCommand(listCmd)
 
@@ -218,6 +221,7 @@ func (a *authenticatedTopicCommand) init() {
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	pcmd.AddContextFlag(createCmd, a.CLICommand)
 	a.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
@@ -233,6 +237,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(describeCmd, a.CLICommand)
 	pcmd.AddOutputFlag(describeCmd)
 	a.AddCommand(describeCmd)
 
@@ -251,6 +256,7 @@ func (a *authenticatedTopicCommand) init() {
 	}
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	pcmd.AddContextFlag(updateCmd, a.CLICommand)
 	a.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -266,6 +272,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(deleteCmd, a.CLICommand)
 	a.AddCommand(deleteCmd)
 
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}

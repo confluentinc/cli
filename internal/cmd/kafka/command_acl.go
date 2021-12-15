@@ -9,6 +9,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -32,7 +33,7 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
 		Short: "Manage Kafka ACLs.",
 	}
 
-	flagMap := OnPremTopicSubcommandFlags
+	var flagMap map[string]*pflag.FlagSet
 	if cfg.IsCloudLogin() {
 		flagMap = AclSubcommandFlags
 	}

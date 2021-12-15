@@ -28,6 +28,7 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("all", false, "List clusters across all environments.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -23,6 +23,7 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
 	cmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

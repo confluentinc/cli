@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -15,6 +16,27 @@ import (
 func AddCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", strings.Join(kafka.Clouds, ", ")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
+}
+
+func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
+	cmd.Flags().String("context", "", "CLI context name.")
+	RegisterFlagCompletionFunc(cmd, "context", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteContexts(command.Config.Config)
+	})
+}
+
+func AutocompleteContexts(cfg *v1.Config) []string {
+	suggestions := make([]string, len(cfg.Contexts))
+	i := 0
+	for context := range cfg.Contexts {
+		suggestions[i] = context
+		i++
+	}
+	return suggestions
 }
 
 func AddOutputFlag(cmd *cobra.Command) {

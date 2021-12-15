@@ -20,7 +20,7 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &brokerCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, OnPremTopicSubcommandFlags)}
+	c := &brokerCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)}
 	c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
 
 	c.AddCommand(c.newDeleteCommand())

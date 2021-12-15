@@ -25,6 +25,7 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	cmd.Flags().AddFlagSet(aclutil.CreateACLFlags())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

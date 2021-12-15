@@ -34,6 +34,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

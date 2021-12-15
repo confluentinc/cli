@@ -23,6 +23,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.onPremList),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
