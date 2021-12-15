@@ -1,6 +1,7 @@
 +--------------------------------+---------------+
 | Name                           | myexporter    |
 | Subjects                       | foo, bar      |
+| Subject Format                 | my-${subject} |
 | Context Type                   | CUSTOM        |
 | Context                        | mycontext     |
 | Remote Schema Registry Configs | key1="value1" |

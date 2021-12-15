@@ -16,12 +16,13 @@ type command struct {
 func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cmd := &cobra.Command{
 		Use:         "environment",
+		Aliases:     []string{"env"},
 		Short:       "Manage and select Confluent Cloud environments.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SubcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 		analyticsClient:               analyticsClient,
 	}
 

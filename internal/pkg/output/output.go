@@ -1,15 +1,17 @@
 package output
 
-type Output int
-
 const (
-	Human Output = iota
+	Human output = iota
 	JSON
 	YAML
 )
 
+const FlagName = "output"
+
 var ValidFlagValues = []string{"human", "json", "yaml"}
 
-func (o Output) String() string {
+type output int
+
+func (o output) String() string {
 	return ValidFlagValues[o]
 }

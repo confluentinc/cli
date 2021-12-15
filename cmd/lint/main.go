@@ -24,8 +24,8 @@ var (
 
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
-		"Connect", "Control Center", "Enterprise", "IAM", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka", "RBAC",
-		"Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
+		"Connect", "Control Center", "Enterprise", "IAM", "ID", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka",
+		"RBAC", "Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
 	}
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "apikey", "apisecret", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",

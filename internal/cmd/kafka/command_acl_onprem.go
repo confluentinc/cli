@@ -7,7 +7,6 @@ import (
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
@@ -29,7 +28,8 @@ func (c *aclCommand) onPremInit() {
 	}
 	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	createCmd.Flags().AddFlagSet(aclutil.CreateACLFlags())
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(createCmd, c.CLICommand)
+	pcmd.AddOutputFlag(createCmd)
 	c.AddCommand(createCmd)
 
 	deleteCmd = &cobra.Command{
@@ -45,7 +45,8 @@ func (c *aclCommand) onPremInit() {
 	}
 	deleteCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	deleteCmd.Flags().AddFlagSet(aclutil.DeleteACLFlags())
-	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(deleteCmd, c.CLICommand)
+	pcmd.AddOutputFlag(deleteCmd)
 	c.AddCommand(deleteCmd)
 
 	listCmd = &cobra.Command{
@@ -66,7 +67,8 @@ func (c *aclCommand) onPremInit() {
 	}
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	listCmd.Flags().AddFlagSet(aclutil.AclFlags())
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(listCmd, c.CLICommand)
+	pcmd.AddOutputFlag(listCmd)
 	c.AddCommand(listCmd)
 }
 

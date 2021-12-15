@@ -132,7 +132,7 @@ func NewClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 
 	c.init(cfg)
@@ -154,7 +154,8 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		listCmd.Long = "List Kafka clusters that are registered with the MDS cluster registry."
 		listCmd.RunE = pcmd.NewCLIRunE(c.onPremList)
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(listCmd, c.CLICommand)
+	pcmd.AddOutputFlag(listCmd)
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
@@ -176,16 +177,16 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 			},
 		),
 	}
-
-	createCmd.Flags().String("cloud", "", "Cloud provider ID (e.g. 'aws' or 'gcp').")
-	createCmd.Flags().String("region", "", "Cloud region ID for cluster (e.g. 'us-west-2').")
+	pcmd.AddCloudFlag(createCmd)
+	pcmd.AddRegionFlag(createCmd, c.AuthenticatedCLICommand)
 	check(createCmd.MarkFlagRequired("cloud"))
 	check(createCmd.MarkFlagRequired("region"))
 	createCmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
 	createCmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	createCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	createCmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(createCmd, c.CLICommand)
+	pcmd.AddOutputFlag(createCmd)
 	c.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
@@ -196,8 +197,9 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		RunE:        pcmd.NewCLIRunE(c.describe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	describeCmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
+	pcmd.AddContextFlag(describeCmd, c.CLICommand)
+	pcmd.AddOutputFlag(describeCmd)
 	c.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
@@ -217,7 +219,8 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 	}
 	updateCmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	updateCmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
-	updateCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(updateCmd, c.CLICommand)
+	pcmd.AddOutputFlag(updateCmd)
 	c.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -227,7 +230,9 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		RunE:        pcmd.NewCLIRunE(c.delete),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(deleteCmd, c.CLICommand)
 	c.AddCommand(deleteCmd)
+
 	useCmd := &cobra.Command{
 		Use:         "use <id>",
 		Short:       "Make the Kafka cluster active for use in other commands.",
@@ -235,7 +240,9 @@ func (c *clusterCommand) init(cfg *v1.Config) {
 		RunE:        pcmd.NewCLIRunE(c.use),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(useCmd, c.CLICommand)
 	c.AddCommand(useCmd)
+
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
 }
 
@@ -687,11 +694,11 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
-	if _, err := c.Context.FindKafkaCluster(cmd, clusterID); err != nil {
+	if _, err := c.Context.FindKafkaCluster(clusterID); err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 
-	if err := c.Context.SetActiveKafkaCluster(cmd, clusterID); err != nil {
+	if err := c.Context.SetActiveKafkaCluster(clusterID); err != nil {
 		return err
 	}
 

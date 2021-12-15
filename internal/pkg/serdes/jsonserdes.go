@@ -11,16 +11,14 @@ import (
 )
 
 type JsonSerializationProvider struct {
-	schemaLoader gojsonschema.JSONLoader
+	schemaLoader *gojsonschema.Schema
 }
 
-func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string) error {
-	schema, err := ioutil.ReadFile(schemaPath)
+func (jsonProvider *JsonSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	schemaLoader, err := parseSchema(schemaPath, referencePathMap)
 	if err != nil {
-		return errors.New(errors.JsonSchemaInvalidErrorMsg)
+		return err
 	}
-
-	schemaLoader := gojsonschema.NewStringLoader(string(schema))
 	jsonProvider.schemaLoader = schemaLoader
 	return nil
 }
@@ -33,7 +31,7 @@ func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// Json schema conducts validation on Json string before serialization.
-	result, err := gojsonschema.Validate(jsonProvider.schemaLoader, documentLoader)
+	result, err := jsonProvider.schemaLoader.Validate(documentLoader)
 	if err != nil {
 		return nil, err
 	}
@@ -54,16 +52,14 @@ func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error
 }
 
 type JsonDeserializationProvider struct {
-	schemaLoader gojsonschema.JSONLoader
+	schemaLoader *gojsonschema.Schema
 }
 
-func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string) error {
-	schema, err := ioutil.ReadFile(schemaPath)
+func (jsonProvider *JsonDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	schemaLoader, err := parseSchema(schemaPath, referencePathMap)
 	if err != nil {
-		return errors.New(errors.JsonSchemaInvalidErrorMsg)
+		return err
 	}
-
-	schemaLoader := gojsonschema.NewStringLoader(string(schema))
 	jsonProvider.schemaLoader = schemaLoader
 	return nil
 }
@@ -78,7 +74,7 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// Json schema conducts validation on Json string before serialization.
-	result, err := gojsonschema.Validate(jsonProvider.schemaLoader, documentLoader)
+	result, err := jsonProvider.schemaLoader.Validate(documentLoader)
 	if err != nil {
 		return "", err
 	}
@@ -96,4 +92,26 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 		return "", err
 	}
 	return compactedBuffer.String(), nil
+}
+
+func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojsonschema.Schema, error) {
+	sl := gojsonschema.NewSchemaLoader()
+	for referenceName, referencePath := range referencePathMap {
+		refSchema, err := ioutil.ReadFile(referencePath)
+		if err != nil {
+			return nil, err
+		}
+		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
+		err = sl.AddSchema("/"+referenceName, referenceLoader)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, errors.New(errors.JsonSchemaInvalidErrorMsg)
+	}
+
+	return sl.Compile(gojsonschema.NewStringLoader(string(schema)))
 }

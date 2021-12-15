@@ -1,6 +1,7 @@
 package serdes
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
 
 	"github.com/linkedin/goavro/v2"
@@ -10,7 +11,11 @@ type AvroSerializationProvider struct {
 	codec *goavro.Codec
 }
 
-func (avroProvider *AvroSerializationProvider) LoadSchema(schemaPath string) error {
+func (avroProvider *AvroSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	if len(referencePathMap) > 0 {
+		return errors.New(errors.AvroReferenceNotSupportedErrorMsg)
+	}
+
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err
@@ -48,7 +53,11 @@ type AvroDeserializationProvider struct {
 	codec *goavro.Codec
 }
 
-func (avroProvider *AvroDeserializationProvider) LoadSchema(schemaPath string) error {
+func (avroProvider *AvroDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	if len(referencePathMap) > 0 {
+		return errors.New(errors.AvroReferenceNotSupportedErrorMsg)
+	}
+
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err

@@ -1,1 +1,4 @@
-Stored API secret for API key "UIAPIKEY101".
+Error: unable to set active API key: Unknown API key UNKNOWN
+
+Suggestions:
+    If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store UNKNOWN <secret>`.

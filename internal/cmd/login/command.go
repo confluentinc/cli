@@ -31,10 +31,25 @@ type Command struct {
 	isTest                  bool
 }
 
-func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
-	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
-	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
-	cmd := &Command{
+func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+	cmd := &cobra.Command{
+		Use:   "login",
+		Short: "Log in to Confluent Cloud or Confluent Platform.",
+		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
+			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
+		Args: cobra.NoArgs,
+	}
+
+	cmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
+	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
+	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
+	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
+
+	c := &Command{
+		CLICommand:              pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		logger:                  log,
 		analyticsClient:         analyticsClient,
 		mdsClientManager:        mdsClientManager,
@@ -44,35 +59,10 @@ func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CC
 		authTokenHandler:        authTokenHandler,
 		isTest:                  isTest,
 	}
-	cmd.init(prerunner)
-	return cmd
-}
 
-func (c *Command) init(prerunner pcmd.PreRunner) {
-	loginCmd := &cobra.Command{
-		Use:   "login",
-		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
-			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
-		Args:              cobra.NoArgs,
-		RunE:              pcmd.NewCLIRunE(c.login),
-		PersistentPreRunE: pcmd.NewCLIPreRunnerE(c.loginPreRunE),
-	}
+	cmd.RunE = pcmd.NewCLIRunE(c.login)
 
-	loginCmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
-	loginCmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-	loginCmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
-	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	loginCmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
-
-	c.CLICommand = pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
-}
-
-func (c *Command) loginPreRunE(cmd *cobra.Command, args []string) error {
-	c.analyticsClient.SetCommandType(analytics.Login)
-	return c.CLICommand.PersistentPreRunE(cmd, args)
+	return c
 }
 
 func (c *Command) login(cmd *cobra.Command, _ []string) error {
@@ -83,12 +73,12 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 
 	isCCloud := c.isCCloudURL(url)
 
-	url, valid, errMsg := validateURL(url, isCCloud)
-	if !valid {
-		return errors.New(errors.InvalidLoginURLMsg)
+	url, warningMsg, err := validateURL(url, isCCloud)
+	if err != nil {
+		return err
 	}
-	if errMsg != "" {
-		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
+	if warningMsg != "" {
+		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, warningMsg)
 	}
 
 	if isCCloud {
@@ -287,7 +277,18 @@ func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 	return nil
 }
 
-func validateURL(url string, isCCloud bool) (string, bool, string) {
+func validateURL(url string, isCCloud bool) (string, string, error) {
+	if isCCloud {
+		for _, hostname := range v1.CCloudHostnames {
+			if strings.Contains(url, hostname) {
+				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
+					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
+				} else {
+					break
+				}
+			}
+		}
+	}
 	protocolRgx, _ := regexp.Compile(`(\w+)://`)
 	portRgx, _ := regexp.Compile(`:(\d+\/?)`)
 
@@ -316,8 +317,11 @@ func validateURL(url string, isCCloud bool) (string, bool, string) {
 		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
 	}
 	matched, _ := regexp.MatchString(pattern, url)
+	if !matched {
+		return url, "", errors.New(errors.InvalidLoginURLMsg)
+	}
 
-	return url, matched, strings.Join(msg, " and ")
+	return url, strings.Join(msg, " and "), nil
 }
 
 func (c *Command) isCCloudURL(url string) bool {
@@ -326,10 +330,8 @@ func (c *Command) isCCloudURL(url string) bool {
 			return true
 		}
 	}
-
 	if c.isTest {
 		return strings.Contains(url, testserver.TestCloudURL.Host)
 	}
-
 	return false
 }

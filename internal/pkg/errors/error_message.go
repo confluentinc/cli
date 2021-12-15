@@ -34,7 +34,9 @@ const (
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// login command
-	NoEnvironmentFoundErrorMsg = "no environment found for authenticated user"
+	NoEnvironmentFoundErrorMsg					= "no environment found for authenticated user"
+	UnneccessaryUrlFlagForCloudLoginErrorMsg	= "there is no need to pass the url flag if you are logging in to Confluent Cloud"
+	UnneccessaryUrlFlagForCloudLoginSuggestions	= "Log in to Confluent Cloud with `confluent login`"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -46,7 +48,6 @@ const (
 	// connect and connector-catalog commands
 	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
 	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	PluginNameNotPassedErrorMsg        = "plugin name must be passed"
 	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
 
@@ -153,10 +154,11 @@ const (
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
 
 	// serialization/deserialization commands
-	JsonSchemaInvalidErrorMsg    = "the json schema is invalid"
-	JsonDocumentInvalidErrorMsg  = "the json document is invalid"
-	ProtoSchemaInvalidErrorMsg   = "the protobuf schema is invalid"
-	ProtoDocumentInvalidErrorMsg = "the protobuf document is invalid"
+	JsonSchemaInvalidErrorMsg         = "the JSON schema is invalid"
+	JsonDocumentInvalidErrorMsg       = "the JSON document is invalid"
+	AvroReferenceNotSupportedErrorMsg = "avro reference not supported in cloud CLI"
+	ProtoSchemaInvalidErrorMsg        = "the protobuf schema is invalid"
+	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
 	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"

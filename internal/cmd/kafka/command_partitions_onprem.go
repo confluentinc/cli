@@ -25,7 +25,7 @@ func NewPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Use:         "partition",
 				Short:       "Manage Kafka partitions.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, OnPremTopicSubcommandFlags),
+			}, prerunner, nil),
 	}
 	partitionCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand))
 	partitionCommand.init()
@@ -48,7 +48,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	listCmd.Flags().String("topic", "", "Topic name to list partitions of.")
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(listCmd)
 	_ = listCmd.MarkFlagRequired("topic")
 	partitionCmd.AddCommand(listCmd)
 
@@ -66,7 +66,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	describeCmd.Flags().String("topic", "", "Topic name to list partitions of.")
 	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(describeCmd)
 	_ = describeCmd.MarkFlagRequired("topic")
 	partitionCmd.AddCommand(describeCmd)
 
@@ -92,7 +92,7 @@ func (partitionCmd *partitionCommand) init() {
 	}
 	reassignmentsCmd.Flags().String("topic", "", "Topic name to search by.")
 	reassignmentsCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	reassignmentsCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(reassignmentsCmd)
 	partitionCmd.AddCommand(reassignmentsCmd)
 }
 
