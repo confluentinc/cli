@@ -41,7 +41,7 @@ func TestCallback(t *testing.T) {
 	go func() {
 		<-ch
 		// send mock request to server's callback endpoint
-		req, err := http.NewRequest("GET", mockUri, nil)
+		req, err := http.NewRequest(http.MethodGet, mockUri, nil)
 		require.NoError(t, err)
 		_, err = http.DefaultClient.Do(req)
 		require.NoError(t, err)
