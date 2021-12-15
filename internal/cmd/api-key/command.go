@@ -6,12 +6,10 @@ import (
 	"strings"
 
 	"github.com/c-bata/go-prompt"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,11 +29,6 @@ type command struct {
 
 const resourceFlagName = "resource"
 
-var subcommandFlags = map[string]*pflag.FlagSet{
-	"create": pcmd.EnvironmentContextSet(),
-	"store":  pcmd.EnvironmentContextSet(),
-}
-
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
@@ -44,7 +37,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 		keystore:                      keystore,
 		flagResolver:                  resolver,
 		analyticsClient:               analyticsClient,

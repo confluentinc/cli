@@ -15,6 +15,8 @@ func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.getConfig),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
