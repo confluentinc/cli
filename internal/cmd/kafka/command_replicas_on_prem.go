@@ -42,7 +42,7 @@ func (replicaCommand *replicaCommand) init() {
 		Long:  "List partition-replicas filtered by topic, partition, and broker via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the replicas for partition 1 of \"my_topic\" .",
+				Text: `List the replicas for partition 1 of "my_topic".`,
 				Code: "confluent kafka replica list --topic my_topic --partition 1",
 			},
 			examples.Example{
