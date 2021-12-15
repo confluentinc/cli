@@ -25,7 +25,7 @@ func New(prerunner pcmd.PreRunner, userAgent string, logger *log.Logger) *cobra.
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &command{StateFlagCommand: pcmd.NewAnonymousStateFlagCommand(cmd, prerunner, subcommandFlags)}
+	c := &command{pcmd.NewAnonymousStateFlagCommand(cmd, prerunner, subcommandFlags)}
 
 	c.AddCommand(newDescribeCommand(prerunner, userAgent, logger))
 	c.AddCommand(newListCommand(prerunner))
