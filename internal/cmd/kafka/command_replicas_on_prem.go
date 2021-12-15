@@ -26,7 +26,7 @@ func NewReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Use:         "replica",
 				Short:       "Manage Kafka replicas.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, OnPremTopicSubcommandFlags),
+			}, prerunner, nil),
 	}
 	replicaCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(replicaCommand.AuthenticatedCLICommand))
 	replicaCommand.init()
@@ -55,7 +55,7 @@ func (replicaCommand *replicaCommand) init() {
 	listCmd.Flags().Int32("partition", -1, "Partition ID.")
 	listCmd.Flags().Int32("broker", -1, "Broker ID.")
 	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(listCmd)
 	replicaCommand.AddCommand(listCmd)
 }
 
