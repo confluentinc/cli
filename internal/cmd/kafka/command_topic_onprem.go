@@ -4,10 +4,8 @@ package kafka
 import (
 	"bufio"
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -155,7 +153,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
-	produceCmd.Flags().String("sr-endpoint", "", "The url to schema registry cluster.")
+	produceCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(produceCmd)
 
@@ -177,7 +175,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
-	consumeCmd.Flags().String("sr-endpoint", "", "The url to schema registry cluster.")
+	consumeCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
 	c.AddCommand(consumeCmd)
 }
@@ -595,15 +593,15 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	configMap := GetOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification, caLocation)
+	configMap := getOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification, caLocation)
 	switch protocol {
 	case "SSL":
-		configMap, err = SetSSLConfig(cmd, configMap)
+		configMap, err = setSSLConfig(cmd, configMap)
 		if err != nil {
 			return err
 		}
 	case "SASL_SSL":
-		configMap, err = SetSASLConfig(cmd, configMap)
+		configMap, err = setSASLConfig(cmd, configMap)
 		if err != nil {
 			return err
 		}
@@ -801,18 +799,18 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	configMap, err := GetOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification, caLocation)
+	configMap, err := getOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification, caLocation)
 	if err != nil {
 		return err
 	}
 	switch protocol {
 	case "SSL":
-		configMap, err = SetSSLConfig(cmd, configMap)
+		configMap, err = setSSLConfig(cmd, configMap)
 		if err != nil {
 			return err
 		}
 	case "SASL_SSL":
-		configMap, err = SetSASLConfig(cmd, configMap)
+		configMap, err = setSASLConfig(cmd, configMap)
 		if err != nil {
 			return err
 		}
@@ -830,8 +828,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 				return err
 			}
 		}
-	} else {
-		srClient, ctx = nil, nil
 	}
 
 	consumer, err := ckafka.NewConsumer(configMap)
@@ -858,20 +854,20 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
-
-	dir := filepath.Join(os.TempDir(), "confluent-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return err
-		}
-	}
-
 	err = consumer.Subscribe(topicName, nil)
 	if err != nil {
 		return err
 	}
+
+	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+
+	dir := filepath.Join(os.TempDir(), "confluent-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.Mkdir(dir, 0755); err != nil {
+			return err
+		}
+	}
+
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
@@ -879,8 +875,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		Out:        cmd.OutOrStdout(),
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
-	err = RunConsumer(cmd, consumer, groupHandler)
-	return err
+	return runConsumer(cmd, consumer, groupHandler)
 }
 
 // validate that a topic exists before attempting to produce/consume messages
@@ -917,7 +912,7 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 		if err != nil {
 			return metaInfo, nil, err
 		}
-		info, err := c.registerSchemaWithToken(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		info, err := registerSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}
@@ -928,37 +923,4 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 		}
 	}
 	return metaInfo, referencePathMap, nil
-}
-
-func (c *authenticatedTopicCommand) registerSchemaWithToken(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
-	if err != nil {
-		return nil, err
-	}
-
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return nil, err
-	}
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		err = output.StructuredOutput(outputFormat, &struct {
-			Id int32 `json:"id" yaml:"id"`
-		}{response.Id})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
-	metaInfo = append(metaInfo, schemaIdBuffer...)
-	return metaInfo, nil
 }

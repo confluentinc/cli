@@ -67,7 +67,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafk
 	}
 }
 
-func GetOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerification bool, caLocation string) *ckafka.ConfigMap {
+func getOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerification bool, caLocation string) *ckafka.ConfigMap {
 	return &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
@@ -79,7 +79,7 @@ func GetOnPremProducerCommonConfig(clientID, bootstrap string, enableSSLVerifica
 	}
 }
 
-func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning, enableSSLVerification bool, caLocation string) (*ckafka.ConfigMap, error) {
+func getOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning, enableSSLVerification bool, caLocation string) (*ckafka.ConfigMap, error) {
 	configMap := &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
@@ -98,7 +98,7 @@ func GetOnPremConsumerCommonConfig(clientID, bootstrap, group string, beginning,
 	return configMap, nil
 }
 
-func SetSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+func setSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
 	certLocation, err := cmd.Flags().GetString("cert-location")
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func SetSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Conf
 	return configMap, nil
 }
 
-func SetSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
 	username, err := cmd.Flags().GetString("username")
 	if err != nil {
 		return nil, err
@@ -226,7 +226,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	return tempStorePath, referencePathMap, nil
 }
 
-func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
+func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	value := e.Value
 	if h.Properties.PrintKey {
 		key := e.Key
@@ -278,7 +278,7 @@ func ConsumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func RunConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -289,13 +289,13 @@ func RunConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 			consumer.Close()
 			run = false
 		default:
-			ev := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
-			if ev == nil {
+			event := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
+			if event == nil {
 				continue
 			}
-			switch e := ev.(type) {
+			switch e := event.(type) {
 			case *ckafka.Message:
-				err := ConsumeMessage(e, groupHandler)
+				err := consumeMessage(e, groupHandler)
 				if err != nil {
 					return err
 				}

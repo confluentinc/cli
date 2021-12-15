@@ -160,35 +160,28 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 		return nil, nil, err
 	}
 	if len(endpoint) == 0 {
-		return nil, nil, errors.New("No schema registry endpoint specified.")
+		return nil, nil, errors.New("no schema registry endpoint specified.")
 	}
 
 	srCtx := context.WithValue(context.Background(), srsdk.ContextAccessToken, mdsToken)
 
 	srConfig.BasePath = endpoint
 	srConfig.UserAgent = ver.UserAgent
-	srConfig.HTTPClient = GetCAClient(caCertPath)
+	srConfig.HTTPClient = getCAClient(caCertPath)
 	srClient := srsdk.NewAPIClient(srConfig)
 
 	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil { // validate client
-		return nil, nil, errors.New("Failed to validate schema registry client with token.")
+		return nil, nil, errors.New("failed to validate schema registry client with token.")
 	}
 	return srClient, srCtx, nil
 }
 
-func GetCAClient(caCertPath string) *http.Client {
+func getCAClient(caCertPath string) *http.Client {
 	caCert, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: caCertPool,
-			},
-		},
-	}
-	return client
+	return &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}}
 }

@@ -680,7 +680,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
+func registerSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
@@ -711,6 +711,25 @@ func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, sub
 	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
 	metaInfo = append(metaInfo, schemaIdBuffer...)
 	return metaInfo, nil
+}
+
+func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
+	var refs []srsdk.SchemaReference
+	refPath, err := cmd.Flags().GetString("refs")
+	if err != nil {
+		return nil, err
+	}
+	if refPath != "" {
+		refBlob, err := ioutil.ReadFile(refPath)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(refBlob, &refs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return refs, nil
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
@@ -965,27 +984,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Out:        cmd.OutOrStdout(),
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
-	err = RunConsumer(cmd, consumer, groupHandler)
-	return err
-}
-
-func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
-	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
-	if err != nil {
-		return nil, err
-	}
-	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(refBlob, &refs)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return refs, nil
+	return runConsumer(cmd, consumer, groupHandler)
 }
 
 // validate that a topic exists before attempting to produce/consume messages
@@ -1106,7 +1105,7 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 			}
 		}
 
-		info, err := h.registerSchemaWithAPIKey(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		info, err := registerSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}
