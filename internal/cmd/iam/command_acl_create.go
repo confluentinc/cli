@@ -34,6 +34,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(addACLFlags())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

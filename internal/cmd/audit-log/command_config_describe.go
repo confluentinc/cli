@@ -9,13 +9,17 @@ import (
 )
 
 func (c *configCommand) newDescribeCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Prints the audit log configuration spec object.",
 		Long:  `Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.`,
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	return cmd
 }
 
 func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {

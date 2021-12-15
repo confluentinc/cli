@@ -55,7 +55,7 @@ func NewBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Use:         "broker",
 				Short:       "Manage Kafka brokers.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, OnPremTopicSubcommandFlags),
+			}, prerunner, nil),
 	}
 	brokerCmd.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(brokerCmd.AuthenticatedCLICommand))
 	brokerCmd.init()
