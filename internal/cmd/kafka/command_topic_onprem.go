@@ -17,7 +17,6 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -142,7 +141,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SASL_SSL protocol (providing username and password).`,
-				Code: `confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap ":19091" --username user --password secret`,
+				Code: `confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap "localhost:19091" --username user --password secret`,
 			},
 		),
 	}
@@ -165,12 +164,12 @@ func (c *authenticatedTopicCommand) onPremInit() {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
-				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap ":19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
+				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap "localhost:19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
 		),
 	}
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
-	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	consumeCmd.Flags().String("group", "", "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
@@ -575,52 +574,30 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	bootstrap, err := cmd.Flags().GetString("bootstrap")
+	configMap, err := getOnPremProducerConfigMap(cmd, c.clientID)
 	if err != nil {
 		return err
-	}
-
-	protocol, err := cmd.Flags().GetString("protocol")
-	if err != nil {
-		return err
-	}
-	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
-	if err != nil {
-		return err
-	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
-	if err != nil {
-		return err
-	}
-
-	configMap := getOnPremProducerCommonConfig(c.clientID, bootstrap, enableSSLVerification, caLocation)
-	switch protocol {
-	case "SSL":
-		configMap, err = setSSLConfig(cmd, configMap)
-		if err != nil {
-			return err
-		}
-	case "SASL_SSL":
-		configMap, err = setSASLConfig(cmd, configMap)
-		if err != nil {
-			return err
-		}
 	}
 
 	producer, err := ckafka.NewProducer(configMap)
 	if err != nil {
 		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateProducerMsg, err)
+			c.logger.Warnf(errors.FailedToCreateProducerMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
 	c.logger.Tracef("Create producer succeeded")
 
+	err = refreshOAuthBearerToken(cmd, producer, c.AuthToken())
+	if err != nil {
+		return err
+	}
+
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
 		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+			c.logger.Warnf(errors.FailedToCreateAdminClientMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
@@ -755,16 +732,6 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	group, err := cmd.Flags().GetString("group")
-	if err != nil {
-		return err
-	}
-
-	beginning, err := cmd.Flags().GetBool("from-beginning")
-	if err != nil {
-		return err
-	}
-
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
@@ -780,40 +747,9 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	bootstrap, err := cmd.Flags().GetString("bootstrap")
+	configMap, err := getOnPremConsumerConfigMap(cmd, c.clientID)
 	if err != nil {
 		return err
-	}
-
-	protocol, err := cmd.Flags().GetString("protocol")
-	if err != nil {
-		return err
-	}
-
-	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
-	if err != nil {
-		return err
-	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
-	if err != nil {
-		return err
-	}
-
-	configMap, err := getOnPremConsumerCommonConfig(c.clientID, bootstrap, group, beginning, enableSSLVerification, caLocation)
-	if err != nil {
-		return err
-	}
-	switch protocol {
-	case "SSL":
-		configMap, err = setSSLConfig(cmd, configMap)
-		if err != nil {
-			return err
-		}
-	case "SASL_SSL":
-		configMap, err = setSASLConfig(cmd, configMap)
-		if err != nil {
-			return err
-		}
 	}
 
 	var srClient *srsdk.APIClient
@@ -833,16 +769,21 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	consumer, err := ckafka.NewConsumer(configMap)
 	if err != nil {
 		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
+			c.logger.Warnf(errors.FailedToCreateConsumerMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
 	c.logger.Tracef("Create consumer succeeded")
 
+	err = refreshOAuthBearerToken(cmd, consumer, c.AuthToken())
+	if err != nil {
+		return err
+	}
+
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+			c.logger.Warnf(errors.FailedToCreateAdminClientMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
