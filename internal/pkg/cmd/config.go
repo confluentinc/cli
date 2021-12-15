@@ -7,11 +7,11 @@ import (
 
 // KafkaCluster creates an schedv1 struct from the Kafka cluster of the current context.
 func KafkaCluster(cmd *cobra.Command, ctx *DynamicContext) (*schedv1.KafkaCluster, error) {
-	kcc, err := ctx.GetKafkaClusterForCommand(cmd)
+	kcc, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
-	envId, err := ctx.AuthenticatedEnvId(cmd)
+	envId, err := ctx.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
 	}

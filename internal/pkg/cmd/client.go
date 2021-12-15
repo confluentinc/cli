@@ -21,8 +21,8 @@ func NewContextClient(ctx *DynamicContext) *contextClient {
 	}
 }
 
-func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*schedv1.KafkaCluster, error) {
-	envId, err := c.context.AuthenticatedEnvId(cmd)
+func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
+	envId, err := c.context.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*sch
 }
 
 func (c *contextClient) FetchAPIKeyError(cmd *cobra.Command, apiKey string, clusterID string) error {
-	envId, err := c.context.AuthenticatedEnvId(cmd)
+	envId, err := c.context.AuthenticatedEnvId()
 	if err != nil {
 		return err
 	}

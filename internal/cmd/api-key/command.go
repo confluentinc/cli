@@ -475,12 +475,12 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		if resourceType != pcmd.KafkaResourceType {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 		}
-		cluster, err = c.Context.FindKafkaCluster(cmd, clusterId)
+		cluster, err = c.Context.FindKafkaCluster(clusterId)
 		if err != nil {
 			return err
 		}
 	} else {
-		cluster, err = c.Context.GetKafkaClusterForCommand(cmd)
+		cluster, err = c.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -555,7 +555,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if resourceType != pcmd.KafkaResourceType {
 		return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 	}
-	cluster, err := c.Context.FindKafkaCluster(cmd, clusterId)
+	cluster, err := c.Context.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err
 	}

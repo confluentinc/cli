@@ -25,7 +25,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 	if ctx == nil {
 		return false, new(errors.NotLoggedInError)
 	}
-	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId)
 	if err != nil {
 		return false, err
 	}
@@ -39,7 +39,7 @@ func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd 
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err
 	}

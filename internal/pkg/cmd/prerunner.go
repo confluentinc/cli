@@ -243,7 +243,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			return err
 		}
 		r.Logger.Flush()
-
+		//command.LaunchDarklyManager = r.LaunchDarkly
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
@@ -340,7 +340,7 @@ func (r *PreRun) setAuthenticatedContext(cobraCommand *cobra.Command, cliCommand
 	}
 	cliCommand.Context = ctx
 
-	state, err := ctx.AuthenticatedState(cobraCommand)
+	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return err
 	}
@@ -417,7 +417,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			state, err := ctx.AuthenticatedState(cliCmd.Command)
+			state, err := ctx.AuthenticatedState()
 			if err != nil {
 				return nil, err
 			}
@@ -441,7 +441,7 @@ func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (st
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_REST") == "" && !strings.Contains(cmd.Name(), "link") && !strings.Contains(cmd.Name(), "mirror") {
 		return "", nil
 	}
-	clusterConfig, err := ctx.GetKafkaClusterForCommand(cmd.Command)
+	clusterConfig, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
 	}
@@ -451,7 +451,7 @@ func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (st
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
 	client := NewContextClient(ctx)
-	kafkaCluster, err := client.FetchCluster(cmd.Command, clusterConfig.ID)
+	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
 	if err != nil {
 		return "", err
 	}
@@ -491,7 +491,7 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 	var userAgent string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
-		state, err := ctx.AuthenticatedState(cmd)
+		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return nil, err
 		}
@@ -742,7 +742,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 				return err
 			}
 
-			cluster, err := ctx.GetKafkaClusterForCommand(cmd)
+			cluster, err := ctx.GetKafkaClusterForCommand()
 			if err != nil {
 				return err
 			}

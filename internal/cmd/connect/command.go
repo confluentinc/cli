@@ -195,7 +195,7 @@ func (c *command) init() {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -307,7 +307,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -325,7 +325,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) pause(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) resume(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -448,7 +448,7 @@ func (c *command) ServerComplete() []prompt.Suggest {
 }
 
 func (c *command) fetchConnectors() (map[string]*opv1.ConnectorExpansion, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.Command)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}

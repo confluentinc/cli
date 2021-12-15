@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	launch_darkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"os"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -88,6 +89,8 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cfg, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
+	launch_darkly.InitLaunchDarklyManager(logger, isTest)
+	//launchDarklyManager := launch_darkly.NewLaunchDarklyManager(logger)
 
 	prerunner := &pcmd.PreRun{
 		Analytics:               analyticsClient,
@@ -102,6 +105,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		MDSClientManager:        mdsClientManager,
 		UpdateClient:            updateClient,
 		Version:                 ver,
+		//LaunchDarkly: 			 launchDarklyManager,
 	}
 
 	var serverCompleter completer.ServerSideCompleter

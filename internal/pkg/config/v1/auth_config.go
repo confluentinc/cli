@@ -2,7 +2,7 @@ package v1
 
 import orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
-// AuthConfig represents an authenticated user.
+// AuthConfig  	represents an authenticated user.
 type AuthConfig struct {
 	User         *orgv1.User         `json:"user"`
 	Account      *orgv1.Account      `json:"account"`

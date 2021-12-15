@@ -272,7 +272,7 @@ func (a *authenticatedTopicCommand) init() {
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -359,7 +359,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			i++
 		}
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -445,7 +445,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -535,7 +535,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if kafkaREST != nil && !dryRun {
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -632,7 +632,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := a.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -725,7 +725,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	level := h.Config.Logger.GetLevel()
 
 	topic := args[0]
-	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -878,7 +878,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cluster, err := h.Context.GetKafkaClusterForCommand(cmd)
+	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}

@@ -127,7 +127,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	if kafkaREST != nil {
 		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
 
-		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -278,7 +278,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}

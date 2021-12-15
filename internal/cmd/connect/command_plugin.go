@@ -95,7 +95,7 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]*pluginDisplay, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]*pluginDisplay, error)
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
