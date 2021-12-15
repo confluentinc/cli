@@ -16,6 +16,8 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

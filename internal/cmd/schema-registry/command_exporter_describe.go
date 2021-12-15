@@ -23,6 +23,8 @@ func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 	}
 
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

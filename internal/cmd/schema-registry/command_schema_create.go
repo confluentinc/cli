@@ -52,6 +52,8 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("schema")

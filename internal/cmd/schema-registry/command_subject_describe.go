@@ -28,6 +28,8 @@ func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

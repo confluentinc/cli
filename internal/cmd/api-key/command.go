@@ -2,7 +2,6 @@ package apikey
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -96,23 +95,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return AutocompleteApiKeys(c.EnvironmentId(), c.Client)
-}
-
-func AutocompleteApiKeys(environment string, client *ccloud.Client) []string {
-	apiKeys, err := client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: environment})
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(apiKeys))
-	for i, apiKey := range apiKeys {
-		if apiKey.UserId == 0 {
-			continue
-		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.Key, apiKey.Description)
-	}
-	return suggestions
+	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.Client)
 }
 
 func (c *command) Cmd() *cobra.Command {

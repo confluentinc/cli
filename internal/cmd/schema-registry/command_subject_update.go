@@ -29,6 +29,8 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 
 	addCompatibilityFlag(cmd)
 	addModeFlag(cmd)
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 
 	return cmd
 }

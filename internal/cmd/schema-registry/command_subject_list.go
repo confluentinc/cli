@@ -31,6 +31,8 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

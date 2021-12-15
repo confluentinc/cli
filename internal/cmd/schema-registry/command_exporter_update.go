@@ -33,6 +33,8 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 	addContextTypeFlag(cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
