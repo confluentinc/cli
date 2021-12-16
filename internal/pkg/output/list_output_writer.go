@@ -16,14 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-const (
-	FlagName      = "output"
-	ShortHandFlag = "o"
-	Usage         = `Specify the output format as "human", "json", or "yaml".`
-)
-
-var DefaultValue = Human.String()
-
 type ListOutputWriter interface {
 	/*
 		AddElement - Add an element to the list to output for StructuredListWriter
@@ -34,7 +26,7 @@ type ListOutputWriter interface {
 		Out - Create the output to the IO channel passed in during construction
 	*/
 	Out() error
-	GetOutputFormat() Output
+	GetOutputFormat() output
 	StableSort()
 }
 

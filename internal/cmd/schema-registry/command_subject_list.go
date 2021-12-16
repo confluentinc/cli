@@ -23,7 +23,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all subjects available in a Schema Registry:",
+				Text: "Retrieve all subjects available in a Schema Registry.",
 				Code: fmt.Sprintf("%s schema-registry subject list", version.CLIName),
 			},
 		),
@@ -31,7 +31,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -56,11 +56,15 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	listOpts := srsdk.ListOpts{Deleted: optional.NewBool(deleted), SubjectPrefix: optional.NewString(subjectPrefix)}
+	listOpts := srsdk.ListOpts{
+		Deleted:       optional.NewBool(deleted),
+		SubjectPrefix: optional.NewString(subjectPrefix),
+	}
 	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
 	if err != nil {
 		return err
 	}
+
 	if len(list) > 0 {
 		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Subject"}, []string{"Subject"}, []string{"subject"})
 		if err != nil {

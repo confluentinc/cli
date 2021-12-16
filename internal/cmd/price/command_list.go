@@ -57,7 +57,6 @@ var (
 )
 
 var (
-	clouds         = []string{"aws", "azure", "gcp"}
 	metrics        = mapToSlice(formatMetric)
 	clusterTypes   = mapToSlice(formatClusterType)
 	availabilities = mapToSlice(formatAvailability)
@@ -120,19 +119,22 @@ func (c *command) newListCommand() *cobra.Command {
 		}),
 	}
 
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", strings.Join(clouds, ", ")))
-	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("availability", "", fmt.Sprintf("Filter by availability (%s).", strings.Join(availabilities, ", ")))
 	cmd.Flags().String("cluster-type", "", fmt.Sprintf("Filter by cluster type (%s).", strings.Join(clusterTypes, ", ")))
 	cmd.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", strings.Join(networkTypes, ", ")))
 	cmd.Flags().String("metric", "", fmt.Sprintf("Filter by metric (%s).", strings.Join(metrics, ", ")))
 	cmd.Flags().Bool("legacy", false, "Show legacy cluster types.")
-	cmd.Flags().StringP(poutput.FlagName, poutput.ShortHandFlag, poutput.DefaultValue, poutput.Usage)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("region")
 
-	c.autocompleteFlags(cmd)
+	pcmd.RegisterFlagCompletionFunc(cmd, "availability", func(_ *cobra.Command, _ []string) []string { return availabilities })
+	pcmd.RegisterFlagCompletionFunc(cmd, "cluster-type", func(_ *cobra.Command, _ []string) []string { return clusterTypes })
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-type", func(_ *cobra.Command, _ []string) []string { return networkTypes })
+	pcmd.RegisterFlagCompletionFunc(cmd, "metric", func(_ *cobra.Command, _ []string) []string { return metrics })
 
 	return cmd
 }

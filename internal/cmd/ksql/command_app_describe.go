@@ -19,13 +19,14 @@ var (
 
 func (c *appCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe a ksqlDB app.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:               "describe <id>",
+		Short:             "Describe a ksqlDB app.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.describe),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

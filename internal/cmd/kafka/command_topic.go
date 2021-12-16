@@ -72,7 +72,7 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -98,7 +98,7 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand.init()
 	} else {
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, OnPremTopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
@@ -150,14 +150,15 @@ func (h *hasAPIKeyTopicCommand) init() {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 	cmd.Flags().String("delimiter", ":", "The key/value delimiter.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(cmd, h.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 	h.AddCommand(cmd)
 
 	cmd = &cobra.Command{
@@ -175,12 +176,13 @@ func (h *hasAPIKeyTopicCommand) init() {
 	}
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
 	h.AddCommand(cmd)
 }
 
@@ -198,10 +200,11 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(listCmd, a.CLICommand)
+	pcmd.AddOutputFlag(listCmd)
 	a.AddCommand(listCmd)
 
-	createCmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -218,6 +221,7 @@ func (a *authenticatedTopicCommand) init() {
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	pcmd.AddContextFlag(createCmd, a.CLICommand)
 	a.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
@@ -233,7 +237,8 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	describeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddContextFlag(describeCmd, a.CLICommand)
+	pcmd.AddOutputFlag(describeCmd)
 	a.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
@@ -251,6 +256,7 @@ func (a *authenticatedTopicCommand) init() {
 	}
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	pcmd.AddContextFlag(updateCmd, a.CLICommand)
 	a.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
@@ -266,6 +272,7 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddContextFlag(deleteCmd, a.CLICommand)
 	a.AddCommand(deleteCmd)
 
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}

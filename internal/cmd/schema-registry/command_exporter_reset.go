@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -17,7 +16,7 @@ func (c *exporterCommand) newResetCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.reset),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

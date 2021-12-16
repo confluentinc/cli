@@ -54,3 +54,8 @@ func newExporterCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *co
 
 	return c.Command
 }
+
+func addContextTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("context-type", "AUTO", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
+	pcmd.RegisterFlagCompletionFunc(cmd, "context-type", func(_ *cobra.Command, _ []string) []string { return []string{"AUTO", "CUSTOM", "NONE"} })
+}

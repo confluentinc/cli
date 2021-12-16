@@ -56,10 +56,12 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("schema")
 	_ = cmd.MarkFlagRequired("subject")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return []string{"AVRO", "PROTOBUF", "JSON"} })
 
 	return cmd
 }

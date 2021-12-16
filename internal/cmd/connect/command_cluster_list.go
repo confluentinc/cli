@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newListCommand() *cobra.Command {
@@ -16,7 +15,8 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
 
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

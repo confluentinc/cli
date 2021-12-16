@@ -12,7 +12,6 @@ import (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner       pcmd.PreRunner
 	logger          *log.Logger
 	srClient        *srsdk.APIClient
 	analyticsClient analytics.Client
@@ -32,7 +31,6 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 	}
 
 	c := &clusterCommand{
-		prerunner:       prerunner,
 		srClient:        srClient,
 		logger:          logger,
 		analyticsClient: analyticsClient,
@@ -41,7 +39,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 
 	c.AddCommand(c.newDescribeCommand())

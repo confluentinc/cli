@@ -25,10 +25,11 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &unregisterCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-
 	c.RunE = pcmd.NewCLIRunE(c.unregister)
 
 	c.Flags().String("cluster-name", "", "Cluster Name.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
 	_ = c.MarkFlagRequired("cluster-name")
 
 	return c.Command
