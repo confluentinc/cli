@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -58,6 +61,31 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient
 	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
 
 	return c
+}
+
+func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return AutocompleteClusters(c.EnvironmentId(), c.Client)
+}
+
+func AutocompleteClusters(environmentId string, client *ccloud.Client) []string {
+	clusters, err := pkafka.ListKafkaClusters(client, environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	}
+	return suggestions
 }
 
 func (c *clusterCommand) Cmd() *cobra.Command {

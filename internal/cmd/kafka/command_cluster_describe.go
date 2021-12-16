@@ -86,12 +86,13 @@ type describeStructWithKAPI struct {
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe [id]",
-		Short:       "Describe a Kafka cluster.",
-		Long:        "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
-		Args:        cobra.MaximumNArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.describe),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "describe [id]",
+		Short:             "Describe a Kafka cluster.",
+		Long:              "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.describe),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
