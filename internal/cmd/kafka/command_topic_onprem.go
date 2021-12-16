@@ -609,16 +609,6 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	parseKey, err := cmd.Flags().GetBool("parse-key")
-	if err != nil {
-		return err
-	}
-
-	delimiter, err := cmd.Flags().GetString("delimiter")
-	if err != nil {
-		return err
-	}
-
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return err
@@ -689,15 +679,9 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			continue
 		}
 
-		key, value, err := getMsgKeyAndValue(metaInfo, data, delimiter, parseKey, serializationProvider)
+		msg, err := getProduceMessage(cmd, metaInfo, topicName, data, serializationProvider)
 		if err != nil {
 			return err
-		}
-
-		msg := &ckafka.Message{
-			TopicPartition: ckafka.TopicPartition{Topic: &topicName, Partition: ckafka.PartitionAny},
-			Key:            []byte(key),
-			Value:          []byte(value),
 		}
 		err = producer.Produce(msg, deliveryChan)
 		if err != nil {

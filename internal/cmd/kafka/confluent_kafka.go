@@ -27,15 +27,14 @@ const (
 	messageOffset         = 5 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 	principalClaimNameKey = "principalClaimName"
 	principalKey          = "principal"
-	joseHeaderEncoded     = "eyJhbGciOiJub25lIn0" // {"alg":"none"}
 )
 
 var (
 	// Regex for sasl.oauthbearer.config, which constrains it to be
 	// 1 or more name=value pairs with optional ignored whitespace
-	oauthbearerConfigRegex = regexp.MustCompile("^(\\s*(\\w+)\\s*=\\s*(\\w+))+\\s*$")
+	oauthbearerConfigRegex = regexp.MustCompile(`^(\s*(\w+)\s*=\s*(\w+))+\s*$`)
 	// Regex used to extract name=value pairs from sasl.oauthbearer.config
-	oauthbearerNameEqualsValueRegex = regexp.MustCompile("(\\w+)\\s*=\\s*(\\w+)")
+	oauthbearerNameEqualsValueRegex = regexp.MustCompile(`(\w+)\s*=\s*(\w+)`)
 )
 
 type ConsumerProperties struct {
@@ -67,12 +66,18 @@ func refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle, tokenValu
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, tokenValue)
 		if retrieveErr != nil {
 			fmt.Fprintf(os.Stderr, "%% Token retrieval error: %v\n", retrieveErr)
-			client.SetOAuthBearerTokenFailure(retrieveErr.Error())
+			err = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
+			if err != nil {
+				return err
+			}
 		} else {
 			setTokenError := client.SetOAuthBearerToken(oauthBearerToken)
 			if setTokenError != nil {
 				fmt.Fprintf(os.Stderr, "%% Error setting token and extensions: %v\n", setTokenError)
-				client.SetOAuthBearerTokenFailure(setTokenError.Error())
+				err = client.SetOAuthBearerTokenFailure(setTokenError.Error())
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

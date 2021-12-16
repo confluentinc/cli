@@ -680,39 +680,6 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func registerSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
-	if err != nil {
-		return nil, err
-	}
-
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return nil, err
-	}
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		err = output.StructuredOutput(outputFormat, &struct {
-			Id int32 `json:"id" yaml:"id"`
-		}{response.Id})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
-	metaInfo = append(metaInfo, schemaIdBuffer...)
-	return metaInfo, nil
-}
-
 func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
 	refPath, err := cmd.Flags().GetString("refs")
@@ -765,11 +732,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	delim, err := cmd.Flags().GetString("delimiter")
-	if err != nil {
-		return err
-	}
-
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return err
@@ -785,11 +747,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	parseKey, err := cmd.Flags().GetBool("parse-key")
-	if err != nil {
-		return err
-	}
-
 	subject := topic + "-value"
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
@@ -801,7 +758,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("map:", referencePathMap)
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
@@ -849,17 +806,10 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			continue
 		}
 
-		key, value, err := getMsgKeyAndValue(metaInfo, data, delim, parseKey, serializationProvider)
+		msg, err := getProduceMessage(cmd, metaInfo, topic, data, serializationProvider)
 		if err != nil {
 			return err
 		}
-
-		msg := &ckafka.Message{
-			TopicPartition: ckafka.TopicPartition{Topic: &topic, Partition: ckafka.PartitionAny},
-			Key:            []byte(key),
-			Value:          []byte(value),
-		}
-
 		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
@@ -987,33 +937,6 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	return runConsumer(cmd, consumer, groupHandler)
 }
 
-// validate that a topic exists before attempting to produce/consume messages
-func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
-	timeout := 10 * time.Second
-	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
-	if err != nil {
-		if err.Error() == ckafka.ErrTransport.String() {
-			err = errors.New("API key may not be provisioned")
-		}
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
-	}
-
-	var foundTopic bool
-	for _, t := range metadata.Topics {
-		h.logger.Tracef("validateTopic: found topic " + t.Topic)
-		if topic == t.Topic {
-			foundTopic = true // no break so that we see all topics from the above printout
-		}
-	}
-	if !foundTopic {
-		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
-	}
-
-	h.logger.Tracef("validateTopic succeeded")
-	return nil
-}
-
 func printHumanDescribe(topicData *topicData) error {
 	configsTableLabels := []string{"Name", "Value"}
 	configsTableEntries := make([][]string, len(topicData.Config))
@@ -1081,6 +1004,33 @@ func (a *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, er
 	return resp, errors.CatchClusterNotReadyError(err, cluster.Id)
 }
 
+// validate that a topic exists before attempting to produce/consume messages
+func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+	timeout := 10 * time.Second
+	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
+	if err != nil {
+		if err.Error() == ckafka.ErrTransport.String() {
+			err = errors.New("API key may not be provisioned")
+		}
+		return fmt.Errorf("failed to obtain topics from client: %v", err)
+	}
+
+	var foundTopic bool
+	for _, t := range metadata.Topics {
+		h.logger.Tracef("validateTopic: found topic " + t.Topic)
+		if topic == t.Topic {
+			foundTopic = true // no break so that we see all topics from the above printout
+		}
+	}
+	if !foundTopic {
+		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+	}
+
+	h.logger.Tracef("validateTopic succeeded")
+	return nil
+}
+
 func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
@@ -1119,6 +1069,39 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 	return metaInfo, referencePathMap, nil
 }
 
+func registerSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
+	schema, err := ioutil.ReadFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
+	if err != nil {
+		return nil, err
+	}
+
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return nil, err
+	}
+	if outputFormat == output.Human.String() {
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+	} else {
+		err = output.StructuredOutput(outputFormat, &struct {
+			Id int32 `json:"id" yaml:"id"`
+		}{response.Id})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
+	metaInfo = append(metaInfo, schemaIdBuffer...)
+	return metaInfo, nil
+}
+
 func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -1147,10 +1130,31 @@ func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 	return referencePathMap, nil
 }
 
-func getMsgKeyAndValue(metaInfo []byte, data, delim string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
+func getProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return nil, err
+	}
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return nil, err
+	}
+	key, value, err := getMsgKeyAndValue(metaInfo, data, delimiter, parseKey, serializationProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ckafka.Message{
+		TopicPartition: ckafka.TopicPartition{Topic: &topicName, Partition: ckafka.PartitionAny},
+		Key:            []byte(key),
+		Value:          []byte(value),
+	}, nil
+}
+
+func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
 	var key, valueString string
 	if parseKey {
-		record := strings.SplitN(data, delim, 2)
+		record := strings.SplitN(data, delimiter, 2)
 		valueString = strings.TrimSpace(record[len(record)-1])
 
 		if len(record) == 2 {

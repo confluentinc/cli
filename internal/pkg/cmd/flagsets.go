@@ -65,7 +65,7 @@ func OnPremAuthenticationSet() *pflag.FlagSet {
 	set.String("bootstrap", "", `List of broker hosts, formatted as "host" or "host:port".`)
 	set.String("protocol", "SSL", "Security protocol used to communicate with brokers.")
 	set.String("mechanism", "PLAIN", "SASL_SSL mechanism used for authentication.")
-	set.String("oauthConfig", "", "SASL configuration for OAUTHBEARER mechanism.")
+	set.String("oauthConfig", "principalClaimName=confluent principal=admin", "Configuration for SASL_SSL/OAUTHBEARER mechanism.")
 	set.String("username", "", "SASL_SSL username for use with PLAIN mechanism.")
 	set.String("password", "", "SASL_SSL password for use with PLAIN mechanism.")
 	set.Bool("ssl-verification", false, "Enable OpenSSL's builtin broker (server) certificate verification.")
