@@ -77,7 +77,7 @@ a prefix.`)
 func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	var aclConfigs []*ACLConfiguration
 
-	if cmd.Name() == listCmd.Name() {
+	if cmd.Name() == "list" {
 		aclConfig := NewACLConfig()
 		cmd.Flags().Visit(fromArgs(aclConfig))
 		aclConfigs = append(aclConfigs, aclConfig)
