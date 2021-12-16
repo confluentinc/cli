@@ -33,14 +33,6 @@ func ClusterEnvironmentContextSet() *pflag.FlagSet {
 	return set
 }
 
-func KeySecretSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("key-secret", pflag.ExitOnError)
-	set.String("api-key", "", "API key.")
-	set.String("api-secret", "", "API key secret.")
-	set.SortFlags = false
-	return set
-}
-
 func OnPremKafkaRestSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-kafkarest", pflag.ExitOnError)
 	set.String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.")
@@ -51,11 +43,4 @@ func OnPremKafkaRestSet() *pflag.FlagSet {
 	set.Bool("prompt", false, "Bypass use of available login credentials and prompt for Kafka Rest credentials.")
 	set.SortFlags = false
 	return set
-}
-
-func CombineFlagSet(flagSet *pflag.FlagSet, toAdd ...*pflag.FlagSet) *pflag.FlagSet {
-	for _, set := range toAdd {
-		flagSet.AddFlagSet(set)
-	}
-	return flagSet
 }

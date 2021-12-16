@@ -712,12 +712,12 @@ func TestStateFlagCommand_AddCommand(t *testing.T) {
 
 	subcommandFlags := map[string]*pflag.FlagSet{
 		"one": pcmd.EnvironmentContextSet(),
-		"two": pcmd.KeySecretSet(),
+		"two": new(pflag.FlagSet),
 	}
 	// checked against to ensure that ONLY the intended flags are added
 	shouldNotHaveFlags := map[string]*pflag.FlagSet{
-		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one":  pcmd.KeySecretSet(),
+		"root": pcmd.EnvironmentSet(),
+		"one":  new(pflag.FlagSet),
 		"two":  pcmd.EnvironmentSet(),
 	}
 
@@ -755,12 +755,12 @@ func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
 
 	subcommandFlags := map[string]*pflag.FlagSet{
 		"one": pcmd.EnvironmentContextSet(),
-		"two": pcmd.KeySecretSet(),
+		"two": new(pflag.FlagSet),
 	}
 	// checked against to ensure that ONLY the intended flags are added
 	shouldNotHaveFlags := map[string]*pflag.FlagSet{
-		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one":  pcmd.KeySecretSet(),
+		"root": pcmd.EnvironmentSet(),
+		"one":  new(pflag.FlagSet),
 		"two":  pcmd.EnvironmentSet(),
 	}
 
@@ -798,12 +798,12 @@ func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
 
 	subcommandFlags := map[string]*pflag.FlagSet{
 		"one": pcmd.EnvironmentContextSet(),
-		"two": pcmd.KeySecretSet(),
+		"two": new(pflag.FlagSet),
 	}
 	// checked against to ensure that ONLY the intended flags are added
 	shouldNotHaveFlags := map[string]*pflag.FlagSet{
-		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one":  pcmd.KeySecretSet(),
+		"root": pcmd.EnvironmentSet(),
+		"one":  new(pflag.FlagSet),
 		"two":  pcmd.EnvironmentSet(),
 	}
 
