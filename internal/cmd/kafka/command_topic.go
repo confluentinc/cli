@@ -72,7 +72,7 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -82,7 +82,7 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 
 	if cfg.IsCloudLogin() {
 		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
-			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
+			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
 			prerunner:           prerunner,
 			logger:              logger,
 			clientID:            clientID,
@@ -90,7 +90,7 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.hasAPIKeyTopicCommand.init()
 
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, TopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
@@ -98,7 +98,7 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand.init()
 	} else {
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, OnPremTopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
@@ -108,6 +108,35 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 	}
 
 	return c
+}
+
+func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteTopics()
+}
+
+func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+	topics, err := c.getTopics()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(topics))
+	for i, topic := range topics {
+		var description string
+		if topic.Internal {
+			description = "Internal"
+		}
+		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
+	}
+	return suggestions
 }
 
 func (k *kafkaTopicCommand) Cmd() *cobra.Command {
@@ -157,6 +186,11 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("api-key", "", "API key.")
+	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
+	cmd.Flags().String("environment", "", "Environment ID.")
 	pcmd.AddOutputFlag(cmd)
 	h.AddCommand(cmd)
 
@@ -181,6 +215,11 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("api-key", "", "API key.")
+	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
+	cmd.Flags().String("environment", "", "Environment ID.")
 	h.AddCommand(cmd)
 }
 
@@ -198,10 +237,13 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(listCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(listCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(listCmd, a.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(listCmd)
 	a.AddCommand(listCmd)
 
-	createCmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -218,13 +260,17 @@ func (a *authenticatedTopicCommand) init() {
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	pcmd.AddClusterFlag(createCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(createCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(createCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <topic>",
-		Short: "Describe a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.describe),
+		Use:               "describe <topic>",
+		Short:             "Describe a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
+		RunE:              pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic.",
@@ -233,14 +279,18 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(describeCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(describeCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(describeCmd, a.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(describeCmd)
 	a.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <topic>",
-		Short: "Update a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.update),
+		Use:               "update <topic>",
+		Short:             "Update a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		RunE:              pcmd.NewCLIRunE(a.update),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
@@ -251,13 +301,17 @@ func (a *authenticatedTopicCommand) init() {
 	}
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	pcmd.AddClusterFlag(updateCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(updateCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(updateCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <topic>",
-		Short: "Delete a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.delete),
+		Use:               "delete <topic>",
+		Short:             "Delete a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
+		RunE:              pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
@@ -266,6 +320,9 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(deleteCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(deleteCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(deleteCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(deleteCmd)
 
 	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}

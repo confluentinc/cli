@@ -2,12 +2,12 @@ package environment
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/c-bata/go-prompt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
@@ -19,20 +19,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return autocompleteEnvironments(c.Client)
-}
-
-func autocompleteEnvironments(client *ccloud.Client) []string {
-	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(environments))
-	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", environment.Id, environment.Name)
-	}
-	return suggestions
+	return pcmd.AutocompleteEnvironments(c.Client)
 }
 
 func (c *command) Cmd() *cobra.Command {

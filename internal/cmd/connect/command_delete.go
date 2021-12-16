@@ -14,7 +14,7 @@ import (
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a connector.",
 		Args:              cobra.ExactArgs(1),
@@ -31,6 +31,12 @@ func (c *command) newDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {

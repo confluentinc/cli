@@ -25,7 +25,7 @@ func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &aclCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, AclSubcommandFlags)}
+	c := &aclCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())

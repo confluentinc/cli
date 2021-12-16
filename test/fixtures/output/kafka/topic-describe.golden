@@ -8,10 +8,10 @@ Describe the `my_topic` topic.
   $ confluent kafka topic describe my_topic
 
 Flags:
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
-      --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

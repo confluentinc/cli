@@ -58,22 +58,21 @@ type command struct {
 }
 
 func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
-	cli := &cobra.Command{
-		Use:               pversion.CLIName,
-		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
-		Long:              getLongDescription(cfg),
-		Version:           ver.Version,
-		DisableAutoGenTag: true,
+	cmd := &cobra.Command{
+		Use:     pversion.CLIName,
+		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
+		Long:    getLongDescription(cfg),
+		Version: ver.Version,
 	}
 
-	cli.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
+	cmd.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
 		pcmd.LabelRequiredFlags(cmd)
 		_ = help.WriteHelpTemplate(cmd)
 	})
 
-	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
-	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
-	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
+	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 
 	logger := log.New()
 
@@ -105,7 +104,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	var serverCompleter completer.ServerSideCompleter
-	shellCompleter := completer.NewShellCompleter(cli)
+	shellCompleter := completer.NewShellCompleter(cmd)
 	if cfg.IsCloudLogin() {
 		serverCompleter = shellCompleter.ServerSideCompleter
 	}
@@ -114,28 +113,28 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	connectCmd := connect.New(prerunner, analyticsClient)
 	environmentCmd := environment.New(prerunner, analyticsClient)
 
-	cli.AddCommand(admin.New(prerunner, isTest))
-	cli.AddCommand(apiKeyCmd.Command)
-	cli.AddCommand(auditlog.New(prerunner))
-	cli.AddCommand(cluster.New(prerunner, ver.UserAgent, logger))
-	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
-	cli.AddCommand(completion.New())
-	cli.AddCommand(context.New(prerunner, flagResolver))
-	cli.AddCommand(connectCmd.Command)
-	cli.AddCommand(environmentCmd.Command)
-	cli.AddCommand(iam.New(cfg, prerunner, serverCompleter))
-	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
-	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
-	cli.AddCommand(local.New(prerunner))
-	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
-	cli.AddCommand(price.New(prerunner))
-	cli.AddCommand(prompt.New(cfg))
-	cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
-	cli.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
-	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
-	cli.AddCommand(version.New(prerunner, ver))
+	cmd.AddCommand(admin.New(prerunner, isTest))
+	cmd.AddCommand(apiKeyCmd.Command)
+	cmd.AddCommand(auditlog.New(prerunner))
+	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent, logger))
+	cmd.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
+	cmd.AddCommand(completion.New())
+	cmd.AddCommand(context.New(prerunner, flagResolver))
+	cmd.AddCommand(connectCmd.Command)
+	cmd.AddCommand(environmentCmd.Command)
+	cmd.AddCommand(iam.New(cfg, prerunner, serverCompleter))
+	cmd.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
+	cmd.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
+	cmd.AddCommand(local.New(prerunner))
+	cmd.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
+	cmd.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
+	cmd.AddCommand(price.New(prerunner))
+	cmd.AddCommand(prompt.New(cfg))
+	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
+	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
+	cmd.AddCommand(shell.NewShellCmd(cmd, prerunner, cfg, shellCompleter, jwtValidator))
+	cmd.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
+	cmd.AddCommand(version.New(prerunner, ver))
 
 	if cfg.IsCloudLogin() {
 		serverCompleter.AddCommand(apiKeyCmd)
@@ -143,10 +142,10 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		serverCompleter.AddCommand(environmentCmd)
 	}
 
-	hideAndErrIfMissingRunRequirement(cli, cfg)
-	disableFlagSorting(cli)
+	hideAndErrIfMissingRunRequirement(cmd, cfg)
+	disableFlagSorting(cmd)
 
-	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
+	return &command{Command: cmd, Analytics: analyticsClient, logger: logger}
 }
 
 func getAnalyticsClient(isTest bool, cfg *v1.Config, cliVersion string, logger *log.Logger) analytics.Client {

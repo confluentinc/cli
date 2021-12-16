@@ -162,7 +162,7 @@ var flagRules = []linter.FlagRule{
 			"batch-size", "enable-systest-events", "formatter", "isolation-level", "line-reader", "max-block-ms",
 			"max-memory-bytes", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
 			"offset", "property", "request-required-acks", "request-timeout-ms", "retry-backoff-ms",
-			"socket-buffer-size", "timeout",
+			"socket-buffer-size", "timeout", "value-format",
 		),
 	),
 	linter.RequireFlagKebabCase,

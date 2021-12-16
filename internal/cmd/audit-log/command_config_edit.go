@@ -14,13 +14,17 @@ import (
 )
 
 func (c *configCommand) newEditCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "edit",
 		Short: "Edit the audit-log config spec interactively.",
 		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.edit),
 	}
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	return cmd
 }
 
 func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {

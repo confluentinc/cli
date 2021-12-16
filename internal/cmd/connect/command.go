@@ -36,7 +36,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		analyticsClient:               analyticsClient,
 	}
 

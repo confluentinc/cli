@@ -38,13 +38,13 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWri
 			Endpoint:  endpoint,
 		}
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			createReply := &schedv1.CreateSchemaRegistryClusterReply{Cluster: srCluster}
 			b, err := utilv1.MarshalJSONToBytes(createReply)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetSchemaRegistryClustersReply{Clusters: []*schedv1.SchemaRegistryCluster{srCluster}})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))

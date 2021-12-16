@@ -13,13 +13,17 @@ import (
 )
 
 func (c *command) newUseCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "use <id>",
 		Short:             "Switch to the specified Confluent Cloud environment.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              pcmd.NewCLIRunE(c.use),
 	}
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	return cmd
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {

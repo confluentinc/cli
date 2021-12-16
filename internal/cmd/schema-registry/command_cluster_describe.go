@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -30,7 +31,7 @@ type describeDisplay struct {
 	ServiceProvider string
 }
 
-func (c *clusterCommand) newDescribeCommand() *cobra.Command {
+func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe the Schema Registry cluster for this environment.",
@@ -39,6 +40,12 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

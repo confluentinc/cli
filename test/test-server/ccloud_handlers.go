@@ -134,12 +134,12 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 		envId := vars["id"]
 		if valid, env := isValidEnvironmentId(environments, envId); valid {
 			switch r.Method {
-			case "GET":
+			case http.MethodGet:
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
-			case "PUT":
+			case http.MethodPut:
 				req := &orgv1.UpdateAccountRequest{}
 				err := utilv1.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)
@@ -148,7 +148,7 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
-			case "DELETE":
+			case http.MethodDelete:
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
@@ -166,12 +166,12 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 // Handler for: "/api/accounts"
 func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
-		} else if r.Method == "POST" {
+		} else if r.Method == http.MethodPost {
 			req := &orgv1.CreateAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -194,7 +194,7 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter,
 func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST": //admin payment update
+		case http.MethodPost: //admin payment update
 			req := &orgv1.UpdatePaymentInfoRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -203,7 +203,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, 
 			res := &orgv1.UpdatePaymentInfoReply{}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
-		case "GET": // admin payment describe
+		case http.MethodGet: // admin payment describe
 			res := orgv1.GetPaymentInfoReply{
 				Card: &orgv1.Card{
 					Cardholder: "Miles Todzo",
@@ -251,7 +251,7 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			var tenDollars int64 = 10 * 10000
 
 			// The time is set to noon so that all time zones display the same local time
@@ -279,7 +279,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWrit
 			require.NoError(t, err)
 			_, err = w.Write(listReply)
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			res := &billingv1.ClaimPromoCodeReply{}
 
 			err := json.NewEncoder(w).Encode(res)
@@ -292,7 +292,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWrit
 func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			serviceAccount := &orgv1.User{
 				Id:                 serviceAccountID,
 				ResourceId:         serviceAccountResourceID,
@@ -305,7 +305,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			req := &orgv1.CreateServiceAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -322,7 +322,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(createReply))
 			require.NoError(t, err)
-		case "PUT":
+		case http.MethodPut:
 			req := &orgv1.UpdateServiceAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -333,7 +333,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(updateReply))
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 			req := &orgv1.DeleteServiceAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -356,7 +356,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 		userId := int32(id)
 
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			res := &orgv1.GetServiceAccountReply{
 				User: &orgv1.User{
 					Id:         userId,
@@ -375,7 +375,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 // Handler for: "/api/api_keys"
 func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
 			req := &schedv1.CreateApiKeyRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -397,7 +397,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
-		} else if r.Method == "GET" {
+		} else if r.Method == http.MethodGet {
 			require.NotEmpty(t, r.URL.Query().Get("account_id"))
 			apiKeys := apiKeysFilter(r.URL)
 			// Return sorted data or the test output will not be stable
@@ -419,7 +419,7 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 		require.NoError(t, err)
 		index := int32(keyId)
 		apiKey := keyStore[index]
-		if r.Method == "PUT" {
+		if r.Method == http.MethodPut {
 			req := &schedv1.UpdateApiKeyRequest{}
 			err = utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -432,7 +432,7 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
-		} else if r.Method == "DELETE" {
+		} else if r.Method == http.MethodDelete {
 			req := &schedv1.DeleteApiKeyRequest{}
 			err = utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -478,9 +478,9 @@ func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r
 			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
 		}
 
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
 			c.HandleKafkaClusterCreate(t)(w, r)
-		} else if r.Method == "GET" {
+		} else if r.Method == http.MethodGet {
 			cluster := schedv1.KafkaCluster{
 				Id:              "lkc-123",
 				Name:            "abc",
@@ -587,14 +587,14 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) func(http.ResponseWriter, *http.
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
 			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
-		} else if r.Method == "GET" {
+		} else if r.Method == http.MethodGet {
 			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
 				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
 			})
@@ -653,7 +653,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) func(http.ResponseWriter, *http.R
 // Handler for: "/api/users"
 func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			users := []*orgv1.User{
 				buildUser(1, "bstrauch@confluent.io", "Brian", "Strauch", "u11"),
 				buildUser(2, "mtodzo@confluent.io", "Miles", "Todzo", "u-17"),
@@ -809,7 +809,7 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 // Handler for: "/api/invitations"
 func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
 				Invitations: []*orgv1.Invitation{
 					buildInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
@@ -819,7 +819,7 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
-		} else if r.Method == "POST" {
+		} else if r.Method == http.MethodPost {
 			body, _ := ioutil.ReadAll(r.Body)
 			bs := string(body)
 			var res flowv1.CreateInvitationReply
@@ -868,7 +868,7 @@ func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *
 		vars := mux.Vars(r)
 		envId := vars["env"]
 		clusterId := vars["cluster"]
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			connectorExpansion := &opv1.ConnectorExpansion{
 				Id: &opv1.ConnectorId{Id: "lcc-123"},
 				Info: &opv1.ConnectorInfo{
@@ -883,7 +883,7 @@ func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
-		} else if r.Method == "POST" {
+		} else if r.Method == http.MethodPost {
 			var request opv1.ConnectorInfo
 			err := utilv1.UnmarshalJSON(r.Body, &request)
 			require.NoError(t, err)
@@ -905,7 +905,7 @@ func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors-plugins"
 func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			connectorPlugin1 := &opv1.ConnectorPluginInfo{
 				Class: "GcsSink",
 				Type:  "Sink",
