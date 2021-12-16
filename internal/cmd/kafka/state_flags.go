@@ -31,5 +31,5 @@ var MirrorSubcommandFlags = map[string]*pflag.FlagSet{
 }
 
 var ProduceAndConsumeFlags = map[string]*pflag.FlagSet{
-	"topic": pcmd.CombineFlagSet(pcmd.ClusterEnvironmentContextSet(), pcmd.KeySecretSet()),
+	"topic": pcmd.ClusterEnvironmentContextSet(),
 }

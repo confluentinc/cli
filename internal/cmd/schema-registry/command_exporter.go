@@ -37,7 +37,7 @@ func newExporterCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *co
 	}
 
 	c := &exporterCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ExporterSubcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 		srClient:                      srClient,
 	}
 

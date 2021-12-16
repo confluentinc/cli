@@ -33,6 +33,8 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 
 	addCompatibilityFlag(cmd)
 	addModeFlag(cmd)
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

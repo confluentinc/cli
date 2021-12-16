@@ -20,7 +20,7 @@ func newSchemaCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobr
 	}
 
 	c := &schemaCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 		srClient:                      srClient,
 	}
 
