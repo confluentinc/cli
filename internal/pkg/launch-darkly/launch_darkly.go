@@ -221,6 +221,6 @@ func contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
 }
 
 func parsePkcFromBootstrap(bootstrap string) string {
-	r := regexp.MustCompile(`(?P<Pkc>pkc-.+?(?=\.))`)
+	r := regexp.MustCompile("pkc-([^.]+)")//`(?P<Pkc>pkc-.+?(?=\.))`)
 	return r.FindString(bootstrap)
 }
