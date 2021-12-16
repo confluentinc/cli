@@ -13,7 +13,7 @@ import (
 // Handler for: "/security/1.0/registry/clusters"
 func (m MdsRouter) HandleRegistryClusters(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			w.Header().Set("Content-Type", "text/json")
 			clusterType := r.URL.Query().Get("clusterType")
 			response := `[ {
@@ -73,12 +73,12 @@ func (m MdsRouter) HandleRegistryClusters(t *testing.T) func(http.ResponseWriter
 			require.NoError(t, err)
 		}
 
-		if r.Method == "DELETE" {
+		if r.Method == http.MethodDelete {
 			clusterName := r.URL.Query().Get("clusterName")
 			require.NotEmpty(t, clusterName)
 		}
 
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
 			var clusterInfos []*mds.ClusterInfo
 			err := json.NewDecoder(r.Body).Decode(&clusterInfos)
 			require.NoError(t, err)
