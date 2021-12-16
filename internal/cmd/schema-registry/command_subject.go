@@ -20,7 +20,7 @@ func newSubjectCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cob
 	}
 
 	c := &subjectCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SubjectSubcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
 		srClient:                      srClient,
 	}
 
