@@ -16,7 +16,8 @@ type replicaCommand struct {
 
 var (
 	replicaListFields = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsInSync"}
-	replicaHumanFields = []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Leader", "In Sync"}
+	replicaStatusListFields = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsObserver", "IsIsrEligible", "IsInIsr", "IsCaughtUp", "LogStartOffset", "LogEndOffset", "LastCaughtUpTimeMs", "LastFetchTimeMs", "LinkName"}
+	replicaHumanFields = []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Leader", "Observer", "Isr Eligible", "In Isr", "Caught Up", "Log Start Offset", "Log End Offset", "Last Caught Up Time Ms", "Last Fetch Time Ms", "Link Name"}
 )
 
 func NewReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -60,7 +61,7 @@ func (replicaCommand *replicaCommand) init() {
 }
 
 func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error {
-	topic, partitionId, brokerId, err := validateFlagCombo(cmd)
+	topic, partitionId, _, err := validateFlagCombo(cmd)
 	if err != nil {
 		return err
 	}
@@ -72,30 +73,49 @@ func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error
 	if err != nil {
 		return nil
 	}
-	var replicaDataList kafkarestv3.ReplicaDataList
+	//var replicaDataList kafkarestv3.ReplicaDataList
+	var replicaStatusDataList kafkarestv3.ReplicaStatusDataList
 	var resp *http.Response
-	if partitionId != -1 && topic != "" {
-		if brokerId != -1 {
-			var replicaData kafkarestv3.ReplicaData
-			replicaData, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(restContext, clusterId, topic, partitionId, brokerId)
-			replicaDataList.Data = append(replicaDataList.Data, replicaData)
-		} else {
-			replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
-		}
+	if partitionId != -1 {
+		replicaStatusDataList, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
 	} else {
-		replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
+		replicaStatusDataList, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(restContext, clusterId, topic)
 	}
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, replicaListFields, replicaHumanFields, camelToSnake(replicaListFields))
+	outputWriter, err := output.NewListOutputWriter(cmd, replicaStatusListFields, replicaHumanFields, camelToSnake(replicaStatusListFields))
 	if err != nil {
 		return err
 	}
-	for _, data := range replicaDataList.Data {
+	for _, data := range replicaStatusDataList.Data {
 		outputWriter.AddElement(&data)
 	}
 	return outputWriter.Out()
+	//restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
+	//restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(restContext, clusterId, topic)
+	//if partitionId != -1 && topic != "" {
+	//	if brokerId != -1 {
+	//		var replicaData kafkarestv3.ReplicaData
+	//		replicaData, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(restContext, clusterId, topic, partitionId, brokerId)
+	//		replicaDataList.Data = append(replicaDataList.Data, replicaData)
+	//	} else {
+	//		replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
+	//	}
+	//} else {
+	//	replicaDataList, resp, err = restClient.ReplicaApi.ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(restContext, clusterId, brokerId)
+	//}
+	//if err != nil {
+	//	return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+	//}
+	//outputWriter, err := output.NewListOutputWriter(cmd, replicaListFields, replicaHumanFields, camelToSnake(replicaListFields))
+	//if err != nil {
+	//	return err
+	//}
+	//for _, data := range replicaDataList.Data {
+	//	outputWriter.AddElement(&data)
+	//}
+	//return outputWriter.Out()
 }
 
 func validateFlagCombo(cmd *cobra.Command) (string, int32, int32, error) {
