@@ -16,6 +16,8 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

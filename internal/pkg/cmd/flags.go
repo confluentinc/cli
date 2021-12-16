@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
@@ -32,9 +33,33 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 func AutocompleteContexts(cfg *v1.Config) []string {
 	suggestions := make([]string, len(cfg.Contexts))
 	i := 0
-	for context := range cfg.Contexts {
-		suggestions[i] = context
+	for ctx := range cfg.Contexts {
+		suggestions[i] = ctx
 		i++
+	}
+	return suggestions
+}
+
+func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("environment", "", "Environment ID.")
+	RegisterFlagCompletionFunc(cmd, "environment", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteEnvironments(command.Client)
+	})
+}
+
+func AutocompleteEnvironments(client *ccloud.Client) []string {
+	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(environments))
+	for i, environment := range environments {
+		suggestions[i] = fmt.Sprintf("%s\t%s", environment.Id, environment.Name)
 	}
 	return suggestions
 }

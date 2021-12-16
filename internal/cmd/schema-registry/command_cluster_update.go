@@ -7,12 +7,13 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *clusterCommand) newUpdateCommand() *cobra.Command {
+func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
 		Short:       "Update global mode or compatibility of Schema Registry.",
@@ -33,6 +34,9 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	addCompatibilityFlag(cmd)
 	addModeFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 
 	return cmd
 }

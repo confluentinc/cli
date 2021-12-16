@@ -7,9 +7,6 @@ import (
 )
 
 var subcommandFlags = map[string]*pflag.FlagSet{
-	"list":           pcmd.EnvironmentContextSet(),
 	"create":         pcmd.ClusterEnvironmentContextSet(),
-	"describe":       pcmd.EnvironmentContextSet(),
-	"delete":         pcmd.EnvironmentContextSet(),
 	"configure-acls": pcmd.ClusterEnvironmentContextSet(),
 }

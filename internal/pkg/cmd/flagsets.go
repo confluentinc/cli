@@ -2,13 +2,6 @@ package cmd
 
 import "github.com/spf13/pflag"
 
-func EnvironmentSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("environment state", pflag.ExitOnError)
-	set.String("environment", "", "Environment ID.")
-	set.SortFlags = false
-	return set
-}
-
 func ClusterSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("cluster state", pflag.ExitOnError)
 	set.String("cluster", "", "Kafka cluster ID.")
@@ -16,17 +9,9 @@ func ClusterSet() *pflag.FlagSet {
 	return set
 }
 
-func EnvironmentContextSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("env-context state", pflag.ExitOnError)
-	set.AddFlagSet(EnvironmentSet())
-	set.String("context", "", "CLI context name.")
-	set.SortFlags = false
-	return set
-}
-
 func ClusterEnvironmentContextSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("cluster-env-context state", pflag.ExitOnError)
-	set.AddFlagSet(EnvironmentSet())
+	set.String("environment", "", "Environment ID.")
 	set.AddFlagSet(ClusterSet())
 	set.String("context", "", "CLI context name.")
 	set.SortFlags = false

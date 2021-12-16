@@ -7,19 +7,18 @@ import (
 )
 
 var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"enable":   pcmd.EnvironmentContextSet(),
-	"describe": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
-	"update":   pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
+	"describe": pcmd.KeySecretSet(),
+	"update":   pcmd.KeySecretSet(),
 }
 
 var SubjectSubcommandFlags = map[string]*pflag.FlagSet{
-	"subject": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
+	"subject": pcmd.KeySecretSet(),
 }
 
 var SchemaSubcommandFlags = map[string]*pflag.FlagSet{
-	"schema": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
+	"schema": pcmd.KeySecretSet(),
 }
 
 var ExporterSubcommandFlags = map[string]*pflag.FlagSet{
-	"exporter": pcmd.CombineFlagSet(pcmd.KeySecretSet(), pcmd.EnvironmentContextSet()),
+	"exporter": pcmd.KeySecretSet(),
 }

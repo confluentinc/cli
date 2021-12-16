@@ -6,11 +6,12 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *clusterCommand) newUseCommand() *cobra.Command {
+func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "use <id>",
 		Short:       "Make the Kafka cluster active for use in other commands.",
@@ -20,6 +21,9 @@ func (c *clusterCommand) newUseCommand() *cobra.Command {
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 
 	return cmd
 }

@@ -16,6 +16,8 @@ func (c *exporterCommand) newResumeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.resume),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
