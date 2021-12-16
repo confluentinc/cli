@@ -27,6 +27,9 @@ func (c *lagCommand) newGetCommand() *cobra.Command {
 
 	cmd.Flags().String("topic", "", "Topic name.")
 	cmd.Flags().Int32("partition", 0, "Partition ID.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("topic")

@@ -22,7 +22,7 @@ func NewLagCommand(prerunner pcmd.PreRunner, groupCmd *consumerGroupCommand) *la
 	}
 
 	c := &lagCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, LagSubcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		consumerGroupCommand:          groupCmd,
 	}
 

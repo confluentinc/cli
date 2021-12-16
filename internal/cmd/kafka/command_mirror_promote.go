@@ -26,6 +26,9 @@ func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 
 	cmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(linkFlagName)

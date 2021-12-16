@@ -29,13 +29,13 @@ import (
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
-	Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error
-	Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
-	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
-	HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error
-	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error
-	ParseFlagsIntoContext(cmd *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	AnonymousParseFlagsIntoContext(cmd *CLICommand) func(*cobra.Command, []string) error
+	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
+	Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
+	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
+	HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error
+	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
+	ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
+	AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
 }
 
 const DoNotTrack = "do-not-track-analytics"
@@ -77,91 +77,71 @@ type AuthenticatedCLICommand struct {
 
 type AuthenticatedStateFlagCommand struct {
 	*AuthenticatedCLICommand
-	subcommandFlags map[string]*pflag.FlagSet
 }
 
 type StateFlagCommand struct {
 	*CLICommand
-	subcommandFlags map[string]*pflag.FlagSet
 }
 
 type HasAPIKeyCLICommand struct {
 	*CLICommand
-	Context         *DynamicContext
-	subcommandFlags map[string]*pflag.FlagSet
+	Context *DynamicContext
 }
 
-func NewAuthenticatedCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
-	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-	}
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(cmd))
-	cmd.Command = command
-
-	return cmd
+func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
+	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(c))
+	c.Command = cmd
+	return c
 }
 
-func (cmd *AuthenticatedCLICommand) SetPersistentPreRunE(persistenPreRunE func(cmd *cobra.Command, args []string) error) {
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(persistenPreRunE)
+func (c *AuthenticatedCLICommand) SetPersistentPreRunE(persistentPreRunE func(*cobra.Command, []string) error) {
+	c.PersistentPreRunE = NewCLIPreRunnerE(persistentPreRunE)
 }
 
 // Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
-func NewAuthenticatedStateFlagCommand(cmd *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
-	c := &AuthenticatedStateFlagCommand{
-		NewAuthenticatedCLICommand(cmd, prerunner),
-		flagMap,
-	}
+func NewAuthenticatedStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedStateFlagCommand {
+	c := &AuthenticatedStateFlagCommand{NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
 	c.Command = cmd
 	return c
 }
 
 // Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
-func NewAuthenticatedWithMDSStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *AuthenticatedStateFlagCommand {
-	cmd := &AuthenticatedStateFlagCommand{
-		NewAuthenticatedWithMDSCLICommand(command, prerunner),
-		flagMap,
-	}
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(cmd.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(cmd.AuthenticatedCLICommand))
-	cmd.Command = command
-	return cmd
+func NewAuthenticatedWithMDSStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedStateFlagCommand {
+	c := &AuthenticatedStateFlagCommand{NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
+	c.Command = cmd
+	return c
 }
 
 // Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
-func NewAnonymousStateFlagCommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *StateFlagCommand {
-	cmd := &StateFlagCommand{
-		NewAnonymousCLICommand(command, prerunner),
-		flagMap,
-	}
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd.CLICommand, false), prerunner.AnonymousParseFlagsIntoContext(cmd.CLICommand))
-	cmd.Command = command
-	return cmd
+func NewAnonymousStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *StateFlagCommand {
+	c := &StateFlagCommand{NewAnonymousCLICommand(cmd, prerunner)}
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(c.CLICommand, false), prerunner.AnonymousParseFlagsIntoContext(c.CLICommand))
+	c.Command = cmd
+	return c
 }
 
-func NewAuthenticatedWithMDSCLICommand(command *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
-	cmd := &AuthenticatedCLICommand{
-		CLICommand: NewCLICommand(command, prerunner),
-	}
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(cmd))
-	cmd.Command = command
-	return cmd
+func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
+	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(c))
+	c.Command = cmd
+	return c
 }
 
-func NewHasAPIKeyCLICommand(command *cobra.Command, prerunner PreRunner, flagMap map[string]*pflag.FlagSet) *HasAPIKeyCLICommand {
-	cmd := &HasAPIKeyCLICommand{
-		CLICommand:      NewCLICommand(command, prerunner),
-		subcommandFlags: flagMap,
-	}
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(cmd))
-	cmd.Command = command
-	return cmd
+func NewHasAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
+	c := &HasAPIKeyCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(c))
+	c.Command = cmd
+	return c
 }
 
-func NewAnonymousCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
-	cmd := NewCLICommand(command, prerunner)
-	command.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(cmd, false))
-	cmd.Command = command
-	return cmd
+func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
+	c := NewCLICommand(cmd, prerunner)
+	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(c, false))
+	c.Command = cmd
+	return c
 }
 
 func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
@@ -173,36 +153,30 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 }
 
 func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
-	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
 	s.AuthenticatedCLICommand.AddCommand(command)
 }
 
-func (a *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
-	a.Command.AddCommand(command)
+func (c *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
+	c.Command.AddCommand(command)
 }
 
 func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(s.subcommandFlags[s.Name()])
-	command.Flags().AddFlagSet(s.subcommandFlags[command.Name()])
 	s.Command.AddCommand(command)
 }
 
-func (a *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
-	return (*a.KafkaRESTProvider)()
+func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
+	return (*c.KafkaRESTProvider)()
 }
 
-func (a *AuthenticatedCLICommand) AuthToken() string {
-	return a.State.AuthToken
+func (c *AuthenticatedCLICommand) AuthToken() string {
+	return c.State.AuthToken
 }
 
-func (a *AuthenticatedCLICommand) EnvironmentId() string {
-	return a.State.Auth.Account.Id
+func (c *AuthenticatedCLICommand) EnvironmentId() string {
+	return c.State.Auth.Account.Id
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.Flags().AddFlagSet(h.subcommandFlags[h.Name()])
-	command.Flags().AddFlagSet(h.subcommandFlags[command.Name()])
 	command.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(command)
 }

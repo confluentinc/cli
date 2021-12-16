@@ -23,7 +23,9 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclConfigFlags())
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

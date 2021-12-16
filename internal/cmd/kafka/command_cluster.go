@@ -1,10 +1,7 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/c-bata/go-prompt"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -36,9 +33,9 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient
 	c := &clusterCommand{analyticsClient: analyticsClient}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	}
 
 	deleteCmd := c.newDeleteCommand(cfg)
@@ -72,20 +69,7 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return AutocompleteClusters(c.EnvironmentId(), c.Client)
-}
-
-func AutocompleteClusters(environmentId string, client *ccloud.Client) []string {
-	clusters, err := pkafka.ListKafkaClusters(client, environmentId)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
-	}
-	return suggestions
+	return pcmd.AutocompleteClusters(c.EnvironmentId(), c.Client)
 }
 
 func (c *clusterCommand) Cmd() *cobra.Command {

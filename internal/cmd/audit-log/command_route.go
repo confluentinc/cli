@@ -21,7 +21,7 @@ func newRouteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &routeCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)}
+	c := &routeCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newListCommand())
 	c.AddCommand(c.newLookupCommand())

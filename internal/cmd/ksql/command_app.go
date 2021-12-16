@@ -3,12 +3,13 @@ package ksql
 import (
 	"context"
 	"fmt"
-  
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/dghubble/sling"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
@@ -43,7 +44,7 @@ func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *
 	}
 
 	c := &appCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		analyticsClient:               analyticsClient,
 	}
 

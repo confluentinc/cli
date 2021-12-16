@@ -31,6 +31,9 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

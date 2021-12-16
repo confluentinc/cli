@@ -62,7 +62,6 @@ func aclEntryFlags() *pflag.FlagSet {
 // resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
-	//flgSet.String("cluster", "", "The Confluent Cloud cluster ID.")
 	flgSet.Bool("cluster-scope", false, `Modify ACLs for the cluster.`)
 	flgSet.String("topic", "", `Modify ACLs for the specified topic resource.`)
 	flgSet.String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")

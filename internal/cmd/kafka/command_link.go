@@ -23,7 +23,7 @@ func newLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &linkCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, LinkSubcommandFlags)}
+	c := &linkCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())

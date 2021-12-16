@@ -13,7 +13,7 @@ import (
 )
 
 func (c *command) newResumeCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "resume <id>",
 		Short:             "Resume a connector.",
 		Args:              cobra.ExactArgs(1),
@@ -30,6 +30,12 @@ func (c *command) newResumeCommand() *cobra.Command {
 			},
 		),
 	}
+
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	return cmd
 }
 
 func (c *command) resume(cmd *cobra.Command, args []string) error {

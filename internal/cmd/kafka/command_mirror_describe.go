@@ -24,6 +24,9 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(linkFlagName, "", "Cluster link name.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(linkFlagName)

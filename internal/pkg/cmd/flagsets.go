@@ -2,22 +2,6 @@ package cmd
 
 import "github.com/spf13/pflag"
 
-func ClusterSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("cluster state", pflag.ExitOnError)
-	set.String("cluster", "", "Kafka cluster ID.")
-	set.SortFlags = false
-	return set
-}
-
-func ClusterEnvironmentContextSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("cluster-env-context state", pflag.ExitOnError)
-	set.String("environment", "", "Environment ID.")
-	set.AddFlagSet(ClusterSet())
-	set.String("context", "", "CLI context name.")
-	set.SortFlags = false
-	return set
-}
-
 func OnPremKafkaRestSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-kafkarest", pflag.ExitOnError)
 	set.String("url", "", "Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.")
