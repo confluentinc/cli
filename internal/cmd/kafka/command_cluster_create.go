@@ -14,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -61,7 +62,7 @@ type validateEncryptionKeyInput struct {
 	AccountID      string
 }
 
-func (c *clusterCommand) newCreateCommand() *cobra.Command {
+func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
@@ -89,6 +90,9 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")

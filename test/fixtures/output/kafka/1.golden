@@ -17,8 +17,8 @@ Flags:
       --cku int                 Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.
       --encryption-key string   Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).
       --context string          CLI context name.
-  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
       --environment string      Environment ID.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

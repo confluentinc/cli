@@ -8,11 +8,12 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *clusterCommand) newDeleteCommand() *cobra.Command {
+func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete <id>",
 		Short:       "Delete a Kafka cluster.",
@@ -22,6 +23,9 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 
 	return cmd
 }

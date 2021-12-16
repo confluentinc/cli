@@ -33,17 +33,17 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient
 	c := &clusterCommand{analyticsClient: analyticsClient}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 
-	deleteCmd := c.newDeleteCommand()
-	describeCmd := c.newDescribeCommand()
-	updateCmd := c.newUpdateCommand()
-	useCmd := c.newUseCommand()
+	deleteCmd := c.newDeleteCommand(cfg)
+	describeCmd := c.newDescribeCommand(cfg)
+	updateCmd := c.newUpdateCommand(cfg)
+	useCmd := c.newUseCommand(cfg)
 
-	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newCreateCommand(cfg))
 	c.AddCommand(deleteCmd)
 	c.AddCommand(describeCmd)
 	c.AddCommand(updateCmd)
