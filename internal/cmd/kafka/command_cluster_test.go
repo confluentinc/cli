@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
 	"time"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/google/go-cmp/cmp"
@@ -164,7 +165,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	}
 	suite.logger = log.New()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := NewClusterCommand(conf, prerunner, suite.analyticsClient)
+	cmd := newClusterCommand(conf, prerunner, suite.analyticsClient)
 	return cmd
 }
 

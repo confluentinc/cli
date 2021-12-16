@@ -18,7 +18,7 @@ type partitionCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	partitionCommand := &partitionCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
