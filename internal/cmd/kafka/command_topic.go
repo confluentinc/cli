@@ -72,7 +72,7 @@ type topicData struct {
 }
 
 // NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -108,6 +108,35 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 	}
 
 	return c
+}
+
+func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteTopics()
+}
+
+func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+	topics, err := c.getTopics()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(topics))
+	for i, topic := range topics {
+		var description string
+		if topic.Internal {
+			description = "Internal"
+		}
+		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
+	}
+	return suggestions
 }
 
 func (k *kafkaTopicCommand) Cmd() *cobra.Command {
@@ -208,7 +237,7 @@ func (a *authenticatedTopicCommand) init() {
 	pcmd.AddOutputFlag(listCmd)
 	a.AddCommand(listCmd)
 
-	createCmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -229,10 +258,11 @@ func (a *authenticatedTopicCommand) init() {
 	a.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <topic>",
-		Short: "Describe a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.describe),
+		Use:               "describe <topic>",
+		Short:             "Describe a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
+		RunE:              pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic.",
@@ -246,10 +276,11 @@ func (a *authenticatedTopicCommand) init() {
 	a.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <topic>",
-		Short: "Update a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.update),
+		Use:               "update <topic>",
+		Short:             "Update a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		RunE:              pcmd.NewCLIRunE(a.update),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
@@ -264,10 +295,11 @@ func (a *authenticatedTopicCommand) init() {
 	a.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <topic>",
-		Short: "Delete a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.delete),
+		Use:               "delete <topic>",
+		Short:             "Delete a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
+		RunE:              pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",

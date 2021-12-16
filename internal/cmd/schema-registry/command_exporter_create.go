@@ -31,6 +31,8 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("config-file")

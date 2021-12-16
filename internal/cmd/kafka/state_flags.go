@@ -10,10 +10,6 @@ var AclSubcommandFlags = map[string]*pflag.FlagSet{
 	"acl": pcmd.ClusterEnvironmentContextSet(),
 }
 
-var ClusterSubcommandFlags = map[string]*pflag.FlagSet{
-	"cluster": pcmd.EnvironmentContextSet(),
-}
-
 var GroupSubcommandFlags = map[string]*pflag.FlagSet{
 	"consumer-group": pcmd.ClusterEnvironmentContextSet(),
 }
