@@ -171,7 +171,7 @@ func (c *Command) initFlags(mode string) {
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
 	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"]+"\n") // "\n" separates the CLI flags from the Kafka flags
 
 	// Kafka Flags
 	defaults := kafkaConsumeDefaultValues
