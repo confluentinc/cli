@@ -126,6 +126,31 @@ func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner, serverCom
 	return c
 }
 
+func (c *consumerGroupCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteConsumerGroups()
+}
+
+func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
+	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedStateFlagCommand)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(consumerGroupDataList.Data))
+	for i, consumerGroup := range consumerGroupDataList.Data {
+		suggestions[i] = consumerGroup.ConsumerGroupId
+	}
+	return suggestions
+}
+
 func (c *consumerGroupCommand) Cmd() *cobra.Command {
 	return c.Command
 }
@@ -150,13 +175,12 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarest
 	if err != nil {
 		return nil, err
 	}
-	groupCmdResp, httpResp, err :=
-		kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(
-			kafkaREST.Context,
-			lkc)
+
+	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(kafkaREST.Context, lkc)
 	if err != nil {
 		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
+
 	return &groupCmdResp, nil
 }
 

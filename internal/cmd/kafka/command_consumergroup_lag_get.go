@@ -10,11 +10,12 @@ import (
 
 func (c *lagCommand) newGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get <consumer-group>",
-		Short: "Get consumer lag for a Kafka topic partition.",
-		Long:  "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.getLag),
+		Use:               "get <consumer-group>",
+		Short:             "Get consumer lag for a Kafka topic partition.",
+		Long:              "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.getLag),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get the consumer lag for topic `my-topic` partition `0` consumed by consumer-group `my-consumer-group`.",

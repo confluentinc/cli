@@ -35,10 +35,11 @@ var (
 
 func (c *lagCommand) newSummarizeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "summarize <consumer-group>",
-		Short: "Summarize consumer lag for a Kafka consumer group.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.summarize),
+		Use:               "summarize <consumer-group>",
+		Short:             "Summarize consumer lag for a Kafka consumer group.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.summarize),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Summarize the lag for the `my-consumer-group` consumer-group.",
