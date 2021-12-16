@@ -193,8 +193,8 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
-		disableAuditLogEnvVar := os.Getenv("DISABLE_AUDIT_LOG") == "true"
-		if disableAuditLogEnvVar != tt.disableAuditLog {
+		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
+		if isAuditLogDisabled != tt.disableAuditLog {
 			s.TestBackend.Close()
 			s.TestBackend = nil
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
