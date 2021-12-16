@@ -36,7 +36,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		keystore:                      keystore,
 		flagResolver:                  resolver,
 		analyticsClient:               analyticsClient,

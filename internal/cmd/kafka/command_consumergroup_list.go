@@ -29,6 +29,9 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 		Hidden: true,
 	}
 
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

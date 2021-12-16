@@ -684,7 +684,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
-			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r, nil)
+			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 			root.Flags().String("api-key", "", "Kafka cluster API key.")
 			root.Flags().String("api-secret", "", "API key secret.")

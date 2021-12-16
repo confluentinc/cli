@@ -52,6 +52,30 @@ func AddCloudFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
+func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteClusters(command.EnvironmentId(), command.Client)
+	})
+}
+
+func AutocompleteClusters(environmentId string, client *ccloud.Client) []string {
+	clusters, err := kafka.ListKafkaClusters(client, environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	}
+	return suggestions
+}
+
 func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	cmd.Flags().String("context", "", "CLI context name.")
 

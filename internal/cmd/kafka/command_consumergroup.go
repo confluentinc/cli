@@ -103,7 +103,7 @@ func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner, serverCom
 	}
 
 	c := &consumerGroupCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, GroupSubcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		serverCompleter:               serverCompleter,
 	}
 
