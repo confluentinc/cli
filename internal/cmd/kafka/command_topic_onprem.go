@@ -153,7 +153,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	produceCmd.Flags().String("delimiter", ":", "The key/value delimiter.")
 	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	produceCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	produceCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(produceCmd)
 	c.AddCommand(produceCmd)
 
 	consumeCmd := &cobra.Command{
@@ -175,7 +175,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
 	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	consumeCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	consumeCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+	pcmd.AddOutputFlag(consumeCmd)
 	c.AddCommand(consumeCmd)
 }
 
