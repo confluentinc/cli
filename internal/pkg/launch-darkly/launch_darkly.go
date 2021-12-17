@@ -23,10 +23,14 @@ const (
 	testEnvClientId = "61af57740127630ce47de5bd"
 )
 
+// Global LdManager
+var LdManager LaunchDarklyManager
+
 type LaunchDarklyManager interface {
 	BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool
 	StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string
 	IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int
+	JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{}
 }
 
 type FeatureFlagManager struct {
@@ -36,7 +40,7 @@ type FeatureFlagManager struct {
 	flagValsAreForAnonUser bool
 }
 
-func NewManager(logger *log.Logger, isTest  bool) LaunchDarklyManager {
+func InitManager(logger *log.Logger, isTest  bool) {
 	// TODO if isTest, return a mock
 	var basePath string
 	if os.Getenv("XX_LD_TEST_ENV") != "" {
@@ -44,30 +48,15 @@ func NewManager(logger *log.Logger, isTest  bool) LaunchDarklyManager {
 	} else {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
-	return &FeatureFlagManager{
+	LdManager = &FeatureFlagManager{
 		logger: logger,
 		client: sling.New().Base(basePath),
 	}
 }
 
 func (f *FeatureFlagManager) BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool {
-	user, isAnonUser := contextToLDUser(ctx)
-	// Check if cached flags are available
-	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
-	if f.isCacheAvailable(isAnonUser) {
-		flagVal, ok := f.flagVals[key].(bool)
-		if !ok {
-			f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
-			return defaultVal
-		}
-		return flagVal
-	}
-	err := f.fetchFlags(user, isAnonUser)
-	if err != nil {
-		f.logger.Debug(err.Error())
-		return defaultVal
-	}
-	flagVal, ok := f.flagVals[key].(bool)
+	flagValInterface := f.generalVariation(key, ctx, defaultVal)
+	flagVal, ok := flagValInterface.(bool)
 	if !ok {
 		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
 		return defaultVal
@@ -76,53 +65,43 @@ func (f *FeatureFlagManager) BoolVariation(key string, ctx *cmd.DynamicContext, 
 }
 
 func (f *FeatureFlagManager) StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string {
-	user, isAnonUser := contextToLDUser(ctx)
-	// Check if cached flags are available
-	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
-	if f.isCacheAvailable(isAnonUser) {
-		flagVal, ok := f.flagVals[key].(string)
-		if !ok {
-			f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
-			return defaultVal
-		}
-		return flagVal
-	}
-	err := f.fetchFlags(user, isAnonUser)
-	if err != nil {
-		f.logger.Debug(err.Error())
-		return defaultVal
-	}
-	flagVal, ok := f.flagVals[key].(string)
+	flagValInterface := f.generalVariation(key, ctx, defaultVal)
+	flagVal, ok := flagValInterface.(string)
 	if !ok {
-		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
+		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "string", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
 }
 
 func (f *FeatureFlagManager) IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int {
+	flagValInterface := f.generalVariation(key, ctx, defaultVal)
+	flagVal, ok := flagValInterface.(int)
+	if !ok {
+		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "int", f.flagVals[key])
+		return defaultVal
+	}
+	return flagVal
+}
+
+func (f *FeatureFlagManager) JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
+	flagVal:= f.generalVariation(key, ctx, defaultVal)
+	return flagVal
+}
+
+func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
 	user, isAnonUser := contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	if f.isCacheAvailable(isAnonUser) {
-		flagVal, ok := f.flagVals[key].(int)
-		if !ok {
-			f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
-			return defaultVal
-		}
-		return flagVal
+		return f.flagVals[key]
 	}
 	err := f.fetchFlags(user, isAnonUser)
 	if err != nil {
 		f.logger.Debug(err.Error())
 		return defaultVal
 	}
-	flagVal, ok := f.flagVals[key].(int)
-	if !ok {
-		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
-		return defaultVal
-	}
-	return flagVal
+	return f.flagVals[key]
 }
 
 func (f *FeatureFlagManager) fetchFlags(user lduser.User, isAnonUser bool) error {

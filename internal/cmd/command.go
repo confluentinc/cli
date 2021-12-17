@@ -58,9 +58,6 @@ type command struct {
 	logger    *log.Logger
 }
 
-// Global variables
-var LdManager launchdarkly.LaunchDarklyManager
-
 func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
 	cli := &cobra.Command{
 		Use:               pversion.CLIName,
@@ -92,7 +89,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cfg, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	LdManager = launchdarkly.NewManager(logger, isTest)
+	launchdarkly.InitManager(logger, isTest)
 
 	prerunner := &pcmd.PreRun{
 		Analytics:               analyticsClient,
