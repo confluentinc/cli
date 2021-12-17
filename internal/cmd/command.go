@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
@@ -28,7 +29,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -132,7 +132,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	cmd.AddCommand(shell.NewShellCmd(cmd, prerunner, cfg, shellCompleter, jwtValidator))
+	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
