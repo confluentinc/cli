@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go v1.38.35
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/brianstrauch/cobra-shell v0.2.0
-	github.com/c-bata/go-prompt v0.2.6
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/bincover v0.2.0
@@ -80,7 +79,6 @@ require (
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
-	mvdan.cc/sh/v3 v3.2.2
 )
 
 replace (

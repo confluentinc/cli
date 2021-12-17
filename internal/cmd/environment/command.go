@@ -9,8 +9,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren []*cobra.Command
-	analyticsClient     analytics.Client
+	analyticsClient analytics.Client
 }
 
 func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
@@ -26,17 +25,11 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 		analyticsClient:               analyticsClient,
 	}
 
-	deleteCmd := c.newDeleteCommand()
-	updateCmd := c.newUpdateCommand()
-	useCmd := c.newUseCommand()
-
 	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(deleteCmd)
+	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newListCommand())
-	c.AddCommand(updateCmd)
-	c.AddCommand(useCmd)
-
-	c.completableChildren = []*cobra.Command{deleteCmd, updateCmd, useCmd}
+	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newUseCommand())
 
 	return c
 }

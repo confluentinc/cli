@@ -14,9 +14,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
-	analyticsClient         analytics.Client
+	analyticsClient analytics.Client
 }
 
 type connectorDescribeDisplay struct {
@@ -32,7 +30,6 @@ var (
 	listStructuredLabels = []string{"id", "name", "status", "type", "trace"}
 )
 
-// New returns the default command object for interacting with Connect.
 func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cmd := &cobra.Command{
 		Use:         "connect",
@@ -45,27 +42,16 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 		analyticsClient:               analyticsClient,
 	}
 
-	createCmd := c.newCreateCommand()
-	describeCmd := c.newDescribeCommand()
-	deleteCmd := c.newDeleteCommand()
-	listCmd := c.newListCommand()
-	pauseCmd := c.newPauseCommand()
-	resumeCmd := c.newResumeCommand()
-	updateCmd := c.newUpdateCommand()
-
 	c.AddCommand(newClusterCommand(prerunner))
-	c.AddCommand(createCmd)
-	c.AddCommand(deleteCmd)
-	c.AddCommand(describeCmd)
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(newEventCommand(prerunner))
-	c.AddCommand(listCmd)
-	c.AddCommand(pauseCmd)
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newPauseCommand())
 	c.AddCommand(newPluginCommand(prerunner))
-	c.AddCommand(resumeCmd)
-	c.AddCommand(updateCmd)
-
-	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, pauseCmd, resumeCmd, updateCmd}
-	c.completableFlagChildren = map[string][]*cobra.Command{"cluster": {createCmd}}
+	c.AddCommand(c.newResumeCommand())
+	c.AddCommand(c.newUpdateCommand())
 
 	return c
 }

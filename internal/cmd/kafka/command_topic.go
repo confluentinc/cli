@@ -54,10 +54,9 @@ type hasAPIKeyTopicCommand struct {
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner           pcmd.PreRunner
-	logger              *log.Logger
-	clientID            string
-	completableChildren []*cobra.Command
+	prerunner pcmd.PreRunner
+	logger    *log.Logger
+	clientID  string
 }
 
 type structuredDescribeDisplay struct {
@@ -70,7 +69,6 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-// NewTopicCommand returns the Cobra command for Kafka topic.
 func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
@@ -292,8 +290,6 @@ func (a *authenticatedTopicCommand) init() {
 	pcmd.AddContextFlag(deleteCmd, a.CLICommand)
 	pcmd.AddEnvironmentFlag(deleteCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(deleteCmd)
-
-	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {

@@ -9,33 +9,22 @@ import (
 
 type lagCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren []*cobra.Command
-	*consumerGroupCommand
 }
 
-func NewLagCommand(prerunner pcmd.PreRunner, groupCmd *consumerGroupCommand) *lagCommand {
+func newLagCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "lag",
 		Short:  "View consumer lag.",
 		Hidden: true,
 	}
 
-	c := &lagCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		consumerGroupCommand:          groupCmd,
-	}
+	c := &lagCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	summarizeCmd := c.newSummarizeCommand()
-	listCmd := c.newListCommand()
-	getCmd := c.newGetCommand()
+	c.AddCommand(c.newGetCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newSummarizeCommand())
 
-	c.AddCommand(summarizeCmd)
-	c.AddCommand(listCmd)
-	c.AddCommand(getCmd)
-
-	c.completableChildren = []*cobra.Command{summarizeCmd, listCmd, getCmd}
-
-	return c
+	return c.Command
 }
 
 func convertLagToStruct(lagData kafkarestv3.ConsumerLagData) *lagDataStruct {
@@ -56,4 +45,29 @@ func convertLagToStruct(lagData kafkarestv3.ConsumerLagData) *lagDataStruct {
 		TopicName:       lagData.TopicName,
 		PartitionId:     lagData.PartitionId,
 	}
+}
+
+func (c *lagCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteConsumerGroups()
+}
+
+func (c *lagCommand) autocompleteConsumerGroups() []string {
+	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedStateFlagCommand)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(consumerGroupDataList.Data))
+	for i, consumerGroup := range consumerGroupDataList.Data {
+		suggestions[i] = consumerGroup.ConsumerGroupId
+	}
+	return suggestions
 }

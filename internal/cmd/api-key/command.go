@@ -17,11 +17,9 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	keystore                keystore.KeyStore
-	flagResolver            pcmd.FlagResolver
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
-	analyticsClient         analytics.Client
+	keystore        keystore.KeyStore
+	flagResolver    pcmd.FlagResolver
+	analyticsClient analytics.Client
 }
 
 const resourceFlagName = "resource"
@@ -40,25 +38,12 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		analyticsClient:               analyticsClient,
 	}
 
-	createCmd := c.newCreateCommand()
-	deleteCmd := c.newDeleteCommand()
-	listCmd := c.newListCommand()
-	storeCmd := c.newStoreCommand()
-	updateCmd := c.newUpdateCommand()
-	useCmd := c.newUseCommand()
-
-	c.AddCommand(createCmd)
-	c.AddCommand(deleteCmd)
-	c.AddCommand(listCmd)
-	c.AddCommand(storeCmd)
-	c.AddCommand(updateCmd)
-	c.AddCommand(useCmd)
-
-	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
-	c.completableFlagChildren = map[string][]*cobra.Command{
-		resourceFlagName:  {createCmd, listCmd, storeCmd, useCmd},
-		"service-account": {createCmd},
-	}
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newStoreCommand())
+	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newUseCommand())
 
 	return c
 }

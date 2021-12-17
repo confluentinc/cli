@@ -19,9 +19,7 @@ import (
 
 type appCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
-	analyticsClient         analytics.Client
+	analyticsClient analytics.Client
 }
 
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
@@ -48,19 +46,11 @@ func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *
 		analyticsClient:               analyticsClient,
 	}
 
-	createCmd := c.newCreateCommand()
-	describeCmd := c.newDescribeCommand()
-	deleteCmd := c.newDeleteCommand()
-	configureAclsCmd := c.newConfigureAclsCommand()
-
+	c.AddCommand(c.newConfigureAclsCommand())
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
-	c.AddCommand(createCmd)
-	c.AddCommand(describeCmd)
-	c.AddCommand(deleteCmd)
-	c.AddCommand(configureAclsCmd)
-
-	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, configureAclsCmd}
-	c.completableFlagChildren = map[string][]*cobra.Command{"cluster": {createCmd}}
 
 	return c
 }

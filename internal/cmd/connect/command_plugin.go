@@ -12,7 +12,6 @@ import (
 
 type pluginCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren []*cobra.Command
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -22,14 +21,10 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &pluginCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &pluginCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	describeCmd := c.newDescribeCommand()
-
-	c.AddCommand(describeCmd)
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
-
-	c.completableChildren = []*cobra.Command{describeCmd}
 
 	return c.Command
 }

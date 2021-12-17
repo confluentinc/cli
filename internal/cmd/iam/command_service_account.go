@@ -10,7 +10,6 @@ import (
 
 type serviceAccountCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	completableChildren []*cobra.Command
 }
 
 func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
@@ -21,17 +20,12 @@ func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &serviceAccountCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-
-	deleteCmd := c.newDeleteCommand()
-	updateCmd := c.newUpdateCommand()
+	c := &serviceAccountCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(deleteCmd)
+	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newListCommand())
-	c.AddCommand(updateCmd)
-
-	c.completableChildren = []*cobra.Command{updateCmd, deleteCmd}
+	c.AddCommand(c.newUpdateCommand())
 
 	return c
 }

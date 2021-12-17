@@ -20,6 +20,7 @@ Available Commands:
   prompt          Add Confluent CLI context to your terminal prompt.
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
+  shell           Start an interactive shell.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.
 

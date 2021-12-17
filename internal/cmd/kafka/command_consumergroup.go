@@ -34,8 +34,6 @@ var (
 
 type consumerGroupCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
 }
 
 type consumerData struct {
@@ -97,19 +95,11 @@ func newConsumerGroupCommand(prerunner pcmd.PreRunner) *consumerGroupCommand {
 		Hidden:  true,
 	}
 
-	c := &consumerGroupCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &consumerGroupCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	lagCmd := NewLagCommand(prerunner, c)
-
-	listCmd := c.newListCommand()
-	describeCmd := c.newDescribeCommand()
-
-	c.AddCommand(describeCmd)
-	c.AddCommand(lagCmd.Command)
-	c.AddCommand(listCmd)
-
-	c.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
-	c.completableFlagChildren = map[string][]*cobra.Command{"cluster": append(lagCmd.completableChildren, listCmd, describeCmd)}
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(newLagCommand(prerunner))
+	c.AddCommand(c.newListCommand())
 
 	return c
 }

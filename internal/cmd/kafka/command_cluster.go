@@ -16,9 +16,8 @@ const (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	logger              *log.Logger
-	completableChildren []*cobra.Command
-	analyticsClient     analytics.Client
+	logger          *log.Logger
+	analyticsClient analytics.Client
 }
 
 func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
@@ -36,24 +35,17 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	}
 
-	deleteCmd := c.newDeleteCommand(cfg)
-	describeCmd := c.newDescribeCommand(cfg)
-	updateCmd := c.newUpdateCommand(cfg)
-	useCmd := c.newUseCommand(cfg)
-
 	c.AddCommand(c.newCreateCommand(cfg))
-	c.AddCommand(deleteCmd)
-	c.AddCommand(describeCmd)
-	c.AddCommand(updateCmd)
-	c.AddCommand(useCmd)
+	c.AddCommand(c.newDeleteCommand(cfg))
+	c.AddCommand(c.newDescribeCommand(cfg))
+	c.AddCommand(c.newUpdateCommand(cfg))
+	c.AddCommand(c.newUseCommand(cfg))
 
 	if cfg.IsCloudLogin() {
 		c.AddCommand(c.newListCommand())
 	} else {
 		c.AddCommand(c.newListCommandOnPrem())
 	}
-
-	c.completableChildren = []*cobra.Command{deleteCmd, describeCmd, updateCmd, useCmd}
 
 	return c
 }
