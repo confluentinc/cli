@@ -61,7 +61,16 @@ func init() {
 }
 
 // Handler for: "/api/me"
-func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.ResponseWriter, *http.Request) {
+	org := &orgv1.Organization{Id: 42}
+	if !isAuditLogEnabled {
+		org.AuditLog = &orgv1.AuditLog{
+			ClusterId:        "lkc-ab123",
+			AccountId:        "env-987zy",
+			ServiceAccountId: auditLogServiceAccountID,
+			TopicName:        "confluent-audit-log-events",
+		}
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
 			User: &orgv1.User{
@@ -70,16 +79,8 @@ func (c *CloudRouter) HandleMe(t *testing.T) func(http.ResponseWriter, *http.Req
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts: environments,
-			Organization: &orgv1.Organization{
-				Id: 42,
-				AuditLog: &orgv1.AuditLog{
-					ClusterId:        "lkc-ab123",
-					AccountId:        "env-987zy",
-					ServiceAccountId: auditLogServiceAccountID,
-					TopicName:        "confluent-audit-log-events",
-				},
-			},
+			Accounts:     environments,
+			Organization: org,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
