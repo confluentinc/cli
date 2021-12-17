@@ -36,9 +36,7 @@ type FeatureFlagManager struct {
 	flagValsAreForAnonUser bool
 }
 
-var LdManager LaunchDarklyManager
-
-func InitManager(logger *log.Logger, isTest  bool) {
+func NewManager(logger *log.Logger, isTest  bool) LaunchDarklyManager {
 	// TODO if isTest, return a mock
 	var basePath string
 	if os.Getenv("XX_LD_TEST_ENV") != "" {
@@ -46,7 +44,7 @@ func InitManager(logger *log.Logger, isTest  bool) {
 	} else {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
-	LdManager = &FeatureFlagManager{
+	return &FeatureFlagManager{
 		logger: logger,
 		client: sling.New().Base(basePath),
 	}
