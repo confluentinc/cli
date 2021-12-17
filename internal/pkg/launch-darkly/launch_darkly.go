@@ -93,7 +93,7 @@ func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContex
 	user, isAnonUser := contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
-	if f.isCacheAvailable(isAnonUser) {
+	if f.areCachedFlagsAvailable(isAnonUser) {
 		return f.flagVals[key]
 	}
 	err := f.fetchFlags(user, isAnonUser)
@@ -118,7 +118,7 @@ func (f *FeatureFlagManager) fetchFlags(user lduser.User, isAnonUser bool) error
 	return nil
 }
 
-func (f *FeatureFlagManager) isCacheAvailable(isAnonUser bool) bool {
+func (f *FeatureFlagManager) areCachedFlagsAvailable(isAnonUser bool) bool {
 	return len(f.flagVals) > 0 && f.flagValsAreForAnonUser == isAnonUser
 }
 
