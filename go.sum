@@ -245,8 +245,8 @@ github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4Yn
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bombsimon/wsl/v3 v3.3.0 h1:Mka/+kRLoQJq7g2rggtgQsjuI/K5Efd87WX96EWFxjM=
 github.com/bombsimon/wsl/v3 v3.3.0/go.mod h1:st10JtZYLE4D5sC7b8xV4zTKZwAQjCH/Hy2Pm1FNZIc=
-github.com/brianstrauch/cobra-shell v0.2.0 h1:q+nNmO0nJ/mX6Gbeep9zBnnIab5QDq8L123uVS2rdAM=
-github.com/brianstrauch/cobra-shell v0.2.0/go.mod h1:waY6r8xIph5zOjlGMaQkb9Xb8KYWgqD6mpNb07a/QPc=
+github.com/brianstrauch/cobra-shell v0.2.1 h1:Jb8CMwL8E4pgZ5UB4GblSQICYVKb26++8PtzjME0Rzw=
+github.com/brianstrauch/cobra-shell v0.2.1/go.mod h1:waY6r8xIph5zOjlGMaQkb9Xb8KYWgqD6mpNb07a/QPc=
 github.com/bsm/go-vlq v0.0.0-20150828105119-ec6e8d4f5f4e/go.mod h1:N+BjUcTjSxc2mtRGSCPsat1kze3CUtvJN3/jTXlp29k=
 github.com/c-bata/go-prompt v0.2.6 h1:POP+nrHE+DfLYx370bedwNhsqmpCUynWPxuHi0C5vZI=
 github.com/c-bata/go-prompt v0.2.6/go.mod h1:/LMAke8wD2FsNu9EXNdHxNLbd9MedkPnCdfpU9wwHfY=
