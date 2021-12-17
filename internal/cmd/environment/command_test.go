@@ -2,11 +2,9 @@ package environment
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -109,48 +107,4 @@ func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	req.True(suite.accountClientMock.DeleteCalled())
 	// TODO add back with analytics
 	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
-}
-
-func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	cmd := suite.newCmd()
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"environment delete", "environment update", "environment use"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
-}
-
-func (suite *EnvironmentTestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for authenticated user",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        environmentID,
-					Description: environmentName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
 }

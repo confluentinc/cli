@@ -1,13 +1,11 @@
 package kafka
 
 import (
-	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -70,27 +68,4 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	}
 
 	return pcmd.AutocompleteClusters(c.EnvironmentId(), c.Client)
-}
-
-func (c *clusterCommand) Cmd() *cobra.Command {
-	return c.Command
-}
-
-func (c *clusterCommand) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	clusters, err := pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
-	if err != nil {
-		return suggestions
-	}
-	for _, cluster := range clusters {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        cluster.Id,
-			Description: cluster.Name,
-		})
-	}
-	return suggestions
-}
-
-func (c *clusterCommand) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
 }

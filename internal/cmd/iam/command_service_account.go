@@ -1,10 +1,8 @@
 package iam
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/c-bata/go-prompt"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -48,34 +46,6 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 	}
 
 	return pcmd.AutocompleteServiceAccounts(c.Client)
-}
-
-func (c *serviceAccountCommand) Cmd() *cobra.Command {
-	return c.Command
-}
-
-func (c *serviceAccountCommand) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	if c.Client == nil {
-		return suggestions
-	}
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return suggestions
-	}
-
-	for _, user := range users {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        user.ResourceId,
-			Description: fmt.Sprintf("%s: %s", user.ServiceName, user.ServiceDescription),
-		})
-	}
-
-	return suggestions
-}
-
-func (c *serviceAccountCommand) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
 }
 
 func requireLen(val string, maxLen int, field string) error {

@@ -44,7 +44,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
@@ -103,12 +102,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		Version:                 ver,
 	}
 
-	var serverCompleter completer.ServerSideCompleter
-	shellCompleter := completer.NewShellCompleter(cmd)
-	if cfg.IsCloudLogin() {
-		serverCompleter = shellCompleter.ServerSideCompleter
-	}
-
 	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
 	connectCmd := connect.New(prerunner, analyticsClient)
 	environmentCmd := environment.New(prerunner, analyticsClient)
@@ -122,9 +115,9 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connectCmd.Command)
 	cmd.AddCommand(environmentCmd.Command)
-	cmd.AddCommand(iam.New(cfg, prerunner, serverCompleter))
-	cmd.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
-	cmd.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
+	cmd.AddCommand(iam.New(cfg, prerunner))
+	cmd.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, analyticsClient))
+	cmd.AddCommand(ksql.New(prerunner, analyticsClient))
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
 	cmd.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
@@ -135,12 +128,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
 	cmd.AddCommand(version.New(prerunner, ver))
-
-	if cfg.IsCloudLogin() {
-		serverCompleter.AddCommand(apiKeyCmd)
-		serverCompleter.AddCommand(connectCmd)
-		serverCompleter.AddCommand(environmentCmd)
-	}
 
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	disableFlagSorting(cmd)

@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/go-printer"
@@ -137,37 +136,6 @@ func (c *authenticatedTopicCommand) autocompleteTopics() []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
 	}
 	return suggestions
-}
-
-func (k *kafkaTopicCommand) Cmd() *cobra.Command {
-	return k.hasAPIKeyTopicCommand.Command
-}
-
-func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	cmd := k.authenticatedTopicCommand
-	if cmd == nil {
-		return suggestions
-	}
-	topics, err := cmd.getTopics()
-	if err != nil {
-		return suggestions
-	}
-	for _, topic := range topics {
-		description := ""
-		if topic.Internal {
-			description = "Internal"
-		}
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        topic.Name,
-			Description: description,
-		})
-	}
-	return suggestions
-}
-
-func (k *kafkaTopicCommand) ServerCompletableChildren() []*cobra.Command {
-	return k.completableChildren
 }
 
 func (h *hasAPIKeyTopicCommand) init() {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -247,84 +246,6 @@ func (suite *ConnectTestSuite) TestUpdateConnector() {
 	req.True(suite.connectMock.UpdateCalled())
 	retVal := suite.connectMock.UpdateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-}
-
-func (suite *ConnectTestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for authenticated user",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        connectorID,
-					Description: connectorName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *ConnectTestSuite) TestServerClusterFlagComplete() {
-	flagName := "cluster"
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        suite.kafkaCluster.Id,
-					Description: suite.kafkaCluster.Name,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *ConnectTestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	cmd := suite.newCmd()
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"connect delete", "connect describe", "connect pause", "connect resume", "connect update"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
 }
 
 func (suite *ConnectTestSuite) TestPluginList() {

@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -57,19 +56,4 @@ func convertLagToStruct(lagData kafkarestv3.ConsumerLagData) *lagDataStruct {
 		TopicName:       lagData.TopicName,
 		PartitionId:     lagData.PartitionId,
 	}
-}
-
-func (c *lagCommand) Cmd() *cobra.Command {
-	return c.Command
-}
-
-// HACK: using consumerGroupCommand's ServerComplete until we can figure out why calling listConsumerGroups on lagCmd is
-// producing segfaults. I believe we just need to figure out why Authenticated (prerunner.go) is being called on
-// consumerGroupCommand.AuthenticatedCLICommand instead of lagCmd.AuthenticatedCLICommand
-func (c *lagCommand) ServerComplete() []prompt.Suggest {
-	return c.consumerGroupCommand.ServerComplete()
-}
-
-func (c *lagCommand) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
 }

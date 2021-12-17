@@ -3,11 +3,9 @@ package apikey
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
@@ -428,128 +426,6 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 	args := suite.keystore.StoreAPIKeyCalls()[0]
 	req.Equal(promptReadString, args.Key.Key)
 	req.Equal(promptReadPass, args.Key.Secret)
-}
-
-func (suite *APITestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	suite.isPromptPipe = false
-	cmd := suite.newCmd()
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"api-key update", "api-key delete", "api-key store", "api-key use"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
-}
-
-func (suite *APITestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for command",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        apiKeyVal,
-					Description: apiKeyDescription,
-				},
-				{
-					Text:        auditLogApiKeyVal,
-					Description: auditLogApiKeyDescription,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *APITestSuite) TestServerResourceFlagComplete() {
-	flagName := resourceFlagName
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        suite.kafkaCluster.Id,
-					Description: suite.kafkaCluster.Name,
-				},
-				{
-					Text:        suite.srCluster.Id,
-					Description: suite.srCluster.Name,
-				},
-				{
-					Text:        suite.ksqlCluster.Id,
-					Description: suite.ksqlCluster.Name,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *APITestSuite) TestServerServiceAccountFlagComplete() {
-	flagName := "service-account"
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        fmt.Sprintf("%d", serviceAccountId),
-					Description: serviceAccountName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			req.Equal(tt.want, got)
-		})
-	}
 }
 
 func TestApiTestSuite(t *testing.T) {
