@@ -102,19 +102,15 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		Version:                 ver,
 	}
 
-	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-	connectCmd := connect.New(prerunner, analyticsClient)
-	environmentCmd := environment.New(prerunner, analyticsClient)
-
 	cmd.AddCommand(admin.New(prerunner, isTest))
-	cmd.AddCommand(apiKeyCmd.Command)
+	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver, analyticsClient))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent, logger))
 	cmd.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
-	cmd.AddCommand(connectCmd.Command)
-	cmd.AddCommand(environmentCmd.Command)
+	cmd.AddCommand(connect.New(prerunner, analyticsClient))
+	cmd.AddCommand(environment.New(prerunner, analyticsClient))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, analyticsClient))
 	cmd.AddCommand(ksql.New(prerunner, analyticsClient))

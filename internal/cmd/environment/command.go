@@ -12,7 +12,7 @@ type command struct {
 	analyticsClient analytics.Client
 }
 
-func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "environment",
 		Aliases:     []string{"env"},
@@ -31,7 +31,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	c.AddCommand(c.newUpdateCommand())
 	c.AddCommand(c.newUseCommand())
 
-	return c
+	return c.Command
 }
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {

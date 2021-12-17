@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -130,7 +131,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *ConnectTestSuite) newCmd() *command {
+func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
 	return New(prerunner, suite.analyticsClient)
 }
@@ -160,7 +161,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
 	args := []string{"delete", connectorID}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
@@ -194,7 +195,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -207,7 +208,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())

@@ -30,7 +30,7 @@ var (
 	listStructuredLabels = []string{"id", "name", "status", "type", "trace"}
 )
 
-func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
+func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "connect",
 		Short:       "Manage Kafka Connect.",
@@ -53,7 +53,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	c.AddCommand(c.newResumeCommand())
 	c.AddCommand(c.newUpdateCommand())
 
-	return c
+	return c.Command
 }
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {

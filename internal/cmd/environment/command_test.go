@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -71,7 +72,7 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *EnvironmentTestSuite) newCmd() *command {
+func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 	client := &ccloud.Client{
 		Account: suite.accountClientMock,
 	}
@@ -90,7 +91,7 @@ func (suite *EnvironmentTestSuite) newCmd() *command {
 func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	cmd := suite.newCmd()
 	args := []string{"create", environmentName}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.CreateCalled())
@@ -101,7 +102,7 @@ func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	cmd := suite.newCmd()
 	args := []string{"delete", environmentID}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.DeleteCalled())

@@ -8,6 +8,7 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -211,7 +212,7 @@ func (suite *APITestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *APITestSuite) newCmd() *command {
+func (suite *APITestSuite) newCmd() *cobra.Command {
 	client := &ccloud.Client{
 		Auth:           &ccsdkmock.Auth{},
 		Account:        &ccsdkmock.Account{},
@@ -249,7 +250,7 @@ func (suite *APITestSuite) newCmd() *command {
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", srClusterID}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
@@ -270,7 +271,7 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", suite.kafkaCluster.Id}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
@@ -283,7 +284,7 @@ func (suite *APITestSuite) TestCreateKafkaApiKey() {
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", "cloud"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
@@ -296,7 +297,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"delete", apiKeyVal}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.DeleteCalled())

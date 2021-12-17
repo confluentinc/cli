@@ -24,7 +24,7 @@ type command struct {
 
 const resourceFlagName = "resource"
 
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage the API keys.",
@@ -45,7 +45,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	c.AddCommand(c.newUpdateCommand())
 	c.AddCommand(c.newUseCommand())
 
-	return c
+	return c.Command
 }
 
 func (c *command) setKeyStoreIfNil() {
