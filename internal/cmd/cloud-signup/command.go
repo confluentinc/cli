@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/types"
-
 	"github.com/spf13/cobra"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/countrycode"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -19,8 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/countrycode"
 )
 
 type command struct {
@@ -48,10 +46,6 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 
 	return c
-}
-
-func (c *command) Cmd() *cobra.Command {
-	return c.Command
 }
 
 func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {

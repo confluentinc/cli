@@ -34,6 +34,31 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
+func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteConnectorPlugins()
+}
+
+func (c *pluginCommand) autocompleteConnectorPlugins() []string {
+	plugins, err := c.getPlugins()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(plugins))
+	for i, plugin := range plugins {
+		suggestions[i] = plugin.Class
+	}
+	return suggestions
+}
+
 func (c *pluginCommand) getPlugins() ([]*opv1.ConnectorPluginInfo, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
