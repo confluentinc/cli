@@ -2,6 +2,11 @@ package schemaregistry
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -14,6 +19,52 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
+
+func GetAPIClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	if srClient != nil {
+		// Tests/mocks
+		return srClient, nil, nil
+	}
+	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
+}
+
+func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	srConfig := srsdk.NewConfiguration()
+
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	endpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(endpoint) == 0 {
+		return nil, nil, errors.New("no schema registry endpoint specified.")
+	}
+
+	srCtx := context.WithValue(context.Background(), srsdk.ContextAccessToken, mdsToken)
+
+	srConfig.BasePath = endpoint
+	srConfig.UserAgent = ver.UserAgent
+	srConfig.HTTPClient = getCAClient(caCertPath)
+	srClient := srsdk.NewAPIClient(srConfig)
+
+	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil { // validate client
+		return nil, nil, errors.New("failed to validate schema registry client with token.")
+	}
+	return srClient, srCtx, nil
+}
+
+func getCAClient(caCertPath string) *http.Client {
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	return &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}}
+}
 
 func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
 	f := form.New(

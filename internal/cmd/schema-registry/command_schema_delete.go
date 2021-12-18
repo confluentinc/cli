@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/antihax/optional"
@@ -16,10 +17,11 @@ import (
 
 func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete one or more schemas.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Use:         "delete",
+		Short:       "Delete one or more schemas.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.delete),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
@@ -44,6 +46,10 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	return deleteSchema(cmd, srClient, ctx)
+}
+
+func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -63,7 +69,6 @@ func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
 	if permanent {
 		deleteType = "hard"
 	}
-
 	if version == "all" {
 		deleteSubjectOpts := srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
 		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)

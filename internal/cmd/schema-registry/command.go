@@ -24,7 +24,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 
 	c.AddCommand(newClusterCommand(cfg, prerunner, srClient, logger, analyticsClient))
 	c.AddCommand(newExporterCommand(prerunner, srClient))
-	c.AddCommand(newSchemaCommand(prerunner, srClient))
+	c.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
 	c.AddCommand(newSubjectCommand(prerunner, srClient))
 
 	return c.Command

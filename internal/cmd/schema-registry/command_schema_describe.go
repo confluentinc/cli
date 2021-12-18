@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -16,11 +17,12 @@ import (
 
 func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "describe <id>",
-		Short:   "Get schema either by schema ID, or by subject/version.",
-		Args:    cobra.MaximumNArgs(1),
-		PreRunE: pcmd.NewCLIPreRunnerE(c.preDescribe),
-		RunE:    pcmd.NewCLIRunE(c.describe),
+		Use:         "describe <id>",
+		Short:       "Get schema either by schema ID, or by subject/version.",
+		Args:        cobra.MaximumNArgs(1),
+		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
+		RunE:        pcmd.NewCLIRunE(c.describe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
@@ -60,18 +62,17 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
-	if len(args) > 0 {
-		return c.describeById(cmd, args)
-	}
-	return c.describeBySubject(cmd)
-}
-
-func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
+	if len(args) > 0 {
+		return c.describeById(cmd, args, srClient, ctx)
+	}
+	return c.describeBySubject(cmd, srClient, ctx)
+}
 
+func (c *schemaCommand) describeById(cmd *cobra.Command, args []string, srClient *srsdk.APIClient, ctx context.Context) error {
 	schemaID, err := strconv.ParseInt(args[0], 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, args[0]), errors.SchemaIntegerSuggestions)
@@ -81,15 +82,10 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
-func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
+func (c *schemaCommand) describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err

@@ -34,9 +34,9 @@ const (
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// login command
-	NoEnvironmentFoundErrorMsg					= "no environment found for authenticated user"
-	UnneccessaryUrlFlagForCloudLoginErrorMsg	= "there is no need to pass the url flag if you are logging in to Confluent Cloud"
-	UnneccessaryUrlFlagForCloudLoginSuggestions	= "Log in to Confluent Cloud with `confluent login`"
+	NoEnvironmentFoundErrorMsg                  = "no environment found for authenticated user"
+	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
+	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"

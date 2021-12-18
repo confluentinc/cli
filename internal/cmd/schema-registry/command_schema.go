@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type schemaCommand struct {
@@ -12,21 +13,32 @@ type schemaCommand struct {
 	srClient *srsdk.APIClient
 }
 
-func newSchemaCommand(prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func newSchemaCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "schema",
-		Short:       "Manage Schema Registry schemas.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:   "schema",
+		Short: "Manage Schema Registry schemas.",
 	}
 
 	c := &schemaCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags),
-		srClient:                      srClient,
+		srClient: srClient,
+	}
+	if cfg.IsCloudLogin() {
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin}
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags)
+	} else {
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin}
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
+	if cfg.IsCloudLogin() {
+		c.AddCommand(c.newCreateCommand())
+		c.AddCommand(c.newDescribeCommand())
+		c.AddCommand(c.newDeleteCommand())
+	} else {
+		c.AddCommand(c.newCreateCommandOnPrem())
+		c.AddCommand(c.newDescribeCommandOnPrem())
+		c.AddCommand(c.newDeleteCommandOnPrem())
+	}
 
 	return c.Command
 }

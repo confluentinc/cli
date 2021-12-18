@@ -1,9 +1,9 @@
 package schemaregistry
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -50,7 +50,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
+	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -82,26 +82,16 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	schemaType = strings.ToUpper(schemaType)
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
 
-	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	refs, err := readSchemaRefs(cmd)
 	if err != nil {
 		return err
-	}
-	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
-		if err != nil {
-			return err
-		}
-
-		if err := json.Unmarshal(refBlob, &refs); err != nil {
-			return err
-		}
 	}
 
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
