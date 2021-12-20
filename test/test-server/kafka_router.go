@@ -59,8 +59,8 @@ const (
 	rpBrokerIdTaskType         = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
 	rpBrokerIdTasks            = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
 	rpPartitionReplicas        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-	rpReplica				   = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas/{broker}"
-	rpBrokerReplicas		   = "/kafka/v3/clusters/{cluster}/brokers/{broker}/partition-replicas"
+	rpTopicReplicaStatuses	   = "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
+	rpPartitionReplicaStatuses = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status"
 )
 
 type KafkaRouter struct {
@@ -144,8 +144,8 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpBrokersTasks, r.HandleKafkaClustersClusterIdBrokersTasksGet(t))
 	r.HandleFunc(rpBrokerIdTaskType, r.HandleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t))
 	r.HandleFunc(rpBrokerIdTasks, r.HandleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t))
-	r.HandleFunc(rpReplica, r.HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(t))
-	r.HandleFunc(rpBrokerReplicas, r.HandleClustersClusterIdBrokersBrokerIdPartitionReplicasGet(t))
+	r.HandleFunc(rpTopicReplicaStatuses, r.HandleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t))
+	r.HandleFunc(rpPartitionReplicaStatuses, r.HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t))
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)

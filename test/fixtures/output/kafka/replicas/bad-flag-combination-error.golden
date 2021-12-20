@@ -1,4 +1,0 @@
-Error: must provide topic and partition flags together
-
-Suggestions:
-    Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags.

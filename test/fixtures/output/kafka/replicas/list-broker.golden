@@ -1,4 +1,0 @@
-  Cluster ID | Broker ID | Topic Name | Partition ID | Leader | In Sync  
--------------+-----------+------------+--------------+--------+----------
-  cluster-1  |         1 |            |            1 | true   | true     
-  cluster-1  |         1 |            |            2 | false  | true     
