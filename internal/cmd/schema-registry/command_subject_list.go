@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/antihax/optional"
@@ -37,13 +38,16 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 }
 
 func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
-	type listDisplay struct {
-		Subject string
-	}
-
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
+	}
+	return listSubjects(cmd, srClient, ctx)
+}
+
+func listSubjects(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
+	type listDisplay struct {
+		Subject string
 	}
 
 	deleted, err := cmd.Flags().GetBool("deleted")

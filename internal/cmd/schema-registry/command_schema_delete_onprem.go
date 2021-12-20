@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -19,7 +20,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
-				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
 			},
 		),
 	}

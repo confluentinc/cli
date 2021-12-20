@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"context"
 	"fmt"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -34,12 +35,17 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	if err != nil {
+		return err
+	}
+
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
 	}
 	if compat != "" {
-		return c.updateCompatibility(cmd, args)
+		return c.updateCompatibility(cmd, args, srClient, ctx)
 	}
 
 	mode, err := cmd.Flags().GetString("mode")
@@ -47,18 +53,13 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if mode != "" {
-		return c.updateMode(cmd, args)
+		return c.updateMode(cmd, args, srClient, ctx)
 	}
 
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
-
+func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string, srClient *srsdk.APIClient, ctx context.Context) error {
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
@@ -73,13 +74,8 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string) 
 	return nil
 }
 
-func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string) error {
+func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string, srClient *srsdk.APIClient, ctx context.Context) error {
 	mode, err := cmd.Flags().GetString("mode")
-	if err != nil {
-		return err
-	}
-
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

@@ -184,6 +184,7 @@ const (
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	OnPremAuthenticationMsg      = "--ca-cert-path <ca-file> --sr-endpoint <schema-registry-endpoint>"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema describe 1337 %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
 			},
 		),
 	}

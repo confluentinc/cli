@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
 			},
 		),
 	}

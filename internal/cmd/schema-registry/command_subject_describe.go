@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/antihax/optional"
@@ -38,14 +39,17 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	return listSubjectVersions(cmd, args[0], srClient, ctx)
+}
 
+func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.APIClient, ctx context.Context) error {
 	deleted, err := cmd.Flags().GetBool("deleted")
 	if err != nil {
 		return err
 	}
 
 	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0], &listVersionsOpts)
+	versions, _, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
 	if err != nil {
 		return err
 	}
