@@ -34,9 +34,9 @@ const (
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// login command
-	NoEnvironmentFoundErrorMsg					= "no environment found for authenticated user"
-	UnneccessaryUrlFlagForCloudLoginErrorMsg	= "there is no need to pass the url flag if you are logging in to Confluent Cloud"
-	UnneccessaryUrlFlagForCloudLoginSuggestions	= "Log in to Confluent Cloud with `confluent login`"
+	NoEnvironmentFoundErrorMsg                  = "no environment found for authenticated user"
+	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
+	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -424,8 +424,8 @@ const (
 	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
 
 	// Replica commands
-	MustEnterValidFlagComboErrorMsg		 = "must pass a valid flag combination"
-	ValidReplicaFlagsSuggestions		 = "Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags."
+	MustEnterValidFlagComboErrorMsg      = "must pass a valid flag combination"
+	ValidReplicaFlagsSuggestions         = "Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags."
 	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
 
 	// Special error types

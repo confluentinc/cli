@@ -59,7 +59,7 @@ const (
 	rpBrokerIdTaskType         = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
 	rpBrokerIdTasks            = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
 	rpPartitionReplicas        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-	rpTopicReplicaStatuses	   = "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
+	rpTopicReplicaStatuses     = "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
 	rpPartitionReplicaStatuses = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status"
 )
 

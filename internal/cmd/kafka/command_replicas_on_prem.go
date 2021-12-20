@@ -1,13 +1,15 @@
 package kafka
 
 import (
+	"net/http"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
-	"net/http"
 )
 
 type replicaCommand struct {
@@ -15,9 +17,9 @@ type replicaCommand struct {
 }
 
 var (
-	replicaListFields = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsInSync"}
+	replicaListFields       = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsInSync"}
 	replicaStatusListFields = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsObserver", "IsIsrEligible", "IsInIsr", "IsCaughtUp", "LogStartOffset", "LogEndOffset", "LastCaughtUpTimeMs", "LastFetchTimeMs", "LinkName"}
-	replicaHumanFields = []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Leader", "Observer", "Isr Eligible", "In Isr", "Caught Up", "Log Start Offset", "Log End Offset", "Last Caught Up Time Ms", "Last Fetch Time Ms", "Link Name"}
+	replicaHumanFields      = []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Leader", "Observer", "Isr Eligible", "In Isr", "Caught Up", "Log Start Offset", "Log End Offset", "Last Caught Up Time Ms", "Last Fetch Time Ms", "Link Name"}
 )
 
 func NewReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -95,35 +97,35 @@ func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error
 	for _, data := range replicaStatusDataList.Data {
 		if humanOutput {
 			d := &struct {
-				ClusterId string
-				TopicName string
-				BrokerId int32
-				PartitionId int32
-				IsLeader bool
-				IsObserver bool
-				IsIsrEligible bool
-				IsInIsr bool
-				IsCaughtUp bool
-				LogStartOffset int64
-				LogEndOffset int64
+				ClusterId          string
+				TopicName          string
+				BrokerId           int32
+				PartitionId        int32
+				IsLeader           bool
+				IsObserver         bool
+				IsIsrEligible      bool
+				IsInIsr            bool
+				IsCaughtUp         bool
+				LogStartOffset     int64
+				LogEndOffset       int64
 				LastCaughtUpTimeMs string
-				LastFetchTimeMs string
-				LinkName string
+				LastFetchTimeMs    string
+				LinkName           string
 			}{
-				ClusterId: data.ClusterId,
-				TopicName: data.TopicName,
-				BrokerId: data.BrokerId,
-				PartitionId: data.PartitionId,
-				IsLeader: data.IsLeader,
-				IsObserver: data.IsObserver,
-				IsIsrEligible: data.IsIsrEligible,
-				IsInIsr: data.IsInIsr,
-				IsCaughtUp: data.IsCaughtUp,
-				LogStartOffset: data.LogStartOffset,
-				LogEndOffset: data.LogEndOffset,
+				ClusterId:          data.ClusterId,
+				TopicName:          data.TopicName,
+				BrokerId:           data.BrokerId,
+				PartitionId:        data.PartitionId,
+				IsLeader:           data.IsLeader,
+				IsObserver:         data.IsObserver,
+				IsIsrEligible:      data.IsIsrEligible,
+				IsInIsr:            data.IsInIsr,
+				IsCaughtUp:         data.IsCaughtUp,
+				LogStartOffset:     data.LogStartOffset,
+				LogEndOffset:       data.LogEndOffset,
 				LastCaughtUpTimeMs: utils.FormatUnixTime(data.LastCaughtUpTimeMs),
-				LastFetchTimeMs: utils.FormatUnixTime(data.LastFetchTimeMs),
-				LinkName: data.LinkName,
+				LastFetchTimeMs:    utils.FormatUnixTime(data.LastFetchTimeMs),
+				LinkName:           data.LinkName,
 			}
 			outputWriter.AddElement(d)
 		} else {

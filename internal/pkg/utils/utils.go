@@ -174,6 +174,6 @@ func CropString(s string, n int) string {
 }
 
 func FormatUnixTime(timeMs int64) string {
-	time := time.Unix(0, timeMs * int64(time.Millisecond))
+	time := time.Unix(0, timeMs*int64(time.Millisecond))
 	return time.UTC().Format("2006-01-02 15:04:05 MST")
 }
