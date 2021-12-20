@@ -31,7 +31,7 @@ var (
 		"ack", "acks", "acl", "acls", "apac", "api", "apikey", "apisecret", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
 		"config", "configs", "connect", "connect-catalog", "consumer.config", "crn", "csu", "decrypt", "deserializer",
 		"deserializers", "env", "eu", "formatter", "gcp", "geo", "gzip", "hostname", "html", "https", "iam", "init",
-		"io", "json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "oauthbearer", "pem",
+		"io", "json", "jsonschema", "kafka", "ksql", "lifecycle", "lz4", "mds", "multi-zone", "netrc", "oauth", "oauthbearer", "pem",
 		"plaintext", "prem", "producer.config", "protobuf", "rbac", "readwrite", "recv", "role-binding", "role-bindings",
 		"sasl", "signup", "single-zone", "sr", "ssl", "sso", "stdin", "systest", "tcp", "tmp", "transactional", "txt", "url", "us",
 		"v2", "vpc", "whitelist", "yaml", "zstd",

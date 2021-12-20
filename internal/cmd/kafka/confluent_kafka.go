@@ -58,7 +58,7 @@ func refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle, tokenValu
 		return err
 	}
 	if mechanism == "OAUTHBEARER" {
-		oauthConfig, err := cmd.Flags().GetString("oauthConfig")
+		oauthConfig, err := cmd.Flags().GetString("oauth-config")
 		if err != nil {
 			return err
 		}
@@ -278,7 +278,7 @@ func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Con
 		saslMap["sasl.username"] = username
 		saslMap["sasl.password"] = password
 	} else {
-		oauthConfig, err := cmd.Flags().GetString("oauthConfig")
+		oauthConfig, err := cmd.Flags().GetString("oauth-config")
 		if err != nil {
 			return nil, err
 		}
