@@ -10,12 +10,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <subject>",
-		Short: "Describe the config of a subject, or at global level.",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDescribe),
+		Use:   "validate <subject>",
+		Short: "Validate input schema against a particular version of a subject for compatibility.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(c.onPremValidate),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the config of a given-name subject.",
@@ -25,6 +25,10 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
+	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
@@ -32,11 +36,11 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *configCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
+func (c *compatibilityCommand) onPremValidate(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
 
-	return describeSchemaConfig(cmd, srClient, ctx)
+	return validateSchemaCompatibility(cmd, srClient, ctx)
 }

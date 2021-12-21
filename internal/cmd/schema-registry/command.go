@@ -27,6 +27,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 	c.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
 	c.AddCommand(newSubjectCommand(cfg, prerunner, srClient))
 	c.AddCommand(newConfigCommand(cfg, prerunner, srClient))
+	c.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
 
 	return c.Command
 }

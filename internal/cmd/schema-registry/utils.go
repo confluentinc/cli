@@ -45,10 +45,8 @@ func printVersions(versions []int32) {
 	printer.RenderCollectionTable(entries, titleRow)
 }
 
-func printConfig(config string) {
-	titleRow := []string{"CompatibilityLevel"}
+func printConfig(record interface{}, titleRow []string) {
 	var entry [][]string
-	record := &struct{ CompatibilityLevel string }{config}
 	entry = append(entry, printer.ToRow(record, titleRow))
 	printer.RenderCollectionTable(entry, titleRow)
 }
