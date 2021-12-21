@@ -18,14 +18,14 @@ type partitionCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	partitionCommand := &partitionCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use:         "partition",
 				Short:       "Manage Kafka partitions.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, nil),
+			}, prerunner),
 	}
 	partitionCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand))
 	partitionCommand.init()

@@ -1,1 +1,4 @@
-Stored API secret for API key "UIAPIKEY100".
+Error: Unknown API key UNKNOWN
+
+Suggestions:
+    Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`.

@@ -161,7 +161,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 		Status:     "Code: 400",
 		StatusCode: 400,
 		Request: &http.Request{
-			Method: "GET",
+			Method: http.MethodGet,
 			URL: &neturl.URL{
 				Host: "myhost",
 				Path: "/my-path",
@@ -171,7 +171,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	r = kafkaRestError(url, openAPIError, &httpResp)
 	req.NotNil(r)
 	req.Contains(r.Error(), "failed")
-	req.Contains(r.Error(), "GET")
+	req.Contains(r.Error(), http.MethodGet)
 	req.Contains(r.Error(), "myhost")
 	req.Contains(r.Error(), "my-path")
 }

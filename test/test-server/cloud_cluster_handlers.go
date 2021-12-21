@@ -239,7 +239,7 @@ func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-		if r.Method == "DELETE" {
+		if r.Method == http.MethodDelete {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -262,7 +262,7 @@ func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Describe client call
 		var out []byte
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			id := r.URL.Query().Get("id")
 			cluster := getBaseDescribeCluster(id, "lkc-update")
 			cluster.Status = schedv1.ClusterStatus_UP
@@ -273,7 +273,7 @@ func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.
 			require.NoError(t, err)
 		}
 		// Update client call
-		if r.Method == "PUT" {
+		if r.Method == http.MethodPut {
 			req := &schedv1.UpdateKafkaClusterRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -306,7 +306,7 @@ func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.
 func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			id := r.URL.Query().Get("id")
 			var err error
 			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
@@ -328,7 +328,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w 
 			require.NoError(t, err)
 		}
 		// Update client call
-		if r.Method == "PUT" {
+		if r.Method == http.MethodPut {
 			req := &schedv1.UpdateKafkaClusterRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -360,7 +360,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w 
 func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
-		if r.Method == "GET" {
+		if r.Method == http.MethodGet {
 			id := r.URL.Query().Get("id")
 			var err error
 			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
@@ -382,7 +382,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w htt
 			require.NoError(t, err)
 		}
 		// Update client call
-		if r.Method == "PUT" {
+		if r.Method == http.MethodPut {
 			req := &schedv1.UpdateKafkaClusterRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)

@@ -93,9 +93,9 @@ func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
-		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
+		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	} else {
-		cliCmd = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
+		cliCmd = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 	ccloudRbacDataplaneEnabled := false
 	if os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "" {

@@ -51,7 +51,7 @@ func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*Scope
 	}
 
 	ctx := utils.GetContext(s.logger)
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/v1/metadata/id", url), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/metadata/id", url), nil)
 	if err != nil {
 		return nil, err
 	}

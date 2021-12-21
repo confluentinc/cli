@@ -21,7 +21,7 @@ func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &configCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)}
+	c := &configCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newEditCommand())

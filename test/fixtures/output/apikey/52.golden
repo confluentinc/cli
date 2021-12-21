@@ -1,25 +1,4 @@
-Error: required flag(s) "resource" not set
-Usage:
-  confluent api-key create [flags]
+Error: unable to set active API key: UIAPIKEY103
 
-Examples:
-Create an API key with full access to cluster "lkc-123456":
-
-  $ confluent api-key create --resource lkc-123456
-
-Create an API key for cluster "lkc-123456" and service account "sa-123456":
-
-  $ confluent api-key create --resource lkc-123456 --service-account sa-123456
-
-Flags:
-      --resource string          REQUIRED: The resource ID. Use "cloud" to create a Cloud API key.
-      --service-account string   Service account ID.
-      --description string       Description of API key.
-  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
-      --environment string       Environment ID.
-      --context string           CLI context name.
-
-Global Flags:
-  -h, --help            Show help for this command.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
+Suggestions:
+    If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store UIAPIKEY103 <secret>`.

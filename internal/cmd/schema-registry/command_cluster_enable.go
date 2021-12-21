@@ -22,7 +22,7 @@ var (
 	enableStructuredRenames = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
 )
 
-func (c *clusterCommand) newEnableCommand() *cobra.Command {
+func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "enable",
 		Short:       "Enable Schema Registry for this environment.",
@@ -40,6 +40,9 @@ func (c *clusterCommand) newEnableCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")

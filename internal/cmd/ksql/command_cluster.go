@@ -17,7 +17,7 @@ func newClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &clusterCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)}
+	c := &clusterCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newListCommand())
 
