@@ -131,6 +131,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 }
 
 func contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
+	// TODO add an attribute for CLI version 
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 	anonUser := false
