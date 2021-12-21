@@ -18,8 +18,8 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.onPremValidate),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the config of a given-name subject.",
-				Code: fmt.Sprintf("%s schema-registry config describe <subject-name> %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+				Text: "Validate the compatibility of <schema> against a subject of latest version.",
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --subject <subject-name> --version latest --schema <schema-path>  %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
 			},
 		),
 	}

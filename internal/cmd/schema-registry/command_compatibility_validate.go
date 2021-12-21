@@ -24,7 +24,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of <schema> against a subject of latest version.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate -S <subject-name> -V latest --schema <schema-path>", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --subject <subject-name> --version <version> --schema <schema-path>", pversion.CLIName),
 			},
 		),
 	}
