@@ -45,6 +45,14 @@ func printVersions(versions []int32) {
 	printer.RenderCollectionTable(entries, titleRow)
 }
 
+func printConfig(config string) {
+	titleRow := []string{"CompatibilityLevel"}
+	var entry [][]string
+	record := &struct{ CompatibilityLevel string }{config}
+	entry = append(entry, printer.ToRow(record, titleRow))
+	printer.RenderCollectionTable(entry, titleRow)
+}
+
 func convertMapToString(m map[string]string) string {
 	pairs := make([]string, 0, len(m))
 	for key, value := range m {
