@@ -1022,7 +1022,7 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 		return fmt.Errorf("failed to obtain topics from client: %v", err)
 	}
 
-	var foundTopic bool
+	foundTopic := false
 	for _, t := range metadata.Topics {
 		h.logger.Tracef("validateTopic: found topic " + t.Topic)
 		if topic == t.Topic {
