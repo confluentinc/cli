@@ -151,7 +151,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
 
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	caCertPath, err := cmd.Flags().GetString("ca-location")
 	if err != nil {
 		return nil, nil, err
 	}

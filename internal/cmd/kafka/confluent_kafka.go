@@ -15,6 +15,7 @@ import (
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -65,7 +66,10 @@ func refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle, tokenValu
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, tokenValue)
 		if retrieveErr != nil {
-			fmt.Fprintf(os.Stderr, "%% Token retrieval error: %v\n", retrieveErr)
+			err = fmt.Errorf("Token retrieval error: %v\n", retrieveErr)
+			if err != nil {
+				return err
+			}
 			err = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			if err != nil {
 				return err
@@ -73,7 +77,10 @@ func refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle, tokenValu
 		} else {
 			setTokenError := client.SetOAuthBearerToken(oauthBearerToken)
 			if setTokenError != nil {
-				fmt.Fprintf(os.Stderr, "%% Error setting token and extensions: %v\n", setTokenError)
+				err = fmt.Errorf("Error setting token and extensions: %v\n", setTokenError)
+				if err != nil {
+					return err
+				}
 				err = client.SetOAuthBearerTokenFailure(setTokenError.Error())
 				if err != nil {
 					return err
@@ -267,11 +274,7 @@ func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Con
 		"sasl.mechanism":    mechanism,
 	}
 	if mechanism == "PLAIN" {
-		username, err := cmd.Flags().GetString("username")
-		if err != nil {
-			return nil, err
-		}
-		password, err := cmd.Flags().GetString("password")
+		username, password, err := promptForSASLAuth(cmd)
 		if err != nil {
 			return nil, err
 		}
@@ -452,4 +455,26 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 		}
 	}
 	return nil
+}
+
+func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
+	username, err := cmd.Flags().GetString("username")
+	if err != nil {
+		return "", "", err
+	}
+	password, err := cmd.Flags().GetString("password")
+	if err != nil {
+		return "", "", err
+	}
+	if username != "" && password != "" {
+		return username, password, nil
+	}
+	f := form.New(
+		form.Field{ID: "username", Prompt: "Enter your SASL username"},
+		form.Field{ID: "password", Prompt: "Enter your SASL password", IsHidden: true},
+	)
+	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+		return "", "", err
+	}
+	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }

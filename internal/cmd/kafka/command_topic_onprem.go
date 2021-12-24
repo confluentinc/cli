@@ -145,7 +145,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 			},
 		),
 	}
-	produceCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
 	produceCmd.Flags().String("refs", "", "The path to the references file.")
@@ -167,7 +166,6 @@ func (c *authenticatedTopicCommand) onPremInit() {
 				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap "localhost:19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
 		),
 	}
-	consumeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
 	consumeCmd.Flags().String("group", "", "Consumer group ID.")
 	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
@@ -565,14 +563,6 @@ func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Cont
 
 func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
 	level := c.Config.Logger.GetLevel()
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
-	if err != nil {
-		return err
-	}
 
 	configMap, err := getOnPremProducerConfigMap(cmd, c.clientID)
 	if err != nil {
@@ -604,7 +594,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = c.validateTopic(adminClient, topicName, clusterId)
+	err = c.validateTopic(adminClient, topicName)
 	if err != nil {
 		return err
 	}
@@ -613,19 +603,17 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
+	subject := topicName + "-value"
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return err
+	}
 
 	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
-
 	refs, err := readSchemaRefs(cmd)
-	if err != nil {
-		return err
-	}
-
-	subject := topicName + "-value"
-	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
 	}
@@ -707,14 +695,6 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
 	level := c.Config.Logger.GetLevel()
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
-	if err != nil {
-		return err
-	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
@@ -774,7 +754,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = c.validateTopic(adminClient, topicName, clusterId)
+	err = c.validateTopic(adminClient, topicName)
 	if err != nil {
 		return err
 	}
@@ -804,7 +784,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic, clusterId string) error {
+func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	timeout := 10 * time.Second
 	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
@@ -820,7 +800,7 @@ func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClien
 	}
 	if !foundTopic {
 		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, clusterId, clusterId, clusterId))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, "<cluster-Id>", "<cluster-Id>", "<cluster-Id>"))
 	}
 
 	c.logger.Tracef("validateTopic succeeded")
