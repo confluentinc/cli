@@ -1,12 +1,8 @@
 package kafka
 
 import (
-	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
-
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -38,9 +34,6 @@ var (
 
 type consumerGroupCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	serverCompleter         completer.ServerSideCompleter
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
 }
 
 type consumerData struct {
@@ -94,7 +87,7 @@ type lagDataStruct struct {
 	PartitionId     int32
 }
 
-func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner, serverCompleter completer.ServerSideCompleter) *consumerGroupCommand {
+func newConsumerGroupCommand(prerunner pcmd.PreRunner) *consumerGroupCommand {
 	cmd := &cobra.Command{
 		Use:     "consumer-group",
 		Aliases: []string{"cg"},
@@ -102,26 +95,11 @@ func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner, serverCom
 		Hidden:  true,
 	}
 
-	c := &consumerGroupCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		serverCompleter:               serverCompleter,
-	}
+	c := &consumerGroupCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	lagCmd := NewLagCommand(prerunner, c)
-
-	listCmd := c.newListCommand()
-	describeCmd := c.newDescribeCommand()
-
-	c.AddCommand(describeCmd)
-	c.AddCommand(lagCmd.Command)
-	c.AddCommand(listCmd)
-
-	c.completableChildren = append(lagCmd.completableChildren, listCmd, describeCmd)
-	c.completableFlagChildren = map[string][]*cobra.Command{"cluster": append(lagCmd.completableChildren, listCmd, describeCmd)}
-
-	if cfg.IsCloudLogin() {
-		c.serverCompleter.AddCommand(lagCmd)
-	}
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(newLagCommand(prerunner))
+	c.AddCommand(c.newListCommand())
 
 	return c
 }
@@ -151,25 +129,6 @@ func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
 	return suggestions
 }
 
-func (c *consumerGroupCommand) Cmd() *cobra.Command {
-	return c.Command
-}
-
-func (c *consumerGroupCommand) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedStateFlagCommand)
-	if err != nil {
-		return suggestions
-	}
-	for _, groupData := range consumerGroupDataList.Data {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        groupData.ConsumerGroupId,
-			Description: groupData.ConsumerGroupId,
-		})
-	}
-	return suggestions
-}
-
 func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarestv3.ConsumerGroupDataList, error) {
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd)
 	if err != nil {
@@ -182,19 +141,4 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarest
 	}
 
 	return &groupCmdResp, nil
-}
-
-func (c *consumerGroupCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
-	return c.completableFlagChildren
-}
-
-func (c *consumerGroupCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
-	return map[string]func() []prompt.Suggest{
-		"cluster": completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
-		// todo: add Topic and Partition flag completion
-	}
-}
-
-func (c *consumerGroupCommand) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
 }

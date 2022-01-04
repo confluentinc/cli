@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -13,7 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
 var (
@@ -110,21 +108,6 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 		EntryFilter:   binding.Entry,
 		PatternFilter: binding.Pattern,
 	}
-}
-
-func (c *aclCommand) ServerCompletableFlagChildren() map[string][]*cobra.Command {
-	return c.completableFlagChildren
-}
-
-func (c *aclCommand) ServerFlagComplete() map[string]func() []prompt.Suggest {
-	return map[string]func() []prompt.Suggest{
-		"cluster":         completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId()),
-		"service-account": completer.ServiceAccountFlagCompleterFunc(c.Client),
-	}
-}
-
-func (c *aclCommand) Cmd() *cobra.Command {
-	return c.Command
 }
 
 func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
