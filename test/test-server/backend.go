@@ -21,8 +21,8 @@ type TestBackend struct {
 	sr             *httptest.Server
 }
 
-func StartTestBackend(t *testing.T) *TestBackend {
-	cloudRouter := NewCloudRouter(t)
+func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
+	cloudRouter := NewCloudRouter(t, isAuditLogEnabled)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
 	srRouter := NewSRRouter(t)
