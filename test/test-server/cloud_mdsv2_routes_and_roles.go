@@ -294,4 +294,16 @@ var v2RoutesAndReplies = map[string]string{
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/food":           `["User:u-11aaa"]`,
 	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/shire-parties": `["User:u-11aaa"]`,
+	"/api/metadata/security/v2alpha1/lookup/role/OrganisationAdmin": `{"status_code":400, "message":"Invalid role name : OrganisationAdmin","type":"INVALID REQUEST DATA"}`,
+	"/api/metadata/security/v2alpha1/lookup/role/MetricsViewers": `{
+	  "errors": [
+		{
+		  "id": "806263f440c3de28bd94fb6d1d81ac1b",
+		  "status": "400",
+		  "code": "invalid-role",
+		  "detail": "Invalid role name : MetricsViewers",
+		  "source": {}
+		}
+	  ]
+	}`,
 }
