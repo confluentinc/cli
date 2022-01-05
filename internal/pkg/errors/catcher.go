@@ -28,32 +28,14 @@ func catchTypedErrors(err error) error {
 	return err
 }
 
-type mdsv2alpha1ErrorType1 struct {
-	Code    int    `json:"status_code"`
-	Message string `json:"message"`
-	Type    string `json:"type"`
-}
-
-type mdsv2alpha1ErrorType2 struct {
-	Id      string `json:"id"`
-	Status  string `json:"status"`
-	Code    string `json:"code"`
-	Message string `json:"detail"`
-	Source  []string `json:"type"`
-}
-
-type mdsv2alpha1ErrorType2Array struct {
-	Errors []mdsv2alpha1ErrorType2 `json:"errors"`
-}
-
-func parseMDSOpenAPIErrorType1(err error) (*mdsv2alpha1ErrorType1, error) {
+func parseMDSOpenAPIErrorType1(err error) (*MDSV2Alpha1ErrorType1, error) {
 	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
-		var decodedError mdsv2alpha1ErrorType1
+		var decodedError MDSV2Alpha1ErrorType1
 		err = json.Unmarshal(openAPIError.Body(), &decodedError)
 		if err != nil {
 			return nil, err
 		}
-		if reflect.DeepEqual(decodedError, mdsv2alpha1ErrorType1{}) {
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType1{}) {
 			return nil, fmt.Errorf("failed to parse")
 		}
 		return &decodedError, nil
@@ -61,14 +43,14 @@ func parseMDSOpenAPIErrorType1(err error) (*mdsv2alpha1ErrorType1, error) {
 	return nil, fmt.Errorf("unexpected type")
 }
 
-func parseMDSOpenAPIErrorType2(err error) (*mdsv2alpha1ErrorType2Array, error) {
+func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
-		var decodedError mdsv2alpha1ErrorType2Array
+		var decodedError MDSV2Alpha1ErrorType2Array
 		err = json.Unmarshal(openAPIError.Body(), &decodedError)
 		if err != nil {
 			return nil, err
 		}
-		if reflect.DeepEqual(decodedError, mdsv2alpha1ErrorType2Array{}) {
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType2Array{}) {
 			return nil, fmt.Errorf("failed to parse")
 		}
 		return &decodedError, nil
@@ -86,16 +68,11 @@ func catchMDSErrors(err error) error {
 		}
 		openAPIError, parseErr := parseMDSOpenAPIErrorType1(err)
 		if parseErr == nil {
-			errorType := fmt.Sprintf("%d %s", openAPIError.Code, openAPIError.Type)
-			return Errorf(GenericOpenAPIErrorMsg, errorType, openAPIError.Message)
+			return openAPIError.UserFacingError()
 		} else {
 			openAPIErrorType2, parseErr2 := parseMDSOpenAPIErrorType2(err)
 			if parseErr2 == nil {
-				errorMessage := ""
-				for _, error := range openAPIErrorType2.Errors {
-					errorMessage = fmt.Sprintf("%s : %s ",error.Status, error.Message) + errorMessage
-				}
-				return Errorf(ParsedGenericOpenAPIErrorMsg, errorMessage)
+				return openAPIErrorType2.UserFacingError()
 			} else {
 				return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 			}
