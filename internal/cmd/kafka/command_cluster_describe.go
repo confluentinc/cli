@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -84,18 +85,22 @@ type describeStructWithKAPI struct {
 	KAPI               string
 }
 
-func (c *clusterCommand) newDescribeCommand() *cobra.Command {
+func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe [id]",
-		Short:       "Describe a Kafka cluster.",
-		Long:        "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
-		Args:        cobra.MaximumNArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.describe),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "describe [id]",
+		Short:             "Describe a Kafka cluster.",
+		Long:              "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.describe),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

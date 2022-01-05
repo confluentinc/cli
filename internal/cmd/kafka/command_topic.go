@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/c-bata/go-prompt"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -42,10 +41,9 @@ type hasAPIKeyTopicCommand struct {
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner           pcmd.PreRunner
-	logger              *log.Logger
-	clientID            string
-	completableChildren []*cobra.Command
+	prerunner pcmd.PreRunner
+	logger    *log.Logger
+	clientID  string
 }
 
 type structuredDescribeDisplay struct {
@@ -58,7 +56,6 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-// NewTopicCommand returns the Cobra command for Kafka topic.
 func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
@@ -69,7 +66,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 
 	if cfg.IsCloudLogin() {
 		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
-			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
+			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
 			prerunner:           prerunner,
 			logger:              logger,
 			clientID:            clientID,
@@ -77,7 +74,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.hasAPIKeyTopicCommand.init()
 
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, TopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
@@ -85,7 +82,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand.init()
 	} else {
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
 			logger:                        logger,
 			clientID:                      clientID,
@@ -97,58 +94,54 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 	return c
 }
 
-func (k *kafkaTopicCommand) Cmd() *cobra.Command {
-	return k.hasAPIKeyTopicCommand.Command
+func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteTopics()
 }
 
-func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	cmd := k.authenticatedTopicCommand
-	if cmd == nil {
-		return suggestions
-	}
-	topics, err := cmd.getTopics()
+func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+	topics, err := c.getTopics()
 	if err != nil {
-		return suggestions
+		return nil
 	}
-	for _, topic := range topics {
-		description := ""
+
+	suggestions := make([]string, len(topics))
+	for i, topic := range topics {
+		var description string
 		if topic.Internal {
 			description = "Internal"
 		}
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        topic.Name,
-			Description: description,
-		})
+		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
 	}
 	return suggestions
 }
 
-func (k *kafkaTopicCommand) ServerCompletableChildren() []*cobra.Command {
-	return k.completableChildren
+func (c *hasAPIKeyTopicCommand) init() {
+	c.AddCommand(c.newProduceCommand())
+	c.AddCommand(c.newConsumeCommand())
 }
 
-func (h *hasAPIKeyTopicCommand) init() {
-	h.AddCommand(h.newProduceCommand())
-	h.AddCommand(h.newConsumeCommand())
-}
+func (c *authenticatedTopicCommand) init() {
+	describeCmd := c.newDescribeCommand()
+	updateCmd := c.newUpdateCommand()
+	deleteCmd := c.newDeleteCommand()
 
-func (a *authenticatedTopicCommand) init() {
-	describeCmd := a.newDescribeCommand()
-	updateCmd := a.newUpdateCommand()
-	deleteCmd := a.newDeleteCommand()
-
-	a.AddCommand(a.newListCommand())
-	a.AddCommand(a.newCreateCommand())
-	a.AddCommand(describeCmd)
-	a.AddCommand(updateCmd)
-	a.AddCommand(deleteCmd)
-
-	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(describeCmd)
+	c.AddCommand(updateCmd)
+	c.AddCommand(deleteCmd)
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
 	timeout := 10 * time.Second
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
@@ -160,17 +153,17 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	foundTopic := false
 	for _, t := range metadata.Topics {
-		h.logger.Tracef("validateTopic: found topic " + t.Topic)
+		c.logger.Tracef("validateTopic: found topic " + t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
-		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 
-	h.logger.Tracef("validateTopic succeeded")
+	c.logger.Tracef("validateTopic succeeded")
 	return nil
 }
 

@@ -106,3 +106,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 		s.runConfluentTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
+	s.runCcloudTest(CLITest{args: "audit-log describe", login: "default", fixture: "auditlog/describe_fail.golden", disableAuditLog: true, wantErrCode: 1})
+}

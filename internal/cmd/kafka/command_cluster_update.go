@@ -9,17 +9,19 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *clusterCommand) newUpdateCommand() *cobra.Command {
+func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a Kafka cluster.",
-		Args:  cobra.ExactArgs(1),
+		Use:               "update <id>",
+		Short:             "Update a Kafka cluster.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, args []string) error {
 			return c.update(cmd, args, form.NewPrompt(os.Stdin))
 		}),
@@ -35,6 +37,9 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -27,7 +27,7 @@ func newClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &clusterCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
 		prerunner:                     prerunner,
 	}
 

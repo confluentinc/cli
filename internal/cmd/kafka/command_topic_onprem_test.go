@@ -24,6 +24,10 @@ import (
 )
 
 const (
+	topicName = "topic"
+)
+
+const (
 	// Expected output of tests
 	ExpectedListTopicsOutput     = "   Name    \n-----------\n  topic-1  \n  topic-2  \n  topic-3  \n"
 	ExpectedListTopicsYamlOutput = `- name: topic-1

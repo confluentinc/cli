@@ -80,30 +80,30 @@ in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/10
 
 ## Developing
 
-This repo requires golang 1.16.3.  We recommend you use `goenv` to manage your go versions.
-There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
-
 ### Go Version
 
-Fortunately `goenv` supports 1.16.3 already. If your `goenv` does not list this as an option,
-you may have to build `goenv`'s `master` branch from source, which you can do with the
-following instructions:
+This repo requires go1.17.5. We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
+There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
-If you already have it via brew, uninstall it first:
+We recommend cloning the `goenv` repo directly to ensure that you have access to the latest version of Go. If you've
+already installed `goenv` with brew, uninstall it first:
 
     brew uninstall goenv
 
-Now clone the repo and update your shell profile:
+Now, clone the `goenv` repo:
 
-    git clone https://github.com/syndbg/goenv.git $GOPATH/src/github.com/syndbg/goenv
-    echo 'export GOENV_ROOT="$GOPATH/src/github.com/syndbg/goenv"' >> ~/.bash_profile
-    echo 'export PATH="$GOENV_ROOT/bin:$PATH"' >> ~/.bash_profile
-    echo 'eval "$(goenv init -)"' >> ~/.bash_profile
+    git clone https://github.com/syndbg/goenv.git ~/.goenv
 
-Install the required version of `goreleaser`
+Then, add the following to your shell profile:
 
-    go get github.com/goreleaser/goreleaser@v0.116.0
+    export GOENV_ROOT="$HOME/.goenv"
+    export PATH="$GOENV_ROOT/bin:$PATH"
+    eval $(goenv init -)
+    export PATH="$PATH:$GOPATH/bin"
 
+Finally, you can install the version of Go we use by running the following command inside the root directory:
+
+    goenv install
 
 ### Mac Setup Notes
 
