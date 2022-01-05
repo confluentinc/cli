@@ -25,7 +25,9 @@ import (
 )
 
 const (
-	messageOffset         = 5 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
+	messageOffset = 5 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
+
+	// required fields of SASL/oauthbearer configuration
 	principalClaimNameKey = "principalClaimName"
 	principalKey          = "principal"
 )
@@ -54,7 +56,7 @@ type GroupHandler struct {
 }
 
 func refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle, tokenValue string) error {
-	mechanism, err := cmd.Flags().GetString("mechanism")
+	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return err
 	}
@@ -112,7 +114,7 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	}
 
 	now := time.Now()
-	expiration := now.Add(time.Second * time.Duration(600))
+	expiration := now.Add(time.Second * time.Duration(3600)) // timeout after 60 mins. TODO: re-authenticate after timout
 	oauthBearerToken := ckafka.OAuthBearerToken{
 		TokenValue: tokenValue,
 		Expiration: expiration,
@@ -155,11 +157,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err != nil {
 		return nil, err
 	}
-	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
-	if err != nil {
-		return nil, err
-	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
+	enableSSLVerification, caLocation, err := getSSLVerification(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -191,11 +189,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err != nil {
 		return nil, err
 	}
-	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
-	if err != nil {
-		return nil, err
-	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
+	enableSSLVerification, caLocation, err := getSSLVerification(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -215,6 +209,21 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	return setProtocolConfig(cmd, configMap)
+}
+
+func getSSLVerification(cmd *cobra.Command) (bool, string, error) {
+	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
+	if err != nil {
+		return false, "", err
+	}
+	caLocation, err := cmd.Flags().GetString("ca-location")
+	if err != nil {
+		return false, "", err
+	}
+	if enableSSLVerification && caLocation == "" {
+		return false, "", errors.New(errors.CaCertNotSpecifiedErrorMsg)
+	}
+	return enableSSLVerification, caLocation, nil
 }
 
 func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
@@ -265,7 +274,7 @@ func setSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Conf
 }
 
 func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
-	mechanism, err := cmd.Flags().GetString("mechanism")
+	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return nil, err
 	}

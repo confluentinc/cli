@@ -1,0 +1,137 @@
+package kafka
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+)
+
+func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
+	consumeCmd := &cobra.Command{
+		Use:   "consume <topic>",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(c.onPremConsume),
+		Short: "Consume messages from a Kafka topic.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
+				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap "localhost:19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
+		),
+	}
+	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	consumeCmd.Flags().String("group", "", "Consumer group ID.")
+	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
+	consumeCmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
+	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	consumeCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	pcmd.AddOutputFlag(consumeCmd)
+
+	return consumeCmd
+}
+
+func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
+	level := c.Config.Logger.GetLevel()
+
+	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	configMap, err := getOnPremConsumerConfigMap(cmd, c.clientID)
+	if err != nil {
+		return err
+	}
+	consumerGroup, err := configMap.Get("group.id", "")
+	if err != nil {
+		return err
+	}
+	c.logger.Debugf(fmt.Sprintf("Created consumer group: %s", consumerGroup))
+
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+		// Only initialize client and context when schema is specified.
+		srClient, ctx, err = sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		if err != nil {
+			if err.Error() == errors.NotLoggedInErrorMsg {
+				return new(errors.SRNotAuthenticatedError)
+			} else {
+				return err
+			}
+		}
+	}
+
+	consumer, err := ckafka.NewConsumer(configMap)
+	if err != nil {
+		if level >= log.WARN {
+			c.logger.Warnf(errors.FailedToCreateConsumerMsg, err)
+		}
+		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+	}
+	c.logger.Tracef("Create consumer succeeded")
+
+	err = refreshOAuthBearerToken(cmd, consumer, c.AuthToken())
+	if err != nil {
+		return err
+	}
+
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		if level >= log.WARN {
+			c.logger.Warnf(errors.FailedToCreateAdminClientMsg, err)
+		}
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	topicName := args[0]
+	err = c.validateTopic(adminClient, topicName)
+	if err != nil {
+		return err
+	}
+
+	err = consumer.Subscribe(topicName, nil)
+	if err != nil {
+		return err
+	}
+
+	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+
+	dir := filepath.Join(os.TempDir(), "confluent-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.Mkdir(dir, 0755); err != nil {
+			return err
+		}
+	}
+
+	groupHandler := &GroupHandler{
+		SrClient:   srClient,
+		Ctx:        ctx,
+		Format:     valueFormat,
+		Out:        cmd.OutOrStdout(),
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+	}
+	return runConsumer(cmd, consumer, groupHandler)
+}

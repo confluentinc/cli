@@ -34,9 +34,9 @@ const (
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// login command
-	NoEnvironmentFoundErrorMsg					= "no environment found for authenticated user"
-	UnneccessaryUrlFlagForCloudLoginErrorMsg	= "there is no need to pass the url flag if you are logging in to Confluent Cloud"
-	UnneccessaryUrlFlagForCloudLoginSuggestions	= "Log in to Confluent Cloud with `confluent login`"
+	NoEnvironmentFoundErrorMsg                  = "no environment found for authenticated user"
+	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
+	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -206,6 +206,7 @@ const (
 	// auth package
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
+	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
@@ -387,8 +388,10 @@ const (
 	NotLoggedInErrorMsg    = "not logged in"
 	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
 		avoidTimeoutSuggestion
-	SRNotAuthenticatedErrorMsg    = "not logged in, or no Schema Registry endpoint specified"
-	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
+	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
+	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token."
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		avoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
