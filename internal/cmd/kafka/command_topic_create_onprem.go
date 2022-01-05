@@ -14,7 +14,7 @@ import (
 )
 
 func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
-	createCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1), // <topic>
@@ -29,31 +29,15 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip",
 			}),
 	}
-	createCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	createCmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
-	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
-	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
+	cmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
-	return createCmd
+	return cmd
 }
 
-//Create a Kafka topic.
-//
-//Usage:
-//confluent kafka topic create <topic> [flags]
-//
-//Flags:
-//--url string                 Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string        Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string    Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string     Path to client private key, include for mTLS authentication.
-//--no-auth                    Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//--partitions int32           Number of topic partitions. (default 6)
-//--replication-factor int32   Number of replicas. (default 3)
-//--config strings             A comma-separated list of topic configuration ('key=value') overrides for the topic being created.
-//--if-not-exists              Exit gracefully if topic already exists.
-//--context string             CLI Context name.
 func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]

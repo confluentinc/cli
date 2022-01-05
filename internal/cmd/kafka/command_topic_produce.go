@@ -18,57 +18,57 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (h *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
-	produceCmd := &cobra.Command{
+func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:         "produce <topic>",
 		Short:       "Produce messages to a Kafka topic.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(h.produce),
+		RunE:        pcmd.NewCLIRunE(c.produce),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
-	produceCmd.Flags().String("schema", "", "The path to the schema file.")
-	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
-	produceCmd.Flags().String("refs", "", "The path to the references file.")
-	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	produceCmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	produceCmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
-	produceCmd.Flags().String("sr-apikey", "", "Schema registry API key.")
-	produceCmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
-	pcmd.AddContextFlag(produceCmd, h.CLICommand)
-	pcmd.AddOutputFlag(produceCmd)
+	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
+	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
-	return produceCmd
+	return cmd
 }
 
-func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
-	level := h.Config.Logger.GetLevel()
+func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
+	level := c.Config.Logger.GetLevel()
 
 	topic := args[0]
-	cluster, err := h.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	producer, err := NewProducer(cluster, h.clientID)
+	producer, err := NewProducer(cluster, c.clientID)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateProducerMsg, err)
+			c.logger.Tracef(errors.FailedToCreateProducerMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
-	h.logger.Tracef("Create producer succeeded")
+	c.logger.Tracef("Create producer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
 
-	err = h.validateTopic(adminClient, topic, cluster)
+	err = c.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 
 	// Meta info contains a magic byte and schema ID (4 bytes).
-	metaInfo, referencePathMap, err := h.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
+	metaInfo, referencePathMap, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	return key, value, nil
 }
 
-func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	var metaInfo []byte
@@ -232,7 +232,7 @@ func (h *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 			return metaInfo, nil, err
 		}
 
-		srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
+		srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
 		if err != nil {
 			if err.Error() == "ccloud" {
 				return nil, nil, new(errors.SRNotAuthenticatedError)

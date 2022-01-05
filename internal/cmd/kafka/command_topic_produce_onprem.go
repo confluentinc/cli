@@ -19,7 +19,7 @@ import (
 )
 
 func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
-	produceCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.onPremProduce),
@@ -31,16 +31,16 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
-	produceCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
-	produceCmd.Flags().String("schema", "", "The path to the local schema file.")
-	produceCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
-	produceCmd.Flags().String("refs", "", "The path to the references file.")
-	produceCmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	produceCmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	produceCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	pcmd.AddOutputFlag(produceCmd)
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	cmd.Flags().String("schema", "", "The path to the local schema file.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
+	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	pcmd.AddOutputFlag(cmd)
 
-	return produceCmd
+	return cmd
 }
 
 func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {

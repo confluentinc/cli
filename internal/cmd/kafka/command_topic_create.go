@@ -15,12 +15,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (a *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
-	createCmd := &cobra.Command{
+func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.create),
+		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a topic named `my_topic` with default options.",
@@ -29,16 +29,16 @@ func (a *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	createCmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
-	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
-	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
-	pcmd.AddContextFlag(createCmd, a.CLICommand)
+	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
+	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafkc.")
+	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	return createCmd
+	return cmd
 }
 
-func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	numPartitions, err := cmd.Flags().GetInt32("partitions")
@@ -65,7 +65,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := a.GetKafkaREST()
+	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 		i := 0
@@ -78,7 +78,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			i++
 		}
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(a.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	topic.Validate = dryRun
 	topic.Spec.Configs = topicConfigsMap
 
-	if err := a.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err

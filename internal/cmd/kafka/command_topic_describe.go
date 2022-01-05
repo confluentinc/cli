@@ -16,12 +16,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (a *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
-	describeCmd := &cobra.Command{
+func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Short: "Describe a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.describe),
+		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic.",
@@ -30,13 +30,13 @@ func (a *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	pcmd.AddContextFlag(describeCmd, a.CLICommand)
-	pcmd.AddOutputFlag(describeCmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
-	return describeCmd
+	return cmd
 }
 
-func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
@@ -48,9 +48,9 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return output.NewInvalidOutputFormatFlagError(outputOption)
 	}
 
-	kafkaREST, _ := a.GetKafkaREST()
+	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -101,13 +101,13 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 	}
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(a.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
 
 	topic := &schedv1.TopicSpecification{Name: topicName}
-	resp, err := a.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return err
 	}

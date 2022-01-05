@@ -17,12 +17,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (a *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
-	updateCmd := &cobra.Command{
+func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.update),
+		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
@@ -31,14 +31,14 @@ func (a *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
-	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
-	pcmd.AddContextFlag(updateCmd, a.CLICommand)
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	return updateCmd
+	return cmd
 }
 
-func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	configStrings, err := cmd.Flags().GetStringSlice("config")
@@ -55,11 +55,11 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := a.GetKafkaREST()
+	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -108,7 +108,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fallback to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(a.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 	topic.Configs = copyMap(configMap)
 
-	err = a.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
+	err = c.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
 	if err != nil {
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err

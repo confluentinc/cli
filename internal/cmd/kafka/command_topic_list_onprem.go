@@ -8,7 +8,7 @@ import (
 )
 
 func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
-	listCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.onPremList),
@@ -21,25 +21,12 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
-	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	pcmd.AddOutputFlag(listCmd)
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	pcmd.AddOutputFlag(cmd)
 
-	return listCmd
+	return cmd
 }
 
-//List Kafka topics.
-//
-//Usage:
-//confluent kafka topic list [flags]
-//
-//Flags:
-//--url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string    Path to client private key, include for mTLS authentication.
-//--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//-o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
-//--context string            CLI Context name.
 func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {

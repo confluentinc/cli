@@ -15,7 +15,7 @@ import (
 )
 
 func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
-	updateCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -26,26 +26,13 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
 			}),
 	}
-	updateCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
-	pcmd.AddOutputFlag(updateCmd)
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
+	pcmd.AddOutputFlag(cmd)
 
-	return updateCmd
+	return cmd
 }
 
-//Update a Kafka topic.
-//
-//Usage:
-//confluent kafka topic update <topic> [flags]
-//
-//Flags:
-//--url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
-//--ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
-//--client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
-//--client-key-path string    Path to client private key, include for mTLS authentication.
-//--no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
-//--config strings            A comma-separated list of topics configuration ('key=value') overrides for the topic being created.
-//--context string            CLI Context name.
 func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 	// Parse Argument
 	topicName := args[0]

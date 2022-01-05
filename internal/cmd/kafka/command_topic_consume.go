@@ -18,12 +18,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (h *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
-	consumeCmd := &cobra.Command{
+func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:         "consume <topic>",
 		Short:       "Consume messages from a Kafka topic.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(h.consume),
+		RunE:        pcmd.NewCLIRunE(c.consume),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -32,21 +32,21 @@ func (h *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 			},
 		),
 	}
-	consumeCmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
-	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
-	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
-	consumeCmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
-	consumeCmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
-	consumeCmd.Flags().String("sr-apikey", "", "Schema registry API key.")
-	consumeCmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
-	pcmd.AddContextFlag(consumeCmd, h.CLICommand)
+	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
+	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
+	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
+	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	return consumeCmd
+	return cmd
 }
 
-func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
-	level := h.Config.Logger.GetLevel()
+func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
+	level := c.Config.Logger.GetLevel()
 
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
@@ -59,7 +59,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cluster, err := h.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			return err
 		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetAPIClientWithAPIKey(cmd, nil, h.Config, h.Version, srAPIKey, srAPISecret)
+		srClient, ctx, err = sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)
@@ -103,25 +103,25 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		srClient, ctx = nil, nil
 	}
 
-	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
+	consumer, err := NewConsumer(group, cluster, c.clientID, beginning)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
+			c.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
-	h.logger.Tracef("Create consumer succeeded")
+	c.logger.Tracef("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
+			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
 		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
 
-	err = h.validateTopic(adminClient, topic, cluster)
+	err = c.validateTopic(adminClient, topic, cluster)
 	if err != nil {
 		return err
 	}

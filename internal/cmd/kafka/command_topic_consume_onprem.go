@@ -18,7 +18,7 @@ import (
 )
 
 func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
-	consumeCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.onPremConsume),
@@ -29,16 +29,16 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap "localhost:19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
 		),
 	}
-	consumeCmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
-	consumeCmd.Flags().String("group", "", "Consumer group ID.")
-	consumeCmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	consumeCmd.Flags().Bool("print-key", false, "Print key of the message.")
-	consumeCmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
-	consumeCmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
-	consumeCmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	pcmd.AddOutputFlag(consumeCmd)
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	cmd.Flags().String("group", "", "Consumer group ID.")
+	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	pcmd.AddOutputFlag(cmd)
 
-	return consumeCmd
+	return cmd
 }
 
 func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {

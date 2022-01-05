@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (a *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
-	deleteCmd := &cobra.Command{
+func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.delete),
+		RunE:  pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
@@ -27,17 +27,17 @@ func (a *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	pcmd.AddContextFlag(deleteCmd, a.CLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	return deleteCmd
+	return cmd
 }
 
-func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaREST, _ := a.GetKafkaREST()
+	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -68,13 +68,13 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(a.Context)
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
 
 	topic := &schedv1.TopicSpecification{Name: topicName}
-	err = a.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	err = c.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err

@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (a *authenticatedTopicCommand) newListCommand() *cobra.Command {
-	listCmd := &cobra.Command{
+func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka topics.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(a.list),
+		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all topics.",
@@ -27,16 +27,16 @@ func (a *authenticatedTopicCommand) newListCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	pcmd.AddContextFlag(listCmd, a.CLICommand)
-	pcmd.AddOutputFlag(listCmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
-	return listCmd
+	return cmd
 }
 
-func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, _ := a.GetKafkaREST()
+func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
+	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
-		kafkaClusterConfig, err := a.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	resp, err := a.getTopics()
+	resp, err := c.getTopics()
 	if err != nil {
 		return err
 	}
@@ -83,12 +83,12 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (a *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
-	cluster, err := pcmd.KafkaCluster(a.Context)
+func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
+	cluster, err := pcmd.KafkaCluster(c.Context)
 	if err != nil {
 		return []*schedv1.TopicDescription{}, err
 	}
 
-	resp, err := a.Client.Kafka.ListTopics(context.Background(), cluster)
+	resp, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	return resp, errors.CatchClusterNotReadyError(err, cluster.Id)
 }
