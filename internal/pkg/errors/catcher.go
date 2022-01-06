@@ -1,11 +1,11 @@
 package errors
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
-	"encoding/json"
-	"reflect"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/hashicorp/go-multierror"
