@@ -17,8 +17,6 @@ func OnPremKafkaRestSet() *pflag.FlagSet {
 func OnPremAuthenticationSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-authentication", pflag.ExitOnError)
 	set.String("bootstrap", "", `List of broker hosts, formatted as "host" or "host:port". Separate hosts with comma.`)
-	set.String("protocol", "SSL", "Security protocol used to communicate with brokers.")
-	set.String("sasl-mechanism", "PLAIN", "SASL_SSL mechanism used for authentication.")
 	set.String("oauth-config", "principalClaimName=confluent principal=admin", "Configuration string for SASL_SSL/OAUTHBEARER mechanism. Use name=value pairs with valid names: principalClaimName, principal, scopeClaimName, scope, and lifeSeconds.")
 	set.String("username", "", "SASL_SSL username for use with PLAIN mechanism.")
 	set.String("password", "", "SASL_SSL password for use with PLAIN mechanism.")

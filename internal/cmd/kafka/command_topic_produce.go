@@ -26,15 +26,19 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 		RunE:        pcmd.NewCLIRunE(c.produce),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
-	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
+	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("api-key", "", "API key.")
+	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().String("environment", "", "Environment ID.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

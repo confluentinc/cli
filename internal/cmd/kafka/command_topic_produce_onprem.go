@@ -31,7 +31,9 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	pcmd.AddProtocolFlag(cmd)
+	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("refs", "", "The path to the references file.")

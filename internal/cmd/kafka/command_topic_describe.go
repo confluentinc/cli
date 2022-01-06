@@ -18,10 +18,11 @@ import (
 
 func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <topic>",
-		Short: "Describe a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:               "describe <topic>",
+		Short:             "Describe a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic.",
@@ -30,7 +31,9 @@ func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

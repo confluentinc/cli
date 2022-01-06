@@ -40,7 +40,11 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("api-key", "", "API key.")
+	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().String("environment", "", "Environment ID.")
 
 	return cmd
 }

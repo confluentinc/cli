@@ -19,10 +19,11 @@ import (
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <topic>",
-		Short: "Update a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:               "update <topic>",
+		Short:             "Update a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		RunE:              pcmd.NewCLIRunE(c.update),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
@@ -33,7 +34,9 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	}
 	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

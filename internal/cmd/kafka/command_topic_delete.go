@@ -15,10 +15,11 @@ import (
 
 func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <topic>",
-		Short: "Delete a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		Use:               "delete <topic>",
+		Short:             "Delete a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
@@ -27,7 +28,9 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

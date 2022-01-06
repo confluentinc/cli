@@ -29,7 +29,9 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 				Code: `confluent kafka topic consume my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SSL --bootstrap "localhost:19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
 		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet()) // includes bootstrap, protocol, ssl and sasl credentials
+	pcmd.AddProtocolFlag(cmd)
+	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
