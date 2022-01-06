@@ -121,31 +121,34 @@ func (e *UpdateClientError) UserFacingError() error {
 }
 
 type MDSV2Alpha1ErrorType1 struct {
-	StatusCode    int    `json:"status_code"`
-	Message string `json:"message"`
-	Type    string `json:"type"`
-	Err   error
+	StatusCode int    `json:"status_code"`
+	Message    string `json:"message"`
+	Type       string `json:"type"`
+	Err        error
 }
 
 func (e *MDSV2Alpha1ErrorType1) Error() string { return e.Message }
 
-func (e *MDSV2Alpha1ErrorType1) UserFacingError() error { return Errorf(ParsedGenericOpenAPIErrorMsg, e.Message) }
+func (e *MDSV2Alpha1ErrorType1) UserFacingError() error {
+	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Message)
+}
 
 type MDSV2Alpha1ErrorType2 struct {
-	Id      string `json:"id"`
-	Status  string `json:"status"`
-	Code    string `json:"code"`
-	Detail string `json:"detail"`
-	Source  []string `json:"type"`
-	Err   error
+	Id     string   `json:"id"`
+	Status string   `json:"status"`
+	Code   string   `json:"code"`
+	Detail string   `json:"detail"`
+	Source []string `json:"type"`
+	Err    error
 }
 
 func (e *MDSV2Alpha1ErrorType2) Error() string { return e.Detail }
 
 type MDSV2Alpha1ErrorType2Array struct {
 	Errors []MDSV2Alpha1ErrorType2 `json:"errors"`
-	Err   error
+	Err    error
 }
+
 func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 	errorMessage := ""
 	for _, error := range e.Errors {
@@ -154,5 +157,6 @@ func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 	return errorMessage
 }
 
-func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error { return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error()) }
-
+func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
+	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error())
+}
