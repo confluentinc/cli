@@ -22,7 +22,7 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.onPremUpdate),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the `my_topic` topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).",
+				Text: `Modify the "my_topic" topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).`,
 				Code: "confluent kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
 			}),
 	}

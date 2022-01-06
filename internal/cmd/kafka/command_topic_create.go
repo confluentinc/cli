@@ -23,7 +23,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.create),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named `my_topic` with default options.",
+				Text: `Create a topic named "my_topic" with default options.`,
 				Code: "confluent kafka topic create my_topic",
 			},
 		),

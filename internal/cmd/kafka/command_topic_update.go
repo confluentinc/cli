@@ -26,7 +26,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
+				Text: `Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).`,
 				Code: `confluent kafka topic update my_topic --config="retention.ms=259200000"`,
 			},
 		),

@@ -27,7 +27,7 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Consume items from the `my_topic` topic and press `Ctrl+C` to exit.",
+				Text: `Consume items from the "my_topic" topic and press "Ctrl+C" to exit.`,
 				Code: "confluent kafka topic consume -b my_topic",
 			},
 		),

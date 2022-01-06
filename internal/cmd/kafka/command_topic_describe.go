@@ -25,7 +25,7 @@ func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
 		RunE:              pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the `my_topic` topic.",
+				Text: `Describe the "my_topic" topic.`,
 				Code: "confluent kafka topic describe my_topic",
 			},
 		),

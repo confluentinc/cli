@@ -22,7 +22,7 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		RunE:              pcmd.NewCLIRunE(c.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
+				Text: `Delete the topics "my_topic" and "my_topic_avro". Use this command carefully as data loss can occur.`,
 				Code: "confluent kafka topic delete my_topic\nconfluent kafka topic delete my_topic_avro",
 			},
 		),
