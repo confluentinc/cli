@@ -117,6 +117,9 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 			if !strings.HasPrefix(serviceAccountID, "sa-") {
 				return errors.New(errors.BadServiceAccountIDErrorMsg)
 			}
+			if _, ok := idMap[serviceAccountID]; !ok {
+				return errors.New(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID))
+			}
 			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", idMap[serviceAccountID]) // translate into numeric ID
 		}
 	}
