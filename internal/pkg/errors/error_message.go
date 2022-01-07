@@ -64,7 +64,7 @@ const (
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
-	UserNotFoundErrorMsg          = "can't map user id to a valid service account"
+	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""

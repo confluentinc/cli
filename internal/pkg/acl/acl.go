@@ -370,7 +370,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 		principal := aclData.Principal
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
 		if err != nil {
-			if err.Error() == errors.UserNotFoundErrorMsg {
+			if err.Error() == errors.UserIdNotValidErrorMsg {
 				continue // skip the entry if not a valid user id
 			}
 			return err
@@ -414,7 +414,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 		principal := binding.Entry.Principal
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
 		if err != nil {
-			if err.Error() == errors.UserNotFoundErrorMsg {
+			if err.Error() == errors.UserIdNotValidErrorMsg {
 				continue // skip the entry if not a valid user id
 			}
 			return err
@@ -450,10 +450,11 @@ func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]strin
 		prefix = splitPrincipal[0]
 		userId := splitPrincipal[1]
 		idp, _ := strconv.ParseInt(userId, 10, 32)
-		if _, ok := idMap[int32(idp)]; !ok {
-			return "", "", errors.New(errors.UserNotFoundErrorMsg)
+		resourceId, ok := idMap[int32(idp)]
+		if !ok {
+			return "", "", errors.New(errors.UserIdNotValidErrorMsg)
 		}
-		resourceId = idMap[int32(idp)]
+		return prefix, resourceId, nil
 	}
-	return prefix, resourceId, nil
+	return "", "", nil
 }
