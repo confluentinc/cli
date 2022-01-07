@@ -263,7 +263,7 @@ Note: If there is a JIRA ticket associated with your PR, please format the PR de
 
 Please familiarize yourself with the following resources before writing your first CLI command:
 
-* TODO: Cloud and On-prem Annotations
+* [Cloud and On-Prem Annotations](pkg/cmd/ANNOTATIONS.md)
 * [CLI Error Handling](pkg/errors/README.md)
-* TODO: Autocompletion
+* [Autocompletion](pkg/cmd/AUTOCOMPLETION.md)
 * TODO: REST Proxy Commands
