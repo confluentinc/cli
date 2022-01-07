@@ -1,6 +1,6 @@
 # Errors And Messages Handling
 
-The CLI codebase stores the strings of all messages in one location: the errors package [internal/pkg/errors](). This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafka cluster). The goal is to ease the verification of consistency and correctness of messages, and to simplify future work in internationalizing the CLI.
+The CLI codebase stores the strings of all messages in the `errors` package. This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafka cluster). The goal is to ease the verification of consistency and correctness of messages, and to simplify future work in internationalizing the CLI.
 
 ## General Message Format
 - `""` surrounding names and ID’s
