@@ -10,7 +10,6 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -45,8 +44,6 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 }
 
 func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
-	level := c.Config.Logger.GetLevel()
-
 	topic := args[0]
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -55,9 +52,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := NewProducer(cluster, c.clientID)
 	if err != nil {
-		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateProducerMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
@@ -65,9 +59,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -77,7 +68,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	valueFormat, err := cmd.Flags().GetString("value-format")
+	valueFormat, subject, serializationProvider, err := prepareSerializer(cmd, topic)
 	if err != nil {
 		return err
 	}
@@ -86,18 +77,10 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-
 	refs, err := readSchemaRefs(cmd)
 	if err != nil {
 		return err
 	}
-
-	subject := topic + "-value"
-	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
-	if err != nil {
-		return err
-	}
-
 	// Meta info contains a magic byte and schema ID (4 bytes).
 	metaInfo, referencePathMap, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
@@ -175,6 +158,19 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 	close(deliveryChan)
 	return scanErr
+}
+
+func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, serdes.SerializationProvider, error) {
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return "", "", nil, err
+	}
+	subject := topicName + "-value"
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return "", "", nil, err
+	}
+	return valueFormat, subject, serializationProvider, nil
 }
 
 func getProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {

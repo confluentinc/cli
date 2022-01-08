@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -50,8 +49,6 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 }
 
 func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
-	level := c.Config.Logger.GetLevel()
-
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
@@ -103,24 +100,16 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 				return err
 			}
 		}
-	} else {
-		srClient, ctx = nil, nil
 	}
 
 	consumer, err := NewConsumer(group, cluster, c.clientID, beginning)
 	if err != nil {
-		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
 	c.logger.Tracef("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		if level >= log.WARN {
-			c.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()

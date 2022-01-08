@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"time"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -219,6 +220,9 @@ func getSSLVerification(cmd *cobra.Command) (bool, string, error) {
 	caLocation, err := cmd.Flags().GetString("ca-location")
 	if err != nil {
 		return false, "", err
+	}
+	if caLocation == "" {
+		caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 	}
 	if enableSSLVerification && caLocation == "" {
 		return false, "", errors.New(errors.CaCertNotSpecifiedErrorMsg)
