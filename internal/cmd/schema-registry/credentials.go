@@ -11,6 +11,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -153,6 +154,9 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 	caCertPath, err := cmd.Flags().GetString("ca-location")
 	if err != nil {
 		return nil, nil, err
+	}
+	if caCertPath == "" {
+		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 	}
 	endpoint, err := cmd.Flags().GetString("sr-endpoint")
 	if err != nil {
