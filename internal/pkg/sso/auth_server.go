@@ -16,6 +16,9 @@ import (
 //go:embed sso_callback.html
 var ssoCallbackHTML string
 
+// Ideally we would randomize this value, but Auth0 requires that we hardcode a single port.
+const port = 26635
+
 /*
 authServer is an HTTP server embedded in the CLI to serve callback requests for SSO logins.
 The server runs in a goroutine / in the background.
@@ -36,10 +39,16 @@ func (s *authServer) startServer() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/cli_callback", s.callbackHandler)
 
-	listener, err := net.ListenTCP("tcp4", &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 26635}) // confl
-
+	// A process can intercept the Auth0 callback by listening to 0.0.0.0:<port>. Verify that this is not the case.
+	lis, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
-		return errors.Wrap(err, errors.StartHTTPServerErrorMsg)
+		return err
+	}
+	_ = lis.Close()
+
+	lis, err = net.ListenTCP("tcp4", &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: port})
+	if err != nil {
+		return err
 	}
 
 	s.wg = &sync.WaitGroup{}
@@ -47,7 +56,7 @@ func (s *authServer) startServer() error {
 
 	s.wg.Add(1)
 	go func() {
-		serverErr := s.server.Serve(listener)
+		serverErr := s.server.Serve(lis)
 		// Serve returns ErrServerClosed when the server is gracefully, intentionally closed:
 		// https://go.googlesource.com/go/+/master/src/net/http/server.go#2854
 		// So don't surface that error to the user.

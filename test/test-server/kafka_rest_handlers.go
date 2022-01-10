@@ -49,7 +49,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPClusters(t *testing.T) func(http.Resp
 func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			vars := mux.Vars(r)
 			err := json.NewEncoder(w).Encode(kafkarestv3.AclDataList{Data: []kafkarestv3.AclData{{
@@ -65,7 +65,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
 			}}})
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			w.Header().Set("Content-Type", "application/json")
 			var req kafkarestv3.ClustersClusterIdAclsPostOpts
@@ -73,7 +73,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 			require.NoError(t, err)
 			err = json.NewEncoder(w).Encode(kafkarestv3.ClustersClusterIdAclsPostOpts{})
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 			w.Header().Set("Content-Type", "application/json")
 			var req kafkarestv3.ClustersClusterIdAclsDeleteOpts
 			_ = json.NewDecoder(r.Body).Decode(&req)
@@ -93,7 +93,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			response := `{
 				"kind": "KafkaTopicList",
@@ -125,7 +125,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 			}`
 			_, err := io.WriteString(w, response)
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			// Parse Create Args
 			reqBody, _ := ioutil.ReadAll(r.Body)
 			var requestData kafkarestv3.CreateTopicRequestData
@@ -195,7 +195,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			// if topic exists
 			if topicName == "topic-exist" {
 				responseString := `{
@@ -364,7 +364,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(
 		topicName := vars["topic"]
 		partitionId := vars["partition"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			// if topic exists
 			if topicName == "topic-exist" {
 				// Define replica & partition info
@@ -445,7 +445,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) func(http.
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			if topicName == "topic-exist" {
 				// Parse Alter Args
 				requestBody, err := ioutil.ReadAll(r.Body)
@@ -485,7 +485,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.Respons
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "DELETE":
+		case http.MethodDelete:
 			if vars["topic"] == "topic-exist" {
 				// Successfully deleted
 				w.WriteHeader(http.StatusNoContent)
@@ -503,13 +503,13 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.Respons
 func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
 			var req kafkarestv3.ClustersClusterIdLinksPostOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseDataList{Data: []kafkarestv3.ListLinksResponseData{
 				{
@@ -538,7 +538,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupDataList{
 				Kind:     "",
@@ -579,7 +579,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseData{
 				Kind:            "",
@@ -590,7 +590,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 				TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
 			})
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
 		}
@@ -602,7 +602,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				w.Header().Set("Content-Type", "application/json")
 				err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupData{
@@ -630,13 +630,13 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
 			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
 				{
@@ -700,7 +700,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumers(t *testing.T) func(http.Res
 	instance2 := "instance-2"
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerDataList{
 				Kind:     "",
@@ -737,13 +737,13 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumers(t *testing.T) func(http.Res
 func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
 			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
 				{
@@ -806,7 +806,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				w.Header().Set("Content-Type", "application/json")
 				instance := "instance-1"
@@ -838,7 +838,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.Re
 func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			fmt.Print("asdfgh")
 			errorMsg := "Not authorized"
 			var errorCode int32 = 401
@@ -903,7 +903,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.Response
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				w.Header().Set("Content-Type", "application/json")
 				instance1 := "instance-1"
@@ -955,7 +955,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.Response
 func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinkConfigsResponseDataList{Data: []kafkarestv3.ListLinkConfigsResponseData{
 				{
@@ -992,7 +992,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.R
 func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
@@ -1037,7 +1037,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLag(t *testing.T) func(http.ResponseW
 		vars := mux.Vars(r)
 		fmt.Println(vars)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				partitionOffsetsMap := map[string]partitionOffsets{
 					"0": {101, 101},
@@ -1082,7 +1082,7 @@ func (r KafkaRestProxyRouter) HandleKafkaTopicPartitions(t *testing.T) func(http
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionDataList{
 				Data: []kafkarestv3.PartitionData{
@@ -1119,7 +1119,7 @@ func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionId(t *testing.T) func(htt
 		partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
 		require.NoError(t, err)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionData{
 				ClusterId:   vars["cluster_id"],
@@ -1306,7 +1306,7 @@ func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionIdReassignment(t *testing
 		partitionIdStr := vars["partition_id"]
 		topicName := vars["topic_name"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if partitionIdStr != "-" && topicName != "-" {
 				partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
 				require.NoError(t, err)

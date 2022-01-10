@@ -19,7 +19,7 @@ import (
 func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mds.AuditLogConfigSpec, []string, error) {
 	var newSpec mds.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
-	warnings := []string{}
+	var warnings []string
 	var newWarnings []string
 
 	sort.Strings(bootstrapServers)
@@ -67,7 +67,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 }
 
 func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) []string {
-	warnings := []string{}
+	var warnings []string
 	for clusterId, spec := range specs {
 		routes := spec.Routes
 		if routes == nil {
@@ -119,14 +119,14 @@ func addDefaultEnabledCategories(specs map[string]*mds.AuditLogConfigSpec, defau
 }
 
 func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
-	warnings := []string{}
+	var warnings []string
 	for clusterId, spec := range specs {
 		routes := spec.Routes
 		if routes == nil {
 			continue
 		}
 
-		foundAuthorities := []string{}
+		var foundAuthorities []string
 		for routeName := range *routes {
 			foundAuthority := getCRNAuthority(routeName)
 			foundAuthorities = append(foundAuthorities, foundAuthority)
@@ -148,7 +148,7 @@ func getCRNAuthority(routeName string) string {
 }
 
 func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string {
-	warnings := []string{}
+	var warnings []string
 	for clusterId, spec := range specs {
 		routes := spec.Routes
 		if routes == nil {
@@ -171,7 +171,7 @@ func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
 }
 
 func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers []string) []string {
-	warnings := []string{}
+	var warnings []string
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		sort.Strings(oldBootStrapServers)
@@ -227,7 +227,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 }
 
 func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) []string {
-	warnings := []string{}
+	var warnings []string
 	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
 		newWarning := fmt.Sprintf(warn.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
 		warnings = append(warnings, newWarning)
@@ -236,7 +236,7 @@ func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int6
 }
 
 func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
-	const DEFAULT_RETENTION_MS = 7776000000
+	const DefaultRetentionMs = 7776000000
 
 	newSpec.DefaultTopics = mds.AuditLogConfigDefaultTopics{
 		Allowed: defaultTopicName,
@@ -245,7 +245,7 @@ func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
 
 	if _, ok := newSpec.Destinations.Topics[defaultTopicName]; !ok {
 		newSpec.Destinations.Topics[defaultTopicName] = mds.AuditLogConfigDestinationConfig{
-			RetentionMs: DEFAULT_RETENTION_MS,
+			RetentionMs: DefaultRetentionMs,
 		}
 	}
 }
@@ -273,7 +273,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 
 func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
 	newRoutes := make(map[string]mds.AuditLogConfigRouteCategories)
-	warnings := []string{}
+	var warnings []string
 
 	clusterIds := make([]string, 0)
 	for clusterId := range specs {
@@ -445,14 +445,14 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 }
 
 func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
-	warnings := []string{}
+	var warnings []string
 	for clusterId, spec := range specs {
 		excludedPrincipals := spec.ExcludedPrincipals
 		if excludedPrincipals == nil {
 			continue
 		}
 
-		differentPrincipals := []string{}
+		var differentPrincipals []string
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
 			if !utils.Contains(*excludedPrincipals, principal) {

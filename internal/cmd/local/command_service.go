@@ -23,12 +23,20 @@ import (
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
-	c := NewLocalCommand(
-		&cobra.Command{
-			Use:   service,
-			Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
-			Args:  cobra.NoArgs,
-		}, prerunner)
+	cmd := &cobra.Command{
+		Use:   service,
+		Short: fmt.Sprintf("Manage %s.", writeOfficialServiceName(service)),
+		Args:  cobra.NoArgs,
+	}
+
+	switch service {
+	case "zookeeper":
+		cmd.Aliases = []string{"zk"}
+	case "schema-registry":
+		cmd.Aliases = []string{"sr"}
+	}
+
+	c := NewLocalCommand(cmd, prerunner)
 
 	c.AddCommand(NewServiceLogCommand(service, prerunner))
 	c.AddCommand(NewServiceStartCommand(service, prerunner))
@@ -483,13 +491,13 @@ func (c *Command) stopProcess(service string) error {
 		}
 	}
 
-	errors := make(chan error)
+	errs := make(chan error)
 	up := make(chan bool)
 	go func() {
 		for {
 			isUp, err := c.isRunning(service)
 			if err != nil {
-				errors <- err
+				errs <- err
 			}
 			if !isUp {
 				up <- isUp
@@ -499,7 +507,7 @@ func (c *Command) stopProcess(service string) error {
 	select {
 	case <-up:
 		break
-	case err := <-errors:
+	case err := <-errs:
 		return err
 	case <-time.After(10 * time.Second):
 		if err := c.killProcess(service); err != nil {

@@ -33,8 +33,8 @@ Flags:
       --ksql-cluster-id string              ksqlDB cluster ID for scope of role binding listings.
       --connect-cluster-id string           Kafka Connect cluster ID for scope of role binding listings.
       --cluster-name string                 Cluster name to uniquely identify the cluster for role binding listings.
-  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
       --context string                      CLI context name.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

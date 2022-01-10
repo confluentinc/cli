@@ -4,7 +4,7 @@ Usage:
   confluent iam rbac role-binding create [flags]
 
 Examples:
-Create a role binding for the client permitting it produce to the topic users.
+Create a role binding for the principal permitting it produce to the "users" topic.
 
   $ confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID
 
@@ -18,8 +18,8 @@ Flags:
       --ksql-cluster-id string              ksqlDB cluster ID for the role binding.
       --connect-cluster-id string           Kafka Connect cluster ID for the role binding.
       --cluster-name string                 Cluster name to uniquely identify the cluster for role binding listings.
-  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
       --context string                      CLI context name.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

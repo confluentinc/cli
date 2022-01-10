@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -36,7 +35,7 @@ var (
 	clusterLabels = []string{"Name", "Type", " Kafka ID", "Component ID", "Hosts", "Protocol"}
 )
 
-func PrintCluster(cmd *cobra.Command, clusterInfos []mds.ClusterInfo, format string) error {
+func PrintCluster(clusterInfos []mds.ClusterInfo, format string) error {
 	if format == output.Human.String() {
 		var data [][]string
 		for _, clusterInfo := range clusterInfos {
@@ -122,7 +121,7 @@ func outputTable(data [][]string) {
 	tablePrinter.Render()
 }
 
-func HandleClusterError(cmd *cobra.Command, err error, response *http.Response) error {
+func HandleClusterError(err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
 		return errors.NewWrapErrorWithSuggestions(err, errors.AccessClusterRegistryErrorMsg, errors.AccessClusterRegistrySuggestions)
 	}

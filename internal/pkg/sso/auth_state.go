@@ -16,7 +16,7 @@ import (
 
 var (
 	ssoProviderCallbackEndpoint = "/cli_callback"
-	ssoProviderCallbackLocalURL = "http://127.0.0.1:26635" + ssoProviderCallbackEndpoint
+	ssoProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + ssoProviderCallbackEndpoint
 
 	ssoConfigs = map[string]ssoConfig{
 		"cpd": {
@@ -181,7 +181,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	url := s.SSOProviderHost + "/oauth/token"
 	s.logger.Debugf("Oauth token request URL: %s", url)
 	s.logger.Debug("Oauth token request payload: ", payload)
-	req, err := http.NewRequest("POST", url, payload)
+	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
 	}

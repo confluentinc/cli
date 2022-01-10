@@ -116,7 +116,7 @@ func (m *Kafka) DeleteACLs(_ context.Context, _ *schedv1.KafkaCluster, filters [
 	return assertEqualFilters(filters, <-m.Expect)
 }
 
-func (m *Kafka) AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, config *linkv1.LinkProperties, options *linkv1.AlterLinkOptions) error {
+func (m *Kafka) AlterLink(_ context.Context, _ *schedv1.KafkaCluster, link string, config *linkv1.LinkProperties, _ *linkv1.AlterLinkOptions) error {
 	if err := assertEqualValues(link, <-m.Expect); err != nil {
 		return err
 	}
@@ -126,14 +126,14 @@ func (m *Kafka) AlterLink(ctx context.Context, cluster *schedv1.KafkaCluster, li
 	return nil
 }
 
-func (m *Kafka) CreateLink(ctx context.Context, destination *schedv1.KafkaCluster, link *linkv1.ClusterLink, options *linkv1.CreateLinkOptions) error {
+func (m *Kafka) CreateLink(_ context.Context, _ *schedv1.KafkaCluster, link *linkv1.ClusterLink, _ *linkv1.CreateLinkOptions) error {
 	if err := assertEquals(link, <-m.Expect); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster, includeTopics bool) (*linkv1.ListLinksResponse, error) {
+func (m *Kafka) ListLinks(_ context.Context, _ *schedv1.KafkaCluster, includeTopics bool) (*linkv1.ListLinksResponse, error) {
 	if includeTopics {
 		topics := []string{"topic-1", "topic-2"}
 
@@ -153,7 +153,7 @@ func (m *Kafka) ListLinks(ctx context.Context, cluster *schedv1.KafkaCluster, in
 	}
 }
 
-func (m *Kafka) DescribeLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string) (*linkv1.LinkProperties, error) {
+func (m *Kafka) DescribeLink(_ context.Context, _ *schedv1.KafkaCluster, link string) (*linkv1.LinkProperties, error) {
 	return &linkv1.LinkProperties{
 		Properties: map[string]string{
 			"Foo": "123",
@@ -162,7 +162,7 @@ func (m *Kafka) DescribeLink(ctx context.Context, cluster *schedv1.KafkaCluster,
 	}, assertEqualValues(link, <-m.Expect)
 }
 
-func (m *Kafka) DeleteLink(ctx context.Context, cluster *schedv1.KafkaCluster, link string, options *linkv1.DeleteLinkOptions) error {
+func (m *Kafka) DeleteLink(_ context.Context, _ *schedv1.KafkaCluster, link string, _ *linkv1.DeleteLinkOptions) error {
 	return assertEqualValues(link, <-m.Expect)
 }
 

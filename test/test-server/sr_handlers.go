@@ -49,13 +49,13 @@ func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) func(http.ResponseWrite
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			var req srsdk.RegisterSchemaRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			err = json.NewEncoder(w).Encode(srsdk.RegisterSchemaRequest{Id: 1})
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			var versions []int32
 			if mux.Vars(r)["subject"] == "testSubject" {
 				versions = []int32{1, 2, 3}
@@ -82,7 +82,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			versionStr := vars["version"]
 			version64, err := strconv.ParseInt(versionStr, 10, 32)
 			require.NoError(t, err)
@@ -100,7 +100,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 				Schema: "schema",
 			})
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(int32(1))
 			require.NoError(t, err)
 		}
@@ -169,11 +169,12 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 		switch r.Method {
 		case http.MethodGet:
 			info := srsdk.ExporterInfo{
-				Name:        name,
-				Subjects:    []string{"foo", "bar"},
-				ContextType: "CUSTOM",
-				Context:     "mycontext",
-				Config:      map[string]string{"key1": "value1", "key2": "value2"},
+				Name:                name,
+				Subjects:            []string{"foo", "bar"},
+				ContextType:         "CUSTOM",
+				Context:             "mycontext",
+				SubjectRenameFormat: "my-${subject}",
+				Config:              map[string]string{"key1": "value1", "key2": "value2"},
 			}
 			err := json.NewEncoder(w).Encode(info)
 			require.NoError(t, err)

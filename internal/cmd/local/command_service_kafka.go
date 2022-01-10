@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -123,26 +124,6 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Text: "Consume newly arriving non-Avro data from a topic called `mytopic2` on a development Kafka cluster on localhost.",
 					Code: "confluent local services kafka consume mytopic2",
 				},
-				examples.Example{
-					Text: "Create a Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as `/tmp/myconfig.properties`. You can specify the file location using `--config <filename>`.",
-					Code: "bootstrap.servers=<broker endpoint>\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<api-key>\" password=\"<api-secret>\";\nbasic.auth.credentials.source=USER_INFO\nschema.registry.basic.auth.user.info=<username:password>\nschema.registry.url=<sr endpoint>",
-				},
-				examples.Example{
-					Text: "Consume non-Avro data from the beginning of a topic named `mytopic3` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at `/tmp/myconfig.properties`.",
-					Code: "confluent local services kafka consume mytopic3 --cloud --config /tmp/myconfig.properties --from-beginning",
-				},
-				examples.Example{
-					Text: "Consume messages with keys and non-Avro values from the beginning of topic called `mytopic4` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at `/tmp/myconfig.properties`. See the sample Confluent Cloud configuration file above.",
-					Code: "confluent local services kafka consume mytopic4 --cloud --config /tmp/myconfig.properties --from-beginning --property print.key=true",
-				},
-				examples.Example{
-					Text: "Consume Avro data from a topic called `mytopic5` in Confluent Cloud. Assumes Confluent Schema Registry is listening at `http://localhost:8081`.",
-					Code: "confluent local services kafka consume mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro \\\n--from-beginning --property schema.registry.url=http://localhost:8081",
-				},
-				examples.Example{
-					Text: "Consume Avro data from a topic called `mytopic6` in Confluent Cloud. Assumes you are using Confluent Cloud Confluent Schema Registry.",
-					Code: "confluent local services kafka consume mytopic6 --cloud --config /tmp/myconfig.properties --value-format avro \\\n--from-beginning --property schema.registry.url=https://<SR ENDPOINT> \\\n--property basic.auth.credentials.source=USER_INFO \\\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>",
-				},
 			),
 		}, prerunner)
 
@@ -172,26 +153,6 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Text: "Produce non-Avro data to a topic called `mytopic2` on a development Kafka cluster on localhost:",
 					Code: "confluent local produce mytopic2",
 				},
-				examples.Example{
-					Text: "Create a customized Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as `/tmp/myconfig.properties`. You can specify the file location using `--config <filename>`.",
-					Code: "bootstrap.servers=<broker endpoint>\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<api-key>\" password=\"<api-secret>\";\nbasic.auth.credentials.source=USER_INFO\nschema.registry.basic.auth.user.info=<username:password>\nschema.registry.url=<sr endpoint>",
-				},
-				examples.Example{
-					Text: "Produce non-Avro data to a topic called `mytopic3` in Confluent Cloud. Assumes topic has already been created.",
-					Code: "confluent local services kafka produce mytopic3 --cloud --config /tmp/myconfig.properties",
-				},
-				examples.Example{
-					Text: "Produce messages with keys and non-Avro values to a topic called `mytopic4` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at `/tmp/myconfig.properties`. Assumes topic has already been created.",
-					Code: "confluent local services kafka produce mytopic4 --cloud --config /tmp/myconfig.properties --property parse.key=true --property key.separator=,",
-				},
-				examples.Example{
-					Text: "Produce Avro data to a topic called `mytopic5` in Confluent Cloud. Assumes topic has already been created, and Confluent Schema Registry is listening at `http://localhost:8081`.",
-					Code: "confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro\n--property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}'\n--property schema.registry.url=http://localhost:8081",
-				},
-				examples.Example{
-					Text: "Produce Avro data to a topic called `mytopic6` in Confluent Cloud. Assumes topic has already been created and you are using Confluent Cloud Confluent Schema Registry.",
-					Code: "confluent local services kafka produce mytopic6 --cloud --config /tmp/myconfig.properties --value-format avro\n--property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}'\n--property schema.registry.url=https://<SR ENDPOINT>\n--property basic.auth.credentials.source=USER_INFO\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>",
-				},
 			),
 		}, prerunner)
 
@@ -210,7 +171,7 @@ func (c *Command) initFlags(mode string) {
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
 	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"]+"\n") // "\n" separates the CLI flags from the Kafka flags
 
 	// Kafka Flags
 	defaults := kafkaConsumeDefaultValues
@@ -220,8 +181,14 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	for flag, val := range defaults {
-		switch val := val.(type) {
+	var flags []string
+	for flag := range defaults {
+		flags = append(flags, flag)
+	}
+	sort.Strings(flags)
+
+	for _, flag := range flags {
+		switch val := defaults[flag].(type) {
 		case bool:
 			c.Flags().Bool(flag, val, usage[flag])
 		case int:

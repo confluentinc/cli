@@ -1,11 +1,13 @@
 package errors
 
 import (
+	"encoding/json"
 	"fmt"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"reflect"
 	"regexp"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -26,6 +28,36 @@ func catchTypedErrors(err error) error {
 	return err
 }
 
+func parseMDSOpenAPIErrorType1(err error) (*MDSV2Alpha1ErrorType1, error) {
+	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
+		var decodedError MDSV2Alpha1ErrorType1
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType1{}) {
+			return nil, fmt.Errorf("failed to parse")
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
+func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
+	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
+		var decodedError MDSV2Alpha1ErrorType2Array
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType2Array{}) {
+			return nil, fmt.Errorf("failed to parse")
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mds.GenericOpenAPIError:
@@ -34,7 +66,17 @@ func catchMDSErrors(err error) error {
 		if strings.Contains(err.Error(), "Forbidden Access") {
 			return NewErrorWithSuggestions(UnauthorizedErrorMsg, UnauthorizedSuggestions)
 		}
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+		openAPIError, parseErr := parseMDSOpenAPIErrorType1(err)
+		if parseErr == nil {
+			return openAPIError.UserFacingError()
+		} else {
+			openAPIErrorType2, parseErr2 := parseMDSOpenAPIErrorType2(err)
+			if parseErr2 == nil {
+				return openAPIErrorType2.UserFacingError()
+			} else {
+				return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+			}
+		}
 	}
 	return err
 }
@@ -90,21 +132,6 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
-/*
-Error: 1 error occurred:
-	* error checking email: User Not Found
-*/
-func CatchEmailNotFoundError(err error, email string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "error checking email: User Not Found") {
-		errorMsg := fmt.Sprintf(InvalidEmailErrorMsg, email)
-		return NewErrorWithSuggestions(errorMsg, InvalidEmailSuggestions)
-	}
-	return err
-}
-
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
@@ -135,17 +162,6 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
-	}
-	return err
-}
-
-func CatchSchemaRegistryNotFoundError(err error, clusterId string) error {
-	if err == nil {
-		return nil
-	}
-	if isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, SRNotFoundSuggestions)
 	}
 	return err
 }

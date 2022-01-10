@@ -14,9 +14,10 @@ type command struct {
 
 func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "context",
-		Short: "Manage CLI configuration contexts.",
-		Long:  "Manage CLI configuration contexts. Contexts define the state of a Confluent Cloud or Confluent Platform login.",
+		Use:     "context",
+		Aliases: []string{"ctx"},
+		Short:   "Manage CLI configuration contexts.",
+		Long:    "Manage CLI configuration contexts. Contexts define the state of a Confluent Cloud or Confluent Platform login.",
 	}
 
 	c := &command{
@@ -45,4 +46,16 @@ func (c *command) context(args []string) (*pcmd.DynamicContext, error) {
 	} else {
 		return nil, errors.NewErrorWithSuggestions("no context selected", "Select an existing context with `confluent context use`, or supply a specific context name as an argument.")
 	}
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteContexts(c.Config.Config)
 }

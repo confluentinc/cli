@@ -34,12 +34,6 @@ func ErrPrintln(cmd *cobra.Command, args ...interface{}) {
 	_, _ = fmt.Fprintln(cmd.OutOrStderr(), args...)
 }
 
-// ErrPrint formats using the default formats for its operands and writes to stderr.
-// Spaces are added between operands when neither is a string.
-func ErrPrint(cmd *cobra.Command, args ...interface{}) {
-	_, _ = fmt.Fprint(cmd.OutOrStderr(), args...)
-}
-
 // ErrPrintf formats according to a format specifier and writes to stderr.
 func ErrPrintf(cmd *cobra.Command, format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(cmd.OutOrStderr(), format, args...)

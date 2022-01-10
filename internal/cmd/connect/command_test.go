@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
 	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -131,10 +131,9 @@ func (suite *ConnectTestSuite) SetupTest() {
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *ConnectTestSuite) newCmd() *command {
+func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, suite.conf)
-	cmd := New(suite.conf, prerunner, suite.analyticsClient)
-	return cmd
+	return New(prerunner, suite.analyticsClient)
 }
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
@@ -162,7 +161,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
 	args := []string{"delete", connectorID}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	retVal := suite.connectMock.DeleteCalls()[0]
@@ -196,7 +195,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config.yaml"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -209,7 +208,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--config", "../../../test/fixtures/input/connector-config-new-format.json"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.connectMock.CreateCalled())
@@ -248,84 +247,6 @@ func (suite *ConnectTestSuite) TestUpdateConnector() {
 	req.True(suite.connectMock.UpdateCalled())
 	retVal := suite.connectMock.UpdateCalls()[0]
 	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
-}
-
-func (suite *ConnectTestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for authenticated user",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        connectorID,
-					Description: connectorName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *ConnectTestSuite) TestServerClusterFlagComplete() {
-	flagName := "cluster"
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        suite.kafkaCluster.Id,
-					Description: suite.kafkaCluster.Name,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *ConnectTestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	cmd := suite.newCmd()
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"connect delete", "connect describe", "connect pause", "connect resume", "connect update"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
 }
 
 func (suite *ConnectTestSuite) TestPluginList() {

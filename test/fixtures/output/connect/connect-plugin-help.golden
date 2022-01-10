@@ -4,7 +4,7 @@ Usage:
   confluent connect plugin [command]
 
 Available Commands:
-  describe    Describe a connector plugin type.
+  describe    Describe a connector plugin.
   list        List connector plugin types.
 
 Global Flags:

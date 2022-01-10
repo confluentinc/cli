@@ -86,15 +86,16 @@ type listDisplay struct {
 
 func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "role-binding",
-		Short: "Manage RBAC and IAM role bindings.",
-		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
+		Use:     "role-binding",
+		Aliases: []string{"rb"},
+		Short:   "Manage RBAC and IAM role bindings.",
+		Long:    "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 	var cliCmd *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
-		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, RoleBindingSubcommandFlags)
+		cliCmd = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	} else {
-		cliCmd = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
+		cliCmd = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 	ccloudRbacDataplaneEnabled := false
 	if os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "" {
@@ -107,6 +108,20 @@ func NewRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	}
 	roleBindingCmd.init()
 	return roleBindingCmd.Command
+}
+
+func (c *roleBindingCommand) getCreateExample(cloud bool) examples.Example {
+	createCmdExampleText := `Create a role binding for the principal permitting it produce to the "users" topic.`
+	createCmdExampleCode := version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID"
+	if cloud {
+		if c.ccloudRbacDataplaneEnabled {
+			createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde"
+		} else {
+			createCmdExampleText = "Create a role binding for the principal giving it the CloudClusterAdmin role for the specified cluster and environment."
+			createCmdExampleCode = version.CLIName + " iam rbac role-binding create --principal User:u-ab1234 --role CloudClusterAdmin --cloud-cluster lkc-ab123 --environment env-abcde"
+		}
+	}
+	return examples.Example{Code: createCmdExampleCode, Text: createCmdExampleText}
 }
 
 func (c *roleBindingCommand) init() {
@@ -184,23 +199,18 @@ func (c *roleBindingCommand) init() {
 		listCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
 		listCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(listCmd, c.CLICommand)
 	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
+	pcmd.AddOutputFlag(listCmd)
 
 	c.AddCommand(listCmd)
 
 	createCmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a role binding.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Create a role binding for the client permitting it produce to the topic users.",
-				Code: version.CLIName + " iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
-			},
-		),
+		Use:     "create",
+		Short:   "Create a role binding.",
+		Args:    cobra.NoArgs,
+		RunE:    pcmd.NewCLIRunE(c.create),
+		Example: examples.BuildExampleString(c.getCreateExample(isCloud)),
 	}
 	createCmd.Flags().String("role", "", "Role name of the new role binding.")
 	createCmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
@@ -221,9 +231,9 @@ func (c *roleBindingCommand) init() {
 		createCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		createCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		createCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(createCmd, c.CLICommand)
 	}
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
+	pcmd.AddOutputFlag(createCmd)
 	check(createCmd.MarkFlagRequired("role"))
 	check(createCmd.MarkFlagRequired("principal"))
 	c.AddCommand(createCmd)
@@ -253,9 +263,9 @@ func (c *roleBindingCommand) init() {
 		deleteCmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		deleteCmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
 		deleteCmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(deleteCmd, c.CLICommand)
 	}
-	deleteCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	deleteCmd.Flags().SortFlags = false
+	pcmd.AddOutputFlag(deleteCmd)
 	check(createCmd.MarkFlagRequired("role"))
 	check(deleteCmd.MarkFlagRequired("principal"))
 	check(deleteCmd.MarkFlagRequired("role"))
@@ -692,7 +702,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		*scope)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
-			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
+			return c.listPrincipalResourcesV1(scope, principal, role)
 		}
 		return err
 	}
@@ -743,7 +753,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(mdsScope *mds.MdsScope, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {

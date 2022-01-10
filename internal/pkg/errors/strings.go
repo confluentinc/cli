@@ -67,7 +67,6 @@ const (
 	CreatedMirrorMsg         = "Created mirror topic \"%s\".\n"
 
 	// kafka acl commands
-	InvalidServiceAccountMsg = "Invalid service account ID \"%s\".\n"
 	DeletedServiceAccountMsg = "Deleted service account \"%s\".\n"
 	DeletedACLsMsg           = "Deleted ACLs.\n"
 	DeletedACLsCountMsg      = "Deleted %d ACLs.\n"
@@ -149,10 +148,4 @@ const (
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
-
-	// shell package
-	AlreadyAuthenticatedMsg      = "You are already authenticated."
-	CurrentlyNotAuthenticatedMsg = "You are currently not authenticated."
-	ShellWelcomeMsg              = "Welcome to the %s shell! %s\n"
-	ShellExitInstructionsMsg     = "Please press `Ctrl-D` or type `quit` to exit."
 )

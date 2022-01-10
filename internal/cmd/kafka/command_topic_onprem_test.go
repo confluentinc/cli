@@ -24,6 +24,10 @@ import (
 )
 
 const (
+	topicName = "topic"
+)
+
+const (
 	// Expected output of tests
 	ExpectedListTopicsOutput     = "   Name    \n-----------\n  topic-1  \n  topic-2  \n  topic-3  \n"
 	ExpectedListTopicsYamlOutput = `- name: topic-1
@@ -236,7 +240,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
 	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, conf)
-	return NewTopicCommand(conf, testPrerunner, nil, "").authenticatedTopicCommand.Command
+	return newTopicCommand(conf, testPrerunner, nil, "").authenticatedTopicCommand.Command
 }
 
 // Executes the given command with the given args, returns the command executed, stdout and error.

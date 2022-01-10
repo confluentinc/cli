@@ -7,21 +7,19 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update [context]",
-		Short: "Update a context field.",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		Use:               "update [context]",
+		Short:             "Update a context field.",
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.update),
 	}
 
 	cmd.Flags().String("name", "", "Set the name of the context.")
 	cmd.Flags().String("kafka-cluster", "", "Set the active Kafka cluster for the context.")
-	cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	cmd.Flags().SortFlags = false
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -68,7 +66,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if kafkaCluster != "" {
-		if err := ctx.SetActiveKafkaCluster(cmd, kafkaCluster); err != nil {
+		if err := ctx.SetActiveKafkaCluster(kafkaCluster); err != nil {
 			return err
 		}
 	}

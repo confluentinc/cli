@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -31,13 +32,12 @@ var (
 	update       = flag.Bool("update", false, "update golden files")
 	debug        = flag.Bool("debug", true, "enable verbose output")
 	cover        = false
-	testBin      = testBinNormal
+	testBin      = "bin/confluent_test"
 	covCollector *bincover.CoverageCollector
 )
 
 const (
-	testBinNormal          = "confluent_test"
-	testBinRace            = "confluent_test_race"
+	testBinRace            = "bin/confluent_test_race"
 	mergedCoverageFilename = "integ_coverage.txt"
 )
 
@@ -59,6 +59,8 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	// True if audit-log is disabled
+	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
 	// Fixed string to check if output contains
@@ -89,12 +91,12 @@ func TestCLI(t *testing.T) {
 }
 
 func init() {
-	collectCoverage := os.Getenv("INTEG_COVER")
-	cover = collectCoverage == "on"
-	ciEnv := os.Getenv("CI")
-	if ciEnv == "on" {
+	cover = os.Getenv("INTEG_COVER") == "on"
+
+	if os.Getenv("CI") == "on" {
 		testBin = testBinRace
 	}
+
 	if runtime.GOOS == "windows" {
 		testBin = testBin + ".exe"
 	}
@@ -106,8 +108,8 @@ func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 	err := covCollector.Setup()
 	req.NoError(err)
-	s.TestBackend = testserver.StartTestBackend(s.T())
-
+	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
+	os.Setenv("DISABLE_AUDIT_LOG", "false")
 	// dumb but effective
 	err = os.Chdir("..")
 	req.NoError(err)
@@ -191,6 +193,14 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
+		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
+		if isAuditLogDisabled != tt.disableAuditLog {
+			s.TestBackend.Close()
+			s.TestBackend = nil
+			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
+			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
+		}
+
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
@@ -222,6 +232,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 				fmt.Println(output)
 			}
 		}
+
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
 		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 		if *debug {

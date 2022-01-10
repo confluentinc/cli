@@ -28,6 +28,39 @@ const (
 	CheckInterval           = 24 * time.Hour
 )
 
+type command struct {
+	*pcmd.CLICommand
+	version *pversion.Version
+	logger  *log.Logger
+	client  update.Client
+	// for testing
+	analyticsClient analytics.Client
+}
+
+func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "update",
+		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
+		Args:        cobra.NoArgs,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireUpdatesEnabled},
+	}
+
+	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
+	cmd.Flags().Bool("major", false, "Allow major version updates.")
+
+	c := &command{
+		CLICommand:      pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		version:         version,
+		logger:          logger,
+		client:          client,
+		analyticsClient: analytics,
+	}
+
+	c.RunE = pcmd.NewCLIRunE(c.update)
+
+	return c.Command
+}
+
 // NewClient returns a new update.Client configured for the CLI
 func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
@@ -46,41 +79,6 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) upda
 		Logger:        logger,
 		Out:           os.Stdout,
 	})
-}
-
-type command struct {
-	*pcmd.CLICommand
-	version *pversion.Version
-	logger  *log.Logger
-	client  update.Client
-	// for testing
-	analyticsClient analytics.Client
-}
-
-// New returns the command for the built-in updater.
-func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
-	c := &command{
-		version:         version,
-		logger:          logger,
-		client:          client,
-		analyticsClient: analytics,
-	}
-
-	cmd := &cobra.Command{
-		Use:         "update",
-		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
-		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.update),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireUpdatesEnabled},
-	}
-
-	c.CLICommand = pcmd.NewAnonymousCLICommand(cmd, prerunner)
-
-	c.Command.Flags().BoolP("yes", "y", false, "Update without prompting.")
-	c.Command.Flags().Bool("major", false, "Allow major version updates.")
-	c.Command.Flags().SortFlags = false
-
-	return c.Command
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {

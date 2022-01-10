@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -145,18 +144,8 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), &cliMock.ServerSideCompleter{}, suite.analyticsClient)
+	cmd := New(cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.analyticsClient)
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-	return cmd
-}
-
-func (suite *KSQLTestSuite) newClusterCMD() *clusterCommand {
-	client := &ccloud.Client{
-		Kafka: suite.kafkac,
-		User:  suite.userc,
-		KSQL:  suite.ksqlc,
-	}
-	cmd := NewClusterCommand(cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.analyticsClient)
 	return cmd
 }
 
@@ -324,40 +313,6 @@ func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	req.True(suite.ksqlc.DeleteCalled())
 	// TODO add back with analytics
 	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
-}
-
-func (suite *KSQLTestSuite) TestServerClusterFlagComplete() {
-	flagName := "cluster"
-	req := suite.Require()
-	type fields struct {
-		Command *clusterCommand
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newClusterCMD(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        suite.kafkaCluster.Id,
-					Description: suite.kafkaCluster.Name,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
 }
 
 func TestKsqlTestSuite(t *testing.T) {

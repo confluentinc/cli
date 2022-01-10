@@ -64,7 +64,6 @@ func NewSchemaRegistryACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			c.Flags().StringP(flag, shorthands[flag], val, usages[flag])
 		}
 	}
-	c.Flags().SortFlags = false
 
 	return c.Command
 }

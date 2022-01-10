@@ -15,6 +15,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -35,7 +36,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		pcmd.AddOutputFlag(cmd)
 	}
 	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
 	if err != nil {
@@ -78,7 +79,7 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -145,7 +146,6 @@ access to the provided operations on the Kafka cluster itself.`)
 operations on the topics that start with that prefix, depending on whether
 the --prefix option was also passed.`)
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
-	flgSet.SortFlags = false
 	return flgSet
 }
 
@@ -356,7 +356,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -370,6 +370,9 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 		principal := aclData.Principal
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
 		if err != nil {
+			if err.Error() == errors.UserIdNotValidErrorMsg {
+				continue // skip the entry if not a valid user id
+			}
 			return err
 		}
 		record := &struct {
@@ -397,7 +400,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
-		cmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
+		pcmd.AddOutputFlag(cmd)
 	}
 
 	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
@@ -411,6 +414,9 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 		principal := binding.Entry.Principal
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
 		if err != nil {
+			if err.Error() == errors.UserIdNotValidErrorMsg {
+				continue // skip the entry if not a valid user id
+			}
 			return err
 		}
 		record := &struct {
@@ -444,7 +450,11 @@ func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]strin
 		prefix = splitPrincipal[0]
 		userId := splitPrincipal[1]
 		idp, _ := strconv.ParseInt(userId, 10, 32)
-		resourceId = idMap[int32(idp)]
+		resourceId, ok := idMap[int32(idp)]
+		if !ok {
+			return "", "", errors.New(errors.UserIdNotValidErrorMsg)
+		}
+		return prefix, resourceId, nil
 	}
-	return prefix, resourceId, nil
+	return "", "", nil
 }

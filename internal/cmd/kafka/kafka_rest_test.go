@@ -84,11 +84,11 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts()
 
 	r := aclBindingToClustersClusterIdAclsPostOpts(&binding).CreateAclRequestData.Value().(kafkarestv3.CreateAclRequestData)
 	req.True(r.Host == "myhost")
-	req.True(r.Operation == kafkarestv3.AclOperation("READ"))
+	req.True(r.Operation == "READ")
 	req.True(r.ResourceName == "mycluster")
 	req.True(r.Principal == "myprincipal")
-	req.True(r.Permission == kafkarestv3.AclPermission("DENY"))
-	req.True(r.PatternType == kafkarestv3.AclPatternType("LITERAL"))
+	req.True(r.Permission == "DENY")
+	req.True(r.PatternType == "LITERAL")
 }
 
 func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts() {
@@ -161,7 +161,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 		Status:     "Code: 400",
 		StatusCode: 400,
 		Request: &http.Request{
-			Method: "GET",
+			Method: http.MethodGet,
 			URL: &neturl.URL{
 				Host: "myhost",
 				Path: "/my-path",
@@ -171,7 +171,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	r = kafkaRestError(url, openAPIError, &httpResp)
 	req.NotNil(r)
 	req.Contains(r.Error(), "failed")
-	req.Contains(r.Error(), "GET")
+	req.Contains(r.Error(), http.MethodGet)
 	req.Contains(r.Error(), "myhost")
 	req.Contains(r.Error(), "my-path")
 }

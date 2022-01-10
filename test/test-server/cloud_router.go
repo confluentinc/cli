@@ -21,27 +21,27 @@ const (
 	cluster             = "/api/clusters/{id}"
 	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
-	serviceAccounts  = "/api/service_accounts"
-	serviceAccount   = "/api/service_accounts/{id}"
-	schemaRegistries = "/api/schema_registries"
-	schemaRegistry   = "/api/schema_registries/{id}"
-	ksql             = "/api/ksqls/{id}"
-	ksqls            = "/api/ksqls"
-	priceTable       = "/api/organizations/{id}/price_table"
-	paymentInfo      = "/api/organizations/{id}/payment_info"
-	promoCodeClaims  = "/api/organizations/{id}/promo_code_claims"
-	invites          = "/api/organizations/{id}/invites"
-	invitations      = "/api/invitations"
-	user             = "/api/users/{id}"
-	users            = "/api/users"
-	user_profile     = "/api/user_profiles/{id}"
-	connector        = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-	connectorPause   = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-	connectorResume  = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-	connectorUpdate  = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-	connectors       = "/api/accounts/{env}/clusters/{cluster}/connectors"
-	connectorPlugins = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
-	connectCatalog   = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
+	serviceAccounts     = "/api/service_accounts"
+	serviceAccount      = "/api/service_accounts/{id}"
+	schemaRegistries    = "/api/schema_registries"
+	schemaRegistry      = "/api/schema_registries/{id}"
+	ksql                = "/api/ksqls/{id}"
+	ksqls               = "/api/ksqls"
+	priceTable          = "/api/organizations/{id}/price_table"
+	paymentInfo         = "/api/organizations/{id}/payment_info"
+	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
+	invites             = "/api/organizations/{id}/invites"
+	invitations         = "/api/invitations"
+	user                = "/api/users/{id}"
+	users               = "/api/users"
+	userProfile         = "/api/user_profiles/{id}"
+	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
+	connectorPause      = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
+	connectorResume     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
+	connectorUpdate     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
+	connectors          = "/api/accounts/{env}/clusters/{cluster}/connectors"
+	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
+	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
@@ -58,9 +58,9 @@ type CloudRouter struct {
 }
 
 // New CloudRouter with all cloud handlers
-func NewCloudRouter(t *testing.T) *CloudRouter {
+func NewCloudRouter(t *testing.T, isAuditLogEnabled bool) *CloudRouter {
 	c := NewEmptyCloudRouter()
-	c.buildCcloudRouter(t)
+	c.buildCcloudRouter(t, isAuditLogEnabled)
 	return c
 }
 
@@ -72,9 +72,9 @@ func NewEmptyCloudRouter() *CloudRouter {
 }
 
 // Add handlers for cloud endpoints
-func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
+func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
-	c.HandleFunc(me, c.HandleMe(t))
+	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
 	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
@@ -118,7 +118,7 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
 	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
-	c.HandleFunc(user_profile, c.HandleUserProfiles(t))
+	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }
 
 func (c *CloudRouter) addOrgRoutes(t *testing.T) {
@@ -150,13 +150,13 @@ func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {
-	c.HandleFunc(connector, c.HandleConnector(t))
+	c.HandleFunc(connector, c.HandleConnector())
 	c.HandleFunc(connectors, c.HandleConnectors(t))
-	c.HandleFunc(connectorPause, c.HandleConnectorPause(t))
-	c.HandleFunc(connectorResume, c.HandleConnectorResume(t))
+	c.HandleFunc(connectorPause, c.HandleConnectorPause())
+	c.HandleFunc(connectorResume, c.HandleConnectorResume())
 	c.HandleFunc(connectorPlugins, c.HandlePlugins(t))
 	c.HandleFunc(connectCatalog, c.HandleConnectCatalog(t))
-	c.HandleFunc(connectorUpdate, c.HandleConnectUpdate(t))
+	c.HandleFunc(connectorUpdate, c.HandleConnectUpdate())
 }
 
 func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {

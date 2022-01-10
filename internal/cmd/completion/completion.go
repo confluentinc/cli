@@ -1,20 +1,19 @@
 package completion
 
 import (
-	"fmt"
+	"bytes"
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-const longDescription = `Use this command to print the output Shell completion
+const longDescription = `Use this command to print the shell completion
 code for the specified shell (Bash/Zsh only). The shell code must be evaluated to provide
 interactive completion of ` + "`confluent`" + ` commands.
 
 Install Bash completions on macOS:
-  #.  Install Homebrew (https://brew.sh/).
+  #. Install Homebrew (https://brew.sh/).
 
   #. Install Bash completions using the ` + "`homebrew`" + ` command:
   
@@ -75,37 +74,34 @@ Install Zsh completions:
   #. To update your completion scripts after updating the CLI, run ` + "`confluent completion <bash|zsh>`" + ` again and overwrite the file initially created above.
 `
 
-type completionCommand struct {
-	*cobra.Command
-	rootCmd *cobra.Command
-}
+func New() *cobra.Command {
+	return &cobra.Command{
+		Use:       "completion <bash|zsh>",
+		Short:     "Print shell completion code.",
+		Long:      longDescription,
+		ValidArgs: []string{"bash", "zsh"},
+		Args:      cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			out, err := completion(cmd.Root(), args[0])
+			if err != nil {
+				return err
+			}
 
-// New returns the Cobra command for shell completion.
-func New(rootCmd *cobra.Command) *cobra.Command {
-	cmd := &completionCommand{
-		rootCmd: rootCmd,
-	}
-	cmd.init()
-	return cmd.Command
-}
-
-func (c *completionCommand) init() {
-	c.Command = &cobra.Command{
-		Use:   "completion <shell>",
-		Short: "Print shell completion code.",
-		Long:  longDescription,
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.completion),
+			utils.Println(cmd, out)
+			return nil
+		},
 	}
 }
 
-func (c *completionCommand) completion(cmd *cobra.Command, args []string) error {
-	switch args[0] {
-	case "bash":
-		return c.rootCmd.GenBashCompletion(cmd.OutOrStdout())
-	case "zsh":
-		return c.rootCmd.GenZshCompletion(cmd.OutOrStdout())
-	default:
-		return fmt.Errorf(errors.UnsupportedShellErrorMsg, args[0])
+func completion(root *cobra.Command, shell string) (string, error) {
+	buf := new(bytes.Buffer)
+	var err error
+
+	if shell == "zsh" {
+		err = root.GenZshCompletion(buf)
+	} else {
+		err = root.GenBashCompletion(buf)
 	}
+
+	return buf.String(), err
 }

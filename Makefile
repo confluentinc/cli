@@ -4,20 +4,6 @@ GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
 
-.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
-cross-build:
-ifeq ($(GOARCH),arm64) # build for darwin/arm64.
-	make build-darwin-arm64
-else # build for amd64 arch
-    ifeq ($(GOOS),windows)
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
-    else ifeq ($(GOOS),linux) 
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
-    else # build for Darwin/amd64
-		CGO_ENABLED=1 make cli-builder
-    endif
-endif
-
 .PHONY: build # compile natively based on the system
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
@@ -35,6 +21,20 @@ else
 		make switch-librdkafka-arm64
 		make cli-builder || true 
 		make restore-librdkafka-amd64
+    endif
+endif
+
+.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+cross-build:
+ifeq ($(GOARCH),arm64) # build for darwin/arm64.
+	make build-darwin-arm64
+else # build for amd64 arch
+    ifeq ($(GOOS),windows)
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
+    else ifeq ($(GOOS),linux) 
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+    else # build for Darwin/amd64
+		CGO_ENABLED=1 make cli-builder
     endif
 endif
 
@@ -69,7 +69,9 @@ S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 .PHONY: clean
 clean:
-	rm -rf $(shell pwd)/dist
+	@for dir in bin dist docs legal; do \
+		[ -d $$dir ] && rm -r $$dir || true ; \
+	done
 
 .PHONY: generate
 generate:
@@ -77,9 +79,9 @@ generate:
 
 .PHONY: deps
 deps:
-	go get github.com/goreleaser/goreleaser@v0.164.0 && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
-	go get github.com/mitchellh/golicense@v0.2.0
+	go install github.com/goreleaser/goreleaser@v0.164.0 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
+	go install github.com/mitchellh/golicense@v0.2.0
 
 .PHONY: jenkins-deps
 # Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
@@ -130,7 +132,7 @@ build-integ:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	binary="confluent_test" ; \
+	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
@@ -142,7 +144,7 @@ build-integ-nonrace:
 
 .PHONY: build-integ-race
 build-integ-race:
-	binary="confluent_test_race" ; \
+	binary="bin/confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
@@ -259,10 +261,6 @@ unit-test: test-prep coverage-unit
 
 .PHONY: int-test
 int-test: test-prep coverage-integ
-
-.PHONY: doctoc
-doctoc:
-	npx doctoc README.md
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

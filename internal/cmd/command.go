@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/jonboulle/clockwork"
 	segment "github.com/segmentio/analytics-go"
@@ -28,7 +29,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	"github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
-	"github.com/confluentinc/cli/internal/cmd/shell"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -44,7 +44,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
@@ -58,22 +57,21 @@ type command struct {
 }
 
 func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
-	cli := &cobra.Command{
-		Use:               pversion.CLIName,
-		Short:             fmt.Sprintf("%s.", pversion.FullCLIName),
-		Long:              getLongDescription(cfg),
-		Version:           ver.Version,
-		DisableAutoGenTag: true,
+	cmd := &cobra.Command{
+		Use:     pversion.CLIName,
+		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
+		Long:    getLongDescription(cfg),
+		Version: ver.Version,
 	}
 
-	cli.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
+	cmd.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
 		pcmd.LabelRequiredFlags(cmd)
 		_ = help.WriteHelpTemplate(cmd)
 	})
 
-	cli.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
-	cli.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cli.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
+	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
+	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 
 	logger := log.New()
 
@@ -104,48 +102,33 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		Version:                 ver,
 	}
 
-	var serverCompleter completer.ServerSideCompleter
-	shellCompleter := completer.NewShellCompleter(cli)
-	if cfg.IsCloudLogin() {
-		serverCompleter = shellCompleter.ServerSideCompleter
-	}
+	cmd.AddCommand(admin.New(prerunner, isTest))
+	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver, analyticsClient))
+	cmd.AddCommand(auditlog.New(prerunner))
+	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent, logger))
+	cmd.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
+	cmd.AddCommand(completion.New())
+	cmd.AddCommand(context.New(prerunner, flagResolver))
+	cmd.AddCommand(connect.New(prerunner, analyticsClient))
+	cmd.AddCommand(environment.New(prerunner, analyticsClient))
+	cmd.AddCommand(iam.New(cfg, prerunner))
+	cmd.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, analyticsClient))
+	cmd.AddCommand(ksql.New(prerunner, analyticsClient))
+	cmd.AddCommand(local.New(prerunner))
+	cmd.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
+	cmd.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
+	cmd.AddCommand(price.New(prerunner))
+	cmd.AddCommand(prompt.New(cfg))
+	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
+	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
+	cmd.AddCommand(shell.New(cmd))
+	cmd.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
+	cmd.AddCommand(version.New(prerunner, ver))
 
-	apiKeyCmd := apikey.New(prerunner, nil, flagResolver, analyticsClient)
-	connectCmd := connect.New(cfg, prerunner, analyticsClient)
-	environmentCmd := environment.New(prerunner, analyticsClient)
+	hideAndErrIfMissingRunRequirement(cmd, cfg)
+	disableFlagSorting(cmd)
 
-	cli.AddCommand(admin.New(prerunner, isTest))
-	cli.AddCommand(apiKeyCmd.Command)
-	cli.AddCommand(auditlog.New(prerunner))
-	cli.AddCommand(cluster.New(prerunner, cluster.NewScopedIdService(ver.UserAgent, logger)))
-	cli.AddCommand(cloudsignup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
-	cli.AddCommand(completion.New(cli))
-	cli.AddCommand(context.New(prerunner, flagResolver))
-	cli.AddCommand(connectCmd.Command)
-	cli.AddCommand(environmentCmd.Command)
-	cli.AddCommand(iam.New(cfg, prerunner, serverCompleter))
-	cli.AddCommand(kafka.New(cfg, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
-	cli.AddCommand(ksql.New(cfg, prerunner, serverCompleter, analyticsClient))
-	cli.AddCommand(local.New(prerunner))
-	cli.AddCommand(login.New(prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cli.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
-	cli.AddCommand(price.New(prerunner))
-	cli.AddCommand(prompt.New(cfg))
-	cli.AddCommand(schemaregistry.New(cfg, prerunner, nil, logger, analyticsClient))
-	cli.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin(logger)))
-	cli.AddCommand(shell.NewShellCmd(cli, prerunner, cfg, shellCompleter, jwtValidator))
-	cli.AddCommand(update.New(prerunner, logger, ver, updateClient, analyticsClient))
-	cli.AddCommand(version.New(prerunner, ver))
-
-	if cfg.IsCloudLogin() {
-		serverCompleter.AddCommand(apiKeyCmd)
-		serverCompleter.AddCommand(connectCmd)
-		serverCompleter.AddCommand(environmentCmd)
-	}
-
-	hideAndErrIfMissingRunRequirement(cli, cfg)
-
-	return &command{Command: cli, Analytics: analyticsClient, logger: logger}
+	return &command{Command: cmd, Analytics: analyticsClient, logger: logger}
 }
 
 func getAnalyticsClient(isTest bool, cfg *v1.Config, cliVersion string, logger *log.Logger) analytics.Client {
@@ -212,6 +195,15 @@ func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
 
 	for _, subcommand := range cmd.Commands() {
 		hideAndErrIfMissingRunRequirement(subcommand, cfg)
+	}
+}
+
+// disableFlagSorting recursively disables the default option to sort flags, for all commands.
+func disableFlagSorting(cmd *cobra.Command) {
+	cmd.Flags().SortFlags = false
+
+	for _, subcommand := range cmd.Commands() {
+		disableFlagSorting(subcommand)
 	}
 }
 

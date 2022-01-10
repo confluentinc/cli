@@ -1,7 +1,7 @@
 ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz windows_amd64.zip
 
 .PHONY: release
-release: get-release-image commit-release tag-release
+release: commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
