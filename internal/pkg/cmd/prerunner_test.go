@@ -538,7 +538,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 }
 
-func Test_ReLoginToLastOrgUsed(t *testing.T) {
+func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	ccloudCreds := &pauth.Credentials{
 		Username: "username",
 		Password: "password",
@@ -566,7 +566,7 @@ func Test_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
 		GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (s string, s2 string, e error) {
-			require.Equal(t, "o-555", orgResourceId)
+			require.Equal(t, "o-555", orgResourceId) // validate correct org id is used
 			return validAuthToken, "", nil
 		},
 	}

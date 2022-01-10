@@ -72,15 +72,16 @@ var (
 		SetCloudClientFunc: func(arg0 *ccloud.Client) {
 		},
 	}
+	orgManagerImpl = pauth.NewLoginOrganizationManagerImpl(log.New())
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetLoginOrganizationFromArgs(cmd)
+			return orgManagerImpl.GetLoginOrganizationFromArgs(cmd)
 		},
 		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetLoginOrganizationFromEnvVar(cmd)
+			return orgManagerImpl.GetLoginOrganizationFromEnvVar(cmd)
 		},
 		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl(log.New()).GetDefaultLoginOrganization()
+			return orgManagerImpl.GetDefaultLoginOrganization()
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
