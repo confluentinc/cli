@@ -50,7 +50,7 @@ We use `pre-commit` hooks and `gitleaks` to prevent secrets from being committed
 
 ### File Layout
 
-This repo follows the [Standard Go Project Layout](https://github.com/golang-standards/project-layout).
+This repo mostly follows the [Standard Go Project Layout](https://github.com/golang-standards/project-layout).
 Here's the basic file structure:
 
     cli/
