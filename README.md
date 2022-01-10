@@ -1,7 +1,7 @@
 # Confluent CLI
 
 [![Release](release.svg)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://dev.azure.com/confluentinc/cli/_apis/build/status/confluentinc.cli?branchName=main)](https://dev.azure.com/confluentinc/cli/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://dev.azure.com/confluentinc/cli/_apis/build/status/confluentinc.cli?branchName=main)](https://dev.azure.com/confluentinc/cli/_build/latest?definitionId=1&branchName=main)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
