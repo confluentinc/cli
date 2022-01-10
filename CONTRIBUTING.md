@@ -257,7 +257,7 @@ That's it! As you can see, the process of adding a new CLI command is pretty str
 * All unit and integration test pass with `make test`.
 * Running `make lint` produces no linter errors.
 
-Note: If there is a JIRA ticket associated with your PR, please format the PR description as "CLI-1234: Description of PR".
+Note: If there is a JIRA ticket associated with your PR, please format the PR description as "[CLI-1234] Description of PR".
 
 ### Detailed Implementation Guides
 
