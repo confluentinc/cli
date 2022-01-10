@@ -255,9 +255,6 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	conf.Contexts[ctx.Name].Config = conf
 	conf.CurrentContext = ctx.Name
 	conf.IsTest = true
-	//if contextState.Auth != nil {
-	//	conf.UpdateLastUsedOrgId(contextState.Auth.Organization.ResourceId)
-	//}
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}

@@ -12,8 +12,8 @@ import (
 )
 
 type LoginOrganizationManager interface {
-	GetLoginOrganizationFromArgs(cmd *cobra.Command) func() (string, error)
-	GetLoginOrganizationFromEnvVar(cmd *cobra.Command) func() (string, error)
+	GetLoginOrganizationFromArgs(*cobra.Command) func() (string, error)
+	GetLoginOrganizationFromEnvVar(*cobra.Command) func() (string, error)
 	GetDefaultLoginOrganization() func() (string, error)
 }
 
@@ -31,10 +31,7 @@ func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error)
 			multiErr = multierror.Append(multiErr, err)
 		}
 	}
-	if multiErr != nil {
-		return "", multiErr
-	}
-	return "", nil
+	return "", multiErr
 }
 
 func NewLoginOrganizationManagerImpl(logger *log.Logger) *LoginOrganizationManagerImpl {

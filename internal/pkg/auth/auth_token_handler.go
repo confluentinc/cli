@@ -42,12 +42,12 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credential
 	}
 
 	client.HttpClient.Timeout = 30 * time.Second
-	a.logger.Debug("Making login request for " + credentials.Username + " for org id " + orgResourceId)
+	a.logger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
 	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
 	return token, "", err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email string, orgResourceId string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
 	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 	if err != nil {
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
@@ -66,7 +66,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	return token, refreshToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email string, orgResourceId string) (string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
 	loginRealmReply, err := client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
@@ -83,7 +83,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string, orgResourceId string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
 	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken, a.logger)
 	if err != nil {
 		return "", "", err
