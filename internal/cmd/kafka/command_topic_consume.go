@@ -37,8 +37,8 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
-	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
 	cmd.Flags().String("api-key", "", "API key.")
 	cmd.Flags().String("api-secret", "", "API key secret.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -83,11 +83,11 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
-		srAPIKey, err := cmd.Flags().GetString("sr-apikey")
+		srAPIKey, err := cmd.Flags().GetString("sr-api-key")
 		if err != nil {
 			return err
 		}
-		srAPISecret, err := cmd.Flags().GetString("sr-apisecret")
+		srAPISecret, err := cmd.Flags().GetString("sr-api-secret")
 		if err != nil {
 			return err
 		}

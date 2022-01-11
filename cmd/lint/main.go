@@ -177,7 +177,7 @@ var flagRules = []linter.FlagRule{
 			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
 			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
-			"skip-message-on-error", "socket-buffer-size", "client-cert-path", "client-key-path",
+			"skip-message-on-error", "socket-buffer-size", "sr-api-key", "sr-api-secret", "client-cert-path", "client-key-path",
 			"source-bootstrap-server", "source-cluster-id", "source-api-secret", "source-api-key",
 		),
 	),

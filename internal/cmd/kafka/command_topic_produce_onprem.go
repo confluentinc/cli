@@ -24,8 +24,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 		Short: "Produce messages to a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Produce message to topic "my_topic" with SASL_SSL protocol (providing username and password).`,
-				Code: `confluent kafka topic produce my_topic --url https://localhost:8092/kafka --ca-cert-path ca.crt --protocol SASL_SSL --bootstrap "localhost:19091" --username user --password secret`,
+				Text: `Produce message to topic "my_topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
+				Code: `confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap "localhost:19091" --username user --password secret`,
+			},
+			examples.Example{
+				Text: `Produce message to topic "my_topic" with SSL protocol, and SSL verification enabled.`,
+				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ssl-verification --ca-location ca-path`,
 			},
 		),
 	}
@@ -170,11 +174,12 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 	if valueFormat != "string" && len(schemaPath) > 0 {
 		srClient, ctx, err := sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 		if err != nil {
-			return metaInfo, nil, err
+			return nil, nil, err
 		}
+
 		info, err := registerSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
 		if err != nil {
-			return metaInfo, nil, err
+			return nil, nil, err
 		}
 		metaInfo = info
 		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)

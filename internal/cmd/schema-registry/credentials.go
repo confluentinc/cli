@@ -2,10 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
-	"net/http"
 	"os"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -170,7 +166,7 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 
 	srConfig.BasePath = endpoint
 	srConfig.UserAgent = ver.UserAgent
-	srConfig.HTTPClient, err = getCAClient(caCertPath)
+	srConfig.HTTPClient, err = utils.GetCAClient(caCertPath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -180,14 +176,4 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 		return nil, nil, errors.New(errors.SRClientNotValidatedErrorMsg)
 	}
 	return srClient, srCtx, nil
-}
-
-func getCAClient(caCertPath string) (*http.Client, error) {
-	caCert, err := ioutil.ReadFile(caCertPath)
-	if err != nil {
-		return nil, errors.New(errors.CaCertNotSpecifiedErrorMsg)
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	return &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}}, nil
 }

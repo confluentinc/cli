@@ -235,7 +235,7 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 	if err != nil {
 		return nil, err
 	}
-	switch protocol {
+	switch protocol { // ckgo client will return 'unsupported protocol' error if not using one of the following
 	case "SSL":
 		configMap, err = setSSLConfig(cmd, configMap)
 		if err != nil {
