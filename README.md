@@ -36,6 +36,8 @@ For example, to install to `/usr/local/bin`:
 
     curl -sL https://cnfl.io/cli | sh -s -- -b /usr/local/bin
 
+(If the directory has insufficient permissions, you may need to prefix `sh` with `sudo`)
+
 #### Install a Specific Version
 
 To list all available versions:
