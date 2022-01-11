@@ -25,7 +25,6 @@ const (
 	//kafka rest urls
 	rpAcls                     = "/kafka/v3/clusters/{cluster}/acls"
 	rpTopics                   = "/kafka/v3/clusters/{cluster}/topics"
-	rpPartitionReplicas        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
 	rpReplicaStatus            = "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
 	rpTopicConfigs             = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 	rpConfigsAlter             = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
@@ -59,6 +58,9 @@ const (
 	rpBrokersTasks             = "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks"
 	rpBrokerIdTaskType         = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
 	rpBrokerIdTasks            = "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
+	rpPartitionReplicas        = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
+	rpTopicReplicaStatuses     = "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
+	rpPartitionReplicaStatuses = "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status"
 )
 
 type KafkaRouter struct {
@@ -142,6 +144,8 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpBrokersTasks, r.HandleKafkaClustersClusterIdBrokersTasksGet(t))
 	r.HandleFunc(rpBrokerIdTaskType, r.HandleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t))
 	r.HandleFunc(rpBrokerIdTasks, r.HandleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t))
+	r.HandleFunc(rpTopicReplicaStatuses, r.HandleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t))
+	r.HandleFunc(rpPartitionReplicaStatuses, r.HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t))
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		_, err := io.WriteString(w, `{}`)

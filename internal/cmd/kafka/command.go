@@ -34,6 +34,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID 
 	c.AddCommand(newLinkCommand(prerunner))
 	c.AddCommand(newMirrorCommand(prerunner))
 	c.AddCommand(newPartitionCommand(prerunner))
+	c.AddCommand(newReplicaCommand(prerunner))
 	c.AddCommand(newRegionCommand(prerunner))
 	c.AddCommand(aclCmd.Command)
 	c.AddCommand(clusterCmd.Command)

@@ -149,7 +149,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	req.Contains(r.Error(), url)
 	e, ok := r.(errors.ErrorWithSuggestions)
 	req.True(ok)
-	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_CA_CERT_PATH")
+	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_PLATFORM_CA_CERT_PATH")
 
 	openAPIError := kafkarestv3.GenericOpenAPIError{}
 
