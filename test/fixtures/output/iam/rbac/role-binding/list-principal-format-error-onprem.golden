@@ -1,5 +1,5 @@
 Error: incorrect principal format specified
 
 Suggestions:
-    Principal must be specified in this format: `<Principal Type>:<Principal Name>`.
+    Principal must be specified in this format: "<Principal Type>:<Principal Name>".
     For example, "User:u-xxxxxx" or "User:sa-xxxxxx".
