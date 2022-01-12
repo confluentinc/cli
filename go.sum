@@ -352,8 +352,8 @@ github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM
 github.com/confluentinc/cire-obelisk v0.285.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
 github.com/confluentinc/cire-obelisk v0.299.0 h1:DKth61Vxb/1f49RX5vZvTzRO7SndV0PXF6YuU/6YYao=
 github.com/confluentinc/cire-obelisk v0.299.0/go.mod h1:fRpRwe0wisvP+N6OdDGT9LZBcvV8AJk9FiNV6+i9bnQ=
-github.com/confluentinc/confluent-kafka-go v1.7.0 h1:tXh3LWb2Ne0WiU3ng4h5qiGA9XV61rz46w60O+cq8bM=
-github.com/confluentinc/confluent-kafka-go v1.7.0/go.mod h1:u2zNLny2xq+5rWeTQjFHbDzzNuba4P1vo31r9r4uAdg=
+github.com/confluentinc/confluent-kafka-go v1.8.2 h1:PBdbvYpyOdFLehj8j+9ba7FL4c4Moxn79gy9cYKxG5E=
+github.com/confluentinc/confluent-kafka-go v1.8.2/go.mod h1:u2zNLny2xq+5rWeTQjFHbDzzNuba4P1vo31r9r4uAdg=
 github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9/go.mod h1:MUrc101nfomW+4pCJKUAiWFsmUTfFwMnXpBxFd6gEqk=
 github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677 h1:J5RaWrvtNMx26YT5dvkkp0Hh/LAWRomK3Q2DMeKRMPk=
 github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677/go.mod h1:M1v2LPUtSndRkYwk0I8rIl8l0N4+eRYjbgUEhXxuQEw=
