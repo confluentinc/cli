@@ -94,13 +94,13 @@ func createTestConfigFile(name string, configs map[string]string) (string, error
 	return dir, file.Close()
 }
 
-func handleOpenApiError(httpResp *_nethttp.Response, err error, kafkaREST *pcmd.KafkaREST) error {
+func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
 	}
 
 	if httpResp != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return err

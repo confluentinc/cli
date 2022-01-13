@@ -14,15 +14,18 @@ import (
 )
 
 const (
-	apiKeyFlagName                     = "source-api-key"
-	apiSecretFlagName                  = "source-api-secret"
-	noValidateFlagName                 = "no-validate"
+	apiKeyFlagName                 = "source-api-key"
+	apiSecretFlagName              = "source-api-secret"
+	noValidateFlagName             = "no-validate"
+	sourceBootstrapServersFlagName = "source-bootstrap-server"
+	sourceClusterIdFlagName        = "source-cluster-id"
+)
+
+const (
 	saslJaasConfigPropertyName         = "sasl.jaas.config"
 	saslMechanismPropertyName          = "sasl.mechanism"
 	securityProtocolPropertyName       = "security.protocol"
-	sourceBootstrapServersFlagName     = "source-bootstrap-server"
 	sourceBootstrapServersPropertyName = "bootstrap.servers"
-	sourceClusterIdFlagName            = "source-cluster-id"
 )
 
 func (c *linkCommand) newCreateCommand() *cobra.Command {
@@ -58,6 +61,11 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
+
+	if c.cfg.IsOnPremLogin() {
+		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	}
+
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -121,32 +129,20 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	if apiKey != "" && apiSecret != "" {
 		configMap[securityProtocolPropertyName] = "SASL_SSL"
 		configMap[saslMechanismPropertyName] = "PLAIN"
-		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(
-			"org.apache.kafka.common.security.plain.PlainLoginModule required "+
-				"username=\"%s\" "+
-				"password=\"%s\";", apiKey, apiSecret)
+		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, apiKey, apiSecret)
 	} else if apiKey != "" {
-		return errors.New("--source-api-key and --source-api-secret must be used together. " +
-			"You cannot pass in one without the other.")
+		return errors.New("--source-api-key and --source-api-secret must be supplied together")
 	}
 
 	// Overriding the bootstrap server prop by the flag value
 	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
 
-	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
 		return err
 	}
 
-	createLinkOpt := &kafkarestv3.ClustersClusterIdLinksPostOpts{
+	opts := &kafkarestv3.ClustersClusterIdLinksPostOpts{
 		ValidateOnly: optional.NewBool(validateOnly),
 		ValidateLink: optional.NewBool(!skipValidatingLink),
 		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
@@ -155,17 +151,15 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		}),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksPost(
-		kafkaREST.Context, lkc, linkName, createLinkOpt)
-
-	if err == nil {
-		msg := errors.CreatedLinkMsg
-		if validateOnly {
-			msg = errors.DryRunPrefix + msg
-		}
-		utils.Printf(cmd, msg, linkName)
-		return nil
+	if httpResp, err := client.ClusterLinkingApi.ClustersClusterIdLinksPost(ctx, clusterId, linkName, opts); err != nil {
+		return handleOpenApiError(httpResp, err, client)
 	}
 
-	return handleOpenApiError(httpResp, err, kafkaREST)
+	msg := errors.CreatedLinkMsg
+	if validateOnly {
+		msg = errors.DryRunPrefix + msg
+	}
+
+	utils.Printf(cmd, msg, linkName)
+	return nil
 }

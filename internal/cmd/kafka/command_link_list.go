@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -34,6 +33,11 @@ func (c *linkCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
+
+	if c.cfg.IsOnPremLogin() {
+		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	}
+
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,22 +52,14 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksGet(kafkaREST.Context, lkc)
+	listLinksRespDataList, httpResp, err := client.ClusterLinkingApi.ClustersClusterIdLinksGet(ctx, clusterId)
 	if err != nil {
-		return handleOpenApiError(httpResp, err, kafkaREST)
+		return handleOpenApiError(httpResp, err, client)
 	}
 
 	if includeTopics {
