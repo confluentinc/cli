@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -211,5 +212,24 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 	for _, tt := range tests {
 		tt.loginURL = s.TestBackend.GetMdsUrl()
 		s.runConfluentTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestLogin_CaCertPath() {
+	resetConfiguration(s.T())
+
+	tests := []CLITest{
+		{args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/test.crt", s.TestBackend.GetMdsUrl())},
+		{args: "context list -o yaml", fixture: "login/1.golden", regex: true},
+	}
+
+	env := []string{
+		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformUsername, "on-prem@example.com"),
+		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformPassword, "password"),
+	}
+
+	for _, tt := range tests {
+		out := runCommand(s.T(), testBin, env, tt.args, 0)
+		s.validateTestOutput(tt, s.T(), out)
 	}
 }
