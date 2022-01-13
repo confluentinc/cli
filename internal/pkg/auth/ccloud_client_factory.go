@@ -3,8 +3,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -30,6 +28,5 @@ func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloud.
 }
 
 func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client {
-	fmt.Println(log.CliLogger)
 	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }

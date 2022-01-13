@@ -188,7 +188,7 @@ func newCmd(conf *v1.Config) *command {
 			return &ccloud.Client{Auth: auth, User: user}
 		},
 	}
-	cmd := New(prerunner, conf.Logger, "ccloud-cli", ccloudClientFactory)
+	cmd := New(prerunner, "ccloud-cli", ccloudClientFactory)
 	return cmd
 }
 

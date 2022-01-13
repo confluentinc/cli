@@ -210,7 +210,9 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver); err != nil {
 			return err
 		}
-		fmt.Println(log.CliLogger)
+		//if log.CliLogger == nil {
+		//	log.InitCliLogger()
+		//}
 		if err := log.SetLoggingVerbosity(cmd, log.CliLogger); err != nil {
 			return err
 		}

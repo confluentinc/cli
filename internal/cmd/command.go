@@ -72,8 +72,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 
-	log.InitCliLogger()
-	fmt.Println(log.CliLogger)
+	//log.InitCliLogger()
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
@@ -161,7 +160,6 @@ func (c *command) sendAndFlushAnalytics(args []string, err error) {
 
 func LoadConfig() (*v1.Config, error) {
 	cfg := v1.New(&pconfig.Params{
-		Logger:     log.New(),
 		MetricSink: metric.NewSink(),
 	})
 

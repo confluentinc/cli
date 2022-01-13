@@ -87,7 +87,6 @@ func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		Config:  v1.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
-		Logger:  log.New(),
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 				return "", "", nil
@@ -106,20 +105,19 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		MDSClientManager: &cliMock.MockMDSClientManager{
-			GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+			GetMDSClientFunc: func(url, caCertPath string) (client *mds.APIClient, e error) {
 				return &mds.APIClient{}, nil
 			},
 		},
 		Analytics:               cliMock.NewDummyAnalyticsMock(),
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:            pcmd.NewJWTValidator(log.New()),
+		JWTValidator:            pcmd.NewJWTValidator(),
 		AuthTokenHandler:        mockAuthTokenHandler,
 	}
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	type fields struct {
-		Logger  *log.Logger
 		Command string
 	}
 	tests := []struct {
@@ -130,7 +128,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "default logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help",
 			},
 			want: log.ERROR,
@@ -138,7 +135,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "warn logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -v",
 			},
 			want: log.WARN,
@@ -146,7 +142,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "info logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vv",
 			},
 			want: log.INFO,
@@ -154,7 +149,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "debug logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vvv",
 			},
 			want: log.DEBUG,
@@ -162,7 +156,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "trace logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vvvv",
 			},
 			want: log.TRACE,
@@ -175,8 +168,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			require.NoError(t, err)
 
 			r := getPreRunBase()
-			r.Logger = tt.fields.Logger
-			r.JWTValidator = pcmd.NewJWTValidator(tt.fields.Logger)
+			r.JWTValidator = pcmd.NewJWTValidator()
 			r.Config = cfg
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -187,7 +179,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
 			require.NoError(t, err)
 
-			got := tt.fields.Logger.GetLevel()
+			got := log.CliLogger.GetLevel()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PreRun.HasAPIKey() = %v, want %v", got, tt.want)
 			}
