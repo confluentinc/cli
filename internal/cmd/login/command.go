@@ -21,7 +21,6 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	logger                  *log.Logger
 	analyticsClient         analytics.Client
 	ccloudClientFactory     pauth.CCloudClientFactory
 	mdsClientManager        pauth.MDSClientManager
@@ -31,7 +30,7 @@ type Command struct {
 	isTest                  bool
 }
 
-func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -50,7 +49,6 @@ func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CC
 
 	c := &Command{
 		CLICommand:              pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		logger:                  log,
 		analyticsClient:         analyticsClient,
 		mdsClientManager:        mdsClientManager,
 		ccloudClientFactory:     ccloudClientFactory,
@@ -121,8 +119,8 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	c.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
-	c.logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
 	return err
 }
@@ -180,7 +178,7 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		isLegacyContext = caCertPath != ""
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, c.logger)
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
 	if err != nil {
 		return err
 	}
@@ -200,7 +198,7 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	c.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 

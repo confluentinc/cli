@@ -49,13 +49,11 @@ type kafkaTopicCommand struct {
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
-	logger    *log.Logger
 	clientID  string
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
-	logger    *log.Logger
 	clientID  string
 }
 
@@ -69,7 +67,7 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -81,7 +79,6 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
 			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
 			prerunner:           prerunner,
-			logger:              logger,
 			clientID:            clientID,
 		}
 		c.hasAPIKeyTopicCommand.init()
@@ -89,7 +86,6 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
 			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
-			logger:                        logger,
 			clientID:                      clientID,
 		}
 		c.authenticatedTopicCommand.init()
@@ -97,7 +93,6 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
 			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
-			logger:                        logger,
 			clientID:                      clientID,
 		}
 		c.authenticatedTopicCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
@@ -735,8 +730,6 @@ func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, sub
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
-	level := h.Config.Logger.GetLevel()
-
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -745,19 +738,14 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateProducerMsg, err)
-		}
+		log.CliLogger.Warnf(errors.FailedToCreateProducerMsg, err)
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
-	h.logger.Tracef("Create producer succeeded")
+	log.CliLogger.Tracef("Create producer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -896,8 +884,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
-	level := h.Config.Logger.GetLevel()
-
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
@@ -955,18 +941,12 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
-	h.logger.Tracef("Create consumer succeeded")
+	log.CliLogger.Tracef("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -1045,17 +1025,17 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	var foundTopic bool
 	for _, t := range metadata.Topics {
-		h.logger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("validateTopic: found topic " + t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
-		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 
-	h.logger.Tracef("validateTopic succeeded")
+	log.CliLogger.Tracef("validateTopic succeeded")
 	return nil
 }
 

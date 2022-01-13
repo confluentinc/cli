@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	//"github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 // Logger is the standard logger for the Confluent SDK.
@@ -22,7 +22,10 @@ type bufferedLog struct {
 	message string
 }
 
-var _ ccloud.Logger = (*Logger)(nil)
+//var _ ccloud.Logger = (*logger)(nil)
+
+// Global logger instance
+var CliLogger *Logger
 
 type Level int
 
@@ -48,6 +51,10 @@ type Params struct {
 	Level  Level
 	Output io.Writer
 	JSON   bool
+}
+
+func InitCliLogger() {
+	CliLogger = New()
 }
 
 // New creates a new Logger with the default configuration.

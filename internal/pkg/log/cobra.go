@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 )
 
@@ -24,5 +25,7 @@ func SetLoggingVerbosity(cmd *cobra.Command, logger *Logger) error {
 		// requested more than 4 -v's, so let's give them the max verbosity we support
 		logger.SetLevel(TRACE)
 	}
+	fmt.Println("level ")
+	fmt.Println(logger.GetLevel())
 	return nil
 }

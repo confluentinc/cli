@@ -23,12 +23,11 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	logger        *log.Logger
 	userAgent     string
 	clientFactory pauth.CCloudClientFactory
 }
 
-func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
+func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
 	cmd := &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
@@ -37,7 +36,6 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 
 	c := &command{
 		CLICommand:    pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		logger:        logger,
 		userAgent:     userAgent,
 		clientFactory: ccloudClientFactory,
 	}
@@ -58,7 +56,7 @@ func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
 		BaseURL:    url,
 		UserAgent:  c.userAgent,
 		HttpClient: ccloud.BaseClient,
-		Logger:     c.logger,
+		Logger:     log.CliLogger,
 	})
 
 	return c.signup(cmd, form.NewPrompt(os.Stdin), client)
@@ -170,7 +168,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
 		}
-		c.logger.Debugf(errors.LoggedInAsMsg, fEmailName.Responses["email"])
+		log.CliLogger.Debugf(errors.LoggedInAsMsg, fEmailName.Responses["email"])
 		return nil
 	}
 }

@@ -10,11 +10,10 @@ import (
 	"github.com/pkg/browser"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func Login(authURL string, noBrowser bool, auth0ConnectionName string, logger *log.Logger) (idToken string, refreshToken string, err error) {
-	state, err := newState(authURL, noBrowser, logger)
+func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken string, refreshToken string, err error) {
+	state, err := newState(authURL, noBrowser)
 	if err != nil {
 		return "", "", err
 	}
@@ -70,8 +69,8 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string, logger *l
 	return state.SSOProviderIDToken, state.SSOProviderRefreshToken, nil
 }
 
-func RefreshTokens(authURL string, refreshToken string, logger *log.Logger) (string, string, error) {
-	state, err := newState(authURL, false, logger)
+func RefreshTokens(authURL string, refreshToken string) (string, string, error) {
+	state, err := newState(authURL, false)
 	if err != nil {
 		return "", "", err
 	}
