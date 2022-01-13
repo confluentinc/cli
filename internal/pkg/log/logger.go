@@ -53,10 +53,6 @@ type Params struct {
 	JSON   bool
 }
 
-//func InitCliLogger() {
-//	CliLogger = New()
-//}
-
 // New creates a new Logger with the default configuration.
 func New() *Logger {
 	return NewWithParams(&Params{
