@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -523,7 +524,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 }
 
 func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
-	originalCaCertPath := "ogcert.pem"
+	originalCaCertPath, _ := filepath.Abs("ogcert.pem")
 
 	req := require.New(t)
 	tests := []struct {
