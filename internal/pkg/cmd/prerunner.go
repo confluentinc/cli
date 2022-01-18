@@ -357,8 +357,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 		return "", nil, err
 	}
 
-	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
-	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+	token, _, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false)
 	if err != nil {
 		return "", nil, err
 	}
@@ -804,8 +803,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 
 	var token string
 	if r.Config.IsCloudLogin() {
-		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+		token, _, err = r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false)
 		if err != nil {
 			return "", err
 		}

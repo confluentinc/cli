@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
@@ -18,7 +19,7 @@ import (
 )
 
 type AuthTokenHandler interface {
-	GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error)
+	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool) (string, string, error)
 	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
 }
 
@@ -30,19 +31,25 @@ func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
 	return &AuthTokenHandlerImpl{logger}
 }
 
-func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error) {
+func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool) (string, string, error) {
+	anonClient := clientFactory.AnonHTTPClientFactory(url)
 	if credentials.IsSSO {
 		// For an SSO user, the "Password" field may contain a refresh token. If one exists, try to obtain a new token.
 		if credentials.Password != "" {
-			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.Password); err == nil {
+			if token, refreshToken, err := a.refreshCCloudSSOToken(anonClient, credentials.Password); err == nil {
 				return token, refreshToken, nil
 			}
 		}
-		return a.getCCloudSSOToken(client, noBrowser, credentials.Username)
+		token, refreshToken, err := a.getCCloudSSOToken(anonClient, noBrowser, credentials.Username)
+		if err != nil {
+			return token, refreshToken, err
+		}
+		err = a.validateTokenUser(clientFactory.JwtHTTPClientFactory(context.Background(), token, url), credentials.Username)
+		return token, refreshToken, err
 	}
 
-	client.HttpClient.Timeout = 30 * time.Second
-	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, "")
+	anonClient.HttpClient.Timeout = 30 * time.Second
+	token, err := anonClient.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, "")
 	return token, "", err
 }
 
@@ -103,4 +110,31 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 		return "", err
 	}
 	return resp.AuthToken, nil
+}
+
+func (a *AuthTokenHandlerImpl) validateTokenUser(client *ccloud.Client, loginEmail string) error {
+	getMeReply, err := getCCloudUser(client); if err != nil {
+		return err
+	}
+	fmt.Println("yooo wtf")
+	fmt.Println(getMeReply.User.Email)
+	fmt.Println(loginEmail)
+	if getMeReply.User.Email != loginEmail {
+		return errors.New("error brah")
+	}
+	return nil
+	//client := ccloud.NewClientWithJWT(context.Background(), token, &ccloud.Params{BaseURL: url, Logger: a.logger})
+	//client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	//var claims map[string]interface{}
+	//parsedToken, err := jwt.ParseSigned(token); if err != nil {
+	//	return new(ccloud.InvalidTokenError)
+	//}
+	//if err := parsedToken.UnsafeClaimsWithoutVerification(&claims); err != nil {
+	//	return err
+	//}
+	//userId, ok := claims["userId"].(float64)
+	//if !ok {
+	//	return errors.New(errors.MalformedJWTNoExprErrorMsg)
+	//}
+	//client.User.Describe(context.Background())
 }
