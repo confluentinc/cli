@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"time"
 
-
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
