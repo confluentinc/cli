@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -178,6 +179,13 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 			return err
 		}
 		isLegacyContext = caCertPath != ""
+	}
+
+	if caCertPath != "" {
+		caCertPath, err = filepath.Abs(caCertPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, c.logger)
