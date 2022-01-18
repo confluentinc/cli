@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -523,7 +524,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 }
 
 func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
-	originalCaCertPath := "ogcert.pem"
+	originalCaCertPath, _ := filepath.Abs("ogcert.pem")
 
 	req := require.New(t)
 	tests := []struct {
@@ -713,13 +714,13 @@ func TestValidateUrl(t *testing.T) {
 		urlOut     string
 		warningMsg string
 		isCCloud   bool
-		errMsg	   string
+		errMsg     string
 	}{
 		{
 			urlIn:      "https:///test.com",
 			urlOut:     "",
 			warningMsg: "default MDS port 8090",
-			errMsg:		errors.InvalidLoginURLMsg,
+			errMsg:     errors.InvalidLoginURLMsg,
 		},
 		{
 			urlIn:      "test.com",
@@ -753,19 +754,19 @@ func TestValidateUrl(t *testing.T) {
 			isCCloud:   true,
 		},
 		{
-			urlIn:		"confluent.cloud:123",
-			isCCloud: 	true,
-			errMsg: 	errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+			urlIn:    "confluent.cloud:123",
+			isCCloud: true,
+			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
 		},
 		{
-			urlIn:		"https://confluent.cloud/login/sso/company",
-			isCCloud: 	true,
-			errMsg: 	errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+			urlIn:    "https://confluent.cloud/login/sso/company",
+			isCCloud: true,
+			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
 		},
 		{
-			urlIn:		"https://devel.cpdev.cloud//",
-			isCCloud: 	true,
-			errMsg: 	errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+			urlIn:    "https://devel.cpdev.cloud//",
+			isCCloud: true,
+			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
 		},
 	}
 	for _, s := range suite {

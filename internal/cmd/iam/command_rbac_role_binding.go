@@ -891,14 +891,16 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 	for _, principal := range principals {
-		displayStruct := &struct {
-			Principal string
-			Email     string
-		}{
-			Principal: principal,
-			Email:     userToEmailMap[principal],
+		if email, ok := userToEmailMap[principal]; ok {
+			displayStruct := &struct {
+				Principal string
+				Email     string
+			}{
+				Principal: principal,
+				Email:     email,
+			}
+			outputWriter.AddElement(displayStruct)
 		}
-		outputWriter.AddElement(displayStruct)
 	}
 	return outputWriter.Out()
 }

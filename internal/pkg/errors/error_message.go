@@ -64,6 +64,7 @@ const (
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
+	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -71,7 +72,7 @@ const (
 
 	// iam rbac role-binding commands
 	PrincipalFormatErrorMsg         = "incorrect principal format specified"
-	PrincipalFormatSuggestions      = "Principal must be specified in this format: `<Principal Type>:<Principal Name>`."
+	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
@@ -373,7 +374,7 @@ const (
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionMsg            = "Unable to establish Kafka REST connection: %s: %s"
 	KafkaRestUnexpectedStatusMsg      = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
-	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_CA_CERT_PATH\""
+	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_PLATFORM_CA_CERT_PATH\""
 	MDSTokenNotFoundMsg               = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
@@ -426,6 +427,12 @@ const (
 	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
 	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
 
+	// Replica commands
+	MustEnterValidFlagComboErrorMsg      = "must pass a valid flag combination"
+	ValidReplicaFlagsSuggestions         = "Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags."
+	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
+
 	// Special error types
-	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
+	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
+	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
 )

@@ -1508,6 +1508,92 @@ func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersBrokerIdTasksGe
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status"
+func (r KafkaRestProxyRouter) HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionId, err := strconv.ParseInt(vars["partition"], 10, 32)
+		require.NoError(t, err)
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(kafkarestv3.ReplicaStatusDataList{
+			Data: []kafkarestv3.ReplicaStatusData{
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        int32(partitionId),
+					BrokerId:           1,
+					IsLeader:           true,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       1,
+				},
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        int32(partitionId),
+					BrokerId:           2,
+					IsLeader:           false,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       0,
+					LinkName:           "link",
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
+func (r KafkaRestProxyRouter) HandleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.ReplicaStatusDataList{
+			Data: []kafkarestv3.ReplicaStatusData{
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        1,
+					BrokerId:           1,
+					IsLeader:           true,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       1,
+				},
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        2,
+					BrokerId:           2,
+					IsLeader:           false,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       0,
+					LinkName:           "link",
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)
 	responseBody := fmt.Sprintf(`{
