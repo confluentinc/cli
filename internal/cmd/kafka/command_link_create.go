@@ -14,18 +14,19 @@ import (
 )
 
 const (
-	apiKeyFlagName                 = "source-api-key"
-	apiSecretFlagName              = "source-api-secret"
-	noValidateFlagName             = "no-validate"
-	sourceBootstrapServersFlagName = "source-bootstrap-server"
-	sourceClusterIdFlagName        = "source-cluster-id"
+	apiKeyFlagName                      = "source-api-key"
+	apiSecretFlagName                   = "source-api-secret"
+	noValidateFlagName                  = "no-validate"
+	destinationBootstrapServersFlagName = "destination-bootstrap-server"
+	sourceBootstrapServersFlagName      = "source-bootstrap-server"
+	sourceClusterIdFlagName             = "source-cluster-id"
 )
 
 const (
-	saslJaasConfigPropertyName         = "sasl.jaas.config"
-	saslMechanismPropertyName          = "sasl.mechanism"
-	securityProtocolPropertyName       = "security.protocol"
-	sourceBootstrapServersPropertyName = "bootstrap.servers"
+	saslJaasConfigPropertyName   = "sasl.jaas.config"
+	saslMechanismPropertyName    = "sasl.mechanism"
+	securityProtocolPropertyName = "security.protocol"
+	bootstrapServersPropertyName = "bootstrap.servers"
 )
 
 func (c *linkCommand) newCreateCommand() *cobra.Command {
@@ -45,7 +46,12 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
+	if c.cfg.IsCloudLogin() {
+		cmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
+	} else {
+		cmd.Flags().String(destinationBootstrapServersFlagName, "", "Bootstrap-server address of the destination cluster.")
+	}
+
 	cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
 	cmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. "+
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
@@ -70,7 +76,12 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired(sourceBootstrapServersFlagName)
+	if c.cfg.IsCloudLogin() {
+		_ = cmd.MarkFlagRequired(sourceBootstrapServersFlagName)
+	} else {
+		_ = cmd.MarkFlagRequired(destinationBootstrapServersFlagName)
+	}
+
 	_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
 
 	return cmd
@@ -79,7 +90,13 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	bootstrapServers, err := cmd.Flags().GetString(sourceBootstrapServersFlagName)
+	var bootstrapServers string
+	var err error
+	if c.cfg.IsCloudLogin() {
+		bootstrapServers, err = cmd.Flags().GetString(sourceBootstrapServersFlagName)
+	} else {
+		bootstrapServers, err = cmd.Flags().GetString(destinationBootstrapServersFlagName)
+	}
 	if err != nil {
 		return err
 	}
@@ -135,7 +152,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// Overriding the bootstrap server prop by the flag value
-	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
+	configMap[bootstrapServersPropertyName] = bootstrapServers
 
 	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
