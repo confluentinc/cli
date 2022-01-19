@@ -42,6 +42,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	_ = cmd.MarkFlagRequired("bootstrap")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -60,7 +61,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	defer producer.Close()
 	c.logger.Tracef("Create producer succeeded")
 
-	err = refreshOAuthBearerToken(cmd, producer, c.AuthToken())
+	err = c.refreshOAuthBearerToken(cmd, producer)
 	if err != nil {
 		return err
 	}
@@ -172,6 +173,9 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
+		if c.State == nil { // require log-in to use oauthbearer token
+			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		}
 		srClient, ctx, err := sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 		if err != nil {
 			return nil, nil, err

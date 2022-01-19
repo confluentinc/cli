@@ -17,7 +17,7 @@ import (
 func GetCAClient(caCertPath string) (*http.Client, error) {
 	caCert, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
-		return nil, errors.New(errors.CaCertNotSpecifiedErrorMsg)
+		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestion)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)

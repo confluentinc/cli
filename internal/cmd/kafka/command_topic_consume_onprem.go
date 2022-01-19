@@ -40,6 +40,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	_ = cmd.MarkFlagRequired("bootstrap")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -75,6 +76,9 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	var ctx context.Context
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
+		if c.State == nil { // require log-in to use oauthbearer token
+			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		}
 		srClient, ctx, err = sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 		if err != nil {
 			return err
@@ -87,7 +91,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}
 	c.logger.Tracef("Create consumer succeeded")
 
-	err = refreshOAuthBearerToken(cmd, consumer, c.AuthToken())
+	err = c.refreshOAuthBearerToken(cmd, consumer)
 	if err != nil {
 		return err
 	}

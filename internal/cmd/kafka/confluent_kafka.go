@@ -56,18 +56,25 @@ type GroupHandler struct {
 	Properties ConsumerProperties
 }
 
-func refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle, tokenValue string) error {
+func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
+	protocol, err := cmd.Flags().GetString("protocol")
+	if err != nil {
+		return err
+	}
 	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return err
 	}
-	if mechanism == "OAUTHBEARER" {
+	if protocol == "SASL_SSL" && mechanism == "OAUTHBEARER" {
 		oauthConfig, err := cmd.Flags().GetString("oauth-config")
 		if err != nil {
 			return err
 		}
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, tokenValue)
+		if c.State == nil { // require log-in to use oauthbearer token
+			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		}
+		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
 		if retrieveErr != nil {
 			err = fmt.Errorf("Token retrieval error: %v\n", retrieveErr)
 			if err != nil {
@@ -225,7 +232,7 @@ func getSSLVerification(cmd *cobra.Command) (bool, string, error) {
 		caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 	}
 	if enableSSLVerification && caLocation == "" {
-		return false, "", errors.New(errors.CaCertNotSpecifiedErrorMsg)
+		return false, "", errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SSLCaCertSuggestion)
 	}
 	return enableSSLVerification, caLocation, nil
 }

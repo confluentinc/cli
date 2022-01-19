@@ -208,6 +208,8 @@ const (
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
 	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
+	SSLCaCertSuggestion              = "Please specify `--ca-location` to enable SSL verification.\n"
+	SRCaCertSuggestion               = "Please specify `--ca-location` to enable schema registry client.\n"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
@@ -387,6 +389,7 @@ const (
 	// Special error handling
 	avoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg    = "not logged in"
+	AuthTokenSuggestion    = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
 	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
 		avoidTimeoutSuggestion
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
