@@ -143,9 +143,10 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"compression-codec", "connect-cluster-id", "consumer-property", "enable-systest-events",
 			"local-secrets-file", "max-partition-memory-bytes", "message-send-max-retries", "metadata-expiry-ms",
-			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks", "request-timeout-ms", // TODO: change back if replication-factor is too long
-			"schema-registry-cluster-id", "service-account", "skip-message-on-error", "socket-buffer-size",
-			"value-deserializer", "bootstrap-servers", "source-bootstrap-server", "source-cluster-id", "source-api-secret",
+			"producer-property", "remote-secrets-file", "replication-factor", "request-required-acks",
+			"request-timeout-ms", "schema-registry-cluster-id", "service-account", "skip-message-on-error",
+			"socket-buffer-size", "value-deserializer", "bootstrap-servers", "source-bootstrap-server",
+			"source-cluster-id", "source-api-secret", "destination-bootstrap-server",
 		),
 	),
 	linter.FlagFilter(
@@ -176,9 +177,9 @@ var flagRules = []linter.FlagRule{
 			"ca-cert-path", "connect-cluster-id", "enable-systest-events", "if-not-exists", "kafka-cluster-id",
 			"ksql-cluster-id", "local-secrets-file", "max-block-ms", "max-memory-bytes", "max-partition-memory-bytes",
 			"message-send-max-retries", "metadata-expiry-ms", "remote-secrets-file", "request-required-acks",
-			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "service-account",
-			"skip-message-on-error", "socket-buffer-size", "client-cert-path", "client-key-path",
-			"source-bootstrap-server", "source-cluster-id", "source-api-secret", "source-api-key",
+			"request-timeout-ms", "retry-backoff-ms", "schema-registry-cluster-id", "skip-message-on-error",
+			"socket-buffer-size", "client-cert-path", "client-key-path", "source-bootstrap-server", "source-cluster-id",
+			"source-api-secret", "source-api-key", "destination-bootstrap-server",
 		),
 	),
 	linter.RequireFlagRealWords('-'),
