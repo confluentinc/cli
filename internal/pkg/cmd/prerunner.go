@@ -355,8 +355,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 		return "", nil, err
 	}
 
-	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
-	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+	token, _, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false)
 	if err != nil {
 		return "", nil, err
 	}
@@ -800,8 +799,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 
 	var token string
 	if r.Config.IsCloudLogin() {
-		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: log.CliLogger, UserAgent: r.Version.UserAgent})
-		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
+		token, _, err = r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false)
 		if err != nil {
 			return "", err
 		}
@@ -897,7 +895,7 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	cfg := kafkarestv3.NewConfiguration()
-	if log.CliLogger.GetLevel() == log.DEBUG || log.CliLogger.GetLevel() == log.TRACE {
+	if log.CliLogger.GetLevel() >= log.DEBUG {
 		cfg.Debug = true
 	}
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"

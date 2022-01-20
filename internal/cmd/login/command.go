@@ -98,13 +98,12 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser)
+	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser)
 	if err != nil {
 		return err
 	}
 
-	client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
 	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
 	if err != nil {

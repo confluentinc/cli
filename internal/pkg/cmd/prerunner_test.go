@@ -74,7 +74,7 @@ var (
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool) (string, string, error) {
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool) (string, string, error) {
 			return "", "", nil
 		},
 		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
@@ -453,7 +453,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			}
 			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
-				GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool) (s string, s2 string, e error) {
+				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool) (s string, s2 string, e error) {
 					return validAuthToken, "", nil
 				},
 				GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
