@@ -362,7 +362,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 		return "", nil, err
 	}
 
-	client := r.CCloudClientFactory.AnonHTTPClientFactory("https://devel.cpdev.cloud")
+	client := r.CCloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	token, _, err := r.AuthTokenHandler.GetCCloudTokens(client, credentials, false, orgResourceId)
 	if err != nil {
 		return "", nil, err

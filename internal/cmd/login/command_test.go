@@ -168,7 +168,7 @@ func TestCredentialsOverride(t *testing.T) {
 	}
 	user := &sdkMock.User{}
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return envCreds, nil
 			}
@@ -178,7 +178,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -267,11 +267,9 @@ func TestLoginSuccess(t *testing.T) {
 			return testToken1, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
-			var org string
+			org := org1Id
 			if org2 {
 				org = org2Id
-			} else {
-				org = org1Id
 			}
 			return &flowv1.GetMeReply{
 				User: &orgv1.User{
@@ -395,12 +393,12 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetCloudCredentialsFromPromptFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{
 							Username: promptUser,
