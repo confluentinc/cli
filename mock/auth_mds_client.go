@@ -8,26 +8,23 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_mds_sdk_go_mdsv1 "github.com/confluentinc/mds-sdk-go/mdsv1"
-
-	github_com_confluentinc_cli_internal_pkg_log "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // MockMDSClientManager is a mock of MDSClientManager interface
 type MockMDSClientManager struct {
 	lockGetMDSClient sync.Mutex
-	GetMDSClientFunc func(url, caCertPath string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error)
+	GetMDSClientFunc func(url, caCertPath string) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error)
 
 	calls struct {
 		GetMDSClient []struct {
 			Url        string
 			CaCertPath string
-			Logger     *github_com_confluentinc_cli_internal_pkg_log.Logger
 		}
 	}
 }
 
 // GetMDSClient mocks base method by wrapping the associated func.
-func (m *MockMDSClientManager) GetMDSClient(url, caCertPath string, logger *github_com_confluentinc_cli_internal_pkg_log.Logger) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error) {
+func (m *MockMDSClientManager) GetMDSClient(url, caCertPath string) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error) {
 	m.lockGetMDSClient.Lock()
 	defer m.lockGetMDSClient.Unlock()
 
@@ -38,16 +35,14 @@ func (m *MockMDSClientManager) GetMDSClient(url, caCertPath string, logger *gith
 	call := struct {
 		Url        string
 		CaCertPath string
-		Logger     *github_com_confluentinc_cli_internal_pkg_log.Logger
 	}{
 		Url:        url,
 		CaCertPath: caCertPath,
-		Logger:     logger,
 	}
 
 	m.calls.GetMDSClient = append(m.calls.GetMDSClient, call)
 
-	return m.GetMDSClientFunc(url, caCertPath, logger)
+	return m.GetMDSClientFunc(url, caCertPath)
 }
 
 // GetMDSClientCalled returns true if GetMDSClient was called at least once.
@@ -62,7 +57,6 @@ func (m *MockMDSClientManager) GetMDSClientCalled() bool {
 func (m *MockMDSClientManager) GetMDSClientCalls() []struct {
 	Url        string
 	CaCertPath string
-	Logger     *github_com_confluentinc_cli_internal_pkg_log.Logger
 } {
 	m.lockGetMDSClient.Lock()
 	defer m.lockGetMDSClient.Unlock()

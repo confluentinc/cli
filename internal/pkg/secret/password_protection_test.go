@@ -16,8 +16,6 @@ import (
 	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
@@ -134,11 +132,10 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
-			logger := log.New()
 			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			req.NoError(err)
 
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin()
 			plugin.RandSource = rand.NewSource(tt.args.seed)
 
 			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
@@ -470,11 +467,10 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 			// Clean Up
 			os.Unsetenv(ConfluentKeyEnvVar)
 			os.RemoveAll(tt.args.secureDir)
-			logger := log.New()
 			req := require.New(t)
 			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			req.NoError(err)
-			plugin := NewPasswordProtectionPlugin(logger)
+			plugin := NewPasswordProtectionPlugin()
 			plugin.RandSource = rand.NewSource(99)
 			plugin.Clock = clockwork.NewFakeClock()
 			if tt.args.setMEK {
@@ -1535,8 +1531,7 @@ func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, l
 	if err != nil {
 		return nil, fmt.Errorf("failed to create password protection directory")
 	}
-	logger := log.New()
-	plugin := NewPasswordProtectionPlugin(logger)
+	plugin := NewPasswordProtectionPlugin()
 	plugin.RandSource = rand.NewSource(99)
 	plugin.Clock = clockwork.NewFakeClock()
 
