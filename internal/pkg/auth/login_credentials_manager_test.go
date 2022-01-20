@@ -15,7 +15,6 @@ import (
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 )
@@ -131,7 +130,6 @@ type LoginCredentialsManagerTestSuite struct {
 	require *require.Assertions
 
 	ccloudClient *ccloud.Client
-	logger       *log.Logger
 	netrcHandler netrc.NetrcHandler
 	prompt       *mock.Prompt
 
@@ -153,7 +151,6 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 			},
 		},
 	}
-	suite.logger = log.New()
 	suite.netrcHandler = &mock.MockNetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			if params.IsCloud {
