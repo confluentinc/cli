@@ -14,7 +14,7 @@ import (
 // MockAuthTokenHandler is a mock of AuthTokenHandler interface
 type MockAuthTokenHandler struct {
 	lockGetCCloudTokens sync.Mutex
-	GetCCloudTokensFunc func(clientFactory github_com_confluentinc_cli_internal_pkg_auth.CCloudClientFactory, url string, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool) (string, string, error)
+	GetCCloudTokensFunc func(clientFactory github_com_confluentinc_cli_internal_pkg_auth.CCloudClientFactory, url string, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool, orgResourceId string) (string, string, error)
 
 	lockGetConfluentToken sync.Mutex
 	GetConfluentTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials) (string, error)
@@ -25,6 +25,7 @@ type MockAuthTokenHandler struct {
 			Url           string
 			Credentials   *github_com_confluentinc_cli_internal_pkg_auth.Credentials
 			NoBrowser     bool
+			OrgResourceId string
 		}
 		GetConfluentToken []struct {
 			MdsClient   *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
@@ -34,7 +35,7 @@ type MockAuthTokenHandler struct {
 }
 
 // GetCCloudTokens mocks base method by wrapping the associated func.
-func (m *MockAuthTokenHandler) GetCCloudTokens(clientFactory github_com_confluentinc_cli_internal_pkg_auth.CCloudClientFactory, url string, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool) (string, string, error) {
+func (m *MockAuthTokenHandler) GetCCloudTokens(clientFactory github_com_confluentinc_cli_internal_pkg_auth.CCloudClientFactory, url string, credentials *github_com_confluentinc_cli_internal_pkg_auth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 	m.lockGetCCloudTokens.Lock()
 	defer m.lockGetCCloudTokens.Unlock()
 
@@ -47,16 +48,18 @@ func (m *MockAuthTokenHandler) GetCCloudTokens(clientFactory github_com_confluen
 		Url           string
 		Credentials   *github_com_confluentinc_cli_internal_pkg_auth.Credentials
 		NoBrowser     bool
+		OrgResourceId string
 	}{
 		ClientFactory: clientFactory,
 		Url:           url,
 		Credentials:   credentials,
 		NoBrowser:     noBrowser,
+		OrgResourceId: orgResourceId,
 	}
 
 	m.calls.GetCCloudTokens = append(m.calls.GetCCloudTokens, call)
 
-	return m.GetCCloudTokensFunc(clientFactory, url, credentials, noBrowser)
+	return m.GetCCloudTokensFunc(clientFactory, url, credentials, noBrowser, orgResourceId)
 }
 
 // GetCCloudTokensCalled returns true if GetCCloudTokens was called at least once.
@@ -73,6 +76,7 @@ func (m *MockAuthTokenHandler) GetCCloudTokensCalls() []struct {
 	Url           string
 	Credentials   *github_com_confluentinc_cli_internal_pkg_auth.Credentials
 	NoBrowser     bool
+	OrgResourceId string
 } {
 	m.lockGetCCloudTokens.Lock()
 	defer m.lockGetCCloudTokens.Unlock()

@@ -27,6 +27,7 @@ type Command struct {
 	mdsClientManager        pauth.MDSClientManager
 	netrcHandler            netrc.NetrcHandler
 	loginCredentialsManager pauth.LoginCredentialsManager
+	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler        pauth.AuthTokenHandler
 	isTest                  bool
 }
@@ -36,6 +37,7 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
 		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
+			fmt.Sprintf("You can log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
 			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
@@ -45,6 +47,7 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
 	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
+	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 
@@ -55,12 +58,12 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 		ccloudClientFactory:     ccloudClientFactory,
 		netrcHandler:            netrcHandler,
 		loginCredentialsManager: loginCredentialsManager,
+		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
 		authTokenHandler:        authTokenHandler,
 		isTest:                  isTest,
 	}
 
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
-
 	return c
 }
 
@@ -88,7 +91,12 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
-	credentials, err := c.getCCloudCredentials(cmd, url)
+	orgResourceId, err := c.getOrgResourceId(cmd)
+	if err != nil {
+		return err
+	}
+
+	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -98,7 +106,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser)
+	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -127,7 +135,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	c.loginCredentialsManager.SetCloudClient(client)
 
@@ -137,16 +145,16 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.C
 	}
 
 	if promptOnly {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd))
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
-		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }
 
@@ -340,4 +348,12 @@ func (c *Command) isCCloudURL(url string) bool {
 		return strings.Contains(url, testserver.TestCloudURL.Host)
 	}
 	return false
+}
+
+func (c *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
+	return pauth.GetLoginOrganization(
+		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
+		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),
+		c.loginOrganizationManager.GetDefaultLoginOrganization(),
+	)
 }

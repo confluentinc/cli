@@ -52,7 +52,8 @@
           }
         }
       },
-      "schema_registry_clusters": {}
+      "schema_registry_clusters": {},
+      "last_org_id": ""
     }
   },
   "context_states": {

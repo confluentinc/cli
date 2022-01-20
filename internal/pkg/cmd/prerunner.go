@@ -214,7 +214,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			return err
 		}
 		log.CliLogger.Flush()
-
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
@@ -321,7 +320,8 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
-	token, credentials, err := r.getCCloudTokenAndCredentials(cmd, netrcMachineName)
+	orgResourceId := r.Config.GetLastUsedOrgId()
+	token, credentials, err := r.getCCloudTokenAndCredentials(cmd, netrcMachineName, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -340,14 +340,14 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, *pauth.Credentials, error) {
+func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (string, *pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
@@ -355,7 +355,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 		return "", nil, err
 	}
 
-	token, _, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false)
+	token, _, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false, orgResourceId)
 	if err != nil {
 		return "", nil, err
 	}
@@ -799,7 +799,8 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 
 	var token string
 	if r.Config.IsCloudLogin() {
-		token, _, err = r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false)
+		orgResourceId := r.Config.GetLastUsedOrgId()
+		token, _, err = r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
 		if err != nil {
 			return "", err
 		}

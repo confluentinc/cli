@@ -4,6 +4,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"time"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
@@ -18,7 +19,7 @@ import (
 )
 
 type AuthTokenHandler interface {
-	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool) (string, string, error)
+	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
 	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
 }
 
@@ -29,16 +30,16 @@ func NewAuthTokenHandler() AuthTokenHandler {
 	return &AuthTokenHandlerImpl{}
 }
 
-func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool) (string, string, error) {
+func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 	anonClient := clientFactory.AnonHTTPClientFactory(url)
 	if credentials.IsSSO {
 		// For an SSO user, the "Password" field may contain a refresh token. If one exists, try to obtain a new token.
 		if credentials.Password != "" {
-			if token, refreshToken, err := a.refreshCCloudSSOToken(anonClient, credentials.Password); err == nil {
+			if token, refreshToken, err := a.refreshCCloudSSOToken(anonClient, credentials.Password, orgResourceId); err == nil {
 				return token, refreshToken, nil
 			}
 		}
-		token, refreshToken, err := a.getCCloudSSOToken(anonClient, noBrowser, credentials.Username)
+		token, refreshToken, err := a.getCCloudSSOToken(anonClient, noBrowser, credentials.Username, orgResourceId)
 		if err != nil {
 			return token, refreshToken, err
 		}
@@ -47,12 +48,13 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 	}
 
 	anonClient.HttpClient.Timeout = 30 * time.Second
-	token, err := anonClient.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, "")
+	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
+	token, err := anonClient.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
 	return token, "", err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email string) (string, string, error) {
-	userSSO, err := a.getCCloudUserSSO(client, email)
+func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
+	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 	if err != nil {
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
 	}
@@ -70,12 +72,13 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	return token, refreshToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email string) (string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
 	loginRealmReply, err := client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
-			Email:    email,
-			ClientId: auth0ClientId,
+			Email:         email,
+			ClientId:      auth0ClientId,
+			OrgResourceId: orgResourceId,
 		})
 	if err != nil {
 		return "", err
@@ -86,13 +89,12 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
 	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
-
-	token, err := client.Auth.Login(context.Background(), idToken, "", "", "")
+	token, err := client.Auth.Login(context.Background(), idToken, "", "", orgResourceId)
 	if err != nil {
 		return "", "", err
 	}

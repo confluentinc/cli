@@ -186,17 +186,17 @@ func (suite *LoginCredentialsManagerTestSuite) SetupTest() {
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVar() {
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(ConfluentCloudEmail, envUsername))
-	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.require.Nil(creds)
 
 	suite.require.NoError(os.Setenv(ConfluentCloudEmail, "test+sso@confluent.io"))
-	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.compareCredentials(&Credentials{Username: "test+sso@confluent.io", IsSSO: true, Password: ""}, creds)
 
 	suite.setCCEnvVars()
-	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)
 }
@@ -204,12 +204,12 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromDeprecatedEnvVar() {
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(DeprecatedConfluentCloudEmail, deprecatedEnvUser))
-	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.require.Nil(creds)
 
 	suite.setDeprecatedCCEnvVars()
-	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.compareCredentials(deprecateEnvCredentials, creds)
 }
@@ -217,7 +217,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromDepre
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVarOrderOfPrecedence() {
 	suite.setCCEnvVars()
 	suite.setDeprecatedCCEnvVars()
-	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{})()
+	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)
 }
@@ -285,7 +285,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestConfluentGetCredentialsFromNe
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromPrompt() {
-	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{})()
+	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, "")()
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
 }
@@ -377,12 +377,12 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	// No credentials in env var and netrc so should look for prompt
 	loginCredentialsManager := NewLoginCredentialsManager(noCredentialsNetrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err := GetLoginCredentials(
-		loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}),
+		loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, ""),
 		loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
 			IsCloud: true,
 			IsSSO:   false,
 		}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
 	)
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
@@ -390,12 +390,12 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	// No credentials in env var but credentials in netrc so netrc credentials should be returned
 	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(
-		loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}),
+		loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, ""),
 		loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
 			IsCloud: true,
 			IsSSO:   false,
 		}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
 	)
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcCredentials, creds)
@@ -404,12 +404,12 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	suite.setCCEnvVars()
 	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(
-		loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}),
+		loginCredentialsManager.GetCloudCredentialsFromEnvVar(&cobra.Command{}, ""),
 		loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
 			IsCloud: true,
 			IsSSO:   false,
 		}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
 	)
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)

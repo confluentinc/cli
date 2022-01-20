@@ -37,12 +37,12 @@ const (
 
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return &pauth.Credentials{
 					Username: promptUser,
@@ -71,8 +71,20 @@ var (
 		SetCloudClientFunc: func(arg0 *ccloud.Client) {
 		},
 	}
+	orgManagerImpl = pauth.NewLoginOrganizationManagerImpl()
+	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
+		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
+			return orgManagerImpl.GetLoginOrganizationFromArgs(cmd)
+		},
+		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
+			return orgManagerImpl.GetLoginOrganizationFromEnvVar(cmd)
+		},
+		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
+			return orgManagerImpl.GetDefaultLoginOrganization()
+		},
+	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory,_ string, _ *pauth.Credentials, _ bool) (string, string, error) {
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory,_ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return testToken, "refreshToken", nil
 		},
 		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
@@ -126,12 +138,13 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &orgv1.Organization{ResourceId: "o-123"},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
 	user := &sdkMock.User{}
-	loginCmd, _ := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager)
+	loginCmd, _ := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
 	req.NoError(err)
 
@@ -143,7 +156,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 }
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager) (*login.Command, *v1.Config) {
+	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
+	loginOrganizationManager pauth.LoginOrganizationManager) (*login.Command, *v1.Config) {
 	cfg := v1.New(new(config.Params))
 	var mdsClient *mds.APIClient
 	if !isCloud {

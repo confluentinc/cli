@@ -1019,7 +1019,7 @@ func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *
 		require.NotEmpty(t, req.Organization.Name)
 		require.NotEmpty(t, req.User)
 		require.NotEmpty(t, req.Credentials)
-		signupReply := &orgv1.SignupReply{}
+		signupReply := &orgv1.SignupReply{Organization: &orgv1.Organization{}}
 		reply, err := utilv1.MarshalJSONToBytes(signupReply)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))

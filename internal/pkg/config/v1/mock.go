@@ -44,6 +44,10 @@ func MockKafkaClusterId() string {
 }
 
 func AuthenticatedCloudConfigMock() *Config {
+	return AuthenticatedToOrgCloudConfigMock(mockOrganizationId, MockOrgResourceId)
+}
+
+func AuthenticatedToOrgCloudConfigMock(orgId int32, orgResourceId string) *Config {
 	params := mockConfigParams{
 		contextName:    mockContextName,
 		userId:         mockUserId,
@@ -51,8 +55,8 @@ func AuthenticatedCloudConfigMock() *Config {
 		username:       mockEmail,
 		url:            testserver.TestCloudURL.String(),
 		envId:          MockEnvironmentId,
-		orgId:          mockOrganizationId,
-		orgResourceId:  MockOrgResourceId,
+		orgId:          orgId,
+		orgResourceId:  orgResourceId,
 		credentialName: usernameCredentialName,
 	}
 	return AuthenticatedConfigMock(params)
@@ -103,7 +107,7 @@ func APICredentialConfigMock() *Config {
 
 	conf := New(&config.Params{})
 
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf)
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf, "")
 	if err != nil {
 		panic(err)
 	}
@@ -151,7 +155,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 	conf := New(&config.Params{})
 	conf.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf, params.orgResourceId)
 	if err != nil {
 		panic(err)
 	}

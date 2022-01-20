@@ -307,7 +307,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -322,7 +322,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -386,7 +386,7 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		return err
 	}
 
-	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil)
+	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "")
 }
 
 // UseContext sets the current context, if it exists.
@@ -480,4 +480,11 @@ func (c *Config) IsCloudLogin() bool {
 func (c *Config) IsOnPremLogin() bool {
 	ctx := c.Context()
 	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
+}
+
+func (c *Config) GetLastUsedOrgId() string {
+	if ctx := c.Context(); ctx != nil && ctx.LastOrgId != "" {
+		return ctx.LastOrgId
+	}
+	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
 }

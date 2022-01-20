@@ -21,11 +21,13 @@ type Context struct {
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
+	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
 	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config) (*Context, error) {
+	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config,
+	orgResourceId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		NetrcMachineName:       name,
@@ -36,6 +38,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
 		Config:                 config,
+		LastOrgId:              orgResourceId,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
 	err := ctx.validate()
