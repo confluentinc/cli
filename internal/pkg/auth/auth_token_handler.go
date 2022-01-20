@@ -44,7 +44,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		if err != nil {
 			return token, refreshToken, err
 		}
-		err = a.validateTokenUser(clientFactory.JwtHTTPClientFactory(context.Background(), token, url), credentials.Username)
+		err = a.checkSSOEmailMatchesLogin(clientFactory.JwtHTTPClientFactory(context.Background(), token, url), credentials.Username)
 		return token, refreshToken, err
 	}
 
@@ -112,29 +112,12 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 	return resp.AuthToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) validateTokenUser(client *ccloud.Client, loginEmail string) error {
+func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
 	getMeReply, err := getCCloudUser(client); if err != nil {
 		return err
 	}
-	fmt.Println("yooo wtf")
-	fmt.Println(getMeReply.User.Email)
-	fmt.Println(loginEmail)
 	if getMeReply.User.Email != loginEmail {
-		return errors.New("error brah")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentials, loginEmail, getMeReply.User.Email), errors.SSOCrdentialsDoNotMatchSuggestions)
 	}
 	return nil
-	//client := ccloud.NewClientWithJWT(context.Background(), token, &ccloud.Params{BaseURL: url, Logger: a.logger})
-	//client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
-	//var claims map[string]interface{}
-	//parsedToken, err := jwt.ParseSigned(token); if err != nil {
-	//	return new(ccloud.InvalidTokenError)
-	//}
-	//if err := parsedToken.UnsafeClaimsWithoutVerification(&claims); err != nil {
-	//	return err
-	//}
-	//userId, ok := claims["userId"].(float64)
-	//if !ok {
-	//	return errors.New(errors.MalformedJWTNoExprErrorMsg)
-	//}
-	//client.User.Describe(context.Background())
 }
