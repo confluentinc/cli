@@ -35,30 +35,30 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove"),
 			true,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "netrc-remove-username-password.golden"),
 			cloudUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove"),
 			false,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "netrc-remove-username-password.golden"),
 			mdsUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-empty"),
 			true,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "empty.golden"),
 			cloudUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-empty"),
 			false,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "empty.golden"),
 			mdsUrl,
 			testBin,
 		},
@@ -112,16 +112,16 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-ccloud-fail"),
 			true,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-ccloud-fail"),
 			cloudUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-mds-fail"),
 			false,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-mds-fail"),
 			mdsUrl,
 			testBin,
 		},
