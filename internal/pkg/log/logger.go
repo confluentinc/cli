@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	//"github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
 // Logger is the standard logger for the Confluent SDK.
