@@ -22,8 +22,6 @@ type bufferedLog struct {
 	message string
 }
 
-//var _ ccloud.Logger = (*logger)(nil)
-
 // Global logger instance
 var CliLogger *Logger
 
@@ -62,6 +60,8 @@ func init() {
 	})
 }
 
+// TODO: once we migrate from ccloud-sdk-v1 we should change these functions to act on the
+// TODO: global logger instead of (l *Logger) and then we can call log.Debug() instead of log.CliLogger.Debug()
 
 // New creates and configures a new Logger.
 func New(params *Params) *Logger {

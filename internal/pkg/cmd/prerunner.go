@@ -570,7 +570,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 
 func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
-	if log.CliLogger.GetLevel() == log.DEBUG || log.CliLogger.GetLevel() == log.TRACE {
+	if log.CliLogger.GetLevel() >= log.DEBUG {
 		mdsConfig.Debug = true
 	}
 	if ctx == nil {
@@ -871,7 +871,7 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 
 func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
-	if log.CliLogger.GetLevel() == log.DEBUG || log.CliLogger.GetLevel() == log.TRACE {
+	if log.CliLogger.GetLevel() >= log.DEBUG {
 		mdsv2Config.Debug = true
 	}
 	if ctx == nil {
