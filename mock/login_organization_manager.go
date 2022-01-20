@@ -13,20 +13,20 @@ import (
 // MockLoginOrganizationManager is a mock of LoginOrganizationManager interface
 type MockLoginOrganizationManager struct {
 	lockGetLoginOrganizationFromArgs sync.Mutex
-	GetLoginOrganizationFromArgsFunc func(cmd *github_com_spf13_cobra.Command) func() (string, error)
+	GetLoginOrganizationFromArgsFunc func(arg0 *github_com_spf13_cobra.Command) func() (string, error)
 
 	lockGetLoginOrganizationFromEnvVar sync.Mutex
-	GetLoginOrganizationFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command) func() (string, error)
+	GetLoginOrganizationFromEnvVarFunc func(arg0 *github_com_spf13_cobra.Command) func() (string, error)
 
 	lockGetDefaultLoginOrganization sync.Mutex
 	GetDefaultLoginOrganizationFunc func() func() (string, error)
 
 	calls struct {
 		GetLoginOrganizationFromArgs []struct {
-			Cmd *github_com_spf13_cobra.Command
+			Arg0 *github_com_spf13_cobra.Command
 		}
 		GetLoginOrganizationFromEnvVar []struct {
-			Cmd *github_com_spf13_cobra.Command
+			Arg0 *github_com_spf13_cobra.Command
 		}
 		GetDefaultLoginOrganization []struct {
 		}
@@ -34,7 +34,7 @@ type MockLoginOrganizationManager struct {
 }
 
 // GetLoginOrganizationFromArgs mocks base method by wrapping the associated func.
-func (m *MockLoginOrganizationManager) GetLoginOrganizationFromArgs(cmd *github_com_spf13_cobra.Command) func() (string, error) {
+func (m *MockLoginOrganizationManager) GetLoginOrganizationFromArgs(arg0 *github_com_spf13_cobra.Command) func() (string, error) {
 	m.lockGetLoginOrganizationFromArgs.Lock()
 	defer m.lockGetLoginOrganizationFromArgs.Unlock()
 
@@ -43,14 +43,14 @@ func (m *MockLoginOrganizationManager) GetLoginOrganizationFromArgs(cmd *github_
 	}
 
 	call := struct {
-		Cmd *github_com_spf13_cobra.Command
+		Arg0 *github_com_spf13_cobra.Command
 	}{
-		Cmd: cmd,
+		Arg0: arg0,
 	}
 
 	m.calls.GetLoginOrganizationFromArgs = append(m.calls.GetLoginOrganizationFromArgs, call)
 
-	return m.GetLoginOrganizationFromArgsFunc(cmd)
+	return m.GetLoginOrganizationFromArgsFunc(arg0)
 }
 
 // GetLoginOrganizationFromArgsCalled returns true if GetLoginOrganizationFromArgs was called at least once.
@@ -63,7 +63,7 @@ func (m *MockLoginOrganizationManager) GetLoginOrganizationFromArgsCalled() bool
 
 // GetLoginOrganizationFromArgsCalls returns the calls made to GetLoginOrganizationFromArgs.
 func (m *MockLoginOrganizationManager) GetLoginOrganizationFromArgsCalls() []struct {
-	Cmd *github_com_spf13_cobra.Command
+	Arg0 *github_com_spf13_cobra.Command
 } {
 	m.lockGetLoginOrganizationFromArgs.Lock()
 	defer m.lockGetLoginOrganizationFromArgs.Unlock()
@@ -72,7 +72,7 @@ func (m *MockLoginOrganizationManager) GetLoginOrganizationFromArgsCalls() []str
 }
 
 // GetLoginOrganizationFromEnvVar mocks base method by wrapping the associated func.
-func (m *MockLoginOrganizationManager) GetLoginOrganizationFromEnvVar(cmd *github_com_spf13_cobra.Command) func() (string, error) {
+func (m *MockLoginOrganizationManager) GetLoginOrganizationFromEnvVar(arg0 *github_com_spf13_cobra.Command) func() (string, error) {
 	m.lockGetLoginOrganizationFromEnvVar.Lock()
 	defer m.lockGetLoginOrganizationFromEnvVar.Unlock()
 
@@ -81,14 +81,14 @@ func (m *MockLoginOrganizationManager) GetLoginOrganizationFromEnvVar(cmd *githu
 	}
 
 	call := struct {
-		Cmd *github_com_spf13_cobra.Command
+		Arg0 *github_com_spf13_cobra.Command
 	}{
-		Cmd: cmd,
+		Arg0: arg0,
 	}
 
 	m.calls.GetLoginOrganizationFromEnvVar = append(m.calls.GetLoginOrganizationFromEnvVar, call)
 
-	return m.GetLoginOrganizationFromEnvVarFunc(cmd)
+	return m.GetLoginOrganizationFromEnvVarFunc(arg0)
 }
 
 // GetLoginOrganizationFromEnvVarCalled returns true if GetLoginOrganizationFromEnvVar was called at least once.
@@ -101,7 +101,7 @@ func (m *MockLoginOrganizationManager) GetLoginOrganizationFromEnvVarCalled() bo
 
 // GetLoginOrganizationFromEnvVarCalls returns the calls made to GetLoginOrganizationFromEnvVar.
 func (m *MockLoginOrganizationManager) GetLoginOrganizationFromEnvVarCalls() []struct {
-	Cmd *github_com_spf13_cobra.Command
+	Arg0 *github_com_spf13_cobra.Command
 } {
 	m.lockGetLoginOrganizationFromEnvVar.Lock()
 	defer m.lockGetLoginOrganizationFromEnvVar.Unlock()

@@ -3,7 +3,6 @@ package auth
 
 import (
 	"context"
-
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -16,20 +15,18 @@ type CCloudClientFactory interface {
 
 type CCloudClientFactoryImpl struct {
 	UserAgent string
-	Logger    *log.Logger
 }
 
-func NewCCloudClientFactory(userAgent string, logger *log.Logger) CCloudClientFactory {
+func NewCCloudClientFactory(userAgent string) CCloudClientFactory {
 	return &CCloudClientFactoryImpl{
 		UserAgent: userAgent,
-		Logger:    logger,
 	}
 }
 
 func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloud.Client {
-	return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: c.Logger, UserAgent: c.UserAgent})
+	return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
 func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client {
-	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: c.Logger, UserAgent: c.UserAgent})
+	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }

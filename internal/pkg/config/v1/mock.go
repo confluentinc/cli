@@ -6,7 +6,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -106,7 +105,7 @@ func APICredentialConfigMock() *Config {
 		kafkaCluster.ID: kafkaCluster,
 	}
 
-	conf := New(&config.Params{Logger: log.New()})
+	conf := New(&config.Params{})
 
 	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf, "")
 	if err != nil {
@@ -153,7 +152,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 		MockEnvironmentId: srCluster,
 	}
 
-	conf := New(&config.Params{Logger: log.New()})
+	conf := New(&config.Params{})
 	conf.IsTest = true
 
 	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf, params.orgResourceId)

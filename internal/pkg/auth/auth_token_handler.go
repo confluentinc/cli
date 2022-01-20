@@ -3,12 +3,13 @@ package auth
 
 import (
 	"context"
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"time"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -18,32 +19,37 @@ import (
 )
 
 type AuthTokenHandler interface {
-	GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
+	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
 	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
 }
 
 type AuthTokenHandlerImpl struct {
-	logger *log.Logger
 }
 
-func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
-	return &AuthTokenHandlerImpl{logger}
+func NewAuthTokenHandler() AuthTokenHandler {
+	return &AuthTokenHandlerImpl{}
 }
 
-func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
+	anonClient := clientFactory.AnonHTTPClientFactory(url)
 	if credentials.IsSSO {
 		// For an SSO user, the "Password" field may contain a refresh token. If one exists, try to obtain a new token.
 		if credentials.Password != "" {
-			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.Password, orgResourceId); err == nil {
+			if token, refreshToken, err := a.refreshCCloudSSOToken(anonClient, credentials.Password, orgResourceId); err == nil {
 				return token, refreshToken, nil
 			}
 		}
-		return a.getCCloudSSOToken(client, noBrowser, credentials.Username, orgResourceId)
+		token, refreshToken, err := a.getCCloudSSOToken(anonClient, noBrowser, credentials.Username, orgResourceId)
+		if err != nil {
+			return token, refreshToken, err
+		}
+		err = a.checkSSOEmailMatchesLogin(clientFactory.JwtHTTPClientFactory(context.Background(), token, url), credentials.Username)
+		return token, refreshToken, err
 	}
 
-	client.HttpClient.Timeout = 30 * time.Second
-	a.logger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
-	token, err := client.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
+	anonClient.HttpClient.Timeout = 30 * time.Second
+	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
+	token, err := anonClient.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
 	return token, "", err
 }
 
@@ -55,7 +61,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	if userSSO == "" {
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO, a.logger)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
 	if err != nil {
 		return "", "", err
 	}
@@ -84,7 +90,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, or
 }
 
 func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
-	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken, a.logger)
+	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
@@ -97,11 +103,21 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
-	ctx := utils.GetContext(a.logger)
+	ctx := utils.GetContext()
 	basicContext := context.WithValue(ctx, mds.ContextBasicAuth, mds.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
 	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return "", err
 	}
 	return resp.AuthToken, nil
+}
+
+func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
+	getMeReply, err := getCCloudUser(client); if err != nil {
+		return err
+	}
+	if getMeReply.User.Email != loginEmail {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentials, loginEmail, getMeReply.User.Email), errors.SSOCrdentialsDoNotMatchSuggestions)
+	}
+	return nil
 }

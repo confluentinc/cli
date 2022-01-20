@@ -18,7 +18,6 @@ type LoginOrganizationManager interface {
 }
 
 type LoginOrganizationManagerImpl struct {
-	logger *log.Logger
 }
 
 func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error) {
@@ -34,8 +33,8 @@ func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error)
 	return "", multiErr
 }
 
-func NewLoginOrganizationManagerImpl(logger *log.Logger) *LoginOrganizationManagerImpl {
-	return &LoginOrganizationManagerImpl{logger: logger}
+func NewLoginOrganizationManagerImpl() *LoginOrganizationManagerImpl {
+	return &LoginOrganizationManagerImpl{}
 }
 
 func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromArgs(cmd *cobra.Command) func() (string, error) {
@@ -48,7 +47,7 @@ func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvVar(cmd *cobra
 	return func() (string, error) {
 		orgResourceId := os.Getenv(ConfluentCloudOrganizationId)
 		if orgResourceId != "" {
-			h.logger.Warn(errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationId)
+			log.CliLogger.Warn(errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationId)
 		}
 		return orgResourceId, nil
 	}

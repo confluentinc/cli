@@ -445,6 +445,6 @@ func apiKeyStoreSecretHandler(args []string) []string {
 func SendAnalyticsAndLog(cmd *cobra.Command, args []string, err error, client Client, logger *log.Logger) {
 	analyticsError := client.SendCommandAnalytics(cmd, args, err)
 	if analyticsError != nil {
-		logger.Debugf("segment analytics sending event failed: %s\n", analyticsError.Error())
+		logger.Debugf("Segment analytics sending event failed: %s\n", analyticsError.Error())
 	}
 }

@@ -19,7 +19,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
 )
@@ -420,7 +419,6 @@ func TestPrivateRepo_GetAvailableVersions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.params.Logger = log.New()
 			r := &PrivateRepo{
 				PrivateRepoParams: tt.params,
 				// Need to inject these so tests pass in different environments (e.g., CI)
@@ -531,7 +529,6 @@ func TestPrivateRepo_DownloadVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.params.Logger = log.New()
 			r := &PrivateRepo{
 				PrivateRepoParams: tt.params,
 				// Need to inject these so tests pass in different environments (e.g., CI)

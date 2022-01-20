@@ -1,6 +1,6 @@
 # Errors And Messages Handling
 
-The CLI codebase stores the strings of all messages in one location: the errors package [internal/pkg/errors](internal/pkg/errors). This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafka cluster). The goal is to ease the verification of consistency and correctness of messages, and to simplify future work in internationalizing the CLI.
+The CLI codebase stores the strings of all messages in the `errors` package. This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafka cluster). The goal is to ease the verification of consistency and correctness of messages, and to simplify future work in internationalizing the CLI.
 
 ## General Message Format
 - `""` surrounding names and ID’s
@@ -51,11 +51,11 @@ Suggestions:
 ## Initializing the errors
 There are four ways to create errors for the CLI.
 
-1. All basic errors will fall under this category. Use one of the error intializing functions in the errors package (errors.New, errors.Errorf, errors.Wrap, errors.Wrapf), with an error message defined in [error_message.go](internal/pkg/errors/error_message.go). The name of the variable must end with *ErrorMsg*.
+1. All basic errors will fall under this category. Use one of the error intializing functions in the errors package (errors.New, errors.Errorf, errors.Wrap, errors.Wrapf), with an error message defined in [error_message.go](error_message.go). The name of the variable must end with *ErrorMsg*.
 ```
 errors.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
 ```
-2. For errors with suggestions, define the error message, and suggestions message next to each other in [error_message.go](internal/pkg/errors/error_message.go). The messages must have the same name with different ending following the naming convention (i.e. *ErrorMsg* and *Suggestions*). Then either `errors.NewErrorWithSuggestion` or `errors.NewWrapErrorWithSuggestion` is used to initialize the error.
+2. For errors with suggestions, define the error message, and suggestions message next to each other in [error_message.go](error_message.go). The messages must have the same name with different ending following the naming convention (i.e. *ErrorMsg* and *Suggestions*). Then either `errors.NewErrorWithSuggestion` or `errors.NewWrapErrorWithSuggestion` is used to initialize the error.
 
 ```
 ResolvingConfigPathErrorMsg        = "error resolving the config filepath at \"%s\" has occurred"
@@ -78,12 +78,12 @@ type CLITypedError interface {
 	UserFacingError() error
 }
 ```
-  See [typed.go](internal/pkg/errors/typed.go) for examples and interface definition.
+  See [typed.go](typed.go) for examples and interface definition.
 
-4. For important errors that are thrown by external packages that need to be caught and translated, define a catcher in [catcher.go](internal/pkg/errors/catcher.go). The catcher can then be either inserted anyhwere in the CLI repo, or simply in `handleErrors` function in [handle.go](internal/pkg/errors/handle.go).
+4. For important errors that are thrown by external packages that need to be caught and translated, define a catcher in [catcher.go](catcher.go). The catcher can then be either inserted anyhwere in the CLI repo, or simply in `handleErrors` function in [handle.go](handle.go).
 
 ## HandleCommon
 `errors.HandleCommon` is called for every cobra RunE or PrerunE command, to handle common logic required for all errors, including turning off the usage message. This is done under the hood when defining new CLI RunE and PrerunE with `cmd.NewCLIRunE` and `cmd.NewCLIPrerunE` intializers.
 
 ## Non-error communcation
-For all non-error messages, define the string variables in [strings.go](internal/pkg/errors/strings.go), with variables name ending with *Msg*. The only exception being that warning messages are defined in [warning_message.go](internal/pkg/errors/warning_message.go) instead.
+For all non-error messages, define the string variables in [strings.go](strings.go), with variables name ending with *Msg*. The only exception being that warning messages are defined in [warning_message.go](warning_message.go) instead.

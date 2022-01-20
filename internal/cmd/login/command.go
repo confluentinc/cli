@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -21,18 +22,17 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	logger                   *log.Logger
-	analyticsClient          analytics.Client
-	ccloudClientFactory      pauth.CCloudClientFactory
-	mdsClientManager         pauth.MDSClientManager
-	netrcHandler             netrc.NetrcHandler
-	loginCredentialsManager  pauth.LoginCredentialsManager
+	analyticsClient         analytics.Client
+	ccloudClientFactory     pauth.CCloudClientFactory
+	mdsClientManager        pauth.MDSClientManager
+	netrcHandler            netrc.NetrcHandler
+	loginCredentialsManager pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
-	authTokenHandler         pauth.AuthTokenHandler
-	isTest                   bool
+	authTokenHandler        pauth.AuthTokenHandler
+	isTest                  bool
 }
 
-func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -52,16 +52,15 @@ func New(prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CC
 	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 
 	c := &Command{
-		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		logger:                   log,
-		analyticsClient:          analyticsClient,
-		mdsClientManager:         mdsClientManager,
-		ccloudClientFactory:      ccloudClientFactory,
-		netrcHandler:             netrcHandler,
-		loginCredentialsManager:  loginCredentialsManager,
-		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(log),
-		authTokenHandler:         authTokenHandler,
-		isTest:                   isTest,
+		CLICommand:              pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		analyticsClient:         analyticsClient,
+		mdsClientManager:        mdsClientManager,
+		ccloudClientFactory:     ccloudClientFactory,
+		netrcHandler:            netrcHandler,
+		loginCredentialsManager: loginCredentialsManager,
+		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
+		authTokenHandler:        authTokenHandler,
+		isTest:                  isTest,
 	}
 
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
@@ -107,13 +106,12 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(client, credentials, noBrowser, orgResourceId)
+	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
 	if err != nil {
 		return err
 	}
 
-	client = c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
 	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
@@ -129,8 +127,8 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	c.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
-	c.logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
 	return err
 }
@@ -188,7 +186,15 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		isLegacyContext = caCertPath != ""
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, c.logger)
+	if caCertPath != "" {
+		caCertPath, err = filepath.Abs(caCertPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
+
 	if err != nil {
 		return err
 	}
@@ -208,7 +214,7 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	c.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 

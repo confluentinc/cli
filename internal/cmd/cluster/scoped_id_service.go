@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -15,7 +14,6 @@ import (
 // This is for querying the endpoint each CP service exposes at /v1/metadata/id.
 type ScopedIdService struct {
 	userAgent string
-	logger    *log.Logger
 }
 
 type ScopedId struct {
@@ -31,10 +29,9 @@ type Scope struct {
 	Clusters map[string]string `json:"clusters"`
 }
 
-func newScopedIdService(userAgent string, logger *log.Logger) *ScopedIdService {
+func newScopedIdService(userAgent string) *ScopedIdService {
 	return &ScopedIdService{
 		userAgent: userAgent,
-		logger:    logger,
 	}
 }
 
@@ -42,7 +39,7 @@ func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*Scope
 	var httpClient *http.Client
 	if caCertPath != "" {
 		var err error
-		httpClient, err = utils.SelfSignedCertClientFromPath(caCertPath, s.logger)
+		httpClient, err = utils.SelfSignedCertClientFromPath(caCertPath)
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +47,7 @@ func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*Scope
 		httpClient = utils.DefaultClient()
 	}
 
-	ctx := utils.GetContext(s.logger)
+	ctx := utils.GetContext()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/v1/metadata/id", url), nil)
 	if err != nil {
 		return nil, err

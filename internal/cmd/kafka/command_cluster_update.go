@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -147,7 +148,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	}
 	requiredPartitionCount, requiredStorageLimit, err := c.getUsageLimit(ctx, uint32(cku))
 	if err != nil {
-		c.logger.Warn("Could not retrieve usage limits ", err)
+		log.CliLogger.Warn("Could not retrieve usage limits ", err)
 		return false, errors.New("Could not retrieve usage limits to validate request to shrink cluster.")
 	}
 	errorMessage := errors.Errorf("Looking at metrics in the last %s window:", window)

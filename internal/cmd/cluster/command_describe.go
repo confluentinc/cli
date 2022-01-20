@@ -11,7 +11,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -35,7 +34,7 @@ type element struct {
 	ID   string `json:"id" yaml:"id"`
 }
 
-func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string, logger *log.Logger) *cobra.Command {
+func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe a Kafka cluster.",
@@ -51,7 +50,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string, logger *log.
 
 	c := &describeCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		client:     newScopedIdService(userAgent, logger),
+		client:     newScopedIdService(userAgent),
 	}
 
 	c.RunE = pcmd.NewCLIRunE(c.describe)

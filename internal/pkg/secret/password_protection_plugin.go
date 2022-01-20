@@ -35,14 +35,13 @@ type PasswordProtection interface {
 }
 
 type PasswordProtectionSuite struct {
-	Logger      *log.Logger
 	Clock       clockwork.Clock
 	RandSource  rand.Source
 	CipherSuite Cipher
 }
 
-func NewPasswordProtectionPlugin(logger *log.Logger) *PasswordProtectionSuite {
-	return &PasswordProtectionSuite{Logger: logger, Clock: clockwork.NewRealClock(), RandSource: &cryptoSource{Logger: logger}}
+func NewPasswordProtectionPlugin() *PasswordProtectionSuite {
+	return &PasswordProtectionSuite{Clock: clockwork.NewRealClock(), RandSource: &cryptoSource{}}
 }
 
 // This function generates a new data key for encryption/decryption of secrets. The DEK is wrapped using the master key and saved in the secrets file
@@ -72,7 +71,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 
 	// Generate the master key from passphrase
 	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
 	newMasterKey, salt, err := engine.GenerateMasterKey(passphrase, "")
 	if err != nil {
 		return "", err
@@ -101,7 +100,7 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher, error) {
 	// Generate the metadata for encryption keys
 	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
 
 	// Generate a new data key. This data key will be used for encrypting the secrets.
 	dataKey, salt, err := engine.GenerateRandomDataKey(MetadataKeyDefaultLengthBytes)
@@ -187,11 +186,11 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
 	// Unwrap DEK with MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Debug(err)
+		log.CliLogger.Debug(err)
 		return errors.New(errors.UnwrapDataKeyErrorMsg)
 	}
 
@@ -208,7 +207,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 				data, iv, algo := ParseCipherValue(cipher)
 				plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 				if err != nil {
-					c.Logger.Debug(err)
+					log.CliLogger.Debug(err)
 					return errors.Errorf(errors.DecryptConfigErrorMsg, key)
 				}
 				_, _, err = configProps.Set(key, plainSecret)
@@ -245,7 +244,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(masterPassphrase, cipherSuite.SaltMEK)
@@ -266,7 +265,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 	// Unwrap old DEK using the MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Debug(err)
+		log.CliLogger.Debug(err)
 		return errors.New(errors.UnwrapDataKeyErrorMsg)
 	}
 
@@ -352,7 +351,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 		return "", err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(oldPassphrase, cipherSuite.SaltMEK)
@@ -368,7 +367,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	// Unwrap DEK using the MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Debug(err)
+		log.CliLogger.Debug(err)
 		return "", errors.New(errors.UnwrapDataKeyErrorMsg)
 	}
 
@@ -671,10 +670,10 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	// Unwrap DEK
-	engine := NewEncryptionEngine(cipherSuite, c.Logger, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
-		c.Logger.Debug(err)
+		log.CliLogger.Debug(err)
 		return errors.New(errors.UnwrapDataKeyErrorMsg)
 	}
 

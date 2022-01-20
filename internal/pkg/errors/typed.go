@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -75,7 +74,7 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-func NewCorruptedConfigError(format, contextName, configFile string, logger *log.Logger) CLITypedError {
+func NewCorruptedConfigError(format, contextName, configFile string) CLITypedError {
 	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
@@ -84,7 +83,7 @@ func NewCorruptedConfigError(format, contextName, configFile string, logger *log
 		errorWithStackTrace = Errorf(format)
 	}
 	// logging stack trace of the error use pkg/errors error type
-	logger.Debugf("%+v", errorWithStackTrace)
+	log.CliLogger.Debugf("%+v", errorWithStackTrace)
 	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
 	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
 	return e

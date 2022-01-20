@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -21,7 +20,6 @@ type Context struct {
 	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
 	State                  *ContextState                     `json:"-" hcl:"-"`
-	Logger                 *log.Logger                       `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
 }
@@ -39,7 +37,6 @@ func newContext(name string, platform *Platform, credential *Credential,
 		CredentialName:         credential.Name,
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
-		Logger:                 config.Logger,
 		Config:                 config,
 		LastOrgId:              orgResourceId,
 	}
@@ -53,13 +50,13 @@ func newContext(name string, platform *Platform, credential *Credential,
 
 func (c *Context) validate() error {
 	if c.Name == "" {
-		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.Filename)
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.Filename)
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename, c.Logger)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename)
 	}
 	if c.SchemaRegistryClusters == nil {
 		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}

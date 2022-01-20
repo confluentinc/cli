@@ -1,0 +1,11 @@
+  Cluster ID | Broker ID | Topic Name  | Partition ID | Leader | Observer | Isr Eligible | In Isr | Caught Up | Log Start Offset | Log End Offset | Last Caught Up Time Ms  |   Last Fetch Time Ms    | Link Name  
+-------------+-----------+-------------+--------------+--------+----------+--------------+--------+-----------+------------------+----------------+-------------------------+-------------------------+------------
+             |      1001 | topic-exist |            0 | true   | false    | false        | true   | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1002 | topic-exist |            0 | false  | false    | false        | true   | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1003 | topic-exist |            0 | false  | false    | false        | true   | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1001 | topic-exist |            1 | false  | false    | false        | false  | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1002 | topic-exist |            1 | true   | false    | false        | true   | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1003 | topic-exist |            1 | false  | false    | false        | true   | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1001 | topic-exist |            2 | false  | false    | false        | false  | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1002 | topic-exist |            2 | false  | false    | false        | false  | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            
+             |      1003 | topic-exist |            2 | true   | false    | false        | true   | false     |                0 |              0 | 1970-01-01 00:00:00 UTC | 1970-01-01 00:00:00 UTC |            

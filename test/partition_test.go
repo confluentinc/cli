@@ -21,7 +21,6 @@ func (s *CLITestSuite) TestPartitions() {
 	}
 	for _, tt := range tests {
 		tt.login = "default"
-		//tt.args += "--url=" + kafkaRestURL
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runConfluentTest(tt)
 	}

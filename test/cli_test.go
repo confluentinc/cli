@@ -263,7 +263,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		// Executes login command if test specifies
 		loginURL := s.getLoginURL(false, tt)
 		if tt.login == "default" {
-			env := []string{pauth.DeprecatedConfluentPlatformUsername + "=fake@user.com", pauth.DeprecatedConfluentPlatformPassword + "=pass1"}
+			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
