@@ -943,7 +943,7 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
-	log.CliLogger.Tracef("Create consumer succeeded")
+	log.CliLogger.Trace("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
@@ -1025,13 +1025,13 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	var foundTopic bool
 	for _, t := range metadata.Topics {
-		log.CliLogger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("Validate topic: found topic " + t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
-		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 

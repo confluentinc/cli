@@ -148,7 +148,7 @@ func (c *command) Execute(args []string) error {
 
 func (c *command) sendAndFlushAnalytics(args []string, err error) {
 	if err := c.Analytics.SendCommandAnalytics(c.Command, args, err); err != nil {
-		log.CliLogger.Debugf("segment analytics sending event failed: %s\n", err.Error())
+		log.CliLogger.Debugf("Segment analytics sending event failed: %s\n", err.Error())
 	}
 
 	if err := c.Analytics.Close(); err != nil {

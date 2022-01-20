@@ -25,7 +25,7 @@ type bufferedLog struct {
 //var _ ccloud.Logger = (*logger)(nil)
 
 // Global logger instance
-var CliLogger = New()
+var CliLogger *Logger
 
 type Level int
 
@@ -53,17 +53,18 @@ type Params struct {
 	JSON   bool
 }
 
-// New creates a new Logger with the default configuration.
-func New() *Logger {
-	return NewWithParams(&Params{
+// Initialize logger
+func init() {
+	CliLogger = New(&Params{
 		Level:  WARN,
 		Output: os.Stderr,
 		JSON:   false,
 	})
 }
 
-// NewWithParams creates and configures a new Logger.
-func NewWithParams(params *Params) *Logger {
+
+// New creates and configures a new Logger.
+func New(params *Params) *Logger {
 	return newLogger(params, hclog.New(&hclog.LoggerOptions{
 		Output:     params.Output,
 		JSONFormat: params.JSON,

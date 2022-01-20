@@ -351,7 +351,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
-		log.CliLogger.Debug("Prerun login getting credentials failed: ", err.Error())
+		log.CliLogger.Debugf("Prerun login getting credentials failed: %v", err.Error())
 		return "", nil, err
 	}
 

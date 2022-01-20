@@ -31,7 +31,7 @@ func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, clien
 			return nil, err
 		}
 		defer caCertReader.Close()
-		log.CliLogger.Tracef("Successfully read CA certificate.")
+		log.CliLogger.Tracef("Successfully read CA certificate")
 	}
 	var cert tls.Certificate
 	if clientCertPath != "" {
@@ -76,7 +76,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		var err error
 		caCertPool, err = x509.SystemCertPool() // load system certs
 		if err != nil {
-			log.CliLogger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
+			log.CliLogger.Warnf("Unable to load system certificates; continuing with custom certificates only")
 		}
 		log.CliLogger.Tracef("Loaded certificate pool from system")
 		if caCertPool == nil {
@@ -88,7 +88,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		if err != nil {
 			return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
 		}
-		log.CliLogger.Tracef("Specified ca certificate has been read")
+		log.CliLogger.Tracef("Specified CA certificate has been read")
 
 		// Append custom certs to the system pool
 		if ok := caCertPool.AppendCertsFromPEM(caCerts); !ok {
@@ -102,7 +102,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 
 	if !isEmptyClientCert(clientCert) {
 		transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}
-		log.CliLogger.Tracef("Successfully added client cert to TLS config")
+		log.CliLogger.Tracef("Successfully added client certificate to TLS config")
 	}
 
 	defaultClient := DefaultClient()
