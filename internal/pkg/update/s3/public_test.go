@@ -15,7 +15,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -40,7 +39,6 @@ func NewMockPublicS3Error() *httptest.Server {
 
 func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 	req := require.New(t)
-	logger := log.New()
 
 	makeVersions := func(versions ...string) version.Collection {
 		col := version.Collection{}
@@ -115,7 +113,6 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
-				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
@@ -135,7 +132,6 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 
 func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 	req := require.New(t)
-	logger := log.New()
 
 	makeVersion := func(v string) *version.Version {
 		ver, err := version.NewSemver(v)
@@ -190,7 +186,6 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
-				Logger:         logger,
 			})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
@@ -285,7 +280,6 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 				S3BinBucket:             tt.fields.S3BinBucket,
 				S3BinRegion:             tt.fields.S3BinRegion,
 				S3ReleaseNotesPrefixFmt: "%s-cli/release-notes",
-				Logger:                  log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
@@ -372,7 +366,6 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewPublicRepo(&PublicRepoParams{
 				S3ReleaseNotesPrefixFmt: "%s-cli/release-notes",
-				Logger:                  log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 
@@ -481,7 +474,6 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
-				Logger:         log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
@@ -553,7 +545,6 @@ func TestPublicRepo_DownloadReleaseNotes(t *testing.T) {
 				S3BinBucket:             tt.fields.S3BinBucket,
 				S3BinRegion:             tt.fields.S3BinRegion,
 				S3ReleaseNotesPrefixFmt: "/%s-cli/release-notes",
-				Logger:                  log.New(),
 			})
 			r.endpoint = tt.fields.Endpoint
 

@@ -44,7 +44,6 @@ const DoNotTrack = "do-not-track-analytics"
 type PreRun struct {
 	Config                  *v1.Config
 	UpdateClient            update.Client
-	Logger                  *log.Logger
 	Analytics               analytics.Client
 	FlagResolver            FlagResolver
 	Version                 *version.Version
@@ -211,11 +210,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver); err != nil {
 			return err
 		}
-
-		if err := log.SetLoggingVerbosity(cmd, r.Logger); err != nil {
+		if err := log.SetLoggingVerbosity(cmd, log.CliLogger); err != nil {
 			return err
 		}
-		r.Logger.Flush()
+		log.CliLogger.Flush()
 
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
@@ -231,7 +229,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				}
 				utils.ErrPrintln(cmd, errors.TokenExpiredMsg)
 				if err := r.Analytics.SessionTimedOut(); err != nil {
-					r.Logger.Debug(err.Error())
+					log.CliLogger.Debug(err.Error())
 				}
 			}
 		}
@@ -267,7 +265,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 				}
 
 				if err := r.ccloudAutoLogin(cmd, netrcMachineName); err != nil {
-					r.Logger.Debugf("Auto login failed: %v", err)
+					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedContext(command)
 				}
@@ -328,7 +326,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 		return err
 	}
 	if token == "" || credentials == nil {
-		r.Logger.Debug("Non-interactive login failed: no credentials")
+		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
@@ -336,9 +334,9 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	if err != nil {
 		return err
 	}
-	r.Logger.Debug(errors.AutoLoginMsg)
-	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
-	r.Logger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	log.CliLogger.Debug(errors.AutoLoginMsg)
+	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return nil
 }
 
@@ -353,7 +351,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
-		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
+		log.CliLogger.Debugf("Prerun login getting credentials failed: %v", err.Error())
 		return "", nil, err
 	}
 
@@ -457,7 +455,6 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
-	var logger *log.Logger
 	var userAgent string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
@@ -466,11 +463,10 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (
 			return nil, err
 		}
 		authToken = state.AuthToken
-		logger = ctx.Logger
 		userAgent = ver.UserAgent
 	}
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
-		BaseURL: baseURL, Logger: logger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
+		BaseURL: baseURL, Logger: log.CliLogger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
 	}), nil
 }
 
@@ -490,7 +486,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 				}
 
 				if err := r.confluentAutoLogin(cmd, netrcMachineName); err != nil {
-					r.Logger.Debugf("Auto login failed: %v", err)
+					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedWithMDSContext(command)
 				}
@@ -529,15 +525,15 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 		return err
 	}
 	if token == "" || credentials == nil {
-		r.Logger.Debug("Non-interactive login failed: no credentials")
+		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
 	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials.Username, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false)
 	if err != nil {
 		return err
 	}
-	r.Logger.Debug(errors.AutoLoginMsg)
-	r.Logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debug(errors.AutoLoginMsg)
+	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
 
@@ -555,7 +551,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 		return "", nil, err
 	}
 
-	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, r.Logger)
+	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath)
 	if err != nil {
 		return "", nil, err
 	}
@@ -574,7 +570,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 
 func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
-	if r.Logger.GetLevel() == log.DEBUG || r.Logger.GetLevel() == log.TRACE {
+	if log.CliLogger.GetLevel() >= log.DEBUG {
 		mdsConfig.Debug = true
 	}
 	if ctx == nil {
@@ -588,9 +584,9 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.SelfSignedCertClientFromPath(caCertPath, r.Logger)
+	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
 	if err != nil {
-		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsConfig.HTTPClient = utils.DefaultClient()
 	} else {
 		mdsConfig.HTTPClient = client
@@ -613,7 +609,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
-			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, restFlags.caCertPath, restFlags.clientCertPath, restFlags.clientKeyPath, r.Logger)
+			cfg.HTTPClient, err = createOnPremKafkaRestClient(command.Context, restFlags.caCertPath, restFlags.clientCertPath, restFlags.clientKeyPath, log.CliLogger)
 			if err != nil {
 				return nil, err
 			}
@@ -626,7 +622,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			}
 			var restContext context.Context
 			if useMdsToken && !restFlags.prompt {
-				r.Logger.Debug("found mds token to use as bearer")
+				log.CliLogger.Debug("found mds token to use as bearer")
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
@@ -658,20 +654,20 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 	}
 	// use cert path flag or env var if it was passed
 	if caCertPath != "" {
-		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath, logger)
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
 		}
 		return client, nil
 		// use cert path from config if available
 	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
-		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath, logger)
+		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
 		}
 		return client, nil
 	} else if clientCertPath != "" && clientKeyPath != "" {
-		client, err := utils.CustomCAAndClientCertClient("", clientCertPath, clientKeyPath, logger)
+		client, err := utils.CustomCAAndClientCertClient("", clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
 		}
@@ -775,16 +771,16 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *DynamicConfig) error 
 
 func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicContext) error {
 	if ctx == nil {
-		r.Logger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
+		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
-	r.Logger.Debug("Updating auth token")
+	log.CliLogger.Debug("Updating auth token")
 	token, err := r.getUpdatedAuthToken(cmd, ctx)
 	if err != nil || token == "" {
-		r.Logger.Debug("Failed to update auth token")
+		log.CliLogger.Debug("Failed to update auth token")
 		return tokenError
 	}
-	r.Logger.Debug("Successfully update auth token")
+	log.CliLogger.Debug("Successfully update auth token")
 	err = ctx.UpdateAuthToken(token)
 	if err != nil {
 		return tokenError
@@ -804,14 +800,14 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 
 	var token string
 	if r.Config.IsCloudLogin() {
-		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: r.Logger, UserAgent: r.Version.UserAgent})
+		client := ccloud.NewClient(&ccloud.Params{BaseURL: ctx.Platform.Server, HttpClient: ccloud.BaseClient, Logger: log.CliLogger, UserAgent: r.Version.UserAgent})
 		token, _, err = r.AuthTokenHandler.GetCCloudTokens(client, credentials, false)
 		if err != nil {
 			return "", err
 		}
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, r.Logger)
+		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath)
 		if err != nil {
 			return "", err
 		}
@@ -838,7 +834,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 	if err != nil {
 		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
 		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
-		r.Logger.Warn(err)
+		log.CliLogger.Warn(err)
 		return
 	}
 
@@ -875,7 +871,7 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 
 func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
-	if r.Logger.GetLevel() == log.DEBUG || r.Logger.GetLevel() == log.TRACE {
+	if log.CliLogger.GetLevel() >= log.DEBUG {
 		mdsv2Config.Debug = true
 	}
 	if ctx == nil {
@@ -889,9 +885,9 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.SelfSignedCertClientFromPath(caCertPath, r.Logger)
+	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
 	if err != nil {
-		r.Logger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
 		mdsv2Config.HTTPClient = utils.DefaultClient()
 	} else {
 		mdsv2Config.HTTPClient = client
@@ -900,8 +896,10 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 }
 
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
-	kafkarestv3.NewConfiguration()
-	return kafkarestv3.NewAPIClient(&kafkarestv3.Configuration{
-		BasePath: kafkaRestURL + "/kafka/v3",
-	}), nil
+	cfg := kafkarestv3.NewConfiguration()
+	if log.CliLogger.GetLevel() == log.DEBUG || log.CliLogger.GetLevel() == log.TRACE {
+		cfg.Debug = true
+	}
+	cfg.BasePath = kafkaRestURL + "/kafka/v3"
+	return kafkarestv3.NewAPIClient(cfg), nil
 }

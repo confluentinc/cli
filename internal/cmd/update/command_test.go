@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
 	updatemock "github.com/confluentinc/cli/internal/pkg/update/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/confluentinc/cli/mock"
@@ -24,7 +23,6 @@ func TestGetReleaseNotes_MultipleReleaseNotes(t *testing.T) {
 
 	c := &command{
 		client:          client,
-		logger:          log.New(),
 		analyticsClient: mock.NewDummyAnalyticsMock(),
 		version:         &version.Version{Version: "0.0.0"},
 	}

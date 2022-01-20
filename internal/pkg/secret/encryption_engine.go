@@ -31,8 +31,8 @@ type EncryptEngineImpl struct {
 	RandSource rand.Source
 }
 
-func NewEncryptionEngine(suite *Cipher, logger *log.Logger, randSource rand.Source) *EncryptEngineImpl {
-	return &EncryptEngineImpl{Cipher: suite, Logger: logger, RandSource: randSource}
+func NewEncryptionEngine(suite *Cipher, randSource rand.Source) *EncryptEngineImpl {
+	return &EncryptEngineImpl{Cipher: suite, RandSource: randSource}
 }
 
 func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) {

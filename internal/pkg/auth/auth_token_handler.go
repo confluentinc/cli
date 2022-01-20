@@ -8,7 +8,6 @@ import (
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -23,11 +22,10 @@ type AuthTokenHandler interface {
 }
 
 type AuthTokenHandlerImpl struct {
-	logger *log.Logger
 }
 
-func NewAuthTokenHandler(logger *log.Logger) AuthTokenHandler {
-	return &AuthTokenHandlerImpl{logger}
+func NewAuthTokenHandler() AuthTokenHandler {
+	return &AuthTokenHandlerImpl{}
 }
 
 func (a *AuthTokenHandlerImpl) GetCCloudTokens(client *ccloud.Client, credentials *Credentials, noBrowser bool) (string, string, error) {
@@ -54,7 +52,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	if userSSO == "" {
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO, a.logger)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
 	if err != nil {
 		return "", "", err
 	}
@@ -82,7 +80,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email str
 }
 
 func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken string) (string, string, error) {
-	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken, a.logger)
+	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
@@ -96,7 +94,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
-	ctx := utils.GetContext(a.logger)
+	ctx := utils.GetContext()
 	basicContext := context.WithValue(ctx, mds.ContextBasicAuth, mds.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
 	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {

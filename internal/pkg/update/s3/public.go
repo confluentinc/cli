@@ -35,7 +35,6 @@ type PublicRepoParams struct {
 	S3BinRegion             string
 	S3BinPrefixFmt          string
 	S3ReleaseNotesPrefixFmt string
-	Logger                  *log.Logger
 }
 
 type ListBucketResult struct {
@@ -112,7 +111,7 @@ func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection
 
 func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucketResult, error) {
 	url := fmt.Sprintf("%s?prefix=%s/", r.endpoint, s3DirPrefix)
-	r.Logger.Debugf("Getting available versions from %s", url)
+	log.CliLogger.Debugf("Getting available versions from %s", url)
 
 	var results []ListBucketResult
 	more := true
@@ -287,7 +286,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err == nil {
-			r.Logger.Tracef("Response from AWS: %s", string(body))
+			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
 		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
 	}
