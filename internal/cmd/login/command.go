@@ -98,7 +98,6 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	//client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser)
 	if err != nil {
 		return err
