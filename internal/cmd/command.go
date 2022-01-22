@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/quotas"
 	"os"
 
 	"github.com/jonboulle/clockwork"
@@ -171,6 +172,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		connectorCatalogCmd := connectorcatalog.New(cliName, prerunner)
 		environmentCmd := environment.New(cliName, prerunner, analyticsClient)
 		serviceAccountCmd := serviceaccount.New(prerunner, analyticsClient)
+		quotasCmd := quotas.New(cliName, prerunner, analyticsClient)
 
 		serverCompleter.AddCommand(apiKeyCmd)
 		serverCompleter.AddCommand(connectorCmd)
@@ -187,6 +189,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 		cli.AddCommand(serviceAccountCmd.Command)
 		cli.AddCommand(shell.NewShellCmd(cli, prerunner, cliName, cfg, configLoadingErr, shellCompleter, jwtValidator))
 		cli.AddCommand(signup.New(prerunner, logger, ver.UserAgent, ccloudClientFactory).Command)
+		cli.AddCommand(quotasCmd.Command)
 	}
 
 	return command

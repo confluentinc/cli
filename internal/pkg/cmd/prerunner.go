@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
 	"net/http"
 	"os"
 	"strings"
@@ -71,12 +72,13 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client            *ccloud.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
-	KafkaRESTProvider *KafkaRESTProvider
-	Context           *DynamicContext
-	State             *v2.ContextState
+	Client             *ccloud.Client
+	MDSClient          *mds.APIClient
+	MDSv2Client        *mdsv2alpha1.APIClient
+	KafkaRESTProvider  *KafkaRESTProvider
+	QuotasClient *quotasv2.APIClient
+	Context            *DynamicContext
+	State              *v2.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -406,7 +408,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *paut
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
-
+	cliCmd.QuotasClient = r.createQuotasClient(ctx, cliCmd.Version)
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Command, cliCmd.Version)
 	if err != nil {
 		return err
@@ -513,6 +515,21 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, cmd *cobra.Command, ver
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
 		BaseURL: baseURL, Logger: logger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
 	}), nil
+}
+
+func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) (*quotasv2.APIClient) {
+	var baseURL string
+	var userAgent string
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+		userAgent = ver.UserAgent
+	}
+
+	cfg := quotasv2.NewConfiguration()
+	cfg.Servers[0].URL = baseURL+"/api"
+	cfg.UserAgent = userAgent
+
+	return quotasv2.NewAPIClient(cfg)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.

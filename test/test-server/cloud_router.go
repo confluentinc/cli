@@ -46,6 +46,7 @@ const (
 	usageLimits         = "/api/usage_limits"
 	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
+	appliedQuotas       = "/api/quotas/v2/applied-quotas"
 )
 
 type CloudRouter struct {
@@ -89,6 +90,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
 	c.addMetricsQueryRoutes(t)
+	c.addQuotasRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -163,4 +165,8 @@ func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
 	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
 	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
+}
+
+func (c *CloudRouter) addQuotasRoutes(t *testing.T) {
+	c.HandleFunc(appliedQuotas, c.HandleAppliedQuotas(t))
 }
