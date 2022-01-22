@@ -346,6 +346,8 @@ github.com/confluentinc/cc-structs/operator v0.753.0 h1:/7iehTE/W8bJrJ8A9b/JFhWo
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91 h1:DW5G4f8mJ+Vpc7Ay5gu9SKul+GCFkA9JVnqUVrdgItc=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91/go.mod h1:A7vR8Me1rDKWnWADVGj5bweYIce4bzPQ+R05bZIAU90=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2 h1:lQ3j0YQLv+vfNsAA+cb3/RvUP6dsRaoa5MVLPltsvp4=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2/go.mod h1:7Hu7+klkfq2KgYgBu3C8jpznvW6wU6O9o9heEXHvJNs=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=
@@ -1635,6 +1637,7 @@ golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d/go.mod h1:gOpvHmFTYa4Iltr
 golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20201203001011-0b49973bad19/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
+golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c h1:SgVl/sCtkicsS7psKkje4H9YtjdEl3xsYh7N+5TDHqY=
 golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
