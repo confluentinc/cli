@@ -21,6 +21,7 @@ Available Commands:
   logout            Log out of Confluent Cloud.
   price             See Confluent Cloud pricing information.
   prompt            Print Confluent Cloud CLI context for your terminal prompt.
+  quota-limits      Look up ccloud service quotas limits
   schema-registry   Manage Schema Registry.
   service-account   Manage service accounts.
   shell             Run the ccloud shell.
