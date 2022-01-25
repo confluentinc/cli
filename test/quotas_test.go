@@ -12,7 +12,7 @@ func (s *CLITestSuite) TestQuotaLimits() {
 		{args: "quota-limits list kafka_cluster --quota-code quota_a -o yaml", fixture: "quotas/6.golden"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.workflow = true
