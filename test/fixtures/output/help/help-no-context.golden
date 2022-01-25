@@ -13,6 +13,7 @@ Available Commands:
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Cloud or Confluent Platform.
   prompt          Add Confluent CLI context to your terminal prompt.
+  quota-limits    Look up ccloud service quotas limits
   shell           Start an interactive shell.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.

@@ -1,0 +1,4 @@
+  QuotaCode | DisplayName |     Scope     | AppliedLimit | Organization | Environment | Network | KafkaCluster | User  
+------------+-------------+---------------+--------------+--------------+-------------+---------+--------------+-------
+  quota_a   |             | kafka_cluster |           15 | org-123      | env-1       |         | lkc-1        |       
+  quota_b   |             | kafka_cluster |           17 | org-123      | env-1       |         | lkc-1        |       
