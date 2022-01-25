@@ -33,9 +33,9 @@ type quotaLimit struct {
 }
 
 var (
-	listFields             = []string{"Id", "DisplayName", "Scope", "AppliedLimit", "OrganizationId", "EnvironmentId", "NetworkId", "KafkaClusterId", "UserId"}
-	listHumanLabels        = []string{"Id", "DisplayName", "Scope", "AppliedLimit","OrganizationId", "EnvironmentId", "NetworkId", "KafkaClusterId", "UserId"}
-	listStructuredLabels   = []string{"Id", "DisplayName", "Scope", "AppliedLimit","OrganizationId", "EnvironmentId", "NetworkId", "KafkaClusterId", "UserId"}
+	listFields             = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Organization", "Environment", "Network", "KafkaClusterId", "User"}
+	listHumanLabels        = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit","Organization", "Environment", "Network", "KafkaClusterId", "User"}
+	listStructuredLabels   = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit","Organization", "Environment", "Network", "KafkaClusterId", "User"}
 )
 
 // New returns the Cobra command for `environment`.
@@ -73,11 +73,11 @@ func (c *command) createContext() context.Context {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	quotaScope := args[0]
 
-	quotaCode, err := cmd.Flags().GetString("quotacode")
+	quotaCode, err := cmd.Flags().GetString("quota-code")
 	if err != nil {
 		return err
 	}
-	kafkaCluster, err := cmd.Flags().GetString("kafkacluster")
+	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
 		return err
 	}
