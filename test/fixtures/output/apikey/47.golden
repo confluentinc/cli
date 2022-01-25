@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 Error: Unknown API key UNKNOWN
 
 Suggestions:
     Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`.
+=======
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+Stored API secret for API key "UIAPIKEY100".
+>>>>>>> add-quotas-api

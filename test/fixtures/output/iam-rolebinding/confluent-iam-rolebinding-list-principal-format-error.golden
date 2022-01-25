@@ -1,0 +1,6 @@
+In the next major version update, `confluent iam rolebinding` has been renamed to `confluent iam rbac`.
+
+Error: incorrect principal format specified
+
+Suggestions:
+    Principal must be specified in this format: `<Principal Type>:<Principal Name>`.

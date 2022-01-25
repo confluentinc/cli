@@ -1,6 +1,7 @@
 package mock
 
 import (
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
 	"os"
 
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -22,6 +23,7 @@ type Commander struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
+	QuotasClient      *quotasv2.APIClient
 	Version           *version.Version
 	Config            *v1.Config
 }
@@ -151,4 +153,5 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
+	command.QuotasClient = c.QuotasClient
 }

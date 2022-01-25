@@ -1,0 +1,7 @@
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+  QuotaCode | DisplayName |     Scope     | AppliedLimit | Organization | Environment | Network | KafkaCluster | User  
+------------+-------------+---------------+--------------+--------------+-------------+---------+--------------+-------
+  quota_a   |             | kafka_cluster |           15 | org-123      | env-1       |         | lkc-1        |       
+  quota_a   |             | kafka_cluster |           16 | org-123      | env-2       |         | lkc-2        |       

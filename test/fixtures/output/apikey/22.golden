@@ -1,1 +1,24 @@
+<<<<<<< HEAD
 Set API Key "MYKEY5" as the active API key for "lkc-other1".
+=======
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+In the next major version update, the `--service-account` flag no longer accepts user IDs.
+
+          Key          | Description | Owner | Owner Resource Id |      Owner Email      |  Resource Type  | Resource ID  |       Created         
+-----------------------+-------------+-------+-------------------+-----------------------+-----------------+--------------+-----------------------
+    DEACTIVATEDUSERKEY |             |  6666 | sa-6666           | <deactivated user>    | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    MYKEY1             | first-key   |     1 | u11               | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    MYKEY2             |             |     2 | u-17              | mtodzo@confluent.io   | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
+    MYKEY3             |             |    23 | u-44ddd           | mhe@confluent.io      | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    MYKEY4             | my-cool-app |    23 | u-44ddd           | mhe@confluent.io      | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+    MYKEY6             | my-ksql-app |    23 | u-44ddd           | mhe@confluent.io      | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+    MYKEY7             |             |    23 | u-44ddd           | mhe@confluent.io      | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
+    MYKEY8             |             |    23 | u-44ddd           | mhe@confluent.io      | cloud           |              | 1999-02-24T00:00:00Z  
+    SERVICEACCOUNTKEY1 |             | 12345 | sa-12345          | <service account>     | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+    UIAPIKEY100        |             |     4 | u-22bbb           | u-22bbb@confluent.io  | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+    UIAPIKEY101        |             |     4 | u-22bbb           | u-22bbb@confluent.io  | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
+    UIAPIKEY102        |             |     4 | u-22bbb           | u-22bbb@confluent.io  | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+    UIAPIKEY103        |             |     4 | u-22bbb           | u-22bbb@confluent.io  | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+>>>>>>> add-quotas-api

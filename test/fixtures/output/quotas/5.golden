@@ -1,0 +1,24 @@
+[
+  {
+    "AppliedLimit": "15",
+    "DisplayName": "",
+    "Environment": "env-1",
+    "KafkaCluster": "lkc-1",
+    "Network": "",
+    "Organization": "org-123",
+    "QuotaCode": "quota_a",
+    "Scope": "kafka_cluster",
+    "User": ""
+  }, 
+  {
+    "AppliedLimit": "16",
+    "DisplayName": "",
+    "Environment": "env-2",
+    "KafkaCluster": "lkc-2",
+    "Network": "",
+    "Organization": "org-123",
+    "QuotaCode": "quota_a",
+    "Scope": "kafka_cluster",
+    "User": ""
+  }
+]

@@ -1,1 +1,13 @@
+<<<<<<< HEAD
 Set API Key "MYKEY4" as the active API key for "lkc-cool1".
+=======
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+It may take a couple of minutes for the API key to be ready.
+Save the API key and secret. The secret is not retrievable later.
++---------+-----------+
+| API Key | MYKEY7    |
+| Secret  | MYSECRET7 |
++---------+-----------+
+>>>>>>> add-quotas-api

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Error: required flag(s) "resource" not set
 Usage:
   confluent api-key use <api-key> [flags]
@@ -8,4 +9,12 @@ Flags:
 Global Flags:
   -h, --help            Show help for this command.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+=======
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+In the next major version update, the `--service-account` flag no longer accepts user IDs.
+
+Error: service account "sa-123456" not found
+>>>>>>> add-quotas-api
 

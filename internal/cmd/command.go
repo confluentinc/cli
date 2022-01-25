@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/quotas"
 	"os"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -120,6 +121,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient, analyticsClient))
 	cmd.AddCommand(version.New(prerunner, ver))
+	cmd.AddCommand(quotas.New(prerunner, analyticsClient).Command)
 
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	disableFlagSorting(cmd)

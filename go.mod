@@ -19,6 +19,7 @@ require (
 	github.com/confluentinc/cc-structs/operator v0.911.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
 	github.com/confluentinc/confluent-kafka-go v1.8.2
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2 // indirect
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928

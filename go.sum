@@ -348,6 +348,10 @@ github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92 h1:vTcLNIx+jStH1O6K0dYVqxDu5kosJZCJ3MzbD9KXuQ0=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92/go.mod h1:A7vR8Me1rDKWnWADVGj5bweYIce4bzPQ+R05bZIAU90=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91 h1:DW5G4f8mJ+Vpc7Ay5gu9SKul+GCFkA9JVnqUVrdgItc=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.91/go.mod h1:A7vR8Me1rDKWnWADVGj5bweYIce4bzPQ+R05bZIAU90=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2 h1:lQ3j0YQLv+vfNsAA+cb3/RvUP6dsRaoa5MVLPltsvp4=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2/go.mod h1:7Hu7+klkfq2KgYgBu3C8jpznvW6wU6O9o9heEXHvJNs=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=
@@ -1671,6 +1675,7 @@ golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99/go.mod h1:KelEdhl1UZF7XfJ
 golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210313182246-cd4f82c27b84/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
+golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c h1:SgVl/sCtkicsS7psKkje4H9YtjdEl3xsYh7N+5TDHqY=
 golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
