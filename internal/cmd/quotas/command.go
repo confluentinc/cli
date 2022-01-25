@@ -21,21 +21,21 @@ type command struct {
 }
 
 type quotaLimit struct {
-	Id       string
+	QuotaCode       string
 	DisplayName string
 	Scope string
 	AppliedLimit int32
-	OrganizationId string
-	EnvironmentId    string
-	KafkaClusterId string
-	NetworkId string
-	UserId string
+	Organization string
+	Environment    string
+	KafkaCluster string
+	Network string
+	User string
 }
 
 var (
-	listFields             = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Organization", "Environment", "Network", "KafkaClusterId", "User"}
-	listHumanLabels        = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit","Organization", "Environment", "Network", "KafkaClusterId", "User"}
-	listStructuredLabels   = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit","Organization", "Environment", "Network", "KafkaClusterId", "User"}
+	listFields             = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Organization", "Environment", "Network", "KafkaCluster", "User"}
+	listHumanLabels        = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit","Organization", "Environment", "Network", "KafkaCluster", "User"}
+	listStructuredLabels   = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit","Organization", "Environment", "Network", "KafkaCluster", "User"}
 )
 
 // New returns the Cobra command for `environment`.
@@ -57,8 +57,8 @@ func (c *command) init() {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
-	listCmd.Flags().StringP("quotacode", "Q", "", "filter the result by quota code")
-	listCmd.Flags().StringP("kafkacluster", "K", "", "filter the result by kafka cluster id")
+	listCmd.Flags().StringP("quota-code", "Q", "", "filter the result by quota code")
+	listCmd.Flags().StringP("kafka-cluster", "K", "", "filter the result by kafka cluster id")
 	listCmd.Flags().StringP("environment", "E", "", "filter the result by environment id")
 	listCmd.Flags().StringP("network", "N", "", "filter the result by network id")
 	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
@@ -149,25 +149,25 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	for _, qt := range qtls {
 		outQt := &quotaLimit{
-			Id: *qt.Id,
+			QuotaCode: *qt.Id,
 			DisplayName: *qt.DisplayName,
 			Scope: *qt.Scope,
 			AppliedLimit: *qt.AppliedLimit,
 		}
 		if qt.Organization != nil {
-			outQt.OrganizationId = qt.Organization.Id
+			outQt.Organization = qt.Organization.Id
 		}
 		if qt.Environment != nil {
-			outQt.EnvironmentId = qt.Environment.Id
+			outQt.Environment = qt.Environment.Id
 		}
 		if qt.Network != nil {
-			outQt.NetworkId = qt.Network.Id
+			outQt.Network = qt.Network.Id
 		}
 		if qt.KafkaCluster != nil {
-			outQt.KafkaClusterId = qt.KafkaCluster.Id
+			outQt.KafkaCluster = qt.KafkaCluster.Id
 		}
 		if qt.User != nil {
-			outQt.UserId = qt.User.Id
+			outQt.User = qt.User.Id
 		}
 		outputWriter.AddElement(outQt)
 	}
