@@ -1,13 +1,3 @@
-<<<<<<< HEAD
     Key    | Description | Owner Resource ID |   Owner Email    |  Resource Type  | Resource ID |       Created         
 -----------+-------------+-------------------+------------------+-----------------+-------------+-----------------------
     MYKEY7 |             | u-44ddd           | mhe@confluent.io | schema-registry | lsrc-1      | 1999-02-24T00:00:00Z  
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-Error: unable to set active API key: Unknown API key UNKNOWN
-
-Suggestions:
-    If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `ccloud api-key store UNKNOWN <secret>`.
->>>>>>> add-quotas-api

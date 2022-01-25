@@ -1,4 +1,2 @@
-In the next major version update, `confluent iam rolebinding` has been renamed to `confluent iam rbac`.
-
   Principal | Role | ResourceType | Name | PatternType  
 ------------+------+--------------+------+--------------

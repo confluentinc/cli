@@ -1,16 +1,4 @@
-<<<<<<< HEAD
     Principal   | Permission | Operation | ResourceType | ResourceName | PatternType  
 ----------------+------------+-----------+--------------+--------------+--------------
   User:sa-12345 | ALLOW      | READ      | TOPIC        | 'test-topic' | LITERAL      
   User:sa-12345 | ALLOW      | DESCRIBE  | TOPIC        | 'test-topic' | LITERAL      
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-In the next major version update, the following output labels/keys were renamed: ServiceAccountId to Principal, Resource to ResourceType, Name to ResourceName, and Type to PatternType.
-
-  ServiceAccountId | Permission | Operation | Resource |     Name     |  Type    
--------------------+------------+-----------+----------+--------------+----------
-  User:0           | ALLOW      | READ      | TOPIC    | 'test-topic' | LITERAL  
-  User:0           | ALLOW      | DESCRIBE  | TOPIC    | 'test-topic' | LITERAL  
->>>>>>> add-quotas-api

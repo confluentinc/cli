@@ -1,20 +1,6 @@
-<<<<<<< HEAD
           Key          | Description | Owner Resource ID |      Owner Email      | Resource Type | Resource ID |       Created         
 -----------------------+-------------+-------------------+-----------------------+---------------+-------------+-----------------------
     DEACTIVATEDUSERKEY |             | sa-6666           | <deactivated user>    | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
     MYKEY1             |             | u11               | bstrauch@confluent.io | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
     MYKEY3             |             | u-44ddd           | mhe@confluent.io      | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
     SERVICEACCOUNTKEY1 |             | sa-12345          | <service account>     | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-In the next major version update, the `--service-account` flag no longer accepts user IDs.
-
-          Key          | Description | Owner | Owner Resource Id |      Owner Email      | Resource Type | Resource ID |       Created         
------------------------+-------------+-------+-------------------+-----------------------+---------------+-------------+-----------------------
-    DEACTIVATEDUSERKEY |             |  6666 | sa-6666           | <deactivated user>    | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
-    MYKEY1             |             |     1 | u11               | bstrauch@confluent.io | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
-    MYKEY3             |             |    23 | u-44ddd           | mhe@confluent.io      | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
-    SERVICEACCOUNTKEY1 |             | 12345 | sa-12345          | <service account>     | kafka         | lkc-bob     | 1999-02-24T00:00:00Z  
->>>>>>> add-quotas-api

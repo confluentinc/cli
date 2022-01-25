@@ -1,6 +1,3 @@
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
   Link Name | Mirror Topic Name | Partition | Partition Mirror Lag | Source Topic Name | Mirror Status | Status Time Ms | Last Source Fetch Offset  
 ------------+-------------------+-----------+----------------------+-------------------+---------------+----------------+---------------------------
   link-1    | dest-topic-1      |         0 |               142857 | src-topic-1       | active        |      111111111 |                  1293009  

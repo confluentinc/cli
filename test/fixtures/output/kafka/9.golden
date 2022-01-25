@@ -1,14 +1,4 @@
-<<<<<<< HEAD
   Cloud ID |      Cloud Name       |    Region ID    |         Region Name          
 -----------+-----------------------+-----------------+------------------------------
   gcp      | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
   gcp      | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-  CloudId |       CloudName       |    RegionId     |         RegionName           
-----------+-----------------------+-----------------+------------------------------
-  gcp     | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
-  gcp     | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       
->>>>>>> add-quotas-api

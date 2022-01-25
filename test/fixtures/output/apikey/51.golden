@@ -1,16 +1,4 @@
-<<<<<<< HEAD
 Error: unable to set active API key: invalid API key "MYKEY2" for resource "lkc-cool1"
 
 Suggestions:
     If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store MYKEY2 <secret>`.
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-It may take a couple of minutes for the API key to be ready.
-Save the API key and secret. The secret is not retrievable later.
-+---------+------------+
-| API Key | MYKEY10    |
-| Secret  | MYSECRET10 |
-+---------+------------+
->>>>>>> add-quotas-api

@@ -1,3 +1,1 @@
-In the next major version update, `confluent iam rolebinding` has been renamed to `confluent iam rbac`.
-
 Error: must specify either principal or role

@@ -1,8 +1,3 @@
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-In the next major version update, `ccloud iam rolebinding` has been renamed to `confluent iam rbac role-binding`.
-
    Principal   |      Email       |       Role        | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type | Name | Pattern Type  
 ---------------+------------------+-------------------+-------------+---------------+--------------+-----------------+---------------+------+---------------
   User:u-44ddd | mhe@confluent.io | CloudClusterAdmin | a-595       | lkc-1111aaa   |              |                 |               |      |               

@@ -1,15 +1,5 @@
-<<<<<<< HEAD:test/fixtures/output/connect/connect-plugin-describe.golden
 The following are required configs:
 connector.class : GcsSink
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-In the next major version update, `ccloud connector-catalog` has been renamed to `confluent connect plugin`.
-
-Following are the required configs: 
-connector.class: GcsSink
->>>>>>> add-quotas-api:test/fixtures/output/connector-catalog/connector-catalog-describe.golden
 kafka.api.key : ["kafka.api.key" is required] 
 kafka.api.secret : ["kafka.api.secret" is required] 
 topics : ["topics" is required] 

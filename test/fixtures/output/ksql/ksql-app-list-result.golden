@@ -1,11 +1,4 @@
-<<<<<<< HEAD
        ID      |        Name        | Topic Prefix |   Kafka   | Storage |         Endpoint         |    Status     
-=======
-The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
-To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
-
-       Id      |        Name        | Topic Prefix |   Kafka   | Storage |         Endpoint         |    Status     
->>>>>>> add-quotas-api
 ---------------+--------------------+--------------+-----------+---------+--------------------------+---------------
   lksqlc-ksql5 | account ksql       | pksqlc-abcde | lkc-qwert |     101 | SASL_SSL://ksql-endpoint | PROVISIONING  
   lksqlc-woooo | kay cee queue elle | pksqlc-ghjkl | lkc-zxcvb |     123 | SASL_SSL://ksql-endpoint | PROVISIONING  

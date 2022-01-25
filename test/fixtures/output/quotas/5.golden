@@ -9,7 +9,7 @@
     "QuotaCode": "quota_a",
     "Scope": "kafka_cluster",
     "User": ""
-  }, 
+  },
   {
     "AppliedLimit": "16",
     "DisplayName": "",
