@@ -27,6 +27,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/quotas"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -120,6 +121,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient, analyticsClient))
 	cmd.AddCommand(version.New(prerunner, ver))
+	cmd.AddCommand(quotas.New(prerunner, analyticsClient).Command)
 
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	disableFlagSorting(cmd)

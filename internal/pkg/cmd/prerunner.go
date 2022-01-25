@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -70,6 +71,7 @@ type AuthenticatedCLICommand struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
+	QuotasClient *quotasv2.APIClient
 	Context           *DynamicContext
 	State             *v1.ContextState
 }
@@ -365,7 +367,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
-
+	cliCmd.QuotasClient = r.createQuotasClient(ctx, cliCmd.Version)
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
@@ -449,6 +451,21 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 	}
 	// if no matches, then use original URL
 	return baseURL
+}
+
+func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) (*quotasv2.APIClient) {
+	var baseURL string
+	var userAgent string
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+		userAgent = ver.UserAgent
+	}
+
+	cfg := quotasv2.NewConfiguration()
+	cfg.Servers[0].URL = baseURL+"/api"
+	cfg.UserAgent = userAgent
+
+	return quotasv2.NewAPIClient(cfg)
 }
 
 func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (*ccloud.Client, error) {
