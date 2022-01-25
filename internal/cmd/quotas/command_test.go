@@ -63,12 +63,12 @@ func (suite *QuotasTestSuite) newCmd() *command {
 
 func (suite *QuotasTestSuite) StartBackEndServer() string {
 	r := mux.NewRouter()
-	r.HandleFunc("/api/quotas/v2/applied-quotas", HandleAppliedQuotas())
+	r.HandleFunc("/api/quotas/v2/applied-quotas", HandleAppliedQuotas(suite.T()))
 	s := httptest.NewServer(r)
 	return s.URL
 }
 
-func HandleAppliedQuotas() func(w http.ResponseWriter, r *http.Request) {
+func HandleAppliedQuotas(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		qt1 := quotasv2.QuotasV2AppliedQuota{
@@ -85,8 +85,10 @@ func HandleAppliedQuotas() func(w http.ResponseWriter, r *http.Request) {
 			Kind: "AppliedQuotaList",
 			Data: []quotasv2.QuotasV2AppliedQuota{qt1},
 		}
-		reply, _ := json.Marshal(qtls)
-		io.WriteString(w, string(reply))
+		reply, err := json.Marshal(qtls)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(reply))
+		require.NoError(t, err)
 	}
 }
 

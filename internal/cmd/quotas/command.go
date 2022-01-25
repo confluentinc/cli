@@ -2,17 +2,13 @@ package quotas
 
 import (
 	"context"
-	"fmt"
-
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
-
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-
 )
 
 type command struct {
@@ -43,7 +39,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 	cliCmd := pcmd.NewAuthenticatedCLICommand(
 		&cobra.Command{
 			Use:   "quota-limits",
-			Short: fmt.Sprintf("Look up ccloud service quotas limits"),
+			Short: "Look up ccloud service quotas limits",
 		}, prerunner)
 	cmd := &command{AuthenticatedCLICommand: cliCmd, analyticsClient: analyticsClient}
 	cmd.init()
