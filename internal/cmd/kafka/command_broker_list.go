@@ -34,7 +34,7 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Get Brokers
-	brokersGetResp, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersGet(restContext, clusterId)
+	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

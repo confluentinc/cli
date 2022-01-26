@@ -34,12 +34,12 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.CreateTopicRequestDataConfigs {
-	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
+	topicConfigs := make([]kafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
 	for k, v := range topicConfigsMap {
 		val := v
-		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
+		topicConfigs[i] = kafkarestv3.ConfigData{
 			Name:  k,
 			Value: &val,
 		}
