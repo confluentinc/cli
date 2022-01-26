@@ -68,14 +68,14 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 		case http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdAclsPostOpts
+			var req kafkarestv3.CreateKafkaAclsOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(kafkarestv3.ClustersClusterIdAclsPostOpts{})
+			err = json.NewEncoder(w).Encode(kafkarestv3.CreateKafkaAclsOpts{})
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdAclsDeleteOpts
+			var req kafkarestv3.DeleteKafkaAclsOpts
 			_ = json.NewDecoder(r.Body).Decode(&req)
 			err := json.NewEncoder(w).Encode(kafkarestv3.InlineResponse200{Data: []kafkarestv3.AclData{
 				{
@@ -506,7 +506,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdLinksPostOpts
+			var req kafkarestv3.CreateKafkaLinkOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
@@ -518,7 +518,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 					SourceClusterId: "cluster-1",
 					LinkName:        "link-1",
 					LinkId:          "LINKID1",
-					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
 				},
 				{
 					Kind:            "",
@@ -526,7 +526,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 					SourceClusterId: "cluster-1",
 					LinkName:        "link-2",
 					LinkId:          "LINKID2",
-					TopicNames:      []string{"link-2-topic-1", "link-2-topic-2"},
+					TopicsNames:     []string{"link-2-topic-1", "link-2-topic-2"},
 				},
 			}})
 			require.NoError(t, err)
@@ -587,7 +587,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 				SourceClusterId: "cluster-1",
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
-				TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
 			})
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -633,7 +633,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			var req kafkarestv3.ListKafkaMirrorTopicsOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
@@ -740,7 +740,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			var req kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
@@ -1263,7 +1263,7 @@ func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigsAlter(t *testing.T) func(h
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 		w.Header().Set("Content-Type", "application/json")
-		var req kafkarestv3.ClustersClusterIdBrokerConfigsalterPostOpts
+		var req kafkarestv3.UpdateKafkaClusterConfigsOpts
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
 	}
