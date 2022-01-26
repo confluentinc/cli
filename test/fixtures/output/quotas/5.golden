@@ -1,7 +1,7 @@
 [
   {
     "AppliedLimit": "15",
-    "DisplayName": "",
+    "DisplayName": "Quota A",
     "Environment": "env-1",
     "KafkaCluster": "lkc-1",
     "Network": "",
@@ -12,7 +12,7 @@
   },
   {
     "AppliedLimit": "16",
-    "DisplayName": "",
+    "DisplayName": "Qutoa A",
     "Environment": "env-2",
     "KafkaCluster": "lkc-2",
     "Network": "",

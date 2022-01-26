@@ -15,7 +15,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 		qt1 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
-			DisplayName:  stringToPtr(""),
+			DisplayName:  stringToPtr("Quota A"),
 			Organization: qtv2.NewObjectReference("org-123", "",""),
 			KafkaCluster: qtv2.NewObjectReference("lkc-1","",""),
 			Environment: qtv2.NewObjectReference("env-1","",""),
@@ -25,7 +25,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 		qt2 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
-			DisplayName:  stringToPtr(""),
+			DisplayName:  stringToPtr("Qutoa A"),
 			Organization: qtv2.NewObjectReference("org-123", "",""),
 			KafkaCluster: qtv2.NewObjectReference("lkc-2","",""),
 			Environment:  qtv2.NewObjectReference("env-2","",""),
@@ -35,7 +35,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 		qt3 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_b"),
 			Scope:        stringToPtr("kafka_cluster"),
-			DisplayName:  stringToPtr(""),
+			DisplayName:  stringToPtr("Quota B"),
 			Organization: qtv2.NewObjectReference("org-123", "",""),
 			KafkaCluster: qtv2.NewObjectReference("lkc-1","",""),
 			Environment: qtv2.NewObjectReference("env-1","",""),
@@ -45,7 +45,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 		qt4 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_b"),
 			Scope:        stringToPtr("kafka_cluster"),
-			DisplayName:  stringToPtr(""),
+			DisplayName:  stringToPtr("Quota B"),
 			Organization: qtv2.NewObjectReference("org-123", "",""),
 			KafkaCluster: qtv2.NewObjectReference("lkc-2","",""),
 			Environment:  qtv2.NewObjectReference("env-2","",""),

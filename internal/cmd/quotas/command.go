@@ -3,6 +3,7 @@ package quotas
 import (
 	"context"
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
+	"net/url"
 
 	"github.com/spf13/cobra"
 
@@ -48,7 +49,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
 
 func (c *command) init() {
 	listCmd := &cobra.Command{
-		Use:   "list <quota-scope> [--quotacode <quota-code> --kafkacluster <kafkacluster-id> --environment <environment-id> --network <network-id>]",
+		Use:   "list <quota-scope> [--quota-code <quota-code> --kafka-cluster <kafka-cluster-id> --environment <environment-id> --network <network-id>]",
 		Short: "List Confluent Cloud service quota limits by quota scopes. (organization, environment, network, kafka_cluster, service_account or user_account)",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.list),
@@ -86,13 +87,30 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	req := c.QuotasClient.AppliedQuotaQuotasV2Api.ListQuotasV2AppliedQuota(c.createContext()).
-		Scope(quotaScope)
-	ls, _, err := req.Execute()
-	if err != nil {
-		return err
+	firstTime := true
+	token := ""
+	qtls := []quotasv2.QuotasV2AppliedQuota{}
+
+	// Since we use paginated results, get all results by iterating the list.
+	for token != "" || firstTime {
+		firstTime = false
+		req := c.QuotasClient.AppliedQuotaQuotasV2Api.ListQuotasV2AppliedQuota(c.createContext()).
+			Scope(quotaScope).PageToken(token)
+		lsResult, _, err := req.Execute()
+		if err != nil {
+			return err
+		}
+		qtls = append(qtls, lsResult.Data...)
+
+		token = ""
+		if md, ok := lsResult.GetMetadataOk(); ok && md.GetNext() != "" {
+			url, err := url.Parse(*lsResult.GetMetadata().Next.Get())
+			if err != nil {
+				return err
+			}
+			token = url.Query().Get("page_token")
+		}
 	}
-	qtls := ls.Data
 
 	//filter by quota id
 	filtered := []quotasv2.QuotasV2AppliedQuota{}
@@ -169,6 +187,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputWriter.Out()
+}
+
+
+
+func GetAllQuotas(){
+
 }
 
 func (c *command) Cmd() *cobra.Command {
