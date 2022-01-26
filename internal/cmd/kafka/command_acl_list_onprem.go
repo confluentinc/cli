@@ -51,7 +51,7 @@ func (c *aclCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	opts := aclutil.AclRequestToListAclReqest(acl)
-	aclGetResp, httpResp, err := restClient.ACLApi.ClustersClusterIdAclsGet(restContext, clusterId, opts)
+	aclGetResp, httpResp, err := restClient.ACLV3Api.GetKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}

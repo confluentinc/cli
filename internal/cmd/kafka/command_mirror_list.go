@@ -70,11 +70,11 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	var httpResp *http.Response
 
 	if linkName == "" {
-		opts := &kafkarestv3.ClustersClusterIdLinksMirrorsGetOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksMirrorsGet(kafkaREST.Context, lkc, opts)
+		opts := &kafkarestv3.ListKafkaMirrorTopicsOpts{MirrorStatus: mirrorStatusOpt}
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, lkc, opts)
 	} else {
-		opts := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsGetOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorsGet(kafkaREST.Context, lkc, linkName, opts)
+		opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: mirrorStatusOpt}
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, lkc, linkName, opts)
 	}
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
@@ -86,7 +86,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
-		var maxLag int64 = 0
+		var maxLag int32 = 0
 		for _, mirrorLag := range mirror.MirrorLags {
 			if mirrorLag.Lag > maxLag {
 				maxLag = mirrorLag.Lag
@@ -100,7 +100,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			MirrorStatus:             string(mirror.MirrorStatus),
 			StatusTimeMs:             mirror.StateTimeMs,
 			NumPartition:             mirror.NumPartitions,
-			MaxPerPartitionMirrorLag: maxLag,
+			MaxPerPartitionMirrorLag: int64(maxLag),
 		})
 	}
 

@@ -60,12 +60,12 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	failoverMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsfailoverPostOpts{
+	failoverMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsFailoverOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
 		ValidateOnly:            optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorsfailoverPost(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

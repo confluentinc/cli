@@ -155,10 +155,10 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 	var err error
 	if configName != "" {
 		var brokerNameData kafkarestv3.BrokerConfigData
-		brokerNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
+		brokerNameData, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
 		brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
 	} else {
-		brokerConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+		brokerConfig, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
 	}
 	if err != nil {
 		return brokerConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -173,10 +173,10 @@ func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext contex
 	var err error
 	if configName != "" { // Get config specified by configName
 		var configNameData kafkarestv3.ClusterConfigData
-		configNameData, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsNameGet(restContext, clusterId, configName)
+		configNameData, resp, err = restClient.ConfigsV3Api.GetKafkaClusterConfig(restContext, clusterId, configName)
 		clusterConfig.Data = []kafkarestv3.ClusterConfigData{configNameData}
 	} else { // Get all configs
-		clusterConfig, resp, err = restClient.ConfigsApi.ClustersClusterIdBrokerConfigsGet(restContext, clusterId)
+		clusterConfig, resp, err = restClient.ConfigsV3Api.ListKafkaClusterConfigs(restContext, clusterId)
 	}
 	if err != nil {
 		return clusterConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
