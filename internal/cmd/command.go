@@ -89,7 +89,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), logger, getCloudClient(cfg, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	launchdarkly.InitManager(logger, isTest)
+	launchdarkly.InitManager(logger, ver, isTest)
 
 	prerunner := &pcmd.PreRun{
 		Analytics:               analyticsClient,

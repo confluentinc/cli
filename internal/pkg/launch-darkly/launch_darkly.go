@@ -6,25 +6,29 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 	"os"
 	"regexp"
-	"strconv"
 )
 
 const (
-	baseURL = "https://clientsdk.launchdarkly.com/sdk/eval/%s/"
+	baseURL = "https://confluent.cloud/ldapi/sdk/eval/%s/"
 	userPath = "users/%s"
 	prodEnvClientId = "61af57740127630ce47de5be"
 	testEnvClientId = "61af57740127630ce47de5bd"
 )
 
-// Global LdManager
-var LdManager LaunchDarklyManager
+var (
+	LdManager LaunchDarklyManager // Global LdManager
+	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id" , "cluster.physicalClusterId"}
+)
+
 
 type LaunchDarklyManager interface {
 	BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool
@@ -38,9 +42,10 @@ type FeatureFlagManager struct {
 	client		*sling.Sling
 	flagVals	map[string]interface{}
 	flagValsAreForAnonUser bool
+	version		*version.Version
 }
 
-func InitManager(logger *log.Logger, isTest  bool) {
+func InitManager(logger *log.Logger, version *version.Version, isTest  bool) {
 	// TODO if isTest, return a mock
 	var basePath string
 	if os.Getenv("XX_LD_TEST_ENV") != "" {
@@ -49,8 +54,9 @@ func InitManager(logger *log.Logger, isTest  bool) {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
 	LdManager = &FeatureFlagManager{
-		logger: logger,
-		client: sling.New().Base(basePath),
+		logger: 	logger,
+		client: 	sling.New().Base(basePath),
+		version: 	version,
 	}
 }
 
@@ -90,7 +96,7 @@ func (f *FeatureFlagManager) JsonVariation(key string, ctx *cmd.DynamicContext, 
 }
 
 func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
-	user, isAnonUser := contextToLDUser(ctx)
+	user, isAnonUser := f.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	if f.areCachedFlagsAvailable(isAnonUser) {
@@ -130,52 +136,45 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	return b64.URLEncoding.EncodeToString(userBytes), nil
 }
 
-func contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
-	// TODO add an attribute for CLI version 
+func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 	anonUser := false
-	var user *orgv1.User // TODO change to internal config user struct when available
+	var user *orgv1.User
 	if ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
 		user = ctx.State.Auth.User
 	}
 	// Basic user info
 	if user != nil && user.Id != 0 {
-		userID := strconv.Itoa(int(ctx.State.Auth.User.Id))
-		userBuilder = lduser.NewUserBuilder(userID)
-		custom.Set("user.id", ldvalue.String(userID))
+		userResourceId := ctx.State.Auth.User.ResourceId
+		userBuilder = lduser.NewUserBuilder(userResourceId)
+		setCustomAttribute(custom, "user.resource_id", ldvalue.String(userResourceId))
 	} else {
 		anonUser = true
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
 
-	if user != nil && user.Email != "" {
-		userBuilder = userBuilder.Email(user.Email).AsPrivateAttribute()
+	if f.version != nil && f.version.Version != "" {
+		fmt.Println(f.version.Version)
+		setCustomAttribute(custom, "cli.version", ldvalue.String(f.version.Version))
 	}
-	var organization *orgv1.Organization // TODO change to internal config org struct when available
+
+	var organization *orgv1.Organization
 	if ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
 		organization = ctx.State.Auth.Organization
 	}
 	// org info
-	if organization != nil && (organization.Id != 0 || organization.ResourceId != "") {
-		custom.Set("org.id", ldvalue.Int(int(organization.Id)))
-		custom.Set("org.resource_id", ldvalue.String(organization.ResourceId))
-		plan := organization.Plan
-		if plan != nil {
-			custom.Set("org.product_level", ldvalue.String(plan.ProductLevel.String()))
-			if plan.Billing != nil {
-				custom.Set("org.billing_method", ldvalue.String(plan.Billing.Method.String()))
-			}
-		}
+	if organization != nil && organization.ResourceId != "" {
+		setCustomAttribute(custom, "org.resource_id", ldvalue.String(organization.ResourceId))
 	}
-	var account *orgv1.Account // TODO change to internal config account/env struct when available
+	var account *orgv1.Account
 	if ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
 		account = ctx.State.Auth.Account
 	}
 	// environment (account) info
 	if account != nil && account.Id != "" {
-		custom.Set("environment.id", ldvalue.String(account.Id))
+		setCustomAttribute(custom, "environment.id", ldvalue.String(account.Id))
 	}
 	// cluster info
 	var cluster *v1.KafkaClusterConfig
@@ -184,11 +183,11 @@ func contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
 	}
 	if cluster != nil {
 		if cluster.ID != "" {
-			custom.Set("cluster.id", ldvalue.String(cluster.ID))
+			setCustomAttribute(custom, "cluster.id", ldvalue.String(cluster.ID))
 		}
 		if cluster.Bootstrap != "" {
 			physicalClusterId := parsePkcFromBootstrap(cluster.Bootstrap)
-			custom.Set("cluster.physicalClusterId", ldvalue.String(physicalClusterId))
+			setCustomAttribute(custom, "cluster.physicalClusterId", ldvalue.String(physicalClusterId))
 		}
 	}
 	customValueMap := custom.Build()
@@ -198,7 +197,22 @@ func contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
 	return userBuilder.Build(), anonUser
 }
 
+func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) error {
+	found := false
+	for _, attribute := range attributes {
+		if key == attribute {
+			found = true
+			break // key is an accepted targeting attribute
+		}
+	}
+	if !found {
+		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
+	}
+	custom.Set(key, value)
+	return nil
+}
+
 func parsePkcFromBootstrap(bootstrap string) string {
-	r := regexp.MustCompile("pkc-([^.]+)")//`(?P<Pkc>pkc-.+?(?=\.))`)
+	r := regexp.MustCompile("pkc-([^.]+)")
 	return r.FindString(bootstrap)
 }

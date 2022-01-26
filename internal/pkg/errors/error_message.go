@@ -425,4 +425,7 @@ const (
 
 	// Special error types
 	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
+
+	// Launch Darkly errors
+	UnsupportedCustomAttributeErrorMsg = `attribute key "%s" is not one of the supported LaunchDarkly targeting values`
 )
