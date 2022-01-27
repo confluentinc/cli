@@ -988,51 +988,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.R
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs/{config_name}"
-func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		println("GOT HERE")
-		switch r.Method {
-		case http.MethodPost:
-			println("GOT HERE")
-			w.WriteHeader(http.StatusNoContent)
-			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.UpdateKafkaLinkConfigOpts
-			err := json.NewDecoder(r.Body).Decode(&req)
-			require.NoError(t, err)
-			//case http.MethodGet:
-			//	w.Header().Set("Content-Type", "application/json")
-			//	err := json.NewEncoder(w).Encode(kafkarestv3.ListLinkConfigsResponseData{Data: []kafkarestv3.ListLinkConfigsResponseData{
-			//		{
-			//			Kind:      "",
-			//			Metadata:  kafkarestv3.ResourceMetadata{},
-			//			ClusterId: "cluster-1",
-			//			Name:      "replica.fetch.max.bytes",
-			//			Value:     "1048576",
-			//			ReadOnly:  false,
-			//			Sensitive: false,
-			//			Source:    "source-1",
-			//			Synonyms:  []string{"rfmb", "bmfr"},
-			//			LinkName:  "link-1",
-			//		},
-			//		{
-			//			Kind:      "",
-			//			Metadata:  kafkarestv3.ResourceMetadata{},
-			//			ClusterId: "cluster-1",
-			//			Name:      "bootstrap.servers",
-			//			Value:     "bitcoin.com:8888",
-			//			ReadOnly:  false,
-			//			Sensitive: false,
-			//			Source:    "source-2",
-			//			Synonyms:  nil,
-			//			LinkName:  "link-1",
-			//		},
-			//	}})
-			//	require.NoError(t, err)
-		}
-	}
-}
-
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors/{mirror_name}"
 func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
