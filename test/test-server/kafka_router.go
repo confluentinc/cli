@@ -32,6 +32,7 @@ const (
 	rpLink                     = "/kafka/v3/clusters/{cluster}/links/{link}"
 	rpLinks                    = "/kafka/v3/clusters/{cluster}/links"
 	rpLinkConfigs              = "/kafka/v3/clusters/{cluster}/links/{link}/configs"
+	rpLinkConfig               = "/kafka/v3/clusters/{cluster}/links/{link}/configs/{config_name}"
 	rpMirror                   = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}"
 	rpAllMirrors               = "/kafka/v3/clusters/{cluster}/links/-/mirrors"
 	rpMirrors                  = "/kafka/v3/clusters/{cluster}/links/{link}/mirrors"
@@ -118,6 +119,7 @@ func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
 	r.HandleFunc(rpLink, r.HandleKafkaRPLink(t))
 	r.HandleFunc(rpLinks, r.HandleKafkaRPLinks(t))
 	r.HandleFunc(rpLinkConfigs, r.HandleKafkaRPLinkConfigs(t))
+	r.HandleFunc(rpLinkConfig, r.HandleKafkaRPLinkConfig(t))
 	r.HandleFunc(rpMirrorPromote, r.HandleKafkaRPMirrorsPromote(t))
 	r.HandleFunc(rpMirror, r.HandleKafkaRPMirror(t))
 	r.HandleFunc(rpAllMirrors, r.HandleKafkaRPAllMirrors(t))
