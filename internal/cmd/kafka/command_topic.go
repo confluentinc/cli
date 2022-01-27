@@ -173,7 +173,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
-	cmd.Flags().String("context-name", "", "The context name under which to lookup schema ID.")
+	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
