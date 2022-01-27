@@ -157,3 +157,7 @@ func camelToSpaced(camels []string) []string {
 	}
 	return ret
 }
+
+func topicNameStrategy(topic string) string {
+	return topic + "-value"
+}
