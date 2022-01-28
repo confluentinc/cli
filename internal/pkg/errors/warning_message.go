@@ -21,7 +21,9 @@ const (
 
 	// ksql create warning
 	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."
-
+	KSQLAppDeprecateWarning = "(DEPRECATED) In a future release, the \"ksql app\" commands will be removed, " +
+		"use the corresponding \"ksql cluster\" commands instead."
+	
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +
 		"for cluster %q has been dropped because it contains a MANAGEMENT event category. The OTHER event " +

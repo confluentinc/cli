@@ -1,25 +1,28 @@
 package ksql
 
 import (
-	"github.com/spf13/cobra"
-
+	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/spf13/cobra"
 )
 
-type clusterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-}
-
-func newClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *ksqlCommand {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage ksqlDB clusters.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &clusterCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
+	c := &ksqlCommand{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
+		analyticsClient:               analyticsClient,
+	}
 
-	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newConfigureAclsCommand(false))
+	c.AddCommand(c.newCreateCommand(false))
+	c.AddCommand(c.newDeleteCommand(false))
+	c.AddCommand(c.newDescribeCommand(false))
+	c.AddCommand(c.newListCommand(false))
 
-	return c.Command
+	return c
 }

@@ -149,9 +149,19 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	return cmd
 }
 
-func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
+func (suite *KSQLTestSuite) TestAppShouldConfigureACLs() {
+	suite.testShouldConfigureACLs(true)
+}
+
+func (suite *KSQLTestSuite) TestClusterShouldConfigureACLs() {
+	suite.testShouldConfigureACLs(false)
+}
+
+func (suite *KSQLTestSuite) testShouldConfigureACLs(isApp bool) {
+	commandString := getCommandString(isApp)
+
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
 
 	err := cmd.Execute()
 
@@ -164,10 +174,20 @@ func (suite *KSQLTestSuite) TestShouldConfigureACLs() {
 	req.Equal(expectedACLs, buf.String())
 }
 
-func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
+func (suite *KSQLTestSuite) TestAppShouldNotConfigureAclsWhenUser() {
+	suite.testShouldNotConfigureAclsWhenUser(true)
+}
+
+func (suite *KSQLTestSuite) TestClusterShouldNotConfigureAclsWhenUser() {
+	suite.testShouldNotConfigureAclsWhenUser(false)
+}
+
+func (suite *KSQLTestSuite) testShouldNotConfigureAclsWhenUser(isApp bool) {
+	commandString := getCommandString(isApp)
+
 	cmd := suite.newCMD()
 	suite.ksqlCluster.ServiceAccountId = 0
-	cmd.SetArgs([]string{"app", "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
 
 	err := cmd.Execute()
 
@@ -176,9 +196,19 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
 	req.Equal(0, len(suite.kafkac.CreateACLsCalls()))
 }
 
-func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
+func (suite *KSQLTestSuite) TestAppShouldAlsoConfigureForPro() {
+	suite.testShouldAlsoConfigureForPro(true)
+}
+
+func (suite *KSQLTestSuite) TestClusterShouldAlsoConfigureForPro() {
+	suite.testShouldAlsoConfigureForPro(false)
+}
+
+func (suite *KSQLTestSuite) testShouldAlsoConfigureForPro(isApp bool) {
+	commandString := getCommandString(isApp)
+
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *schedv1.KafkaCluster) (cluster2 *schedv1.KafkaCluster, e error) {
 		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
 	}
@@ -194,9 +224,19 @@ func (suite *KSQLTestSuite) TestShouldAlsoConfigureForPro() {
 	req.Equal(expectedACLs, buf.String())
 }
 
-func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
+func (suite *KSQLTestSuite) TestAppShouldNotConfigureOnDryRun() {
+	suite.testShouldNotConfigureOnDryRun(true)
+}
+
+func (suite *KSQLTestSuite) TestClusterShouldNotConfigureOnDryRun() {
+	suite.testShouldNotConfigureOnDryRun(false)
+}
+
+func (suite *KSQLTestSuite) testShouldNotConfigureOnDryRun(isApp bool) {
+	commandString := getCommandString(isApp)
+
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "configure-acls", "--dry-run", ksqlClusterID})
+	cmd.SetArgs([]string{commandString, "configure-acls", "--dry-run", ksqlClusterID})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
@@ -208,23 +248,18 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureOnDryRun() {
 	req.Equal(expectedACLs, buf.String())
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQL() {
-	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.ksqlc.CreateCalled())
-	cfg := suite.ksqlc.CreateCalls()[0].Arg1
-	req.Equal("", cfg.Image)
-	req.Equal(uint32(4), cfg.TotalNumCsu)
-	// TODO add back with analytics
-	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKey() {
+	suite.testCreateKSQLWithApiKey(true)
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKey() {
+	suite.testCreateKSQLWithApiKey(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
+	args := []string{commandString, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -239,9 +274,18 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKey() {
 	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingKey() {
+	suite.testCreateKSQLWithApiKeyMissingKey(true)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKey() {
+	suite.testCreateKSQLWithApiKeyMissingKey(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKey(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "create", ksqlClusterID, "--api-secret", keySecretString})
+	cmd.SetArgs([]string{commandString, "create", ksqlClusterID, "--api-secret", keySecretString})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -250,9 +294,18 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKey() {
 	req.Equal("required flag(s) \"api-key\" not set", err.Error())
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingSecret() {
+	suite.testCreateKSQLWithApiKeyMissingSecret(true)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingSecret() {
+	suite.testCreateKSQLWithApiKeyMissingSecret(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingSecret(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "create", ksqlClusterID, "--api-key", keyString})
+	cmd.SetArgs([]string{commandString, "create", ksqlClusterID, "--api-key", keyString})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -261,9 +314,18 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingSecret() {
 	req.Equal("required flag(s) \"api-secret\" not set", err.Error())
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKeyAndSecret() {
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingKeyAndSecret() {
+	suite.testCreateKSQLWithApiKeyMissingKeyAndSecret(true)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKeyAndSecret() {
+	suite.testCreateKSQLWithApiKeyMissingKeyAndSecret(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKeyAndSecret(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "create", ksqlClusterID})
+	cmd.SetArgs([]string{commandString, "create", ksqlClusterID})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -272,9 +334,18 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithApiKeyMissingKeyAndSecret() {
 	req.Equal(`required flag(s) "api-key", "api-secret" not set`, err.Error())
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithImage() {
+	suite.testCreateKSQLWithImage(true)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithImage() {
+	suite.testCreateKSQLWithImage(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithImage(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	args := []string{"app", "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
+	args := []string{commandString, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -283,9 +354,18 @@ func (suite *KSQLTestSuite) TestCreateKSQLWithImage() {
 	req.Equal("foo", cfg.Image)
 }
 
-func (suite *KSQLTestSuite) TestDescribeKSQL() {
+func (suite *KSQLTestSuite) TestDescribeKSQLApp() {
+	suite.testDescribeKSQL(true)
+}
+
+func (suite *KSQLTestSuite) TestDescribeKSQLCluster() {
+	suite.testDescribeKSQL(false)
+}
+
+func (suite *KSQLTestSuite) testDescribeKSQL(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "describe", ksqlClusterID})
+	cmd.SetArgs([]string{commandString, "describe", ksqlClusterID})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -293,9 +373,18 @@ func (suite *KSQLTestSuite) TestDescribeKSQL() {
 	req.True(suite.ksqlc.DescribeCalled())
 }
 
-func (suite *KSQLTestSuite) TestListKSQL() {
+func (suite *KSQLTestSuite) TestListKSQLApp() {
+	suite.testListKSQL(true)
+}
+
+func (suite *KSQLTestSuite) TestListKSQLCluster() {
+	suite.testListKSQL(false)
+}
+
+func (suite *KSQLTestSuite) testListKSQL(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"app", "list"})
+	cmd.SetArgs([]string{commandString, "list"})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -303,9 +392,18 @@ func (suite *KSQLTestSuite) TestListKSQL() {
 	req.True(suite.ksqlc.ListCalled())
 }
 
-func (suite *KSQLTestSuite) TestDeleteKSQL() {
+func (suite *KSQLTestSuite) TestDeleteKSQLApp() {
+	suite.testDeleteKSQL(true)
+}
+
+func (suite *KSQLTestSuite) TestDeleteKSQLCluster() {
+	suite.testDeleteKSQL(false)
+}
+
+func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
+	commandString := getCommandString(isApp)
 	cmd := suite.newCMD()
-	args := []string{"app", "delete", ksqlClusterID}
+	args := []string{commandString, "delete", ksqlClusterID}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -313,6 +411,14 @@ func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	req.True(suite.ksqlc.DeleteCalled())
 	// TODO add back with analytics
 	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
+}
+
+func getCommandString(isApp bool) string {
+	if isApp {
+		return "app"
+	} else {
+		return "cluster"
+	}
 }
 
 func TestKsqlTestSuite(t *testing.T) {

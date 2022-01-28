@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -14,13 +15,24 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *appCommand) newConfigureAclsCommand() *cobra.Command {
+func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
+	var shortText string
+	var runCommand func(*cobra.Command, []string) error
+	if isApp {
+		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		runCommand = c.configureACLsApp
+	} else {
+		shortText = "Configure ACLs for a ksqlDB cluster."
+		runCommand = c.configureACLsCluster
+	}
+
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> TOPICS...",
-		Short:             "Configure ACLs for a ksqlDB cluster.",
+		Short:             shortText,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.configureACLs),
+		RunE:              pcmd.NewCLIRunE(runCommand),
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
@@ -31,7 +43,15 @@ func (c *appCommand) newConfigureAclsCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *appCommand) configureACLs(cmd *cobra.Command, args []string) error {
+func (c *ksqlCommand) configureACLsCluster(cmd *cobra.Command, args []string) error {
+	return c.configureACLs(cmd, args, false)
+}
+
+func (c *ksqlCommand) configureACLsApp(cmd *cobra.Command, args []string) error {
+	return c.configureACLs(cmd, args, true)
+}
+
+func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp bool) error {
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
@@ -70,10 +90,13 @@ func (c *appCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
 
+	if isApp {
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	}
 	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 }
 
-func (c *appCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, error) {
+func (c *ksqlCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, error) {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
@@ -87,7 +110,7 @@ func (c *appCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, er
 	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.Id)
 }
 
-func (c *appCommand) buildACLBindings(serviceAccountId string, cluster *schedv1.KSQLCluster, topics []string) []*schedv1.ACLBinding {
+func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1.KSQLCluster, topics []string) []*schedv1.ACLBinding {
 	bindings := make([]*schedv1.ACLBinding, 0)
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
@@ -135,7 +158,7 @@ func (c *appCommand) buildACLBindings(serviceAccountId string, cluster *schedv1.
 	return bindings
 }
 
-func (c *appCommand) createClusterAcl(operation schedv1.ACLOperations_ACLOperation, serviceAccountId string) *schedv1.ACLBinding {
+func (c *ksqlCommand) createClusterAcl(operation schedv1.ACLOperations_ACLOperation, serviceAccountId string) *schedv1.ACLBinding {
 	binding := &schedv1.ACLBinding{
 		Entry: &schedv1.AccessControlEntryConfig{
 			Host: "*",
@@ -151,7 +174,7 @@ func (c *appCommand) createClusterAcl(operation schedv1.ACLOperations_ACLOperati
 	return binding
 }
 
-func (c *appCommand) createACL(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
+func (c *ksqlCommand) createACL(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
 	binding := &schedv1.ACLBinding{
 		Entry: &schedv1.AccessControlEntryConfig{
 			Host: "*",
