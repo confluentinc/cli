@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
@@ -22,14 +23,14 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	analyticsClient         analytics.Client
-	ccloudClientFactory     pauth.CCloudClientFactory
-	mdsClientManager        pauth.MDSClientManager
-	netrcHandler            netrc.NetrcHandler
-	loginCredentialsManager pauth.LoginCredentialsManager
+	analyticsClient          analytics.Client
+	ccloudClientFactory      pauth.CCloudClientFactory
+	mdsClientManager         pauth.MDSClientManager
+	netrcHandler             netrc.NetrcHandler
+	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
-	authTokenHandler        pauth.AuthTokenHandler
-	isTest                  bool
+	authTokenHandler         pauth.AuthTokenHandler
+	isTest                   bool
 }
 
 func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
@@ -52,15 +53,15 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 
 	c := &Command{
-		CLICommand:              pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		analyticsClient:         analyticsClient,
-		mdsClientManager:        mdsClientManager,
-		ccloudClientFactory:     ccloudClientFactory,
-		netrcHandler:            netrcHandler,
-		loginCredentialsManager: loginCredentialsManager,
+		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		analyticsClient:          analyticsClient,
+		mdsClientManager:         mdsClientManager,
+		ccloudClientFactory:      ccloudClientFactory,
+		netrcHandler:             netrcHandler,
+		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
-		authTokenHandler:        authTokenHandler,
-		isTest:                  isTest,
+		authTokenHandler:         authTokenHandler,
+		isTest:                   isTest,
 	}
 
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
@@ -108,6 +109,10 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
 	if err != nil {
+		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
+		}
+
 		return err
 	}
 

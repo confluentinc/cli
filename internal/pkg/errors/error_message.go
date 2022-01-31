@@ -38,7 +38,7 @@ const (
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
-	SSOCrdentialsDoNotMatchSuggestions 			= "Please re-login and use the same email at the prompt and in the SSO portal."
+	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -404,11 +404,12 @@ const (
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		avoidTimeoutSuggestion
-	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
-	InvalidLoginErrorMsg          = "incorrect email or password"
-	CCloudInvalidLoginSuggestions = avoidTimeoutSuggestion
-	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
-	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
+	InvalidLoginURLMsg               = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
+	InvalidLoginErrorMsg             = "incorrect email or password"
+	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
+	CCloudInvalidLoginSuggestions    = avoidTimeoutSuggestion
+	NoAPIKeySelectedErrorMsg         = "no API key selected for resource \"%s\""
+	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
