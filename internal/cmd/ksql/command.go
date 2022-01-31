@@ -21,7 +21,6 @@ type command struct {
 
 type ksqlCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	analyticsClient analytics.Client
 	isApp bool
 }
 

@@ -20,15 +20,12 @@ var (
 )
 
 func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
-	var shortText string
-	var runCommand func(*cobra.Command, []string) error
+	shortText := "List ksqlDB clusters."
+	runCommand := c.listCluster
 	if isApp {
 		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "List ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		shortText = "List ksqlDB apps. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.listApp
-	} else {
-		shortText = "List ksqlDB cluster."
-		runCommand = c.listCluster
 	}
 
 	cmd := &cobra.Command{
@@ -45,11 +42,11 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) listCluster(cmd *cobra.Command, args []string) error {
+func (c *ksqlCommand) listClusters(cmd *cobra.Command, args []string) error {
 	return c.list(cmd, args, false)
 }
 
-func (c *ksqlCommand) listApp(cmd *cobra.Command, args []string) error {
+func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
 	return c.list(cmd, args, true)
 }
 

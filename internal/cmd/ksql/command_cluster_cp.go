@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func newCPClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage ksqlDB clusters in Confluent Platform.",
