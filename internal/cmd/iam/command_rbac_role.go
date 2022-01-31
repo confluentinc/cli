@@ -41,9 +41,9 @@ func NewRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	var command *pcmd.AuthenticatedStateFlagCommand
 	if cfg.IsOnPremLogin() {
-		command = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, RoleSubcommandFlags)
+		command = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	} else {
-		command = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
+		command = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 
 	c := &roleCommand{

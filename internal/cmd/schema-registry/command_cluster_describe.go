@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"math"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -30,7 +32,7 @@ type describeDisplay struct {
 	ServiceProvider string
 }
 
-func (c *clusterCommand) newDescribeCommand() *cobra.Command {
+func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe the Schema Registry cluster for this environment.",
@@ -39,6 +41,12 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -72,7 +80,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
 		if err != nil {
 			compatibility = ""
-			c.logger.Warn("Could not retrieve Schema Registry Compatibility")
+			log.CliLogger.Warn("Could not retrieve Schema Registry Compatibility")
 		} else {
 			compatibility = compatibilityResponse.CompatibilityLevel
 		}
@@ -80,7 +88,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		modeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
 		if err != nil {
 			mode = ""
-			c.logger.Warn("Could not retrieve Schema Registry Mode")
+			log.CliLogger.Warn("Could not retrieve Schema Registry Mode")
 		} else {
 			mode = modeResponse.Mode
 		}
@@ -93,7 +101,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	query := schemaCountQueryFor(cluster.Id)
 	metricsResponse, err := c.Client.MetricsApi.QueryV2(ctx, "cloud", query, "")
 	if err != nil || metricsResponse == nil {
-		c.logger.Warn("Could not retrieve Schema Registry Metrics: ", err)
+		log.CliLogger.Warn("Could not retrieve Schema Registry Metrics: ", err)
 		numSchemas = ""
 		availableSchemas = ""
 	} else if len(metricsResponse.Result) == 0 {
@@ -104,7 +112,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		numSchemas = strconv.Itoa(numSchemasInt)
 		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - numSchemasInt)
 	} else {
-		c.logger.Warn("Unexpected results from Metrics API")
+		log.CliLogger.Warn("Unexpected results from Metrics API")
 		numSchemas = ""
 		availableSchemas = ""
 	}

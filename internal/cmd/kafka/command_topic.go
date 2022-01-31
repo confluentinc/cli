@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-	"github.com/c-bata/go-prompt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/confluentinc/go-printer"
@@ -50,15 +49,12 @@ type kafkaTopicCommand struct {
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
-	logger    *log.Logger
 	clientID  string
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner           pcmd.PreRunner
-	logger              *log.Logger
-	clientID            string
-	completableChildren []*cobra.Command
+	prerunner pcmd.PreRunner
+	clientID  string
 }
 
 type structuredDescribeDisplay struct {
@@ -71,8 +67,7 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-// NewTopicCommand returns the Cobra command for Kafka topic.
-func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -82,25 +77,22 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 
 	if cfg.IsCloudLogin() {
 		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
-			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner, ProduceAndConsumeFlags),
+			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
 			prerunner:           prerunner,
-			logger:              logger,
 			clientID:            clientID,
 		}
 		c.hasAPIKeyTopicCommand.init()
 
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, TopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
-			logger:                        logger,
 			clientID:                      clientID,
 		}
 		c.authenticatedTopicCommand.init()
 	} else {
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, OnPremTopicSubcommandFlags),
+			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
-			logger:                        logger,
 			clientID:                      clientID,
 		}
 		c.authenticatedTopicCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
@@ -110,35 +102,33 @@ func NewTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 	return c
 }
 
-func (k *kafkaTopicCommand) Cmd() *cobra.Command {
-	return k.hasAPIKeyTopicCommand.Command
+func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteTopics()
 }
 
-func (k *kafkaTopicCommand) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	cmd := k.authenticatedTopicCommand
-	if cmd == nil {
-		return suggestions
-	}
-	topics, err := cmd.getTopics()
+func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+	topics, err := c.getTopics()
 	if err != nil {
-		return suggestions
+		return nil
 	}
-	for _, topic := range topics {
-		description := ""
+
+	suggestions := make([]string, len(topics))
+	for i, topic := range topics {
+		var description string
 		if topic.Internal {
 			description = "Internal"
 		}
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        topic.Name,
-			Description: description,
-		})
+		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
 	}
 	return suggestions
-}
-
-func (k *kafkaTopicCommand) ServerCompletableChildren() []*cobra.Command {
-	return k.completableChildren
 }
 
 func (h *hasAPIKeyTopicCommand) init() {
@@ -157,6 +147,11 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("api-key", "", "API key.")
+	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
+	cmd.Flags().String("environment", "", "Environment ID.")
 	pcmd.AddOutputFlag(cmd)
 	h.AddCommand(cmd)
 
@@ -178,9 +173,15 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+	cmd.Flags().String("api-key", "", "API key.")
+	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pcmd.AddContextFlag(cmd, h.CLICommand)
+	cmd.Flags().String("environment", "", "Environment ID.")
 	h.AddCommand(cmd)
 }
 
@@ -198,10 +199,13 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(listCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(listCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(listCmd, a.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(listCmd)
 	a.AddCommand(listCmd)
 
-	createCmd = &cobra.Command{
+	createCmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
@@ -218,13 +222,17 @@ func (a *authenticatedTopicCommand) init() {
 	createCmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
 	createCmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	createCmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	pcmd.AddClusterFlag(createCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(createCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(createCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(createCmd)
 
 	describeCmd := &cobra.Command{
-		Use:   "describe <topic>",
-		Short: "Describe a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.describe),
+		Use:               "describe <topic>",
+		Short:             "Describe a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
+		RunE:              pcmd.NewCLIRunE(a.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the `my_topic` topic.",
@@ -233,14 +241,18 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(describeCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(describeCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(describeCmd, a.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(describeCmd)
 	a.AddCommand(describeCmd)
 
 	updateCmd := &cobra.Command{
-		Use:   "update <topic>",
-		Short: "Update a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.update),
+		Use:               "update <topic>",
+		Short:             "Update a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		RunE:              pcmd.NewCLIRunE(a.update),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Modify the `my_topic` topic to have a retention period of 3 days (259200000 milliseconds).",
@@ -251,13 +263,17 @@ func (a *authenticatedTopicCommand) init() {
 	}
 	updateCmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
 	updateCmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
+	pcmd.AddClusterFlag(updateCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(updateCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(updateCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(updateCmd)
 
 	deleteCmd := &cobra.Command{
-		Use:   "delete <topic>",
-		Short: "Delete a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(a.delete),
+		Use:               "delete <topic>",
+		Short:             "Delete a Kafka topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(a.validArgs),
+		RunE:              pcmd.NewCLIRunE(a.delete),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.",
@@ -266,9 +282,10 @@ func (a *authenticatedTopicCommand) init() {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+	pcmd.AddClusterFlag(deleteCmd, a.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(deleteCmd, a.CLICommand)
+	pcmd.AddEnvironmentFlag(deleteCmd, a.AuthenticatedCLICommand)
 	a.AddCommand(deleteCmd)
-
-	a.completableChildren = []*cobra.Command{describeCmd, updateCmd, deleteCmd}
 }
 
 func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
@@ -280,7 +297,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		topicGetResp, httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsGet(kafkaREST.Context, lkc)
+		topicGetResp, httpResp, err := kafkaREST.Client.TopicV3Api.ListKafkaTopics(kafkaREST.Context, lkc)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -367,7 +384,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		_, httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsPost(kafkaREST.Context, lkc, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+		_, httpResp, err := kafkaREST.Client.TopicV3Api.CreateKafkaTopic(kafkaREST.Context, lkc, &kafkarestv3.CreateKafkaTopicOpts{
 			CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 				TopicName:         topicName,
 				PartitionsCount:   numPartitions,
@@ -453,7 +470,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
+		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -478,7 +495,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData := &topicData{}
 			topicData.TopicName = topicName
 			// Get topic config
-			configsResp, httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(kafkaREST.Context, lkc, topicName)
+			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
 			if err != nil {
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			} else if configsResp.Data == nil {
@@ -543,8 +560,8 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(kafkaREST.Context, lkc, topicName,
-			&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
+		httpResp, err := kafkaREST.Client.ConfigsV3Api.UpdateKafkaTopicConfigBatch(kafkaREST.Context, lkc, topicName,
+			&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
 			})
 
@@ -640,7 +657,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsTopicNameDelete(kafkaREST.Context, lkc, topicName)
+		httpResp, err := kafkaREST.Client.TopicV3Api.DeleteKafkaTopic(kafkaREST.Context, lkc, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
@@ -714,8 +731,6 @@ func (h *hasAPIKeyTopicCommand) registerSchemaWithAPIKey(cmd *cobra.Command, sub
 }
 
 func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
-	level := h.Config.Logger.GetLevel()
-
 	topic := args[0]
 	cluster, err := h.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -724,19 +739,14 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := NewProducer(cluster, h.clientID)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateProducerMsg, err)
-		}
+		log.CliLogger.Warnf(errors.FailedToCreateProducerMsg, err)
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
-	h.logger.Tracef("Create producer succeeded")
+	log.CliLogger.Tracef("Create producer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -782,7 +792,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	subject := topic + "-value"
+	subject := topicNameStrategy(topic)
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
@@ -875,8 +885,6 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 }
 
 func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
-	level := h.Config.Logger.GetLevel()
-
 	topic := args[0]
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
@@ -934,18 +942,12 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	consumer, err := NewConsumer(group, cluster, h.clientID, beginning)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateConsumerMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
-	h.logger.Tracef("Create consumer succeeded")
+	log.CliLogger.Trace("Create consumer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		if level >= log.WARN {
-			h.logger.Tracef(errors.FailedToCreateAdminClientMsg, err)
-		}
 		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
 	}
 	defer adminClient.Close()
@@ -970,11 +972,21 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	subject := topicNameStrategy(topic)
+	contextName, err := cmd.Flags().GetString("context-name")
+	if err != nil {
+		return err
+	}
+	if contextName != "" {
+		subject = contextName
+	}
+
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
+		Subject:    subject,
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 
@@ -1024,17 +1036,17 @@ func (h *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	var foundTopic bool
 	for _, t := range metadata.Topics {
-		h.logger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("Validate topic: found topic " + t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
-		h.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 
-	h.logger.Tracef("validateTopic succeeded")
+	log.CliLogger.Tracef("validateTopic succeeded")
 	return nil
 }
 

@@ -7,17 +7,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	logger          *log.Logger
 	srClient        *srsdk.APIClient
 	analyticsClient analytics.Client
 }
 
-func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
@@ -32,20 +30,19 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 
 	c := &clusterCommand{
 		srClient:        srClient,
-		logger:          logger,
 		analyticsClient: analyticsClient,
 	}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, ClusterSubcommandFlags)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, OnPremClusterSubcommandFlags)
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newEnableCommand())
+	c.AddCommand(c.newDescribeCommand(cfg))
+	c.AddCommand(c.newEnableCommand(cfg))
 	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newUpdateCommand(cfg))
 
 	return c.Command
 }

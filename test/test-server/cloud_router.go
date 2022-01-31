@@ -58,9 +58,9 @@ type CloudRouter struct {
 }
 
 // New CloudRouter with all cloud handlers
-func NewCloudRouter(t *testing.T) *CloudRouter {
+func NewCloudRouter(t *testing.T, isAuditLogEnabled bool) *CloudRouter {
 	c := NewEmptyCloudRouter()
-	c.buildCcloudRouter(t)
+	c.buildCcloudRouter(t, isAuditLogEnabled)
 	return c
 }
 
@@ -72,9 +72,9 @@ func NewEmptyCloudRouter() *CloudRouter {
 }
 
 // Add handlers for cloud endpoints
-func (c *CloudRouter) buildCcloudRouter(t *testing.T) {
+func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
-	c.HandleFunc(me, c.HandleMe(t))
+	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
 	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))

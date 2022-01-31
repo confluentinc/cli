@@ -20,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -36,7 +35,6 @@ type ClusterTestSuite struct {
 	srMock          *ccsdkmock.SchemaRegistry
 	srClientMock    *srsdk.APIClient
 	metricsApi      *ccsdkmock.MetricsApi
-	logger          *log.Logger
 	analyticsClient analytics.Client
 	analyticsOutput []segment.Message
 }
@@ -103,7 +101,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		SchemaRegistry: suite.srMock,
 		MetricsApi:     suite.metricsApi,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.logger, suite.analyticsClient)
+	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.analyticsClient)
 	return cmd
 }
 

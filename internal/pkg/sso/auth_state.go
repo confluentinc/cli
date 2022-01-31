@@ -58,13 +58,12 @@ type authState struct {
 	SSOProviderClientID           string
 	SSOProviderCallbackUrl        string
 	SSOProviderIdentifier         string
-	logger                        *log.Logger
 }
 
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authURL string, noBrowser bool, logger *log.Logger) (*authState, error) {
+func newState(authURL string, noBrowser bool) (*authState, error) {
 	if authURL == "" {
 		authURL = "https://confluent.cloud"
 	}
@@ -83,7 +82,6 @@ func newState(authURL string, noBrowser bool, logger *log.Logger) (*authState, e
 	}
 
 	state := &authState{}
-	state.logger = logger
 	state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint
 	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
 	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
@@ -179,9 +177,9 @@ func (s *authState) saveOAuthTokenResponse(data map[string]interface{}) error {
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]interface{}, error) {
 	url := s.SSOProviderHost + "/oauth/token"
-	s.logger.Debugf("Oauth token request URL: %s", url)
-	s.logger.Debug("Oauth token request payload: ", payload)
-	req, err := http.NewRequest("POST", url, payload)
+	log.CliLogger.Debugf("Oauth token request URL: %s", url)
+	log.CliLogger.Debug("Oauth token request payload: ", payload)
+	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
 	}
@@ -195,7 +193,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	var data map[string]interface{}
 	err = json.Unmarshal(responseBody, &data)
 	if err != nil {
-		s.logger.Debugf("Failed oauth token response body: %s", responseBody)
+		log.CliLogger.Debugf("Failed oauth token response body: %s", responseBody)
 		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
 	}
 	return data, nil

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -170,7 +171,7 @@ func (c *Command) initFlags(mode string) {
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
 	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"]+"\n") // "\n" separates the CLI flags from the Kafka flags
 
 	// Kafka Flags
 	defaults := kafkaConsumeDefaultValues
@@ -180,8 +181,14 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	for flag, val := range defaults {
-		switch val := val.(type) {
+	var flags []string
+	for flag := range defaults {
+		flags = append(flags, flag)
+	}
+	sort.Strings(flags)
+
+	for _, flag := range flags {
+		switch val := defaults[flag].(type) {
 		case bool:
 			c.Flags().Bool(flag, val, usage[flag])
 		case int:

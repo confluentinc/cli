@@ -23,6 +23,9 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	pcmd.AddOutputFlag(cmd)
+	if c.cfg.IsOnPremLogin() {
+		pcmd.AddContextFlag(cmd, c.CLICommand)
+	}
 
 	return cmd
 }

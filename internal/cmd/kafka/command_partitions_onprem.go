@@ -18,14 +18,14 @@ type partitionCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	partitionCommand := &partitionCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
 			&cobra.Command{
 				Use:         "partition",
 				Short:       "Manage Kafka partitions.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, OnPremTopicSubcommandFlags),
+			}, prerunner),
 	}
 	partitionCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand))
 	partitionCommand.init()
@@ -109,7 +109,7 @@ func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error
 	if err != nil {
 		return err
 	}
-	partitionListResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(restContext, clusterId, topic)
+	partitionListResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -161,7 +161,7 @@ func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string
 	if err != nil {
 		return err
 	}
-	partitionGetResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdGet(restContext, clusterId, topic, partitionId)
+	partitionGetResp, resp, err := restClient.PartitionV3Api.GetKafkaPartition(restContext, clusterId, topic, partitionId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

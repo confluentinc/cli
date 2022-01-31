@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/types"
-
 	"github.com/spf13/cobra"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/countrycode"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -19,18 +19,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/countrycode"
 )
 
 type command struct {
 	*pcmd.CLICommand
-	logger        *log.Logger
 	userAgent     string
 	clientFactory pauth.CCloudClientFactory
 }
 
-func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
+func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
 	cmd := &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
@@ -39,7 +36,6 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 
 	c := &command{
 		CLICommand:    pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		logger:        logger,
 		userAgent:     userAgent,
 		clientFactory: ccloudClientFactory,
 	}
@@ -48,10 +44,6 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, userAgent string, ccloudC
 	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 
 	return c
-}
-
-func (c *command) Cmd() *cobra.Command {
-	return c.Command
 }
 
 func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
@@ -64,7 +56,7 @@ func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
 		BaseURL:    url,
 		UserAgent:  c.userAgent,
 		HttpClient: ccloud.BaseClient,
-		Logger:     c.logger,
+		Logger:     log.CliLogger,
 	})
 
 	return c.signup(cmd, form.NewPrompt(os.Stdin), client)
@@ -134,14 +126,15 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		},
 		CountryCode: countryCode,
 	}
-
-	if _, err := client.Signup.Create(context.Background(), req); err != nil {
+	signupReply, err := client.Signup.Create(context.Background(), req)
+	if err != nil {
 		if strings.Contains(err.Error(), "email already exists") {
 			return errors.NewErrorWithSuggestions("failed to signup", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
 		}
 		return err
 
 	}
+	org := signupReply.Organization
 
 	utils.Printf(cmd, "A verification email has been sent to %s.\n", fEmailName.Responses["email"].(string))
 	v := form.New(form.Field{ID: "verified", Prompt: `Type "y" once verified, or type "n" to resend.`, IsYesOrNo: true})
@@ -161,7 +154,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		}
 		var token string
 		var err error
-		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string), ""); err != nil {
+		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string), org.ResourceId); err != nil {
 			if err.Error() == "username or password is invalid" {
 				utils.ErrPrintln(cmd, "Sorry, your email is not verified. Another verification email was sent to your address. Please click the verification link in that message to verify your email.")
 				continue
@@ -176,7 +169,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
 		}
-		c.logger.Debugf(errors.LoggedInAsMsg, fEmailName.Responses["email"])
+		log.CliLogger.Debugf(errors.LoggedInAsMsg, fEmailName.Responses["email"])
 		return nil
 	}
 }

@@ -5,11 +5,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/antihax/optional"
 	"io"
 	"io/ioutil"
 	"path/filepath"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -31,6 +33,7 @@ type GroupHandler struct {
 	Ctx        context.Context
 	Format     string
 	Out        io.Writer
+	Subject    string
 	Properties ConsumerProperties
 }
 
@@ -100,12 +103,15 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
 
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%d.txt", schemaID))
-	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%d.ref", schemaID))
+	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
+	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
 	var references []srsdk.SchemaReference
 	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, nil)
+		getSchemaOpts := srsdk.GetSchemaOpts{
+			Subject: optional.NewString(h.Subject),
+		}
+		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, &getSchemaOpts)
 		if err != nil {
 			return "", nil, err
 		}

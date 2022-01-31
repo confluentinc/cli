@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -41,8 +42,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID. Use "cloud" to create a Cloud API key.`)
-	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("description", "", "Description of API key.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(resourceFlagName)
@@ -56,7 +59,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	serviceAccountID, err := cmd.Flags().GetString("service-account")
+	serviceAccountId, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -67,7 +70,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	key := &schedv1.ApiKey{
-		UserResourceId: serviceAccountID,
+		UserResourceId: serviceAccountId,
 		Description:    description,
 		AccountId:      c.EnvironmentId(),
 	}
@@ -82,7 +85,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
 	if err != nil {
-		return err
+		return c.catchServiceAccountNotValidError(err, clusterId, serviceAccountId)
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
@@ -131,4 +134,25 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 		key.ServiceAccount = false
 	}
 	return key, nil
+}
+
+// CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
+// predefined audit log service account
+func (c *command) catchServiceAccountNotValidError(err error, clusterId, serviceAccountId string) error {
+	if err == nil {
+		return nil
+	}
+
+	if err.Error() == "error creating api key: service account is not valid" && clusterId == c.State.Auth.Organization.AuditLog.ClusterId {
+		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), c.State.Auth.Organization.AuditLog.ServiceAccountId)
+		if err2 != nil {
+			return err
+		}
+	
+		if serviceAccountId != auditLogServiceAccount.ResourceId {
+			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.ResourceId)
+		}
+	}
+
+	return err
 }

@@ -3,12 +3,13 @@ package ksql
 import (
 	"context"
 	"fmt"
-  
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/dghubble/sling"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
@@ -18,9 +19,7 @@ import (
 
 type appCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
-	analyticsClient         analytics.Client
+	analyticsClient analytics.Client
 }
 
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
@@ -43,23 +42,15 @@ func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *
 	}
 
 	c := &appCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		analyticsClient:               analyticsClient,
 	}
 
-	createCmd := c.newCreateCommand()
-	describeCmd := c.newDescribeCommand()
-	deleteCmd := c.newDeleteCommand()
-	configureAclsCmd := c.newConfigureAclsCommand()
-
+	c.AddCommand(c.newConfigureAclsCommand())
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
-	c.AddCommand(createCmd)
-	c.AddCommand(describeCmd)
-	c.AddCommand(deleteCmd)
-	c.AddCommand(configureAclsCmd)
-
-	c.completableChildren = []*cobra.Command{describeCmd, deleteCmd, configureAclsCmd}
-	c.completableFlagChildren = map[string][]*cobra.Command{"cluster": {createCmd}}
 
 	return c
 }

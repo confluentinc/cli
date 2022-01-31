@@ -61,7 +61,8 @@ REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name librdkafka_vendor)
+RDKAFKA_VERSION = 1.8.2
+RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -79,9 +80,9 @@ generate:
 
 .PHONY: deps
 deps:
-	go get github.com/goreleaser/goreleaser@v0.164.0 && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
-	go get github.com/mitchellh/golicense@v0.2.0
+	go install github.com/goreleaser/goreleaser@v0.164.0 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
+	go install github.com/mitchellh/golicense@v0.2.0
 
 .PHONY: jenkins-deps
 # Jenkins only depends on goreleaser, so we omit golangci-lint and golicense

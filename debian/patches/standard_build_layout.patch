@@ -1,6 +1,6 @@
---- cli/Makefile	2021-11-29 16:05:53.000000000 -0800
-+++ debian/Makefile	2021-11-22 17:13:36.000000000 -0800
-@@ -1,267 +1,130 @@
+--- cli/Makefile	2022-01-21 01:15:51.000000000 -0800
++++ debian/Makefile	2022-01-14 15:17:29.000000000 -0800
+@@ -1,268 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -67,7 +67,8 @@
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
--RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name librdkafka_vendor)
+-RDKAFKA_VERSION = 1.8.2
+-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
@@ -91,9 +92,9 @@
 -
 -.PHONY: deps
 -deps:
--	go get github.com/goreleaser/goreleaser@v0.164.0 && \
--	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
--	go get github.com/mitchellh/golicense@v0.2.0
+-	go install github.com/goreleaser/goreleaser@v0.164.0 && \
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
+-	go install github.com/mitchellh/golicense@v0.2.0
 -
 -.PHONY: jenkins-deps
 -# Jenkins only depends on goreleaser, so we omit golangci-lint and golicense

@@ -38,14 +38,13 @@ type LaunchDarklyManager interface {
 }
 
 type FeatureFlagManager struct {
-	logger		*log.Logger
 	client		*sling.Sling
 	flagVals	map[string]interface{}
 	flagValsAreForAnonUser bool
 	version		*version.Version
 }
 
-func InitManager(logger *log.Logger, version *version.Version, isTest  bool) {
+func InitManager(version *version.Version, isTest  bool) {
 	// TODO if isTest, return a mock
 	var basePath string
 	if os.Getenv("XX_LD_TEST_ENV") != "" {
@@ -54,7 +53,6 @@ func InitManager(logger *log.Logger, version *version.Version, isTest  bool) {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
 	LdManager = &FeatureFlagManager{
-		logger: 	logger,
 		client: 	sling.New().Base(basePath),
 		version: 	version,
 	}
@@ -64,7 +62,7 @@ func (f *FeatureFlagManager) BoolVariation(key string, ctx *cmd.DynamicContext, 
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
-		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
+		log.CliLogger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
@@ -74,7 +72,7 @@ func (f *FeatureFlagManager) StringVariation(key string, ctx *cmd.DynamicContext
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(string)
 	if !ok {
-		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "string", f.flagVals[key])
+		log.CliLogger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "string", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
@@ -84,7 +82,7 @@ func (f *FeatureFlagManager) IntVariation(key string, ctx *cmd.DynamicContext, d
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(int)
 	if !ok {
-		f.logger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "int", f.flagVals[key])
+		log.CliLogger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "int", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
@@ -104,7 +102,7 @@ func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContex
 	}
 	err := f.fetchFlags(user, isAnonUser)
 	if err != nil {
-		f.logger.Debug(err.Error())
+		log.CliLogger.Debug(err.Error())
 		return defaultVal
 	}
 	return f.flagVals[key]
@@ -117,7 +115,7 @@ func (f *FeatureFlagManager) fetchFlags(user lduser.User, isAnonUser bool) error
 	}
 	resp, err := f.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&f.flagVals, err)
 	if err != nil {
-		f.logger.Debug(resp)
+		log.CliLogger.Debug(resp)
 		return fmt.Errorf("error fetching feature flags: %w", err)
 	}
 	f.flagValsAreForAnonUser = isAnonUser

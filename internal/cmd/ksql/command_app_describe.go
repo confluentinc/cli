@@ -26,6 +26,8 @@ func (c *appCommand) newDescribeCommand() *cobra.Command {
 		RunE:              pcmd.NewCLIRunE(c.describe),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

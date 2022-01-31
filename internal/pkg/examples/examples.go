@@ -15,7 +15,9 @@ type Example struct {
 func BuildExampleString(examples ...Example) string {
 	var str strings.Builder
 	for _, e := range examples {
-		str.WriteString(e.Text + "\n\n")
+		if e.Text != "" {
+			str.WriteString(e.Text + "\n\n")
+		}
 		if e.Code != "" {
 			str.WriteString(formatCodeBlock(e.Code) + "\n\n")
 		}

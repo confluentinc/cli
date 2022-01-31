@@ -3,13 +3,12 @@ package kafka
 import (
 	"bytes"
 	"context"
-	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"testing"
 	"time"
 
-	"github.com/c-bata/go-prompt"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+
 	"github.com/google/go-cmp/cmp"
 	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
@@ -24,7 +23,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -48,7 +46,6 @@ type KafkaClusterTestSuite struct {
 	analyticsClient analytics.Client
 	metricsApi      *ccsdkmock.MetricsApi
 	usageLimits     *ccsdkmock.UsageLimits
-	logger          *log.Logger
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
@@ -162,43 +159,9 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	suite.logger = log.New()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := NewClusterCommand(conf, prerunner, suite.analyticsClient)
+	cmd := newClusterCommand(conf, prerunner, suite.analyticsClient)
 	return cmd
-}
-
-func (suite *KafkaClusterTestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *clusterCommand
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for authenticated user",
-			fields: fields{
-				Command: suite.newCmd(v1.AuthenticatedCloudConfigMock()),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        clusterId,
-					Description: clusterName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
 }
 
 func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
@@ -394,17 +357,6 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
 	req.True(suite.metricsApi.QueryV2Called())
 	req.Contains(err.Error(), "cluster shrink validation error")
-}
-
-func (suite *KafkaClusterTestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"cluster delete", "cluster describe", "cluster update", "cluster use"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
 }
 
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
