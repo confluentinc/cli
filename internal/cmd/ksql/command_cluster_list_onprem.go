@@ -20,7 +20,7 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 		Short: "List registered ksqlDB clusters.",
 		Long:  "List ksqlDB clusters that are registered with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.listCP),
+		RunE:  pcmd.NewCLIRunE(c.listOnPrem),
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

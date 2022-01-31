@@ -15,7 +15,6 @@ func newClusterCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Clien
 
 	c := &ksqlCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		analyticsClient:               analyticsClient,
 	}
 
 	c.AddCommand(c.newConfigureAclsCommand(false))

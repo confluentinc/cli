@@ -15,10 +15,9 @@ func newClusterCommandOnPrem(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &ksqlCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
-		analyticsClient:               nil,
 	}
 	
-	c.AddCommand(c.newListClusterCPCommand())
+	c.AddCommand(c.newListCommandOnPrem())
 
 	return c.Command
 }

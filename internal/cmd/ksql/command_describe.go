@@ -20,15 +20,12 @@ var (
 )
 
 func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
-	var shortText string
-	var runCommand func(*cobra.Command, []string) error
+	shortText := "Describe a ksqlDB cluster."
+	runCommand := c.describeCluster
 	if isApp {
 		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Describe a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.describeApp
-	} else {
-		shortText = "Describe a ksqlDB cluster."
-		runCommand = c.describeCluster
 	}
 	
 	cmd := &cobra.Command{

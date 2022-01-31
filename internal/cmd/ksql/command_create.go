@@ -8,7 +8,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -16,15 +15,12 @@ import (
 )
 
 func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
-	var shortText string
-	var runCommand func(*cobra.Command, []string) error
+	shortText := "Create a ksqlDB cluster."
+	runCommand := c.createCluster
 	if isApp {
 		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.createApp
-	} else {
-		shortText = "Create a ksqlDB cluster."
-		runCommand = c.createCluster
 	}
 
 	cmd := &cobra.Command{
@@ -117,7 +113,6 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}

@@ -16,7 +16,6 @@ func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *
 
 	c := &ksqlCommand{
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		analyticsClient:               analyticsClient,
 	}
 
 	c.AddCommand(c.newConfigureAclsCommand(true))

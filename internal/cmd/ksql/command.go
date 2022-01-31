@@ -21,7 +21,6 @@ type command struct {
 
 type ksqlCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	isApp bool
 }
 
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
@@ -53,7 +52,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Comm
 
 	c.AddCommand(appCmd.Command)
 	c.AddCommand(clusterCmd.Command)
-	c.AddCommand(newCPClusterCommand(prerunner))
+	c.AddCommand(newClusterCommandOnPrem(prerunner))
 
 	return c.Command
 }

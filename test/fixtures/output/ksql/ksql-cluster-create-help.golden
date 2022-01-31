@@ -1,7 +1,7 @@
-Create a ksqlDB app. (DEPRECATED) In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
+Create a ksqlDB cluster.
 
 Usage:
-  confluent ksql app create <name> [flags]
+  confluent ksql cluster create <name> [flags]
 
 Flags:
       --api-key string       REQUIRED: Kafka API key for the ksqlDB cluster to use.
