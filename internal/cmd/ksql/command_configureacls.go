@@ -17,16 +17,19 @@ import (
 
 func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	shortText := "Configure ACLs for a ksqlDB cluster."
+	longText := ""
 	runCommand := c.configureACLsCluster
 	if isApp {
-		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "(Deprecated) Configure ACLs for a ksqlDB app."
+		longText = "Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.configureACLsApp
 	}
 
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> TOPICS...",
 		Short:             shortText,
+		Long:              longText,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              pcmd.NewCLIRunE(runCommand),

@@ -16,16 +16,19 @@ import (
 
 func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	shortText := "Create a ksqlDB cluster."
+	longText := ""
 	runCommand := c.createCluster
 	if isApp {
-		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "(Deprecated) Create a ksqlDB app."
+		longText = "Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.createApp
 	}
 
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: shortText,
+		Long:  longText,
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(runCommand),
 	}
