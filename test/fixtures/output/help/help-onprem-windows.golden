@@ -13,7 +13,7 @@ Available Commands:
   help            Help about any command
   iam             Manage RBAC, ACL and IAM permissions.
   kafka           Manage Apache Kafka.
-  ksql            Manage ksqlDB applications.
+  ksql            Manage ksqlDB clusters.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Platform.
   prompt          Add Confluent CLI context to your terminal prompt.

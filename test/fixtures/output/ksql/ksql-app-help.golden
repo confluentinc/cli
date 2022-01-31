@@ -4,11 +4,11 @@ Usage:
   confluent ksql app [command]
 
 Available Commands:
-  configure-acls (Deprecated) Configure ACLs for a ksqlDB app.
-  create         (Deprecated) Create a ksqlDB app.
-  delete         (Deprecated) Delete a ksqlDB app.
-  describe       (Deprecated) Describe a ksqlDB app.
-  list           (Deprecated) List ksqlDB apps.
+  configure-acls Configure ACLs for a ksqlDB app (deprecated).
+  create         Create a ksqlDB app (deprecated).
+  delete         Delete a ksqlDB app (deprecated).
+  describe       Describe a ksqlDB app (deprecated).
+  list           List ksqlDB apps (deprecated).
 
 Global Flags:
   -h, --help            Show help for this command.

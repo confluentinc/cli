@@ -1,16 +1,16 @@
 package ksql
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-func newAppCommand(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *ksqlCommand {
+func newAppCommand(prerunner pcmd.PreRunner) *ksqlCommand {
 	cmd := &cobra.Command{
 		Use:         "app",
-		Short:       "Manage ksqlDB apps. " + errors.KSQLAppDeprecateWarning,
+		Short:       "Manage ksqlDB apps (deprecated).",
+		Long:        "Manage ksqlDB apps. " + errors.KSQLAppDeprecateWarning,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 

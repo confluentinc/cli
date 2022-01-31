@@ -86,6 +86,7 @@ var rules = []linter.Rule{
 		linter.ExcludeCommandContains("schema-registry"),
 		// skip ksql configure-acls command as it can take any number of topic arguments
 		linter.ExcludeCommandContains("ksql app configure-acls"),
+		linter.ExcludeCommandContains("ksql cluster configure-acls"),
 		// skip cluster describe as it takes a URL as a flag instead of a resource identity
 		linter.ExcludeCommandContains("cluster describe"),
 		// skip connector-catalog describe as it connector plugin name

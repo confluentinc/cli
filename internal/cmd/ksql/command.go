@@ -6,17 +6,16 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type command struct {
 	*pcmd.CLICommand
-	analyticsClient analytics.Client
 }
 
 type ksqlCommand struct {
@@ -35,24 +34,22 @@ type ksqlCluster struct {
 	Status            string `json:"status,omitempty"`
 }
 
-func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "ksql",
-		Short:       "Manage ksqlDB.",
+		Short:       "Manage ksqlDB clusters.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
 	c := &command{
-		CLICommand:      pcmd.NewCLICommand(cmd, prerunner),
-		analyticsClient: analyticsClient,
+		CLICommand: pcmd.NewCLICommand(cmd, prerunner),
 	}
 
-	appCmd := newAppCommand(prerunner, c.analyticsClient)
-	clusterCmd := newClusterCommand(prerunner, c.analyticsClient)
+	appCmd := newAppCommand(prerunner)
+	clusterCmd := newClusterCommand(cfg, prerunner)
 
 	c.AddCommand(appCmd.Command)
 	c.AddCommand(clusterCmd.Command)
-	c.AddCommand(newClusterCommandOnPrem(prerunner))
 
 	return c.Command
 }
