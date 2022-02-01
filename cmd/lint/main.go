@@ -23,9 +23,9 @@ var (
 	vocab *gospell.GoSpell
 
 	properNouns = []string{
-		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
-		"Connect", "Control Center", "Enterprise", "IAM", "ID", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka",
-		"RBAC", "Schema Registry", "ZooKeeper", "ZooKeeper™", "cku", "DEPRECATED",
+		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "cku", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
+		"Connect", "Control Center", "DEPRECATED", "Enterprise", "IAM", "ID", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka",
+		"RBAC", "Schema Registry", "ZooKeeper", "ZooKeeper™",
 	}
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "apikey", "apisecret", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",

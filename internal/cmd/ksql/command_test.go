@@ -158,10 +158,10 @@ func (suite *KSQLTestSuite) TestClusterShouldConfigureACLs() {
 }
 
 func (suite *KSQLTestSuite) testShouldConfigureACLs(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "configure-acls", ksqlClusterID})
 
 	err := cmd.Execute()
 
@@ -183,11 +183,11 @@ func (suite *KSQLTestSuite) TestClusterShouldNotConfigureAclsWhenUser() {
 }
 
 func (suite *KSQLTestSuite) testShouldNotConfigureAclsWhenUser(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 
 	cmd := suite.newCMD()
 	suite.ksqlCluster.ServiceAccountId = 0
-	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "configure-acls", ksqlClusterID})
 
 	err := cmd.Execute()
 
@@ -205,10 +205,10 @@ func (suite *KSQLTestSuite) TestClusterShouldAlsoConfigureForPro() {
 }
 
 func (suite *KSQLTestSuite) testShouldAlsoConfigureForPro(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "configure-acls", ksqlClusterID})
 	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *schedv1.KafkaCluster) (cluster2 *schedv1.KafkaCluster, e error) {
 		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
 	}
@@ -233,10 +233,10 @@ func (suite *KSQLTestSuite) TestClusterShouldNotConfigureOnDryRun() {
 }
 
 func (suite *KSQLTestSuite) testShouldNotConfigureOnDryRun(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "configure-acls", "--dry-run", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "configure-acls", "--dry-run", ksqlClusterID})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 
@@ -257,9 +257,9 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKey() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	args := []string{commandString, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
+	args := []string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -283,9 +283,9 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKey() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKey(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "create", ksqlClusterID, "--api-secret", keySecretString})
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-secret", keySecretString})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -303,9 +303,9 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingSecret() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingSecret(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "create", ksqlClusterID, "--api-key", keyString})
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -323,9 +323,9 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKeyAndSecret()
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKeyAndSecret(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "create", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -343,9 +343,9 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithImage() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithImage(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	args := []string{commandString, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
+	args := []string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())
@@ -363,9 +363,9 @@ func (suite *KSQLTestSuite) TestDescribeKSQLCluster() {
 }
 
 func (suite *KSQLTestSuite) testDescribeKSQL(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "describe", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "describe", ksqlClusterID})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -382,9 +382,9 @@ func (suite *KSQLTestSuite) TestListKSQLCluster() {
 }
 
 func (suite *KSQLTestSuite) testListKSQL(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandString, "list"})
+	cmd.SetArgs([]string{commandName, "list"})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -401,9 +401,9 @@ func (suite *KSQLTestSuite) TestDeleteKSQLCluster() {
 }
 
 func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
-	commandString := getCommandName(isApp)
+	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	args := []string{commandString, "delete", ksqlClusterID}
+	args := []string{commandName, "delete", ksqlClusterID}
 
 	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
 	req := require.New(suite.T())

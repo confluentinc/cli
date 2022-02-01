@@ -41,15 +41,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{
-		CLICommand: pcmd.NewCLICommand(cmd, prerunner),
-	}
+	c := &command{pcmd.NewCLICommand(cmd, prerunner)}
 
-	appCmd := newAppCommand(prerunner)
-	clusterCmd := newClusterCommand(cfg, prerunner)
-
-	c.AddCommand(appCmd.Command)
-	c.AddCommand(clusterCmd.Command)
+	c.AddCommand(newAppCommand(prerunner).Command)
+	c.AddCommand(newClusterCommand(cfg, prerunner).Command)
 
 	return c.Command
 }

@@ -14,9 +14,7 @@ func newAppCommand(prerunner pcmd.PreRunner) *ksqlCommand {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &ksqlCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-	}
+	c := &ksqlCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),}
 
 	c.AddCommand(c.newConfigureAclsCommand(true))
 	c.AddCommand(c.newCreateCommand(true))
