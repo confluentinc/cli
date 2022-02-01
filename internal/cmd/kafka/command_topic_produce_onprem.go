@@ -29,7 +29,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SSL protocol, and SSL verification enabled.`,
-				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ssl-verification --ca-location ca-path`,
+				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ca-location ca-path`,
 			},
 		),
 	}
