@@ -16,12 +16,12 @@ import (
 
 func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	shortText := "Create a ksqlDB cluster."
-	longText := ""
+	var longText string
 	runCommand := c.createCluster
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Create a ksqlDB app (deprecated)."
-		longText = "Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		shortText = "DEPRECATED: Create a ksqlDB app."
+		longText = "DEPRECATED: Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.createApp
 	}
 

@@ -16,14 +16,10 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *ksqlCommand {
 	var c *ksqlCommand
 	var listCommand *cobra.Command
 	if cfg.IsCloudLogin() {
-		c = &ksqlCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		}
+		c = &ksqlCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 		listCommand = c.newListCommand(false)
 	} else {
-		c = &ksqlCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
-		}
+		c = &ksqlCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 		listCommand = c.newListCommandOnPrem()
 	}
 

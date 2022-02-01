@@ -21,7 +21,7 @@ const (
 
 	// ksql create warning
 	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."
-	KSQLAppDeprecateWarning = "(DEPRECATED) In the next major release, the `confluent ksql app` commands will be removed. " +
+	KSQLAppDeprecateWarning = "In the next major release, the `confluent ksql app` commands will be removed. " +
 		"Use the equivalent `confluent ksql cluster` commands instead."
 	
 	// audit log migration

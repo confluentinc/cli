@@ -1,4 +1,4 @@
-Create a ksqlDB app. (DEPRECATED) In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
+DEPRECATED: Create a ksqlDB app. In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
 
 Usage:
   confluent ksql app create <name> [flags]

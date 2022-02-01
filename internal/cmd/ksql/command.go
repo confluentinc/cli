@@ -37,7 +37,7 @@ type ksqlCluster struct {
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "ksql",
-		Short:       "Manage ksqlDB clusters.",
+		Short:       "Manage ksqlDB.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 

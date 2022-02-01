@@ -25,7 +25,7 @@ var (
 	properNouns = []string{
 		"ACL", "ACLs", "API", "Apache", "CCloud CLI", "CLI", "Confluent Cloud", "Confluent Platform", "Confluent",
 		"Connect", "Control Center", "Enterprise", "IAM", "ID", "ksqlDB Server", "ksqlDB", "Kafka REST", "Kafka",
-		"RBAC", "Schema Registry", "ZooKeeper", "ZooKeeper™", "cku",
+		"RBAC", "Schema Registry", "ZooKeeper", "ZooKeeper™", "cku", "DEPRECATED",
 	}
 	vocabWords = []string{
 		"ack", "acks", "acl", "acls", "apac", "api", "apikey", "apisecret", "auth", "avro", "aws", "backoff", "ccloud", "cku", "cli", "codec",
@@ -129,7 +129,7 @@ var rules = []linter.Rule{
 	linter.RequireCapitalizeProperNouns("Long", linter.SetDifferenceIgnoresCase(properNouns, []string{"confluent"})),
 	linter.Filter(
 		linter.RequireNotTitleCase("Short", properNouns),
-		linter.ExcludeCommandContains("secret", "mirror"),
+		linter.ExcludeCommandContains("secret", "mirror", "ksql app"),
 	),
 	linter.Filter(
 		linter.RequireRealWords("Use", '-'),

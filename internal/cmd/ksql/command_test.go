@@ -158,7 +158,7 @@ func (suite *KSQLTestSuite) TestClusterShouldConfigureACLs() {
 }
 
 func (suite *KSQLTestSuite) testShouldConfigureACLs(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
@@ -183,7 +183,7 @@ func (suite *KSQLTestSuite) TestClusterShouldNotConfigureAclsWhenUser() {
 }
 
 func (suite *KSQLTestSuite) testShouldNotConfigureAclsWhenUser(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 
 	cmd := suite.newCMD()
 	suite.ksqlCluster.ServiceAccountId = 0
@@ -205,7 +205,7 @@ func (suite *KSQLTestSuite) TestClusterShouldAlsoConfigureForPro() {
 }
 
 func (suite *KSQLTestSuite) testShouldAlsoConfigureForPro(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "configure-acls", ksqlClusterID})
@@ -233,7 +233,7 @@ func (suite *KSQLTestSuite) TestClusterShouldNotConfigureOnDryRun() {
 }
 
 func (suite *KSQLTestSuite) testShouldNotConfigureOnDryRun(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "configure-acls", "--dry-run", ksqlClusterID})
@@ -257,7 +257,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKey() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	args := []string{commandString, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
 
@@ -283,7 +283,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKey() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKey(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "create", ksqlClusterID, "--api-secret", keySecretString})
 
@@ -303,7 +303,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingSecret() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingSecret(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "create", ksqlClusterID, "--api-key", keyString})
 
@@ -323,7 +323,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKeyAndSecret()
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKeyAndSecret(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "create", ksqlClusterID})
 
@@ -343,7 +343,7 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithImage() {
 }
 
 func (suite *KSQLTestSuite) testCreateKSQLWithImage(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	args := []string{commandString, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
 
@@ -363,7 +363,7 @@ func (suite *KSQLTestSuite) TestDescribeKSQLCluster() {
 }
 
 func (suite *KSQLTestSuite) testDescribeKSQL(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "describe", ksqlClusterID})
 
@@ -382,7 +382,7 @@ func (suite *KSQLTestSuite) TestListKSQLCluster() {
 }
 
 func (suite *KSQLTestSuite) testListKSQL(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandString, "list"})
 
@@ -401,7 +401,7 @@ func (suite *KSQLTestSuite) TestDeleteKSQLCluster() {
 }
 
 func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
-	commandString := getCommandString(isApp)
+	commandString := getCommandName(isApp)
 	cmd := suite.newCMD()
 	args := []string{commandString, "delete", ksqlClusterID}
 
@@ -413,7 +413,7 @@ func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
 	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
-func getCommandString(isApp bool) string {
+func getCommandName(isApp bool) string {
 	if isApp {
 		return "app"
 	} else {

@@ -1,10 +1,10 @@
-Manage ksqlDB clusters.
+Manage ksqlDB.
 
 Usage:
   confluent ksql [command]
 
 Available Commands:
-  app         Manage ksqlDB apps (deprecated).
+  app         DEPRECATED: Manage ksqlDB apps.
   cluster     Manage ksqlDB clusters.
 
 Global Flags:
