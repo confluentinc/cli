@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"time"
 
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -31,6 +30,7 @@ const (
 	// required fields of SASL/oauthbearer configuration
 	principalClaimNameKey = "principalClaimName"
 	principalKey          = "principal"
+	oauthConfig           = "principalClaimName=confluent principal=admin"
 )
 
 var (
@@ -66,10 +66,6 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 		return err
 	}
 	if protocol == "SASL_SSL" && mechanism == "OAUTHBEARER" {
-		oauthConfig, err := cmd.Flags().GetString("oauth-config")
-		if err != nil {
-			return err
-		}
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
@@ -165,7 +161,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err != nil {
 		return nil, err
 	}
-	enableSSLVerification, caLocation, err := getSSLVerification(cmd)
+	caLocation, err := cmd.Flags().GetString("ca-location")
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +169,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
 		"bootstrap.servers":                     bootstrap,
-		"enable.ssl.certificate.verification":   enableSSLVerification,
+		"enable.ssl.certificate.verification":   true,
 		"ssl.ca.location":                       caLocation,
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
@@ -197,7 +193,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err != nil {
 		return nil, err
 	}
-	enableSSLVerification, caLocation, err := getSSLVerification(cmd)
+	caLocation, err := cmd.Flags().GetString("ca-location")
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +202,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		"client.id":                             clientID,
 		"group.id":                              group,
 		"bootstrap.servers":                     bootstrap,
-		"enable.ssl.certificate.verification":   enableSSLVerification,
+		"enable.ssl.certificate.verification":   true,
 		"ssl.ca.location":                       caLocation,
 	}
 	autoOffsetReset := "latest"
@@ -217,24 +213,6 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	return setProtocolConfig(cmd, configMap)
-}
-
-func getSSLVerification(cmd *cobra.Command) (bool, string, error) {
-	enableSSLVerification, err := cmd.Flags().GetBool("ssl-verification")
-	if err != nil {
-		return false, "", err
-	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
-	if err != nil {
-		return false, "", err
-	}
-	if caLocation == "" {
-		caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
-	}
-	if enableSSLVerification && caLocation == "" {
-		return false, "", errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SSLCaCertSuggestion)
-	}
-	return enableSSLVerification, caLocation, nil
 }
 
 func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
@@ -301,10 +279,6 @@ func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Con
 		saslMap["sasl.username"] = username
 		saslMap["sasl.password"] = password
 	} else {
-		oauthConfig, err := cmd.Flags().GetString("oauth-config")
-		if err != nil {
-			return nil, err
-		}
 		saslMap["sasl.oauthbearer.config"] = oauthConfig
 	}
 	for key, value := range saslMap {
