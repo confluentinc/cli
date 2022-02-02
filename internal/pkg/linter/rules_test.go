@@ -1,4 +1,4 @@
-package lint_cli
+package linter
 
 import (
 	"strings"
