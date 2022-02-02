@@ -38,7 +38,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameDelete(kafkaREST.Context, lkc, linkName)
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.DeleteKafkaLink(kafkaREST.Context, lkc, linkName)
 	if err == nil {
 		utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
 	}

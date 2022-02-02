@@ -86,7 +86,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	skipValidatingLink, err := cmd.Flags().GetBool(noValidateFlagName)
+	_, err = cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
@@ -146,16 +146,14 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createLinkOpt := &kafkarestv3.ClustersClusterIdLinksPostOpts{
-		ValidateOnly: optional.NewBool(validateOnly),
-		ValidateLink: optional.NewBool(!skipValidatingLink),
+	createLinkOpt := &kafkarestv3.CreateKafkaLinkOpts{
 		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
 			SourceClusterId: sourceClusterId,
 			Configs:         toCreateTopicConfigs(configMap),
 		}),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksPost(
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaLink(
 		kafkaREST.Context, lkc, linkName, createLinkOpt)
 
 	if err == nil {

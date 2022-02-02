@@ -11,7 +11,7 @@ import (
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update the encrypted secrets from the configuration properties file.",
+		Short: "Update secrets in a configuration properties file.",
 		Long:  "This command updates the encrypted secrets from the configuration properties file.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.update),

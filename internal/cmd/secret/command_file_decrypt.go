@@ -9,7 +9,7 @@ import (
 func (c *command) newDecryptCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decrypt",
-		Short: "Decrypt encrypted secrets from the configuration properties file.",
+		Short: "Decrypt secrets in a configuration properties file.",
 		Long:  "This command decrypts the passwords in file specified in `--config-file`. This command returns a failure if a master key has not already been set using the `master-key generate` command.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.decrypt),

@@ -18,7 +18,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -36,13 +35,11 @@ type kafkaTopicCommand struct {
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
-	logger    *log.Logger
 	clientID  string
 }
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
-	logger    *log.Logger
 	clientID  string
 }
 
@@ -56,7 +53,7 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *kafkaTopicCommand {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -68,7 +65,6 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
 			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
 			prerunner:           prerunner,
-			logger:              logger,
 			clientID:            clientID,
 		}
 		c.hasAPIKeyTopicCommand.init()
@@ -76,7 +72,6 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
 			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
-			logger:                        logger,
 			clientID:                      clientID,
 		}
 		c.authenticatedTopicCommand.init()
@@ -84,7 +79,6 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logge
 		c.authenticatedTopicCommand = &authenticatedTopicCommand{
 			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 			prerunner:                     prerunner,
-			logger:                        logger,
 			clientID:                      clientID,
 		}
 		c.authenticatedTopicCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
