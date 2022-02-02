@@ -1,9 +1,11 @@
-DEPRECATED: Delete a ksqlDB app. In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
+Configure ACLs for a ksqlDB cluster.
 
 Usage:
-  confluent ksql app delete <id> [flags]
+  confluent ksql cluster configure-acls <id> TOPICS... [flags]
 
 Flags:
+      --dry-run              If specified, print the ACLs that will be set and exit.
+      --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
 

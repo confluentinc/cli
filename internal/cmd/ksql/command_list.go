@@ -2,6 +2,9 @@ package ksql
 
 import (
 	"context"
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -16,12 +19,23 @@ var (
 	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status"}
 )
 
-func (c *appCommand) newListCommand() *cobra.Command {
+func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
+	shortText := "List ksqlDB clusters."
+	var longText string
+	runCommand := c.listClusters
+	if isApp {
+		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "DEPRECATED: List ksqlDB apps."
+		longText = "DEPRECATED: List ksqlDB apps. " + errors.KSQLAppDeprecateWarning
+		runCommand = c.listApps
+	}
+
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List ksqlDB apps.",
+		Short: shortText,
+		Long:  longText,
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  pcmd.NewCLIRunE(runCommand),
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -31,13 +45,24 @@ func (c *appCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *appCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *ksqlCommand) listClusters(cmd *cobra.Command, args []string) error {
+	return c.list(cmd, args, false)
+}
+
+func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
+	return c.list(cmd, args, true)
+}
+
+func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {
 		return err
 	}
 
+	if isApp {
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return err

@@ -22,7 +22,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.RequireCapitalizeProperNouns("Short", properNouns),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.RequireNotTitleCase("Short", properNouns),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("ksql app")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -122,6 +122,7 @@ var properNouns = []string{
 	"Confluent",
 	"Connect",
 	"Control Center",
+	"DEPRECATED",
 	"IAM",
 	"ID",
 	"Kafka",

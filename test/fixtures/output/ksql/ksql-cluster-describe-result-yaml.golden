@@ -1,4 +1,3 @@
-In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
 endpoint: SASL_SSL://ksql-endpoint
 id: lksqlc-12345
 kafka: lkc-abcde
