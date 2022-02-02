@@ -2,6 +2,7 @@ package completion
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -95,13 +96,12 @@ func New() *cobra.Command {
 
 func completion(root *cobra.Command, shell string) (string, error) {
 	buf := new(bytes.Buffer)
-	var err error
 
 	if shell == "zsh" {
-		err = root.GenZshCompletion(buf)
+		err := root.GenZshCompletion(buf)
+		return "#compdef confluent\n" + strings.TrimPrefix(buf.String(), "#"), err
 	} else {
-		err = root.GenBashCompletion(buf)
+		err := root.GenBashCompletion(buf)
+		return buf.String(), err
 	}
-
-	return buf.String(), err
 }
