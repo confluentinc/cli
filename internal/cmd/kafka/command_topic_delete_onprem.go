@@ -37,7 +37,7 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 		return err
 	}
 	// Delete Topic
-	resp, err := restClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(restContext, clusterId, topicName)
+	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

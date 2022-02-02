@@ -70,8 +70,8 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		}
 		i++
 	}
-	resp, err := restClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(restContext, clusterId, topicName,
-		&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
+	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName,
+		&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
 			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 		})
 	if err != nil {

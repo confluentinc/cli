@@ -82,7 +82,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		i++
 	}
 	// Create new topic
-	_, resp, err := restClient.TopicApi.ClustersClusterIdTopicsPost(restContext, clusterId, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+	_, resp, err := restClient.TopicV3Api.CreateKafkaTopic(restContext, clusterId, &kafkarestv3.CreateKafkaTopicOpts{
 		CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 			TopicName:         topicName,
 			PartitionsCount:   numPartitions,

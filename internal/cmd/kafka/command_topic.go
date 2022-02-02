@@ -18,6 +18,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -147,17 +148,17 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	foundTopic := false
 	for _, t := range metadata.Topics {
-		c.logger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("Validate topic: found topic " + t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
-		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 
-	c.logger.Tracef("validateTopic succeeded")
+	log.CliLogger.Tracef("validateTopic succeeded")
 	return nil
 }
 

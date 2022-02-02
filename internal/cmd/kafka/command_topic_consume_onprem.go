@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -70,7 +71,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	c.logger.Debugf(fmt.Sprintf("Created consumer group: %s", consumerGroup))
+	log.CliLogger.Debugf(fmt.Sprintf("Created consumer group: %s", consumerGroup))
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context
@@ -89,7 +90,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
-	c.logger.Tracef("Create consumer succeeded")
+	log.CliLogger.Tracef("Create consumer succeeded")
 
 	err = c.refreshOAuthBearerToken(cmd, consumer)
 	if err != nil {

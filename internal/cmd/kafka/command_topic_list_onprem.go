@@ -37,7 +37,7 @@ func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) e
 		return err
 	}
 	// Get Topics
-	topicGetResp, resp, err := restClient.TopicApi.ClustersClusterIdTopicsGet(restContext, clusterId)
+	topicGetResp, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

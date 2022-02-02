@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type PartitionData struct {
@@ -40,7 +41,7 @@ func (c *authenticatedTopicCommand) onPremInit() {
 }
 
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
-	clusters, resp, err := client.ClusterApi.ClustersGet(ctx)
+	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
 	if err != nil {
 		return "", kafkaRestError(client.GetConfig().BasePath, err, resp)
 	}
@@ -61,16 +62,16 @@ func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClien
 
 	var foundTopic bool
 	for _, t := range metadata.Topics {
-		c.logger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("validateTopic: found topic " + t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
 	}
 	if !foundTopic {
-		c.logger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
+		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, "<cluster-Id>", "<cluster-Id>", "<cluster-Id>"))
 	}
 
-	c.logger.Tracef("validateTopic succeeded")
+	log.CliLogger.Tracef("validateTopic succeeded")
 	return nil
 }
