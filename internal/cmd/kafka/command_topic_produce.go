@@ -166,7 +166,7 @@ func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, se
 	if err != nil {
 		return "", "", nil, err
 	}
-	subject := topicName + "-value"
+	subject := topicNameStrategy(topicName)
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return "", "", nil, err

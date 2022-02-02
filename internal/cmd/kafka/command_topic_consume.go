@@ -37,6 +37,7 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
+	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
@@ -134,11 +135,22 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+
+	subject := topicNameStrategy(topic)
+	contextName, err := cmd.Flags().GetString("context-name")
+	if err != nil {
+		return err
+	}
+	if contextName != "" {
+		subject = contextName
+	}
+
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
+		Subject:    subject,
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
