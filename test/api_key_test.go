@@ -144,6 +144,6 @@ func (s *CLITestSuite) TestAPIKey() {
 }
 
 func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
-	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "default", fixture: "apikey/55.golden", wantErrCode: 1}
+	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "default", fixture: "api-key/55.golden", wantErrCode: 1}
 	s.runCcloudTest(tt)
 }

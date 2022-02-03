@@ -3,8 +3,9 @@ package test
 func (s *CLITestSuite) TestKSQL() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "ksql --help", fixture: "ksql/ksql-help.golden"},
+		{args: "ksql --help", fixture: "ksql/help.golden"},
 	}
+
 	appTests := []CLITest{
 		{args: "ksql app --help", fixture: "ksql/app-help.golden"},
 		{args: "ksql app configure-acls --help", fixture: "ksql/app-configure-acls-help.golden"},
