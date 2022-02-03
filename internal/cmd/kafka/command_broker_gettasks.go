@@ -125,7 +125,7 @@ func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) brokerTaskData {
 		ClusterId:       entry.ClusterId,
 		BrokerId:        entry.BrokerId,
 		TaskType:        entry.TaskType,
-		TaskStatus:      entry.TaskStatus,
+		TaskStatus:      string(entry.TaskStatus),
 		CreatedAt:       entry.CreatedAt,
 		UpdatedAt:       entry.UpdatedAt,
 		SubTaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),

@@ -15,7 +15,7 @@ Available Commands:
   help            Help about any command
   iam             Manage RBAC and IAM permissions.
   kafka           Manage Apache Kafka.
-  ksql            Manage ksqlDB applications.
+  ksql            Manage ksqlDB.
   local           Manage a local Confluent Platform development environment.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Cloud.

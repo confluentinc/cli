@@ -120,7 +120,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, args[0])
+		return errors.CatchKafkaNotFoundError(err, lkc)
 	}
 
 	return outputKafkaClusterDescriptionWithKAPI(cmd, cluster, all)

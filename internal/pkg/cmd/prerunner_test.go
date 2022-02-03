@@ -4,21 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
-	"reflect"
-	"strings"
-	"testing"
-
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
@@ -30,10 +19,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"os"
+	"reflect"
+	"strings"
+	"testing"
 )
 
 const (
@@ -57,7 +50,7 @@ const (
 
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -67,14 +60,14 @@ var (
 				return nil, nil
 			}
 		},
-		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool) (string, string, error) {
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return "", "", nil
 		},
 		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
@@ -87,7 +80,6 @@ func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		Config:  v1.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
-		Logger:  log.New(),
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 				return "", "", nil
@@ -106,20 +98,19 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		MDSClientManager: &cliMock.MockMDSClientManager{
-			GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+			GetMDSClientFunc: func(url, caCertPath string) (client *mds.APIClient, e error) {
 				return &mds.APIClient{}, nil
 			},
 		},
 		Analytics:               cliMock.NewDummyAnalyticsMock(),
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:            pcmd.NewJWTValidator(log.New()),
+		JWTValidator:            pcmd.NewJWTValidator(),
 		AuthTokenHandler:        mockAuthTokenHandler,
 	}
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	type fields struct {
-		Logger  *log.Logger
 		Command string
 	}
 	tests := []struct {
@@ -130,7 +121,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "default logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help",
 			},
 			want: log.ERROR,
@@ -138,7 +128,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "warn logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -v",
 			},
 			want: log.WARN,
@@ -146,7 +135,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "info logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vv",
 			},
 			want: log.INFO,
@@ -154,7 +142,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "debug logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vvv",
 			},
 			want: log.DEBUG,
@@ -162,7 +149,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "trace logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vvvv",
 			},
 			want: log.TRACE,
@@ -175,8 +161,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			require.NoError(t, err)
 
 			r := getPreRunBase()
-			r.Logger = tt.fields.Logger
-			r.JWTValidator = pcmd.NewJWTValidator(tt.fields.Logger)
+			r.JWTValidator = pcmd.NewJWTValidator()
 			r.Config = cfg
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -187,7 +172,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
 			require.NoError(t, err)
 
-			got := tt.fields.Logger.GetLevel()
+			got := log.CliLogger.GetLevel()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PreRun.HasAPIKey() = %v, want %v", got, tt.want)
 			}
@@ -451,7 +436,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 									Email:     "",
 									FirstName: "",
 								},
-								Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+								Organization: &orgv1.Organization{ResourceId: "o-123"},
+								Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
 					}}
@@ -461,7 +447,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			}
 			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
-				GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool) (s string, s2 string, e error) {
+				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
 				GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
@@ -474,7 +460,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			var confluentEnvVarCalled bool
 			var confluentNetrcCalled bool
 			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
 						return tt.envVarReturn.creds, tt.envVarReturn.err
@@ -537,6 +523,62 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 }
 
+func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
+	ccloudCreds := &pauth.Credentials{
+		Username: "username",
+		Password: "password",
+	}
+	r := getPreRunBase()
+	r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			return &ccloud.Client{Auth: &sdkMock.Auth{
+				UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
+					return &flowv1.GetMeReply{
+						User: &orgv1.User{
+							Id:        23,
+							Email:     "",
+							FirstName: "",
+						},
+						Organization: &orgv1.Organization{ResourceId: "o-123"},
+						Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+					}, nil
+				},
+			}}
+		},
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+			return &ccloud.Client{}
+		},
+	}
+	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, orgResourceId string) (s string, s2 string, e error) {
+			require.Equal(t, "o-555", orgResourceId) // validate correct org id is used
+			return validAuthToken, "", nil
+		},
+	}
+	r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+		GetCredentialsFromNetrcFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcFunc,
+		GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return ccloudCreds, nil
+			}
+		},
+	}
+
+	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
+	err := cfg.Context().DeleteUserAuth()
+	require.NoError(t, err)
+	r.Config = cfg
+
+	root := &cobra.Command{
+		Run: func(cmd *cobra.Command, args []string) {},
+	}
+	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
+	root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+	_, err = pcmd.ExecuteCommand(rootCmd.Command)
+	require.NoError(t, err)
+}
+
 func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -563,7 +605,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			var envVarCalled bool
 			var netrcCalled bool
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						envVarCalled = true
 						return nil, nil

@@ -147,7 +147,7 @@ func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) e
 		return err
 	}
 	// Get Topics
-	topicGetResp, resp, err := restClient.TopicApi.ClustersClusterIdTopicsGet(restContext, clusterId)
+	topicGetResp, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -225,7 +225,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		i++
 	}
 	// Create new topic
-	_, resp, err := restClient.TopicApi.ClustersClusterIdTopicsPost(restContext, clusterId, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+	_, resp, err := restClient.TopicV3Api.CreateKafkaTopic(restContext, clusterId, &kafkarestv3.CreateKafkaTopicOpts{
 		CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 			TopicName:         topicName,
 			PartitionsCount:   numPartitions,
@@ -279,7 +279,7 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 		return err
 	}
 	// Delete Topic
-	resp, err := restClient.TopicApi.ClustersClusterIdTopicsTopicNameDelete(restContext, clusterId, topicName)
+	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -337,8 +337,8 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		}
 		i++
 	}
-	resp, err := restClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(restContext, clusterId, topicName,
-		&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
+	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName,
+		&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
 			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 		})
 	if err != nil {
@@ -406,7 +406,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 
 	// Get partitions
 	topicData := &TopicData{}
-	partitionsResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(restContext, clusterId, topicName)
+	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	} else if partitionsResp.Data == nil {
@@ -447,7 +447,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	}
 
 	// Get configs
-	configsResp, resp, err := restClient.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(restContext, clusterId, topicName)
+	configsResp, resp, err := restClient.ConfigsV3Api.ListKafkaTopicConfigs(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	} else if configsResp.Data == nil {
@@ -497,7 +497,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 }
 
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
-	clusters, resp, err := client.ClusterApi.ClustersGet(ctx)
+	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
 	if err != nil {
 		return "", kafkaRestError(client.GetConfig().BasePath, err, resp)
 	}

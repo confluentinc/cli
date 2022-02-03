@@ -59,12 +59,12 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pauseMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorspausePostOpts{
+	pauseMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsPauseOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
 		ValidateOnly:            optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorspausePost(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPause(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

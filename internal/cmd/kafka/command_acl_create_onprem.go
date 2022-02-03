@@ -49,7 +49,7 @@ func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	opts := aclutil.AclRequestToCreateAclReqest(acl)
-	httpResp, err := restClient.ACLApi.ClustersClusterIdAclsPost(restContext, clusterId, opts)
+	httpResp, err := restClient.ACLV3Api.CreateKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}
