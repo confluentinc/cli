@@ -74,7 +74,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) erro
 			return err
 		}
 
-		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
 		if err != nil {
 			return err
 		}

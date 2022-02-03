@@ -319,8 +319,8 @@ github.com/confluentinc/cc-structs/kafka/metrics v0.753.0/go.mod h1:clmdyh3waKvM
 github.com/confluentinc/cc-structs/kafka/org v0.410.0/go.mod h1:cHFmFDME3PjKTkK9B4kvNuar2gzhaUdHGbp1gljkC44=
 github.com/confluentinc/cc-structs/kafka/org v0.719.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.887.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
-github.com/confluentinc/cc-structs/kafka/org v0.945.0 h1:U5T24k6fbdvtm43n2fbE9s15PK2R8DvwCajvEoxm2QE=
-github.com/confluentinc/cc-structs/kafka/org v0.945.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
+github.com/confluentinc/cc-structs/kafka/org v0.1056.0 h1:4q5OMDQ7WA1gJ1oEYhXtp4EOdPBS5trxkxp+gBWux8k=
+github.com/confluentinc/cc-structs/kafka/org v0.1056.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/product/core v0.405.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
 github.com/confluentinc/cc-structs/kafka/product/core v0.408.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
 github.com/confluentinc/cc-structs/kafka/product/core v0.410.0/go.mod h1:FF4M+qXDH18/wt3flngDO4YKI3VZICwwt/rwAGahtgw=
@@ -346,8 +346,8 @@ github.com/confluentinc/cc-structs/operator v0.405.0/go.mod h1:h80UL1NR+Q9Ey/umr
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1QE6hUG3WkzpYjPsjUbg=
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92 h1:vTcLNIx+jStH1O6K0dYVqxDu5kosJZCJ3MzbD9KXuQ0=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92/go.mod h1:A7vR8Me1rDKWnWADVGj5bweYIce4bzPQ+R05bZIAU90=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.95 h1:i6NI9nHjWnrwPDCaQkIJLecC+FS9L35mt7+E6id2PTU=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.95/go.mod h1:KcJwPVBOzlx7OFVFRBJ7ObHo7tTw1RD+xrukByOuHwU=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=

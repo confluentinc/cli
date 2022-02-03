@@ -83,7 +83,7 @@ func (c *ksqlCommand) checkProvisioningFailed(cluster *schedv1.KSQLCluster) (boo
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
 	if err != nil {
 		return false, err
 	}
