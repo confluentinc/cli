@@ -1,6 +1,6 @@
---- cli/Makefile	2022-01-04 11:55:18.000000000 -0600
-+++ debian/Makefile	2022-01-04 09:43:15.000000000 -0600
-@@ -1,267 +1,130 @@
+--- cli/Makefile	2022-01-21 01:15:51.000000000 -0800
++++ debian/Makefile	2022-01-14 15:17:29.000000000 -0800
+@@ -1,268 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -67,7 +67,8 @@
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
--RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name librdkafka_vendor)
+-RDKAFKA_VERSION = 1.8.2
+-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag

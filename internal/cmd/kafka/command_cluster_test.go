@@ -23,7 +23,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -47,7 +46,6 @@ type KafkaClusterTestSuite struct {
 	analyticsClient analytics.Client
 	metricsApi      *ccsdkmock.MetricsApi
 	usageLimits     *ccsdkmock.UsageLimits
-	logger          *log.Logger
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
@@ -161,7 +159,6 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	suite.logger = log.New()
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
 	cmd := newClusterCommand(conf, prerunner, suite.analyticsClient)
 	return cmd

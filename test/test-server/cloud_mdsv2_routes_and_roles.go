@@ -290,7 +290,7 @@ var v2RoutesAndReplies = map[string]string{
 			"User:u-22bbb"
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/CloudClusterAdmin": `[
-			"User:u-33ccc", "User:u-44ddd"
+			"User:u-33ccc", "User:u-44ddd", "User:u-unlisted"
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/food":          `["User:u-11aaa"]`,
 	"/api/metadata/security/v2alpha1/lookup/role/ResourceOwner/resource/Topic/name/shire-parties": `["User:u-11aaa"]`,

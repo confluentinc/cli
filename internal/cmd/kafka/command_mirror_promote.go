@@ -60,12 +60,12 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promoteMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorspromotePostOpts{
+	promoteMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsPromoteOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
 		ValidateOnly:            optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorspromotePost(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

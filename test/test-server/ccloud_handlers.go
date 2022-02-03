@@ -380,6 +380,14 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
+
+			if req.ApiKey.UserResourceId == "sa-123456" {
+				b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{Error: &corev1.Error{Message: "service account is not valid"}})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+			}
+
 			apiKey := req.ApiKey
 			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
@@ -1019,7 +1027,7 @@ func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *
 		require.NotEmpty(t, req.Organization.Name)
 		require.NotEmpty(t, req.User)
 		require.NotEmpty(t, req.Credentials)
-		signupReply := &orgv1.SignupReply{}
+		signupReply := &orgv1.SignupReply{Organization: &orgv1.Organization{}}
 		reply, err := utilv1.MarshalJSONToBytes(signupReply)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))

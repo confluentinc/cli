@@ -4,15 +4,13 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, logger *log.Logger, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "schema-registry",
 		Aliases:     []string{"sr"},
@@ -22,7 +20,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient, lo
 
 	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-	c.AddCommand(newClusterCommand(cfg, prerunner, srClient, logger, analyticsClient))
+	c.AddCommand(newClusterCommand(cfg, prerunner, srClient, analyticsClient))
 	c.AddCommand(newExporterCommand(prerunner, srClient))
 	c.AddCommand(newSchemaCommand(prerunner, srClient))
 	c.AddCommand(newSubjectCommand(prerunner, srClient))

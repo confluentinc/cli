@@ -98,10 +98,6 @@ builds:
         - cmd: make switch-librdkafka-arm64
       post:
         - cmd: make restore-librdkafka-amd64
-        - cmd: make download-licenses
-          env:
-            - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/signed-arm64_darwin_arm64/confluent
         - cmd: gon gon_confluent_arm64.hcl
 
 archives:

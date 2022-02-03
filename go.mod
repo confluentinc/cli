@@ -18,13 +18,13 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.911.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
-	github.com/confluentinc/confluent-kafka-go v1.7.0
+	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
 	github.com/confluentinc/go-netrc v0.0.0-20201015001751-d8d220f17928
 	github.com/confluentinc/go-printer v0.13.0
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.7
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.13
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.27
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787

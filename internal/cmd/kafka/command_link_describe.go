@@ -50,7 +50,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	listLinkConfigsRespData, httpResp, err := client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(ctx, clusterId, linkName)
+	listLinkConfigsRespData, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, linkName)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}

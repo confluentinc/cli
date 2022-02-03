@@ -78,7 +78,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts{
+	createMirrorOpt := &kafkarestv3.CreateKafkaMirrorTopicOpts{
 		CreateMirrorTopicRequestData: optional.NewInterface(
 			kafkarestv3.CreateMirrorTopicRequestData{
 				SourceTopicName:   sourceTopicName,
@@ -88,7 +88,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorsPost(kafkaREST.Context, lkc, linkName, createMirrorOpt)
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt)
 	if err == nil {
 		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
 	}

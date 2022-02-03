@@ -63,13 +63,13 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := &kafkarestv3.ClustersClusterIdLinksLinkNameConfigsalterPutOpts{
+	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
 		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{
 			Data: toAlterConfigBatchRequestData(configsMap),
 		}),
 	}
 
-	if httpResp, err := client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsalterPut(ctx, clusterId, linkName, opts); err != nil {
+	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}
 

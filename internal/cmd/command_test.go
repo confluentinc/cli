@@ -9,13 +9,12 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var (
-	mockBaseConfig = &config.BaseConfig{Params: &config.Params{Logger: log.New()}}
+	mockBaseConfig = &config.BaseConfig{Params: &config.Params{}}
 	mockVersion    = new(pversion.Version)
 )
 

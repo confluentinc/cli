@@ -16,14 +16,12 @@ type JWTValidator interface {
 }
 
 type JWTValidatorImpl struct {
-	Logger  *log.Logger
 	Clock   clockwork.Clock
 	Version *version.Version
 }
 
-func NewJWTValidator(logger *log.Logger) *JWTValidatorImpl {
+func NewJWTValidator() *JWTValidatorImpl {
 	return &JWTValidatorImpl{
-		Logger: logger,
 		Clock:  clockwork.NewRealClock(),
 	}
 }
@@ -48,7 +46,7 @@ func (v *JWTValidatorImpl) Validate(context *v1.Context) error {
 		return errors.New(errors.MalformedJWTNoExprErrorMsg)
 	}
 	if float64(v.Clock.Now().Unix()) > exp {
-		v.Logger.Debug("Token expired.")
+		log.CliLogger.Debug("Token expired.")
 		return new(ccloud.ExpiredTokenError)
 	}
 	return nil

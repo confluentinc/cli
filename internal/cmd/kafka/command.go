@@ -6,7 +6,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type command struct {
@@ -14,7 +13,7 @@ type command struct {
 	analyticsClient analytics.Client
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID string, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string, analyticsClient analytics.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
 		Short: "Manage Apache Kafka.",
@@ -28,7 +27,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, logger *log.Logger, clientID 
 	aclCmd := newAclCommand(cfg, prerunner)
 	clusterCmd := newClusterCommand(cfg, prerunner, c.analyticsClient)
 	groupCmd := newConsumerGroupCommand(prerunner)
-	topicCmd := newTopicCommand(cfg, prerunner, logger, clientID)
+	topicCmd := newTopicCommand(cfg, prerunner, clientID)
 
 	c.AddCommand(newBrokerCommand(prerunner))
 	c.AddCommand(newLinkCommand(cfg, prerunner))

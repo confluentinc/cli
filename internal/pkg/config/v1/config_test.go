@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -138,7 +137,6 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			},
 		},
 		State:  state,
-		Logger: log.New(),
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -148,7 +146,6 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		CredentialName:         apiCredential.Name,
 		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
 		State:                  &ContextState{},
-		Logger:                 log.New(),
 	}
 	twoEnvStatefulContext := &Context{
 		Name:           contextName,
@@ -164,7 +161,6 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			},
 		},
 		State:  twoEnvState,
-		Logger: log.New(),
 	}
 	context := "onprem"
 	if isCloud {
@@ -172,7 +168,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{Logger: log.New()},
+			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
 			Ver:      config.Version{Version: Version},
 		},
@@ -194,7 +190,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{Logger: log.New()},
+			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
 			Ver:      config.Version{Version: Version},
 		},
@@ -216,7 +212,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{Logger: log.New()},
+			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
 			Ver:      config.Version{Version: Version},
 		},
@@ -282,7 +278,7 @@ func TestConfig_Load(t *testing.T) {
 			name: "should load disable update checks and disable updates",
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params:   &config.Params{Logger: log.New()},
+					Params:   &config.Params{},
 					Filename: "test_json/load_disable_update.json",
 					Ver:      config.Version{Version: Version},
 				},
@@ -298,7 +294,7 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{Logger: log.New()})
+			c := New(&config.Params{})
 			c.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
@@ -572,7 +568,7 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	c := New(&config.Params{Logger: log.New()})
+	c := New(&config.Params{})
 	got := c.GetFilename()
 	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
 	if got != want {
@@ -639,7 +635,7 @@ func TestConfig_AddContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.config.AddContext(tt.contextName, tt.platformName, tt.credentialName, tt.kafkaClusters, tt.kafka,
-				tt.schemaRegistryClusters, tt.state)
+				tt.schemaRegistryClusters, tt.state, MockOrgResourceId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, tt.wantErr)
 			}

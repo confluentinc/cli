@@ -37,6 +37,8 @@ const (
 	NoEnvironmentFoundErrorMsg                  = "no environment found for authenticated user"
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
+	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
+	SSOCrdentialsDoNotMatchSuggestions 			= "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -72,7 +74,7 @@ const (
 
 	// iam rbac role-binding commands
 	PrincipalFormatErrorMsg         = "incorrect principal format specified"
-	PrincipalFormatSuggestions      = "Principal must be specified in this format: `<Principal Type>:<Principal Name>`."
+	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg              = "failed to lookup role \"%s\""

@@ -4,14 +4,13 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type command struct {
 	*pcmd.StateFlagCommand
 }
 
-func New(prerunner pcmd.PreRunner, userAgent string, logger *log.Logger) *cobra.Command {
+func New(prerunner pcmd.PreRunner, userAgent string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Retrieve metadata about Confluent Platform clusters.",
@@ -20,7 +19,7 @@ func New(prerunner pcmd.PreRunner, userAgent string, logger *log.Logger) *cobra.
 
 	c := &command{pcmd.NewAnonymousStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(newDescribeCommand(prerunner, userAgent, logger))
+	c.AddCommand(newDescribeCommand(prerunner, userAgent))
 	c.AddCommand(newListCommand(prerunner))
 	c.AddCommand(newRegisterCommand(prerunner))
 	c.AddCommand(newUnregisterCommand(prerunner))

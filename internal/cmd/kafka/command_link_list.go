@@ -57,7 +57,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := client.ClusterLinkingApi.ClustersClusterIdLinksGet(ctx, clusterId)
+	listLinksRespDataList, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinks(ctx, clusterId)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}
@@ -69,8 +69,8 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		for _, link := range listLinksRespDataList.Data {
-			if len(link.TopicNames) > 0 {
-				for _, topic := range link.TopicNames {
+			if len(link.TopicsNames) > 0 {
+				for _, topic := range link.TopicsNames {
 					outputWriter.AddElement(
 						&LinkTopicWriter{
 							LinkName:        link.LinkName,

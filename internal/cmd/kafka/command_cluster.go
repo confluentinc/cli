@@ -6,7 +6,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 const (
@@ -16,7 +15,6 @@ const (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	logger          *log.Logger
 	analyticsClient analytics.Client
 }
 

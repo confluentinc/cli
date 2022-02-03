@@ -43,7 +43,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
-	_, resp, err := restClient.BrokerApi.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerId, &opts)
+	_, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerId, &opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

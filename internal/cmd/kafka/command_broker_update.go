@@ -75,15 +75,15 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	configs := toAlterConfigBatchRequestData(configsMap)
 
 	if all {
-		resp, err := restClient.ConfigsApi.ClustersClusterIdBrokerConfigsalterPost(restContext, clusterId,
-			&kafkarestv3.ClustersClusterIdBrokerConfigsalterPostOpts{
+		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,
+			&kafkarestv3.UpdateKafkaClusterConfigsOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 			})
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 		}
 	} else {
-		resp, err := restClient.ConfigsApi.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
+		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
 			&kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
 			})

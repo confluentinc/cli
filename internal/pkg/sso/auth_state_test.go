@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func TestNewStateDev(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", false, log.New())
+	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -34,7 +32,7 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	stateStag, err := newState("https://stag.cpdev.cloud", false, log.New())
+	stateStag, err := newState("https://stag.cpdev.cloud", false)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io", stateStag.SSOProviderHost)
 	require.Equal(t, "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w", stateStag.SSOProviderClientID)
@@ -44,7 +42,7 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check cpd configs
-	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", false, log.New())
+	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", false)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-cpd.confluent-dev.io", stateCpd.SSOProviderHost)
 	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
@@ -55,7 +53,7 @@ func TestNewStateDev(t *testing.T) {
 }
 
 func TestNewStateDevNoBrowser(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", true, log.New())
+	state, err := newState("https://devel.cpdev.cloud", true)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -76,7 +74,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	stateStag, err := newState("https://stag.cpdev.cloud", true, log.New())
+	stateStag, err := newState("https://stag.cpdev.cloud", true)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io", stateStag.SSOProviderHost)
 	require.Equal(t, "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w", stateStag.SSOProviderClientID)
@@ -86,7 +84,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check cpd configs
-	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true, log.New())
+	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-cpd.confluent-dev.io", stateCpd.SSOProviderHost)
 	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
@@ -97,7 +95,7 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 }
 
 func TestNewStateProd(t *testing.T) {
-	state, err := newState("https://confluent.cloud", false, log.New())
+	state, err := newState("https://confluent.cloud", false)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -118,7 +116,7 @@ func TestNewStateProd(t *testing.T) {
 
 func TestNewStateProdNoBrowser(t *testing.T) {
 	for _, authURL := range []string{"", "https://confluent.cloud"} {
-		state, err := newState(authURL, true, log.New())
+		state, err := newState(authURL, true)
 		require.NoError(t, err)
 		// randomly generated
 		require.True(t, len(state.CodeVerifier) > 10)
@@ -140,14 +138,14 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 }
 
 func TestNewStateInvalidUrl(t *testing.T) {
-	state, err := newState("Invalid url", true, log.New())
+	state, err := newState("Invalid url", true)
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "unrecognized auth url: Invalid url")
 	require.Nil(t, state)
 }
 
 func TestGetAuthorizationUrl(t *testing.T) {
-	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
+	state, _ := newState("https://devel.cpdev.cloud", false)
 
 	// test get auth code url
 	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo")
@@ -178,7 +176,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 func TestGetOAuthToken(t *testing.T) {
 	mockRefreshToken := "foo"
 
-	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
+	state, _ := newState("https://devel.cpdev.cloud", false)
 
 	expectedUri := "/oauth/token"
 	expectedPayload := "grant_type=authorization_code" +
@@ -216,7 +214,7 @@ func TestRefreshOAuthToken(t *testing.T) {
 	mockRefreshToken1 := "foo"
 	mockRefreshToken2 := "bar"
 
-	state, _ := newState("https://devel.cpdev.cloud", false, log.New())
+	state, _ := newState("https://devel.cpdev.cloud", false)
 	state.SSOProviderRefreshToken = mockRefreshToken1
 
 	expectedUri := "/oauth/token"
