@@ -85,7 +85,7 @@ func (c *appCommand) checkProvisioningFailed(cluster *schedv1.KSQLCluster) (bool
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
 	if err != nil {
 		return false, err
 	}

@@ -285,7 +285,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
 			return err
 		}
-
 		return r.setCCloudClient(command)
 	}
 }
@@ -377,7 +376,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
-		restEndpoint, err := getKafkaRestEndpoint(ctx, cliCmd)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx, cliCmd)
 		if err != nil {
 			return nil, err
 		}
@@ -391,7 +390,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
 			if err != nil {
 				return nil, err
 			}
@@ -404,36 +403,36 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
+func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", nil
+		return "", "", nil
 	}
 	clusterConfig, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	if clusterConfig.RestEndpoint != "" {
-		return clusterConfig.RestEndpoint, nil
+		return clusterConfig.RestEndpoint, clusterConfig.ID, nil
 	}
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
 	client := NewContextClient(ctx)
 	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
 	if err != nil {
-		return "", err
+		return "", clusterConfig.ID, err
 	}
 	// no need to update the config if it's still empty
 	if kafkaCluster.RestEndpoint == "" {
-		return "", nil
+		return "", clusterConfig.ID, nil
 	}
 	// update config to have updated cluster if rest endpoint is no longer ""
 	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
 	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
 	err = ctx.Save() //should we fail on this error or log and continue?
 	if err != nil {
-		return "", err
+		return "", clusterConfig.ID, err
 	}
-	return kafkaCluster.RestEndpoint, nil
+	return kafkaCluster.RestEndpoint, clusterConfig.ID, nil
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.

@@ -54,7 +54,7 @@ func (c *appCommand) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
 		if err != nil {
 			return err
 		}
