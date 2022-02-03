@@ -13,7 +13,7 @@ import (
 func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		qt1 := qtv2.QuotasV2AppliedQuota{
+		quota1 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Quota A"),
@@ -23,7 +23,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(15),
 		}
 
-		qt2 := qtv2.QuotasV2AppliedQuota{
+		quota2 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Qutoa A"),
@@ -33,7 +33,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(16),
 		}
 
-		qt3 := qtv2.QuotasV2AppliedQuota{
+		quota3 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_b"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Quota B"),
@@ -43,7 +43,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(17),
 		}
 
-		qt4 := qtv2.QuotasV2AppliedQuota{
+		quota4 := qtv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_b"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Quota B"),
@@ -53,13 +53,13 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(18),
 		}
 
-		qtls := &qtv2.QuotasV2AppliedQuotaList{
+		quotaList := &qtv2.QuotasV2AppliedQuotaList{
 			ApiVersion: "quotas/v2",
 			Kind:       "AppliedQuotaList",
-			Data:       []qtv2.QuotasV2AppliedQuota{qt1, qt2, qt3, qt4},
+			Data:       []qtv2.QuotasV2AppliedQuota{quota1, quota2, quota3, quota4},
 		}
 
-		reply, err := json.Marshal(qtls)
+		reply, err := json.Marshal(quotaList)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)

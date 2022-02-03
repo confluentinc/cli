@@ -70,7 +70,7 @@ func (suite *QuotasTestSuite) StartBackEndServer() string {
 func HandleAppliedQuotas(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		qt1 := quotasv2.QuotasV2AppliedQuota{
+		quota1 := quotasv2.QuotasV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr(""),
@@ -79,12 +79,12 @@ func HandleAppliedQuotas(t *testing.T) func(w http.ResponseWriter, r *http.Reque
 			Environment:  quotasv2.NewObjectReference("env-1", "", ""),
 			AppliedLimit: int32ToPtr(15),
 		}
-		qtls := &quotasv2.QuotasV2AppliedQuotaList{
+		quotaList := &quotasv2.QuotasV2AppliedQuotaList{
 			ApiVersion: "quotas/v2",
 			Kind:       "AppliedQuotaList",
-			Data:       []quotasv2.QuotasV2AppliedQuota{qt1},
+			Data:       []quotasv2.QuotasV2AppliedQuota{quota1},
 		}
-		reply, err := json.Marshal(qtls)
+		reply, err := json.Marshal(quotaList)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
