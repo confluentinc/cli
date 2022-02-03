@@ -143,7 +143,7 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 		user = ctx.State.Auth.User
 	}
 	// Basic user info
-	if user != nil && user.Id != 0 {
+	if user != nil && user.ResourceId != "" {
 		userResourceId := ctx.State.Auth.User.ResourceId
 		userBuilder = lduser.NewUserBuilder(userResourceId)
 		setCustomAttribute(custom, "user.resource_id", ldvalue.String(userResourceId))
@@ -154,7 +154,6 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 	}
 
 	if f.version != nil && f.version.Version != "" {
-		fmt.Println(f.version.Version)
 		setCustomAttribute(custom, "cli.version", ldvalue.String(f.version.Version))
 	}
 
