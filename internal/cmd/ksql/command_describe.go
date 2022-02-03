@@ -29,7 +29,7 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 		longText = "DEPRECATED: Describe a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.describeApp
 	}
-	
+
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             shortText,
