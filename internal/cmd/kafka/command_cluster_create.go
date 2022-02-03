@@ -338,7 +338,7 @@ func getKafkaProvisionEstimate(sku productv1.Sku) string {
 
 	switch sku {
 	case productv1.Sku_DEDICATED:
-		return fmt.Sprintf(fmtEstimate, "1 hour") + " The admin will receive an email once the dedicated cluster is provisioned."
+		return fmt.Sprintf(fmtEstimate, "1 hour") + " The admin for the organization will receive an email once the dedicated cluster is provisioned."
 	default:
 		return fmt.Sprintf(fmtEstimate, "5 minutes")
 	}
