@@ -3,11 +3,12 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"

@@ -1,9 +1,10 @@
 package ksql
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/spf13/cobra"
 )
 
 func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *ksqlCommand {

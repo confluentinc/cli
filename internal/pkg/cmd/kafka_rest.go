@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 

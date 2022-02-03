@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
