@@ -1,18 +1,16 @@
-package lint_cli
+package linter
 
 import (
 	"fmt"
 
-	"github.com/client9/gospell"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 type Linter struct {
-	Rules     []Rule
+	Rules     []CommandRule
 	FlagRules []FlagRule
-	Vocab     *gospell.GoSpell
 	Debug     bool
 }
 

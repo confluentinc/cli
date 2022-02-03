@@ -16,7 +16,7 @@ import (
 func (c *mirrorCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all mirror topics in the cluster or under the given cluster link.",
+		Short: "List mirror topics in a cluster or under a cluster link.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
