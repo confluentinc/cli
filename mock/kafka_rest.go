@@ -6,7 +6,7 @@ import (
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 // Compile-time check interface adherence

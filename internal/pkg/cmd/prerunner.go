@@ -71,7 +71,7 @@ type AuthenticatedCLICommand struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
-	QuotasClient *quotasv2.APIClient
+	QuotasClient      *quotasv2.APIClient
 	Context           *DynamicContext
 	State             *v1.ContextState
 }
@@ -453,7 +453,7 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 	return baseURL
 }
 
-func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) (*quotasv2.APIClient) {
+func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) *quotasv2.APIClient {
 	var baseURL string
 	var userAgent string
 	if ctx != nil {
@@ -462,7 +462,7 @@ func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) (
 	}
 
 	cfg := quotasv2.NewConfiguration()
-	cfg.Servers[0].URL = baseURL+"/api"
+	cfg.Servers[0].URL = baseURL + "/api"
 	cfg.UserAgent = userAgent
 
 	return quotasv2.NewAPIClient(cfg)

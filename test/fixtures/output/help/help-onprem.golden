@@ -18,7 +18,6 @@ Available Commands:
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Platform.
   prompt          Add Confluent CLI context to your terminal prompt.
-  quota-limits    Look up ccloud service quotas limits
   schema-registry Manage Schema Registry.
   secret          Manage secrets for Confluent Platform.
   shell           Start an interactive shell.

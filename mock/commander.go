@@ -23,7 +23,7 @@ type Commander struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
-	QuotasClient *quotasv2.APIClient
+	QuotasClient      *quotasv2.APIClient
 	Version           *version.Version
 	Config            *v1.Config
 }

@@ -1,18 +1,18 @@
-- AppliedLimit: "15"
-  DisplayName: Quota A
-  Environment: env-1
-  KafkaCluster: lkc-1
-  Network: ""
-  Organization: org-123
-  QuotaCode: quota_a
-  Scope: kafka_cluster
-  User: ""
-- AppliedLimit: "16"
-  DisplayName: Qutoa A
-  Environment: env-2
-  KafkaCluster: lkc-2
-  Network: ""
-  Organization: org-123
-  QuotaCode: quota_a
-  Scope: kafka_cluster
-  User: ""
+- applied_limit: "15"
+  display_name: Quota A
+  environment: env-1
+  kafka_cluster: lkc-1
+  network: ""
+  organization: org-123
+  quota_code: quota_a
+  scope: kafka_cluster
+  user: ""
+- applied_limit: "16"
+  display_name: Qutoa A
+  environment: env-2
+  kafka_cluster: lkc-2
+  network: ""
+  organization: org-123
+  quota_code: quota_a
+  scope: kafka_cluster
+  user: ""

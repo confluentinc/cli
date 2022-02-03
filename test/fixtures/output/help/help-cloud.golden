@@ -6,6 +6,7 @@ Usage:
 Available Commands:
   admin           Perform administrative tasks for the current organization.
   api-key         Manage the API keys.
+  applied-quotas  Look up ccloud service quotas limits
   audit-log       Manage audit log configuration.
   cloud-signup    Sign up for Confluent Cloud.
   completion      Print shell completion code.
@@ -21,7 +22,6 @@ Available Commands:
   logout          Log out of Confluent Cloud.
   price           See Confluent Cloud pricing information.
   prompt          Add Confluent CLI context to your terminal prompt.
-  quota-limits    Look up ccloud service quotas limits
   schema-registry Manage Schema Registry.
   shell           Start an interactive shell.
   update          Update the Confluent CLI.

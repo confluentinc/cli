@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/cli/internal/cmd/quotas"
+
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/jonboulle/clockwork"
@@ -27,7 +29,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
-	"github.com/confluentinc/cli/internal/cmd/quotas"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/update"
@@ -116,12 +117,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
+	cmd.AddCommand(quotas.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil, analyticsClient))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient, analyticsClient))
 	cmd.AddCommand(version.New(prerunner, ver))
-	cmd.AddCommand(quotas.New(prerunner, analyticsClient).Command)
 
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	disableFlagSorting(cmd)
