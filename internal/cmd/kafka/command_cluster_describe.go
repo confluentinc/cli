@@ -18,10 +18,16 @@ var (
 	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 	describeHumanRenames               = map[string]string{
-		"NetworkIngress":  "Ingress",
-		"NetworkEgress":   "Egress",
-		"ServiceProvider": "Provider",
-		"EncryptionKeyId": "Encryption Key ID"}
+		"ApiEndpoint":        "API Endpoint",
+		"ClusterSize":        "Cluster Size",
+		"EncryptionKeyId":    "Encryption Key ID",
+		"Id":                 "ID",
+		"NetworkEgress":      "Egress",
+		"NetworkIngress":     "Ingress",
+		"PendingClusterSize": "Pending Cluster Size",
+		"RestEndpoint":       "REST Endpoint",
+		"ServiceProvider":    "Provider",
+	}
 	describeStructuredRenames = map[string]string{
 		"Id":                 "id",
 		"Name":               "name",
