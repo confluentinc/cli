@@ -8,19 +8,29 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *appCommand) newCreateCommand() *cobra.Command {
+func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
+	shortText := "Create a ksqlDB cluster."
+	var longText string
+	runCommand := c.createCluster
+	if isApp {
+		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "DEPRECATED: Create a ksqlDB app."
+		longText = "DEPRECATED: Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		runCommand = c.createApp
+	}
+
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a ksqlDB app.",
+		Short: shortText,
+		Long:  longText,
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  pcmd.NewCLIRunE(runCommand),
 	}
 
 	cmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use.")
@@ -39,7 +49,15 @@ func (c *appCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *appCommand) create(cmd *cobra.Command, args []string) error {
+func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
+	return c.create(cmd, args, false)
+}
+
+func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
+	return c.create(cmd, args, true)
+}
+
+func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -67,13 +85,9 @@ func (c *appCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if kafkaApiKey != "" && kafkaApiKeySecret != "" {
-		cfg.KafkaApiKey = &schedv1.ApiKey{
-			Key:    kafkaApiKey,
-			Secret: kafkaApiKeySecret,
-		}
-	} else {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLCreateDeprecateWarning)
+	cfg.KafkaApiKey = &schedv1.ApiKey{
+		Key:    kafkaApiKey,
+		Secret: kafkaApiKeySecret,
 	}
 
 	image, err := cmd.Flags().GetString("image")
@@ -102,6 +116,8 @@ func (c *appCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
+	if isApp {
+		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	}
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }

@@ -14,13 +14,13 @@ import (
 
 const clusterType = "ksql-cluster"
 
-func (c *clusterCommand) newListCommand() *cobra.Command {
+func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List registered ksqlDB clusters.",
 		Long:  "List ksqlDB clusters that are registered with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  pcmd.NewCLIRunE(c.listOnPrem),
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -29,7 +29,7 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 	ksqlClusterType := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 

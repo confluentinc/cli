@@ -67,8 +67,8 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 }
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsGetOpts
-func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsGetOpts {
-	var opts kafkarestv3.ClustersClusterIdAclsGetOpts
+func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.GetKafkaAclsOpts {
+	var opts kafkarestv3.GetKafkaAclsOpts
 
 	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
 		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
@@ -95,7 +95,7 @@ func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarest
 }
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsPostOpts
-func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkarestv3.ClustersClusterIdAclsPostOpts {
+func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkarestv3.CreateKafkaAclsOpts {
 	var aclRequestData kafkarestv3.CreateAclRequestData
 
 	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
@@ -118,15 +118,15 @@ func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkares
 		aclRequestData.Permission = kafkarestv3.AclPermission(acl.Entry.PermissionType.String())
 	}
 
-	var opts kafkarestv3.ClustersClusterIdAclsPostOpts
+	var opts kafkarestv3.CreateKafkaAclsOpts
 	opts.CreateAclRequestData = optional.NewInterface(aclRequestData)
 
 	return opts
 }
 
 // Converts ACLFilter to Kafka REST ClustersClusterIdAclsDeleteOpts
-func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.ClustersClusterIdAclsDeleteOpts {
-	var opts kafkarestv3.ClustersClusterIdAclsDeleteOpts
+func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.DeleteKafkaAclsOpts {
+	var opts kafkarestv3.DeleteKafkaAclsOpts
 
 	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
 		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))

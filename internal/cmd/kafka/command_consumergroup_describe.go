@@ -54,12 +54,12 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdGet(kafkaREST.Context, lkc, consumerGroupId)
+	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroup(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
-	groupCmdConsumersResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(kafkaREST.Context, lkc, consumerGroupId)
+	groupCmdConsumersResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumers(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

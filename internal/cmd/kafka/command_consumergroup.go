@@ -135,7 +135,7 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarest
 		return nil, err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsGet(kafkaREST.Context, lkc)
+	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
 	if err != nil {
 		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

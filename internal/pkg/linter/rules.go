@@ -1,4 +1,4 @@
-package lint_cli
+package linter
 
 import (
 	"fmt"
@@ -15,30 +15,28 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var (
-	alnum, _ = regexp.Compile("[^a-zA-Z0-9]+")
+type (
+	CommandRule func(cmd *cobra.Command) error
+	FlagRule    func(flag *pflag.Flag, cmd *cobra.Command) error
 )
 
-type Rule func(cmd *cobra.Command) error
-type FlagRule func(flag *pflag.Flag, cmd *cobra.Command) error
+var alphanumeric, _ = regexp.Compile("[^a-zA-Z0-9]+")
 
 var vocab *gospell.GoSpell
 
-// TODO/HACK: this is to inject a vocab "global" object for use by the rules
 func SetVocab(v *gospell.GoSpell) {
 	vocab = v
 }
 
 // RequireRealWords checks that a field uses delimited-real-words, not smushcasecommands
-func RequireRealWords(field string, delimiter rune) Rule {
+func RequireRealWords(field string, delimiter rune) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		var issues *multierror.Error
 		bareCmd := strings.Split(fieldValue, " ")[0] // TODO should we check all parts?
 		for _, w := range strings.Split(bareCmd, string(delimiter)) {
 			if ok := vocab.Spell(w); !ok {
-				issue := fmt.Errorf("%s should consist of delimited real english words for %s on %s - unknown %s",
-					normalizeDesc(field), bareCmd, FullCommand(cmd), w)
+				issue := fmt.Errorf("%s should consist of delimited real english words for %s on `%s` - unknown %s", normalizeDesc(field), bareCmd, FullCommand(cmd), w)
 				issues = multierror.Append(issues, issue)
 			}
 		}
@@ -47,7 +45,7 @@ func RequireRealWords(field string, delimiter rune) Rule {
 }
 
 // RequireEndWithPunctuation checks that a field ends with a period
-func RequireEndWithPunctuation(field string, ignoreIfEndsWithCodeBlock bool) Rule {
+func RequireEndWithPunctuation(field string, ignoreIfEndsWithCodeBlock bool) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		chomped := strings.TrimRight(fieldValue, "\n")
@@ -59,7 +57,7 @@ func RequireEndWithPunctuation(field string, ignoreIfEndsWithCodeBlock bool) Rul
 			}
 			// ignore rule if last line is code block
 			if !strings.HasPrefix(lines[lastLine], "  ") || !ignoreIfEndsWithCodeBlock {
-				return fmt.Errorf("%s should end with punctuation on %s", normalizeDesc(field), FullCommand(cmd))
+				return fmt.Errorf("%s should end with punctuation on `%s`", normalizeDesc(field), FullCommand(cmd))
 			}
 		}
 		return nil
@@ -67,18 +65,18 @@ func RequireEndWithPunctuation(field string, ignoreIfEndsWithCodeBlock bool) Rul
 }
 
 // RequireStartWithCapital checks that a field starts with a capital letter
-func RequireStartWithCapital(field string) Rule {
+func RequireStartWithCapital(field string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		if fieldValue != "" && (fieldValue[0] < 'A' || fieldValue[0] > 'Z') {
-			return fmt.Errorf("%s should start with a capital on %s", normalizeDesc(field), FullCommand(cmd))
+			return fmt.Errorf("%s should start with a capital on `%s`", normalizeDesc(field), FullCommand(cmd))
 		}
 		return nil
 	}
 }
 
 // RequireCapitalizeProperNouns checks that a field capitalizes proper nouns
-func RequireCapitalizeProperNouns(field string, properNouns []string) Rule {
+func RequireCapitalizeProperNouns(field string, properNouns []string) CommandRule {
 	index := map[string]string{}
 	for _, n := range properNouns {
 		index[strings.ToLower(n)] = n
@@ -88,7 +86,7 @@ func RequireCapitalizeProperNouns(field string, properNouns []string) Rule {
 		var issues *multierror.Error
 		for _, word := range strings.Split(fieldValue, " ") {
 			if v, found := index[strings.ToLower(word)]; found && word != v {
-				issue := fmt.Errorf("%s should capitalize %s on %s", normalizeDesc(field), v, FullCommand(cmd))
+				issue := fmt.Errorf("%s should capitalize %s on `%s`", normalizeDesc(field), v, FullCommand(cmd))
 				issues = multierror.Append(issues, issue)
 			}
 		}
@@ -97,16 +95,16 @@ func RequireCapitalizeProperNouns(field string, properNouns []string) Rule {
 }
 
 // RequireLengthBetween checks that a field is between a certain min and max length
-func RequireLengthBetween(field string, minLength, maxLength int) Rule {
+func RequireLengthBetween(field string, minLength, maxLength int) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		var issues *multierror.Error
 		if len(fieldValue) < minLength {
-			issue := fmt.Errorf("%s is too short on %s (%d)", normalizeDesc(field), FullCommand(cmd), len(fieldValue))
+			issue := fmt.Errorf("%s is too short on `%s` (%d < %d)", normalizeDesc(field), FullCommand(cmd), len(fieldValue), minLength)
 			issues = multierror.Append(issues, issue)
 		}
 		if len(fieldValue) > maxLength {
-			issue := fmt.Errorf("%s is too long on %s (%d)", normalizeDesc(field), FullCommand(cmd), len(fieldValue))
+			issue := fmt.Errorf("%s is too long on `%s` (%d > %d)", normalizeDesc(field), FullCommand(cmd), len(fieldValue), maxLength)
 			issues = multierror.Append(issues, issue)
 		}
 		return issues
@@ -114,23 +112,23 @@ func RequireLengthBetween(field string, minLength, maxLength int) Rule {
 }
 
 // RequireSingular checks that a field is singular (not plural)
-func RequireSingular(field string) Rule {
+func RequireSingular(field string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		if flect.Singularize(fieldValue) != fieldValue {
-			return fmt.Errorf("%s should be singular for %s", normalizeDesc(field), FullCommand(cmd))
+			return fmt.Errorf("%s should be singular for `%s`", normalizeDesc(field), FullCommand(cmd))
 		}
 		return nil
 	}
 }
 
 // RequireLowerCase checks that a field is lower case
-func RequireLowerCase(field string) Rule {
+func RequireLowerCase(field string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		command := strings.Split(fieldValue, " ")[0]
 		if strings.ToLower(command) != command {
-			return fmt.Errorf("%s should be lower case for %s", normalizeDesc(field), FullCommand(cmd))
+			return fmt.Errorf("%s should be lower case for `%s`", normalizeDesc(field), FullCommand(cmd))
 		}
 		return nil
 	}
@@ -143,49 +141,10 @@ type NamedArgumentConfig struct {
 	OtherCommandsArg string
 }
 
-// RequireNamedArgument checks that a command has a single argument with the appropriate name.
-// You can specify different names for create commands vs other commands; e.g., to pass NAME on create and ID elsewhere.
-// You can also pass a string of overrides for some commands, identified by their parent, to have a different config.
-func RequireNamedArgument(defConfig NamedArgumentConfig, overrides map[string]NamedArgumentConfig) Rule {
-	return func(cmd *cobra.Command) error {
-		// check whether arg parsing is setup correctly to expect exactly 1 arg (the ID/Name)
-		if reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.ExactArgs(1)).Pointer() && reflect.ValueOf(cmd.Args).Pointer() != reflect.ValueOf(cobra.MaximumNArgs(1)).Pointer() {
-			return fmt.Errorf("missing expected argument on %s", FullCommand(cmd))
-		}
-
-		// check whether the usage string is setup correctly
-		if o, found := overrides[cmd.Parent().Use]; found {
-			if strings.HasPrefix(cmd.Use, "create ") {
-				if !strings.HasSuffix(cmd.Use, o.CreateCommandArg) {
-					return fmt.Errorf("bad usage string: must have %s in %s",
-						o.CreateCommandArg, FullCommand(cmd))
-				}
-			} else if !strings.HasSuffix(cmd.Use, o.OtherCommandsArg) {
-				return fmt.Errorf("bad usage string: must have %s in %s",
-					o.OtherCommandsArg, FullCommand(cmd))
-			}
-		} else {
-			// check for "create NAME" and "<verb> ID" elsewhere
-			if strings.HasPrefix(cmd.Use, "create ") {
-				if !strings.HasSuffix(cmd.Use, defConfig.CreateCommandArg) {
-					return fmt.Errorf("bad usage string: must have %s in %s",
-						defConfig.CreateCommandArg, FullCommand(cmd))
-				}
-			} else if !strings.HasSuffix(cmd.Use, defConfig.OtherCommandsArg) {
-				return fmt.Errorf("bad usage string: must have %s in %s",
-					defConfig.OtherCommandsArg, FullCommand(cmd))
-			}
-		}
-
-		return nil
-	}
-}
-
 func isCapitalized(word string) bool {
 	return word[0] >= 'A' && word[0] <= 'Z'
 }
 
-// Separate for testability
 func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field string, fullCommand string) *multierror.Error {
 	var issues *multierror.Error
 
@@ -193,9 +152,10 @@ func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field st
 	for _, properNoun := range properNouns {
 		fieldValue = strings.ReplaceAll(fieldValue, properNoun, "")
 	}
+
 	words := strings.Split(fieldValue, " ")
 	for i := 0; i < len(words); i++ {
-		word := strings.TrimRight(alnum.ReplaceAllString(words[i], ""), " ") // Remove any punctuation before comparison
+		word := strings.TrimRight(alphanumeric.ReplaceAllString(words[i], ""), " ") // Remove any punctuation before comparison
 		if word == "" {
 			continue
 		}
@@ -203,8 +163,7 @@ func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field st
 			if isCapitalized(word) {
 				continue
 			} else {
-				issue := fmt.Errorf("should capitalize %s on %s - %s",
-					normalizeDesc(field), fullCommand, fieldValue)
+				issue := fmt.Errorf("should capitalize %s on `%s` - %s", normalizeDesc(field), fullCommand, fieldValue)
 				issues = multierror.Append(issues, issue)
 			}
 		}
@@ -215,8 +174,7 @@ func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field st
 		if i > 0 && strings.HasSuffix(words[i-1], ".") {
 			continue
 		}
-		issue := fmt.Errorf("don't title case %s on %s - %s",
-			normalizeDesc(field), fullCommand, fieldValue)
+		issue := fmt.Errorf("don't title case %s on `%s` - %s", normalizeDesc(field), fullCommand, fieldValue)
 		issues = multierror.Append(issues, issue)
 	}
 	return issues
@@ -224,41 +182,10 @@ func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field st
 
 // RequireNotTitleCase checks that a field is Not Title Casing Everything.
 // You may pass a list of proper nouns that should always be capitalized, however.
-func RequireNotTitleCase(field string, properNouns []string) Rule {
+func RequireNotTitleCase(field string, properNouns []string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		return requireNotTitleCaseHelper(fieldValue, properNouns, field, FullCommand(cmd))
-	}
-}
-
-// RequireFlag checks that a flag is defined and whether it should be optional or required
-func RequireFlag(flag string, optional bool) Rule {
-	return func(cmd *cobra.Command) error {
-		f := cmd.Flag(flag)
-		if f == nil {
-			return fmt.Errorf("missing --%s flag on %s", flag, FullCommand(cmd))
-		} else {
-			if optional && f.Annotations[cobra.BashCompOneRequiredFlag] != nil &&
-				f.Annotations[cobra.BashCompOneRequiredFlag][0] == "true" {
-				return fmt.Errorf("required --%s flag should be optional on %s", flag, FullCommand(cmd))
-			}
-		}
-		return nil
-	}
-}
-
-// RequireFlagType checks that a flag has the specified type, if it exists.
-// Please use RequireFlag to check that it exists first.
-func RequireFlagType(flag, typeName string) Rule {
-	return func(cmd *cobra.Command) error {
-		f := cmd.Flag(flag)
-		if f != nil {
-			// check that --flag has the right type (so its not a different meaning)
-			if typeName != "" && f.Value.Type() != typeName {
-				return fmt.Errorf("standard --%s flag has the wrong type on %s", flag, FullCommand(cmd))
-			}
-		}
-		return nil
 	}
 }
 
@@ -268,8 +195,7 @@ func RequireFlagRealWords(delim rune) FlagRule {
 		var issues *multierror.Error
 		for _, w := range strings.Split(flag.Name, string(delim)) {
 			if ok := vocab.Spell(w); !ok {
-				issue := fmt.Errorf("flag name should consist of delimited real english words for %s on %s - unknown %s",
-					flag.Name, FullCommand(cmd), w)
+				issue := fmt.Errorf("flag name should consist of delimited real english words for --%s on `%s` - unknown %s", flag.Name, FullCommand(cmd), w)
 				issues = multierror.Append(issues, issue)
 			}
 		}
@@ -285,8 +211,7 @@ func RequireFlagDelimiter(delim rune, maxCount int) FlagRule {
 			if l == delim {
 				countDelim++
 				if countDelim > maxCount {
-					return fmt.Errorf("flag name must only have %d delimiter (\"%c\") for %s on %s",
-						maxCount, delim, flag.Name, FullCommand(cmd))
+					return fmt.Errorf("flag name must only have %d delimiter (\"%c\") for --%s on `%s`", maxCount, delim, flag.Name, FullCommand(cmd))
 				}
 			}
 		}
@@ -299,8 +224,7 @@ func RequireFlagCharacters(delim rune) FlagRule {
 	return func(flag *pflag.Flag, cmd *cobra.Command) error {
 		for _, l := range flag.Name {
 			if !unicode.IsLetter(l) && l != delim {
-				return fmt.Errorf("flag name must be letters and delim (\"%c\") for %s on %s",
-					delim, flag.Name, FullCommand(cmd))
+				return fmt.Errorf("flag name must be letters and delim (\"%c\") for --%s on `%s`", delim, flag.Name, FullCommand(cmd))
 			}
 		}
 		return nil
@@ -310,24 +234,32 @@ func RequireFlagCharacters(delim rune) FlagRule {
 // RequireFlagUsageEndWithPunctuation checks that a flag description ends with a period
 func RequireFlagUsageEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
 	if len(flag.Usage) > 0 && flag.Usage[len(flag.Usage)-1] != '.' {
-		return fmt.Errorf("flag usage doesn't end with punctuation for %s on %s", flag.Name, FullCommand(cmd))
+		return fmt.Errorf("flag usage doesn't end with punctuation for --%s on `%s`", flag.Name, FullCommand(cmd))
 	}
 	return nil
 }
 
 func RequireFlagUsageMessage(flag *pflag.Flag, cmd *cobra.Command) error {
 	if len(flag.Usage) == 0 {
-		return fmt.Errorf("flag must provide help message for %s on %s", flag.Name, FullCommand(cmd))
+		return fmt.Errorf("flag must provide help message for --%s on `%s`", flag.Name, FullCommand(cmd))
 	}
 	return nil
 }
 
 // RequireFlagUsageStartWithCapital checks that a flag description starts with a capital letter
-func RequireFlagUsageStartWithCapital(flag *pflag.Flag, cmd *cobra.Command) error {
-	if len(flag.Usage) > 0 && (flag.Usage[0] < 'A' || flag.Usage[0] > 'Z') {
-		return fmt.Errorf("flag usage should start with a capital for %s on %s", flag.Name, FullCommand(cmd))
+func RequireFlagUsageStartWithCapital(properNouns []string) FlagRule {
+	return func(flag *pflag.Flag, cmd *cobra.Command) error {
+		for _, word := range properNouns {
+			if strings.HasPrefix(flag.Usage, word) {
+				return nil
+			}
+		}
+
+		if len(flag.Usage) > 0 && (flag.Usage[0] < 'A' || flag.Usage[0] > 'Z') {
+			return fmt.Errorf("flag usage should start with a capital for --%s on `%s`", flag.Name, FullCommand(cmd))
+		}
+		return nil
 	}
-	return nil
 }
 
 // RequireFlagNameLength checks that a flag is between a certain min and max length
@@ -335,11 +267,11 @@ func RequireFlagNameLength(minLength, maxLength int) FlagRule {
 	return func(flag *pflag.Flag, cmd *cobra.Command) error {
 		var issues *multierror.Error
 		if len(flag.Name) < minLength {
-			issue := fmt.Errorf("flag name is too short for %s on %s", flag.Name, FullCommand(cmd))
+			issue := fmt.Errorf("flag name is too short for --%s on `%s` (%d < %d)", flag.Name, FullCommand(cmd), len(flag.Name), minLength)
 			issues = multierror.Append(issues, issue)
 		}
 		if len(flag.Name) > maxLength {
-			issue := fmt.Errorf("flag name is too long for %s on %s", flag.Name, FullCommand(cmd))
+			issue := fmt.Errorf("flag name is too long for --%s on `%s` (%d > %d)", flag.Name, FullCommand(cmd), len(flag.Name), maxLength)
 			issues = multierror.Append(issues, issue)
 		}
 		return issues
@@ -350,41 +282,24 @@ func RequireFlagNameLength(minLength, maxLength int) FlagRule {
 func RequireFlagKebabCase(flag *pflag.Flag, cmd *cobra.Command) error {
 	flagKebab := strcase.ToKebab(flag.Name)
 	if flagKebab != flag.Name {
-		return fmt.Errorf("flag name must be kebab-case: %s should be %s on %s", flag.Name, flagKebab, FullCommand(cmd))
+		return fmt.Errorf("flag name must be kebab-case: --%s should be --%s on `%s`", flag.Name, flagKebab, FullCommand(cmd))
 	}
 	return nil
 }
 
 func RequireFlagUsageRealWords(flag *pflag.Flag, cmd *cobra.Command) error {
 	var issues *multierror.Error
-	usage := strings.TrimRight(alnum.ReplaceAllString(flag.Usage, " "), " ") // Remove any punctuation before checking spelling
+	usage := strings.TrimRight(alphanumeric.ReplaceAllString(flag.Usage, " "), " ") // Remove any punctuation before checking spelling
 	if usage == "" {
 		return nil
 	}
 	for _, w := range strings.Split(usage, " ") {
 		if ok := vocab.Spell(w); !ok {
-			issue := fmt.Errorf("flag usage should consist of delimited real english words for %s on %s - unknown '%s' in '%s'",
-				flag.Name, FullCommand(cmd), w, usage)
+			issue := fmt.Errorf("flag usage should consist of delimited real english words for --%s on `%s` - unknown '%s' in '%s'", flag.Name, FullCommand(cmd), w, usage)
 			issues = multierror.Append(issues, issue)
 		}
 	}
 	return issues.ErrorOrNil()
-}
-
-// SetDifference returns set1 - set2
-func SetDifferenceIgnoresCase(set1 []string, set2 []string) []string {
-	// make a hash set from set2 for efficient searches
-	hashSet2 := make(map[string]interface{})
-	for _, elem := range set2 {
-		hashSet2[strings.ToLower(elem)] = struct{}{}
-	}
-	var diff []string
-	for _, elem := range set1 {
-		if _, inSet2 := hashSet2[strings.ToLower(elem)]; !inSet2 {
-			diff = append(diff, elem)
-		}
-	}
-	return diff
 }
 
 func getValueByName(obj interface{}, name string) string {
