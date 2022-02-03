@@ -79,8 +79,6 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts:     environments,
-			Organization: org,
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
