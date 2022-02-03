@@ -646,7 +646,7 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					OS:     "darwin",
+					OS: "darwin",
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
@@ -678,7 +678,7 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					OS:     "windows",
+					OS: "windows",
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{

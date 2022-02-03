@@ -5,10 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/antihax/optional"
 	"io"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/antihax/optional"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"

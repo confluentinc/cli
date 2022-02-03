@@ -3,8 +3,9 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"

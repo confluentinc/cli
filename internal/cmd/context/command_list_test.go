@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 func TestNewRow_Current(t *testing.T) {

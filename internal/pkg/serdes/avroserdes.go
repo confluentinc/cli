@@ -1,8 +1,9 @@
 package serdes
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"io/ioutil"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/linkedin/goavro/v2"
 )
