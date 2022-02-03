@@ -148,7 +148,7 @@ func (c *command) catchServiceAccountNotValidError(err error, clusterId, service
 		if err2 != nil {
 			return err
 		}
-	
+
 		if serviceAccountId != auditLogServiceAccount.ResourceId {
 			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.ResourceId)
 		}

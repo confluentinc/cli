@@ -3,13 +3,15 @@ package ksql
 import (
 	"context"
 	"fmt"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
