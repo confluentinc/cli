@@ -202,8 +202,8 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 			pathKey := GenerateConfigKey(configFilePath, key)
 			cipher := secureConfigProps.GetString(pathKey, "")
 			if cipher != "" {
-				data, nonce, algo := ParseCipherValue(cipher)
-				plainSecret, err := engine.Decrypt(data, nonce, algo, dataKey)
+				data, iv, algo := ParseCipherValue(cipher)
+				plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 				if err != nil {
 					log.CliLogger.Debug(err)
 					return errors.Errorf(errors.DecryptConfigErrorMsg, key)
@@ -280,16 +280,16 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 			return err
 		}
 		if encrypted && !strings.HasPrefix(key, MetadataPrefix) {
-			data, nonce, algo := ParseCipherValue(value)
-			plainSecret, err := engine.Decrypt(data, nonce, algo, dataKey)
+			data, iv, algo := ParseCipherValue(value)
+			plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 			if err != nil {
 				return err
 			}
-			cipher, nonce, err := engine.Encrypt(plainSecret, newDataKey)
+			cipher, iv, err := engine.Encrypt(plainSecret, newDataKey)
 			if err != nil {
 				return err
 			}
-			formattedCipher := c.formatCipherValue(cipher, nonce)
+			formattedCipher := c.formatCipherValue(cipher, iv)
 			_, _, err = secureConfigProps.Set(key, formattedCipher)
 			if err != nil {
 				return err
@@ -375,11 +375,11 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	}
 
 	// Wrap DEK using the new MEK
-	wrappedDataKey, nonce, err := engine.WrapDataKey(dataKey, newMasterKey)
+	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, newMasterKey)
 	if err != nil {
 		return "", err
 	}
-	newEncodedDataKey := c.formatCipherValue(wrappedDataKey, nonce)
+	newEncodedDataKey := c.formatCipherValue(wrappedDataKey, iv)
 
 	secureConfigProps, err := utils.LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
@@ -538,12 +538,12 @@ func (c *PasswordProtectionSuite) removePropertiesConfig(configFilePath string, 
 }
 
 func (c *PasswordProtectionSuite) wrapDataKey(engine EncryptionEngine, dataKey []byte, masterKey string) (string, error) {
-	wrappedDataKey, nonce, err := engine.WrapDataKey(dataKey, masterKey)
+	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, masterKey)
 	if err != nil {
 		return "", err
 	}
 
-	encodedDataKey := c.formatCipherValue(wrappedDataKey, nonce)
+	encodedDataKey := c.formatCipherValue(wrappedDataKey, iv)
 
 	return encodedDataKey, nil
 }
@@ -573,8 +573,8 @@ func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) (bool, erro
 	return passwordRegex.MatchString(config), nil
 }
 
-func (c *PasswordProtectionSuite) formatCipherValue(cipher string, nonce string) string {
-	return "ENC[" + MetadataEncAlgorithm + ",data:" + cipher + ",nonce:" + nonce + ",type:str]"
+func (c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
+	return "ENC[" + MetadataEncAlgorithm + ",data:" + cipher + ",iv:" + iv + ",type:str]"
 }
 
 func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
@@ -586,8 +586,8 @@ func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEng
 	if err != nil {
 		return []byte{}, err
 	}
-	data, nonce, algo := ParseCipherValue(key)
-	return engine.UnwrapDataKey(data, nonce, algo, masterKey)
+	data, iv, algo := ParseCipherValue(key)
+	return engine.UnwrapDataKey(data, iv, algo, masterKey)
 }
 
 func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath string, masterKey string) (*properties.Properties, *Cipher, error) {
@@ -691,12 +691,12 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 			if err != nil {
 				return err
 			}
-			cipher, nonce, err := engine.Encrypt(value, dataKey)
+			cipher, iv, err := engine.Encrypt(value, dataKey)
 
 			if err != nil {
 				return err
 			}
-			formattedCipher := c.formatCipherValue(cipher, nonce)
+			formattedCipher := c.formatCipherValue(cipher, iv)
 			_, _, err = secureConfigProps.Set(pathKey, formattedCipher)
 			if err != nil {
 				return err

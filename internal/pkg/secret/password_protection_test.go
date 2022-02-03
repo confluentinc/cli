@@ -447,8 +447,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,nonce:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,nonce:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -474,8 +474,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,nonce:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:asdsdsssddsoooofsccqtsaEmDlA==,nonce:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
+config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:asdsdsssddsoooofsccqtsaEmDlA==,iv:POkDq4Pd8VXpEXnw,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -502,8 +502,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:svYxySZYksI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,nonce:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,nonce:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:svYxySZYksI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -530,8 +530,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,nonce:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:6aMBA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+KviA6w=,nonce:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
+config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:6aMBA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+KviA6w=,iv:POkDq4Pd8VXpEXnw,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -558,8 +558,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,nonce:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+=,nonce:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
+config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+=,iv:POkDq4Pd8VXpEXnw,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -586,8 +586,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,nonce:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+KviA6w=,nonce:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
+config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+KviA6w=,iv:POkDq4Pd8VXpEXnw,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",

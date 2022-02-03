@@ -7,22 +7,19 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
-	"io"
-
-	"golang.org/x/crypto/pbkdf2"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 // Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
 	Encrypt(plainText string, key []byte) (string, string, error)
-	Decrypt(cipher string, nonce string, algo string, key []byte) (string, error)
+	Decrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
 	GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
-	UnwrapDataKey(dataKey string, nonce string, algo string, masterKey string) ([]byte, error)
+	UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
 }
 
 // EncryptEngineImpl is the EncryptionEngine implementation
@@ -93,13 +90,13 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
-func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, nonce string, _ string, masterKey string) ([]byte, error) {
+func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, _ string, masterKey string) ([]byte, error) {
 	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	dataKeyEnc, err := c.Decrypt(dataKey, nonce, c.Cipher.EncryptionAlgo, masterKeyByte)
+	dataKeyEnc, err := c.Decrypt(dataKey, iv, c.Cipher.EncryptionAlgo, masterKeyByte)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -107,7 +104,7 @@ func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, nonce string, _ string
 	return base64.StdEncoding.DecodeString(dataKeyEnc)
 }
 
-func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, nonceStr string, err error) {
+func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, ivStr string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -126,12 +123,15 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 		return "", "", err
 	}
 
-	nonceBytes := make([]byte, 12)
-	if _, err := io.ReadFull(rand.Reader, nonceBytes); err != nil {
-		panic(err.Error())
+	ivStr, err = c.generateRandomString(12)
+	if err != nil {
+		return "", "", err
 	}
 
-	nonceStr = base64.StdEncoding.EncodeToString(nonceBytes)
+	ivBytes, err := base64.StdEncoding.DecodeString(ivStr)
+	if err != nil {
+		return "", "", err
+	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
@@ -141,21 +141,21 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 	content := []byte(plainText)
 	content = c.pKCS5Padding(content, block.BlockSize())
 
-	ciphertext := aesgcm.Seal(nil, nonceBytes, content, nil)
+	ciphertext := aesgcm.Seal(nil, ivBytes, content, nil)
 	result := base64.StdEncoding.EncodeToString(ciphertext)
-	return result, nonceStr, nil
+	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) Decrypt(cipher string, nonce string, _ string, key []byte) (string, error) {
+func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, _ string, key []byte) (string, error) {
 	cipherBytes, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
 		return "", err
 	}
-	nonceBytes, err := base64.StdEncoding.DecodeString(nonce)
+	ivBytes, err := base64.StdEncoding.DecodeString(iv)
 	if err != nil {
 		return "", err
 	}
-	plainText, err := c.decrypt(cipherBytes, key, nonceBytes)
+	plainText, err := c.decrypt(cipherBytes, key, ivBytes)
 	if err != nil {
 		return "", err
 	}
@@ -168,7 +168,7 @@ func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase string, salt string)
 	return key, nil
 }
 
-func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, nonce []byte) (plain []byte, err error) {
+func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -192,7 +192,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, nonce []byte) (pla
 		panic(err.Error())
 	}
 
-	decrypted, err := aesgcm.Open(nil, nonce, crypt, nil)
+	decrypted, err := aesgcm.Open(nil, iv, crypt, nil)
 	if err != nil {
 		panic(err.Error())
 	}

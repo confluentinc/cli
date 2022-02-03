@@ -25,7 +25,7 @@ const (
 const (
 	MetadataEncAlgorithm = "AES/GCM/PKCS5Padding"
 	DataPattern          = "data\\:(.*?)\\,"
-	NoncePattern         = "nonce\\:(.*?)\\,"
+	IVPattern            = "iv\\:(.*?)\\,"
 	EncPattern           = "ENC\\[(.*?)\\,"
 	PasswordPattern      = "^\\$\\{(.*?):((.*?):)?(.*?)\\}$"
 	CipherPattern        = "ENC\\[(.*?)\\]"

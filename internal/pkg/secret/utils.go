@@ -19,7 +19,7 @@ import (
 )
 
 var dataRegex = regexp.MustCompile(DataPattern)
-var nonceRegex = regexp.MustCompile(NoncePattern)
+var ivRegex = regexp.MustCompile(IVPattern)
 var algoRegex = regexp.MustCompile(EncPattern)
 var passwordRegex = regexp.MustCompile(PasswordPattern)
 var cipherRegex = regexp.MustCompile(CipherPattern)
@@ -30,9 +30,9 @@ func GenerateConfigValue(key string, path string) string {
 
 func ParseCipherValue(cipher string) (string, string, string) {
 	data := findMatchTrim(cipher, dataRegex, "data:", ",")
-	nonce := findMatchTrim(cipher, nonceRegex, "nonce:", ",")
+	iv := findMatchTrim(cipher, ivRegex, "iv:", ",")
 	algo := findMatchTrim(cipher, algoRegex, "ENC[", ",")
-	return data, nonce, algo
+	return data, iv, algo
 }
 
 func findMatchTrim(original string, re *regexp.Regexp, prefix string, suffix string) string {
