@@ -42,7 +42,6 @@ func (c *command) newListCmd() *cobra.Command {
 	cmd.Flags().String("kafka-cluster", "", "filter the result by kafka cluster id")
 	cmd.Flags().String("environment", "", "filter the result by environment id")
 	cmd.Flags().String("network", "", "filter the result by network id")
-	cmd.Flags().SortFlags = false
 	pcmd.AddOutputFlag(cmd)
 	return cmd
 }
