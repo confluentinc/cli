@@ -32,7 +32,7 @@ var (
 
 func (c *command) newListCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <quota-scope> [--quota-code <quota-code> --kafka-cluster <kafka-cluster-id> --environment <environment-id> --network <network-id>]",
+		Use:   "list <quota-scope>",
 		Short: "List Confluent Cloud service quota limits by a scope.",
 		Long:  "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account)",
 		Args:  cobra.ExactArgs(1),
