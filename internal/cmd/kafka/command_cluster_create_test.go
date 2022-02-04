@@ -13,6 +13,6 @@ func TestGetKafkaProvisionEstimate_Basic(t *testing.T) {
 }
 
 func TestGetKafkaProvisionEstimate_Dedicated(t *testing.T) {
-	expected := "It may take up to 1 hour for the Kafka cluster to be ready. The admin will receive an email once the dedicated cluster is provisioned."
+	expected := "It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned."
 	require.Equal(t, expected, getKafkaProvisionEstimate(productv1.Sku_DEDICATED))
 }

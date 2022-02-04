@@ -237,7 +237,7 @@ Identity:
   id-xyz
 
 
-Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The admin will receive an email once the dedicated cluster is provisioned.
+Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
 +---------------+---------------+
 | ID            | lkc-xyz       |
 | Name          | gcp-byok-test |
