@@ -1,0 +1,9 @@
++--------------+--------------------------+
+| Id           | lksqlc-ksql5             |
+| Name         | account ksql             |
+| Topic Prefix | pksqlc-abcde             |
+| Kafka        | lkc-qwert                |
+| Storage      |                      101 |
+| Endpoint     | SASL_SSL://ksql-endpoint |
+| Status       | PROVISIONING             |
++--------------+--------------------------+

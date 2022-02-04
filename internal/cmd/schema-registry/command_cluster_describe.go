@@ -2,9 +2,10 @@ package schemaregistry
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"math"
 	"strconv"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"

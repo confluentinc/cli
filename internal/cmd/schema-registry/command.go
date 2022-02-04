@@ -3,8 +3,9 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

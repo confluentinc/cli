@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-hclog"
-
 )
 
 // Logger is the standard logger for the Confluent SDK.
