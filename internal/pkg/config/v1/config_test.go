@@ -136,7 +136,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				SrCredentials:          nil,
 			},
 		},
-		State:  state,
+		State: state,
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -160,7 +160,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				SrCredentials:          nil,
 			},
 		},
-		State:  twoEnvState,
+		State: twoEnvState,
 	}
 	context := "onprem"
 	if isCloud {

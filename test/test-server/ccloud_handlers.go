@@ -72,14 +72,14 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 		}
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
+		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
 			User: &orgv1.User{
 				Id:         23,
 				Email:      "cody@confluent.io",
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts:     environments,
+			Accounts: environments,
 			Organization: org,
 		})
 		require.NoError(t, err)

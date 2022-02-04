@@ -2,9 +2,10 @@
 package auth
 
 import (
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient

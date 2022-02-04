@@ -65,13 +65,13 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"Must be used with --source-api-key.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-	cmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
-	cmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
 
 	if c.cfg.IsOnPremLogin() {
 		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	}
 
+	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
+	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -102,16 +102,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
-	if err != nil {
-		return err
-	}
-
-	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
-	if err != nil {
-		return err
-	}
-
-	_, err = cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
@@ -170,11 +160,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	msg := errors.CreatedLinkMsg
-	if validateOnly {
-		msg = errors.DryRunPrefix + msg
-	}
-
-	utils.Printf(cmd, msg, linkName)
+	utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
 	return nil
 }

@@ -1,11 +1,12 @@
 package serdes
 
 import (
+	"path/filepath"
+
 	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	parse "github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
-	"path/filepath"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
