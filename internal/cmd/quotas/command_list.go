@@ -31,19 +31,20 @@ var (
 )
 
 func (c *command) newListCmd() *cobra.Command {
-	listCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "list <quota-scope> [--quota-code <quota-code> --kafka-cluster <kafka-cluster-id> --environment <environment-id> --network <network-id>]",
-		Short: "List Confluent Cloud service quota limits by quota scopes. (organization, environment, network, kafka_cluster, service_account or user_account)",
+		Short: "List Confluent Cloud service quota limits by a scope.",
+		Long:  "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account)",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
-	listCmd.Flags().StringP("quota-code", "Q", "", "filter the result by quota code")
-	listCmd.Flags().StringP("kafka-cluster", "K", "", "filter the result by kafka cluster id")
-	listCmd.Flags().StringP("environment", "E", "", "filter the result by environment id")
-	listCmd.Flags().StringP("network", "N", "", "filter the result by network id")
-	listCmd.Flags().SortFlags = false
-	pcmd.AddOutputFlag(listCmd)
-	return listCmd
+	cmd.Flags().String("quota-code", "", "filter the result by quota code")
+	cmd.Flags().String("kafka-cluster", "", "filter the result by kafka cluster id")
+	cmd.Flags().String("environment", "", "filter the result by environment id")
+	cmd.Flags().String("network", "", "filter the result by network id")
+	cmd.Flags().SortFlags = false
+	pcmd.AddOutputFlag(cmd)
+	return cmd
 }
 
 func (c *command) createContext() context.Context {
@@ -170,8 +171,4 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputWriter.Out()
-}
-
-func (c *command) Cmd() *cobra.Command {
-	return c.Command
 }

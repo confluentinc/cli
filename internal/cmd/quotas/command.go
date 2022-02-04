@@ -12,9 +12,9 @@ type command struct {
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "applied-quotas",
+		Use:         "applied-quota",
 		Aliases:     []string{"quota"},
-		Short:       "Look up ccloud service quotas limits",
+		Short:       "Look up Confluent Cloud service quotas limits",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
