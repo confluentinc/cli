@@ -12,12 +12,12 @@ require (
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
 	github.com/confluentinc/cc-structs/kafka/core v0.753.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.945.0
-	github.com/confluentinc/cc-structs/kafka/org v0.945.0
+	github.com/confluentinc/cc-structs/kafka/org v0.1056.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.753.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.911.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.95
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0

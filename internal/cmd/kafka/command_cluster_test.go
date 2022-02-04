@@ -237,23 +237,23 @@ Identity:
   id-xyz
 
 
-Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 5 minutes for the Kafka cluster to be ready.
-+--------------+---------------+
-| Id           | lkc-xyz       |
-| Name         | gcp-byok-test |
-| Type         | DEDICATED     |
-| Ingress      |             0 |
-| Egress       |             0 |
-| Storage      |             0 |
-| Provider     | gcp           |
-| Availability | single-zone   |
-| Region       | us-central1   |
-| Status       | PROVISIONING  |
-| Endpoint     |               |
-| ApiEndpoint  |               |
-| RestEndpoint |               |
-| ClusterSize  |             0 |
-+--------------+---------------+
+Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
++---------------+---------------+
+| ID            | lkc-xyz       |
+| Name          | gcp-byok-test |
+| Type          | DEDICATED     |
+| Ingress       |             0 |
+| Egress        |             0 |
+| Storage       |             0 |
+| Provider      | gcp           |
+| Availability  | single-zone   |
+| Region        | us-central1   |
+| Status        | PROVISIONING  |
+| Endpoint      |               |
+| API Endpoint  |               |
+| REST Endpoint |               |
+| Cluster Size  |             0 |
++---------------+---------------+
 `)
 	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
 	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)

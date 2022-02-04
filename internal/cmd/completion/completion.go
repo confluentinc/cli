@@ -101,7 +101,7 @@ func completion(root *cobra.Command, shell string) (string, error) {
 		err := root.GenZshCompletion(buf)
 		return "#compdef confluent\n" + strings.TrimPrefix(buf.String(), "#"), err
 	} else {
-		err := root.GenBashCompletion(buf)
+		err := root.GenBashCompletionV2(buf, true)
 		return buf.String(), err
 	}
 }
