@@ -96,49 +96,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	//filter by quota id
-	filtered := []quotasv2.QuotasV2AppliedQuota{}
-	if quotaCode != "" {
-		for _, qt := range qtls {
-			if *qt.Id == quotaCode {
-				filtered = append(filtered, qt)
-			}
-		}
-		qtls = filtered
-	}
-
-	//filter by environment id
-	filtered = []quotasv2.QuotasV2AppliedQuota{}
-	if environment != "" {
-		for _, qt := range qtls {
-			if qt.Environment != nil && qt.Environment.Id == environment {
-				filtered = append(filtered, qt)
-			}
-		}
-		qtls = filtered
-	}
-
-	//filter by cluster id
-	filtered = []quotasv2.QuotasV2AppliedQuota{}
-	if kafkaCluster != "" {
-		for _, qt := range qtls {
-			if qt.KafkaCluster != nil && qt.KafkaCluster.Id == kafkaCluster {
-				filtered = append(filtered, qt)
-			}
-		}
-		qtls = filtered
-	}
-
-	//filter by network id
-	filtered = []quotasv2.QuotasV2AppliedQuota{}
-	if network != "" {
-		for _, qt := range qtls {
-			if qt.Network != nil && qt.Network.Id == network {
-				filtered = append(filtered, qt)
-			}
-		}
-		qtls = filtered
-	}
+	qtls = filterQuotaResults(qtls, quotaCode, environment, network, kafkaCluster)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
@@ -171,4 +129,52 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputWriter.Out()
+}
+
+func filterQuotaResults(quotaList []quotasv2.QuotasV2AppliedQuota, quotaCode string, environment string, network string, kafkaCluster string) []quotasv2.QuotasV2AppliedQuota {
+	//filter by quota id
+	filtered := []quotasv2.QuotasV2AppliedQuota{}
+	if quotaCode != "" {
+		for _, qt := range quotaList {
+			if *qt.Id == quotaCode {
+				filtered = append(filtered, qt)
+			}
+		}
+		quotaList = filtered
+	}
+
+	//filter by environment id
+	filtered = []quotasv2.QuotasV2AppliedQuota{}
+	if environment != "" {
+		for _, qt := range quotaList {
+			if qt.Environment != nil && qt.Environment.Id == environment {
+				filtered = append(filtered, qt)
+			}
+		}
+		quotaList = filtered
+	}
+
+	//filter by cluster id
+	filtered = []quotasv2.QuotasV2AppliedQuota{}
+	if kafkaCluster != "" {
+		for _, qt := range quotaList {
+			if qt.KafkaCluster != nil && qt.KafkaCluster.Id == kafkaCluster {
+				filtered = append(filtered, qt)
+			}
+		}
+		quotaList = filtered
+	}
+
+	//filter by network id
+	filtered = []quotasv2.QuotasV2AppliedQuota{}
+	if network != "" {
+		for _, qt := range quotaList {
+			if qt.Network != nil && qt.Network.Id == network {
+				filtered = append(filtered, qt)
+			}
+		}
+		quotaList = filtered
+	}
+
+	return quotaList
 }

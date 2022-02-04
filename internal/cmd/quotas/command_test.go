@@ -107,3 +107,97 @@ func (suite *QuotasTestSuite) TestListQuotas() {
 	req.Nil(err)
 
 }
+
+func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
+	t := suite.T()
+	quota1 := quotasv2.QuotasV2AppliedQuota{
+		Id:           stringToPtr("quota_a"),
+		Scope:        stringToPtr("kafka_cluster"),
+		DisplayName:  stringToPtr("Quota A"),
+		Organization: quotasv2.NewObjectReference("org-123", "", ""),
+		KafkaCluster: quotasv2.NewObjectReference("lkc-1", "", ""),
+		Environment:  quotasv2.NewObjectReference("env-1", "", ""),
+		Network:      quotasv2.NewObjectReference("n-1", "", ""),
+		AppliedLimit: int32ToPtr(15),
+	}
+
+	quota2 := quotasv2.QuotasV2AppliedQuota{
+		Id:           stringToPtr("quota_a"),
+		Scope:        stringToPtr("kafka_cluster"),
+		DisplayName:  stringToPtr("Qutoa A"),
+		Organization: quotasv2.NewObjectReference("org-123", "", ""),
+		KafkaCluster: quotasv2.NewObjectReference("lkc-2", "", ""),
+		Environment:  quotasv2.NewObjectReference("env-2", "", ""),
+		AppliedLimit: int32ToPtr(16),
+	}
+
+	quota3 := quotasv2.QuotasV2AppliedQuota{
+		Id:           stringToPtr("quota_b"),
+		Scope:        stringToPtr("kafka_cluster"),
+		DisplayName:  stringToPtr("Quota B"),
+		Organization: quotasv2.NewObjectReference("org-123", "", ""),
+		KafkaCluster: quotasv2.NewObjectReference("lkc-1", "", ""),
+		Environment:  quotasv2.NewObjectReference("env-1", "", ""),
+		AppliedLimit: int32ToPtr(17),
+	}
+
+	quota4 := quotasv2.QuotasV2AppliedQuota{
+		Id:           stringToPtr("quota_b"),
+		Scope:        stringToPtr("kafka_cluster"),
+		DisplayName:  stringToPtr("Quota B"),
+		Organization: quotasv2.NewObjectReference("org-123", "", ""),
+		KafkaCluster: quotasv2.NewObjectReference("lkc-2", "", ""),
+		Environment:  quotasv2.NewObjectReference("env-2", "", ""),
+		AppliedLimit: int32ToPtr(18),
+	}
+
+	quotaList := []quotasv2.QuotasV2AppliedQuota{quota1, quota2, quota3, quota4}
+
+	type test struct {
+		name               string
+		filterQuotaCode    string
+		filterEnvironment  string
+		filterNetwork      string
+		filterKafkaCluster string
+		originData         []quotasv2.QuotasV2AppliedQuota
+		expectedData       []quotasv2.QuotasV2AppliedQuota
+	}
+
+	tests := []*test{
+		{
+			name:         "No filter",
+			originData:   quotaList,
+			expectedData: quotaList,
+		},
+		{
+			name:            "Filter by quota code",
+			filterQuotaCode: "quota_a",
+			originData:      quotaList,
+			expectedData:    []quotasv2.QuotasV2AppliedQuota{quota1, quota2},
+		},
+		{
+			name:              "Filter by environment",
+			filterEnvironment: "env-1",
+			originData:        quotaList,
+			expectedData:      []quotasv2.QuotasV2AppliedQuota{quota1, quota3},
+		},
+		{
+			name:               "Filter by kafka cluster",
+			filterKafkaCluster: "lkc-1",
+			originData:         quotaList,
+			expectedData:       []quotasv2.QuotasV2AppliedQuota{quota1, quota3},
+		},
+		{
+			name:          "Filter by network",
+			filterNetwork: "n-1",
+			originData:    quotaList,
+			expectedData:  []quotasv2.QuotasV2AppliedQuota{quota1},
+		},
+	}
+
+	for _, test := range tests {
+		filterResult := filterQuotaResults(test.originData, test.filterQuotaCode, test.filterEnvironment, test.filterNetwork, test.filterKafkaCluster)
+		require.Equal(t, test.expectedData, filterResult)
+	}
+
+}
