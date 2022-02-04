@@ -12,7 +12,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -196,7 +195,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 

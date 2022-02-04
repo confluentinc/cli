@@ -1,5 +1,5 @@
---- cli/Makefile	2022-01-21 01:15:51.000000000 -0800
-+++ debian/Makefile	2022-01-14 15:17:29.000000000 -0800
+--- cli/Makefile	2022-02-04 15:01:25.000000000 -0800
++++ debian/Makefile	2022-01-11 19:05:28.000000000 -0800
 @@ -1,268 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -221,7 +221,7 @@
  
 -.PHONY: lint-go
 -lint-go:
--	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+-	@golangci-lint run --timeout=10m
 -	@echo "✅  golangci-lint"
 -
 -.PHONY: lint-cli
