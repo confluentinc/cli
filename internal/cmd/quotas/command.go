@@ -20,7 +20,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	c.AddCommand(c.newListCmd())
+	c.AddCommand(c.newListCommand())
 
 	return c.Command
 }

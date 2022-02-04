@@ -30,7 +30,7 @@ var (
 	listStructuredLabels = []string{"quota_code", "display_name", "scope", "applied_limit", "organization", "environment", "network", "kafka_cluster", "user"}
 )
 
-func (c *command) newListCmd() *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list <quota-scope>",
 		Short: "List Confluent Cloud service quota limits by a scope.",
@@ -70,59 +70,61 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	firstTime := true
 	token := ""
-	qtls := []quotasv2.QuotasV2AppliedQuota{}
+	quotaList := []quotasv2.QuotasV2AppliedQuota{}
 
 	// Since we use paginated results, get all results by iterating the list.
-	for token != "" || firstTime {
-		firstTime = false
+	for {
 		req := c.QuotasClient.AppliedQuotaQuotasV2Api.ListQuotasV2AppliedQuota(c.createContext()).
 			Scope(quotaScope).PageToken(token)
 		lsResult, _, err := req.Execute()
 		if err != nil {
 			return err
 		}
-		qtls = append(qtls, lsResult.Data...)
+		quotaList = append(quotaList, lsResult.Data...)
 
 		token = ""
 		if md, ok := lsResult.GetMetadataOk(); ok && md.GetNext() != "" {
-			url, err := url.Parse(*lsResult.GetMetadata().Next.Get())
+			url, err := url.Parse(*md.Next.Get())
 			if err != nil {
 				return err
 			}
 			token = url.Query().Get("page_token")
 		}
+
+		if token == "" {
+			break
+		}
 	}
 
-	qtls = filterQuotaResults(qtls, quotaCode, environment, network, kafkaCluster)
+	quotaList = filterQuotaResults(quotaList, quotaCode, environment, network, kafkaCluster)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return err
 	}
 
-	for _, qt := range qtls {
+	for _, quota := range quotaList {
 		outQt := &quotaLimit{
-			QuotaCode:    *qt.Id,
-			DisplayName:  *qt.DisplayName,
-			Scope:        *qt.Scope,
-			AppliedLimit: *qt.AppliedLimit,
+			QuotaCode:    *quota.Id,
+			DisplayName:  *quota.DisplayName,
+			Scope:        *quota.Scope,
+			AppliedLimit: *quota.AppliedLimit,
 		}
-		if qt.Organization != nil {
-			outQt.Organization = qt.Organization.Id
+		if quota.Organization != nil {
+			outQt.Organization = quota.Organization.Id
 		}
-		if qt.Environment != nil {
-			outQt.Environment = qt.Environment.Id
+		if quota.Environment != nil {
+			outQt.Environment = quota.Environment.Id
 		}
-		if qt.Network != nil {
-			outQt.Network = qt.Network.Id
+		if quota.Network != nil {
+			outQt.Network = quota.Network.Id
 		}
-		if qt.KafkaCluster != nil {
-			outQt.KafkaCluster = qt.KafkaCluster.Id
+		if quota.KafkaCluster != nil {
+			outQt.KafkaCluster = quota.KafkaCluster.Id
 		}
-		if qt.User != nil {
-			outQt.User = qt.User.Id
+		if quota.User != nil {
+			outQt.User = quota.User.Id
 		}
 		outputWriter.AddElement(outQt)
 	}
