@@ -14,12 +14,12 @@ import (
 )
 
 const (
-	apiKeyFlagName                      = "source-api-key"
-	apiSecretFlagName                   = "source-api-secret"
-	noValidateFlagName                  = "no-validate"
-	destinationBootstrapServersFlagName = "destination-bootstrap-server"
-	sourceBootstrapServersFlagName      = "source-bootstrap-server"
-	sourceClusterIdFlagName             = "source-cluster-id"
+	apiKeyFlagName                     = "source-api-key"
+	apiSecretFlagName                  = "source-api-secret"
+	noValidateFlagName                 = "no-validate"
+	destinationBootstrapServerFlagName = "destination-bootstrap-server"
+	sourceBootstrapServerFlagName      = "source-bootstrap-server"
+	sourceClusterIdFlagName            = "source-cluster-id"
 )
 
 const (
@@ -47,9 +47,9 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	}
 
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
+		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster.")
 	} else {
-		cmd.Flags().String(destinationBootstrapServersFlagName, "", "Bootstrap-server address of the destination cluster.")
+		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster.")
 	}
 
 	cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
@@ -65,21 +65,21 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"Must be used with --source-api-key.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
+	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
 
 	if c.cfg.IsOnPremLogin() {
 		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	}
 
-	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
-	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	if c.cfg.IsCloudLogin() {
-		_ = cmd.MarkFlagRequired(sourceBootstrapServersFlagName)
+		_ = cmd.MarkFlagRequired(sourceBootstrapServerFlagName)
 	} else {
-		_ = cmd.MarkFlagRequired(destinationBootstrapServersFlagName)
+		_ = cmd.MarkFlagRequired(destinationBootstrapServerFlagName)
 	}
 
 	_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
@@ -90,12 +90,12 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	var bootstrapServers string
+	var bootstrapServer string
 	var err error
 	if c.cfg.IsCloudLogin() {
-		bootstrapServers, err = cmd.Flags().GetString(sourceBootstrapServersFlagName)
+		bootstrapServer, err = cmd.Flags().GetString(sourceBootstrapServerFlagName)
 	} else {
-		bootstrapServers, err = cmd.Flags().GetString(destinationBootstrapServersFlagName)
+		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
 	}
 	if err != nil {
 		return err
@@ -116,12 +116,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Two optional flags: --source-api-key and --source-api-secret
-	// 1. if I have neither flag set, then no change in behavior – use config-file as normal
-	//
-	// 2. if I have only 1 flag set, but not the other, then throw an error
-	//
-	// 3. if I have both set, then the CLI should add these configs on top of configs passed in config-file
 	apiKey, err := cmd.Flags().GetString(apiKeyFlagName)
 	if err != nil {
 		return err
@@ -132,17 +126,15 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Overriding the security props by the flag value
+	configMap[bootstrapServersPropertyName] = bootstrapServer
+
 	if apiKey != "" && apiSecret != "" {
 		configMap[securityProtocolPropertyName] = "SASL_SSL"
 		configMap[saslMechanismPropertyName] = "PLAIN"
 		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, apiKey, apiSecret)
-	} else if apiKey != "" {
+	} else if apiKey != "" || apiSecret != "" {
 		return errors.New("--source-api-key and --source-api-secret must be supplied together")
 	}
-
-	// Overriding the bootstrap server prop by the flag value
-	configMap[bootstrapServersPropertyName] = bootstrapServers
 
 	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
