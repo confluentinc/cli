@@ -196,8 +196,10 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 	}
 
 	for _, test := range tests {
-		filterResult := filterQuotaResults(test.originData, test.filterQuotaCode, test.filterEnvironment, test.filterNetwork, test.filterKafkaCluster)
-		require.Equal(t, test.expectedData, filterResult)
+		t.Run(test.name, func(t *testing.T) {
+			filterResult := filterQuotaResults(test.originData, test.filterQuotaCode, test.filterEnvironment, test.filterNetwork, test.filterKafkaCluster)
+			require.Equal(t, test.expectedData, filterResult)
+		})
 	}
 
 }
