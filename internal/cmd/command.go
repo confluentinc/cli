@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/confluentinc/cli/internal/cmd/quotas"
-
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/jonboulle/clockwork"
@@ -29,6 +27,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
+	"github.com/confluentinc/cli/internal/cmd/quotas"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/update"
