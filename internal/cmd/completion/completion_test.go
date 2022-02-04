@@ -13,6 +13,6 @@ func TestCompletion(t *testing.T) {
 		cmd := new(cobra.Command)
 		out, err := completion(cmd, shell)
 		require.NoError(t, err)
-		require.Contains(t, out, fmt.Sprintf("# %s completion for", shell))
+		require.Contains(t, out, fmt.Sprintf("# %s completion", shell))
 	}
 }
