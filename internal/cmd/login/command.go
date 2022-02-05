@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -22,7 +21,6 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	analyticsClient          analytics.Client
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
 	netrcHandler             netrc.NetrcHandler
@@ -32,7 +30,7 @@ type Command struct {
 	isTest                   bool
 }
 
-func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -53,7 +51,6 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 
 	c := &Command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		analyticsClient:          analyticsClient,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
