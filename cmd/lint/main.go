@@ -39,7 +39,7 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagKebabCase,
 		linter.ExcludeFlag(
 			"producer.config",
-			"consumer.config"
+			"consumer.config",
 		),
 	),
 	linter.RequireFlagRealWords('-'),
