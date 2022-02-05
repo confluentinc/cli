@@ -27,14 +27,14 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		{
 			name:        "error if no active kafka",
 			args:        "kafka topic create integ",
-			fixture:     "err-no-kafka.golden",
+			fixture:     "login/err-no-kafka.golden",
 			wantErrCode: 1,
 			login:       "default",
 		},
 		{
 			name:        "error if topic already exists",
 			args:        "kafka topic create topic-exist",
-			fixture:     "topic-exists.golden",
+			fixture:     "login/topic-exists.golden",
 			wantErrCode: 1,
 			login:       "default",
 			useKafka:    "lkc-create-topic",
@@ -44,7 +44,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		{
 			name:        "error if no api key used",
 			args:        "kafka topic produce integ",
-			fixture:     "err-no-api-key.golden",
+			fixture:     "login/err-no-api-key.golden",
 			wantErrCode: 1,
 			login:       "default",
 			useKafka:    "lkc-abc123",
@@ -52,7 +52,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		{
 			name:        "error if deleting non-existent api-key",
 			args:        "api-key delete UNKNOWN",
-			fixture:     "delete-unknown-key.golden",
+			fixture:     "login/delete-unknown-key.golden",
 			wantErrCode: 1,
 			login:       "default",
 			useKafka:    "lkc-abc123",
@@ -61,7 +61,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		{
 			name:        "error if using unknown kafka",
 			args:        "kafka cluster use lkc-unknown",
-			fixture:     "err-use-unknown-kafka.golden",
+			fixture:     "login/err-use-unknown-kafka.golden",
 			wantErrCode: 1,
 			login:       "default",
 		},
@@ -81,13 +81,13 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	}{
 		{
 			true,
-			"netrc-save-ccloud-username-password.golden",
+			"login/netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
 			testBin,
 		},
 		{
 			false,
-			"netrc-save-mds-username-password.golden",
+			"login/netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
 			testBin,
 		},
@@ -98,7 +98,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		s.T().Fatalf("problems recovering caller information")
 	}
 
-	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc")
+	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc")
 	for _, tt := range tests {
 		// store existing credentials in netrc to check that they are not corrupted
 		originalNetrc, err := ioutil.ReadFile(netrcInput)
@@ -149,16 +149,16 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		bin      string
 	}{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc-old-password-ccloud"),
 			true,
-			"netrc-save-ccloud-username-password.golden",
+			"login/netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc-old-password-mds"),
 			false,
-			"netrc-save-mds-username-password.golden",
+			"login/netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
 			testBin,
 		},
@@ -204,7 +204,7 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 		{
 			name:        "invalid URL provided",
 			args:        "login --url http:///test",
-			fixture:     "invalid-login-url.golden",
+			fixture:     "login/invalid-login-url.golden",
 			wantErrCode: 1,
 		},
 	}
@@ -219,7 +219,7 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 	resetConfiguration(s.T())
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/test.crt", s.TestBackend.GetMdsUrl())},
+		{args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},
 		{args: "context list -o yaml", fixture: "login/1.golden", regex: true},
 	}
 

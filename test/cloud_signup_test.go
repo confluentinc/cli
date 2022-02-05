@@ -11,12 +11,12 @@ func (s *CLITestSuite) TestCloudSignup() {
 		{
 			args:        "cloud-signup --url=" + s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nUS\ny\nConfluent\nPa$$word12\nn\ny\nN\nY\nn\ny\n"))},
-			fixture:     "signup/signup-reprompt-on-no-success.golden",
+			fixture:     "cloud-signup/reprompt-on-no-success.golden",
 		},
 		{
 			args:        "cloud-signup --url=" + s.TestBackend.GetCloudUrl(),
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nUS\ny\nConfluent\nPa$$word12\ny\ny\ny\n"))},
-			fixture:     "signup/signup-success.golden",
+			fixture:     "cloud-signup/success.golden",
 		},
 	}
 

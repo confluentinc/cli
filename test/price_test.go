@@ -1,8 +1,6 @@
 package test
 
-import (
-	"fmt"
-)
+import "fmt"
 
 const (
 	exampleCloud  = "aws"
