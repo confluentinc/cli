@@ -71,7 +71,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	log.CliLogger.Debugf(fmt.Sprintf("Created consumer group: %s", consumerGroup))
+	log.CliLogger.Debugf("Created consumer group: %s", consumerGroup)
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context
