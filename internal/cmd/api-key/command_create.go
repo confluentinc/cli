@@ -8,7 +8,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -109,8 +108,6 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, userKey.UserResourceId)
-	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, userKey.Key)
 	return nil
 }
 

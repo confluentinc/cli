@@ -190,7 +190,7 @@ endif
 
 .PHONY: lint-go
 lint-go:
-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+	@golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli

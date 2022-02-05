@@ -104,7 +104,6 @@ func getPreRunBase() *pcmd.PreRun {
 				return &mds.APIClient{}, nil
 			},
 		},
-		Analytics:               cliMock.NewDummyAnalyticsMock(),
 		LoginCredentialsManager: mockLoginCredentialsManager,
 		JWTValidator:            pcmd.NewJWTValidator(),
 		AuthTokenHandler:        mockAuthTokenHandler,
@@ -205,33 +204,12 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	}
 }
 
-func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	analyticsClient := cliMock.NewDummyAnalyticsMock()
-
-	r := getPreRunBase()
-	r.Analytics = analyticsClient
-
-	root := &cobra.Command{
-		Run: func(cmd *cobra.Command, args []string) {},
-	}
-	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
-	root.Flags().CountP("verbose", "v", "Increase verbosity")
-
-	_, err := pcmd.ExecuteCommand(rootCmd.Command)
-	require.NoError(t, err)
-
-	require.True(t, analyticsClient.TrackCommandCalled())
-}
-
 func TestPreRun_TokenExpires(t *testing.T) {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
-	analyticsClient := cliMock.NewDummyAnalyticsMock()
-
 	r := getPreRunBase()
 	r.Config = cfg
-	r.Analytics = analyticsClient
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
@@ -244,7 +222,6 @@ func TestPreRun_TokenExpires(t *testing.T) {
 
 	// Check auth is nil for now, until there is a better to create a fake logged in user and check if it's logged out
 	require.Nil(t, cfg.Context().State.Auth)
-	require.True(t, analyticsClient.SessionTimedOutCalled())
 }
 
 func Test_UpdateToken(t *testing.T) {

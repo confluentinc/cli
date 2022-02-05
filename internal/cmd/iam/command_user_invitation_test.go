@@ -5,28 +5,21 @@ import (
 	"testing"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/spf13/cobra"
-
-	segment "github.com/segmentio/analytics-go"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 type InvitationTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	userMock        *ccsdkmock.User
-	analyticsOutput []segment.Message
-	analyticsClient analytics.Client
+	conf     *v1.Config
+	userMock *ccsdkmock.User
 }
 
 func (suite *InvitationTestSuite) SetupTest() {
@@ -67,8 +60,6 @@ func (suite *InvitationTestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
@@ -81,8 +72,8 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 
 func (suite *InvitationTestSuite) TestInvitationList() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"invitation", "list"}
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"invitation", "list"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	req.True(suite.userMock.ListInvitationsCalled())
@@ -93,8 +84,8 @@ func (suite *InvitationTestSuite) TestInvitationList() {
 
 func (suite *InvitationTestSuite) TestCreateInvitation() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"invitation", "create", "cli@confluent.io"}
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"invitation", "create", "cli@confluent.io"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.userMock.CreateInvitationCalled())
