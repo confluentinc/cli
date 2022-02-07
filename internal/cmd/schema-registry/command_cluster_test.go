@@ -101,7 +101,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		SchemaRegistry: suite.srMock,
 		MetricsApi:     suite.metricsApi,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.analyticsClient)
+	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock, suite.analyticsClient)
 	return cmd
 }
 

@@ -37,6 +37,8 @@ const (
 var shouldError bool
 var shouldPrompt bool
 
+// pending rewriting with v2 mocks
+
 type KafkaClusterTestSuite struct {
 	suite.Suite
 	conf            *v1.Config
@@ -159,7 +161,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
 	cmd := newClusterCommand(conf, prerunner, suite.analyticsClient)
 	return cmd
 }
@@ -386,7 +388,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
 	conf := v1.AuthenticatedCloudConfigMock()
 	cmd := suite.newCmd(conf)
-	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil)
+	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil, nil, nil)
 	lkc, err := cmd.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

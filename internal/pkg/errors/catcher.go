@@ -3,6 +3,8 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
@@ -153,6 +155,17 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
 	return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+}
+
+func CatchCkuNotValidError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "CKU must be greater") {
+		return New(InvalidCkuErrorMsg)
+	}
+	return err
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {

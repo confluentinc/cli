@@ -29,7 +29,8 @@ var (
 )
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
-	client := buildMockClient()
+	client := buildCcloudMockClient()
+	// orgClient := pmock.NewOrgClientMock()
 	tests := []struct {
 		name           string
 		ctx            *pcmd.DynamicContext
@@ -110,7 +111,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 	}
 }
 
-func buildMockClient() *ccloud.Client {
+func buildCcloudMockClient() *ccloud.Client {
 	client := pmock.NewClientMock()
 	client.Account = &mock.Account{ListFunc: func(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
 		return []*orgv1.Account{{Id: apiEnvironment}}, nil
@@ -123,7 +124,7 @@ func getBaseContext() *pcmd.DynamicContext {
 	return pcmd.NewDynamicContext(cfg.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
-	}, pmock.NewClientMock())
+	}, pmock.NewClientMock(), pmock.NewCmkClientMock(), pmock.NewOrgClientMock())
 }
 
 func getClusterFlagContext() *pcmd.DynamicContext {
@@ -131,7 +132,7 @@ func getClusterFlagContext() *pcmd.DynamicContext {
 	clusterFlagContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
-	}, pmock.NewClientMock())
+	}, pmock.NewClientMock(), pmock.NewCmkClientMock(), pmock.NewOrgClientMock())
 	// create cluster that will be used in "--cluster" flag value
 	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &v1.KafkaClusterConfig{
 		ID:   flagCluster,
@@ -145,7 +146,7 @@ func getEnvFlagContext() *pcmd.DynamicContext {
 	envFlagContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
-	}, pmock.NewClientMock())
+	}, pmock.NewClientMock(), pmock.NewCmkClientMock(), pmock.NewOrgClientMock())
 	envFlagContext.State.Auth.Accounts = append(envFlagContext.State.Auth.Accounts, &orgv1.Account{Name: flagEnvironment, Id: flagEnvironment})
 	return envFlagContext
 }
@@ -155,7 +156,7 @@ func getEnvAndClusterFlagContext() *pcmd.DynamicContext {
 	envAndClusterFlagContext := pcmd.NewDynamicContext(config.Context(), &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
-	}, pmock.NewClientMock())
+	}, pmock.NewClientMock(), pmock.NewCmkClientMock(), pmock.NewOrgClientMock())
 
 	envAndClusterFlagContext.State.Auth.Accounts = append(envAndClusterFlagContext.State.Auth.Accounts, &orgv1.Account{Name: flagEnvironment, Id: flagEnvironment})
 	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v1.KafkaEnvContext{

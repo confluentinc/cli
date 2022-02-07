@@ -3,13 +3,15 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/cli/internal/pkg/log"
+
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -52,11 +54,15 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	clusterID := args[0]
-	req := &schedv1.KafkaCluster{
-		AccountId: c.EnvironmentId(),
-		Id:        clusterID,
+	update := cmkv2.CmkV2ClusterUpdate{
+		Id: cmkv2.PtrString(clusterID),
+		Spec: &cmkv2.CmkV2ClusterSpecUpdate{
+			Environment: &cmkv2.ObjectReference{
+				Id: c.EnvironmentId(),
+			},
+		},
 	}
-	currentCluster, err := c.Client.Kafka.Describe(context.Background(), req)
+	currentCluster, _, err := cmk.DescribeKafkaCluster(c.CmkClient, clusterID, c.EnvironmentId(), c.AuthToken())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
@@ -69,53 +75,57 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		if name == "" {
 			return errors.New(errors.NonEmptyNameErrorMsg)
 		}
-		req.Name = name
+		update.Spec.SetDisplayName(name)
 	} else {
-		req.Name = currentCluster.Name
+		update.Spec.SetDisplayName(*currentCluster.GetSpec().DisplayName)
 	}
 
-	req.Cku, err = c.validateResize(cmd, currentCluster, prompt)
+	updatedCku, err := c.validateResize(cmd, &currentCluster, prompt)
 	if err != nil {
 		return err
 	}
+	if updatedCku != -1 {
+		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
+	}
 
-	updatedCluster, err := c.Client.Kafka.Update(context.Background(), req)
+	updatedCluster, _, err := cmk.UpdateKafkaCluster(c.CmkClient, clusterID, update, c.AuthToken())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
-	return outputKafkaClusterDescription(cmd, updatedCluster)
+	return c.outputKafkaClusterDescription(cmd, &updatedCluster)
 }
 
-func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *schedv1.KafkaCluster, prompt form.Prompt) (int32, error) {
+func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
+	// returning -1 when error or unchanged
 	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
 		if err != nil {
-			return currentCluster.Cku, err
+			return -1, err
 		}
 		// Ensure the cluster is a Dedicated Cluster
-		if !isDedicated(currentCluster) {
-			return currentCluster.Cku, errors.Errorf("error updating kafka cluster: %v", errors.ClusterResizeNotSupported)
+		if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
+			return -1, errors.Errorf("error updating kafka cluster: %v", errors.ClusterResizeNotSupported)
 		}
 		// Durability Checks
-		if currentCluster.Durability == schedv1.Durability_HIGH && cku <= 1 {
-			return currentCluster.Cku, errors.New(errors.CKUMoreThanOneErrorMsg)
+		if *currentCluster.GetSpec().Availability == highAvailability && cku <= 1 {
+			return -1, errors.New(errors.CKUMoreThanOneErrorMsg)
 		}
 		if cku <= 0 {
-			return currentCluster.Cku, errors.New(errors.CKUMoreThanZeroErrorMsg)
+			return -1, errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
 		// Cluster can't be resized while it's provisioning or being expanded already.
 		// Name _can_ be changed during these times, though.
 		err = isClusterResizeInProgress(currentCluster)
 		if err != nil {
-			return currentCluster.Cku, err
+			return -1, err
 		}
 		//If shrink
-		if int32(cku) < currentCluster.Cku {
+		if int32(cku) < currentCluster.GetSpec().Config.CmkV2Dedicated.Cku {
 			// metrics api auth via jwt
 			shouldPrompt, errFromSmallWindowMetrics := c.validateKafkaClusterMetrics(context.Background(), int32(cku), currentCluster, true)
 			if errFromSmallWindowMetrics != nil && !shouldPrompt {
-				return currentCluster.Cku, fmt.Errorf("cluster shrink validation error: \n%v", errFromSmallWindowMetrics)
+				return -1, fmt.Errorf("cluster shrink validation error: \n%v", errFromSmallWindowMetrics)
 			}
 			promptMessage := ""
 			if shouldPrompt {
@@ -128,7 +138,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 			if promptMessage != "" {
 				ok, err := confirmShrink(cmd, prompt, promptMessage)
 				if !ok || err != nil {
-					return currentCluster.Cku, err
+					return -1, err
 				} else {
 					return int32(cku), nil
 				}
@@ -136,10 +146,10 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *sche
 		}
 		return int32(cku), nil
 	}
-	return currentCluster.Cku, nil
+	return -1, nil
 }
 
-func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku int32, currentCluster *schedv1.KafkaCluster, isLatestMetric bool) (bool, error) {
+func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku int32, currentCluster *cmkv2.CmkV2Cluster, isLatestMetric bool) (bool, error) {
 	var window string
 	if isLatestMetric {
 		window = "15 min"
@@ -153,21 +163,22 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 	}
 	errorMessage := errors.Errorf("Looking at metrics in the last %s window:", window)
 	shouldPrompt := true
-	isValidPartitionCountErr := c.validatePartitionCount(currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
+	isValidPartitionCountErr := c.validatePartitionCount(*currentCluster.Id, requiredPartitionCount, isLatestMetric, cku)
 	if isValidPartitionCountErr != nil {
 		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidPartitionCountErr.Error())
 		shouldPrompt = false
 	}
 	var isValidStorageLimitErr error
-	if !currentCluster.InfiniteStorage {
-		isValidStorageLimitErr = c.validateStorageLimit(currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
+	// if !currentCluster.InfiniteStorage {
+	if false {
+		isValidStorageLimitErr = c.validateStorageLimit(*currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
 		if isValidStorageLimitErr != nil {
 			errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidStorageLimitErr.Error())
 			shouldPrompt = false
 		}
 	}
 	// Get Cluster Load Metric
-	isValidLoadErr := c.validateClusterLoad(currentCluster.Id, isLatestMetric)
+	isValidLoadErr := c.validateClusterLoad(*currentCluster.Id, isLatestMetric)
 	if isValidLoadErr != nil {
 		errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidLoadErr)
 	}

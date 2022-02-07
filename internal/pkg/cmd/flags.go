@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -76,6 +79,19 @@ func AutocompleteClusters(environmentId string, client *ccloud.Client) []string 
 	return suggestions
 }
 
+func AutocompleteCmkClusters(environmentId string, client *cmkv2.APIClient, authToken string) []string {
+	resp, _, err := cmk.ListKafkaClusters(client, environmentId, authToken)
+	if err != nil {
+		return nil
+	}
+	clusters := resp.Data
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.GetSpec().DisplayName)
+	}
+	return suggestions
+}
+
 func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	cmd.Flags().String("context", "", "CLI context name.")
 
@@ -105,19 +121,20 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client)
+		return AutocompleteEnvironments(command.OrgClient, command.AuthToken())
 	})
 }
 
-func AutocompleteEnvironments(client *ccloud.Client) []string {
-	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+func AutocompleteEnvironments(client *orgv2.APIClient, authToken string) []string {
+	resp, _, err := org.ListEnvironments(client, authToken)
 	if err != nil {
 		return nil
 	}
+	environments := resp.Data
 
 	suggestions := make([]string, len(environments))
 	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", environment.Id, environment.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
 	return suggestions
 }

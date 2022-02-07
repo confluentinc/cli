@@ -1,23 +1,21 @@
 package kafka
 
 import (
-	"context"
-	"strconv"
+	"strings"
 
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
-	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
-	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
-	describeHumanRenames               = map[string]string{
+	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+	describeHumanRenames = map[string]string{
 		"NetworkIngress":  "Ingress",
 		"NetworkEgress":   "Egress",
 		"ServiceProvider": "Provider",
@@ -36,7 +34,6 @@ var (
 		"Availability":       "availability",
 		"Status":             "status",
 		"Endpoint":           "endpoint",
-		"ApiEndpoint":        "api_endpoint",
 		"EncryptionKeyId":    "encryption_key_id",
 		"RestEndpoint":       "rest_endpoint",
 	}
@@ -95,8 +92,6 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 		RunE:              pcmd.NewCLIRunE(c.describe),
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-
-	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -107,23 +102,17 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	all, err := cmd.Flags().GetBool("all")
-	if err != nil {
-		return err
-	}
-
 	lkc, err := c.getLkcForDescribe(args)
 	if err != nil {
 		return err
 	}
 
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
-	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
+	cluster, _, err := cmk.DescribeKafkaCluster(c.CmkClient, lkc, c.EnvironmentId(), c.AuthToken())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0])
 	}
 
-	return outputKafkaClusterDescriptionWithKAPI(cmd, cluster, all)
+	return c.outputKafkaClusterDescription(cmd, &cluster)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -139,95 +128,50 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return lkc, nil
 }
 
-func outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *schedv1.KafkaCluster, all bool) error {
-	fields := basicDescribeFields
-	structureRenames := describeStructuredRenames
-	delete(structureRenames, "ApiEndpoint")
-	if all { // expose KAPI when --all flag is set
-		fields = append(fields, "KAPI")
-		structureRenames["KAPI"] = "kapi"
-	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster), getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, structureRenames)
+func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
+	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, basicDescribeFields), describeHumanRenames, describeStructuredRenames)
 }
 
-func convertClusterToDescribeStructWithKAPI(cluster *schedv1.KafkaCluster) *describeStructWithKAPI {
-	clusterStorage := strconv.Itoa(int(cluster.Storage))
-	if clusterStorage == "-1" || cluster.InfiniteStorage {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster) *describeStruct {
+	var clusterStorage string
+	if !isBasic(cluster) {
 		clusterStorage = "Infinite"
+	} else {
+		clusterStorage = "5 TB"
 	}
 
-	return &describeStructWithKAPI{
-		Id:                 cluster.Id,
-		Name:               cluster.Name,
-		Type:               cluster.Deployment.Sku.String(),
-		ClusterSize:        cluster.Cku,
-		PendingClusterSize: cluster.PendingCku,
-		NetworkIngress:     cluster.NetworkIngress,
-		NetworkEgress:      cluster.NetworkEgress,
-		Storage:            clusterStorage,
-		ServiceProvider:    cluster.ServiceProvider,
-		Region:             cluster.Region,
-		Availability:       durabilityToAvaiablityNameMap[cluster.Durability.String()],
-		Status:             cluster.Status.String(),
-		Endpoint:           cluster.Endpoint,
-		EncryptionKeyId:    cluster.EncryptionKeyId,
-		RestEndpoint:       cluster.RestEndpoint,
-		KAPI:               cluster.ApiEndpoint,
-	}
-}
-
-func outputKafkaClusterDescription(cmd *cobra.Command, cluster *schedv1.KafkaCluster) error {
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint), describeHumanRenames, describeStructuredRenames)
-}
-
-func convertClusterToDescribeStruct(cluster *schedv1.KafkaCluster) *describeStruct {
-	clusterStorage := strconv.Itoa(int(cluster.Storage))
-	if clusterStorage == "-1" || cluster.InfiniteStorage {
-		clusterStorage = "Infinite"
-	}
+	ingress, egress := getCmkClusterIngressAndEgress(cluster)
 
 	return &describeStruct{
-		Id:                 cluster.Id,
-		Name:               cluster.Name,
-		Type:               cluster.Deployment.Sku.String(),
-		ClusterSize:        cluster.Cku,
-		PendingClusterSize: cluster.PendingCku,
-		NetworkIngress:     cluster.NetworkIngress,
-		NetworkEgress:      cluster.NetworkEgress,
+		Id:                 *cluster.Id,
+		Name:               *cluster.Spec.DisplayName,
+		Type:               getCmkClusterType(cluster),
+		ClusterSize:        getCmkClusterSize(cluster),
+		PendingClusterSize: getCmkClusterPendingSize(cluster),
+		NetworkIngress:     ingress,
+		NetworkEgress:      egress,
 		Storage:            clusterStorage,
-		ServiceProvider:    cluster.ServiceProvider,
-		Region:             cluster.Region,
-		Availability:       durabilityToAvaiablityNameMap[cluster.Durability.String()],
-		Status:             cluster.Status.String(),
-		Endpoint:           cluster.Endpoint,
-		ApiEndpoint:        cluster.ApiEndpoint,
-		EncryptionKeyId:    cluster.EncryptionKeyId,
-		RestEndpoint:       cluster.RestEndpoint,
+		ServiceProvider:    strings.ToLower(*cluster.Spec.Cloud),
+		Region:             *cluster.Spec.Region,
+		Availability:       availabilities[*cluster.Spec.Availability],
+		Status:             getCmkClusterStatus(cluster),
+		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
+		// EncryptionKeyId:    cluster.EncryptionKeyId,
+		RestEndpoint: cluster.Spec.GetHttpEndpoint(),
 	}
 }
 
-func getKafkaClusterDescribeFields(cluster *schedv1.KafkaCluster, basicFields []string) []string {
+func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []string) []string {
 	describeFields := basicFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
 		if isExpanding(cluster) || isShrinking(cluster) {
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
-		if cluster.EncryptionKeyId != "" {
-			describeFields = append(describeFields, "EncryptionKeyId")
-		}
+		// waiting to be added!!!
+		// if cluster.EncryptionKeyId != "" {
+		// 	describeFields = append(describeFields, "EncryptionKeyId")
+		// }
 	}
 	return describeFields
-}
-
-func isDedicated(cluster *schedv1.KafkaCluster) bool {
-	return cluster.Deployment.Sku == productv1.Sku_DEDICATED
-}
-
-func isExpanding(cluster *schedv1.KafkaCluster) bool {
-	return cluster.Status == schedv1.ClusterStatus_EXPANDING || cluster.PendingCku > cluster.Cku
-}
-
-func isShrinking(cluster *schedv1.KafkaCluster) bool {
-	return cluster.Status == schedv1.ClusterStatus_SHRINKING || (cluster.PendingCku < cluster.Cku && cluster.PendingCku != 0)
 }

@@ -10,10 +10,13 @@ import (
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -136,11 +139,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	sku, err := stringToSku(typeString)
-	if err != nil {
-		return err
-	}
-
 	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
 	if err != nil {
 		return err
@@ -157,14 +155,18 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		}
 	}
 
-	cfg := &schedv1.KafkaClusterConfig{
-		AccountId:       c.EnvironmentId(),
-		Name:            args[0],
-		ServiceProvider: cloud,
-		Region:          region,
-		Durability:      availability,
-		Deployment:      &schedv1.Deployment{Sku: sku},
-		EncryptionKeyId: encryptionKeyID,
+	cluster := cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			Environment: &cmkv2.ObjectReference{
+				Id: c.EnvironmentId(),
+			},
+			DisplayName:  cmkv2.PtrString(args[0]),
+			Cloud:        cmkv2.PtrString(cloud),
+			Region:       cmkv2.PtrString(region),
+			Availability: cmkv2.PtrString(availability),
+			Config:       setClusterConfig(typeString),
+			// EncryptionKeyId: encryptionKeyID,
+		},
 	}
 
 	if cmd.Flags().Changed("cku") {
@@ -172,19 +174,18 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		if err != nil {
 			return err
 		}
-		if sku != productv1.Sku_DEDICATED {
+		if typeString != skuDedicated {
 			return errors.New(errors.CKUOnlyForDedicatedErrorMsg)
 		}
 		if cku <= 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
-		cfg.Cku = int32(cku)
+		cluster.Spec.Config.CmkV2Dedicated.Cku = int32(cku)
 	}
 
-	cluster, err := c.Client.Kafka.Create(context.Background(), cfg)
+	kafkaCluster, r, err := cmk.CreateKafkaCluster(c.CmkClient, cluster, c.AuthToken())
 	if err != nil {
-		// TODO: don't swallow validation errors (reportedly separately)
-		return err
+		return errors.CatchCkuNotValidError(err, r)
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
@@ -196,8 +197,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
-	return outputKafkaClusterDescription(cmd, cluster)
+	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, *kafkaCluster.Id)
+	return c.outputKafkaClusterDescription(cmd, &kafkaCluster)
 }
 
 func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
@@ -311,24 +312,42 @@ func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []
 	return environments
 }
 
-func stringToAvailability(s string) (schedv1.Durability, error) {
+func stringToAvailability(s string) (string, error) {
 	if s == singleZone {
-		return schedv1.Durability_LOW, nil
+		return lowAvailability, nil
 	} else if s == multiZone {
-		return schedv1.Durability_HIGH, nil
+		return highAvailability, nil
 	}
-	return schedv1.Durability_LOW, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
+	return lowAvailability, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
 		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
-func stringToSku(s string) (productv1.Sku, error) {
-	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(s)])
+func stringToSku(typeString string) (int32, error) {
+	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(typeString)])
 	switch sku {
 	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
 		break
 	default:
-		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, s),
+		return int32(productv1.Sku_UNKNOWN), errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, typeString),
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
-	return sku, nil
+	return int32(sku), nil
+}
+
+func setClusterConfig(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+	switch typeString {
+	case skuBasic:
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
+			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+		}
+	case skuStandard:
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
+			CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
+		}
+	case skuDedicated:
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: 1},
+		}
+	}
+	return nil
 }

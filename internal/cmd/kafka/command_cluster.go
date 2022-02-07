@@ -9,9 +9,16 @@ import (
 )
 
 const (
-	singleZone = "single-zone"
-	multiZone  = "multi-zone"
+	singleZone       = "single-zone"
+	multiZone        = "multi-zone"
+	lowAvailability  = "SINGLE_ZONE"
+	highAvailability = "MULTI_ZONE"
 )
+
+var availabilities = map[string]string{
+	lowAvailability:  singleZone,
+	highAvailability: multiZone,
+}
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
@@ -57,5 +64,5 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteClusters(c.EnvironmentId(), c.Client)
+	return pcmd.AutocompleteCmkClusters(c.EnvironmentId(), c.CmkClient, c.AuthToken())
 }

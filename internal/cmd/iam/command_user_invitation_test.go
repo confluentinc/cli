@@ -2,9 +2,10 @@ package iam
 
 import (
 	"context"
+	"testing"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
-	"testing"
 
 	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
@@ -34,13 +35,13 @@ func (suite *InvitationTestSuite) SetupTest() {
 		GetUserProfileFunc: func(_ context.Context, _ *orgv1.User) (*flowv1.UserProfile, error) {
 			return &flowv1.UserProfile{
 				FirstName: "TEST",
-				LastName: "lastname",
+				LastName:  "lastname",
 			}, nil
 		},
 		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (*orgv1.User, error) {
 			return &orgv1.User{
 				FirstName: "TEST",
-				LastName: "lastname",
+				LastName:  "lastname",
 			}, nil
 		},
 		ListInvitationsFunc: func(_ context.Context) ([]*orgv1.Invitation, error) {
@@ -61,11 +62,10 @@ func (suite *InvitationTestSuite) SetupTest() {
 		},
 		CreateInvitationFunc: func(_ context.Context, arg1 *flowv1.CreateInvitationRequest) (*orgv1.Invitation, error) {
 			return &orgv1.Invitation{
-				Id: "invitation1",
+				Id:    "invitation1",
 				Email: "cli@confluent.io",
 			}, nil
 		},
-
 	}
 	suite.analyticsOutput = make([]segment.Message, 0)
 	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
@@ -75,7 +75,7 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
 	return NewUserCommand(prerunner)
 }
 

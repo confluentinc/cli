@@ -57,7 +57,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCom
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client,nil, nil, nil, conf)
 	return NewServiceAccountCommand(prerunner)
 }
 

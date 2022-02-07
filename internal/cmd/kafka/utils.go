@@ -8,7 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -122,20 +123,78 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
-func isClusterResizeInProgress(currentCluster *schedv1.KafkaCluster) error {
-	switch currentCluster.Status {
-	case schedv1.ClusterStatus_PROVISIONING:
+func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
+	if currentCluster.Status.Phase == "PROVISIONING" {
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-	case schedv1.ClusterStatus_EXPANDING:
+	}
+	if isExpanding(currentCluster) {
 		return errors.New(errors.KafkaClusterExpandingErrorMsg)
-	case schedv1.ClusterStatus_SHRINKING:
+	}
+	if isShrinking(currentCluster) {
 		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
-	case schedv1.ClusterStatus_DELETING:
-		return errors.New(errors.KafkaClusterDeletingErrorMsg)
-	case schedv1.ClusterStatus_DELETED:
-		return errors.New(errors.KafkaClusterDeletingErrorMsg)
 	}
 	return nil
+}
+
+func getCmkClusterIngressAndEgress(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
+	if isDedicated(cluster) {
+		return 50, 100
+	}
+	return 100, 100
+}
+
+func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
+	if isBasic(cluster) {
+		return productv1.Sku_name[2]
+	}
+	if isStandard(cluster) {
+		return productv1.Sku_name[3]
+	}
+	return productv1.Sku_name[4]
+}
+
+func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
+	if isDedicated(cluster) {
+		return *cluster.Status.Cku
+	}
+	return -1
+}
+
+func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
+	if isDedicated(cluster) {
+		return cluster.Spec.Config.CmkV2Dedicated.Cku
+	}
+	return -1
+}
+
+func isBasic(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config.CmkV2Basic != nil
+}
+
+func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config.CmkV2Standard != nil
+}
+
+func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config.CmkV2Dedicated != nil
+}
+
+func isExpanding(cluster *cmkv2.CmkV2Cluster) bool {
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku > *cluster.Status.Cku
+}
+
+func isShrinking(cluster *cmkv2.CmkV2Cluster) bool {
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku < *cluster.Status.Cku && cluster.Spec.Config.CmkV2Dedicated.Cku != 0
+}
+
+func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
+	if isExpanding(cluster) {
+		return "EXPANDING"
+	}
+	if isShrinking(cluster) {
+		return "SHRINKING"
+	}
+	return cluster.Status.Phase
 }
 
 func camelToSnake(camels []string) []string {

@@ -34,7 +34,7 @@ func TestFeedbackEmptyMessage(t *testing.T) {
 }
 
 func mockFeedbackCommand(msg string) *cobra.Command {
-	mockPreRunner := mock.NewPreRunnerMock(nil, nil, nil, nil)
+	mockPreRunner := mock.NewPreRunnerMock(nil, nil, nil, nil, nil)
 	mockAnalytics := mock.NewDummyAnalyticsMock()
 	mockPrompt := pmock.NewPromptMock(msg)
 	return NewFeedbackCmdWithPrompt(mockPreRunner, mockAnalytics, mockPrompt)

@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	cmk "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -17,15 +19,19 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	resolver FlagResolver
-	client   *ccloud.Client
+	resolver  FlagResolver
+	client    *ccloud.Client
+	cmkClient *cmk.APIClient
+	orgClient *org.APIClient
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, cmkClient *cmk.APIClient, orgClient *org.APIClient) *DynamicContext {
 	return &DynamicContext{
-		Context:  context,
-		resolver: resolver,
-		client:   client,
+		Context:   context,
+		resolver:  resolver,
+		client:    client,
+		cmkClient: cmkClient,
+		orgClient: orgClient,
 	}
 }
 
@@ -112,7 +118,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	if cluster := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); cluster != nil {
 		return cluster, nil
 	}
-	if d.client == nil {
+	if d.cmkClient == nil {
 		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
 	}
 	// Resolve cluster details if not found locally.

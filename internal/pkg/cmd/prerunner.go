@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	cmk "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -67,11 +69,23 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
+	CmkClient         *cmk.APIClient
+	OrgClient         *org.APIClient
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
 	Context           *DynamicContext
 	State             *v1.ContextState
+}
+
+func (c *AuthenticatedCLICommand) CmkApiContext() context.Context {
+	auth := context.WithValue(context.Background(), cmk.ContextAccessToken, c.AuthToken())
+	return auth
+}
+
+func (c *AuthenticatedCLICommand) OrgApiContext() context.Context {
+	auth := context.WithValue(context.Background(), org.ContextAccessToken, c.AuthToken())
+	return auth
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -286,7 +300,15 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		return r.setCCloudClient(command)
+		if err := r.setCCloudClient(command); err != nil {
+			return err
+		}
+
+		if err := r.setCmkClient(command); err != nil {
+			return err
+		}
+
+		return r.setOrgClient(command)
 	}
 }
 
@@ -404,6 +426,26 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
+func (r *PreRun) setCmkClient(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+
+	cmkClient := r.createCmkClient(ctx, cliCmd.Version)
+	cliCmd.CmkClient = cmkClient
+	cliCmd.Context.cmkClient = cmkClient
+	cliCmd.Config.CmkClient = cmkClient
+	return nil
+}
+
+func (r *PreRun) setOrgClient(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+
+	orgClient := r.createOrgClient(ctx, cliCmd.Version)
+	cliCmd.OrgClient = orgClient
+	cliCmd.Context.orgClient = orgClient
+	cliCmd.Config.OrgClient = orgClient
+	return nil
+}
+
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", nil
@@ -467,6 +509,44 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
 		BaseURL: baseURL, Logger: log.CliLogger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
 	}), nil
+}
+
+func (r *PreRun) createCmkClient(ctx *DynamicContext, ver *version.Version) *cmk.APIClient {
+	var baseURL string
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+	}
+	cmkServer := baseURL[:8] + "api." + baseURL[8:]
+	server := cmk.ServerConfigurations{
+		{URL: cmkServer, Description: "Confluent Cloud"},
+	}
+	cfg := &cmk.Configuration{
+		DefaultHeader:    make(map[string]string),
+		UserAgent:        "OpenAPI-Generator/1.0.0/go",
+		Debug:            false,
+		Servers:          server,
+		OperationServers: map[string]cmk.ServerConfigurations{},
+	}
+	return cmk.NewAPIClient(cfg)
+}
+
+func (r *PreRun) createOrgClient(ctx *DynamicContext, ver *version.Version) *org.APIClient {
+	var baseURL string
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+	}
+	orgServer := baseURL[:8] + "api." + baseURL[8:]
+	server := org.ServerConfigurations{
+		{URL: orgServer, Description: "Confluent Cloud"},
+	}
+	cfg := &org.Configuration{
+		DefaultHeader:    make(map[string]string),
+		UserAgent:        "OpenAPI-Generator/1.0.0/go",
+		Debug:            false,
+		Servers:          server,
+		OperationServers: map[string]org.ServerConfigurations{},
+	}
+	return org.NewAPIClient(cfg)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
@@ -702,6 +782,14 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 			ctx.client = client
 			command.Config.Client = client
+
+			cmkClient := r.createCmkClient(ctx, command.Version)
+			ctx.cmkClient = cmkClient
+			command.Config.CmkClient = cmkClient
+
+			orgClient := r.createOrgClient(ctx, command.Version)
+			ctx.orgClient = orgClient
+			command.Config.OrgClient = orgClient
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err
