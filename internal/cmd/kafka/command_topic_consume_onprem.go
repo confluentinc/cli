@@ -42,6 +42,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	_ = cmd.MarkFlagRequired("bootstrap")
+	_ = cmd.MarkFlagRequired("ca-location")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
