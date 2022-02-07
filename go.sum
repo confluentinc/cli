@@ -241,8 +241,6 @@ github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb h1:m935MPodAbYS46DG4
 github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb/go.mod h1:PkYb9DJNAwrSvRx5DYA+gUcOIgTGVMNkfSCbZM8cWpI=
 github.com/blang/semver v3.5.0+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/blendle/zapdriver v1.3.1/go.mod h1:mdXfREi6u5MArG4j9fewC+FGnXaBR+T4Ox4J2u4eHCc=
-github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
-github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bombsimon/wsl/v3 v3.3.0 h1:Mka/+kRLoQJq7g2rggtgQsjuI/K5Efd87WX96EWFxjM=
 github.com/bombsimon/wsl/v3 v3.3.0/go.mod h1:st10JtZYLE4D5sC7b8xV4zTKZwAQjCH/Hy2Pm1FNZIc=
 github.com/brianstrauch/cobra-shell v0.2.2 h1:n2sZcvSrIZ/D47PS3Ae0Ux6CBUWhLpVWHMpxoc9wJmw=
@@ -1292,10 +1290,6 @@ github.com/sebdah/goldie v0.0.0-20180424091453-8784dd1ab561 h1:IY+sDBJR/wRtsxq+6
 github.com/sebdah/goldie v0.0.0-20180424091453-8784dd1ab561/go.mod h1:lvjGftC8oe7XPtyrOidaMi0rp5B9+XY/ZRUynGnuaxQ=
 github.com/securego/gosec/v2 v2.8.0 h1:iHg9cVmHWf5n6/ijUJ4F10h5bKlNtvXmcWzRw0lxiKE=
 github.com/securego/gosec/v2 v2.8.0/go.mod h1:hJZ6NT5TqoY+jmOsaxAV4cXoEdrMRLVaNPnSpUCvCZs=
-github.com/segmentio/analytics-go v3.1.0+incompatible h1:IyiOfUgQFVHvsykKKbdI7ZsH374uv3/DfZUo9+G0Z80=
-github.com/segmentio/analytics-go v3.1.0+incompatible/go.mod h1:C7CYBtQWk4vRk2RyLu0qOcbHJ18E3F1HV2C/8JvKN48=
-github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c h1:rsRTAcCR5CeNLkvgBVSjQoDGRRt6kggsE6XYBqCv2KQ=
-github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c/go.mod h1:kJ9mm9YmoWSkk+oQ+5Cj8DEoRCX2JT6As4kEtIIOp1M=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/sergi/go-diff v1.1.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
 github.com/sergi/go-diff v1.2.0 h1:XU+rvMAioB0UC3q1MFrIQy4Vo5/4VsRDQQXHsEya6xQ=
@@ -1467,8 +1461,6 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMx
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778/go.mod h1:2MuV+tbUrU1zIOPMxZ5EncGwgmMJsa+9ucAQZXxsObs=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
-github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c h1:3lbZUMbMiGUW/LMkfsEABsc5zNT9+b1CvsJx47JzJ8g=
-github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c/go.mod h1:UrdRz5enIKZ63MEE3IF9l2/ebyx59GyGgPi+tICQdmM=
 github.com/yeya24/promlinter v0.1.0 h1:goWULN0jH5Yajmu/K+v1xCqIREeB+48OiJ2uu2ssc7U=
 github.com/yeya24/promlinter v0.1.0/go.mod h1:rs5vtZzeBHqqMwXqFScncpCF6u06lezhZepno9AB1Oc=
 github.com/yudai/gojsondiff v1.0.0/go.mod h1:AY32+k2cwILAkW1fbgxQ5mUmMiZFgLIV+FBNExI05xg=

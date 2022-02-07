@@ -6,19 +6,15 @@ import (
 	"fmt"
 	"testing"
 
-	segment "github.com/segmentio/analytics-go"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
 	"github.com/confluentinc/cli/internal/pkg/acl"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -71,15 +67,13 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	kafkaCluster    *schedv1.KafkaCluster
-	ksqlCluster     *schedv1.KSQLCluster
-	serviceAcct     *orgv1.User
-	ksqlc           *mock.KSQL
-	kafkac          *mock.Kafka
-	userc           *mock.User
-	analyticsClient analytics.Client
-	analyticsOutput []segment.Message
+	conf         *v1.Config
+	kafkaCluster *schedv1.KafkaCluster
+	ksqlCluster  *schedv1.KSQLCluster
+	serviceAcct  *orgv1.User
+	ksqlc        *mock.KSQL
+	kafkac       *mock.Kafka
+	userc        *mock.User
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
@@ -134,8 +128,6 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
@@ -259,9 +251,8 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKey() {
 func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
 	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	args := []string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString}
-
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.CreateCalled())
@@ -270,8 +261,6 @@ func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
 	req.Equal(uint32(4), cfg.TotalNumCsu)
 	req.Equal(keyString, cfg.KafkaApiKey.Key)
 	req.Equal(keySecretString, cfg.KafkaApiKey.Secret)
-	// TODO add back with analytics
-	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingKey() {
@@ -345,9 +334,8 @@ func (suite *KSQLTestSuite) TestCreateKSQLClusterWithImage() {
 func (suite *KSQLTestSuite) testCreateKSQLWithImage(isApp bool) {
 	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	args := []string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"}
-
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	cfg := suite.ksqlc.CreateCalls()[0].Arg1
@@ -403,14 +391,11 @@ func (suite *KSQLTestSuite) TestDeleteKSQLCluster() {
 func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
 	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	args := []string{commandName, "delete", ksqlClusterID}
-
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{commandName, "delete", ksqlClusterID})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.DeleteCalled())
-	// TODO add back with analytics
-	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], ksqlClusterID, req)
 }
 
 func getCommandName(isApp bool) string {

@@ -3,7 +3,6 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
@@ -15,17 +14,16 @@ const (
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	analyticsClient analytics.Client
 }
 
-func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *clusterCommand {
+func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *clusterCommand {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage Kafka clusters.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &clusterCommand{analyticsClient: analyticsClient}
+	c := &clusterCommand{}
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)

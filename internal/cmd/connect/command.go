@@ -8,13 +8,11 @@ import (
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	analyticsClient analytics.Client
 }
 
 type connectorDescribeDisplay struct {
@@ -30,17 +28,14 @@ var (
 	listStructuredLabels = []string{"id", "name", "status", "type", "trace"}
 )
 
-func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "connect",
 		Short:       "Manage Kafka Connect.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		analyticsClient:               analyticsClient,
-	}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(newClusterCommand(prerunner))
 	c.AddCommand(c.newCreateCommand())

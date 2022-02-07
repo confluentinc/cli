@@ -6,12 +6,9 @@ import (
 	"github.com/confluentinc/bincover"
 )
 
-func (s *CLITestSuite) TestPaymentDescribe() {
+func (s *CLITestSuite) TestAdminPaymentDescribe() {
 	tests := []CLITest{
-		{
-			args:    "admin payment describe",
-			fixture: "admin/payment-describe.golden",
-		},
+		{args: "admin payment describe", fixture: "admin/payment-describe.golden"},
 	}
 
 	for _, test := range tests {
@@ -20,7 +17,7 @@ func (s *CLITestSuite) TestPaymentDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestPaymentUpdate() {
+func (s *CLITestSuite) TestAdminPaymentUpdate() {
 	tests := []CLITest{
 		{
 			args:        "admin payment update",
@@ -33,6 +30,29 @@ func (s *CLITestSuite) TestPaymentUpdate() {
 			fixture:     "admin/payment-update-bad-cvc.golden",
 		},
 	}
+	for _, test := range tests {
+		test.login = "default"
+		s.runCcloudTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestAdminPromoAdd() {
+	tests := []CLITest{
+		{args: "admin promo add PROMOCODE", fixture: "admin/promo-add.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "default"
+		s.runCcloudTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestAdminPromoList() {
+	tests := []CLITest{
+		{args: "admin promo list", fixture: "admin/promo-list.golden"},
+		{args: "admin promo list -o json", fixture: "admin/promo-list-json.golden"},
+	}
+
 	for _, test := range tests {
 		test.login = "default"
 		s.runCcloudTest(test)

@@ -7,7 +7,6 @@ import (
 
 	updatemock "github.com/confluentinc/cli/internal/pkg/update/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 func TestGetReleaseNotes_MultipleReleaseNotes(t *testing.T) {
@@ -22,9 +21,8 @@ func TestGetReleaseNotes_MultipleReleaseNotes(t *testing.T) {
 	}
 
 	c := &command{
-		client:          client,
-		analyticsClient: mock.NewDummyAnalyticsMock(),
-		version:         &version.Version{Version: "0.0.0"},
+		client:  client,
+		version: &version.Version{Version: "0.0.0"},
 	}
 
 	require.Equal(t, "v0.1.0 changes\n\nv1.0.0 changes\n", c.getReleaseNotes("confluent", "1.0.0"))

@@ -5,11 +5,8 @@ import (
 	"os"
 
 	shell "github.com/brianstrauch/cobra-shell"
-	"github.com/jonboulle/clockwork"
-	segment "github.com/segmentio/analytics-go"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -33,7 +30,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	pconfig "github.com/confluentinc/cli/internal/pkg/config"
@@ -42,19 +38,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
-	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/confluentinc/cli/mock"
 )
 
 type command struct {
 	*cobra.Command
-	// @VisibleForTesting
-	Analytics analytics.Client
 }
 
 func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
@@ -77,7 +68,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
 
-	analyticsClient := getAnalyticsClient(isTest, cfg, ver.Version)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -87,7 +77,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 
 	prerunner := &pcmd.PreRun{
-		Analytics:               analyticsClient,
 		AuthTokenHandler:        authTokenHandler,
 		CCloudClientFactory:     ccloudClientFactory,
 		Config:                  cfg,
@@ -101,62 +90,44 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	}
 
 	cmd.AddCommand(admin.New(prerunner, isTest))
-	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver, analyticsClient))
+	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory).Command)
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
-	cmd.AddCommand(connect.New(prerunner, analyticsClient))
-	cmd.AddCommand(environment.New(prerunner, analyticsClient))
+	cmd.AddCommand(connect.New(prerunner))
+	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
-	cmd.AddCommand(kafka.New(cfg, prerunner, ver.ClientID, analyticsClient))
+	cmd.AddCommand(kafka.New(cfg, prerunner, ver.ClientID))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
-	cmd.AddCommand(login.New(prerunner, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
-	cmd.AddCommand(logout.New(cfg, prerunner, analyticsClient, netrcHandler).Command)
+	cmd.AddCommand(login.New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
+	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler).Command)
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
+<<<<<<< HEAD
 	cmd.AddCommand(quotas.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil, analyticsClient))
+=======
+	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
+>>>>>>> 2bcd95ddef659a406e49a97180e3b6799aff94f3
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd))
-	cmd.AddCommand(update.New(prerunner, ver, updateClient, analyticsClient))
+	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	disableFlagSorting(cmd)
 
-	return &command{Command: cmd, Analytics: analyticsClient}
-}
-
-func getAnalyticsClient(isTest bool, cfg *v1.Config, cliVersion string) analytics.Client {
-	if cfg.IsOnPremLogin() || isTest {
-		return mock.NewDummyAnalyticsMock()
-	}
-	segmentClient, _ := segment.NewWithConfig(keys.SegmentKey, segment.Config{
-		Logger: analytics.NewLogger(log.CliLogger),
-	})
-	return analytics.NewAnalyticsClient(cfg, cliVersion, segmentClient, clockwork.NewRealClock())
+	return &command{Command: cmd}
 }
 
 func (c *command) Execute(args []string) error {
-	c.Analytics.SetStartTime()
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
-	c.sendAndFlushAnalytics(args, err)
 	return err
-}
-
-func (c *command) sendAndFlushAnalytics(args []string, err error) {
-	if err := c.Analytics.SendCommandAnalytics(c.Command, args, err); err != nil {
-		log.CliLogger.Debugf("Segment analytics sending event failed: %s\n", err.Error())
-	}
-
-	if err := c.Analytics.Close(); err != nil {
-		log.CliLogger.Debug(err)
-	}
 }
 
 func LoadConfig() (*v1.Config, error) {
