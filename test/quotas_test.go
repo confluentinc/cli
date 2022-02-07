@@ -6,7 +6,7 @@ func (s *CLITestSuite) TestQuotaLimits() {
 		// tt.workflow=true so login is not reset
 		{args: "applied-quota list kafka_cluster", fixture: "quotas/1.golden", login: "default"},
 		{args: "applied-quota list kafka_cluster --environment env-1", fixture: "quotas/2.golden"},
-		{args: "applied-quota list kafka_cluster --kafka-cluster lkc-1", fixture: "quotas/3.golden"},
+		{args: "applied-quota list kafka_cluster --cluster lkc-1", fixture: "quotas/3.golden"},
 		{args: "applied-quota list kafka_cluster --quota-code quota_a ", fixture: "quotas/4.golden"},
 		{args: "applied-quota list kafka_cluster --quota-code quota_a -o json", fixture: "quotas/5.golden"},
 		{args: "applied-quota list kafka_cluster --quota-code quota_a -o yaml", fixture: "quotas/6.golden"},

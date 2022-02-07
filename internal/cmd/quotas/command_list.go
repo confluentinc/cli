@@ -38,9 +38,9 @@ func (c *command) newListCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.list),
 	}
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("quota-code", "", "filter the result by quota code")
-	cmd.Flags().String("kafka-cluster", "", "filter the result by kafka cluster id")
-	cmd.Flags().String("environment", "", "filter the result by environment id")
 	cmd.Flags().String("network", "", "filter the result by network id")
 	pcmd.AddOutputFlag(cmd)
 	return cmd
@@ -57,7 +57,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
+	kafkaCluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}
