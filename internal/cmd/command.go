@@ -106,12 +106,8 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler).Command)
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
-<<<<<<< HEAD
 	cmd.AddCommand(quotas.New(prerunner))
-	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil, analyticsClient))
-=======
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
->>>>>>> 2bcd95ddef659a406e49a97180e3b6799aff94f3
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
