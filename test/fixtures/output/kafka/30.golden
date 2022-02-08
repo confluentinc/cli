@@ -1,15 +1,15 @@
-+--------------+---------------------------+
-| Id           | lkc-describe-dedicated    |
-| Name         | kafka-cluster             |
-| Type         | DEDICATED                 |
-| Ingress      |                       100 |
-| Egress       |                       100 |
-| Storage      |                       500 |
-| Provider     | aws                       |
-| Availability | single-zone               |
-| Region       | us-west-2                 |
-| Status       | PROVISIONING              |
-| Endpoint     | SASL_SSL://kafka-endpoint |
-| RestEndpoint | http://kafka-rest-url     |
-| ClusterSize  |                         1 |
-+--------------+---------------------------+
++---------------+---------------------------+
+| ID            | lkc-describe-dedicated    |
+| Name          | kafka-cluster             |
+| Type          | DEDICATED                 |
+| Ingress       |                       100 |
+| Egress        |                       100 |
+| Storage       |                       500 |
+| Provider      | aws                       |
+| Availability  | single-zone               |
+| Region        | us-west-2                 |
+| Status        | PROVISIONING              |
+| Endpoint      | SASL_SSL://kafka-endpoint |
+| REST Endpoint | http://kafka-rest-url     |
+| Cluster Size  |                         1 |
++---------------+---------------------------+

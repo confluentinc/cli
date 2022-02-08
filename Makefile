@@ -157,8 +157,8 @@ build-integ-race:
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
-define caasenv-authenticate
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+define aws-authenticate
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
 endef
 
 .PHONY: fmt
@@ -190,7 +190,7 @@ endif
 
 .PHONY: lint-go
 lint-go:
-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+	@golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli

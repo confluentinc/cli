@@ -20,8 +20,8 @@ import (
 func TestPromoAdd(t *testing.T) {
 	client := &ccloud.Client{
 		Billing: &ccloudmock.Billing{
-			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) error {
-				return nil
+			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) (*billingv1.PromoCodeClaim, error) {
+				return nil, nil
 			},
 		},
 	}

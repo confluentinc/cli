@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -22,17 +21,16 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	analyticsClient         analytics.Client
-	ccloudClientFactory     pauth.CCloudClientFactory
-	mdsClientManager        pauth.MDSClientManager
-	netrcHandler            netrc.NetrcHandler
-	loginCredentialsManager pauth.LoginCredentialsManager
+	ccloudClientFactory      pauth.CCloudClientFactory
+	mdsClientManager         pauth.MDSClientManager
+	netrcHandler             netrc.NetrcHandler
+	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
-	authTokenHandler        pauth.AuthTokenHandler
-	isTest                  bool
+	authTokenHandler         pauth.AuthTokenHandler
+	isTest                   bool
 }
 
-func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -52,15 +50,14 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 
 	c := &Command{
-		CLICommand:              pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		analyticsClient:         analyticsClient,
-		mdsClientManager:        mdsClientManager,
-		ccloudClientFactory:     ccloudClientFactory,
-		netrcHandler:            netrcHandler,
-		loginCredentialsManager: loginCredentialsManager,
+		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		mdsClientManager:         mdsClientManager,
+		ccloudClientFactory:      ccloudClientFactory,
+		netrcHandler:             netrcHandler,
+		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
-		authTokenHandler:        authTokenHandler,
-		isTest:                  isTest,
+		authTokenHandler:         authTokenHandler,
+		isTest:                   isTest,
 	}
 
 	cmd.RunE = pcmd.NewCLIRunE(c.login)

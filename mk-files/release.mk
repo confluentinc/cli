@@ -31,7 +31,7 @@ release-to-stag:
 
 .PHONY: release-to-prod
 release-to-prod:
-	@$(caasenv-authenticate) && \
+	@$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)
@@ -64,7 +64,7 @@ restore-librdkafka-amd64:
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	$(caasenv-authenticate) && \
+	$(aws-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml || true && \
 	make restore-librdkafka-amd64
@@ -81,7 +81,7 @@ goreleaser-patches:
 # Dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change doesn't count)
 .PHONY: set-acls
 set-acls:
-	$(caasenv-authenticate) && \
+	$(aws-authenticate) && \
 	for file_type in binaries archives; do \
 		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
 		echo "SETTING ACLS: $${folder_path}"; \
@@ -92,7 +92,7 @@ set-acls:
 # Chose not to change install script to expect no-v because older versions use the format with 'v'.
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
 	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
 	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
@@ -107,7 +107,7 @@ copy-stag-archives-to-latest:
 # first argument: S3 folder of archives we want to copy from
 # second argument: S3 folder destination for latest archives
 define copy-archives-files-to-latest
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
 	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
 	latest_folder=$2/confluent-cli/archives/latest; \
 	for suffix in $(ARCHIVE_TYPES); do \
@@ -121,7 +121,7 @@ endef
 # second argument: S3 folder destination for latest archives
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
 	version_checksums=confluent_v$(CLEAN_VERSION)_checksums.txt; \
 	latest_checksums=confluent_latest_checksums.txt; \
 	cd $(TEMP_DIR) ; \
@@ -143,5 +143,5 @@ download-licenses:
 .PHONY: publish-installer
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installer:
-	$(caasenv-authenticate) && \
+	$(aws-authenticate) && \
 	aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read

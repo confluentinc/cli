@@ -3,13 +3,14 @@ package update
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
