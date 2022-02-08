@@ -1,11 +1,10 @@
 package iam
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -29,17 +28,20 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	// users, err := c.Client.User.GetServiceAccounts(context.Background())
+	resp, _, err := iam.ListIamServiceAccounts(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return err
 	}
+	serviceAccounts := resp.Data
 
 	outputWriter, err := output.NewListOutputWriter(cmd, serviceAccountListFields, serviceAccountListHumanLabels, serviceAccountListStructuredLabels)
 	if err != nil {
 		return err
 	}
-	for _, u := range users {
-		outputWriter.AddElement(u)
+	for _, u := range serviceAccounts {
+		element := &serviceAccountStruct{ResourceId: *u.Id, ServiceName: *u.DisplayName, ServiceDescription: *u.Description}
+		outputWriter.AddElement(element)
 	}
 	return outputWriter.Out()
 }

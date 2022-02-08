@@ -1,15 +1,15 @@
 package iam
 
 import (
-	"context"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -47,12 +47,20 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	user := &orgv1.User{
-		ResourceId:         args[0],
-		ServiceDescription: description,
-	}
+	// user := &orgv1.User{
+	// 	ResourceId:         args[0],
+	// 	ServiceDescription: description,
+	// }
 
-	if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
+	// if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
+	// 	return err
+	// }
+
+	update := iamv2.IamV2ServiceAccountUpdate{
+		Description: &description,
+	}
+	_, _, err = iam.UpdateIamServiceAccount(*c.IamClient, args[0], update, c.AuthToken())
+	if err != nil {
 		return err
 	}
 

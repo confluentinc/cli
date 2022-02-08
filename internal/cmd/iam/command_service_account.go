@@ -12,6 +12,12 @@ type serviceAccountCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
+type serviceAccountStruct struct {
+	ResourceId         string
+	ServiceName        string
+	ServiceDescription string
+}
+
 func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	cmd := &cobra.Command{
 		Use:         "service-account",

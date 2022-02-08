@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -60,14 +59,16 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	user := &orgv1.User{
-		ServiceName:        name,
-		ServiceDescription: description,
-		ServiceAccount:     true,
+	serviceAccount := iamv2.IamV2ServiceAccount{
+		DisplayName: iamv2.PtrString(name),
+		Description: &description,
 	}
-	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
+	resp, _, err := iam.CreateIamServiceAccount(*c.IamClient, serviceAccount, c.AuthToken())
 	if err != nil {
 		return err
 	}
-	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
+
+	serviceAccountStruct := &serviceAccountStruct{ResourceId: *resp.Id, ServiceName: *resp.DisplayName, ServiceDescription: *resp.Description}
+
+	return output.DescribeObject(cmd, serviceAccountStruct, describeFields, describeHumanRenames, describeStructuredRenames)
 }

@@ -1,11 +1,10 @@
 package iam
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -29,7 +28,8 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
-	if err := c.Client.User.Delete(context.Background(), &orgv1.User{ResourceId: resourceId}); err != nil {
+	_, err := iam.DeleteIamUser(*c.IamClient, resourceId, c.AuthToken())
+	if err != nil {
 		return err
 	}
 

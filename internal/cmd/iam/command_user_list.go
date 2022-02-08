@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -30,10 +31,11 @@ func (c userCommand) newListCommand() *cobra.Command {
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
-	users, err := c.Client.User.List(context.Background())
+	resp, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return err
 	}
+	users := resp.Data
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
 	if err != nil {
@@ -41,7 +43,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, user := range users {
-		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: user.ResourceId})
+		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
 			return err
 		}
