@@ -672,15 +672,8 @@ github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787/go.mod h1:
 github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076/go.mod h1:WD/4qYOPFMs2ozq2z2VJFtHljgptKHWtOMb9ochncfA=
 github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 h1:77/42xar6SY7DxTSVZhb1XoJycpkh6UIy0OdpxpVmFU=
 github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65/go.mod h1:WD/4qYOPFMs2ozq2z2VJFtHljgptKHWtOMb9ochncfA=
-github.com/confluentinc/protoc-gen-ccloud v0.0.0-20190122202943-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=
-github.com/confluentinc/protoc-gen-ccloud v0.0.1/go.mod h1:pDn9xwYsW8QvxGpwJ9CaomgtYBpx7FgdonHVmCo5yRo=
-github.com/confluentinc/protoc-gen-ccloud v0.0.2-0.20190205163731-91a08616afd2/go.mod h1:RL4B2sjziJsuvLS6nkpqJha7026Wl3aaN4cXMSDYoc4=
-github.com/confluentinc/protoc-gen-ccloud v0.0.3/go.mod h1:aZRVEnVpDqGKlGNaR75eWMcMzXOFDDps7ByPJiPPwxg=
 github.com/confluentinc/protoc-gen-ccloud v0.0.4 h1:cQkU/EJe1ZeSMNyIr2EZkcyJx4rhhR5v7Ierj3toxbo=
 github.com/confluentinc/protoc-gen-ccloud v0.0.4/go.mod h1:c5l+BPASYdK6SttAYW8yrGx0NNhB+4xpKID+w/MXp/8=
-github.com/confluentinc/prototools v0.0.1/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
-github.com/confluentinc/prototools v0.0.2-0.20190205163623-ca587b85ed4e/go.mod h1:ycwwz5+n4KxCfEKvkF5uC21S5wKtkHKcUD7OWCOGG3k=
-github.com/confluentinc/prototools v0.0.3/go.mod h1:BeYyZpaHqLMJ3uFf5aGl30F6xnideWJLd0HsGm9QY2U=
 github.com/confluentinc/prototools v0.0.4/go.mod h1:V4b4Enz2JM192RaRXFyN3yBMXAToleg+dTpCOu4fnhE=
 github.com/confluentinc/schema-registry-sdk-go v0.0.12 h1:cAbyMjl+osUwTlYipSG2XcMSrvcugBOK0JdVznfdUKg=
 github.com/confluentinc/schema-registry-sdk-go v0.0.12/go.mod h1:+3hPLr84tBmDdQV1XSvo3H9FZwL3+Nx9MGbm17QyXq0=
