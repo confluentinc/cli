@@ -1,5 +1,5 @@
---- cli/Makefile	2022-02-04 15:01:25.000000000 -0800
-+++ debian/Makefile	2022-01-11 19:05:28.000000000 -0800
+--- cli/Makefile	2022-02-08 13:25:02.000000000 -0600
++++ debian/Makefile	2022-01-24 13:34:02.000000000 -0600
 @@ -1,268 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -173,8 +173,8 @@
 -
 -# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 -# then assuming caas.sh lives here should be fine
--define caasenv-authenticate
--	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+-define aws-authenticate
+-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
 -endef
 -
 -.PHONY: fmt
