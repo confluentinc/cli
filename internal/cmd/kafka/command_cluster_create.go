@@ -12,7 +12,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -193,10 +192,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
+		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
@@ -331,4 +329,15 @@ func stringToSku(s string) (productv1.Sku, error) {
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil
+}
+
+func getKafkaProvisionEstimate(sku productv1.Sku) string {
+	fmtEstimate := "It may take up to %s for the Kafka cluster to be ready."
+
+	switch sku {
+	case productv1.Sku_DEDICATED:
+		return fmt.Sprintf(fmtEstimate, "1 hour") + " The organization admin will receive an email once the dedicated cluster is provisioned."
+	default:
+		return fmt.Sprintf(fmtEstimate, "5 minutes")
+	}
 }

@@ -173,6 +173,7 @@ func (h *hasAPIKeyTopicCommand) init() {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The key/value delimiter.")
+	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 	cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
@@ -296,7 +297,7 @@ func (a *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		topicGetResp, httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsGet(kafkaREST.Context, lkc)
+		topicGetResp, httpResp, err := kafkaREST.Client.TopicV3Api.ListKafkaTopics(kafkaREST.Context, lkc)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -383,7 +384,7 @@ func (a *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		_, httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsPost(kafkaREST.Context, lkc, &kafkarestv3.ClustersClusterIdTopicsPostOpts{
+		_, httpResp, err := kafkaREST.Client.TopicV3Api.CreateKafkaTopic(kafkaREST.Context, lkc, &kafkarestv3.CreateKafkaTopicOpts{
 			CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
 				TopicName:         topicName,
 				PartitionsCount:   numPartitions,
@@ -469,7 +470,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(kafkaREST.Context, lkc, topicName)
+		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -494,7 +495,7 @@ func (a *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData := &topicData{}
 			topicData.TopicName = topicName
 			// Get topic config
-			configsResp, httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsGet(kafkaREST.Context, lkc, topicName)
+			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
 			if err != nil {
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			} else if configsResp.Data == nil {
@@ -559,8 +560,8 @@ func (a *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		httpResp, err := kafkaREST.Client.ConfigsApi.ClustersClusterIdTopicsTopicNameConfigsalterPost(kafkaREST.Context, lkc, topicName,
-			&kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts{
+		httpResp, err := kafkaREST.Client.ConfigsV3Api.UpdateKafkaTopicConfigBatch(kafkaREST.Context, lkc, topicName,
+			&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
 			})
 
@@ -656,7 +657,7 @@ func (a *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		httpResp, err := kafkaREST.Client.TopicApi.ClustersClusterIdTopicsTopicNameDelete(kafkaREST.Context, lkc, topicName)
+		httpResp, err := kafkaREST.Client.TopicV3Api.DeleteKafkaTopic(kafkaREST.Context, lkc, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
@@ -791,7 +792,7 @@ func (h *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	subject := topic + "-value"
+	subject := topicNameStrategy(topic)
 	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return err
@@ -971,11 +972,21 @@ func (h *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	subject := topicNameStrategy(topic)
+	contextName, err := cmd.Flags().GetString("context-name")
+	if err != nil {
+		return err
+	}
+	if contextName != "" {
+		subject = contextName
+	}
+
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,
 		Ctx:        ctx,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
+		Subject:    subject,
 		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 

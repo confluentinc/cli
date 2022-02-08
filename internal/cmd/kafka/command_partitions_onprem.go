@@ -109,7 +109,7 @@ func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error
 	if err != nil {
 		return err
 	}
-	partitionListResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(restContext, clusterId, topic)
+	partitionListResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -161,7 +161,7 @@ func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string
 	if err != nil {
 		return err
 	}
-	partitionGetResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdGet(restContext, clusterId, topic, partitionId)
+	partitionGetResp, resp, err := restClient.PartitionV3Api.GetKafkaPartition(restContext, clusterId, topic, partitionId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

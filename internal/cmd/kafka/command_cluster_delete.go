@@ -6,7 +6,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -43,6 +42,5 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, args[0])
 	return nil
 }

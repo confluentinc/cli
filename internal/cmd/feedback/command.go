@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -15,20 +14,16 @@ import (
 )
 
 type command struct {
-	analyticsClient analytics.Client
-	prompt          form.Prompt
+	prompt form.Prompt
 }
 
-func New(prerunner pcmd.PreRunner, analytics analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	prompt := form.NewPrompt(os.Stdin)
-	return NewFeedbackCmdWithPrompt(prerunner, analytics, prompt)
+	return NewFeedbackCmdWithPrompt(prerunner, prompt)
 }
 
-func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, analyticsClient analytics.Client, prompt form.Prompt) *cobra.Command {
-	c := command{
-		analyticsClient: analyticsClient,
-		prompt:          prompt,
-	}
+func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, prompt form.Prompt) *cobra.Command {
+	c := command{prompt: prompt}
 	cmd := pcmd.NewAnonymousCLICommand(
 		&cobra.Command{
 			Use:   "feedback",
@@ -48,7 +43,6 @@ func (c *command) feedbackRunE(cmd *cobra.Command, _ []string) error {
 	msg := f.Responses["feedback"].(string)
 
 	if len(msg) > 0 {
-		c.analyticsClient.SetSpecialProperty(analytics.FeedbackPropertiesKey, msg)
 		utils.Println(cmd, errors.ThanksForFeedbackMsg)
 	}
 	return nil

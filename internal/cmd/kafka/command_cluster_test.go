@@ -6,23 +6,18 @@ import (
 	"testing"
 	"time"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/google/go-cmp/cmp"
-	segment "github.com/segmentio/analytics-go"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -42,8 +37,6 @@ type KafkaClusterTestSuite struct {
 	conf            *v1.Config
 	kafkaMock       *ccsdkmock.Kafka
 	envMetadataMock *ccsdkmock.EnvironmentMetadata
-	analyticsOutput []segment.Message
-	analyticsClient analytics.Client
 	metricsApi      *ccsdkmock.MetricsApi
 	usageLimits     *ccsdkmock.UsageLimits
 }
@@ -86,8 +79,6 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 	suite.metricsApi = &ccsdkmock.MetricsApi{
 		QueryV2Func: func(ctx context.Context, view string, query *ccloud.MetricsApiRequest, jwt string) (*ccloud.MetricsApiQueryReply, error) {
 			if query.Aggregations[0].Metric != ClusterLoadMetricName {
@@ -160,14 +151,12 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		UsageLimits:         suite.usageLimits,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	cmd := newClusterCommand(conf, prerunner, suite.analyticsClient)
-	return cmd
+	return newClusterCommand(conf, prerunner)
 }
 
 func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	req := require.New(suite.T())
 	root := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	root.analyticsClient.SetStartTime()
 	kafkaMock := &ccsdkmock.Kafka{
 		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
 			return &schedv1.KafkaCluster{
@@ -237,23 +226,23 @@ Identity:
   id-xyz
 
 
-Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 5 minutes for the Kafka cluster to be ready.
-+--------------+---------------+
-| Id           | lkc-xyz       |
-| Name         | gcp-byok-test |
-| Type         | DEDICATED     |
-| Ingress      |             0 |
-| Egress       |             0 |
-| Storage      |             0 |
-| Provider     | gcp           |
-| Availability | single-zone   |
-| Region       | us-central1   |
-| Status       | PROVISIONING  |
-| Endpoint     |               |
-| ApiEndpoint  |               |
-| RestEndpoint |               |
-| ClusterSize  |             0 |
-+--------------+---------------+
+Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
++---------------+---------------+
+| ID            | lkc-xyz       |
+| Name          | gcp-byok-test |
+| Type          | DEDICATED     |
+| Ingress       |             0 |
+| Egress        |             0 |
+| Storage       |             0 |
+| Provider      | gcp           |
+| Availability  | single-zone   |
+| Region        | us-central1   |
+| Status        | PROVISIONING  |
+| Endpoint      |               |
+| API Endpoint  |               |
+| REST Endpoint |               |
+| Cluster Size  |             0 |
++---------------+---------------+
 `)
 	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
 	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)
@@ -307,8 +296,8 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	shouldError = false
 	shouldPrompt = true
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"update", clusterName, "--cku", "2"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
+	err := cmd.Execute()
 	req.Contains(err.Error(), "Cluster resize error: failed to read your confirmation")
 	req.True(suite.metricsApi.QueryV2Called())
 }
@@ -353,33 +342,29 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 	shouldError = true
 	shouldPrompt = false
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"update", clusterName, "--cku", "2"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
+	err := cmd.Execute()
 	req.True(suite.metricsApi.QueryV2Called())
 	req.Contains(err.Error(), "cluster shrink validation error")
 }
 
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"create", clusterName, "--cloud", cloudId, "--region", regionId}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"create", clusterName, "--cloud", cloudId, "--region", regionId})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.envMetadataMock.GetCalled())
 	req.True(suite.kafkaMock.CreateCalled())
-	// TODO add back with analytics
-	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"delete", clusterId}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"delete", clusterId})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.kafkaMock.DeleteCalled())
-	// TODO add back with analytics
-	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], clusterId, req)
 }
 
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {

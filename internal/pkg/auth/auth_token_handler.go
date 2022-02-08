@@ -4,8 +4,9 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
@@ -113,7 +114,8 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
-	getMeReply, err := getCCloudUser(client); if err != nil {
+	getMeReply, err := getCCloudUser(client)
+	if err != nil {
 		return err
 	}
 	if getMeReply.User.Email != loginEmail {

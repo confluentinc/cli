@@ -5,9 +5,6 @@ const (
 	APIKeyNotRetrievableMsg = "Save the API key and secret. The secret is not retrievable later."
 	APIKeyTime              = "It may take a couple of minutes for the API key to be ready."
 
-	// kafka commands
-	KafkaClusterTime = "It may take up to 5 minutes for the Kafka cluster to be ready."
-
 	// secret commands
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
 
@@ -21,6 +18,8 @@ const (
 
 	// ksql create warning
 	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."
+	KSQLAppDeprecateWarning    = "In the next major release, the `confluent ksql app` commands will be removed. " +
+		"Use the equivalent `confluent ksql cluster` commands instead."
 
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +

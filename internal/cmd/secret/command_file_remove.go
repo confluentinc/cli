@@ -10,7 +10,7 @@ import (
 func (c *command) newRemoveCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove",
-		Short: "Delete the configuration values from the configuration properties file.",
+		Short: "Remove values from a configuration properties file.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.remove),
 	}

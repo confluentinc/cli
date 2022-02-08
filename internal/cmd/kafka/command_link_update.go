@@ -67,8 +67,8 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-	opts := &kafkarestv3.ClustersClusterIdLinksLinkNameConfigsalterPutOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs})}
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsalterPut(kafkaREST.Context, lkc, linkName, opts)
+	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs})}
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(kafkaREST.Context, lkc, linkName, opts)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
 	}
