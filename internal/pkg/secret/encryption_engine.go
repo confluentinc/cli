@@ -90,13 +90,13 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
-func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, _ string, masterKey string) ([]byte, error) {
+func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
 	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	dataKeyEnc, err := c.Decrypt(dataKey, iv, c.Cipher.EncryptionAlgo, masterKeyByte)
+	dataKeyEnc, err := c.Decrypt(dataKey, iv, algo, masterKeyByte)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -146,7 +146,7 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, _ string, key []byte) (string, error) {
+func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key []byte) (string, error) {
 	cipherBytes, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
 		return "", err
@@ -155,7 +155,7 @@ func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, _ string, key []by
 	if err != nil {
 		return "", err
 	}
-	plainText, err := c.decrypt(cipherBytes, key, ivBytes)
+	plainText, err := c.decrypt(cipherBytes, key, ivBytes, algo)
 	if err != nil {
 		return "", err
 	}
@@ -168,7 +168,7 @@ func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase string, salt string)
 	return key, nil
 }
 
-func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain []byte, err error) {
+func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo string) (plain []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -187,14 +187,23 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 		return []byte{}, err
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		panic(err.Error())
-	}
+	var decrypted []byte
 
-	decrypted, err := aesgcm.Open(nil, iv, crypt, nil)
-	if err != nil {
-		panic(err.Error())
+	if algo == "AES/CBC/PKCS5Padding" {
+		ecb := cipher.NewCBCDecrypter(block, iv)
+		decrypted = make([]byte, len(crypt))
+		ecb.CryptBlocks(decrypted, crypt)
+
+	} else if algo == "AES/GCM/PKCS5Padding" {
+		aesgcm, err := cipher.NewGCM(block)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		decrypted, err = aesgcm.Open(nil, iv, crypt, nil)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 
 	return c.pKCS5Trimming(decrypted)

@@ -573,7 +573,35 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
-			name: "ValidTestCase: Decrypt Config File",
+			name: "ValidTestCase: Decrypt Config File (AES CBC)",
+			args: &args{
+				masterKeyPassphrase: "abc123",
+				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+`,
+				secretFileContent: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
+_metadata.symmetric_key.0.created_at = 2019-05-30 19:34:58.190796 -0700 PDT m=+13.357260342
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 10000
+_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
+_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+`,
+				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
+				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
+				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/decrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
+				setNewMEK:              true,
+				newMasterKey:           "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
+			},
+			wantErr:        false,
+			wantOutputFile: "testPassword = password\n",
+		},
+		{
+			name: "ValidTestCase: Decrypt Config File (AES GCM)",
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
