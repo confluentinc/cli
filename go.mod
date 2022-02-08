@@ -130,6 +130,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.833.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.4.0 // indirect
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.299.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 // indirect

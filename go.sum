@@ -346,6 +346,8 @@ github.com/confluentinc/cc-structs/operator v0.911.0 h1:21n1nOWg6+OhKKrvJASlcHN1
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.95 h1:i6NI9nHjWnrwPDCaQkIJLecC+FS9L35mt7+E6id2PTU=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.95/go.mod h1:KcJwPVBOzlx7OFVFRBJ7ObHo7tTw1RD+xrukByOuHwU=
+github.com/confluentinc/ccloud-sdk-go-v2/org v0.4.0 h1:WcJs6RbY8nU5HapaG0ZCH9ftFBtZyuKMIuNAkdVmc2o=
+github.com/confluentinc/ccloud-sdk-go-v2/org v0.4.0/go.mod h1:zREJ+OOZz0rEXCaPx0JbCVj2EfNnYs/c6qhPDfhldI0=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=

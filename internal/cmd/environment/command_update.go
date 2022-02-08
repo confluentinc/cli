@@ -1,13 +1,12 @@
 package environment
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -34,13 +33,20 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	account := &orgv1.Account{
-		Id:             id,
-		Name:           name,
-		OrganizationId: c.State.Auth.Account.OrganizationId,
-	}
+	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)} // do we need to specify id too?
 
-	if err := c.Client.Account.Update(context.Background(), account); err != nil {
+	// account := &orgv1.Account{
+	// 	Id:             id,
+	// 	Name:           name,
+	// 	OrganizationId: c.State.Auth.Account.OrganizationId,
+	// }
+
+	// if err := c.Client.Account.Update(context.Background(), account); err != nil {
+	// 	return err
+	// }
+
+	_, _, err = org.UpdateOrgEnvironment(c.OrgClient, id, updateEnvironment, c.AuthToken())
+	if err != nil {
 		return err
 	}
 

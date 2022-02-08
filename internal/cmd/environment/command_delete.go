@@ -1,13 +1,11 @@
 package environment
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -24,9 +22,13 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	account := &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId}
+	// account := &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId}
 
-	if err := c.Client.Account.Delete(context.Background(), account); err != nil {
+	// if err := c.Client.Account.Delete(context.Background(), account); err != nil {
+	// 	return err
+	// }
+	_, err := org.DeleteOrgEnvironment(c.OrgClient, id, c.AuthToken())
+	if err != nil {
 		return err
 	}
 
