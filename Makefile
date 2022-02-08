@@ -157,7 +157,7 @@ build-integ-race:
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
-define caasenv-authenticate
+define aws-authenticate
 	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
 endef
 
