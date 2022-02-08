@@ -23,6 +23,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.onPremProduce),
 		Short: "Produce messages to a Kafka topic.",
+		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
@@ -58,14 +59,14 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	producer, err := ckafka.NewProducer(configMap)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
+		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
 	err = c.refreshOAuthBearerToken(cmd, producer)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
 	}
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
@@ -77,7 +78,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	topicName := args[0]
 	err = c.validateTopic(adminClient, topicName)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
 	}
 
 	valueFormat, subject, serializationProvider, err := prepareSerializer(cmd, topicName)

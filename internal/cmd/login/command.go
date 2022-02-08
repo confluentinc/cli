@@ -39,6 +39,7 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
 			fmt.Sprintf("You can log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
 			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+			"Confluent Platform configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html." +
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args: cobra.NoArgs,

@@ -23,6 +23,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.onPremConsume),
 		Short: "Consume messages from a Kafka topic.",
+		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
@@ -89,13 +90,13 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	consumer, err := ckafka.NewConsumer(configMap)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
 	err = c.refreshOAuthBearerToken(cmd, consumer)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
 	}
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
@@ -107,7 +108,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	topicName := args[0]
 	err = c.validateTopic(adminClient, topicName)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
 	}
 
 	err = consumer.Subscribe(topicName, nil)
