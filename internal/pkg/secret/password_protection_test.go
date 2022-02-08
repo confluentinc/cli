@@ -492,7 +492,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 					err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.originalConfigs, plugin)
 					req.NoError(err)
 				} else {
-					if strings.Contains(tt.args.configFilePath, "json") {
+					if strings.HasSuffix(tt.args.configFilePath, ".json") {
 						validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
 					} else {
 						validateTextFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
