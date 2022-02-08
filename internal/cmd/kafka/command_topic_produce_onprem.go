@@ -66,7 +66,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	err = c.refreshOAuthBearerToken(cmd, producer)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
+		return err
 	}
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
@@ -78,7 +78,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	topicName := args[0]
 	err = c.validateTopic(adminClient, topicName)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
+		return err
 	}
 
 	valueFormat, subject, serializationProvider, err := prepareSerializer(cmd, topicName)

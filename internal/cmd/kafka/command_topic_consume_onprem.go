@@ -96,7 +96,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	err = c.refreshOAuthBearerToken(cmd, consumer)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
+		return err
 	}
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
@@ -108,7 +108,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	topicName := args[0]
 	err = c.validateTopic(adminClient, topicName)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.OnPremConfigGuideSuggestion)
+		return err
 	}
 
 	err = consumer.Subscribe(topicName, nil)
