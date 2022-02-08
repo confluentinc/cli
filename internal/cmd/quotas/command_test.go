@@ -12,12 +12,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -27,8 +24,6 @@ type QuotasTestSuite struct {
 	suite.Suite
 	conf            *v1.Config
 	QuotasClient    *quotasv2.APIClient
-	analyticsOutput []segment.Message
-	analyticsClient analytics.Client
 }
 
 func TestQuotasTestSuite(t *testing.T) {
@@ -38,8 +33,6 @@ func TestQuotasTestSuite(t *testing.T) {
 func (suite *QuotasTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.StartBackEndServer()
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 	url := suite.StartBackEndServer()
 	cfg := quotasv2.NewConfiguration()
 
@@ -102,7 +95,8 @@ func int32ToPtr(i int32) *int32 {
 func (suite *QuotasTestSuite) TestListQuotas() {
 	cmd := suite.newCmd()
 	args := []string{"list", "kafka_cluster"}
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs(args)
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 
