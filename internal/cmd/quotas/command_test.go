@@ -22,8 +22,8 @@ import (
 
 type QuotasTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	QuotasClient    *quotasv2.APIClient
+	conf         *v1.Config
+	QuotasClient *quotasv2.APIClient
 }
 
 func TestQuotasTestSuite(t *testing.T) {
