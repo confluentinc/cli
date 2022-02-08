@@ -115,8 +115,13 @@ func RequireLengthBetween(field string, minLength, maxLength int) CommandRule {
 func RequireSingular(field string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
+		if strings.HasSuffix(fieldValue, "quota") {
+			// flect.Singularize("xx-quota") -> xx-quotum
+			// this is a known issue with the package, create an exception for this
+			return nil
+		}
 		if flect.Singularize(fieldValue) != fieldValue {
-			return fmt.Errorf("%s should be singular for `%s`", normalizeDesc(field), FullCommand(cmd))
+			return fmt.Errorf("%s should be singular for `%s` (Origin: %s)", normalizeDesc(field), FullCommand(cmd), flect.Singularize(fieldValue))
 		}
 		return nil
 	}
