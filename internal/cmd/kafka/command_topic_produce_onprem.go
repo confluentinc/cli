@@ -44,9 +44,9 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	pcmd.AddOutputFlag(cmd)
 	_ = cmd.MarkFlagRequired("bootstrap")
 	_ = cmd.MarkFlagRequired("ca-location")
-	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
