@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
@@ -13,6 +14,7 @@ type DynamicConfig struct {
 	Resolver  FlagResolver
 	Client    *ccloud.Client
 	IamClient *iamv2.APIClient
+	MdsClient *mdsv2.APIClient
 }
 
 func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client) *DynamicConfig {

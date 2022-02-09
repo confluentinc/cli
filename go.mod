@@ -164,6 +164,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.5.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.3.0 // indirect
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.357.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect

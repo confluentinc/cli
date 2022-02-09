@@ -28,12 +28,10 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	// users, err := c.Client.User.GetServiceAccounts(context.Background())
-	resp, _, err := iam.ListIamServiceAccounts(*c.IamClient, c.AuthToken())
+	serviceAccounts, _, err := iam.ListIamServiceAccounts(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return err
 	}
-	serviceAccounts := resp.Data
 
 	outputWriter, err := output.NewListOutputWriter(cmd, serviceAccountListFields, serviceAccountListHumanLabels, serviceAccountListStructuredLabels)
 	if err != nil {

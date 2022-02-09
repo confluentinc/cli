@@ -10,6 +10,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -21,6 +22,7 @@ type DynamicContext struct {
 	resolver  FlagResolver
 	client    *ccloud.Client
 	iamClient *iamv2.APIClient
+	mdsClient *mdsv2.APIClient
 }
 
 func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {

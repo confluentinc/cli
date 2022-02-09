@@ -31,11 +31,10 @@ func (c userCommand) newListCommand() *cobra.Command {
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
-	resp, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
+	users, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return err
 	}
-	users := resp.Data
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
 	if err != nil {

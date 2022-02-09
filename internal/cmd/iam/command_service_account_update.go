@@ -47,14 +47,6 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	// user := &orgv1.User{
-	// 	ResourceId:         args[0],
-	// 	ServiceDescription: description,
-	// }
-
-	// if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
-	// 	return err
-	// }
 
 	update := iamv2.IamV2ServiceAccountUpdate{
 		Description: &description,

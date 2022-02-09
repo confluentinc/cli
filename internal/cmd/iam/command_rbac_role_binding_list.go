@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"context"
 	"net/http"
 	"sort"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -231,12 +231,12 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
-	users, err := c.Client.User.List(context.Background())
+	users, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return userToEmailMap, err
 	}
 	for _, u := range users {
-		userToEmailMap["User:"+u.ResourceId] = u.Email
+		userToEmailMap["User:"+*u.Id] = *u.Email
 	}
 	return userToEmailMap, nil
 }
