@@ -80,14 +80,14 @@ generate:
 
 .PHONY: deps
 deps:
-	go install github.com/goreleaser/goreleaser@v0.164.0 && \
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
+	go install github.com/goreleaser/goreleaser@v1.4.1 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
 	go install github.com/mitchellh/golicense@v0.2.0
 
 .PHONY: jenkins-deps
 # Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
 jenkins-deps:
-	go get github.com/goreleaser/goreleaser@v0.164.0
+	go get github.com/goreleaser/goreleaser@v1.4.1
 
 ifeq ($(shell uname),Darwin)
     SHASUM ?= gsha256sum
@@ -158,7 +158,7 @@ build-integ-race:
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
 endef
 
 .PHONY: fmt
