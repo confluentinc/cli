@@ -54,7 +54,7 @@ publish-release-notes-to-docs-repos:
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
     aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
 
 define print-publish-release-notes-next-steps
