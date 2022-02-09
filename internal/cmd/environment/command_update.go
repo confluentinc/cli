@@ -33,18 +33,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)} // do we need to specify id too?
-
-	// account := &orgv1.Account{
-	// 	Id:             id,
-	// 	Name:           name,
-	// 	OrganizationId: c.State.Auth.Account.OrganizationId,
-	// }
-
-	// if err := c.Client.Account.Update(context.Background(), account); err != nil {
-	// 	return err
-	// }
-
+	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	_, _, err = org.UpdateOrgEnvironment(c.OrgClient, id, updateEnvironment, c.AuthToken())
 	if err != nil {
 		return err

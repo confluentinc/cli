@@ -22,11 +22,6 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	// account := &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId}
-
-	// if err := c.Client.Account.Delete(context.Background(), account); err != nil {
-	// 	return err
-	// }
 	_, err := org.DeleteOrgEnvironment(c.OrgClient, id, c.AuthToken())
 	if err != nil {
 		return err
