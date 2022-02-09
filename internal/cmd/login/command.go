@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
