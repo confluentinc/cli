@@ -232,3 +232,7 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	}
 	return err
 }
+
+func CatchSchemaRegistryNotEnabledError(err error) bool {
+	return err.Error() == SRNotEnabledErrorMsg
+}

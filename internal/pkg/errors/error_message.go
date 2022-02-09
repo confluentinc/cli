@@ -38,7 +38,7 @@ const (
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
-	SSOCrdentialsDoNotMatchSuggestions 			= "Please re-login and use the same email at the prompt and in the SSO portal."
+	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -96,6 +96,16 @@ const (
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
+
+	// kafka client-config package
+	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
+	WriteConfigFileErrorMsg               = "failed to write config file"
+	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
+	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
+		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
+		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
+	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--sr-apikey` and --sr-apisecret`."
 
 	// kafka cluster commands
 	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."

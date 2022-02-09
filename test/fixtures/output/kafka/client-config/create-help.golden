@@ -1,0 +1,26 @@
+Create a Kafka Client configuration file.
+
+Usage:
+  confluent kafka client-config create [command]
+
+Available Commands:
+  clojure     Create a Clojure Client configuration file.
+  cpp         Create a C/C++ Client configuration file.
+  csharp      Create a C# Client configuration file.
+  go          Create a Go Client configuration file.
+  groovy      Create a Groovy Client configuration file.
+  java        Create a Java Client configuration file.
+  kotlin      Create a Kotlin Client configuration file.
+  ktor        Create a Ktor Client configuration file.
+  nodejs      Create a Node.js Client configuration file.
+  python      Create a Python Client configuration file.
+  ruby        Create a Ruby Client configuration file.
+  rust        Create a Rust Client configuration file.
+  scala       Create a Scala Client configuration file.
+  springboot  Create a Spring Boot Client configuration file.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka client-config create [command] --help" for more information about a command.

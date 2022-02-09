@@ -30,6 +30,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string, analyticsCli
 	topicCmd := newTopicCommand(cfg, prerunner, clientID)
 
 	c.AddCommand(newBrokerCommand(prerunner))
+	c.AddCommand(newClientConfigCommand(prerunner, clientID, c.analyticsClient))
 	c.AddCommand(newLinkCommand(prerunner))
 	c.AddCommand(newMirrorCommand(prerunner))
 	c.AddCommand(newPartitionCommand(prerunner))

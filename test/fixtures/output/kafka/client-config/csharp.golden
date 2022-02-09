@@ -1,0 +1,10 @@
+# Kafka
+bootstrap.servers=kafka-endpoint
+security.protocol=SASL_SSL
+sasl.mechanisms=PLAIN
+sasl.username=UIAPIKEY100
+sasl.password=UIAPISECRET100
+
+# Best practice for higher availability in librdkafka clients prior to 1.7
+session.timeout.ms=45000
+
