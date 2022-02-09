@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -105,6 +106,10 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
 	if err != nil {
+		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
+		}
+
 		return err
 	}
 
