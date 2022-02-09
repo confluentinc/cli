@@ -136,6 +136,7 @@ const (
 	FailedToCreateProducerMsg            = "failed to create producer: %v"
 	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
 	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
+	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
@@ -209,6 +210,9 @@ const (
 	// auth package
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
+	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
+	SSLCaCertSuggestion              = "Please specify `--ca-location` to enable SSL verification.\n"
+	SRCaCertSuggestion               = "Please specify `--ca-location` to enable schema registry client.\n"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
@@ -386,12 +390,16 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	avoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
-	NotLoggedInErrorMsg    = "not logged in"
-	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
+	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg         = "not logged in"
+	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
+	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
+	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
 		avoidTimeoutSuggestion
-	SRNotAuthenticatedErrorMsg    = "not logged in, or no Schema Registry endpoint specified"
-	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
+	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
+	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token."
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		avoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +

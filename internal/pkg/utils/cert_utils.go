@@ -14,6 +14,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
+func GetCAClient(caCertPath string) (*http.Client, error) {
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestion)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	return &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}}, nil
+}
+
 func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
 	return CustomCAAndClientCertClient(caCertPath, "", "")
 }
