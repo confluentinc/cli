@@ -32,24 +32,22 @@ type prettyRole struct {
 	AccessPolicy string
 }
 
-func NewRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "role",
 		Short: "Manage RBAC and IAM roles.",
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
 
-	var command *pcmd.AuthenticatedStateFlagCommand
-	if cfg.IsOnPremLogin() {
-		command = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
-	} else {
-		command = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, nil)
+	c := &roleCommand{
+		cfg:                        cfg,
+		ccloudRbacDataplaneEnabled: os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "",
 	}
 
-	c := &roleCommand{
-		AuthenticatedStateFlagCommand: command,
-		cfg:                           cfg,
-		ccloudRbacDataplaneEnabled:    os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "",
+	if cfg.IsOnPremLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 
 	c.AddCommand(c.newDescribeCommand())

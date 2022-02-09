@@ -12,8 +12,8 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -61,7 +61,7 @@ type validateEncryptionKeyInput struct {
 	AccountID      string
 }
 
-func (c *clusterCommand) newCreateCommand() *cobra.Command {
+func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Kafka cluster.",
@@ -89,6 +89,9 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
@@ -189,10 +192,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
+		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, cluster.Id)
 	return outputKafkaClusterDescription(cmd, cluster)
 }
 
@@ -327,4 +329,15 @@ func stringToSku(s string) (productv1.Sku, error) {
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil
+}
+
+func getKafkaProvisionEstimate(sku productv1.Sku) string {
+	fmtEstimate := "It may take up to %s for the Kafka cluster to be ready."
+
+	switch sku {
+	case productv1.Sku_DEDICATED:
+		return fmt.Sprintf(fmtEstimate, "1 hour") + " The organization admin will receive an email once the dedicated cluster is provisioned."
+	default:
+		return fmt.Sprintf(fmtEstimate, "5 minutes")
+	}
 }

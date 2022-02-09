@@ -8,7 +8,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -22,7 +21,7 @@ var (
 	enableStructuredRenames = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
 )
 
-func (c *clusterCommand) newEnableCommand() *cobra.Command {
+func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "enable",
 		Short:       "Enable Schema Registry for this environment.",
@@ -40,6 +39,9 @@ func (c *clusterCommand) newEnableCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("cloud")
@@ -92,7 +94,6 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 			SchemaRegistryEndpoint: newCluster.Endpoint,
 		}
 		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
-		c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, v2Cluster.Id)
 	}
 
 	return nil

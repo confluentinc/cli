@@ -87,10 +87,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/kafka-acls-list-json.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/kafka-acls-list-yaml.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-service-account.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "default", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
@@ -157,6 +158,48 @@ func getCreateLinkConfigFile() string {
 	return file.Name()
 }
 
+func (s *CLITestSuite) TestKafkaBroker() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: "kafka broker list -h", fixture: "kafka/broker/list-help.golden"},
+		{args: "kafka broker list", fixture: "kafka/broker/list.golden"},
+		{args: "kafka broker list -o json", fixture: "kafka/broker/list-json.golden"},
+		{args: "kafka broker list -o yaml", fixture: "kafka/broker/list-yaml.golden"},
+
+		{args: "kafka broker describe -h", fixture: "kafka/broker/describe-help.golden"},
+		{args: "kafka broker describe 1", fixture: "kafka/broker/describe-1.golden"},
+		{args: "kafka broker describe 1 -o json", fixture: "kafka/broker/describe-1-json.golden"},
+		{args: "kafka broker describe 1 -o yaml", fixture: "kafka/broker/describe-1-yaml.golden"},
+		{args: "kafka broker describe --all", fixture: "kafka/broker/describe-all.golden"},
+		{args: "kafka broker describe --all -o json", fixture: "kafka/broker/describe-all-json.golden"},
+		{args: "kafka broker describe --all -o yaml", fixture: "kafka/broker/describe-all-yaml.golden"},
+		{args: "kafka broker describe 1 --config-name compression.type", fixture: "kafka/broker/describe-1-config.golden"},
+		{args: "kafka broker describe --all --config-name compression.type", fixture: "kafka/broker/describe-all-config.golden"},
+		{args: "kafka broker describe --all --config-name compression.type -o json", fixture: "kafka/broker/describe-all-config-json.golden"},
+		{args: "kafka broker describe 1 --all", wantErrCode: 1, fixture: "kafka/broker/err-all-and-arg.golden"},
+
+		{args: "kafka broker update -h", fixture: "kafka/broker/update-help.golden"},
+		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN --all", fixture: "kafka/broker/update-all.golden"},
+		{args: "kafka broker update 1 --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-1.golden"},
+		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", wantErrCode: 1, fixture: "kafka/broker/err-need-all-or-arg.golden"},
+
+		{args: "kafka broker delete -h", fixture: "kafka/broker/delete-help.golden"},
+		{args: "kafka broker delete 1", fixture: "kafka/broker/delete.golden"},
+
+		{args: "kafka broker get-tasks -h", fixture: "kafka/broker/get-tasks-help.golden"},
+		{args: "kafka broker get-tasks 1", fixture: "kafka/broker/get-tasks-1.golden"},
+		{args: "kafka broker get-tasks 1 --task-type remove-broker", fixture: "kafka/broker/get-tasks-1-remove-broker.golden"},
+		{args: "kafka broker get-tasks --all", fixture: "kafka/broker/get-tasks-all.golden"},
+		{args: "kafka broker get-tasks --all --task-type add-broker", fixture: "kafka/broker/get-tasks-all-add-broker.golden"},
+	}
+
+	for _, tt := range tests {
+		tt.login = "default"
+		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runConfluentTest(tt)
+	}
+}
+
 //func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {
 //	tests := []CLITest{
 //		{args: "kafka consumer-group --help", fixture: "kafka/consumer-group-help.golden"},
@@ -203,26 +246,70 @@ func getCreateLinkConfigFile() string {
 //	}
 //}
 
-func (s *CLITestSuite) TestConfluentKafkaTopicList() {
+func (s *CLITestSuite) TestKafkaPartitions() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: "kafka partition --help", fixture: "kafka/partitions/help.golden"},
+		{args: "kafka partition list -h", fixture: "kafka/partitions/list-help.golden"},
+		{args: "kafka partition list --topic topic1", fixture: "kafka/partitions/list.golden"},
+		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partitions/list-json.golden"},
+		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partitions/list-yaml.golden"},
+		{args: "kafka partition describe -h", fixture: "kafka/partitions/describe-help.golden"},
+		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partitions/describe.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partitions/describe-json.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partitions/describe-yaml.golden"},
+		{args: "kafka partition get-reassignments -h", fixture: "kafka/partitions/reassignments-help.golden"},
+		{args: "kafka partition get-reassignments", fixture: "kafka/partitions/reassignments.golden"},
+		{args: "kafka partition get-reassignments -o json", fixture: "kafka/partitions/reassignments-json.golden"},
+		{args: "kafka partition get-reassignments --topic topic1", fixture: "kafka/partitions/reassignments-by-topic.golden"},
+		{args: "kafka partition get-reassignments 0 --topic topic1", fixture: "kafka/partitions/reassignments-by-partition.golden"},
+		{args: "kafka partition get-reassignments 0 --topic topic1 -o yaml", fixture: "kafka/partitions/reassignments-by-partition-yaml.golden"},
+	}
+	for _, tt := range tests {
+		tt.login = "default"
+		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runConfluentTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaReplica() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: "kafka replica --help", fixture: "kafka/replica/help.golden"},
+		{args: "kafka replica list -h", fixture: "kafka/replica/list-help.golden"},
+		{args: "kafka replica list --topic topic-exist", fixture: "kafka/replica/list-topic-replicas.golden"},
+		{args: "kafka replica list --topic topic-exist -o json", fixture: "kafka/replica/list-topic-replicas-json.golden"},
+		{args: "kafka replica list --topic topic-exist --partition 2", fixture: "kafka/replica/list-partition-replicas.golden"},
+		{args: "kafka replica list --topic topic-exist --partition 2 -o yaml", fixture: "kafka/replica/list-partition-replicas-yaml.golden"},
+		{args: "kafka replica list", fixture: "kafka/replica/no-flags-error.golden", wantErrCode: 1},
+	}
+	for _, tt := range tests {
+		tt.login = "default"
+		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runConfluentTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaTopicList() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Test correct usage
-		{args: fmt.Sprintf("kafka topic list --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/list.golden"},
 		// Test with basic auth input
-		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/topic/list-with-auth.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "default", fixture: "kafka/confluent/topic/list-with-auth-from-login.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "default", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/confluent/topic/list-with-auth-prompt.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/topic/list-with-auth.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "default", fixture: "kafka/topic/list-with-auth-from-login.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "default", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/topic/list-with-auth-prompt.golden"},
 		// Test with CONFLUENT_REST_URL env var
-		{args: "kafka topic list --no-auth", fixture: "kafka/confluent/topic/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		{args: "kafka topic list --no-auth", fixture: "kafka/topic/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Test failure when only one of client-cert-path or client-key-path are provided
-		{args: "kafka topic list --client-cert-path cert.crt", wantErrCode: 1, fixture: "kafka/confluent/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
-		{args: "kafka topic list --client-key-path cert.key", wantErrCode: 1, fixture: "kafka/confluent/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		{args: "kafka topic list --client-cert-path cert.crt", wantErrCode: 1, fixture: "kafka/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
+		{args: "kafka topic list --client-key-path cert.key", wantErrCode: 1, fixture: "kafka/topic/client-cert-flag-error.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Output should format correctly depending on format argument.
-		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list-yaml.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list-json.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/topic/list-yaml.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/topic/list-json.golden"},
 		// Invalid format string should throw error
-		{args: fmt.Sprintf("kafka topic list --url %s -o hello --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
+		{args: fmt.Sprintf("kafka topic list --url %s -o hello --no-auth", kafkaRestURL), fixture: "kafka/topic/list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
 	}
 
 	for _, clitest := range tests {
@@ -230,7 +317,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicList() {
 	}
 }
 
-func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
+func (s *CLITestSuite) TestKafkaTopicCreate() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// <topic> errors
@@ -248,11 +335,11 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=1 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Unknown topic config name: asdf (40002)\n", wantErrCode: 1, name: "creating topic with incorrect config name should fail"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=as --no-auth", kafkaRestURL), contains: "Error: REST request failed: Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", wantErrCode: 1, name: "creating topic with correct key incorrect config value should fail"},
 		// Success
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with default params (part 6, repl 3, no configs) should create successfully"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with default params (part 6, repl 3, no configs) should create successfully"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 2 --config retention.ms=100000,compression.type=gzip --no-auth", kafkaRestURL),
-			fixture: "kafka/confluent/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with valid optional params should create successfully"},
+			fixture: "kafka/topic/create-topic-success.golden", wantErrCode: 0, name: "correct URL with valid optional params should create successfully"},
 		// --ifnotexists
-		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --if-not-exists --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/create-duplicate-topic-ifnotexists-success.golden", wantErrCode: 0, name: "create topic with existing topic name with if-not-exists flag should succeed"},
+		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --if-not-exists --no-auth", kafkaRestURL), fixture: "kafka/topic/create-duplicate-topic-ifnotexists-success.golden", wantErrCode: 0, name: "create topic with existing topic name with if-not-exists flag should succeed"},
 	}
 
 	for _, clitest := range tests {
@@ -260,12 +347,12 @@ func (s *CLITestSuite) TestConfluentKafkaTopicCreate() {
 	}
 }
 
-func (s *CLITestSuite) TestConfluentKafkaTopicDelete() {
+func (s *CLITestSuite) TestKafkaTopicDelete() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: fmt.Sprintf("kafka topic delete --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
-		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/delete-topic-success.golden", wantErrCode: 0, name: "deleting existing topic with correct url should delete successfully"},
-		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/delete-topic-not-exist-failure.golden", wantErrCode: 1, name: "deleting a non-existent topic should fail"},
+		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/delete-topic-success.golden", wantErrCode: 0, name: "deleting existing topic with correct url should delete successfully"},
+		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", wantErrCode: 1, name: "deleting a non-existent topic should fail"},
 	}
 
 	for _, clitest := range tests {
@@ -273,7 +360,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
+func (s *CLITestSuite) TestKafkaTopicUpdate() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Topic name errors
@@ -286,10 +373,10 @@ func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config asdf=1 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Config asdf cannot be found for TOPIC topic-exist in cluster cluster-1. (404)\n", wantErrCode: 1, name: "incorrect config name should fail"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as --no-auth", kafkaRestURL), contains: "Error: REST request failed: Invalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", wantErrCode: 1, name: "correct key incorrect config value should fail"},
 		// Success cases
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-success", wantErrCode: 0, name: "valid config updates should succeed with configs printed sorted"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1000,retention.ms=1 --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-duplicate-success", wantErrCode: 0, name: "valid duplicate config should succeed with the later config value kept"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-auth -o json", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-success-json.golden", wantErrCode: 0, name: "config updates with json output"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-auth -o yaml", kafkaRestURL), fixture: "kafka/confluent/topic/update-topic-config-success-yaml.golden", wantErrCode: 0, name: "config updates with yaml output"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-auth", kafkaRestURL), fixture: "kafka/topic/update-topic-config-success", wantErrCode: 0, name: "valid config updates should succeed with configs printed sorted"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1000,retention.ms=1 --no-auth", kafkaRestURL), fixture: "kafka/topic/update-topic-config-duplicate-success", wantErrCode: 0, name: "valid duplicate config should succeed with the later config value kept"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-auth -o json", kafkaRestURL), fixture: "kafka/topic/update-topic-config-success-json.golden", wantErrCode: 0, name: "config updates with json output"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-auth -o yaml", kafkaRestURL), fixture: "kafka/topic/update-topic-config-success-yaml.golden", wantErrCode: 0, name: "config updates with yaml output"},
 	}
 
 	for _, clitest := range tests {
@@ -297,7 +384,7 @@ func (s *CLITestSuite) TestConfluentKafkaTopicUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestConfluentKafkaTopicDescribe() {
+func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Topic name errors
@@ -306,10 +393,10 @@ func (s *CLITestSuite) TestConfluentKafkaTopicDescribe() {
 		// -o errors
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o asdf --no-auth", kafkaRestURL), contains: "Error: invalid value \"asdf\" for flag `--output`\n\nSuggestions:\n    The possible values for flag `output` are: human, json, yaml.", wantErrCode: 1, name: "bad output format flag should lead to error"},
 		// Success cases
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success.golden", wantErrCode: 0, name: "topic that exists & correct format arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success.golden", wantErrCode: 0, name: "topic that exist & human arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success-json.golden", wantErrCode: 0, name: "topic that exist & json arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/confluent/topic/describe-topic-success-yaml.golden", wantErrCode: 0, name: "topic that exist & yaml arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", wantErrCode: 0, name: "topic that exists & correct format arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", wantErrCode: 0, name: "topic that exist & human arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success-json.golden", wantErrCode: 0, name: "topic that exist & json arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success-yaml.golden", wantErrCode: 0, name: "topic that exist & yaml arg should lead to success"},
 	}
 
 	for _, clitest := range tests {
@@ -317,29 +404,29 @@ func (s *CLITestSuite) TestConfluentKafkaTopicDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestConfluentKafkaACL() {
+func (s *CLITestSuite) TestKafkaACL() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// error case: bad operation, specified more than one resource type
-		{args: fmt.Sprintf("kafka acl list --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation and conflicting resource type errors", fixture: "kafka/confluent/acl/list-errors.golden", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka acl list --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation and conflicting resource type errors", fixture: "kafka/acl/list-errors.golden", wantErrCode: 1},
 		// success cases
-		{args: fmt.Sprintf("kafka acl list --url %s --no-auth", kafkaRestURL), name: "acl list output human", fixture: "kafka/confluent/acl/acl-list.golden"},
-		{args: fmt.Sprintf("kafka acl list -o json --url %s --no-auth", kafkaRestURL), name: "acl list output json", fixture: "kafka/confluent/acl/acl-list-json.golden"},
-		{args: fmt.Sprintf("kafka acl list -o yaml --url %s --no-auth", kafkaRestURL), name: "acl list output yaml", fixture: "kafka/confluent/acl/acl-list-yaml.golden"},
+		{args: fmt.Sprintf("kafka acl list --url %s --no-auth", kafkaRestURL), name: "acl list output human", fixture: "kafka/acl/list.golden"},
+		{args: fmt.Sprintf("kafka acl list -o json --url %s --no-auth", kafkaRestURL), name: "acl list output json", fixture: "kafka/acl/list-json.golden"},
+		{args: fmt.Sprintf("kafka acl list -o yaml --url %s --no-auth", kafkaRestURL), name: "acl list output yaml", fixture: "kafka/acl/list-yaml.golden"},
 
 		// error case: bad operation, specified more than one resource type, allow/deny not set
-		{args: fmt.Sprintf("kafka acl create --principal User:Alice --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/confluent/acl/create-errors.golden", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka acl create --principal User:Alice --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/acl/create-errors.golden", wantErrCode: 1},
 		// success cases
-		{args: fmt.Sprintf("kafka acl create --operation write --cluster-scope --principal User:Alice --allow --url %s --no-auth", kafkaRestURL), name: "acl create output human", fixture: "kafka/confluent/acl/acl-create.golden"},
-		{args: fmt.Sprintf("kafka acl create --operation all --cluster-scope --principal User:Alice --allow -o json --url %s --no-auth", kafkaRestURL), name: "acl create output json", fixture: "kafka/confluent/acl/acl-create-json.golden"},
-		{args: fmt.Sprintf("kafka acl create --operation all --topic Test --principal User:Alice --allow -o yaml --url %s --no-auth", kafkaRestURL), name: "acl create output yaml", fixture: "kafka/confluent/acl/acl-create-yaml.golden"},
+		{args: fmt.Sprintf("kafka acl create --operation write --cluster-scope --principal User:Alice --allow --url %s --no-auth", kafkaRestURL), name: "acl create output human", fixture: "kafka/acl/create.golden"},
+		{args: fmt.Sprintf("kafka acl create --operation all --cluster-scope --principal User:Alice --allow -o json --url %s --no-auth", kafkaRestURL), name: "acl create output json", fixture: "kafka/acl/create-json.golden"},
+		{args: fmt.Sprintf("kafka acl create --operation all --topic Test --principal User:Alice --allow -o yaml --url %s --no-auth", kafkaRestURL), name: "acl create output yaml", fixture: "kafka/acl/create-yaml.golden"},
 
 		// error case: bad operation, specified more than one resource type, allow/deny not set
-		{args: fmt.Sprintf("kafka acl delete --principal User:Alice --host '*' --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/confluent/acl/delete-errors.golden", wantErrCode: 1},
+		{args: fmt.Sprintf("kafka acl delete --principal User:Alice --host '*' --operation fake --topic Test --consumer-group Group:Test --url %s --no-auth", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/acl/delete-errors.golden", wantErrCode: 1},
 		// success cases
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-auth", kafkaRestURL), name: "acl delete output human", fixture: "kafka/confluent/acl/acl-delete.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o json --url %s --no-auth", kafkaRestURL), name: "acl delete output json", fixture: "kafka/confluent/acl/acl-delete-json.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o yaml --url %s --no-auth", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/confluent/acl/acl-delete-yaml.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-auth", kafkaRestURL), name: "acl delete output human", fixture: "kafka/acl/delete.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o json --url %s --no-auth", kafkaRestURL), name: "acl delete output json", fixture: "kafka/acl/delete-json.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o yaml --url %s --no-auth", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
 	}
 
 	for _, clitest := range tests {

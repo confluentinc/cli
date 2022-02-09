@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
@@ -117,21 +119,20 @@ func (c *Config) Load() error {
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
-			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
 		}
 		if context.CredentialName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
 		}
 		if context.PlatformName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
 		}
 		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
-		context.Logger = c.Logger
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename, c.Logger)
+			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
 	}
@@ -243,8 +244,8 @@ func (c *Config) Validate() error {
 	// Validate that current context exists.
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
-			c.Logger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename, c.Logger)
+			log.CliLogger.Trace("current context does not exist")
+			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
 		}
 	}
 	// Validate that every context:
@@ -253,30 +254,30 @@ func (c *Config) Validate() error {
 	for _, context := range c.Contexts {
 		err := context.validate()
 		if err != nil {
-			c.Logger.Trace("context validation error")
+			log.CliLogger.Trace("context validation error")
 			return err
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
-			c.Logger.Trace("unspecified credential error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename, c.Logger)
+			log.CliLogger.Trace("unspecified credential error")
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
-			c.Logger.Trace("unspecified platform error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename, c.Logger)
+			log.CliLogger.Trace("unspecified platform error")
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
-			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
-			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename, c.Logger)
+			log.CliLogger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
+			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
-			c.Logger.Trace("context state mapped to nonexistent context")
-			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename, c.Logger)
+			log.CliLogger.Trace("context state mapped to nonexistent context")
+			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename)
 		}
 	}
 
@@ -307,7 +308,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -322,7 +323,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -386,7 +387,7 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		return err
 	}
 
-	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil)
+	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "")
 }
 
 // UseContext sets the current context, if it exists.
@@ -480,4 +481,11 @@ func (c *Config) IsCloudLogin() bool {
 func (c *Config) IsOnPremLogin() bool {
 	ctx := c.Context()
 	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
+}
+
+func (c *Config) GetLastUsedOrgId() string {
+	if ctx := c.Context(); ctx != nil && ctx.LastOrgId != "" {
+		return ctx.LastOrgId
+	}
+	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
 }

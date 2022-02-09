@@ -31,6 +31,9 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -51,7 +54,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	listLinkConfigsRespData, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsGet(kafkaREST.Context, lkc, linkName)
+	listLinkConfigsRespData, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaLinkConfigs(kafkaREST.Context, lkc, linkName)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
 	}

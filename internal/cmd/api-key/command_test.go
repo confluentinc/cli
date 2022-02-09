@@ -3,23 +3,18 @@ package apikey
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"testing"
-
-	"github.com/c-bata/go-prompt"
-	"github.com/gogo/protobuf/types"
-	segment "github.com/segmentio/analytics-go"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	"github.com/gogo/protobuf/types"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
@@ -87,8 +82,6 @@ type APITestSuite struct {
 	ksqlMock         *ccsdkmock.KSQL
 	isPromptPipe     bool
 	userMock         *ccsdkmock.User
-	analyticsOutput  []segment.Message
-	analyticsClient  analytics.Client
 }
 
 //Require
@@ -209,11 +202,9 @@ func (suite *APITestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *APITestSuite) newCmd() *command {
+func (suite *APITestSuite) newCmd() *cobra.Command {
 	client := &ccloud.Client{
 		Auth:           &ccsdkmock.Auth{},
 		Account:        &ccsdkmock.Account{},
@@ -245,67 +236,52 @@ func (suite *APITestSuite) newCmd() *command {
 		MDSClient:    nil,
 		Config:       suite.conf,
 	}
-	return New(prerunner, suite.keystore, resolverMock, suite.analyticsClient)
+	return New(prerunner, suite.keystore, resolverMock)
 }
 
 func (suite *APITestSuite) TestCreateSrApiKey() {
 	cmd := suite.newCmd()
 	args := []string{"create", "--resource", srClusterID}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs(args)
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, srClusterID)
-	// TODO add back with analytics
-	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
-
-//func checkTrackedResourceAndKey(segmentMsg segment.Message, req *require.Assertions) {
-//	test_utils.CheckTrackedResourceIDInt32(segmentMsg, apiKeyResourceId, req)
-//
-//	key, err := test_utils.GetPagePropertyValue(segmentMsg, analytics.ApiKeyPropertiesKey)
-//	req.NoError(err)
-//	req.Equal(apiKeyVal, key.(string))
-//}
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
-	args := []string{"create", "--resource", suite.kafkaCluster.Id}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"create", "--resource", suite.kafkaCluster.Id})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(inputKey.LogicalClusters[0].Id, suite.kafkaCluster.Id)
-	// TODO add back with analytics
-	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestCreateCloudAPIKey() {
 	cmd := suite.newCmd()
-	args := []string{"create", "--resource", "cloud"}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"create", "--resource", "cloud"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.CreateCalled())
 	inputKey := suite.apiMock.CreateCalls()[0].Arg1
 	req.Equal(0, len(inputKey.LogicalClusters))
-	// TODO add back with analytics
-	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
-	args := []string{"delete", apiKeyVal}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"delete", apiKeyVal})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.DeleteCalled())
 	inputKey := suite.apiMock.DeleteCalls()[0].Arg1
 	req.Equal(inputKey.Key, apiKeyVal)
-	// TODO add back with analytics
-	//checkTrackedResourceAndKey(suite.analyticsOutput[0], req)
 }
 
 func (suite *APITestSuite) TestListSrApiKey() {
@@ -428,128 +404,6 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 	args := suite.keystore.StoreAPIKeyCalls()[0]
 	req.Equal(promptReadString, args.Key.Key)
 	req.Equal(promptReadPass, args.Key.Secret)
-}
-
-func (suite *APITestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	suite.isPromptPipe = false
-	cmd := suite.newCmd()
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"api-key update", "api-key delete", "api-key store", "api-key use"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
-}
-
-func (suite *APITestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for command",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        apiKeyVal,
-					Description: apiKeyDescription,
-				},
-				{
-					Text:        auditLogApiKeyVal,
-					Description: auditLogApiKeyDescription,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *APITestSuite) TestServerResourceFlagComplete() {
-	flagName := resourceFlagName
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        suite.kafkaCluster.Id,
-					Description: suite.kafkaCluster.Name,
-				},
-				{
-					Text:        suite.srCluster.Id,
-					Description: suite.srCluster.Name,
-				},
-				{
-					Text:        suite.ksqlCluster.Id,
-					Description: suite.ksqlCluster.Name,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			req.Equal(tt.want, got)
-		})
-	}
-}
-
-func (suite *APITestSuite) TestServerServiceAccountFlagComplete() {
-	flagName := "service-account"
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for flag",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        fmt.Sprintf("%d", serviceAccountId),
-					Description: serviceAccountName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerFlagComplete()[flagName]()
-			req.Equal(tt.want, got)
-		})
-	}
 }
 
 func TestApiTestSuite(t *testing.T) {

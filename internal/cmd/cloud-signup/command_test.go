@@ -155,9 +155,15 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 	cloudSignupCmd.Config = &cmdPkg.DynamicConfig{
 		Config: v1.UnauthenticatedCloudConfigMock(),
 	}
-
-	err := cloudSignupCmd.signup(cmd, prompt, mockCcloudClient())
+	mockCCloudClient := mockCcloudClient()
+	err := cloudSignupCmd.signup(cmd, prompt, mockCCloudClient)
 	require.NoError(t, err)
+	mockSignup := mockCCloudClient.Signup.(*ccloudmock.Signup)
+	require.Equal(t, 1, len(mockSignup.CreateCalls()))
+	require.Equal(t, "bstrauch@confluent.io", mockSignup.CreateCalls()[0].Arg1.User.Email)
+	mockLogin := mockCCloudClient.Auth.(*ccloudmock.Auth)
+	require.Equal(t, 1, len(mockLogin.LoginCalls()))
+	require.Equal(t, "o-123", mockLogin.LoginCalls()[0].OrgResourceId)
 
 	for _, x := range expected {
 		require.Contains(t, buf.String(), x)
@@ -178,7 +184,8 @@ func newCmd(conf *v1.Config) *command {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &orgv1.Organization{ResourceId: "o-123"},
+				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -188,7 +195,7 @@ func newCmd(conf *v1.Config) *command {
 			return &ccloud.Client{Auth: auth, User: user}
 		},
 	}
-	cmd := New(prerunner, conf.Logger, "ccloud-cli", ccloudClientFactory)
+	cmd := New(prerunner, "ccloud-cli", ccloudClientFactory)
 	return cmd
 }
 
@@ -196,7 +203,7 @@ func mockCcloudClient() *ccloud.Client {
 	return &ccloud.Client{
 		Signup: &ccloudmock.Signup{
 			CreateFunc: func(_ context.Context, _ *orgv1.SignupRequest) (*orgv1.SignupReply, error) {
-				return nil, nil
+				return &orgv1.SignupReply{Organization: &orgv1.Organization{ResourceId: "o-123"}}, nil
 			},
 			SendVerificationEmailFunc: func(_ context.Context, _ *orgv1.User) error {
 				return nil

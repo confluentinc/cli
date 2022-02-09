@@ -7,6 +7,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -55,8 +56,11 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"Must be used with --source-api-key.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-	cmd.Flags().Bool(dryrunFlagName, false, "If set, will NOT actually create the link, but simply validates it.")
-	cmd.Flags().Bool(noValidateFlagName, false, "If set, will create the link even if the source cluster cannot be reached with the supplied bootstrap server and credentials.")
+	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
+	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	_ = cmd.MarkFlagRequired(sourceBootstrapServersFlagName)
 	_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
@@ -73,16 +77,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
-	if err != nil {
-		return err
-	}
-
-	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
-	if err != nil {
-		return err
-	}
-
-	skipValidatingLink, err := cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
@@ -142,24 +136,18 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createLinkOpt := &kafkarestv3.ClustersClusterIdLinksPostOpts{
-		ValidateOnly: optional.NewBool(validateOnly),
-		ValidateLink: optional.NewBool(!skipValidatingLink),
+	createLinkOpt := &kafkarestv3.CreateKafkaLinkOpts{
 		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
 			SourceClusterId: sourceClusterId,
 			Configs:         toCreateTopicConfigs(configMap),
 		}),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksPost(
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaLink(
 		kafkaREST.Context, lkc, linkName, createLinkOpt)
 
 	if err == nil {
-		msg := errors.CreatedLinkMsg
-		if validateOnly {
-			msg = errors.DryRunPrefix + msg
-		}
-		utils.Printf(cmd, msg, linkName)
+		utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
 		return nil
 	}
 

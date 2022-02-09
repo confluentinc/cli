@@ -2,12 +2,10 @@ package environment
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
-	segment "github.com/segmentio/analytics-go"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -15,8 +13,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -31,8 +27,6 @@ type EnvironmentTestSuite struct {
 	suite.Suite
 	conf              *v1.Config
 	accountClientMock *ccsdkmock.Account
-	analyticsOutput   []segment.Message
-	analyticsClient   analytics.Client
 }
 
 func TestEnvironmentTestSuite(t *testing.T) {
@@ -69,11 +63,9 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 			return nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
-func (suite *EnvironmentTestSuite) newCmd() *command {
+func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 	client := &ccloud.Client{
 		Account: suite.accountClientMock,
 	}
@@ -86,71 +78,23 @@ func (suite *EnvironmentTestSuite) newCmd() *command {
 		MDSClient:    nil,
 		Config:       suite.conf,
 	}
-	return New(prerunner, suite.analyticsClient)
+	return New(prerunner)
 }
 
 func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	cmd := suite.newCmd()
-	args := []string{"create", environmentName}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"create", environmentName})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.CreateCalled())
-	// TODO add back with analytics
-	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
 }
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	cmd := suite.newCmd()
-	args := []string{"delete", environmentID}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"delete", environmentID})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.accountClientMock.DeleteCalled())
-	// TODO add back with analytics
-	//test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], environmentID, req)
-}
-
-func (suite *EnvironmentTestSuite) TestServerCompletableChildren() {
-	req := require.New(suite.T())
-	cmd := suite.newCmd()
-	completableChildren := cmd.ServerCompletableChildren()
-	expectedChildren := []string{"environment delete", "environment update", "environment use"}
-	req.Len(completableChildren, len(expectedChildren))
-	for i, expectedChild := range expectedChildren {
-		req.Contains(completableChildren[i].CommandPath(), expectedChild)
-	}
-}
-
-func (suite *EnvironmentTestSuite) TestServerComplete() {
-	req := suite.Require()
-	type fields struct {
-		Command *command
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []prompt.Suggest
-	}{
-		{
-			name: "suggest for authenticated user",
-			fields: fields{
-				Command: suite.newCmd(),
-			},
-			want: []prompt.Suggest{
-				{
-					Text:        environmentID,
-					Description: environmentName,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			_ = tt.fields.Command.PersistentPreRunE(tt.fields.Command.Command, []string{})
-			got := tt.fields.Command.ServerComplete()
-			fmt.Println(&got)
-			req.Equal(tt.want, got)
-		})
-	}
 }

@@ -15,6 +15,10 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
+type outputStruct struct {
+	Id int32 `json:"id" yaml:"id"`
+}
+
 func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -51,6 +55,10 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("schema")
@@ -105,9 +113,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	if outputFormat == output.Human.String() {
 		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
-		return output.StructuredOutput(outputFormat, &struct {
-			Id int32 `json:"id" yaml:"id"`
-		}{response.Id})
+		return output.StructuredOutput(outputFormat, &outputStruct{response.Id})
 	}
 
 	return nil

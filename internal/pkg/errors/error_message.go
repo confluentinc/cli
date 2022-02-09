@@ -21,7 +21,7 @@ const (
 	APIKeyUseFailedErrorMsg             = "unable to set active API key"
 	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
-	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `confluent kafka cluster use` command."
+	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
 	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
@@ -37,6 +37,8 @@ const (
 	NoEnvironmentFoundErrorMsg                  = "no environment found for authenticated user"
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
+	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
+	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -64,6 +66,7 @@ const (
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
+	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -71,7 +74,7 @@ const (
 
 	// iam rbac role-binding commands
 	PrincipalFormatErrorMsg         = "incorrect principal format specified"
-	PrincipalFormatSuggestions      = "Principal must be specified in this format: `<Principal Type>:<Principal Name>`."
+	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
@@ -133,6 +136,7 @@ const (
 	FailedToCreateProducerMsg            = "failed to create producer: %v"
 	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
 	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
+	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
@@ -207,6 +211,9 @@ const (
 	// auth package
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
+	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
+	SSLCaCertSuggestion              = "Please specify `--ca-location` to enable SSL verification.\n"
+	SRCaCertSuggestion               = "Please specify `--ca-location` to enable schema registry client.\n"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
@@ -373,7 +380,7 @@ const (
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionMsg            = "Unable to establish Kafka REST connection: %s: %s"
 	KafkaRestUnexpectedStatusMsg      = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
-	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_CA_CERT_PATH\""
+	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_PLATFORM_CA_CERT_PATH\""
 	MDSTokenNotFoundMsg               = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
@@ -384,12 +391,16 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	avoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
-	NotLoggedInErrorMsg    = "not logged in"
-	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
+	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg         = "not logged in"
+	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
+	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
+	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
 		avoidTimeoutSuggestion
-	SRNotAuthenticatedErrorMsg    = "not logged in, or no Schema Registry endpoint specified"
-	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
+	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
+	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token."
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		avoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
@@ -402,11 +413,12 @@ const (
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		avoidTimeoutSuggestion
-	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
-	InvalidLoginErrorMsg          = "incorrect email or password"
-	CCloudInvalidLoginSuggestions = avoidTimeoutSuggestion
-	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
-	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
+	InvalidLoginURLMsg               = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
+	InvalidLoginErrorMsg             = "incorrect email or password"
+	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
+	CCloudInvalidLoginSuggestions    = avoidTimeoutSuggestion
+	NoAPIKeySelectedErrorMsg         = "no API key selected for resource \"%s\""
+	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
@@ -424,6 +436,12 @@ const (
 	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
 	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
 
+	// Replica commands
+	MustEnterValidFlagComboErrorMsg      = "must pass a valid flag combination"
+	ValidReplicaFlagsSuggestions         = "Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags."
+	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
+
 	// Special error types
-	GenericOpenAPIErrorMsg = "metadata service backend error: %s: %s"
+	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
+	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
 )

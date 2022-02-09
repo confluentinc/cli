@@ -1,0 +1,17 @@
+DEPRECATED: Manage ksqlDB apps. In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
+
+Usage:
+  confluent ksql app [command]
+
+Available Commands:
+  configure-acls DEPRECATED: Configure ACLs for a ksqlDB app.
+  create         DEPRECATED: Create a ksqlDB app.
+  delete         DEPRECATED: Delete a ksqlDB app.
+  describe       DEPRECATED: Describe a ksqlDB app.
+  list           DEPRECATED: List ksqlDB apps.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent ksql app [command] --help" for more information about a command.

@@ -2,30 +2,24 @@ package iam
 
 import (
 	"context"
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/spf13/cobra"
 	"testing"
 
-	segment "github.com/segmentio/analytics-go"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 type InvitationTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	userMock        *ccsdkmock.User
-	analyticsOutput []segment.Message
-	analyticsClient analytics.Client
+	conf     *v1.Config
+	userMock *ccsdkmock.User
 }
 
 func (suite *InvitationTestSuite) SetupTest() {
@@ -34,13 +28,13 @@ func (suite *InvitationTestSuite) SetupTest() {
 		GetUserProfileFunc: func(_ context.Context, _ *orgv1.User) (*flowv1.UserProfile, error) {
 			return &flowv1.UserProfile{
 				FirstName: "TEST",
-				LastName: "lastname",
+				LastName:  "lastname",
 			}, nil
 		},
 		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (*orgv1.User, error) {
 			return &orgv1.User{
 				FirstName: "TEST",
-				LastName: "lastname",
+				LastName:  "lastname",
 			}, nil
 		},
 		ListInvitationsFunc: func(_ context.Context) ([]*orgv1.Invitation, error) {
@@ -61,14 +55,11 @@ func (suite *InvitationTestSuite) SetupTest() {
 		},
 		CreateInvitationFunc: func(_ context.Context, arg1 *flowv1.CreateInvitationRequest) (*orgv1.Invitation, error) {
 			return &orgv1.Invitation{
-				Id: "invitation1",
+				Id:    "invitation1",
 				Email: "cli@confluent.io",
 			}, nil
 		},
-
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
@@ -81,8 +72,8 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 
 func (suite *InvitationTestSuite) TestInvitationList() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"invitation", "list"}
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"invitation", "list"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
 	req.True(suite.userMock.ListInvitationsCalled())
@@ -93,8 +84,8 @@ func (suite *InvitationTestSuite) TestInvitationList() {
 
 func (suite *InvitationTestSuite) TestCreateInvitation() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"invitation", "create", "cli@confluent.io"}
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"invitation", "create", "cli@confluent.io"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.userMock.CreateInvitationCalled())

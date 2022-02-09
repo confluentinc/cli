@@ -10,16 +10,13 @@ import (
 	"testing"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-
-	"github.com/spf13/pflag"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,10 +29,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	cliMock "github.com/confluentinc/cli/mock"
-
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
 
 const (
@@ -59,7 +52,7 @@ const (
 
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -69,14 +62,14 @@ var (
 				return nil, nil
 			}
 		},
-		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
 	}
 	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
-		GetCCloudTokensFunc: func(_ *ccloud.Client, _ *pauth.Credentials, _ bool) (string, string, error) {
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return "", "", nil
 		},
 		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
@@ -89,7 +82,6 @@ func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		Config:  v1.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
-		Logger:  log.New(),
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 				return "", "", nil
@@ -108,20 +100,18 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		MDSClientManager: &cliMock.MockMDSClientManager{
-			GetMDSClientFunc: func(url, caCertPath string, logger *log.Logger) (client *mds.APIClient, e error) {
+			GetMDSClientFunc: func(url, caCertPath string) (client *mds.APIClient, e error) {
 				return &mds.APIClient{}, nil
 			},
 		},
-		Analytics:               cliMock.NewDummyAnalyticsMock(),
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:            pcmd.NewJWTValidator(log.New()),
+		JWTValidator:            pcmd.NewJWTValidator(),
 		AuthTokenHandler:        mockAuthTokenHandler,
 	}
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	type fields struct {
-		Logger  *log.Logger
 		Command string
 	}
 	tests := []struct {
@@ -132,7 +122,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "default logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help",
 			},
 			want: log.ERROR,
@@ -140,7 +129,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "warn logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -v",
 			},
 			want: log.WARN,
@@ -148,7 +136,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "info logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vv",
 			},
 			want: log.INFO,
@@ -156,7 +143,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "debug logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vvv",
 			},
 			want: log.DEBUG,
@@ -164,7 +150,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		{
 			name: "trace logging level",
 			fields: fields{
-				Logger:  log.New(),
 				Command: "help -vvvv",
 			},
 			want: log.TRACE,
@@ -177,8 +162,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			require.NoError(t, err)
 
 			r := getPreRunBase()
-			r.Logger = tt.fields.Logger
-			r.JWTValidator = pcmd.NewJWTValidator(tt.fields.Logger)
+			r.JWTValidator = pcmd.NewJWTValidator()
 			r.Config = cfg
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -189,7 +173,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
 			require.NoError(t, err)
 
-			got := tt.fields.Logger.GetLevel()
+			got := log.CliLogger.GetLevel()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PreRun.HasAPIKey() = %v, want %v", got, tt.want)
 			}
@@ -220,33 +204,12 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	}
 }
 
-func TestPreRun_CallsAnalyticsTrackCommand(t *testing.T) {
-	analyticsClient := cliMock.NewDummyAnalyticsMock()
-
-	r := getPreRunBase()
-	r.Analytics = analyticsClient
-
-	root := &cobra.Command{
-		Run: func(cmd *cobra.Command, args []string) {},
-	}
-	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
-	root.Flags().CountP("verbose", "v", "Increase verbosity")
-
-	_, err := pcmd.ExecuteCommand(rootCmd.Command)
-	require.NoError(t, err)
-
-	require.True(t, analyticsClient.TrackCommandCalled())
-}
-
 func TestPreRun_TokenExpires(t *testing.T) {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
-	analyticsClient := cliMock.NewDummyAnalyticsMock()
-
 	r := getPreRunBase()
 	r.Config = cfg
-	r.Analytics = analyticsClient
 
 	root := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {},
@@ -259,7 +222,6 @@ func TestPreRun_TokenExpires(t *testing.T) {
 
 	// Check auth is nil for now, until there is a better to create a fake logged in user and check if it's logged out
 	require.Nil(t, cfg.Context().State.Auth)
-	require.True(t, analyticsClient.SessionTimedOutCalled())
 }
 
 func Test_UpdateToken(t *testing.T) {
@@ -453,7 +415,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 									Email:     "",
 									FirstName: "",
 								},
-								Accounts: []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+								Organization: &orgv1.Organization{ResourceId: "o-123"},
+								Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
 					}}
@@ -463,7 +426,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 			}
 			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
-				GetCCloudTokensFunc: func(client *ccloud.Client, credentials *pauth.Credentials, noBrowser bool) (s string, s2 string, e error) {
+				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
 				GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
@@ -476,7 +439,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			var confluentEnvVarCalled bool
 			var confluentNetrcCalled bool
 			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
 						return tt.envVarReturn.creds, tt.envVarReturn.err
@@ -539,6 +502,62 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 }
 
+func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
+	ccloudCreds := &pauth.Credentials{
+		Username: "username",
+		Password: "password",
+	}
+	r := getPreRunBase()
+	r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			return &ccloud.Client{Auth: &sdkMock.Auth{
+				UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
+					return &flowv1.GetMeReply{
+						User: &orgv1.User{
+							Id:        23,
+							Email:     "",
+							FirstName: "",
+						},
+						Organization: &orgv1.Organization{ResourceId: "o-123"},
+						Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+					}, nil
+				},
+			}}
+		},
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+			return &ccloud.Client{}
+		},
+	}
+	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, orgResourceId string) (s string, s2 string, e error) {
+			require.Equal(t, "o-555", orgResourceId) // validate correct org id is used
+			return validAuthToken, "", nil
+		},
+	}
+	r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+		GetCredentialsFromNetrcFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcFunc,
+		GetCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return ccloudCreds, nil
+			}
+		},
+	}
+
+	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
+	err := cfg.Context().DeleteUserAuth()
+	require.NoError(t, err)
+	r.Config = cfg
+
+	root := &cobra.Command{
+		Run: func(cmd *cobra.Command, args []string) {},
+	}
+	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
+	root.Flags().CountP("verbose", "v", "Increase verbosity")
+
+	_, err = pcmd.ExecuteCommand(rootCmd.Command)
+	require.NoError(t, err)
+}
+
 func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -565,7 +584,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			var envVarCalled bool
 			var netrcCalled bool
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						envVarCalled = true
 						return nil, nil
@@ -686,7 +705,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
-			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r, nil)
+			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 			root.Flags().String("api-key", "", "Kafka cluster API key.")
 			root.Flags().String("api-secret", "", "API key secret.")
@@ -702,135 +721,6 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-		})
-	}
-}
-
-func TestStateFlagCommand_AddCommand(t *testing.T) {
-	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
-	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
-
-	subcommandFlags := map[string]*pflag.FlagSet{
-		"one": pcmd.EnvironmentContextSet(),
-		"two": pcmd.KeySecretSet(),
-	}
-	// checked against to ensure that ONLY the intended flags are added
-	shouldNotHaveFlags := map[string]*pflag.FlagSet{
-		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one":  pcmd.KeySecretSet(),
-		"two":  pcmd.EnvironmentSet(),
-	}
-
-	r := getPreRunBase()
-	r.Config = userNameConfigLoggedIn
-
-	cmdRoot := &cobra.Command{Use: "root"}
-	root := pcmd.NewAnonymousStateFlagCommand(cmdRoot, r, subcommandFlags)
-
-	for subcommand := range subcommandFlags {
-		t.Run(subcommand, func(t *testing.T) {
-			cmd := &cobra.Command{Use: subcommand}
-			//flags should be added in AddCommand()
-			root.AddCommand(cmd)
-			//create flagset of all flags that should be included
-			shouldHaveFlags := pflag.NewFlagSet("shouldHaveFlags", pflag.ExitOnError)
-			shouldHaveFlags.AddFlagSet(subcommandFlags["root"])
-			shouldHaveFlags.AddFlagSet(subcommandFlags[subcommand])
-			//iterate through shouldHaveFlags and make sure they are all attached to cmd
-			shouldHaveFlags.VisitAll(func(flag *pflag.Flag) {
-				f := cmd.Flag(flag.Name)
-				require.NotNil(t, f)
-			})
-			shouldNotHaveFlags[subcommand].VisitAll(func(flag *pflag.Flag) {
-				f := cmd.Flag(flag.Name)
-				require.Nil(t, f)
-			})
-		})
-	}
-}
-
-func TestAuthenticatedStateFlagCommand_AddCommand(t *testing.T) {
-	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
-	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
-
-	subcommandFlags := map[string]*pflag.FlagSet{
-		"one": pcmd.EnvironmentContextSet(),
-		"two": pcmd.KeySecretSet(),
-	}
-	// checked against to ensure that ONLY the intended flags are added
-	shouldNotHaveFlags := map[string]*pflag.FlagSet{
-		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one":  pcmd.KeySecretSet(),
-		"two":  pcmd.EnvironmentSet(),
-	}
-
-	r := getPreRunBase()
-	r.Config = userNameConfigLoggedIn
-
-	cmdRoot := &cobra.Command{Use: "root"}
-	root := pcmd.NewAuthenticatedStateFlagCommand(cmdRoot, r, subcommandFlags)
-
-	for subcommand := range subcommandFlags {
-		t.Run(subcommand, func(t *testing.T) {
-			cmd := &cobra.Command{Use: subcommand}
-			//flags should be added in AddCommand()
-			root.AddCommand(cmd)
-			//create flagset of all flags that should be included
-			shouldHaveFlags := pflag.NewFlagSet("shouldHaveFlags", pflag.ExitOnError)
-			shouldHaveFlags.AddFlagSet(subcommandFlags["root"])
-			shouldHaveFlags.AddFlagSet(subcommandFlags[subcommand])
-			//iterate through shouldHaveFlags and make sure they are all attached to cmd
-			shouldHaveFlags.VisitAll(func(flag *pflag.Flag) {
-				f := cmd.Flag(flag.Name)
-				require.NotNil(t, f)
-			})
-			shouldNotHaveFlags[subcommand].VisitAll(func(flag *pflag.Flag) {
-				f := cmd.Flag(flag.Name)
-				require.Nil(t, f)
-			})
-		})
-	}
-}
-
-func TestHasAPIKeyCLICommand_AddCommand(t *testing.T) {
-	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
-	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
-
-	subcommandFlags := map[string]*pflag.FlagSet{
-		"one": pcmd.EnvironmentContextSet(),
-		"two": pcmd.KeySecretSet(),
-	}
-	// checked against to ensure that ONLY the intended flags are added
-	shouldNotHaveFlags := map[string]*pflag.FlagSet{
-		"root": pcmd.CombineFlagSet(pcmd.EnvironmentSet(), pcmd.KeySecretSet()),
-		"one":  pcmd.KeySecretSet(),
-		"two":  pcmd.EnvironmentSet(),
-	}
-
-	r := getPreRunBase()
-	r.Config = userNameConfigLoggedIn
-
-	cmdRoot := &cobra.Command{Use: "root"}
-	root := pcmd.NewHasAPIKeyCLICommand(cmdRoot, r, subcommandFlags)
-
-	for subcommand := range subcommandFlags {
-		t.Run(subcommand, func(t *testing.T) {
-			cmd := &cobra.Command{Use: subcommand}
-			//flags should be added in AddCommand()
-			root.AddCommand(cmd)
-			//create flagset of all flags that should be included
-			shouldHaveFlags := pflag.NewFlagSet("shouldHaveFlags", pflag.ExitOnError)
-			shouldHaveFlags.AddFlagSet(subcommandFlags["root"])
-			shouldHaveFlags.AddFlagSet(subcommandFlags[subcommand])
-			//iterate through shouldHaveFlags and make sure they are all attached to cmd
-			shouldHaveFlags.VisitAll(func(flag *pflag.Flag) {
-				f := cmd.Flag(flag.Name)
-				require.NotNil(t, f)
-			})
-			shouldNotHaveFlags[subcommand].VisitAll(func(flag *pflag.Flag) {
-				f := cmd.Flag(flag.Name)
-				require.Nil(t, f)
-			})
 		})
 	}
 }

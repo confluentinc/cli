@@ -65,7 +65,7 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &mirrorCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, MirrorSubcommandFlags)}
+	c := &mirrorCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDescribeCommand())

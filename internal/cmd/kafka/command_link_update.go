@@ -5,6 +5,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -26,6 +27,10 @@ func (c *linkCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
 	_ = cmd.MarkFlagRequired(configFileFlagName)
 
 	return cmd
@@ -62,8 +67,8 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
 
-	opts := &kafkarestv3.ClustersClusterIdLinksLinkNameConfigsalterPutOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs})}
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameConfigsalterPut(kafkaREST.Context, lkc, linkName, opts)
+	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs})}
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(kafkaREST.Context, lkc, linkName, opts)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
 	}

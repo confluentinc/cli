@@ -25,7 +25,7 @@ func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Use:         "partition",
 				Short:       "Manage Kafka partitions.",
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner, nil),
+			}, prerunner),
 	}
 	partitionCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand))
 	partitionCommand.init()
@@ -41,7 +41,7 @@ func (partitionCmd *partitionCommand) init() {
 		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the partitions for `my_topic`.",
+				Text: `List the partitions for "my_topic".`,
 				Code: "confluent kafka partition list --topic my_topic",
 			},
 		),
@@ -60,7 +60,7 @@ func (partitionCmd *partitionCommand) init() {
 		RunE:  pcmd.NewCLIRunE(partitionCmd.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe partition `1` for `my_topic`.",
+				Text: `Describe partition "1" for "my_topic".`,
 				Code: "confluent kafka partition describe 1 --topic my_topic",
 			}),
 	}
@@ -82,11 +82,11 @@ func (partitionCmd *partitionCommand) init() {
 				Code: "confluent kafka partition get-reassignments",
 			},
 			examples.Example{
-				Text: "Get replica reassignments for `my_topic`.",
+				Text: `Get replica reassignments for "my_topic".`,
 				Code: "confluent kafka partition get-reassignments --topic my_topic",
 			},
 			examples.Example{
-				Text: "Get replica reassignments for partition `1` of `my_topic`.",
+				Text: `Get replica reassignments for partition "1" of "my_topic".`,
 				Code: "confluent kafka partition get-reassignments 1 --topic my_topic",
 			}),
 	}
@@ -109,7 +109,7 @@ func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error
 	if err != nil {
 		return err
 	}
-	partitionListResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsGet(restContext, clusterId, topic)
+	partitionListResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -161,7 +161,7 @@ func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string
 	if err != nil {
 		return err
 	}
-	partitionGetResp, resp, err := restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdGet(restContext, clusterId, topic, partitionId)
+	partitionGetResp, resp, err := restClient.PartitionV3Api.GetKafkaPartition(restContext, clusterId, topic, partitionId)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}

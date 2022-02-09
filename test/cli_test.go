@@ -11,10 +11,12 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/confluentinc/bincover"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -58,6 +60,8 @@ type CLITest struct {
 	authKafka string
 	// Name of a golden output fixture containing expected output
 	fixture string
+	// True if audit-log is disabled
+	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
 	// Fixed string to check if output contains
@@ -105,8 +109,8 @@ func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 	err := covCollector.Setup()
 	req.NoError(err)
-	s.TestBackend = testserver.StartTestBackend(s.T())
-
+	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
+	os.Setenv("DISABLE_AUDIT_LOG", "false")
 	// dumb but effective
 	err = os.Chdir("..")
 	req.NoError(err)
@@ -141,16 +145,25 @@ func (s *CLITestSuite) TearDownSuite() {
 }
 
 func (s *CLITestSuite) TestCcloudErrors() {
+	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
+
 	s.T().Run("invalid user or pass", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, "login --url "+s.TestBackend.GetCloudUrl(), 1)
+		output := runCommand(tt, testBin, env, args, 1)
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
 	})
 
+	s.T().Run("suspended organization", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
+		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
+	})
+
 	s.T().Run("expired token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
+		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "expired@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
@@ -160,7 +173,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("malformed token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
+		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "malformed@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
@@ -171,7 +184,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, "login -vvv --url "+s.TestBackend.GetCloudUrl(), 0)
+		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsg, "invalid@user.com"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
@@ -190,6 +203,14 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
+		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
+		if isAuditLogDisabled != tt.disableAuditLog {
+			s.TestBackend.Close()
+			s.TestBackend = nil
+			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
+			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
+		}
+
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
@@ -221,6 +242,7 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 				fmt.Println(output)
 			}
 		}
+
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
 		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 		if *debug {
@@ -251,7 +273,7 @@ func (s *CLITestSuite) runConfluentTest(tt CLITest) {
 		// Executes login command if test specifies
 		loginURL := s.getLoginURL(false, tt)
 		if tt.login == "default" {
-			env := []string{pauth.DeprecatedConfluentPlatformUsername + "=fake@user.com", pauth.DeprecatedConfluentPlatformPassword + "=pass1"}
+			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)

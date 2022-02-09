@@ -24,6 +24,9 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(linkFlagName, "", "Cluster link name.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(linkFlagName)
@@ -52,7 +55,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorsMirrorTopicNameGet(kafkaREST.Context, lkc, linkName, mirrorTopicName)
+	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, mirrorTopicName)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -70,7 +73,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			MirrorStatus:          string(mirror.MirrorStatus),
 			StatusTimeMs:          mirror.StateTimeMs,
 			Partition:             partitionLag.Partition,
-			PartitionMirrorLag:    partitionLag.Lag,
+			PartitionMirrorLag:    int64(partitionLag.Lag),
 			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}

@@ -10,12 +10,13 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Client lets you check for updated application binaries and install them if desired
@@ -40,7 +41,6 @@ var _ Client = (*client)(nil)
 type ClientParams struct {
 	Repository Repository
 	Out        pio.File
-	Logger     *log.Logger
 	// Optional, if you want to disable checking for updates
 	DisableCheck bool
 	// Optional, if you wish to rate limit your update checks. The parent directories must exist.
@@ -159,7 +159,7 @@ func isLessThanVersion(curr, latest *version.Version) bool {
 // PromptToDownload displays an interactive CLI prompt to download the latest version
 func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool {
 	if confirm && !c.fs.IsTerminal(c.Out.Fd()) {
-		c.Logger.Warn("disable confirm as stdout is not a tty")
+		log.CliLogger.Warn("disable confirm as stdout is not a tty")
 		confirm = false
 	}
 
@@ -198,7 +198,7 @@ func (c *client) UpdateBinary(cliName, version, path string) error {
 	defer func() {
 		err = c.fs.RemoveAll(downloadDir)
 		if err != nil {
-			c.Logger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
+			log.CliLogger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
 		}
 	}()
 

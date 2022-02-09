@@ -24,6 +24,10 @@ import (
 )
 
 const (
+	topicName = "topic"
+)
+
+const (
 	// Expected output of tests
 	ExpectedListTopicsOutput     = "   Name    \n-----------\n  topic-1  \n  topic-2  \n  topic-3  \n"
 	ExpectedListTopicsYamlOutput = `- name: topic-1
@@ -133,7 +137,7 @@ func checkURL(url string) error {
 func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	// Define testAPIClient
 	suite.testClient = kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
-	suite.testClient.ClusterApi = &kafkarestv3mock.ClusterApi{
+	suite.testClient.ClusterV3Api = &kafkarestv3mock.ClusterV3Api{
 		ClustersGetFunc: func(ctx context.Context) (kafkarestv3.ClusterDataList, *http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
@@ -144,8 +148,8 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			return *suite.clusterList, nil, nil
 		},
 	}
-	suite.testClient.TopicApi = &kafkarestv3mock.TopicApi{
-		ClustersClusterIdTopicsGetFunc: func(ctx context.Context, clusterId string) (kafkarestv3.TopicDataList, *http.Response, error) {
+	suite.testClient.TopicV3Api = &kafkarestv3mock.TopicV3Api{
+		ListKafkaTopicsFunc: func(ctx context.Context, clusterId string) (kafkarestv3.TopicDataList, *http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
@@ -154,7 +158,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			// Return canned data
 			return *suite.topicList, nil, nil
 		},
-		ClustersClusterIdTopicsPostFunc: func(ctx context.Context, clusterId string, localVarOptionals *kafkarestv3.ClustersClusterIdTopicsPostOpts) (kafkarestv3.TopicData, *http.Response, error) {
+		CreateKafkaTopicFunc: func(ctx context.Context, clusterId string, localVarOptionals *kafkarestv3.CreateKafkaTopicOpts) (kafkarestv3.TopicData, *http.Response, error) {
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
 				return kafkarestv3.TopicData{}, nil, err
@@ -179,7 +183,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 				ReplicationFactor: topicCreateData.ReplicationFactor,
 			}, nil, nil
 		},
-		ClustersClusterIdTopicsTopicNameDeleteFunc: func(ctx context.Context, clusterId string, topicName string) (*http.Response, error) {
+		DeleteKafkaTopicFunc: func(ctx context.Context, clusterId string, topicName string) (*http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
@@ -188,8 +192,8 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			return nil, nil
 		},
 	}
-	suite.testClient.ConfigsApi = &kafkarestv3mock.ConfigsApi{
-		ClustersClusterIdTopicsTopicNameConfigsalterPostFunc: func(ctx context.Context, clusterId string, topicName string, localVarOptionals *kafkarestv3.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts) (*http.Response, error) {
+	suite.testClient.ConfigsV3Api = &kafkarestv3mock.ConfigsV3Api{
+		UpdateKafkaTopicConfigBatchFunc: func(ctx context.Context, clusterId string, topicName string, localVarOptionals *kafkarestv3.UpdateKafkaTopicConfigBatchOpts) (*http.Response, error) {
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
 				return nil, err
@@ -207,7 +211,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			}
 			return nil, nil
 		},
-		ClustersClusterIdTopicsTopicNameConfigsGetFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+		ListKafkaTopicConfigsFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
 				return kafkarestv3.TopicConfigDataList{}, nil, err
@@ -215,8 +219,8 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 			return *suite.configDataList, nil, nil
 		},
 	}
-	suite.testClient.PartitionApi = &kafkarestv3mock.PartitionApi{
-		ClustersClusterIdTopicsTopicNamePartitionsGetFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
+	suite.testClient.PartitionV3Api = &kafkarestv3mock.PartitionV3Api{
+		ListKafkaPartitionsFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
 				return kafkarestv3.PartitionDataList{}, nil, err
@@ -236,7 +240,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
 	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, conf)
-	return newTopicCommand(conf, testPrerunner, nil, "").authenticatedTopicCommand.Command
+	return newTopicCommand(conf, testPrerunner, "").authenticatedTopicCommand.Command
 }
 
 // Executes the given command with the given args, returns the command executed, stdout and error.

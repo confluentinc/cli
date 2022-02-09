@@ -3,15 +3,15 @@ Usage:
   confluent kafka topic delete <topic> [flags]
 
 Examples:
-Delete the topics `my_topic` and `my_topic_avro`. Use this command carefully as data loss can occur.
+Delete the topics "my_topic" and "my_topic_avro". Use this command carefully as data loss can occur.
 
   $ confluent kafka topic delete my_topic
   $ confluent kafka topic delete my_topic_avro
 
 Flags:
+      --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
-      --cluster string       Kafka cluster ID.
 
 Global Flags:
   -h, --help            Show help for this command.

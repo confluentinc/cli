@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -31,13 +30,10 @@ const (
 type command struct {
 	*pcmd.CLICommand
 	version *pversion.Version
-	logger  *log.Logger
 	client  update.Client
-	// for testing
-	analyticsClient analytics.Client
 }
 
-func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
 		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
@@ -49,11 +45,9 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version
 	cmd.Flags().Bool("major", false, "Allow major version updates.")
 
 	c := &command{
-		CLICommand:      pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		version:         version,
-		logger:          logger,
-		client:          client,
-		analyticsClient: analytics,
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		version:    version,
+		client:     client,
 	}
 
 	c.RunE = pcmd.NewCLIRunE(c.update)
@@ -62,13 +56,12 @@ func New(prerunner pcmd.PreRunner, logger *log.Logger, version *pversion.Version
 }
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) update.Client {
+func NewClient(cliName string, disableUpdateCheck bool) update.Client {
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:             S3BinRegion,
 		S3BinBucket:             S3BinBucket,
 		S3BinPrefixFmt:          S3BinPrefixFmt,
 		S3ReleaseNotesPrefixFmt: S3ReleaseNotesPrefixFmt,
-		Logger:                  logger,
 	})
 	homedir, _ := os.UserHomeDir()
 	return update.NewClient(&update.ClientParams{
@@ -76,7 +69,6 @@ func NewClient(cliName string, disableUpdateCheck bool, logger *log.Logger) upda
 		DisableCheck:  disableUpdateCheck,
 		CheckFile:     fmt.Sprintf(CheckFileFmt, homedir, cliName),
 		CheckInterval: CheckInterval,
-		Logger:        logger,
 		Out:           os.Stdout,
 	})
 }
@@ -161,8 +153,7 @@ func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
 	}
 
 	if errMsg != "" {
-		c.logger.Debugf(errMsg)
-		c.analyticsClient.SetSpecialProperty(analytics.ReleaseNotesErrorPropertiesKeys, errMsg)
+		log.CliLogger.Debugf(errMsg)
 		return ""
 	}
 

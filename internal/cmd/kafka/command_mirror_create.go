@@ -5,6 +5,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -32,6 +33,9 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String(linkFlagName, "", "The name of the cluster link to attach to the mirror topic.")
 	cmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
 	cmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	_ = cmd.MarkFlagRequired(linkFlagName)
 
@@ -74,7 +78,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts{
+	createMirrorOpt := &kafkarestv3.CreateKafkaMirrorTopicOpts{
 		CreateMirrorTopicRequestData: optional.NewInterface(
 			kafkarestv3.CreateMirrorTopicRequestData{
 				SourceTopicName:   sourceTopicName,
@@ -84,7 +88,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorsPost(kafkaREST.Context, lkc, linkName, createMirrorOpt)
+	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt)
 	if err == nil {
 		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
 	}

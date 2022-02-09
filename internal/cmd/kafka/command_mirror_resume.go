@@ -29,6 +29,9 @@ func (c *mirrorCommand) newResumeCommand() *cobra.Command {
 
 	cmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(linkFlagName)
@@ -60,12 +63,12 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resumeMirrorOpt := &kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsresumePostOpts{
+	resumeMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsResumeOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
 		ValidateOnly:            optional.NewBool(validateOnly),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksLinkNameMirrorsresumePost(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsResume(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
@@ -110,7 +113,7 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 				Partition:             partitionLag.Partition,
 				ErrorMessage:          errMsg,
 				ErrorCode:             code,
-				PartitionMirrorLag:    partitionLag.Lag,
+				PartitionMirrorLag:    int64(partitionLag.Lag),
 				LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 			})
 		}

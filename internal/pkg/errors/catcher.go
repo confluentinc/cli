@@ -1,7 +1,9 @@
 package errors
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -26,6 +28,36 @@ func catchTypedErrors(err error) error {
 	return err
 }
 
+func parseMDSOpenAPIErrorType1(err error) (*MDSV2Alpha1ErrorType1, error) {
+	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
+		var decodedError MDSV2Alpha1ErrorType1
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType1{}) {
+			return nil, fmt.Errorf("failed to parse")
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
+func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
+	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
+		var decodedError MDSV2Alpha1ErrorType2Array
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType2Array{}) {
+			return nil, fmt.Errorf("failed to parse")
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mds.GenericOpenAPIError:
@@ -34,7 +66,17 @@ func catchMDSErrors(err error) error {
 		if strings.Contains(err.Error(), "Forbidden Access") {
 			return NewErrorWithSuggestions(UnauthorizedErrorMsg, UnauthorizedSuggestions)
 		}
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+		openAPIError, parseErr := parseMDSOpenAPIErrorType1(err)
+		if parseErr == nil {
+			return openAPIError.UserFacingError()
+		} else {
+			openAPIErrorType2, parseErr2 := parseMDSOpenAPIErrorType2(err)
+			if parseErr2 == nil {
+				return openAPIErrorType2.UserFacingError()
+			} else {
+				return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+			}
+		}
 	}
 	return err
 }

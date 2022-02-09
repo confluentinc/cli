@@ -75,7 +75,7 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-func NewCorruptedConfigError(format, contextName, configFile string, logger *log.Logger) CLITypedError {
+func NewCorruptedConfigError(format, contextName, configFile string) CLITypedError {
 	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
@@ -84,7 +84,7 @@ func NewCorruptedConfigError(format, contextName, configFile string, logger *log
 		errorWithStackTrace = Errorf(format)
 	}
 	// logging stack trace of the error use pkg/errors error type
-	logger.Debugf("%+v", errorWithStackTrace)
+	log.CliLogger.Debugf("%+v", errorWithStackTrace)
 	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
 	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
 	return e
@@ -118,4 +118,45 @@ func (e *UpdateClientError) Error() string {
 func (e *UpdateClientError) UserFacingError() error {
 	errMsg := fmt.Sprintf(prefixFormat, UpdateClientFailurePrefix, e.errorMsg)
 	return NewErrorWithSuggestions(errMsg, UpdateClientFailureSuggestions)
+}
+
+type MDSV2Alpha1ErrorType1 struct {
+	StatusCode int    `json:"status_code"`
+	Message    string `json:"message"`
+	Type       string `json:"type"`
+	Err        error
+}
+
+func (e *MDSV2Alpha1ErrorType1) Error() string { return e.Message }
+
+func (e *MDSV2Alpha1ErrorType1) UserFacingError() error {
+	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Message)
+}
+
+type MDSV2Alpha1ErrorType2 struct {
+	Id     string   `json:"id"`
+	Status string   `json:"status"`
+	Code   string   `json:"code"`
+	Detail string   `json:"detail"`
+	Source []string `json:"type"`
+	Err    error
+}
+
+func (e *MDSV2Alpha1ErrorType2) Error() string { return e.Detail }
+
+type MDSV2Alpha1ErrorType2Array struct {
+	Errors []MDSV2Alpha1ErrorType2 `json:"errors"`
+	Err    error
+}
+
+func (e *MDSV2Alpha1ErrorType2Array) Error() string {
+	errorMessage := ""
+	for _, error := range e.Errors {
+		errorMessage = fmt.Sprintf("%s ", error.Error()) + errorMessage
+	}
+	return errorMessage
+}
+
+func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
+	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error())
 }

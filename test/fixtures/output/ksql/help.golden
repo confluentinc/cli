@@ -1,0 +1,14 @@
+Manage ksqlDB.
+
+Usage:
+  confluent ksql [command]
+
+Available Commands:
+  app         DEPRECATED: Manage ksqlDB apps.
+  cluster     Manage ksqlDB clusters.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent ksql [command] --help" for more information about a command.

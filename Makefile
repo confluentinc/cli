@@ -61,7 +61,8 @@ REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name librdkafka_vendor)
+RDKAFKA_VERSION = 1.8.2
+RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -79,14 +80,14 @@ generate:
 
 .PHONY: deps
 deps:
-	go get github.com/goreleaser/goreleaser@v0.164.0 && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
-	go get github.com/mitchellh/golicense@v0.2.0
+	go install github.com/goreleaser/goreleaser@v1.4.1 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
+	go install github.com/mitchellh/golicense@v0.2.0
 
 .PHONY: jenkins-deps
 # Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
 jenkins-deps:
-	go get github.com/goreleaser/goreleaser@v0.164.0
+	go get github.com/goreleaser/goreleaser@v1.4.1
 
 ifeq ($(shell uname),Darwin)
     SHASUM ?= gsha256sum
@@ -156,8 +157,8 @@ build-integ-race:
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
-define caasenv-authenticate
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+define aws-authenticate
+	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
 endef
 
 .PHONY: fmt
@@ -189,7 +190,7 @@ endif
 
 .PHONY: lint-go
 lint-go:
-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+	@golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli

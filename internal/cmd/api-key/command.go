@@ -2,41 +2,27 @@ package apikey
 
 import (
 	"context"
-	"fmt"
 	"strings"
-
-	"github.com/c-bata/go-prompt"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	"github.com/confluentinc/cli/internal/pkg/shell/completer"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	keystore                keystore.KeyStore
-	flagResolver            pcmd.FlagResolver
-	completableChildren     []*cobra.Command
-	completableFlagChildren map[string][]*cobra.Command
-	analyticsClient         analytics.Client
+	keystore     keystore.KeyStore
+	flagResolver pcmd.FlagResolver
 }
 
 const resourceFlagName = "resource"
 
-var subcommandFlags = map[string]*pflag.FlagSet{
-	"create": pcmd.EnvironmentContextSet(),
-	"store":  pcmd.EnvironmentContextSet(),
-}
-
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage the API keys.",
@@ -44,33 +30,19 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, subcommandFlags),
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		keystore:                      keystore,
 		flagResolver:                  resolver,
-		analyticsClient:               analyticsClient,
 	}
 
-	createCmd := c.newCreateCommand()
-	deleteCmd := c.newDeleteCommand()
-	listCmd := c.newListCommand()
-	storeCmd := c.newStoreCommand()
-	updateCmd := c.newUpdateCommand()
-	useCmd := c.newUseCommand()
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newStoreCommand())
+	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newUseCommand())
 
-	c.AddCommand(createCmd)
-	c.AddCommand(deleteCmd)
-	c.AddCommand(listCmd)
-	c.AddCommand(storeCmd)
-	c.AddCommand(updateCmd)
-	c.AddCommand(useCmd)
-
-	c.completableChildren = append(c.completableChildren, updateCmd, deleteCmd, storeCmd, useCmd)
-	c.completableFlagChildren = map[string][]*cobra.Command{
-		resourceFlagName:  {createCmd, listCmd, storeCmd, useCmd},
-		"service-account": {createCmd},
-	}
-
-	return c
+	return c.Command
 }
 
 func (c *command) setKeyStoreIfNil() {
@@ -96,97 +68,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return AutocompleteApiKeys(c.EnvironmentId(), c.Client)
-}
-
-func AutocompleteApiKeys(environment string, client *ccloud.Client) []string {
-	apiKeys, err := client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: environment})
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(apiKeys))
-	for i, apiKey := range apiKeys {
-		if apiKey.UserId == 0 {
-			continue
-		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.Key, apiKey.Description)
-	}
-	return suggestions
-}
-
-func (c *command) Cmd() *cobra.Command {
-	return c.Command
-}
-
-func (c *command) ServerComplete() []prompt.Suggest {
-	var suggests []prompt.Suggest
-	apiKeys, err := c.fetchAPIKeys()
-	if err != nil {
-		return suggests
-	}
-	for _, key := range apiKeys {
-		suggests = append(suggests, prompt.Suggest{
-			Text:        key.Key,
-			Description: key.Description,
-		})
-	}
-	return suggests
-}
-
-func (c *command) fetchAPIKeys() ([]*schedv1.ApiKey, error) {
-	apiKeys, err := c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: nil, UserId: 0})
-	if err != nil {
-		return nil, errors.HandleCommon(err, c.Command)
-	}
-
-	var userApiKeys []*schedv1.ApiKey
-	for _, key := range apiKeys {
-		if key.UserId != 0 {
-			userApiKeys = append(userApiKeys, key)
-		}
-	}
-	return userApiKeys, nil
-}
-
-func (c *command) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
-}
-
-func (c *command) ServerCompletableFlagChildren() map[string][]*cobra.Command {
-	return c.completableFlagChildren
-}
-
-func (c *command) ServerFlagComplete() map[string]func() []prompt.Suggest {
-	return map[string]func() []prompt.Suggest{
-		resourceFlagName:  c.resourceFlagCompleterFunc,
-		"service-account": completer.ServiceAccountFlagCompleterFunc(c.Client),
-	}
-}
-
-func (c *command) resourceFlagCompleterFunc() []prompt.Suggest {
-	suggestions := completer.ClusterFlagServerCompleterFunc(c.Client, c.EnvironmentId())()
-
-	ctx := context.Background()
-	ctxClient := pcmd.NewContextClient(c.Context)
-	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
-	if err == nil {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        cluster.Id,
-			Description: cluster.Name,
-		})
-	}
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.KSQL.List(context.Background(), req)
-	if err == nil {
-		for _, cluster := range clusters {
-			suggestions = append(suggestions, prompt.Suggest{
-				Text:        cluster.Id,
-				Description: cluster.Name,
-			})
-		}
-	}
-	return suggestions
+	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.Client)
 }
 
 func (c *command) getAllUsers() ([]*orgv1.User, error) {

@@ -24,10 +24,11 @@ var (
 
 func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <consumer-group>",
-		Short: "Describe a Kafka consumer group.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		Use:               "describe <consumer-group>",
+		Short:             "Describe a Kafka consumer group.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the "my-consumer-group" consumer group:`,
@@ -37,6 +38,9 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 		Hidden: true,
 	}
 
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -50,12 +54,12 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdGet(kafkaREST.Context, lkc, consumerGroupId)
+	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroup(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
-	groupCmdConsumersResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(kafkaREST.Context, lkc, consumerGroupId)
+	groupCmdConsumersResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumers(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
