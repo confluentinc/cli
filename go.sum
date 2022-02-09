@@ -614,8 +614,6 @@ github.com/confluentinc/cc-structs/operator v0.640.0/go.mod h1:HuCEW8KtDHzJOUpik
 github.com/confluentinc/cc-structs/operator v0.753.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.779.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2 h1:lQ3j0YQLv+vfNsAA+cb3/RvUP6dsRaoa5MVLPltsvp4=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2/go.mod h1:7Hu7+klkfq2KgYgBu3C8jpznvW6wU6O9o9heEXHvJNs=
 github.com/confluentinc/cc-structs/operator v0.1071.0 h1:QcuisUnJgFvjBW/sDGYk/BXPDtGK1MH/LjFlK6QUxiM=
 github.com/confluentinc/cc-structs/operator v0.1071.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/public_apis/iam v0.437.0/go.mod h1:l0eswgWHRrg7NAkBM98xbc0EDetnTa6aqnt5qZzyPRc=
@@ -630,6 +628,8 @@ github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0b
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.97 h1:YqrA7D65itna0z3XVgkkDYU5XvJJzmODTHXFTJmDAX4=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.97/go.mod h1:5pA883HWkymMrWwlCvgr2Tn49qN36jdjOWo+QCBhrDE=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2 h1:lQ3j0YQLv+vfNsAA+cb3/RvUP6dsRaoa5MVLPltsvp4=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas v0.0.2/go.mod h1:7Hu7+klkfq2KgYgBu3C8jpznvW6wU6O9o9heEXHvJNs=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=
