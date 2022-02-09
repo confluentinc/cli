@@ -97,7 +97,6 @@ const (
 	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
 	NoSubjectsMsg                       = "No subjects."
 	NoExporterMsg                       = "No exporters."
-	SRCredsValidationFailedMsg          = "Failed to validate Schema Registry API key and secret."
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
