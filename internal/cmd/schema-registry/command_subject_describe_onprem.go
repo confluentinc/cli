@@ -13,10 +13,11 @@ import (
 
 func (c *subjectCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <subject>",
-		Short: "Describe subject versions and compatibility.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDescribe),
+		Use:         "describe <subject>",
+		Short:       "Describe subject versions and compatibility.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Retrieve all versions registered under a given subject and its compatibility level.",

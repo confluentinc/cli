@@ -12,10 +12,11 @@ import (
 
 func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validate <subject>",
-		Short: "Validate input schema against a particular version of a subject for compatibility.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.onPremValidate),
+		Use:         "validate <subject>",
+		Short:       "Validate input schema against a particular version of a subject for compatibility.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.onPremValidate),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of <schema> against a subject of latest version.",

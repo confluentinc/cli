@@ -21,7 +21,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 		Short:       "Delete one or more schemas.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.delete),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",

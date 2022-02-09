@@ -15,18 +15,17 @@ type subjectCommand struct {
 
 func newSubjectCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "subject",
-		Short: "Manage Schema Registry subjects.",
+		Use:         "subject",
+		Short:       "Manage Schema Registry subjects.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	c := &subjectCommand{
 		srClient: srClient,
 	}
 	if cfg.IsCloudLogin() {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags)
 	} else {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 

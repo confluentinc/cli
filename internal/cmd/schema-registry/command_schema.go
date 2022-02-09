@@ -15,18 +15,17 @@ type schemaCommand struct {
 
 func newSchemaCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "schema",
-		Short: "Manage Schema Registry schemas.",
+		Use:         "schema",
+		Short:       "Manage Schema Registry schemas.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	c := &schemaCommand{
 		srClient: srClient,
 	}
 	if cfg.IsCloudLogin() {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags)
 	} else {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 

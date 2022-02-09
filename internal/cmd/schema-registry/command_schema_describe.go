@@ -22,7 +22,7 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
 		RunE:        pcmd.NewCLIRunE(c.describe),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",

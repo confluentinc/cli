@@ -13,10 +13,11 @@ import (
 
 func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete one or more schemas.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.onPremDelete),
+		Use:         "delete",
+		Short:       "Delete one or more schemas.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.onPremDelete),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",

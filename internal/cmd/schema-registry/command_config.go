@@ -15,18 +15,17 @@ type configCommand struct {
 
 func newConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config",
-		Short: "Manage Schema Registry config.",
+		Use:         "config",
+		Short:       "Manage Schema Registry config.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	c := &configCommand{
 		srClient: srClient,
 	}
 	if cfg.IsCloudLogin() {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags)
 	} else {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 

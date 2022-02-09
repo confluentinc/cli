@@ -13,10 +13,11 @@ import (
 
 func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List subjects.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.onPremList),
+		Use:         "list",
+		Short:       "List subjects.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.onPremList),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Retrieve all subjects available in a Schema Registry.",

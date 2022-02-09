@@ -13,10 +13,11 @@ import (
 
 func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <subject>",
-		Short: "Update subject compatibility or mode.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremUpdate),
+		Use:         "update <subject>",
+		Short:       "Update subject compatibility or mode.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.onPremUpdate),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update subject level compatibility or mode of Schema Registry:",
@@ -39,21 +40,5 @@ func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	compat, err := cmd.Flags().GetString("compatibility")
-	if err != nil {
-		return err
-	}
-	if compat != "" {
-		return c.updateCompatibility(cmd, args, srClient, ctx)
-	}
-
-	mode, err := cmd.Flags().GetString("mode")
-	if err != nil {
-		return err
-	}
-	if mode != "" {
-		return c.updateMode(cmd, args, srClient, ctx)
-	}
-
-	return errors.New(errors.CompatibilityOrModeErrorMsg)
+	return c.updateSchemaSubject(cmd, args, srClient, ctx)
 }

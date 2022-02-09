@@ -13,10 +13,11 @@ import (
 
 func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a schema.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.onPremCreate),
+		Use:         "create",
+		Short:       "Create a schema.",
+		Args:        cobra.NoArgs,
+		RunE:        pcmd.NewCLIRunE(c.onPremCreate),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
@@ -46,11 +47,11 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	schemaType, err := cmd.Flags().GetString("type")
+	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
-	schemaPath, err := cmd.Flags().GetString("schema")
+	schemaType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
 	}

@@ -15,18 +15,17 @@ type compatibilityCommand struct {
 
 func newCompatibilityCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "compatibility",
-		Short: "Validate Schema Registry compaibility.",
+		Use:         "compatibility",
+		Short:       "Validate Schema Registry compaibility.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	c := &compatibilityCommand{
 		srClient: srClient,
 	}
 	if cfg.IsCloudLogin() {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner, SchemaSubcommandFlags)
 	} else {
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin}
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner, nil)
 	}
 

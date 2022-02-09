@@ -12,10 +12,11 @@ import (
 
 func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <subject>",
-		Short: "Describe the config of a subject, or at global level.",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDescribe),
+		Use:         "describe <subject>",
+		Short:       "Describe the config of a subject, or at global level.",
+		Args:        cobra.MaximumNArgs(1),
+		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the config of a given-name subject.",

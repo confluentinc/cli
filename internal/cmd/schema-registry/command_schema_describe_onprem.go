@@ -12,11 +12,12 @@ import (
 
 func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "describe <id>",
-		Short:   "Get schema either by schema ID, or by subject/version.",
-		Args:    cobra.MaximumNArgs(1),
-		PreRunE: pcmd.NewCLIPreRunnerE(c.preDescribe),
-		RunE:    pcmd.NewCLIRunE(c.onPremDescribe),
+		Use:         "describe <id>",
+		Short:       "Get schema either by schema ID, or by subject/version.",
+		Args:        cobra.MaximumNArgs(1),
+		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
+		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",

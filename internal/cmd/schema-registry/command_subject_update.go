@@ -39,7 +39,10 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	return c.updateSchemaSubject(cmd, args, srClient, ctx)
+}
 
+func (c *subjectCommand) updateSchemaSubject(cmd *cobra.Command, args []string, srClient *srsdk.APIClient, ctx context.Context) error {
 	compat, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
