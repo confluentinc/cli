@@ -4,7 +4,7 @@ Usage:
   confluent kafka partition describe <id> [flags]
 
 Examples:
-Describe partition `1` for `my_topic`.
+Describe partition "1" for "my_topic".
 
   $ confluent kafka partition describe 1 --topic my_topic
 

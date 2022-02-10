@@ -839,6 +839,7 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		//nolint
 		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }

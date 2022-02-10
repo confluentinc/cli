@@ -41,7 +41,7 @@ func (partitionCmd *partitionCommand) init() {
 		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the partitions for `my_topic`.",
+				Text: `List the partitions for "my_topic".`,
 				Code: "confluent kafka partition list --topic my_topic",
 			},
 		),
@@ -60,7 +60,7 @@ func (partitionCmd *partitionCommand) init() {
 		RunE:  pcmd.NewCLIRunE(partitionCmd.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe partition `1` for `my_topic`.",
+				Text: `Describe partition "1" for "my_topic".`,
 				Code: "confluent kafka partition describe 1 --topic my_topic",
 			}),
 	}
@@ -82,11 +82,11 @@ func (partitionCmd *partitionCommand) init() {
 				Code: "confluent kafka partition get-reassignments",
 			},
 			examples.Example{
-				Text: "Get replica reassignments for `my_topic`.",
+				Text: `Get replica reassignments for "my_topic".`,
 				Code: "confluent kafka partition get-reassignments --topic my_topic",
 			},
 			examples.Example{
-				Text: "Get replica reassignments for partition `1` of `my_topic`.",
+				Text: `Get replica reassignments for partition "1" of "my_topic".`,
 				Code: "confluent kafka partition get-reassignments 1 --topic my_topic",
 			}),
 	}

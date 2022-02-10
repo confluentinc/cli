@@ -16,6 +16,10 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
+type outputStruct struct {
+	Id int32 `json:"id" yaml:"id"`
+}
+
 func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -121,9 +125,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	if outputFormat == output.Human.String() {
 		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
-		return output.StructuredOutput(outputFormat, &struct {
-			Id int32 `json:"id" yaml:"id"`
-		}{response.Id})
+		return output.StructuredOutput(outputFormat, &outputStruct{response.Id})
 	}
 
 	return nil
