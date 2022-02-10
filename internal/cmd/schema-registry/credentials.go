@@ -119,6 +119,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			srConfig.BasePath = endpoint
 		}
 		srConfig.UserAgent = ver.UserAgent
+		srConfig.HTTPClient = utils.DefaultClient()
 		srClient := srsdk.NewAPIClient(srConfig)
 
 		// Test credentials

@@ -21,7 +21,14 @@ func GetCAClient(caCertPath string) (*http.Client, error) {
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	return &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}}, nil
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+			RootCAs:    caCertPool,
+		},
+		ForceAttemptHTTP2: true,
+	}
+	return &http.Client{Transport: transport}, nil
 }
 
 func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
@@ -119,7 +126,6 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}
 		log.CliLogger.Tracef("Successfully added client certificate to TLS config")
 	}
-
 	defaultClient := DefaultClient()
 	client := &http.Client{
 		Transport:     transport,
@@ -127,6 +133,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		Jar:           defaultClient.Jar,
 		Timeout:       defaultClient.Timeout,
 	}
+
 	log.CliLogger.Tracef("Successfully set client properties")
 
 	return client, nil
@@ -137,5 +144,14 @@ func isEmptyClientCert(cert tls.Certificate) bool {
 }
 
 func DefaultClient() *http.Client {
-	return http.DefaultClient
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+		ForceAttemptHTTP2: true,
+	}
+	client := &http.Client{
+		Transport: transport,
+	}
+	return client
 }
