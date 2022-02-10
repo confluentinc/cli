@@ -43,6 +43,7 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 
 	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	cmd.Flags().Bool("major", false, "Allow major version updates.")
+	cmd.Flags().Bool("no-verify", false, "Skip checksum verification of new binary.")
 
 	c := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
@@ -80,6 +81,11 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	major, err := cmd.Flags().GetBool("major")
+	if err != nil {
+		return err
+	}
+
+	noVerify, err := cmd.Flags().GetBool("no-verify")
 	if err != nil {
 		return err
 	}
@@ -128,7 +134,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin); err != nil {
+	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin, noVerify); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}
 
