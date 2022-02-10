@@ -440,21 +440,32 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	return outputWriter.Out()
 }
 
-func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]string) (string, string, error) {
-	var prefix, resourceId string
-	if principal != "" {
-		splitPrincipal := strings.Split(principal, ":")
-		if len(splitPrincipal) < 2 {
-			return prefix, resourceId, errors.Errorf("Unrecognized principal format %s", principal)
-		}
-		prefix = splitPrincipal[0]
-		userId := splitPrincipal[1]
-		idp, _ := strconv.ParseInt(userId, 10, 32)
-		resourceId, ok := idMap[int32(idp)]
-		if !ok {
-			return "", "", errors.New(errors.UserIdNotValidErrorMsg)
-		}
-		return prefix, resourceId, nil
+func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId map[int32]string) (string, string, error) {
+	if principal == "" {
+		return "", "", nil
 	}
-	return "", "", nil
+
+	x := strings.Split(principal, ":")
+	if len(x) < 2 {
+		return "", "", errors.Errorf("unrecognized principal format %s", principal)
+	}
+	prefix := x[0]
+	suffix := x[1]
+
+	if strings.HasPrefix(suffix, "sa-") {
+		return prefix, suffix, nil
+	}
+
+	// The principal may contain a numeric ID. Try to map it to a resource ID.
+	id, err := strconv.ParseInt(suffix, 10, 32)
+	if err != nil {
+		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
+	}
+
+	resourceId, ok := numericIdToResourceId[int32(id)]
+	if !ok {
+		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
+	}
+
+	return prefix, resourceId, nil
 }

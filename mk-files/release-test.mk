@@ -24,7 +24,7 @@ test-installer:
 .PHONY: verify-binaries
 verify-binaries:
 	$(eval TEMP_DIR=$(shell mktemp -d))
-	@$(caasenv-authenticate) && \
+	@$(aws-authenticate) && \
 	for os in linux darwin windows; do \
 		for arch in arm64 amd64; do \
 			if [ "$${os}" != "darwin" ] && [ "$${arch}" = "arm64" ] ; then \

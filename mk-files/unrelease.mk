@@ -32,14 +32,14 @@ unrelease-warn:
 
 .PHONY: delete-archives-and-binaries
 delete-archives-and-binaries:
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
 	$(call delete-release-folder,binaries); \
 	$(call delete-release-folder,archives)
 
 .PHONY: delete-release-notes
 delete-release-notes:
 	@echo -n "Do you want to delete the release notes from S3? (y/n): "
-	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(caasenv-authenticate); $(call delete-release-folder,release-notes); fi
+	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(aws-authenticate); $(call delete-release-folder,release-notes); fi
 
 define delete-release-folder
 	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/$1/$(CLEAN_VERSION) --recursive
@@ -48,7 +48,7 @@ endef
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
 	make copy-prod-archives-to-stag-latest
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
 	$(call copy-stag-content-to-prod,archives,latest)
 	@echo "Verifying latest archives with: make test-installer"
 	make test-installer
@@ -66,5 +66,5 @@ restore-latest-archives-warn:
 
 .PHONY: clean-staging-folder
 clean-staging-folder:
-	$(caasenv-authenticate); \
+	$(aws-authenticate); \
 	aws s3 rm $(S3_STAG_PATH) --recursive

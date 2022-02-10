@@ -35,7 +35,13 @@ var commandRules = []linter.CommandRule{
 
 var flagRules = []linter.FlagRule{
 	// Hard Requirements
-	linter.RequireFlagKebabCase,
+	linter.FlagFilter(
+		linter.RequireFlagKebabCase,
+		linter.ExcludeFlag(
+			"producer.config",
+			"consumer.config",
+		),
+	),
 	linter.RequireFlagRealWords('-'),
 	linter.FlagFilter(linter.RequireFlagCharacters('-'), linter.ExcludeFlag("consumer.config", "producer.config")),
 
@@ -109,6 +115,8 @@ var flagRules = []linter.FlagRule{
 			"source-api-secret",
 			"source-bootstrap-server",
 			"source-cluster-id",
+			"sr-api-key",
+			"sr-api-secret",
 		),
 	),
 }

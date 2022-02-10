@@ -47,7 +47,7 @@ func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvVar(cmd *cobra
 	return func() (string, error) {
 		orgResourceId := os.Getenv(ConfluentCloudOrganizationId)
 		if orgResourceId != "" {
-			log.CliLogger.Warn(errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationId)
+			log.CliLogger.Warnf(errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationId)
 		}
 		return orgResourceId, nil
 	}

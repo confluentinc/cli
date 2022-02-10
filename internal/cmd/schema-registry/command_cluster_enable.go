@@ -8,7 +8,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -95,7 +94,6 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 			SchemaRegistryEndpoint: newCluster.Endpoint,
 		}
 		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
-		c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, v2Cluster.Id)
 	}
 
 	return nil

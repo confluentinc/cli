@@ -6,7 +6,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -40,8 +39,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, environment.Id)
 
 	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
 }
