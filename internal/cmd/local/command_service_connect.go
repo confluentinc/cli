@@ -2,6 +2,7 @@ package local
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -388,7 +389,17 @@ func makeRequest(method, url string, body []byte) (string, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+		ForceAttemptHTTP2: true,
+	}
+
+	client := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: transport,
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		return "", err
