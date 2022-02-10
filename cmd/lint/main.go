@@ -30,7 +30,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	// Soft Requirements
-	linter.Filter(linter.RequireLengthBetween("Short", 10, 60), linter.ExcludeCommand("schema-registry")),
+	linter.Filter(linter.RequireLengthBetween("Short", 10, 60), linter.ExcludeCommand("schema-registry compatibility")),
 }
 
 var flagRules = []linter.FlagRule{
