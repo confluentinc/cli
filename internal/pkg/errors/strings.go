@@ -12,6 +12,7 @@ const (
 
 	// auth commands
 	LoggedInAsMsg              = "Logged in as \"%s\".\n"
+	LoggedInAsMsgWithOrg       = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
 	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
 	LoggedOutMsg               = "You are now logged out."
 	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"

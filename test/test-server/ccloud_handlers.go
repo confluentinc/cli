@@ -62,7 +62,7 @@ func init() {
 
 // Handler for: "/api/me"
 func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.ResponseWriter, *http.Request) {
-	org := &orgv1.Organization{Id: 42}
+	org := &orgv1.Organization{Id: 42, ResourceId: "abc-123", Name: "Confluent"}
 	if !isAuditLogEnabled {
 		org.AuditLog = &orgv1.AuditLog{
 			ClusterId:        "lkc-ab123",
