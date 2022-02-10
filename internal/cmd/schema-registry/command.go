@@ -18,13 +18,12 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 
 	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-	c.AddCommand(newClusterCommand(cfg, prerunner, srClient))
 	c.AddCommand(newExporterCommand(prerunner, srClient))
+	c.AddCommand(newClusterCommand(cfg, prerunner, srClient))
+	c.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
+	c.AddCommand(newConfigCommand(cfg, prerunner, srClient))
 	c.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
 	c.AddCommand(newSubjectCommand(cfg, prerunner, srClient))
-	c.AddCommand(newConfigCommand(cfg, prerunner, srClient))
-	c.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
-
 	return c.Command
 }
 

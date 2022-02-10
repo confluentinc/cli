@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -21,12 +20,12 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Retrieve all subjects available in a Schema Registry.",
-				Code: fmt.Sprintf("%s schema-registry subject list %s", version.CLIName, errors.OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry subject list %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
+	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())

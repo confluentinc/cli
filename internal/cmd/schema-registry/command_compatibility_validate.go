@@ -19,19 +19,19 @@ import (
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
-		Short: "Validate input schema against a particular version of a subject for compatibility.",
+		Short: "Validate a schema against a particular version of a subject for compatibility.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.validate),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Validate the compatibility of <schema> against a subject of latest version.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --subject <subject-name> --version <version> --schema <schema-path>", pversion.CLIName),
+				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type AVRO --subject records --version latest", pversion.CLIName),
 			},
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -20,13 +19,13 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type AVRO %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
@@ -59,9 +58,5 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	_, _, err = c.registerSchema(cmd, schemaType, schemaPath, subject, schemaType, refs)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

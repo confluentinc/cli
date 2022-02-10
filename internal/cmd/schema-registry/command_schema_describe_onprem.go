@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -12,7 +11,7 @@ import (
 
 func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe <id>",
+		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
@@ -21,13 +20,17 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337 %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry schema describe 1337 %s", pversion.CLIName, OnPremAuthenticationMsg),
+			},
+			examples.Example{
+				Text: "Describe the schema string by both subject and version.",
+				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 
@@ -40,7 +43,7 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	if len(args) > 0 {
-		return c.describeById(cmd, args, srClient, ctx)
+		return c.describeById(cmd, args[0], srClient, ctx)
 	}
 	return c.describeBySubject(cmd, srClient, ctx)
 }

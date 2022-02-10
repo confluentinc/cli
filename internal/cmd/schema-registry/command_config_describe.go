@@ -22,17 +22,17 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the config of a given-name subject.",
-				Code: fmt.Sprintf("%s schema-registry config describe --subject <subject-name>", pversion.CLIName),
+				Text: "Describe the config of subject `payments`.",
+				Code: fmt.Sprintf("%s schema-registry config describe --subject payments", pversion.CLIName),
 			},
 			examples.Example{
-				Text: "Describe the global config",
+				Text: "Describe the global config.",
 				Code: fmt.Sprintf("%s schema-registry config describe", pversion.CLIName),
 			},
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -25,13 +25,9 @@ func newConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.
 	}
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-	}
-
-	if cfg.IsCloudLogin() {
 		c.AddCommand(c.newDescribeCommand())
 	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 		c.AddCommand(c.newDescribeCommandOnPrem())
 	}
 

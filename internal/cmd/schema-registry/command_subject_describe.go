@@ -23,13 +23,13 @@ func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all versions registered under a given subject and its compatibility level.",
-				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name>", version.CLIName),
+				Text: "Retrieve all versions registered under subject `payments` and its compatibility level.",
+				Code: fmt.Sprintf("%s schema-registry subject describe payments", version.CLIName),
 			},
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
+	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)

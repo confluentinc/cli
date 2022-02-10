@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	SubjectUsage = "Subject of the schema."
+	SubjectUsage            = "Subject of the schema."
+	OnPremAuthenticationMsg = "--ca-cert-path <ca-file> --sr-endpoint <schema-registry-endpoint>"
 )
 
 func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {

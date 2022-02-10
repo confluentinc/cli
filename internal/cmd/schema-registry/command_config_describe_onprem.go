@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -19,17 +18,17 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the config of a given-name subject.",
-				Code: fmt.Sprintf("%s schema-registry config describe <subject-name> %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+				Text: "Describe the config of a subject `payments`.",
+				Code: fmt.Sprintf("%s schema-registry config describe <subject-name> %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
-				Text: "Describe the global config",
-				Code: fmt.Sprintf("%s schema-registry config describe %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+				Text: "Describe the global config.",
+				Code: fmt.Sprintf("%s schema-registry config describe %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)

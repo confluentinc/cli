@@ -17,7 +17,7 @@ import (
 
 func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe <id>",
+		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
@@ -35,8 +35,8 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -71,15 +71,15 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(args) > 0 {
-		return c.describeById(cmd, args, srClient, ctx)
+		return c.describeById(cmd, args[0], srClient, ctx)
 	}
 	return c.describeBySubject(cmd, srClient, ctx)
 }
 
-func (c *schemaCommand) describeById(cmd *cobra.Command, args []string, srClient *srsdk.APIClient, ctx context.Context) error {
-	schemaID, err := strconv.ParseInt(args[0], 10, 32)
+func (c *schemaCommand) describeById(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
+	schemaID, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, args[0]), errors.SchemaIntegerSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)
 	}
 
 	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schemaID), nil)

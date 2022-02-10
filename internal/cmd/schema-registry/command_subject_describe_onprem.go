@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -20,13 +19,13 @@ func (c *subjectCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all versions registered under a given subject and its compatibility level.",
-				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name> %s", version.CLIName, errors.OnPremAuthenticationMsg),
+				Text: "Retrieve all versions registered under subject `payments` and its compatibility level.",
+				Code: fmt.Sprintf("%s schema-registry subject describe payments %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
+	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)

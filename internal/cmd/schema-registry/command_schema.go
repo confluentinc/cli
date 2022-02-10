@@ -25,19 +25,14 @@ func newSchemaCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.
 	}
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-	}
-
-	if cfg.IsCloudLogin() {
 		c.AddCommand(c.newCreateCommand())
 		c.AddCommand(c.newDescribeCommand())
 		c.AddCommand(c.newDeleteCommand())
 	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 		c.AddCommand(c.newCreateCommandOnPrem())
 		c.AddCommand(c.newDescribeCommandOnPrem())
 		c.AddCommand(c.newDeleteCommandOnPrem())
 	}
-
 	return c.Command
 }

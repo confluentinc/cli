@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -21,7 +20,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update subject level compatibility or mode of Schema Registry:",
-				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE %s", version.CLIName, version.CLIName, errors.OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD %s\n%s schema-registry subject update payments --mode=READWRITE %s", version.CLIName, OnPremAuthenticationMsg, version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}

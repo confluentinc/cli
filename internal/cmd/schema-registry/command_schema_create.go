@@ -28,7 +28,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema --schema payments.avro --type AVRO", pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Where schemafilepath may include these contents.",
@@ -52,7 +52,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -19,14 +18,14 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Validate the compatibility of <schema> against a subject of latest version.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --subject <subject-name> --version latest --schema <schema-path>  %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type AVRO --subject records --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")

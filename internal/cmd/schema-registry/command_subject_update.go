@@ -23,7 +23,7 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update subject level compatibility or mode of Schema Registry:",
-				Code: fmt.Sprintf("%s schema-registry subject update <subject-name> --compatibility=BACKWARD\n%s schema-registry subject update <subject-name> --mode=READWRITE", version.CLIName, version.CLIName),
+				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD\n%s schema-registry subject update payments --mode=READWRITE", version.CLIName, version.CLIName),
 			},
 		),
 	}
