@@ -10,6 +10,7 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -240,6 +241,16 @@ func CatchSchemaNotFoundError(err error, resp *http.Response) error {
 	}
 	if strings.Contains(resp.Status, "Not Found") {
 		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
+	}
+	return err
+}
+
+func CatchNoSubjectLevelConfigError(err error, resp *http.Response, subject string) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(resp.Status, "Not Found") {
+		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
 	}
 	return err
 }

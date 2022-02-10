@@ -3,8 +3,10 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -14,14 +16,18 @@ import (
 
 func (c *configCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <subject>",
+		Use:   "describe",
 		Short: "Describe the config of a subject, or at global level.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the config of a given-name subject.",
-				Code: fmt.Sprintf("%s schema-registry config describe <subject-name>", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry config describe --subject <subject-name>", pversion.CLIName),
+			},
+			examples.Example{
+				Text: "Describe the global config",
+				Code: fmt.Sprintf("%s schema-registry config describe", pversion.CLIName),
 			},
 		),
 	}
@@ -44,14 +50,15 @@ func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
 func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subject, err := cmd.Flags().GetString("subject")
 	var config srsdk.Config
+	var r *http.Response
 	if err != nil {
 		return err
 	}
 
 	if subject != "" {
-		config, _, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
+		config, r, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 		if err != nil {
-			return err
+			return errors.CatchNoSubjectLevelConfigError(err, r, subject)
 		}
 	} else {
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)

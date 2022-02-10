@@ -12,7 +12,7 @@ import (
 
 func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe <subject>",
+		Use:         "describe",
 		Short:       "Describe the config of a subject, or at global level.",
 		Args:        cobra.MaximumNArgs(1),
 		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
@@ -21,6 +21,10 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 			examples.Example{
 				Text: "Describe the config of a given-name subject.",
 				Code: fmt.Sprintf("%s schema-registry config describe <subject-name> %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
+			},
+			examples.Example{
+				Text: "Describe the global config",
+				Code: fmt.Sprintf("%s schema-registry config describe %s", pversion.CLIName, errors.OnPremAuthenticationMsg),
 			},
 		),
 	}

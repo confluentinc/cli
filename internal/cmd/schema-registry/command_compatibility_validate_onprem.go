@@ -12,7 +12,7 @@ import (
 
 func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "validate <subject>",
+		Use:         "validate",
 		Short:       "Validate input schema against a particular version of a subject for compatibility.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.onPremValidate),
