@@ -75,18 +75,18 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	}
 	if version == "all" {
 		deleteSubjectOpts := srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		versions, _, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)
+		versions, r, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)
 		if err != nil {
-			return err
+			return errors.CatchSchemaNotFoundError(err, r)
 		}
 		utils.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
 		printVersions(versions)
 		return nil
 	} else {
 		deleteVersionOpts := srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		versionResult, _, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, &deleteVersionOpts)
+		versionResult, r, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, &deleteVersionOpts)
 		if err != nil {
-			return err
+			return errors.CatchSchemaNotFoundError(err, r)
 		}
 		utils.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
 		printVersions([]int32{versionResult})

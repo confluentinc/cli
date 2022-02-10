@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -53,9 +54,9 @@ func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.API
 	}
 
 	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, _, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
+	versions, r, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
 	if err != nil {
-		return err
+		return errors.CatchSchemaNotFoundError(err, r)
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)

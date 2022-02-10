@@ -73,8 +73,8 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, args []string, 
 	}
 
 	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compat}
-	if _, _, err = srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, args[0], updateReq); err != nil {
-		return err
+	if _, r, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, args[0], updateReq); err != nil {
+		return errors.CatchSchemaNotFoundError(err, r)
 	}
 
 	utils.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, args[0])
@@ -87,9 +87,9 @@ func (c *subjectCommand) updateMode(cmd *cobra.Command, args []string, srClient 
 		return err
 	}
 
-	updatedMode, _, err := srClient.DefaultApi.UpdateMode(ctx, args[0], srsdk.ModeUpdateRequest{Mode: mode})
+	updatedMode, r, err := srClient.DefaultApi.UpdateMode(ctx, args[0], srsdk.ModeUpdateRequest{Mode: mode})
 	if err != nil {
-		return err
+		return errors.CatchSchemaNotFoundError(err, r)
 	}
 
 	utils.Printf(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, args[0])

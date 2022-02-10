@@ -189,6 +189,9 @@ const (
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
 	OnPremAuthenticationMsg      = "--ca-cert-path <ca-file> --sr-endpoint <schema-registry-endpoint>"
+	SchemaNotFoundErrorMsg       = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions    = "List available subjects with `confluent schema-registry subject list`.\n" +
+		"List available versions with `confluent schema-registry subject describe`"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"fmt"
-	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -28,7 +27,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
+	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -59,7 +58,7 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	_, _, err = c.registerSchema(cmd, schemaType, schemaPath, subject, strings.ToUpper(schemaType), refs)
+	_, _, err = c.registerSchema(cmd, schemaType, schemaPath, subject, schemaType, refs)
 	if err != nil {
 		return err
 	}

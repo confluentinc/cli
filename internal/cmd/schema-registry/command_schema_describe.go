@@ -98,9 +98,9 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, srClient *srsdk.AP
 	if err != nil {
 		return err
 	}
-	schemaString, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
+	schemaString, r, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
 	if err != nil {
-		return err
+		return errors.CatchSchemaNotFoundError(err, r)
 	}
 	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }

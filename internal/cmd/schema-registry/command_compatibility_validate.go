@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -81,9 +82,9 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 
 	req := srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs}
 
-	compatibleResp, _, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
+	compatibleResp, r, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
 	if err != nil {
-		return err
+		return errors.CatchSchemaNotFoundError(err, r)
 	}
 	compatible := strconv.FormatBool(compatibleResp.IsCompatible)
 
