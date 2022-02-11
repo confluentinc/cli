@@ -125,7 +125,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 
 func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, nil, suite.conf)
-	return New(prerunner, suite.analyticsClient)
+	return New(prerunner)
 }
 
 func (suite *ConnectTestSuite) TestPauseConnector() {

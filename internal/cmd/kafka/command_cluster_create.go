@@ -138,6 +138,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
+	sku, err := stringToSku(typeString)
+	if err != nil {
+		return err
+	}
+
 	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
 	if err != nil {
 		return err
@@ -320,16 +325,16 @@ func stringToAvailability(s string) (string, error) {
 		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
-func stringToSku(typeString string) (int32, error) {
+func stringToSku(typeString string) (productv1.Sku, error) {
 	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(typeString)])
 	switch sku {
 	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
 		break
 	default:
-		return int32(productv1.Sku_UNKNOWN), errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, typeString),
+		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, typeString),
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
-	return int32(sku), nil
+	return sku, nil
 }
 
 func setClusterConfig(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {

@@ -93,7 +93,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &updatedCluster)
+	return outputKafkaClusterDescription(cmd, &updatedCluster)
 }
 
 func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {

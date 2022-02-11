@@ -97,7 +97,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc)
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &cluster)
+	return outputKafkaClusterDescription(cmd, &cluster)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -113,7 +113,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return lkc, nil
 }
 
-func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
+func outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
 	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster), getKafkaClusterDescribeFields(cluster, basicDescribeFields), describeHumanRenames, describeStructuredRenames)
 }
 
